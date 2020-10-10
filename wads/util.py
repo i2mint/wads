@@ -131,7 +131,7 @@ def replace_import_names(
     if add_comment_at_the_end_of_lines_replaced is False:
         suffix = ""
     elif add_comment_at_the_end_of_lines_replaced is True:
-        suffix = "# line_was_edited_by_epythet"
+        suffix = "# line_was_edited_by_wads"
     elif isinstance(add_comment_at_the_end_of_lines_replaced, str):
         suffix = add_comment_at_the_end_of_lines_replaced
         if not suffix.startswith('#'):
@@ -278,7 +278,7 @@ def highlight(string, effect=fc['reverse'], beg_mark='[[', end_mark=']]', end_ef
     `fc` variable of this module. It's a dict (and if you have ``py2store``, it's a mapping containing
     that dict and allowing you access through attributes too).
 
-    >>> from epythet.util import fc
+    >>> from wads.util import fc
     >>> list(fc)[20:25]
     ['magenta', 'cyan', 'gray', 'dark_gray', 'dark_red']
 

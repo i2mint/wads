@@ -3,15 +3,15 @@ import shutil
 import json
 # from functools import partial
 from typing import List, Optional
-from wads import pkg_path_names, root_dir, epythet_configs, epythet_configs_file
-from wads import pkg_join as epythet_join
+from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
+from wads import pkg_join as wads_join
 from wads.util import mk_conditional_logger
 
-# from epythet.pack_util import write_configs
+# from wads.pack_util import write_configs
 
 path_sep = os.path.sep
 
-populate_dflts = epythet_configs.get(
+populate_dflts = wads_configs.get(
     'populate_dflts',
     {'description': "There's a bit of an air of mystery around this project...",
      'root_url': None,
@@ -31,7 +31,7 @@ def gen_readme_text(name, text="There's a bit of an air of mystery around this p
 """
 
 
-# TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in epythet_configs_file
+# TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file
 def populate_pkg_dir(pkg_dir,
                      description: str = populate_dflts['description'],
                      root_url: Optional[str] = populate_dflts['root_url'],
@@ -46,9 +46,9 @@ def populate_pkg_dir(pkg_dir,
                      **configs):
     """Populate project directory root with useful packaging files, if they're missing.
 
-    >>> from epythet.populate import populate_pkg_dir
+    >>> from wads.populate import populate_pkg_dir
     >>> import os  # doctest: +SKIP
-    >>> name = 'epythet'  # doctest: +SKIP
+    >>> name = 'wads'  # doctest: +SKIP
     >>> pkg_dir = f'/D/Dropbox/dev/p3/proj/i/{name}'  # doctest: +SKIP
     >>> populate_pkg_dir(pkg_dir,  # doctest: +SKIP
     ...                  description='Tools for packaging',
@@ -64,7 +64,7 @@ def populate_pkg_dir(pkg_dir,
     :param keywords:
     :param install_requires:
     :param verbose:
-    :param default_from: Name of field to look up in epythet_configs to get defaults from,
+    :param default_from: Name of field to look up in wads_configs to get defaults from,
         or 'user_input' to get it from user input.
     :param configs:
     :return:
@@ -77,10 +77,10 @@ def populate_pkg_dir(pkg_dir,
             raise NotImplementedError("Not immplemented yet")  # TODO: Implement
         else:
             try:
-                epythet_configs = json.load(open(epythet_configs_file))
-                args_defaults = epythet_configs[defaults_from]
+                wads_configs = json.load(open(wads_configs_file))
+                args_defaults = wads_configs[defaults_from]
             except KeyError:
-                raise KeyError(f"{epythet_configs_file} json didn't have a {defaults_from} field")
+                raise KeyError(f"{wads_configs_file} json didn't have a {defaults_from} field")
         _locals = locals()
         for k, v in args_defaults.items():
             _locals[k] = v
@@ -132,7 +132,7 @@ def populate_pkg_dir(pkg_dir,
 
     def copy_from_resource(resource_name):
         _clog(f'... copying {resource_name} from {root_dir} to {pkg_dir}')
-        shutil.copy(epythet_join(resource_name), pjoin(resource_name))
+        shutil.copy(wads_join(resource_name), pjoin(resource_name))
 
     def should_update(resource_name):
         return (resource_name in overwrite) or (not os.path.isfile(pjoin(resource_name)))
@@ -149,12 +149,12 @@ def populate_pkg_dir(pkg_dir,
             fp.write(content)
 
     if should_update('setup.cfg'):
-        from epythet.pack_util import write_configs
+        from wads.pack import write_configs
         _clog("... making a 'setup.cfg'")
         write_configs(configs, pjoin('setup.cfg'))
 
     if should_update('LICENSE'):
-        from epythet.licensing import license_body
+        from wads.licensing import license_body
         _license_body = license_body(configs['license'])
         save_txt_to_pkg('LICENSE', _license_body)
 
@@ -178,12 +178,12 @@ def update_pack_and_setup_py(target_pkg_dir):
 
     resources = {'pack.py', 'setup.py'}
     for resource_name in resources:
-        print(f'... copying {resource_name} from {epythet_join("")} to {target_pkg_dir}')
+        print(f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}')
         shutil.move(src=pjoin(resource_name), dst=pjoin('_' + resource_name))
-        shutil.copy(src=epythet_join(resource_name), dst=pjoin(resource_name))
+        shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
 
 
 if __name__ == '__main__':
-    import argh  # TODO: replace by argparse, or require argh in epythet?
+    import argh  # TODO: replace by argparse, or require argh in wads?
 
     argh.dispatch_command(populate_pkg_dir)

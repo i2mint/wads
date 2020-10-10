@@ -180,12 +180,12 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
     >>> section_from_ini = {
-    ...     'name': 'epythet',
+    ...     'name': 'wads',
     ...     'keywords': '\n\tpackaging\n\tpublishing'
     ... }
     >>> section_for_python = dict(postprocess_ini_section_items(section_from_ini))
     >>> section_for_python
-    {'name': 'epythet', 'keywords': ['packaging', 'publishing']}
+    {'name': 'wads', 'keywords': ['packaging', 'publishing']}
 
     """
     splitter_re = re.compile('[\n\r\t]+')
@@ -203,7 +203,7 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     """Transform list values into newline-separated strings, in view of writing the value to a ini formatted section
     >>> section = {
-    ...     'name': 'epythet',
+    ...     'name': 'wads',
     ...     'keywords': ['documentation', 'packaging', 'publishing']
     ... }
     >>> for_ini = dict(preprocess_ini_section_items(section))
