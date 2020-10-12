@@ -1,8 +1,9 @@
-# epythet
+# wads
 
-Documentation and packaging tools.
+Utils to package and (pypi) publish without all the boring stuff.
 
-Less humdrum, more automation, earlier at the pub. 
+
+
 
 
 
