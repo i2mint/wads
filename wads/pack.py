@@ -226,6 +226,8 @@ def read_configs(
         pkg_dir: Path,
         postproc=postprocess_ini_section_items
 ):
+    assert isinstance(pkg_dir, Path), \
+        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
@@ -246,6 +248,8 @@ def write_configs(
         configs,
         preproc=preprocess_ini_section_items
 ):
+    assert isinstance(pkg_dir, Path), \
+        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()

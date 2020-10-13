@@ -71,6 +71,7 @@ def populate_pkg_dir(pkg_dir,
 
     """
     # TODO: Test this defaults_from thing!
+    args_defaults = dict()
     if defaults_from is not None:
         if defaults_from == 'user_input':
             args_defaults = dict()  # ... and then fill with user input
@@ -81,9 +82,6 @@ def populate_pkg_dir(pkg_dir,
                 args_defaults = wads_configs[defaults_from]
             except KeyError:
                 raise KeyError(f"{wads_configs_file} json didn't have a {defaults_from} field")
-        _locals = locals()
-        for k, v in args_defaults.items():
-            _locals[k] = v
 
     if isinstance(overwrite, str):
         overwrite = {overwrite}
@@ -124,8 +122,8 @@ def populate_pkg_dir(pkg_dir,
                   keywords=keywords,
                   install_requires=install_requires)
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
-    kwargs['description-file'] = kwargs.get('description_file', '')
-    configs = dict(name=name, **configs, **kwargs)
+    configs = dict(name=name, **configs, **kwargs, **args_defaults)
+    kwargs['description-file'] = kwargs.pop('description_file', '')
 
     assert configs.get('name', name) == name, \
         f"There's a name conflict. pkg_dir tells me the name is {name}, but configs tell me its {configs.get('name')}"
@@ -151,7 +149,7 @@ def populate_pkg_dir(pkg_dir,
     if should_update('setup.cfg'):
         from wads.pack import write_configs
         _clog("... making a 'setup.cfg'")
-        write_configs(configs, pjoin('setup.cfg'))
+        write_configs(pjoin(''), configs)
 
     if should_update('LICENSE'):
         from wads.licensing import license_body
