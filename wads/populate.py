@@ -158,6 +158,7 @@ def populate_pkg_dir(pkg_dir,
 
     if should_update('README.md'):
         readme_text = gen_readme_text(name, configs.get('description'))
+        readme_text += '\n\nTo install:\t```pip install babe```\n'
         save_txt_to_pkg('README.md', readme_text)
 
     return name
