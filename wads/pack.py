@@ -56,6 +56,7 @@ def clog(condition, *args, **kwargs):
 Path = str
 
 
+# TODO: Add a function that adds/commits/pushes the updated setup.cfg
 def go(pkg_dir, version=None, verbose: bool = True):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
