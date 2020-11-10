@@ -48,7 +48,15 @@ def get_name_from_configs(pkg_dir, assert_exists=True):
     return name
 
 
-def go(pkg_dir, version=None, verbose=True):
+def clog(condition, *args, **kwargs):
+    if condition:
+        pprint(*args, **kwargs)
+
+
+Path = str
+
+
+def go(pkg_dir, version=None, verbose: bool = True):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
 
@@ -61,14 +69,19 @@ def go(pkg_dir, version=None, verbose=True):
     update_setup_cfg(pkg_dir, verbose=verbose)
     run_setup(pkg_dir)
     twine_upload_dist(pkg_dir)
+    delete_pkg_directories(pkg_dir, verbose)
 
 
-def clog(condition, *args, **kwargs):
-    if condition:
-        pprint(*args, **kwargs)
-
-
-Path = str
+def delete_pkg_directories(pkg_dir: Path, verbose=True):
+    from shutil import rmtree
+    pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
+    names_to_delete = ['dist', 'build', f"{pkg_dirname}.egg-info"]
+    for name_to_delete in names_to_delete:
+        delete_dirpath = os.path.join(pkg_dir, name_to_delete)
+        if os.path.isdir(delete_dirpath):
+            if verbose:
+                print(f"Deleting folder: {delete_dirpath}")
+            rmtree(delete_dirpath)
 
 
 # def update_version(version):

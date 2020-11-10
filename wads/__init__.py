@@ -10,6 +10,7 @@ To see available commands
 
 """
 
+import setuptools  # to avoid a warning due to distutils_patch.py
 import os
 import json
 

@@ -40,6 +40,7 @@ def populate_pkg_dir(pkg_dir,
                      description_file: str = populate_dflts['description_file'],
                      keywords: Optional[List] = populate_dflts['keywords'],
                      install_requires: Optional[List] = populate_dflts['install_requires'],
+                     include_pip_install_instruction_in_readme=True,
                      verbose: bool = populate_dflts['verbose'],
                      overwrite: List = (),
                      defaults_from: Optional[str] = None,
@@ -158,7 +159,8 @@ def populate_pkg_dir(pkg_dir,
 
     if should_update('README.md'):
         readme_text = gen_readme_text(name, configs.get('description'))
-        readme_text += '\n\nTo install:\t```pip install babe```\n'
+        if include_pip_install_instruction_in_readme:
+            readme_text += f'\n\nTo install:\t```pip install {name}```\n'
         save_txt_to_pkg('README.md', readme_text)
 
     return name
