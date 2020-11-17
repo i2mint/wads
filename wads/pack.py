@@ -34,7 +34,11 @@ from configparser import ConfigParser
 import os
 
 CONFIG_FILE_NAME = 'setup.cfg'
-CONFIG_SECTION = 'metadata'
+METADATA_SECTION = 'metadata'
+OPTIONS_SECTION = 'options'
+DFLT_OPTIONS = {'packages': 'find:',
+                'include_package_data': True,
+                'zip_safe': False}
 
 pjoin = lambda *p: os.path.join(*p)
 
@@ -231,8 +235,11 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     if isinstance(items, Mapping):
         items = items.items()
     for k, v in items:
+        if isinstance(v, str) and not v.startswith('"') and ',' in v:
+            v = list(map(str.strip, v.split(',')))
         if isinstance(v, list):
             v = '\n\t' + '\n\t'.join(v)
+
         yield k, v
 
 
@@ -251,7 +258,7 @@ def read_configs(
     #     if postproc:
     #         d = {k: dict(postproc(v)) for k, v in c}
     # else:
-    d = dict(c[CONFIG_SECTION])
+    d = dict(c[METADATA_SECTION])
     if postproc:
         d = dict(postproc(d))
     return d
@@ -260,7 +267,8 @@ def read_configs(
 def write_configs(
         pkg_dir: Path,
         configs,
-        preproc=preprocess_ini_section_items
+        preproc=preprocess_ini_section_items,
+        dflt_options=DFLT_OPTIONS
 ):
     assert isinstance(pkg_dir, Path), \
         "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
@@ -269,7 +277,17 @@ def write_configs(
     c = ConfigParser()
     if os.path.isfile(config_filepath):
         c.read_file(open(config_filepath, 'r'))
-    c[CONFIG_SECTION] = dict(preproc(configs))
+
+    metadata_dict = dict(preproc(configs))
+    options = dflt_options
+
+    # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities
+    for k in ['install_requires', 'install-requires', 'packages', 'zip_safe', 'include_package_data']:
+        if k in metadata_dict:
+            options[k] = metadata_dict.pop(k)  # get it out of metadata_dict and into options
+
+    c[METADATA_SECTION] = metadata_dict
+    c[OPTIONS_SECTION] = options
     with open(config_filepath, 'w') as fp:
         c.write(fp)
 

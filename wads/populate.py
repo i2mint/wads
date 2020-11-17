@@ -150,6 +150,8 @@ def populate_pkg_dir(pkg_dir,
     if should_update('setup.cfg'):
         from wads.pack import write_configs
         _clog("... making a 'setup.cfg'")
+        if 'pkg-dir' in configs:
+            del configs['pkg-dir']
         write_configs(pjoin(''), configs)
 
     if should_update('LICENSE'):
