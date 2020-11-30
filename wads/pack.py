@@ -245,7 +245,8 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 def read_configs(
         pkg_dir: Path,
-        postproc=postprocess_ini_section_items
+        postproc=postprocess_ini_section_items,
+        section=METADATA_SECTION,
 ):
     assert isinstance(pkg_dir, Path), \
         "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
@@ -253,12 +254,7 @@ def read_configs(
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     c.read_file(open(config_filepath, 'r'))
-    # if CONFIG_SECTION is None:
-    #     d = dict(c)
-    #     if postproc:
-    #         d = {k: dict(postproc(v)) for k, v in c}
-    # else:
-    d = dict(c[METADATA_SECTION])
+    d = dict(c[section])
     if postproc:
         d = dict(postproc(d))
     return d
@@ -279,12 +275,15 @@ def write_configs(
         c.read_file(open(config_filepath, 'r'))
 
     metadata_dict = dict(preproc(configs))
-    options = dflt_options
+    options = dict(dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION))
 
-    # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities
+    # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities.
     for k in ['install_requires', 'install-requires', 'packages', 'zip_safe', 'include_package_data']:
         if k in metadata_dict:
-            options[k] = metadata_dict.pop(k)  # get it out of metadata_dict and into options
+            if k not in options:
+                options[k] = metadata_dict.pop(k)  # get it out of metadata_dict and into options
+            else:
+                metadata_dict.pop(k)  # if it's both in metadata and in options, just get it out of metadata
 
     c[METADATA_SECTION] = metadata_dict
     c[OPTIONS_SECTION] = options
