@@ -253,10 +253,13 @@ def read_configs(
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
-    c.read_file(open(config_filepath, 'r'))
-    d = dict(c[section])
-    if postproc:
-        d = dict(postproc(d))
+    if os.path.isfile(config_filepath):
+        c.read_file(open(config_filepath, 'r'))
+        d = dict(c[section])
+        if postproc:
+            d = dict(postproc(d))
+    else:
+        d = {}
     return d
 
 
