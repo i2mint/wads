@@ -1,6 +1,6 @@
 # wads
 
-Utils to package and (pypi) publish without all the boring stuff.
+Tools for packaging and publishing to pypi for those who just don't want to deal with it
 
 To install (for example):
 ```
