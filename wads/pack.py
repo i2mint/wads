@@ -4,23 +4,23 @@
 
 The typical sequence of the methodic and paranoid could be something like this:
 
-```
-python pack.py current-configs  # see what you got
-python pack.py increment-configs-version  # update (increment the version and write that in setup.cfg
-python pack.py current-configs-version  # see that it worked
-python pack.py current-configs  # ... if you really want to see the whole configs again (you're really paranoid)
-python pack.py run-setup  # see that it worked
-python pack.py twine-upload-dist  # publish
-# and then go check things work...
-```
+::
+
+    python pack.py current-configs  # see what you got
+    python pack.py increment-configs-version  # update (increment the version and write that in setup.cfg
+    python pack.py current-configs-version  # see that it worked
+    python pack.py current-configs  # ... if you really want to see the whole configs again (you're really paranoid)
+    python pack.py run-setup  # see that it worked
+    python pack.py twine-upload-dist  # publish
+    # and then go check things work...
+
 
 
 If you're crazy (or know what you're doing) just do
 
-```
-python pack.py go
-```
+::
 
+    python pack.py go
 
 """
 import subprocess
@@ -220,6 +220,7 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 # TODO: Find out if configparse has an option to do this processing already
 def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     """Transform list values into newline-separated strings, in view of writing the value to a ini formatted section
+
     >>> section = {
     ...     'name': 'wads',
     ...     'keywords': ['documentation', 'packaging', 'publishing']
@@ -350,10 +351,11 @@ def current_pypi_version(
     """
     Return version of package on pypi.python.org using json.
 
-    ```
-    > current_pypi_version('py2store')
-    '0.0.7'
-    ```
+    ::
+
+        current_pypi_version('py2store')
+        '0.0.7'
+
 
     :param package: Name of the package
     :return: A version (string) or None if there was an exception (usually means there
