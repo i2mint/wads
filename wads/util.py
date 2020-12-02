@@ -3,8 +3,31 @@ from itertools import chain
 import pkgutil
 from functools import partial
 import os
+import subprocess
 
 standard_lib_dir = os.path.dirname(os.__file__)
+
+
+def git(command='status', work_tree='.', git_dir=None):
+    """Launch git commands.
+
+    :param command: git command (e.g. 'status', 'branch', 'commit -m "blah"', 'push', etc.)
+    :param work_tree: The work_tree directory (i.e. where the project is)
+    :param git_dir: The .git directory (usually, and by default, will be taken to be "{work_tree}/.git/"
+    :return: What ever the command line returns (decoded to string)
+    """
+
+    """
+    
+    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ add myFile
+    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m 'something'
+
+    """
+    work_tree = os.path.abspath(os.path.expanduser(work_tree))
+    if git_dir is None:
+        git_dir = os.path.join(work_tree, '.git')
+    command = f'git --git-dir="{git_dir}" --work-tree="{work_tree}" {command}'
+    return subprocess.check_output(command, shell=True).decode()
 
 
 def is_standard_lib_path(path):

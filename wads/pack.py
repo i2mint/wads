@@ -31,6 +31,7 @@ import sys
 from pprint import pprint
 from typing import Union, Mapping, Iterable, Generator
 from configparser import ConfigParser
+from functools import partial
 import os
 
 CONFIG_FILE_NAME = 'setup.cfg'
@@ -43,6 +44,31 @@ DFLT_OPTIONS = {'packages': 'find:',
 pjoin = lambda *p: os.path.join(*p)
 
 
+def git(command='status', work_tree='.', git_dir=None):
+    """Launch git commands.
+
+    :param command: git command (e.g. 'status', 'branch', 'commit -m "blah"', 'push', etc.)
+    :param work_tree: The work_tree directory (i.e. where the project is)
+    :param git_dir: The .git directory (usually, and by default, will be taken to be "{work_tree}/.git/"
+    :return: What ever the command line returns (decoded to string)
+    """
+
+    """
+
+    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ add myFile
+    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m 'something'
+
+    """
+    work_tree = os.path.abspath(os.path.expanduser(work_tree))
+    if git_dir is None:
+        git_dir = os.path.join(work_tree, '.git')
+    command = f'git --git-dir="{git_dir}" --work-tree="{work_tree}" {command}'
+    r = subprocess.check_output(command, shell=True)
+    if isinstance(r, bytes):
+        r = r.decode()
+    return r
+
+
 def get_name_from_configs(pkg_dir, assert_exists=True):
     """Get name from local setup.cfg (metadata section)"""
     configs = read_configs(pkg_dir=pkg_dir)
@@ -52,29 +78,67 @@ def get_name_from_configs(pkg_dir, assert_exists=True):
     return name
 
 
-def clog(condition, *args, **kwargs):
+def clog(condition, *args, log_func=pprint, **kwargs):
     if condition:
-        pprint(*args, **kwargs)
+        log_func(*args, **kwargs)
 
 
 Path = str
 
 
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
-def go(pkg_dir, version=None, verbose: bool = True):
+def go(pkg_dir,
+       version=None,
+       verbose: bool = True,
+       skip_git_commit: bool = False,
+       answer_yes_to_all_prompts: bool = False
+       ):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
 
     :param version: The desired version (if not given, will increment the current version
     :param verbose: Whether to print stuff or not
+    :param skip_git_commit: Whether to skip the git commit and push step
+    :param answer_yes_to_all_prompts: If you do git commit and push, whether to ask confirmation after showing status
 
     """
 
-    increment_configs_version(pkg_dir, version)
+    version = increment_configs_version(pkg_dir, version)
     update_setup_cfg(pkg_dir, verbose=verbose)
     run_setup(pkg_dir)
     twine_upload_dist(pkg_dir)
     delete_pkg_directories(pkg_dir, verbose)
+
+    if not skip_git_commit:
+        git_commit_and_push(pkg_dir, version, verbose, answer_yes_to_all_prompts)
+
+
+def git_commit_and_push(pkg_dir,
+                        version=None,
+                        verbose: bool = True,
+                        answer_yes_to_all_prompts: bool = False):
+    def ggit(command):
+        r = git(command, work_tree=pkg_dir)
+        clog(verbose, r, log_func=print)
+
+    ggit('status')
+
+    if not answer_yes_to_all_prompts:
+        answer = input("Should I do a 'git add *'? ([Y]/n): ")
+        if answer and answer != 'Y':
+            print("Okay, I'll stop here.")
+            return
+    ggit('add *')
+
+    ggit('status')  # show status again
+
+    if not answer_yes_to_all_prompts:
+        answer = input(f'Should I commit -m "{version}" and push? ([Y]/n)')
+        if answer and answer != 'Y':
+            print("Okay, I'll stop here.")
+            return
+    ggit(f'commit -m {version}')
+    ggit(f'push')
 
 
 def delete_pkg_directories(pkg_dir: Path, verbose=True):
@@ -165,6 +229,7 @@ def increment_configs_version(
     version = increment_version(version)
     configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
+    return version
 
 
 def run_setup(pkg_dir):
@@ -496,7 +561,8 @@ argh_kwargs = {
         get_name_from_configs,
         run_setup,
         current_pypi_version,
-        validate_pkg_dir
+        validate_pkg_dir,
+        git_commit_and_push
     ],
     'namespace_kwargs': {
         'title': 'Package Configurations',
