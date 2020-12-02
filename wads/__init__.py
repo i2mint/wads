@@ -25,8 +25,21 @@ pkg_dir = os.path.dirname(root_dir)
 pkg_join = lambda *paths: os.path.join(pkg_dir, *paths)
 
 # TODO: Change to use ini format? (Or yaml or toml?)
-wads_configs_file = pkg_join('wads_configs.json')
-wads_configs = json.load(open(wads_configs_file))
+wads_configs_file = rjoin(data_dir, 'wads_configs.json')
+try:
+    wads_configs = json.load(open(wads_configs_file))
+except FileNotFoundError:
+    wads_configs = {
+        "populate_dflts": {
+            "description": "There's a bit of an air of mystery around this project...",
+            "root_url": None,
+            "author": None,
+            "license": "mit",
+            "description_file": "README.md",
+            "keywords": None,
+            "install_requires": None,
+            "verbose": None
+        }}
 
 pkg_path_names = ('.gitignore', 'setup.py')
 pkg_paths = {pkg_join(name) for name in pkg_path_names}
