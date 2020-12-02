@@ -43,6 +43,7 @@ DFLT_OPTIONS = {'packages': 'find:',
 
 pjoin = lambda *p: os.path.join(*p)
 DOCSRC = 'docsrc'
+DFLT_PUBLISH_DOCS_TO = 'github'
 
 
 def git(command='status', work_tree='.', git_dir=None):
@@ -90,6 +91,7 @@ Path = str
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
 def go(pkg_dir,
        version=None,
+       publish_docs_to=DFLT_PUBLISH_DOCS_TO,
        verbose: bool = True,
        skip_git_commit: bool = False,
        answer_yes_to_all_prompts: bool = False
@@ -110,6 +112,8 @@ def go(pkg_dir,
     twine_upload_dist(pkg_dir)
     delete_pkg_directories(pkg_dir, verbose)
 
+    if publish_docs_to:
+        generate_and_publish_docs(pkg_dir, publish_docs_to)
     if not skip_git_commit:
         git_commit_and_push(pkg_dir, version, verbose, answer_yes_to_all_prompts)
 
@@ -142,13 +146,13 @@ def git_commit_and_push(pkg_dir,
     ggit(f'push')
 
 
-def generate_and_publish_docs(pkg_dir, publish_to='github'):
+def generate_and_publish_docs(pkg_dir, publish_docs_to='github'):
     # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
     from epythet.docs_gen.autogen import make_autodocs
     from epythet.docs_gen.call_make import make
     make_autodocs(pkg_dir)
-    if publish_to:
-        make(publish_to)
+    if publish_docs_to:
+        make(pkg_dir, publish_docs_to)
 
 
 def delete_pkg_directories(pkg_dir: Path, verbose=True):
@@ -331,7 +335,11 @@ def read_configs(
     c = ConfigParser()
     if os.path.isfile(config_filepath):
         c.read_file(open(config_filepath, 'r'))
-        d = dict(c[section])
+        print(type(section), section)
+        try:
+            d = c[section]
+        except KeyError:
+            d = {}
         if postproc:
             d = dict(postproc(d))
     else:
@@ -561,6 +569,7 @@ def read_and_resolve_setup_configs(
 argh_kwargs = {
     'namespace': 'pack',
     'functions': [
+        generate_and_publish_docs,
         current_configs,
         increment_configs_version,
         current_configs_version,

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.14 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.20 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -66,6 +66,7 @@
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Generator</span>
 <span class="kn">from</span> <span class="nn">configparser</span> <span class="kn">import</span> <span class="n">ConfigParser</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
 <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s1">&#39;setup.cfg&#39;</span>
@@ -76,6 +77,33 @@
                 <span class="s1">&#39;zip_safe&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 
 <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+<span class="n">DOCSRC</span> <span class="o">=</span> <span class="s1">&#39;docsrc&#39;</span>
+<span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="s1">&#39;github&#39;</span>
+
+
+<div class="viewcode-block" id="git"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.git">[docs]</a><span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Launch git commands.</span>
+
+<span class="sd">    :param command: git command (e.g. &#39;status&#39;, &#39;branch&#39;, &#39;commit -m &quot;blah&quot;&#39;, &#39;push&#39;, etc.)</span>
+<span class="sd">    :param work_tree: The work_tree directory (i.e. where the project is)</span>
+<span class="sd">    :param git_dir: The .git directory (usually, and by default, will be taken to be &quot;{work_tree}/.git/&quot;</span>
+<span class="sd">    :return: What ever the command line returns (decoded to string)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ add myFile</span>
+<span class="sd">    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m &#39;something&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">work_tree</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">work_tree</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">git_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">git_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_tree</span><span class="p">,</span> <span class="s1">&#39;.git&#39;</span><span class="p">)</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;git --git-dir=&quot;</span><span class="si">{</span><span class="n">git_dir</span><span class="si">}</span><span class="s1">&quot; --work-tree=&quot;</span><span class="si">{</span><span class="n">work_tree</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">r</span></div>
 
 
 <div class="viewcode-block" id="get_name_from_configs"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.get_name_from_configs">[docs]</a><span class="k">def</span> <span class="nf">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">assert_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -87,29 +115,79 @@
     <span class="k">return</span> <span class="n">name</span></div>
 
 
-<span class="k">def</span> <span class="nf">clog</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">clog</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">log_func</span><span class="o">=</span><span class="n">pprint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
-        <span class="n">pprint</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">log_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="n">Path</span> <span class="o">=</span> <span class="nb">str</span>
 
 
 <span class="c1"># TODO: Add a function that adds/commits/pushes the updated setup.cfg</span>
-<div class="viewcode-block" id="go"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.go">[docs]</a><span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="go"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.go">[docs]</a><span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span>
+       <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+       <span class="n">publish_docs_to</span><span class="o">=</span><span class="n">DFLT_PUBLISH_DOCS_TO</span><span class="p">,</span>
+       <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+       <span class="n">skip_git_commit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+       <span class="n">answer_yes_to_all_prompts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+       <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Update version, package and deploy:</span>
 <span class="sd">    Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist</span>
 
 <span class="sd">    :param version: The desired version (if not given, will increment the current version</span>
 <span class="sd">    :param verbose: Whether to print stuff or not</span>
+<span class="sd">    :param skip_git_commit: Whether to skip the git commit and push step</span>
+<span class="sd">    :param answer_yes_to_all_prompts: If you do git commit and push, whether to ask confirmation after showing status</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">increment_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">increment_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="n">update_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">run_setup</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">twine_upload_dist</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">delete_pkg_directories</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span></div>
+    <span class="n">delete_pkg_directories</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">publish_docs_to</span><span class="p">:</span>
+        <span class="n">generate_and_publish_docs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">publish_docs_to</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_git_commit</span><span class="p">:</span>
+        <span class="n">git_commit_and_push</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">answer_yes_to_all_prompts</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">git_commit_and_push</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span>
+                        <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="n">answer_yes_to_all_prompts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">ggit</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="n">clog</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">log_func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
+
+    <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">answer_yes_to_all_prompts</span><span class="p">:</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Should I do a &#39;git add *&#39;? ([Y]/n): &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">answer</span> <span class="ow">and</span> <span class="n">answer</span> <span class="o">!=</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Okay, I&#39;ll stop here.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;add *&#39;</span><span class="p">)</span>
+
+    <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>  <span class="c1"># show status again</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">answer_yes_to_all_prompts</span><span class="p">:</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Should I commit -m &quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&quot; and push? ([Y]/n)&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">answer</span> <span class="ow">and</span> <span class="n">answer</span> <span class="o">!=</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Okay, I&#39;ll stop here.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="n">ggit</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;commit -m </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ggit</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;push&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">generate_and_publish_docs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">publish_docs_to</span><span class="o">=</span><span class="s1">&#39;github&#39;</span><span class="p">):</span>
+    <span class="c1"># TODO: Figure out epythet and wads relationship -- right now, there&#39;s a reflexive dependency</span>
+    <span class="kn">from</span> <span class="nn">epythet.docs_gen.autogen</span> <span class="kn">import</span> <span class="n">make_autodocs</span>
+    <span class="kn">from</span> <span class="nn">epythet.docs_gen.call_make</span> <span class="kn">import</span> <span class="n">make</span>
+    <span class="n">make_autodocs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">publish_docs_to</span><span class="p">:</span>
+        <span class="n">make</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">publish_docs_to</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">delete_pkg_directories</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -199,7 +277,8 @@
     <span class="n">version</span> <span class="o">=</span> <span class="n">_get_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
     <span class="n">configs</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
-    <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
+    <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">version</span></div>
 
 
 <div class="viewcode-block" id="run_setup"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.run_setup">[docs]</a><span class="k">def</span> <span class="nf">run_setup</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
@@ -291,7 +370,11 @@
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">):</span>
         <span class="n">c</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">))</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">section</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">section</span><span class="p">),</span> <span class="n">section</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">postproc</span><span class="p">:</span>
             <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">postproc</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -521,6 +604,7 @@
 <span class="n">argh_kwargs</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;namespace&#39;</span><span class="p">:</span> <span class="s1">&#39;pack&#39;</span><span class="p">,</span>
     <span class="s1">&#39;functions&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">generate_and_publish_docs</span><span class="p">,</span>
         <span class="n">current_configs</span><span class="p">,</span>
         <span class="n">increment_configs_version</span><span class="p">,</span>
         <span class="n">current_configs_version</span><span class="p">,</span>
@@ -531,7 +615,8 @@
         <span class="n">get_name_from_configs</span><span class="p">,</span>
         <span class="n">run_setup</span><span class="p">,</span>
         <span class="n">current_pypi_version</span><span class="p">,</span>
-        <span class="n">validate_pkg_dir</span>
+        <span class="n">validate_pkg_dir</span><span class="p">,</span>
+        <span class="n">git_commit_and_push</span>
     <span class="p">],</span>
     <span class="s1">&#39;namespace_kwargs&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Package Configurations&#39;</span><span class="p">,</span>

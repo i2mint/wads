@@ -170,7 +170,7 @@ def populate_pkg_dir(pkg_dir,
     if not skip_docsrc_gen:
         # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
         from epythet.docs_gen.setup_docsrc import make_docsrc
-        make_docsrc(pkg_dir)
+        make_docsrc(pkg_dir, verbose)
 
     return name
 

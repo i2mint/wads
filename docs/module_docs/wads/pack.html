@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.14 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.20 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -76,8 +76,26 @@
 </dd></dl>
 
 <dl class="py function">
+<dt id="wads.pack.git">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">git</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span><span class="o">=</span><span class="default_value">'status'</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.git" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch git commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>command</strong> – git command (e.g. ‘status’, ‘branch’, ‘commit -m “blah”’, ‘push’, etc.)</p></li>
+<li><p><strong>work_tree</strong> – The work_tree directory (i.e. where the project is)</p></li>
+<li><p><strong>git_dir</strong> – The .git directory (usually, and by default, will be taken to be “{work_tree}/.git/”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>What ever the command line returns (decoded to string)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="wads.pack.go">
-<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">go</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.go" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">go</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">publish_docs_to</span><span class="o">=</span><span class="default_value">'github'</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">skip_git_commit</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">answer_yes_to_all_prompts</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.go" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update version, package and deploy:
 Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist</p>
 <dl class="field-list simple">
@@ -85,6 +103,8 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>version</strong> – The desired version (if not given, will increment the current version</p></li>
 <li><p><strong>verbose</strong> – Whether to print stuff or not</p></li>
+<li><p><strong>skip_git_commit</strong> – Whether to skip the git commit and push step</p></li>
+<li><p><strong>answer_yes_to_all_prompts</strong> – If you do git commit and push, whether to ask confirmation after showing status</p></li>
 </ul>
 </dd>
 </dl>
