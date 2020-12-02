@@ -44,6 +44,7 @@ def populate_pkg_dir(pkg_dir,
                      verbose: bool = populate_dflts['verbose'],
                      overwrite: List = (),
                      defaults_from: Optional[str] = None,
+                     skip_docsrc_gen=False,
                      **configs):
     """Populate project directory root with useful packaging files, if they're missing.
 
@@ -128,6 +129,7 @@ def populate_pkg_dir(pkg_dir,
 
     assert configs.get('name', name) == name, \
         f"There's a name conflict. pkg_dir tells me the name is {name}, but configs tell me its {configs.get('name')}"
+    configs['display_name'] = configs.get('display_name', configs['name'])
 
     def copy_from_resource(resource_name):
         _clog(f'... copying {resource_name} from {root_dir} to {pkg_dir}')
@@ -164,6 +166,11 @@ def populate_pkg_dir(pkg_dir,
         if include_pip_install_instruction_in_readme:
             readme_text += f'\n\nTo install:\t```pip install {name}```\n'
         save_txt_to_pkg('README.md', readme_text)
+
+    if not skip_docsrc_gen:
+        # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
+        from epythet.docs_gen.setup_docsrc import make_docsrc
+        make_docsrc(pkg_dir)
 
     return name
 

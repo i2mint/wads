@@ -42,6 +42,7 @@ DFLT_OPTIONS = {'packages': 'find:',
                 'zip_safe': False}
 
 pjoin = lambda *p: os.path.join(*p)
+DOCSRC = 'docsrc'
 
 
 def git(command='status', work_tree='.', git_dir=None):
@@ -139,6 +140,15 @@ def git_commit_and_push(pkg_dir,
             return
     ggit(f'commit -m {version}')
     ggit(f'push')
+
+
+def generate_and_publish_docs(pkg_dir, publish_to='github'):
+    # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
+    from epythet.docs_gen.autogen import make_autodocs
+    from epythet.docs_gen.call_make import make
+    make_autodocs(pkg_dir)
+    if publish_to:
+        make(publish_to)
 
 
 def delete_pkg_directories(pkg_dir: Path, verbose=True):
