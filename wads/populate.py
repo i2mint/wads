@@ -40,6 +40,8 @@ def populate_pkg_dir(pkg_dir,
                      description_file: str = populate_dflts['description_file'],
                      keywords: Optional[List] = populate_dflts['keywords'],
                      install_requires: Optional[List] = populate_dflts['install_requires'],
+                     long_description=populate_dflts['long_description_content_type'],
+                     long_description_content_type=populate_dflts['long_description_content_type'],
                      include_pip_install_instruction_in_readme=True,
                      verbose: bool = populate_dflts['verbose'],
                      overwrite: List = (),
@@ -65,6 +67,8 @@ def populate_pkg_dir(pkg_dir,
     :param description_file:
     :param keywords:
     :param install_requires:
+    :param long_description:
+    :param long_description_content_type:
     :param verbose:
     :param default_from: Name of field to look up in wads_configs to get defaults from,
         or 'user_input' to get it from user input.
