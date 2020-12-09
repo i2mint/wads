@@ -89,21 +89,22 @@ jobs:
       - name: Generate Documentation
         run: |
           $SCRIPTS_DIR/generate_documentation.py
+          ls $GITHUB_WORKSPACE/
 
       - name: Package
         run: python setup.py sdist
 
       - name: Publish
         run: |
-          twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
-          epythet docs_gen make $PROJECT_NAME github
+#          twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
+          epythet docs_gen make . github
 
-      - name: Push Changes
-        run: |
-          git commit -a -m "**CI** Formatted code + Updated version number and documentation. [skip ci]"
-          git push
+      # - name: Push Changes
+      #   run: |
+      #     git commit -a -m "**CI** Formatted code + Updated version number and documentation. [skip ci]"
+      #     git push
 
-      - name: Tag Repository
-        run: |
-          git tag $VERSION
-          git push origin $VERSION
+      # - name: Tag Repository
+      #   run: |
+      #     git tag $VERSION
+      #     git push origin $VERSION
