@@ -95,9 +95,9 @@ jobs:
         run: python setup.py sdist
 
       - name: Publish
-        run: |
-#          twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
-          epythet docs_gen make . github
+        run: epythet docs_gen make . github
+          # twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
+          # epythet docs_gen make . github
 
       # - name: Push Changes
       #   run: |
