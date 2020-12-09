@@ -9,8 +9,12 @@
 
 
 # TODO: Make it work with regular expressions, to be more flexible
-def replace_relative_links_to_absolute(s: str,
-                                       root_url: str,
-                                       str_to_match_and_add_root_url_before: str = '\n![png]('):
-    return s.replace(str_to_match_and_add_root_url_before,
-                     root_url + str_to_match_and_add_root_url_before)
+def replace_relative_links_to_absolute(
+    s: str,
+    root_url: str,
+    str_to_match_and_add_root_url_before: str = '\n![png](',
+):
+    return s.replace(
+        str_to_match_and_add_root_url_before,
+        root_url + str_to_match_and_add_root_url_before,
+    )
