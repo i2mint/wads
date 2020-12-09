@@ -20,8 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Initialize Resource Directory
-        run: |
-          echo "RESOURCE_DIR=$(mktemp -d)" >> $GITHUB_ENV
+        run: echo "RESOURCE_DIR=$(mktemp -d)" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -69,8 +68,7 @@ jobs:
           pip -q install semver axblack twine epythet
 
       - name: Initialize Resource Directory
-        run: |
-          echo "RESOURCE_DIR=$(mktemp -d)" >> $GITHUB_ENV
+        run: echo "RESOURCE_DIR=$(mktemp -d)" >> $GITHUB_ENV
 
       - name: Get CI Scripts
         run: |
@@ -93,8 +91,7 @@ jobs:
       #     $SCRIPTS_DIR/generate_documentation.py
 
       - name: Package
-        run: |
-          python setup.py sdist
+        run: python setup.py sdist
 
       - name: Publish
         run: |
