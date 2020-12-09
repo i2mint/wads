@@ -30,16 +30,17 @@ try:
     wads_configs = json.load(open(wads_configs_file))
 except FileNotFoundError:
     wads_configs = {
-        "populate_dflts": {
-            "description": "There's a bit of an air of mystery around this project...",
-            "root_url": None,
-            "author": None,
-            "license": "mit",
-            "description_file": "README.md",
-            "keywords": None,
-            "install_requires": None,
-            "verbose": None
-        }}
+        'populate_dflts': {
+            'description': "There's a bit of an air of mystery around this project...",
+            'root_url': None,
+            'author': None,
+            'license': 'mit',
+            'description_file': 'README.md',
+            'keywords': None,
+            'install_requires': None,
+            'verbose': None,
+        }
+    }
 
 pkg_path_names = ('.gitignore', 'setup.py')
 pkg_paths = {pkg_join(name) for name in pkg_path_names}
@@ -51,6 +52,7 @@ def main():
     import argh  # pip install argh
 
     from wads.pack import argh_kwargs as pack_kw
+
     # from wads.docs_gen import argh_kwargs as docs_gen_kw
 
     parser = argh.ArghParser()
@@ -59,5 +61,5 @@ def main():
     parser.dispatch()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

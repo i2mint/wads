@@ -37,9 +37,11 @@ import os
 CONFIG_FILE_NAME = 'setup.cfg'
 METADATA_SECTION = 'metadata'
 OPTIONS_SECTION = 'options'
-DFLT_OPTIONS = {'packages': 'find:',
-                'include_package_data': True,
-                'zip_safe': False}
+DFLT_OPTIONS = {
+    'packages': 'find:',
+    'include_package_data': True,
+    'zip_safe': False,
+}
 
 pjoin = lambda *p: os.path.join(*p)
 DOCSRC = 'docsrc'
@@ -76,7 +78,7 @@ def get_name_from_configs(pkg_dir, assert_exists=True):
     configs = read_configs(pkg_dir=pkg_dir)
     name = configs.get('name', None)
     if assert_exists:
-        assert name is not None, "No name was found in configs"
+        assert name is not None, 'No name was found in configs'
     return name
 
 
@@ -89,13 +91,14 @@ Path = str
 
 
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
-def go(pkg_dir,
-       version=None,
-       publish_docs_to=DFLT_PUBLISH_DOCS_TO,
-       verbose: bool = True,
-       skip_git_commit: bool = False,
-       answer_yes_to_all_prompts: bool = False
-       ):
+def go(
+    pkg_dir,
+    version=None,
+    publish_docs_to=DFLT_PUBLISH_DOCS_TO,
+    verbose: bool = True,
+    skip_git_commit: bool = False,
+    answer_yes_to_all_prompts: bool = False,
+):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
 
@@ -115,13 +118,17 @@ def go(pkg_dir,
     if publish_docs_to:
         generate_and_publish_docs(pkg_dir, publish_docs_to)
     if not skip_git_commit:
-        git_commit_and_push(pkg_dir, version, verbose, answer_yes_to_all_prompts)
+        git_commit_and_push(
+            pkg_dir, version, verbose, answer_yes_to_all_prompts
+        )
 
 
-def git_commit_and_push(pkg_dir,
-                        version=None,
-                        verbose: bool = True,
-                        answer_yes_to_all_prompts: bool = False):
+def git_commit_and_push(
+    pkg_dir,
+    version=None,
+    verbose: bool = True,
+    answer_yes_to_all_prompts: bool = False,
+):
     def ggit(command):
         r = git(command, work_tree=pkg_dir)
         clog(verbose, r, log_func=print)
@@ -150,6 +157,7 @@ def generate_and_publish_docs(pkg_dir, publish_docs_to='github'):
     # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
     from epythet.docs_gen.autogen import make_autodocs
     from epythet.docs_gen.call_make import make
+
     make_autodocs(pkg_dir)
     if publish_docs_to:
         make(pkg_dir, publish_docs_to)
@@ -157,13 +165,14 @@ def generate_and_publish_docs(pkg_dir, publish_docs_to='github'):
 
 def delete_pkg_directories(pkg_dir: Path, verbose=True):
     from shutil import rmtree
+
     pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
-    names_to_delete = ['dist', 'build', f"{pkg_dirname}.egg-info"]
+    names_to_delete = ['dist', 'build', f'{pkg_dirname}.egg-info']
     for name_to_delete in names_to_delete:
         delete_dirpath = os.path.join(pkg_dir, name_to_delete)
         if os.path.isdir(delete_dirpath):
             if verbose:
-                print(f"Deleting folder: {delete_dirpath}")
+                print(f'Deleting folder: {delete_dirpath}')
             rmtree(delete_dirpath)
 
 
@@ -189,10 +198,13 @@ def validate_pkg_dir(pkg_dir):
     """Asserts that the pkg_dir is actually one (has a pkg_name/__init__.py file)"""
     pkg_dir, pkg_dirname = _get_pkg_dir_and_name(pkg_dir)
     assert os.path.isdir(pkg_dir), f"Directory {pkg_dir} wasn't found"
-    assert pkg_dirname in os.listdir(pkg_dir), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_dirname}"
-    assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_dirname)), \
-        f"pkg_dir={pkg_dir} contains a dir named {pkg_dirname}, " \
+    assert pkg_dirname in os.listdir(
+        pkg_dir
+    ), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_dirname}"
+    assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_dirname)), (
+        f'pkg_dir={pkg_dir} contains a dir named {pkg_dirname}, '
         f"but that dir isn't a package (does not have a __init__.py"
+    )
 
     return pkg_dir, pkg_dirname
 
@@ -213,8 +225,10 @@ def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
     If version is not given, will ask pypi (via http request) what the current version is, and increment that.
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
-    configs = read_and_resolve_setup_configs(pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version)
-    pprint("\n{configs}\n")
+    configs = read_and_resolve_setup_configs(
+        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version
+    )
+    pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
     write_configs(pkg_dir=pkg_dir, configs=configs)
 
@@ -225,21 +239,22 @@ def set_version(pkg_dir, version):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir)
-    assert isinstance(version, str), "version should be a string"
+    assert isinstance(version, str), 'version should be a string'
     configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
 
 
 def increment_configs_version(
-        pkg_dir,
-        version=None,
+    pkg_dir, version=None,
 ):
     """Update setup.cfg (at this point, just updates the version).
     If version is not given, will ask pypi (via http request) what the current version is, and increment that.
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir=pkg_dir)
-    version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
+    version = _get_version(
+        pkg_dir, version=version, configs=configs, new_deploy=False
+    )
     version = increment_version(version)
     configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
@@ -248,18 +263,24 @@ def increment_configs_version(
 
 def run_setup(pkg_dir):
     """Run ``python setup.py sdist bdist_wheel``"""
-    print('--------------------------- setup_output ---------------------------')
+    print(
+        '--------------------------- setup_output ---------------------------'
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
-    setup_output = subprocess.run(f'{sys.executable} setup.py sdist bdist_wheel'.split(' '))
+    setup_output = subprocess.run(
+        f'{sys.executable} setup.py sdist bdist_wheel'.split(' ')
+    )
     os.chdir(original_dir)
     # print(f"{setup_output}\n")
 
 
 def twine_upload_dist(pkg_dir):
     """Publish to pypi. Runs ``python -m twine upload dist/*``"""
-    print('--------------------------- upload_output ---------------------------')
+    print(
+        '--------------------------- upload_output ---------------------------'
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
@@ -273,7 +294,9 @@ def twine_upload_dist(pkg_dir):
 
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
-def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
+def postprocess_ini_section_items(
+    items: Union[Mapping, Iterable]
+) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
     >>> section_from_ini = {
@@ -292,7 +315,9 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
         if v.startswith('\n'):
             v = splitter_re.split(v[1:])
             v = [vv.strip() for vv in v if vv.strip()]
-            v = [vv for vv in v if not vv.startswith('#')]  # remove commented lines
+            v = [
+                vv for vv in v if not vv.startswith('#')
+            ]  # remove commented lines
         yield k, v
 
 
@@ -324,12 +349,13 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-        pkg_dir: Path,
-        postproc=postprocess_ini_section_items,
-        section=METADATA_SECTION,
+    pkg_dir: Path,
+    postproc=postprocess_ini_section_items,
+    section=METADATA_SECTION,
 ):
-    assert isinstance(pkg_dir, Path), \
-        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
+    assert isinstance(
+        pkg_dir, Path
+    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
@@ -348,13 +374,14 @@ def read_configs(
 
 
 def write_configs(
-        pkg_dir: Path,
-        configs,
-        preproc=preprocess_ini_section_items,
-        dflt_options=DFLT_OPTIONS
+    pkg_dir: Path,
+    configs,
+    preproc=preprocess_ini_section_items,
+    dflt_options=DFLT_OPTIONS,
 ):
-    assert isinstance(pkg_dir, Path), \
-        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
+    assert isinstance(
+        pkg_dir, Path
+    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
@@ -362,15 +389,27 @@ def write_configs(
         c.read_file(open(config_filepath, 'r'))
 
     metadata_dict = dict(preproc(configs))
-    options = dict(dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION))
+    options = dict(
+        dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION)
+    )
 
     # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities.
-    for k in ['install_requires', 'install-requires', 'packages', 'zip_safe', 'include_package_data']:
+    for k in [
+        'install_requires',
+        'install-requires',
+        'packages',
+        'zip_safe',
+        'include_package_data',
+    ]:
         if k in metadata_dict:
             if k not in options:
-                options[k] = metadata_dict.pop(k)  # get it out of metadata_dict and into options
+                options[k] = metadata_dict.pop(
+                    k
+                )  # get it out of metadata_dict and into options
             else:
-                metadata_dict.pop(k)  # if it's both in metadata and in options, just get it out of metadata
+                metadata_dict.pop(
+                    k
+                )  # if it's both in metadata and in options, just get it out of metadata
 
     c[METADATA_SECTION] = metadata_dict
     c[OPTIONS_SECTION] = options
@@ -379,6 +418,7 @@ def write_configs(
 
 
 # dflt_formatter = Formatter()
+
 
 def increment_version(version_str):
     version_nums = list(map(int, version_str.split('.')))
@@ -394,42 +434,48 @@ except ModuleNotFoundError:
     requests_is_installed = False
 
 
-def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
+def http_get_json(
+    url, use_requests=requests_is_installed
+) -> Union[dict, None]:
     """Make ah http request to url and get json, and return as python dict
     """
 
     if use_requests:
         import requests
+
         r = requests.get(url)
         if r.status_code == 200:
             return r.json()
         else:
-            raise ValueError(f"response code was {r.status_code}")
+            raise ValueError(f'response code was {r.status_code}')
     else:
         import urllib.request
         from urllib.error import HTTPError
+
         req = urllib.request.Request(url)
         try:
             r = urllib.request.urlopen(req)
             if r.code == 200:
                 return json.loads(r.read())
             else:
-                raise ValueError(f"response code was {r.code}")
+                raise ValueError(f'response code was {r.code}')
         except HTTPError:
             return None  # to indicate (hopefully) that name doesn't exist
         except Exception:
             raise
 
 
-DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = 'https://pypi.python.org/pypi/{package}/json'
+DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = (
+    'https://pypi.python.org/pypi/{package}/json'
+)
 
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
 def current_pypi_version(
-        pkg_dir: Path,
-        name: Union[None, str] = None,
-        url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
-        use_requests=requests_is_installed
+    pkg_dir: Path,
+    name: Union[None, str] = None,
+    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
+    use_requests=requests_is_installed,
 ) -> Union[str, None]:
     """
     Return version of package on pypi.python.org using json.
@@ -445,57 +491,70 @@ def current_pypi_version(
     """
     pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
     name = name or get_name_from_configs(pkg_dir)
-    assert pkg_dirname == name, f"pkg_dirname ({pkg_dirname}) and name ({name}) were not the same"
+    assert (
+        pkg_dirname == name
+    ), f'pkg_dirname ({pkg_dirname}) and name ({name}) were not the same'
     url = url_template.format(package=name)
     t = http_get_json(url, use_requests=use_requests)
     releases = t.get('releases', [])
     if releases:
-        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[-1]
+        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[
+            -1
+        ]
 
 
 def next_version_for_package(
-        pkg_dir: Path,
-        name: Union[None, str] = None,
-        url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
-        version_if_current_version_none='0.0.1',
-        use_requests=requests_is_installed
+    pkg_dir: Path,
+    name: Union[None, str] = None,
+    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
+    version_if_current_version_none='0.0.1',
+    use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
-    current_version = current_pypi_version(name, url_template, use_requests=use_requests)
+    current_version = current_pypi_version(
+        name, url_template, use_requests=use_requests
+    )
     if current_version is not None:
         return increment_version(current_version)
     else:
         return version_if_current_version_none
 
 
-def _get_version(pkg_dir: Path,
-                 version,
-                 configs,
-                 name: Union[None, str] = None,
-                 new_deploy=False):
+def _get_version(
+    pkg_dir: Path,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
+):
     version = version or configs.get('version', None)
     if version is None:
         try:
             if new_deploy:
-                version = next_version_for_package(pkg_dir, name)  # when you want to make a new package
+                version = next_version_for_package(
+                    pkg_dir, name
+                )  # when you want to make a new package
             else:
-                version = current_pypi_version(pkg_dir, name)  # when you want to make a new package
+                version = current_pypi_version(
+                    pkg_dir, name
+                )  # when you want to make a new package
         except Exception as e:
             print(
-                f"Got an error trying to get the new version of {name} so will try to get the version from setup.cfg...")
-            print(f"{e}")
+                f'Got an error trying to get the new version of {name} so will try to get the version from setup.cfg...'
+            )
+            print(f'{e}')
             version = configs.get('version', None)
             if version is None:
-                raise ValueError(f"Couldn't fetch the next version from PyPi (no API token?), "
-                                 f"nor did I find a version in setup.cfg (metadata section).")
+                raise ValueError(
+                    f"Couldn't fetch the next version from PyPi (no API token?), "
+                    f'nor did I find a version in setup.cfg (metadata section).'
+                )
     return version
 
 
 def read_and_resolve_setup_configs(
-        pkg_dir: Path,
-        new_deploy=False,
-        version=None,
-        assert_names=True):
+    pkg_dir: Path, new_deploy=False, version=None, assert_names=True
+):
     """make setup params and call setup
 
     :param pkg_dir: Directory where the pkg is (which is also where the setup.cfg is)
@@ -513,21 +572,29 @@ def read_and_resolve_setup_configs(
     configs = read_configs(pkg_dir)
 
     # parse out name and root_url
-    assert 'root_url' in configs or 'url' in configs, "configs didn't have a root_url or url"
+    assert (
+        'root_url' in configs or 'url' in configs
+    ), "configs didn't have a root_url or url"
 
     name = configs['name'] or pkg_dirname
     if assert_names:
-        assert name == pkg_dirname, f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
+        assert (
+            name == pkg_dirname
+        ), f'config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!'
 
     if 'root_url' in configs:
         root_url = configs['root_url']
-        if root_url.endswith('/'):  # yes, it's a url so it's always forward slash, not the systems' slash os.sep
+        if root_url.endswith(
+            '/'
+        ):  # yes, it's a url so it's always forward slash, not the systems' slash os.sep
             root_url = root_url[:-1]
-        url = f"{root_url}/{name}"
+        url = f'{root_url}/{name}'
     elif 'url' in configs:
         url = configs['url']
     else:
-        raise ValueError(f"configs didn't have a root_url or url. It should have at least one of these!")
+        raise ValueError(
+            f"configs didn't have a root_url or url. It should have at least one of these!"
+        )
 
     # Note: if version is not in config, version will be None,
     #  resulting in bumping the version or making it be 0.0.1 if the package is not found (i.e. first deploy)
@@ -547,10 +614,10 @@ def read_and_resolve_setup_configs(
             with open('README.md') as f:
                 return f.read()
         except:
-            return ""
+            return ''
 
     dflt_kwargs = dict(
-        name=f"{name}",
+        name=f'{name}',
         version=f'{version}',
         url=url,
         packages=find_packages(),
@@ -558,7 +625,7 @@ def read_and_resolve_setup_configs(
         platforms='any',
         # long_description=text_of_readme_md_file(),
         # long_description_content_type="text/markdown",
-        description_file='README.md'
+        description_file='README.md',
     )
 
     configs = dict(dflt_kwargs, **setup_kwargs)
@@ -581,12 +648,12 @@ argh_kwargs = {
         run_setup,
         current_pypi_version,
         validate_pkg_dir,
-        git_commit_and_push
+        git_commit_and_push,
     ],
     'namespace_kwargs': {
         'title': 'Package Configurations',
-        'description': 'Utils to package and publish.'
-    }
+        'description': 'Utils to package and publish.',
+    },
 }
 
 if __name__ == '__main__':
