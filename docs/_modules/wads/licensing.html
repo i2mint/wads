@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.licensing &#8212; wads 0.0.22 documentation</title>
+    <title>wads.licensing &#8212; wads 0.0.25 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -38,7 +38,9 @@
 
 
 <span class="k">def</span> <span class="nf">license_body</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">search_name_and_spdx_id</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">_license_info</span> <span class="o">=</span> <span class="n">license_info</span><span class="p">(</span><span class="n">license</span><span class="p">,</span> <span class="n">search_name_and_spdx_id</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">)</span>
+    <span class="n">_license_info</span> <span class="o">=</span> <span class="n">license_info</span><span class="p">(</span>
+        <span class="n">license</span><span class="p">,</span> <span class="n">search_name_and_spdx_id</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">_license_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_license_info</span><span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">]</span>
 
@@ -50,7 +52,9 @@
             <span class="k">for</span> <span class="n">ll</span> <span class="ow">in</span> <span class="n">licenses</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">license</span> <span class="ow">in</span> <span class="p">{</span><span class="n">ll</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">ll</span><span class="p">[</span><span class="s1">&#39;spdx_id&#39;</span><span class="p">]}:</span>
                     <span class="k">return</span> <span class="n">ll</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;That&#39;s not a valid license key. Here is a list of valid license keys:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;That&#39;s not a valid license key. Here is a list of valid license keys:&quot;</span>
+        <span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">licenses</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">licenses</span><span class="p">[</span><span class="n">license</span><span class="p">]</span>

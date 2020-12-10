@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.22 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.25 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -36,6 +36,7 @@
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">json</span>
+
 <span class="c1"># from functools import partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">wads</span> <span class="kn">import</span> <span class="n">pkg_path_names</span><span class="p">,</span> <span class="n">root_dir</span><span class="p">,</span> <span class="n">wads_configs</span><span class="p">,</span> <span class="n">wads_configs_file</span>
@@ -48,43 +49,51 @@
 
 <span class="n">populate_dflts</span> <span class="o">=</span> <span class="n">wads_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
     <span class="s1">&#39;populate_dflts&#39;</span><span class="p">,</span>
-    <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s2">&quot;There&#39;s a bit of an air of mystery around this project...&quot;</span><span class="p">,</span>
-     <span class="s1">&#39;root_url&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-     <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-     <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;mit&#39;</span><span class="p">,</span>
-     <span class="s1">&#39;description_file&#39;</span><span class="p">:</span> <span class="s1">&#39;README.md&#39;</span><span class="p">,</span>
-     <span class="s2">&quot;long_description&quot;</span><span class="p">:</span> <span class="s2">&quot;file:README.md&quot;</span><span class="p">,</span>
-     <span class="s2">&quot;long_description_content_type&quot;</span><span class="p">:</span> <span class="s2">&quot;text/markdown&quot;</span><span class="p">,</span>
-     <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-     <span class="s1">&#39;install_requires&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-     <span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s2">&quot;There&#39;s a bit of an air of mystery around this project...&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;root_url&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;mit&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;description_file&#39;</span><span class="p">:</span> <span class="s1">&#39;README.md&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;long_description&#39;</span><span class="p">:</span> <span class="s1">&#39;file:README.md&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;long_description_content_type&#39;</span><span class="p">:</span> <span class="s1">&#39;text/markdown&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;install_requires&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">},</span>
 <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">gen_readme_text</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;There&#39;s a bit of an air of mystery around this project...&quot;</span><span class="p">):</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2"># </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"></span>
-<span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2"></span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">gen_readme_text</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;There&#39;s a bit of an air of mystery around this project...&quot;</span>
+<span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1"># </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"></span>
+<span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">&#39;&#39;&#39;</span>
 
 
 <span class="c1"># TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file</span>
-<div class="viewcode-block" id="populate_pkg_dir"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.populate_pkg_dir">[docs]</a><span class="k">def</span> <span class="nf">populate_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span>
-                     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span>
-                     <span class="n">root_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;root_url&#39;</span><span class="p">],</span>
-                     <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">],</span>
-                     <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">],</span>
-                     <span class="n">description_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;description_file&#39;</span><span class="p">],</span>
-                     <span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">],</span>
-                     <span class="n">install_requires</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;install_requires&#39;</span><span class="p">],</span>
-                     <span class="n">long_description</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;long_description&#39;</span><span class="p">],</span>
-                     <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;long_description_content_type&#39;</span><span class="p">],</span>
-                     <span class="n">include_pip_install_instruction_in_readme</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">],</span>
-                     <span class="n">overwrite</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">(),</span>
-                     <span class="n">defaults_from</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                     <span class="n">skip_docsrc_gen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                     <span class="o">**</span><span class="n">configs</span><span class="p">):</span>
+<div class="viewcode-block" id="populate_pkg_dir"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.populate_pkg_dir">[docs]</a><span class="k">def</span> <span class="nf">populate_pkg_dir</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span>
+    <span class="n">root_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;root_url&#39;</span><span class="p">],</span>
+    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">],</span>
+    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">],</span>
+    <span class="n">description_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;description_file&#39;</span><span class="p">],</span>
+    <span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">],</span>
+    <span class="n">install_requires</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;install_requires&#39;</span><span class="p">],</span>
+    <span class="n">long_description</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;long_description&#39;</span><span class="p">],</span>
+    <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span>
+        <span class="s1">&#39;long_description_content_type&#39;</span>
+    <span class="p">],</span>
+    <span class="n">include_pip_install_instruction_in_readme</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">],</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">defaults_from</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_docsrc_gen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">configs</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Populate project directory root with useful packaging files, if they&#39;re missing.</span>
 
 <span class="sd">    &gt;&gt;&gt; from wads.populate import populate_pkg_dir</span>
@@ -118,13 +127,17 @@
     <span class="k">if</span> <span class="n">defaults_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">defaults_from</span> <span class="o">==</span> <span class="s1">&#39;user_input&#39;</span><span class="p">:</span>
             <span class="n">args_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># ... and then fill with user input</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not immplemented yet&quot;</span><span class="p">)</span>  <span class="c1"># TODO: Implement</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;Not immplemented yet&#39;</span>
+            <span class="p">)</span>  <span class="c1"># TODO: Implement</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">wads_configs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">wads_configs_file</span><span class="p">))</span>
                 <span class="n">args_defaults</span> <span class="o">=</span> <span class="n">wads_configs</span><span class="p">[</span><span class="n">defaults_from</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wads_configs_file</span><span class="si">}</span><span class="s2"> json didn&#39;t have a </span><span class="si">{</span><span class="n">defaults_from</span><span class="si">}</span><span class="s2"> field&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">wads_configs_file</span><span class="si">}</span><span class="s2"> json didn&#39;t have a </span><span class="si">{</span><span class="n">defaults_from</span><span class="si">}</span><span class="s2"> field&quot;</span>
+                <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overwrite</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">overwrite</span> <span class="o">=</span> <span class="p">{</span><span class="n">overwrite</span><span class="p">}</span>
@@ -133,45 +146,54 @@
 
     <span class="n">_clog</span> <span class="o">=</span> <span class="n">mk_conditional_logger</span><span class="p">(</span><span class="n">condition</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
-    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> is not a directory&quot;</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s1"> is not a directory&#39;</span>
     <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
-        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
+        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[</span>
+            <span class="p">:</span><span class="o">-</span><span class="mi">1</span>
+        <span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... making directory </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making directory </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="k">if</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;__init__.py&#39;</span><span class="p">)</span>
-        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... making an empty </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making an empty </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
-            <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
     <span class="c1"># Note: Overkill since we just made those things...</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;You should have a </span><span class="si">{name}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">/__init__.py structure. You don&#39;t.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span>
+        <span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;You should have a </span><span class="si">{name}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">/__init__.py structure. You don&#39;t.&quot;</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">)):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">):</span>
             <span class="k">pass</span>
 
-    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
-                  <span class="n">root_url</span><span class="o">=</span><span class="n">root_url</span><span class="p">,</span>
-                  <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
-                  <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
-                  <span class="n">description_file</span><span class="o">=</span><span class="n">description_file</span><span class="p">,</span>
-                  <span class="n">long_description</span><span class="o">=</span><span class="n">long_description</span><span class="p">,</span>
-                  <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">long_description_content_type</span><span class="p">,</span>
-                  <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
-                  <span class="n">install_requires</span><span class="o">=</span><span class="n">install_requires</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">root_url</span><span class="o">=</span><span class="n">root_url</span><span class="p">,</span>
+        <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
+        <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+        <span class="n">description_file</span><span class="o">=</span><span class="n">description_file</span><span class="p">,</span>
+        <span class="n">long_description</span><span class="o">=</span><span class="n">long_description</span><span class="p">,</span>
+        <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">long_description_content_type</span><span class="p">,</span>
+        <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
+        <span class="n">install_requires</span><span class="o">=</span><span class="n">install_requires</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
     <span class="n">configs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">args_defaults</span><span class="p">)</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;description-file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;description_file&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">name</span><span class="p">,</span> \
-        <span class="sa">f</span><span class="s2">&quot;There&#39;s a name conflict. pkg_dir tells me the name is </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, but configs tell me its </span><span class="si">{</span><span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">name</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;There&#39;s a name conflict. pkg_dir tells me the name is </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, but configs tell me its </span><span class="si">{</span><span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">configs</span><span class="p">[</span><span class="s1">&#39;display_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;display_name&#39;</span><span class="p">,</span> <span class="n">configs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">copy_from_resource</span><span class="p">(</span><span class="n">resource_name</span><span class="p">):</span>
@@ -179,7 +201,9 @@
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">wads_join</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">should_update</span><span class="p">(</span><span class="n">resource_name</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">resource_name</span> <span class="ow">in</span> <span class="n">overwrite</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">resource_name</span> <span class="ow">in</span> <span class="n">overwrite</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span>
+        <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">resource_name</span> <span class="ow">in</span> <span class="n">pkg_path_names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">resource_name</span><span class="p">):</span>
@@ -187,13 +211,14 @@
 
     <span class="k">def</span> <span class="nf">save_txt_to_pkg</span><span class="p">(</span><span class="n">resource_name</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
         <span class="n">target_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">target_path</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2"> exists already&quot;</span>
-        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... making a </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">target_path</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s1"> exists already&#39;</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making a </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
             <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">wads.pack</span> <span class="kn">import</span> <span class="n">write_configs</span>
+
         <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... making a &#39;setup.cfg&#39;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;pkg-dir&#39;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">configs</span><span class="p">[</span><span class="s1">&#39;pkg-dir&#39;</span><span class="p">]</span>
@@ -201,6 +226,7 @@
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s1">&#39;LICENSE&#39;</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">wads.licensing</span> <span class="kn">import</span> <span class="n">license_body</span>
+
         <span class="n">_license_body</span> <span class="o">=</span> <span class="n">license_body</span><span class="p">(</span><span class="n">configs</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">])</span>
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s1">&#39;LICENSE&#39;</span><span class="p">,</span> <span class="n">_license_body</span><span class="p">)</span>
 
@@ -213,27 +239,33 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_docsrc_gen</span><span class="p">:</span>
         <span class="c1"># TODO: Figure out epythet and wads relationship -- right now, there&#39;s a reflexive dependency</span>
         <span class="kn">from</span> <span class="nn">epythet.docs_gen.setup_docsrc</span> <span class="kn">import</span> <span class="n">make_docsrc</span>
+
         <span class="n">make_docsrc</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">name</span></div>
 
 
-<div class="viewcode-block" id="update_pack_and_setup_py"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py">[docs]</a><span class="k">def</span> <span class="nf">update_pack_and_setup_py</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">,</span>
-                             <span class="n">copy_files</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="s1">&#39;wads/data/MANIFEST.in&#39;</span><span class="p">)</span>
-                             <span class="p">):</span>
+<div class="viewcode-block" id="update_pack_and_setup_py"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py">[docs]</a><span class="k">def</span> <span class="nf">update_pack_and_setup_py</span><span class="p">(</span>
+    <span class="n">target_pkg_dir</span><span class="p">,</span> <span class="n">copy_files</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="s1">&#39;wads/data/MANIFEST.in&#39;</span><span class="p">)</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Just copy over setup.py and pack.py (moving the original to be prefixed by &#39;_&#39;&quot;&quot;&quot;</span>
     <span class="n">copy_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">copy_files</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">target_pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
-        <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">target_pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
+        <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">target_pkg_dir</span><span class="p">[</span>
+            <span class="p">:</span><span class="o">-</span><span class="mi">1</span>
+        <span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">contents</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="p">{</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">contents</span><span class="p">),</span> \
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="p">{</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
+        <span class="n">contents</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">resource_name</span> <span class="ow">in</span> <span class="n">copy_files</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">resource_name</span><span class="p">))</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">wads_join</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span></div>
 
