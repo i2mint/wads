@@ -1,4 +1,4 @@
-from epythet import licenses_json_path
+from wads import licenses_json_path
 import json
 
 
