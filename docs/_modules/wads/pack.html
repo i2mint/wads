@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.26 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.27 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -80,7 +80,7 @@
 
 <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
 <span class="n">DOCSRC</span> <span class="o">=</span> <span class="s1">&#39;docsrc&#39;</span>
-<span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="s1">&#39;github&#39;</span>
+<span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#&#39;github&#39;</span>
 
 
 <div class="viewcode-block" id="git"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.git">[docs]</a><span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -125,7 +125,18 @@
 <span class="n">Path</span> <span class="o">=</span> <span class="nb">str</span>
 
 
+<span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;To implement by VF&#39;</span><span class="p">)</span>
+    <span class="c1"># git pull and if differences, exit with next instructions (like &quot;please resolve merge conflicts...&quot;)</span>
+    <span class="c1"># blackify</span>
+    <span class="c1"># run tests (pytest - -doctest - modules - v)</span>
+    <span class="c1"># push</span>
+
+
 <span class="c1"># TODO: Add a function that adds/commits/pushes the updated setup.cfg</span>
+<span class="c1"># TODO: Include tests as first step</span>
+<span class="c1"># TODO: blackify</span>
+<span class="c1"># TODO: Git pull and make sure no conflicts before moving on...</span>
 <div class="viewcode-block" id="go"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.go">[docs]</a><span class="k">def</span> <span class="nf">go</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">,</span>
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -679,6 +690,7 @@
         <span class="n">read_and_resolve_setup_configs</span><span class="p">,</span>
         <span class="n">update_setup_cfg</span><span class="p">,</span>
         <span class="n">go</span><span class="p">,</span>
+        <span class="n">push</span><span class="p">,</span>
         <span class="n">get_name_from_configs</span><span class="p">,</span>
         <span class="n">run_setup</span><span class="p">,</span>
         <span class="n">current_pypi_version</span><span class="p">,</span>

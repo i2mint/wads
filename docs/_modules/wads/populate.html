@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.26 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.27 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -42,6 +42,8 @@
 <span class="kn">from</span> <span class="nn">wads</span> <span class="kn">import</span> <span class="n">pkg_path_names</span><span class="p">,</span> <span class="n">root_dir</span><span class="p">,</span> <span class="n">wads_configs</span><span class="p">,</span> <span class="n">wads_configs_file</span>
 <span class="kn">from</span> <span class="nn">wads</span> <span class="kn">import</span> <span class="n">pkg_join</span> <span class="k">as</span> <span class="n">wads_join</span>
 <span class="kn">from</span> <span class="nn">wads.util</span> <span class="kn">import</span> <span class="n">mk_conditional_logger</span>
+<span class="kn">from</span> <span class="nn">wads.pack</span> <span class="kn">import</span> <span class="n">write_configs</span>
+<span class="kn">from</span> <span class="nn">wads.licensing</span> <span class="kn">import</span> <span class="n">license_body</span>
 
 <span class="c1"># from wads.pack_util import write_configs</span>
 
@@ -122,10 +124,10 @@
 <span class="sd">    :return:</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Test this defaults_from thing!</span>
+
     <span class="n">args_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">defaults_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">defaults_from</span> <span class="o">==</span> <span class="s1">&#39;user_input&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">defaults_from</span> <span class="o">==</span> <span class="s1">&#39;user_input&#39;</span><span class="p">:</span>  <span class="c1"># TODO: Implement!</span>
             <span class="n">args_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># ... and then fill with user input</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s1">&#39;Not immplemented yet&#39;</span>
@@ -188,7 +190,9 @@
         <span class="n">install_requires</span><span class="o">=</span><span class="n">install_requires</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
-    <span class="n">configs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">args_defaults</span><span class="p">)</span>
+    <span class="c1"># configs = dict(name=name, **configs, **kwargs, **args_defaults)</span>
+    <span class="n">configs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">args_defaults</span><span class="p">,</span> <span class="o">**</span><span class="n">configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;description-file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;description_file&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="p">(</span>
@@ -217,16 +221,12 @@
             <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">wads.pack</span> <span class="kn">import</span> <span class="n">write_configs</span>
-
         <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... making a &#39;setup.cfg&#39;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;pkg-dir&#39;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">configs</span><span class="p">[</span><span class="s1">&#39;pkg-dir&#39;</span><span class="p">]</span>
         <span class="n">write_configs</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="n">configs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s1">&#39;LICENSE&#39;</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">wads.licensing</span> <span class="kn">import</span> <span class="n">license_body</span>
-
         <span class="n">_license_body</span> <span class="o">=</span> <span class="n">license_body</span><span class="p">(</span><span class="n">configs</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">])</span>
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s1">&#39;LICENSE&#39;</span><span class="p">,</span> <span class="n">_license_body</span><span class="p">)</span>
 

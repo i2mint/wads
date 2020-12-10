@@ -91,11 +91,12 @@ Path = str
 
 
 def push(pkg_dir):
-    raise NotImplementedError("To implement by VF")
+    raise NotImplementedError('To implement by VF')
     # git pull and if differences, exit with next instructions (like "please resolve merge conflicts...")
     # blackify
     # run tests (pytest - -doctest - modules - v)
     # push
+
 
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
 # TODO: Include tests as first step
