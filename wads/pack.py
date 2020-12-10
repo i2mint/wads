@@ -45,7 +45,7 @@ DFLT_OPTIONS = {
 
 pjoin = lambda *p: os.path.join(*p)
 DOCSRC = 'docsrc'
-DFLT_PUBLISH_DOCS_TO = 'github'
+DFLT_PUBLISH_DOCS_TO = None  #'github'
 
 
 def git(command='status', work_tree='.', git_dir=None):
@@ -90,7 +90,17 @@ def clog(condition, *args, log_func=pprint, **kwargs):
 Path = str
 
 
+def push(pkg_dir):
+    raise NotImplementedError("To implement by VF")
+    # git pull and if differences, exit with next instructions (like "please resolve merge conflicts...")
+    # blackify
+    # run tests (pytest - -doctest - modules - v)
+    # push
+
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
+# TODO: Include tests as first step
+# TODO: blackify
+# TODO: Git pull and make sure no conflicts before moving on...
 def go(
     pkg_dir,
     version=None,
@@ -644,6 +654,7 @@ argh_kwargs = {
         read_and_resolve_setup_configs,
         update_setup_cfg,
         go,
+        push,
         get_name_from_configs,
         run_setup,
         current_pypi_version,
