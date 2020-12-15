@@ -90,7 +90,13 @@ def clog(condition, *args, log_func=pprint, **kwargs):
 Path = str
 
 
-def check_in_changes(commit_message: str, auto_choose_default_answers: bool):
+def check_in_changes(
+    commit_message: str,
+    auto_choose_default_answers=False,
+    bypass_docstring_validation=False,
+    bypass_tests=False,
+    bypass_code_formatting=False,
+):
     """[summary]
     """
 
@@ -154,7 +160,8 @@ def check_in_changes(commit_message: str, auto_choose_default_answers: bool):
     def commit_and_push_local_changes():
         result = git('status')
         if 'Changes not staged for commit' in git('status'):
-            print(result)
+            if not auto_choose_default_answers:
+                print(result)
             if confirm(
                 'Do you want to stage all your pending changes', default=True
             ):
@@ -174,9 +181,12 @@ def check_in_changes(commit_message: str, auto_choose_default_answers: bool):
     try:
         check_if_there_are_changes()
         pull_remote_changes()
-        validate_docstrings()
-        run_tests()
-        format_code()
+        if not bypass_docstring_validation:
+            validate_docstrings()
+        if not bypass_tests:
+            run_tests()
+        if not bypass_code_formatting:
+            format_code()
         commit_and_push_local_changes()
 
     except subprocess.CalledProcessError:
