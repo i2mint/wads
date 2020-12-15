@@ -237,7 +237,11 @@ def update_pack_and_setup_py(
         shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
 
 
-if __name__ == '__main__':
+def main():
     import argh  # TODO: replace by argparse, or require argh in wads?
 
     argh.dispatch_command(populate_pkg_dir)
+
+
+if __name__ == '__main__':
+    main()

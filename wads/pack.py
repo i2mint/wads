@@ -33,6 +33,9 @@ from typing import Union, Mapping, Iterable, Generator
 from configparser import ConfigParser
 from functools import partial
 import os
+import argh
+import pytest
+import pylint.lint
 
 CONFIG_FILE_NAME = 'setup.cfg'
 METADATA_SECTION = 'metadata'
@@ -92,37 +95,66 @@ Path = str
 
 def check_in_changes(
     commit_message: str,
-    auto_choose_default_answers=False,
+    work_tree='.',
+    git_dir=None,
+    auto_choose_default_action=False,
     bypass_docstring_validation=False,
     bypass_tests=False,
     bypass_code_formatting=False,
+    verbose=False,
 ):
-    """[summary]
+    """Validate, normalize, stage, commit and push your local changes to a remote repository.
+
+    :param commit_message: Your commit message
+    :type commit_message: str
+    :param work_tree: The relative or absolute path of the working directory, defaults to '.'
+    :type work_tree: str, optional
+    :param git_dir: The relative or absolute path of the git directory, defaults to None
+    :type git_dir: str, optional
+    :param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action, defaults to False
+    :type auto_choose_default_action: bool, optional
+    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exist for every module, class and function, defaults to False
+    :type bypass_docstring_validation: bool, optional
+    :param bypass_tests: Set to True if you don't want to run doctests and other tests, defaults to False
+    :type bypass_tests: bool, optional
+    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack, defaults to False
+    :type bypass_code_formatting: bool, optional
+    :param verbose: Set to True if you want to log extra information during the process, defaults to False
+    :type verbose: bool, optional
     """
 
-    import argh
-    import pytest
-    import pylint.lint
-    import sys
+    def ggit(command):
+        r = git(command, work_tree=work_tree, git_dir=git_dir)
+        clog(verbose, r, log_func=print)
+        return r
+
+    def print_step_title(step_title):
+        if verbose:
+            print()
+            print(f'============= {step_title.upper()} =============')
+        else:
+            print(f'-- {step_title}')
 
     def abort():
         print('Aborting')
         sys.exit()
 
     def confirm(action, default):
-        if auto_choose_default_answers:
+        if auto_choose_default_action:
             return default
         return argh.interaction.confirm(action, default)
 
-    def check_if_there_are_changes():
-        if 'nothing to commit, working tree clean' in git('status'):
+    def verify_current_changes():
+        print_step_title('Verify current changes')
+        if 'nothing to commit, working tree clean' in ggit('status'):
             print('No changes to check in.')
             abort()
 
     def pull_remote_changes():
-        git('stash')
-        result = git('pull')
-        git('stash apply')
+        print_step_title('Pull remote changes')
+        ggit('stash')
+        result = ggit('pull')
+        ggit('stash apply')
         if result != 'Already up to date.' and not confirm(
             'Your local repository was not up to date, but it is now. Do you want to continue',
             default=True,
@@ -130,17 +162,40 @@ def check_in_changes(
             abort()
 
     def validate_docstrings():
-        result = pylint.lint.Run(
-            ['wads', '--disable=all', '--enable=C0114,C0115,C0116'],
-            do_exit=False,
-        )
-        if result.linter.stats['global_note'] < 10 and not confirm(
-            'Docstrings are missing. Do you want to push anyway', default=True
-        ):
-            abort()
+        def run_pylint(current_dir):
+            if os.path.exists(os.path.join(current_dir, '__init__.py')):
+                result = pylint.lint.Run(
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
+                    do_exit=False,
+                )
+                if result.linter.stats['global_note'] < 10 and not confirm(
+                    f'Docstrings are missing in directory {current_dir}. Do you want to continue',
+                    default=True,
+                ):
+                    abort()
+            else:
+                for subdir in next(os.walk(current_dir))[1]:
+                    run_pylint(os.path.join(current_dir, subdir))
+
+        print_step_title('Validate docstrings')
+        if not verbose:
+            pylint.lint.reporters.json_reporter.JSONReporter.display_messages = (
+                lambda self, layout: None
+            )
+        run_pylint('.')
 
     def run_tests():
-        result = pytest.main(['--doctest-modules', '-v'])
+        print_step_title('Run tests')
+        args = ['--doctest-modules']
+        if verbose:
+            args.append('-v')
+        else:
+            args.extend(['-q', '--no-summary'])
+        result = pytest.main(args)
         if result == pytest.ExitCode.TESTS_FAILED and not confirm(
             'Tests have failed. Do you want to push anyway', default=False
         ):
@@ -155,31 +210,43 @@ def check_in_changes(
             abort()
 
     def format_code():
-        subprocess.check_output('black --line-length=79 .', shell=True)
+        print_step_title('Format code')
+        subprocess.run(
+            'black --line-length=79 .',
+            shell=True,
+            check=True,
+            capture_output=not verbose,
+        )
 
-    def commit_and_push_local_changes():
-        result = git('status')
-        if 'Changes not staged for commit' in git('status'):
-            if not auto_choose_default_answers:
+    def stage_changes():
+        print_step_title('Stage changes')
+        result = ggit('status')
+        if 'Changes not staged for commit' in result:
+            if not auto_choose_default_action and not verbose:
                 print(result)
             if confirm(
                 'Do you want to stage all your pending changes', default=True
             ):
                 git('add -A')
-        if 'no changes added to commit' in git('status'):
+
+    def commit_changes():
+        print_step_title('Commit changes')
+        if 'no changes added to commit' in ggit('status'):
             print('No changes to check in.')
             abort()
-        git(f'commit --message="{commit_message}"')
+        ggit(f'commit --message="{commit_message}"')
+
+    def push_changes():
+        print_step_title('Push changes')
         if not confirm(
             'Your changes have been commited. Do you want to push',
             default=True,
         ):
             abort()
-        git('push')
-        print('Pushed!')
+        ggit('push')
 
     try:
-        check_if_there_are_changes()
+        verify_current_changes()
         pull_remote_changes()
         if not bypass_docstring_validation:
             validate_docstrings()
@@ -187,17 +254,15 @@ def check_in_changes(
             run_tests()
         if not bypass_code_formatting:
             format_code()
-        commit_and_push_local_changes()
+        stage_changes()
+        commit_changes()
+        push_changes()
 
     except subprocess.CalledProcessError:
         print('An error occured. Please check the output.')
         abort()
 
-    # if (result == 'Already up to date.')
-    # git pull and if differences, exit with next instructions (like "please resolve merge conflicts...")
-    # blackify
-    # run tests (pytest - -doctest - modules - v)
-    # push
+    print('Your changes have been checked in successfully!')
 
 
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
@@ -769,7 +834,12 @@ argh_kwargs = {
     },
 }
 
-if __name__ == '__main__':
+
+def main():
     import argh  # pip install argh
 
     argh.dispatch_commands(argh_kwargs.get('functions', None))
+
+
+if __name__ == '__main__':
+    main()
