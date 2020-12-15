@@ -90,7 +90,7 @@ def clog(condition, *args, log_func=pprint, **kwargs):
 Path = str
 
 
-def check_in_changes(commit_message: str):
+def check_in_changes(commit_message: str, auto_choose_default_answers: bool):
     """[summary]
     """
 
@@ -103,6 +103,11 @@ def check_in_changes(commit_message: str):
         print('Aborting')
         sys.exit()
 
+    def confirm(action, default):
+        if auto_choose_default_answers:
+            return default
+        return argh.interaction.confirm(action, default)
+
     def check_if_there_are_changes():
         if 'nothing to commit, working tree clean' in git('status'):
             print('No changes to check in.')
@@ -112,7 +117,7 @@ def check_in_changes(commit_message: str):
         git('stash')
         result = git('pull')
         git('stash apply')
-        if result != 'Already up to date.' and not argh.interaction.confirm(
+        if result != 'Already up to date.' and not confirm(
             'Your local repository was not up to date, but it is now. Do you want to continue',
             default=True,
         ):
@@ -123,20 +128,15 @@ def check_in_changes(commit_message: str):
             ['wads', '--disable=all', '--enable=C0114,C0115,C0116'],
             do_exit=False,
         )
-        if result.linter.stats[
-            'global_note'
-        ] < 10 and not argh.interaction.confirm(
+        if result.linter.stats['global_note'] < 10 and not confirm(
             'Docstrings are missing. Do you want to push anyway', default=True
         ):
             abort()
 
     def run_tests():
         result = pytest.main(['--doctest-modules', '-v'])
-        if (
-            result == pytest.ExitCode.TESTS_FAILED
-            and not argh.interaction.confirm(
-                'Tests have failed. Do you want to push anyway', default=False
-            )
+        if result == pytest.ExitCode.TESTS_FAILED and not confirm(
+            'Tests have failed. Do you want to push anyway', default=False
         ):
             abort()
         elif result not in [
@@ -155,15 +155,15 @@ def check_in_changes(commit_message: str):
         result = git('status')
         if 'Changes not staged for commit' in git('status'):
             print(result)
-            if argh.interaction.confirm(
-                'Do you want to stage all your pending changes', default=True,
+            if confirm(
+                'Do you want to stage all your pending changes', default=True
             ):
                 git('add -A')
         if 'no changes added to commit' in git('status'):
             print('No changes to check in.')
             abort()
         git(f'commit --message="{commit_message}"')
-        if not argh.interaction.confirm(
+        if not confirm(
             'Your changes have been commited. Do you want to push',
             default=True,
         ):
