@@ -53,7 +53,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update PYTHONPATH
-        run: echo "::set-env name=PYTHONPATH::$GITHUB_WORKSPACE"
+        run: echo "PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Configure Git
         run: |
