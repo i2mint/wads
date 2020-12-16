@@ -93,7 +93,7 @@ def clog(condition, *args, log_func=pprint, **kwargs):
 Path = str
 
 
-def check_in_changes(
+def check_in(
     commit_message: str,
     work_tree='.',
     git_dir=None,
@@ -107,19 +107,19 @@ def check_in_changes(
 
     :param commit_message: Your commit message
     :type commit_message: str
-    :param work_tree: The relative or absolute path of the working directory, defaults to '.'
+    :param work_tree: The relative or absolute path of the working directory. Defaults to '.'.
     :type work_tree: str, optional
-    :param git_dir: The relative or absolute path of the git directory, defaults to None
+    :param git_dir: The relative or absolute path of the git directory. If None, it will be taken to be "{work_tree}/.git/". Defaults to None.
     :type git_dir: str, optional
-    :param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action, defaults to False
+    :param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action. Defaults to False.
     :type auto_choose_default_action: bool, optional
-    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exist for every module, class and function, defaults to False
+    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exist for every module, class and function. Defaults to False.
     :type bypass_docstring_validation: bool, optional
-    :param bypass_tests: Set to True if you don't want to run doctests and other tests, defaults to False
+    :param bypass_tests: Set to True if you don't want to run doctests and other tests. Defaults to False.
     :type bypass_tests: bool, optional
-    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack, defaults to False
+    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack. Defaults to False.
     :type bypass_code_formatting: bool, optional
-    :param verbose: Set to True if you want to log extra information during the process, defaults to False
+    :param verbose: Set to True if you want to log extra information during the process. Defaults to False.
     :type verbose: bool, optional
     """
 
@@ -821,7 +821,7 @@ argh_kwargs = {
         read_and_resolve_setup_configs,
         update_setup_cfg,
         go,
-        check_in_changes,
+        check_in,
         get_name_from_configs,
         run_setup,
         current_pypi_version,
