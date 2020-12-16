@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.27 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.34 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -68,6 +68,9 @@
 <span class="kn">from</span> <span class="nn">configparser</span> <span class="kn">import</span> <span class="n">ConfigParser</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argh</span>
+<span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">pylint.lint</span>
 
 <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s1">&#39;setup.cfg&#39;</span>
 <span class="n">METADATA_SECTION</span> <span class="o">=</span> <span class="s1">&#39;metadata&#39;</span>
@@ -105,7 +108,7 @@
     <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">r</span></div>
+    <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="get_name_from_configs"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.get_name_from_configs">[docs]</a><span class="k">def</span> <span class="nf">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">assert_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -125,12 +128,176 @@
 <span class="n">Path</span> <span class="o">=</span> <span class="nb">str</span>
 
 
-<span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;To implement by VF&#39;</span><span class="p">)</span>
-    <span class="c1"># git pull and if differences, exit with next instructions (like &quot;please resolve merge conflicts...&quot;)</span>
-    <span class="c1"># blackify</span>
-    <span class="c1"># run tests (pytest - -doctest - modules - v)</span>
-    <span class="c1"># push</span>
+<div class="viewcode-block" id="check_in_changes"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.check_in_changes">[docs]</a><span class="k">def</span> <span class="nf">check_in_changes</span><span class="p">(</span>
+    <span class="n">commit_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">work_tree</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+    <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">auto_choose_default_action</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_tests</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_code_formatting</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validate, normalize, stage, commit and push your local changes to a remote repository.</span>
+
+<span class="sd">    :param commit_message: Your commit message</span>
+<span class="sd">    :type commit_message: str</span>
+<span class="sd">    :param work_tree: The relative or absolute path of the working directory, defaults to &#39;.&#39;</span>
+<span class="sd">    :type work_tree: str, optional</span>
+<span class="sd">    :param git_dir: The relative or absolute path of the git directory, defaults to None</span>
+<span class="sd">    :type git_dir: str, optional</span>
+<span class="sd">    :param auto_choose_default_action: Set to True if you don&#39;t want to be prompted and automatically select the default action, defaults to False</span>
+<span class="sd">    :type auto_choose_default_action: bool, optional</span>
+<span class="sd">    :param bypass_docstring_validation: Set to True if you don&#39;t want to check if a docstring exist for every module, class and function, defaults to False</span>
+<span class="sd">    :type bypass_docstring_validation: bool, optional</span>
+<span class="sd">    :param bypass_tests: Set to True if you don&#39;t want to run doctests and other tests, defaults to False</span>
+<span class="sd">    :type bypass_tests: bool, optional</span>
+<span class="sd">    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack, defaults to False</span>
+<span class="sd">    :type bypass_code_formatting: bool, optional</span>
+<span class="sd">    :param verbose: Set to True if you want to log extra information during the process, defaults to False</span>
+<span class="sd">    :type verbose: bool, optional</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">ggit</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="n">work_tree</span><span class="p">,</span> <span class="n">git_dir</span><span class="o">=</span><span class="n">git_dir</span><span class="p">)</span>
+        <span class="n">clog</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">log_func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="k">def</span> <span class="nf">print_step_title</span><span class="p">(</span><span class="n">step_title</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;============= </span><span class="si">{</span><span class="n">step_title</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s1"> =============&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;-- </span><span class="si">{</span><span class="n">step_title</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">abort</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Aborting&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">confirm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">auto_choose_default_action</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">return</span> <span class="n">argh</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">verify_current_changes</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Verify current changes&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;nothing to commit, working tree clean&#39;</span> <span class="ow">in</span> <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No changes to check in.&#39;</span><span class="p">)</span>
+            <span class="n">abort</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">pull_remote_changes</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Pull remote changes&#39;</span><span class="p">)</span>
+        <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;stash&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;pull&#39;</span><span class="p">)</span>
+        <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;stash apply&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="s1">&#39;Already up to date.&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
+            <span class="s1">&#39;Your local repository was not up to date, but it is now. Do you want to continue&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">abort</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">validate_docstrings</span><span class="p">():</span>
+        <span class="k">def</span> <span class="nf">run_pylint</span><span class="p">(</span><span class="n">current_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="s1">&#39;__init__.py&#39;</span><span class="p">)):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">pylint</span><span class="o">.</span><span class="n">lint</span><span class="o">.</span><span class="n">Run</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">current_dir</span><span class="p">,</span>
+                        <span class="s1">&#39;--disable=all&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--enable=C0114,C0115,C0116&#39;</span><span class="p">,</span>
+                    <span class="p">],</span>
+                    <span class="n">do_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">linter</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;global_note&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Docstrings are missing in directory </span><span class="si">{</span><span class="n">current_dir</span><span class="si">}</span><span class="s1">. Do you want to continue&#39;</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">abort</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="nb">next</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">current_dir</span><span class="p">))[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">run_pylint</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">subdir</span><span class="p">))</span>
+
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Validate docstrings&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">pylint</span><span class="o">.</span><span class="n">lint</span><span class="o">.</span><span class="n">reporters</span><span class="o">.</span><span class="n">json_reporter</span><span class="o">.</span><span class="n">JSONReporter</span><span class="o">.</span><span class="n">display_messages</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="n">run_pylint</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_tests</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Run tests&#39;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;--doctest-modules&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;-q&#39;</span><span class="p">,</span> <span class="s1">&#39;--no-summary&#39;</span><span class="p">])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">pytest</span><span class="o">.</span><span class="n">ExitCode</span><span class="o">.</span><span class="n">TESTS_FAILED</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
+            <span class="s1">&#39;Tests have failed. Do you want to push anyway&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">):</span>
+            <span class="n">abort</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">result</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">ExitCode</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">ExitCode</span><span class="o">.</span><span class="n">NO_TESTS_COLLECTED</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s1">&#39;Something went wrong when running tests. Please check the output.&#39;</span>
+            <span class="p">)</span>
+            <span class="n">abort</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">format_code</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Format code&#39;</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="s1">&#39;black --line-length=79 .&#39;</span><span class="p">,</span>
+            <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="ow">not</span> <span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">stage_changes</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Stage changes&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;Changes not staged for commit&#39;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">auto_choose_default_action</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">confirm</span><span class="p">(</span>
+                <span class="s1">&#39;Do you want to stage all your pending changes&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">):</span>
+                <span class="n">git</span><span class="p">(</span><span class="s1">&#39;add -A&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">commit_changes</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Commit changes&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;no changes added to commit&#39;</span> <span class="ow">in</span> <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No changes to check in.&#39;</span><span class="p">)</span>
+            <span class="n">abort</span><span class="p">()</span>
+        <span class="n">ggit</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;commit --message=&quot;</span><span class="si">{</span><span class="n">commit_message</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">push_changes</span><span class="p">():</span>
+        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Push changes&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
+            <span class="s1">&#39;Your changes have been commited. Do you want to push&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">abort</span><span class="p">()</span>
+        <span class="n">ggit</span><span class="p">(</span><span class="s1">&#39;push&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">verify_current_changes</span><span class="p">()</span>
+        <span class="n">pull_remote_changes</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bypass_docstring_validation</span><span class="p">:</span>
+            <span class="n">validate_docstrings</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bypass_tests</span><span class="p">:</span>
+            <span class="n">run_tests</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bypass_code_formatting</span><span class="p">:</span>
+            <span class="n">format_code</span><span class="p">()</span>
+        <span class="n">stage_changes</span><span class="p">()</span>
+        <span class="n">commit_changes</span><span class="p">()</span>
+        <span class="n">push_changes</span><span class="p">()</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;An error occured. Please check the output.&#39;</span><span class="p">)</span>
+        <span class="n">abort</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your changes have been checked in successfully!&#39;</span><span class="p">)</span></div>
 
 
 <span class="c1"># TODO: Add a function that adds/commits/pushes the updated setup.cfg</span>
@@ -483,8 +650,7 @@
 <div class="viewcode-block" id="http_get_json"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.http_get_json">[docs]</a><span class="k">def</span> <span class="nf">http_get_json</span><span class="p">(</span>
     <span class="n">url</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Make ah http request to url and get json, and return as python dict</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Make ah http request to url and get json, and return as python dict&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">use_requests</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">requests</span>
@@ -690,7 +856,7 @@
         <span class="n">read_and_resolve_setup_configs</span><span class="p">,</span>
         <span class="n">update_setup_cfg</span><span class="p">,</span>
         <span class="n">go</span><span class="p">,</span>
-        <span class="n">push</span><span class="p">,</span>
+        <span class="n">check_in_changes</span><span class="p">,</span>
         <span class="n">get_name_from_configs</span><span class="p">,</span>
         <span class="n">run_setup</span><span class="p">,</span>
         <span class="n">current_pypi_version</span><span class="p">,</span>
@@ -703,10 +869,15 @@
     <span class="p">},</span>
 <span class="p">}</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="kn">import</span> <span class="nn">argh</span>  <span class="c1"># pip install argh</span>
 
     <span class="n">argh</span><span class="o">.</span><span class="n">dispatch_commands</span><span class="p">(</span><span class="n">argh_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;functions&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
           </div>

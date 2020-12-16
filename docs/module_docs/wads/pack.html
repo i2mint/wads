@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.33 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.34 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -34,8 +34,198 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="wads-pack">
-<h1>wads.pack<a class="headerlink" href="#wads-pack" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-wads.pack">
+<span id="wads-pack"></span><h1>wads.pack<a class="headerlink" href="#module-wads.pack" title="Permalink to this headline">¶</a></h1>
+<p>Utils to package and publish.</p>
+<p>The typical sequence of the methodic and paranoid could be something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span>  <span class="c1"># see what you got</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">increment</span><span class="o">-</span><span class="n">configs</span><span class="o">-</span><span class="n">version</span>  <span class="c1"># update (increment the version and write that in setup.cfg</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span><span class="o">-</span><span class="n">version</span>  <span class="c1"># see that it worked</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span>  <span class="c1"># ... if you really want to see the whole configs again (you&#39;re really paranoid)</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span><span class="o">-</span><span class="n">setup</span>  <span class="c1"># see that it worked</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">twine</span><span class="o">-</span><span class="n">upload</span><span class="o">-</span><span class="n">dist</span>  <span class="c1"># publish</span>
+<span class="c1"># and then go check things work...</span>
+</pre></div>
+</div>
+<p>If you’re crazy (or know what you’re doing) just do</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">go</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="wads.pack.check_in_changes">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">check_in_changes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit_message</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auto_choose_default_action</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_tests</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_code_formatting</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#check_in_changes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.check_in_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate, normalize, stage, commit and push your local changes to a remote repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>commit_message</strong> (<em>str</em>) – Your commit message</p></li>
+<li><p><strong>work_tree</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the working directory, defaults to ‘.’</p></li>
+<li><p><strong>git_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the git directory, defaults to None</p></li>
+<li><p><strong>auto_choose_default_action</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to be prompted and automatically select the default action, defaults to False</p></li>
+<li><p><strong>bypass_docstring_validation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to check if a docstring exist for every module, class and function, defaults to False</p></li>
+<li><p><strong>bypass_tests</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to run doctests and other tests, defaults to False</p></li>
+<li><p><strong>bypass_code_formatting</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to treu if you don;t want the code to be automatically formatted using axblack, defaults to False</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you want to log extra information during the process, defaults to False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.current_pypi_version">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">current_pypi_version</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>None<span class="p">, </span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">url_template</span><span class="o">=</span><span class="default_value">'https://pypi.python.org/pypi/{package}/json'</span></em>, <em class="sig-param"><span class="n">use_requests</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span>str<span class="p">]</span><a class="reference internal" href="../../_modules/wads/pack.html#current_pypi_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.current_pypi_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return version of package on pypi.python.org using json.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">current_pypi_version</span><span class="p">(</span><span class="s1">&#39;py2store&#39;</span><span class="p">)</span>
+<span class="s1">&#39;0.0.7&#39;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>package</strong> – Name of the package</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A version (string) or None if there was an exception (usually means there</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.get_name_from_configs">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">get_name_from_configs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">assert_exists</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#get_name_from_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.get_name_from_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get name from local setup.cfg (metadata section)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.git">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">git</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span><span class="o">=</span><span class="default_value">'status'</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.git" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch git commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>command</strong> – git command (e.g. ‘status’, ‘branch’, ‘commit -m “blah”’, ‘push’, etc.)</p></li>
+<li><p><strong>work_tree</strong> – The work_tree directory (i.e. where the project is)</p></li>
+<li><p><strong>git_dir</strong> – The .git directory (usually, and by default, will be taken to be “{work_tree}/.git/”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>What ever the command line returns (decoded to string)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.go">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">go</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">publish_docs_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">skip_git_commit</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">answer_yes_to_all_prompts</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.go" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update version, package and deploy:
+Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version</strong> – The desired version (if not given, will increment the current version</p></li>
+<li><p><strong>verbose</strong> – Whether to print stuff or not</p></li>
+<li><p><strong>skip_git_commit</strong> – Whether to skip the git commit and push step</p></li>
+<li><p><strong>answer_yes_to_all_prompts</strong> – If you do git commit and push, whether to ask confirmation after showing status</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.http_get_json">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">http_get_json</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="n">use_requests</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; Optional<span class="p">[</span>dict<span class="p">]</span><a class="reference internal" href="../../_modules/wads/pack.html#http_get_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.http_get_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make ah http request to url and get json, and return as python dict</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.increment_configs_version">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">increment_configs_version</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#increment_configs_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.increment_configs_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update setup.cfg (at this point, just updates the version).
+If version is not given, will ask pypi (via http request) what the current version is, and increment that.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.postprocess_ini_section_items">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">postprocess_ini_section_items</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Mapping<span class="p">, </span>Iterable<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Generator<a class="reference internal" href="../../_modules/wads/pack.html#postprocess_ini_section_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.postprocess_ini_section_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform newline-separated string values into actual list of strings (assuming that intent)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section_from_ini</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;wads&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">packaging</span><span class="se">\n\t</span><span class="s1">publishing&#39;</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section_for_python</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">postprocess_ini_section_items</span><span class="p">(</span><span class="n">section_from_ini</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section_for_python</span>
+<span class="go">{&#39;name&#39;: &#39;wads&#39;, &#39;keywords&#39;: [&#39;packaging&#39;, &#39;publishing&#39;]}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.preprocess_ini_section_items">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">preprocess_ini_section_items</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">items</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Mapping<span class="p">, </span>Iterable<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Generator<a class="reference internal" href="../../_modules/wads/pack.html#preprocess_ini_section_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.preprocess_ini_section_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform list values into newline-separated strings, in view of writing the value to a ini formatted section</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;wads&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;documentation&#39;</span><span class="p">,</span> <span class="s1">&#39;packaging&#39;</span><span class="p">,</span> <span class="s1">&#39;publishing&#39;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">for_ini</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">preprocess_ini_section_items</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;keywords =&#39;</span> <span class="o">+</span> <span class="n">for_ini</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">])</span>  
+<span class="go">keywords =</span>
+<span class="go">    documentation</span>
+<span class="go">    packaging</span>
+<span class="go">    publishing</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.read_and_resolve_setup_configs">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">read_and_resolve_setup_configs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">new_deploy</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assert_names</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#read_and_resolve_setup_configs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.read_and_resolve_setup_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>make setup params and call setup</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pkg_dir</strong> – Directory where the pkg is (which is also where the setup.cfg is)</p></li>
+<li><p><strong>new_deploy</strong> – whether this setup for a new deployment (publishing to pypi) or not</p></li>
+<li><p><strong>version</strong> – The version number to set this up as.
+If not given will look at setup.cfg[metadata] for one,
+and if not found there will use the current version (requesting pypi.org)
+and bump it if the new_deploy flag is on</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.run_setup">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">run_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#run_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.run_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">sdist</span> <span class="pre">bdist_wheel</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.set_version">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">set_version</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#set_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.set_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update setup.cfg (at this point, just updates the version).
+If version is not given, will ask pypi (via http request) what the current version is, and increment that.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.twine_upload_dist">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">twine_upload_dist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#twine_upload_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.twine_upload_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publish to pypi. Runs <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">twine</span> <span class="pre">upload</span> <span class="pre">dist/*</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.update_setup_cfg">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">update_setup_cfg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">new_deploy</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#update_setup_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.update_setup_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update setup.cfg (at this point, just updates the version).
+If version is not given, will ask pypi (via http request) what the current version is, and increment that.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.pack.validate_pkg_dir">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">validate_pkg_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#validate_pkg_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.validate_pkg_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asserts that the pkg_dir is actually one (has a pkg_name/__init__.py file)</p>
+</dd></dl>
+
 </div>
 
 
