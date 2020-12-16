@@ -35,10 +35,10 @@ populate_dflts = wads_configs.get(
 def gen_readme_text(
     name, text="There's a bit of an air of mystery around this project..."
 ):
-    return f"""
+    return f'''
 # {name}
 {text}
-"""
+'''
 
 
 # TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file
