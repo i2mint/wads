@@ -125,5 +125,3 @@ pack go PKG_DIR
 (or `pack go --version 0.0.0 PKG_DIR` if it's the very first release).
 
 But we suggest you get familiar with what the steps are doing, so you can bend them to your liking.
-
-

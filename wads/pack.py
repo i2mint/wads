@@ -181,11 +181,6 @@ def check_in(
                 for subdir in next(os.walk(current_dir))[1]:
                     run_pylint(os.path.join(current_dir, subdir))
 
-        print_step_title('Validate docstrings')
-        if not verbose:
-            pylint.lint.reporters.json_reporter.JSONReporter.display_messages = (
-                lambda self, layout: None
-            )
         run_pylint('.')
 
     def run_tests():
