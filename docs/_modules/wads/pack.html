@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.35 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.36 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -148,11 +148,11 @@
 <span class="sd">    :type git_dir: str, optional</span>
 <span class="sd">    :param auto_choose_default_action: Set to True if you don&#39;t want to be prompted and automatically select the default action. Defaults to False.</span>
 <span class="sd">    :type auto_choose_default_action: bool, optional</span>
-<span class="sd">    :param bypass_docstring_validation: Set to True if you don&#39;t want to check if a docstring exist for every module, class and function. Defaults to False.</span>
+<span class="sd">    :param bypass_docstring_validation: Set to True if you don&#39;t want to check if a docstring exists for every module, class and function. Defaults to False.</span>
 <span class="sd">    :type bypass_docstring_validation: bool, optional</span>
 <span class="sd">    :param bypass_tests: Set to True if you don&#39;t want to run doctests and other tests. Defaults to False.</span>
 <span class="sd">    :type bypass_tests: bool, optional</span>
-<span class="sd">    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack. Defaults to False.</span>
+<span class="sd">    :param bypass_code_formatting: Set to True if you don&#39;t want the code to be automatically formatted using axblack. Defaults to False.</span>
 <span class="sd">    :type bypass_code_formatting: bool, optional</span>
 <span class="sd">    :param verbose: Set to True if you want to log extra information during the process. Defaults to False.</span>
 <span class="sd">    :type verbose: bool, optional</span>
@@ -216,11 +216,6 @@
                 <span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="nb">next</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">current_dir</span><span class="p">))[</span><span class="mi">1</span><span class="p">]:</span>
                     <span class="n">run_pylint</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="n">subdir</span><span class="p">))</span>
 
-        <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Validate docstrings&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="n">pylint</span><span class="o">.</span><span class="n">lint</span><span class="o">.</span><span class="n">reporters</span><span class="o">.</span><span class="n">json_reporter</span><span class="o">.</span><span class="n">JSONReporter</span><span class="o">.</span><span class="n">display_messages</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="kc">None</span>
-            <span class="p">)</span>
         <span class="n">run_pylint</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">run_tests</span><span class="p">():</span>
