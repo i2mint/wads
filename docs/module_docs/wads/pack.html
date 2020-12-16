@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.34 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.35 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -52,20 +52,20 @@
 </pre></div>
 </div>
 <dl class="py function">
-<dt id="wads.pack.check_in_changes">
-<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">check_in_changes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit_message</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auto_choose_default_action</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_tests</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_code_formatting</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#check_in_changes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.check_in_changes" title="Permalink to this definition">¶</a></dt>
+<dt id="wads.pack.check_in">
+<code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">check_in</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit_message</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auto_choose_default_action</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_tests</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bypass_code_formatting</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#check_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.check_in" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate, normalize, stage, commit and push your local changes to a remote repository.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>commit_message</strong> (<em>str</em>) – Your commit message</p></li>
-<li><p><strong>work_tree</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the working directory, defaults to ‘.’</p></li>
-<li><p><strong>git_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the git directory, defaults to None</p></li>
-<li><p><strong>auto_choose_default_action</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to be prompted and automatically select the default action, defaults to False</p></li>
-<li><p><strong>bypass_docstring_validation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to check if a docstring exist for every module, class and function, defaults to False</p></li>
-<li><p><strong>bypass_tests</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to run doctests and other tests, defaults to False</p></li>
-<li><p><strong>bypass_code_formatting</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to treu if you don;t want the code to be automatically formatted using axblack, defaults to False</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you want to log extra information during the process, defaults to False</p></li>
+<li><p><strong>work_tree</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the working directory. Defaults to ‘.’.</p></li>
+<li><p><strong>git_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The relative or absolute path of the git directory. If None, it will be taken to be “{work_tree}/.git/”. Defaults to None.</p></li>
+<li><p><strong>auto_choose_default_action</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to be prompted and automatically select the default action. Defaults to False.</p></li>
+<li><p><strong>bypass_docstring_validation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to check if a docstring exist for every module, class and function. Defaults to False.</p></li>
+<li><p><strong>bypass_tests</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you don’t want to run doctests and other tests. Defaults to False.</p></li>
+<li><p><strong>bypass_code_formatting</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to treu if you don;t want the code to be automatically formatted using axblack. Defaults to False.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you want to log extra information during the process. Defaults to False.</p></li>
 </ul>
 </dd>
 </dl>
