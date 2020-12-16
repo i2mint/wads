@@ -113,11 +113,11 @@ def check_in(
     :type git_dir: str, optional
     :param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action. Defaults to False.
     :type auto_choose_default_action: bool, optional
-    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exist for every module, class and function. Defaults to False.
+    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exists for every module, class and function. Defaults to False.
     :type bypass_docstring_validation: bool, optional
     :param bypass_tests: Set to True if you don't want to run doctests and other tests. Defaults to False.
     :type bypass_tests: bool, optional
-    :param bypass_code_formatting: Set to treu if you don;t want the code to be automatically formatted using axblack. Defaults to False.
+    :param bypass_code_formatting: Set to True if you don't want the code to be automatically formatted using axblack. Defaults to False.
     :type bypass_code_formatting: bool, optional
     :param verbose: Set to True if you want to log extra information during the process. Defaults to False.
     :type verbose: bool, optional
