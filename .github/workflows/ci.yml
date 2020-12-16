@@ -52,6 +52,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update PYTHONPATH
+        run: echo "::set-env name=PYTHONPATH::$GITHUB_WORKSPACE"
+
       - name: Configure Git
         run: |
           git config --global user.email "vferon@pentalog.com"
