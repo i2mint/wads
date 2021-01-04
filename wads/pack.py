@@ -48,7 +48,7 @@ DFLT_OPTIONS = {
 
 pjoin = lambda *p: os.path.join(*p)
 DOCSRC = 'docsrc'
-DFLT_PUBLISH_DOCS_TO = None  #'github'
+DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 
 def git(command='status', work_tree='.', git_dir=None):
@@ -94,14 +94,14 @@ Path = str
 
 
 def check_in(
-    commit_message: str,
-    work_tree='.',
-    git_dir=None,
-    auto_choose_default_action=False,
-    bypass_docstring_validation=False,
-    bypass_tests=False,
-    bypass_code_formatting=False,
-    verbose=False,
+        commit_message: str,
+        work_tree='.',
+        git_dir=None,
+        auto_choose_default_action=False,
+        bypass_docstring_validation=False,
+        bypass_tests=False,
+        bypass_code_formatting=False,
+        verbose=False,
 ):
     """Validate, normalize, stage, commit and push your local changes to a remote repository.
 
@@ -156,8 +156,8 @@ def check_in(
         result = ggit('pull')
         ggit('stash apply')
         if result != 'Already up to date.' and not confirm(
-            'Your local repository was not up to date, but it is now. Do you want to continue',
-            default=True,
+                'Your local repository was not up to date, but it is now. Do you want to continue',
+                default=True,
         ):
             abort()
 
@@ -173,8 +173,8 @@ def check_in(
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
-                    f'Docstrings are missing in directory {current_dir}. Do you want to continue',
-                    default=True,
+                        f'Docstrings are missing in directory {current_dir}. Do you want to continue',
+                        default=True,
                 ):
                     abort()
             else:
@@ -192,7 +192,7 @@ def check_in(
             args.extend(['-q', '--no-summary'])
         result = pytest.main(args)
         if result == pytest.ExitCode.TESTS_FAILED and not confirm(
-            'Tests have failed. Do you want to push anyway', default=False
+                'Tests have failed. Do you want to push anyway', default=False
         ):
             abort()
         elif result not in [
@@ -220,7 +220,7 @@ def check_in(
             if not auto_choose_default_action and not verbose:
                 print(result)
             if confirm(
-                'Do you want to stage all your pending changes', default=True
+                    'Do you want to stage all your pending changes', default=True
             ):
                 git('add -A')
 
@@ -234,8 +234,8 @@ def check_in(
     def push_changes():
         print_step_title('Push changes')
         if not confirm(
-            'Your changes have been commited. Do you want to push',
-            default=True,
+                'Your changes have been commited. Do you want to push',
+                default=True,
         ):
             abort()
         ggit('push')
@@ -260,17 +260,57 @@ def check_in(
     print('Your changes have been checked in successfully!')
 
 
+def goo(pkg_dir,
+        commit_message,
+        git_dir=None,
+        auto_choose_default_action=False,
+        bypass_docstring_validation=False,
+        bypass_tests=False,
+        bypass_code_formatting=False,
+        verbose=False, ):
+    """Validate, normalize, stage, commit and push your local changes to a remote repository.
+
+    :param pkg_dir: The relative or absolute path of the working directory. Defaults to '.'.
+    :type pkg_dir: str, optional
+    :param commit_message: Your commit message
+    :type commit_message: str
+    :param git_dir: The relative or absolute path of the git directory. If None, it will be taken to be "{work_tree}/.git/". Defaults to None.
+    :type git_dir: str, optional
+    :param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action. Defaults to False.
+    :type auto_choose_default_action: bool, optional
+    :param bypass_docstring_validation: Set to True if you don't want to check if a docstring exists for every module, class and function. Defaults to False.
+    :type bypass_docstring_validation: bool, optional
+    :param bypass_tests: Set to True if you don't want to run doctests and other tests. Defaults to False.
+    :type bypass_tests: bool, optional
+    :param bypass_code_formatting: Set to True if you don't want the code to be automatically formatted using axblack. Defaults to False.
+    :type bypass_code_formatting: bool, optional
+    :param verbose: Set to True if you want to log extra information during the process. Defaults to False.
+    :type verbose: bool, optional
+    """
+
+    return check_in(commit_message=commit_message,
+                    work_tree=pkg_dir,
+                    git_dir=git_dir,
+                    auto_choose_default_action=auto_choose_default_action,
+                    bypass_docstring_validation=bypass_docstring_validation,
+                    bypass_tests=bypass_tests,
+                    bypass_code_formatting=bypass_code_formatting,
+                    verbose=verbose)
+
+
 # TODO: Add a function that adds/commits/pushes the updated setup.cfg
 # TODO: Include tests as first step
 # TODO: blackify
 # TODO: Git pull and make sure no conflicts before moving on...
 def go(
-    pkg_dir,
-    version=None,
-    publish_docs_to=DFLT_PUBLISH_DOCS_TO,
-    verbose: bool = True,
-    skip_git_commit: bool = False,
-    answer_yes_to_all_prompts: bool = False,
+        pkg_dir,
+        version=None,
+        publish_docs_to=DFLT_PUBLISH_DOCS_TO,
+        verbose: bool = True,
+        skip_git_commit: bool = False,
+        answer_yes_to_all_prompts: bool = False,
+        twine_upload_options_str: str = '',
+        keep_dist_pkgs=False
 ):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
@@ -285,8 +325,10 @@ def go(
     version = increment_configs_version(pkg_dir, version)
     update_setup_cfg(pkg_dir, verbose=verbose)
     run_setup(pkg_dir)
-    twine_upload_dist(pkg_dir)
-    delete_pkg_directories(pkg_dir, verbose)
+    twine_upload_dist(pkg_dir, twine_upload_options_str)
+
+    if not keep_dist_pkgs:
+        delete_pkg_directories(pkg_dir, verbose)
 
     if publish_docs_to:
         generate_and_publish_docs(pkg_dir, publish_docs_to)
@@ -297,10 +339,10 @@ def go(
 
 
 def git_commit_and_push(
-    pkg_dir,
-    version=None,
-    verbose: bool = True,
-    answer_yes_to_all_prompts: bool = False,
+        pkg_dir,
+        version=None,
+        verbose: bool = True,
+        answer_yes_to_all_prompts: bool = False,
 ):
     def ggit(command):
         r = git(command, work_tree=pkg_dir)
@@ -399,7 +441,7 @@ def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version
+        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -418,7 +460,7 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, version=None,
+        pkg_dir, version=None,
 ):
     """Update setup.cfg (at this point, just updates the version).
     If version is not given, will ask pypi (via http request) what the current version is, and increment that.
@@ -449,7 +491,7 @@ def run_setup(pkg_dir):
     # print(f"{setup_output}\n")
 
 
-def twine_upload_dist(pkg_dir):
+def twine_upload_dist(pkg_dir, options_str=None):
     """Publish to pypi. Runs ``python -m twine upload dist/*``"""
     print(
         '--------------------------- upload_output ---------------------------'
@@ -457,8 +499,13 @@ def twine_upload_dist(pkg_dir):
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
-    # TODO: dist/*? How to publish just last on
-    subprocess.run(f'{sys.executable} -m twine upload dist/*'.split(' '))
+    # TODO: dist/*? How to publish just last one?
+    if options_str:
+        command = f'{sys.executable} -m twine upload {options_str} dist/*'
+    else:
+        command = f'{sys.executable} -m twine upload dist/*'
+    # print(command)
+    subprocess.run(command.split(' '))
     os.chdir(original_dir)
     # print(f"{upload_output.decode()}\n")
 
@@ -468,7 +515,7 @@ def twine_upload_dist(pkg_dir):
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
 def postprocess_ini_section_items(
-    items: Union[Mapping, Iterable]
+        items: Union[Mapping, Iterable]
 ) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
@@ -522,9 +569,9 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path,
-    postproc=postprocess_ini_section_items,
-    section=METADATA_SECTION,
+        pkg_dir: Path,
+        postproc=postprocess_ini_section_items,
+        section=METADATA_SECTION,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -547,10 +594,10 @@ def read_configs(
 
 
 def write_configs(
-    pkg_dir: Path,
-    configs,
-    preproc=preprocess_ini_section_items,
-    dflt_options=DFLT_OPTIONS,
+        pkg_dir: Path,
+        configs,
+        preproc=preprocess_ini_section_items,
+        dflt_options=DFLT_OPTIONS,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -608,7 +655,7 @@ except ModuleNotFoundError:
 
 
 def http_get_json(
-    url, use_requests=requests_is_installed
+        url, use_requests=requests_is_installed
 ) -> Union[dict, None]:
     """Make ah http request to url and get json, and return as python dict"""
 
@@ -644,10 +691,10 @@ DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = (
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
 def current_pypi_version(
-    pkg_dir: Path,
-    name: Union[None, str] = None,
-    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
-    use_requests=requests_is_installed,
+        pkg_dir: Path,
+        name: Union[None, str] = None,
+        url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
+        use_requests=requests_is_installed,
 ) -> Union[str, None]:
     """
     Return version of package on pypi.python.org using json.
@@ -664,7 +711,7 @@ def current_pypi_version(
     pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
     name = name or get_name_from_configs(pkg_dir)
     assert (
-        pkg_dirname == name
+            pkg_dirname == name
     ), f'pkg_dirname ({pkg_dirname}) and name ({name}) were not the same'
     url = url_template.format(package=name)
     t = http_get_json(url, use_requests=use_requests)
@@ -676,11 +723,11 @@ def current_pypi_version(
 
 
 def next_version_for_package(
-    pkg_dir: Path,
-    name: Union[None, str] = None,
-    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
-    version_if_current_version_none='0.0.1',
-    use_requests=requests_is_installed,
+        pkg_dir: Path,
+        name: Union[None, str] = None,
+        url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
+        version_if_current_version_none='0.0.1',
+        use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
     current_version = current_pypi_version(
@@ -693,11 +740,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path,
-    version,
-    configs,
-    name: Union[None, str] = None,
-    new_deploy=False,
+        pkg_dir: Path,
+        version,
+        configs,
+        name: Union[None, str] = None,
+        new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -725,7 +772,7 @@ def _get_version(
 
 
 def read_and_resolve_setup_configs(
-    pkg_dir: Path, new_deploy=False, version=None, assert_names=True
+        pkg_dir: Path, new_deploy=False, version=None, assert_names=True
 ):
     """make setup params and call setup
 
@@ -745,19 +792,19 @@ def read_and_resolve_setup_configs(
 
     # parse out name and root_url
     assert (
-        'root_url' in configs or 'url' in configs
+            'root_url' in configs or 'url' in configs
     ), "configs didn't have a root_url or url"
 
     name = configs['name'] or pkg_dirname
     if assert_names:
         assert (
-            name == pkg_dirname
+                name == pkg_dirname
         ), f'config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!'
 
     if 'root_url' in configs:
         root_url = configs['root_url']
         if root_url.endswith(
-            '/'
+                '/'
         ):  # yes, it's a url so it's always forward slash, not the systems' slash os.sep
             root_url = root_url[:-1]
         url = f'{root_url}/{name}'
@@ -816,6 +863,7 @@ argh_kwargs = {
         read_and_resolve_setup_configs,
         update_setup_cfg,
         go,
+        goo,
         check_in,
         get_name_from_configs,
         run_setup,
