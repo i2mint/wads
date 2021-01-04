@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.38 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.39 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -83,7 +83,7 @@
 
 <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
 <span class="n">DOCSRC</span> <span class="o">=</span> <span class="s1">&#39;docsrc&#39;</span>
-<span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1">#&#39;github&#39;</span>
+<span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &#39;github&#39;</span>
 
 
 <div class="viewcode-block" id="git"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.git">[docs]</a><span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -295,6 +295,48 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your changes have been checked in successfully!&#39;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="goo"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.goo">[docs]</a><span class="k">def</span> <span class="nf">goo</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">,</span>
+    <span class="n">commit_message</span><span class="p">,</span>
+    <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">auto_choose_default_action</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_tests</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">bypass_code_formatting</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validate, normalize, stage, commit and push your local changes to a remote repository.</span>
+
+<span class="sd">    :param pkg_dir: The relative or absolute path of the working directory. Defaults to &#39;.&#39;.</span>
+<span class="sd">    :type pkg_dir: str, optional</span>
+<span class="sd">    :param commit_message: Your commit message</span>
+<span class="sd">    :type commit_message: str</span>
+<span class="sd">    :param git_dir: The relative or absolute path of the git directory. If None, it will be taken to be &quot;{work_tree}/.git/&quot;. Defaults to None.</span>
+<span class="sd">    :type git_dir: str, optional</span>
+<span class="sd">    :param auto_choose_default_action: Set to True if you don&#39;t want to be prompted and automatically select the default action. Defaults to False.</span>
+<span class="sd">    :type auto_choose_default_action: bool, optional</span>
+<span class="sd">    :param bypass_docstring_validation: Set to True if you don&#39;t want to check if a docstring exists for every module, class and function. Defaults to False.</span>
+<span class="sd">    :type bypass_docstring_validation: bool, optional</span>
+<span class="sd">    :param bypass_tests: Set to True if you don&#39;t want to run doctests and other tests. Defaults to False.</span>
+<span class="sd">    :type bypass_tests: bool, optional</span>
+<span class="sd">    :param bypass_code_formatting: Set to True if you don&#39;t want the code to be automatically formatted using axblack. Defaults to False.</span>
+<span class="sd">    :type bypass_code_formatting: bool, optional</span>
+<span class="sd">    :param verbose: Set to True if you want to log extra information during the process. Defaults to False.</span>
+<span class="sd">    :type verbose: bool, optional</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">check_in</span><span class="p">(</span>
+        <span class="n">commit_message</span><span class="o">=</span><span class="n">commit_message</span><span class="p">,</span>
+        <span class="n">work_tree</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="n">git_dir</span><span class="o">=</span><span class="n">git_dir</span><span class="p">,</span>
+        <span class="n">auto_choose_default_action</span><span class="o">=</span><span class="n">auto_choose_default_action</span><span class="p">,</span>
+        <span class="n">bypass_docstring_validation</span><span class="o">=</span><span class="n">bypass_docstring_validation</span><span class="p">,</span>
+        <span class="n">bypass_tests</span><span class="o">=</span><span class="n">bypass_tests</span><span class="p">,</span>
+        <span class="n">bypass_code_formatting</span><span class="o">=</span><span class="n">bypass_code_formatting</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
 <span class="c1"># TODO: Add a function that adds/commits/pushes the updated setup.cfg</span>
 <span class="c1"># TODO: Include tests as first step</span>
 <span class="c1"># TODO: blackify</span>
@@ -306,6 +348,8 @@
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">skip_git_commit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">answer_yes_to_all_prompts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">twine_upload_options_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="n">keep_dist_pkgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Update version, package and deploy:</span>
 <span class="sd">    Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist</span>
@@ -320,8 +364,10 @@
     <span class="n">version</span> <span class="o">=</span> <span class="n">increment_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="n">update_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">run_setup</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">twine_upload_dist</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">delete_pkg_directories</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">twine_upload_dist</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">twine_upload_options_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_dist_pkgs</span><span class="p">:</span>
+        <span class="n">delete_pkg_directories</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">publish_docs_to</span><span class="p">:</span>
         <span class="n">generate_and_publish_docs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">publish_docs_to</span><span class="p">)</span>
@@ -434,7 +480,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">configs</span> <span class="o">=</span> <span class="n">read_and_resolve_setup_configs</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="o">=</span><span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="n">new_deploy</span><span class="o">=</span><span class="n">new_deploy</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span>
+        <span class="n">pkg_dir</span><span class="o">=</span><span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="n">new_deploy</span><span class="o">=</span><span class="n">new_deploy</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">pprint</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{configs}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">clog</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">pprint</span><span class="p">(</span><span class="n">configs</span><span class="p">))</span>
@@ -484,7 +530,7 @@
     <span class="c1"># print(f&quot;{setup_output}\n&quot;)</span>
 
 
-<div class="viewcode-block" id="twine_upload_dist"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.twine_upload_dist">[docs]</a><span class="k">def</span> <span class="nf">twine_upload_dist</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+<div class="viewcode-block" id="twine_upload_dist"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.twine_upload_dist">[docs]</a><span class="k">def</span> <span class="nf">twine_upload_dist</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">options_str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Publish to pypi. Runs ``python -m twine upload dist/*``&quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span>
         <span class="s1">&#39;--------------------------- upload_output ---------------------------&#39;</span>
@@ -492,8 +538,13 @@
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">original_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="c1"># TODO: dist/*? How to publish just last on</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s1"> -m twine upload dist/*&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+    <span class="c1"># TODO: dist/*? How to publish just last one?</span>
+    <span class="k">if</span> <span class="n">options_str</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s1"> -m twine upload </span><span class="si">{</span><span class="n">options_str</span><span class="si">}</span><span class="s1"> dist/*&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s1"> -m twine upload dist/*&#39;</span>
+    <span class="c1"># print(command)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">original_dir</span><span class="p">)</span></div>
     <span class="c1"># print(f&quot;{upload_output.decode()}\n&quot;)</span>
 
@@ -851,6 +902,7 @@
         <span class="n">read_and_resolve_setup_configs</span><span class="p">,</span>
         <span class="n">update_setup_cfg</span><span class="p">,</span>
         <span class="n">go</span><span class="p">,</span>
+        <span class="n">goo</span><span class="p">,</span>
         <span class="n">check_in</span><span class="p">,</span>
         <span class="n">get_name_from_configs</span><span class="p">,</span>
         <span class="n">run_setup</span><span class="p">,</span>
