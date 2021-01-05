@@ -76,20 +76,19 @@ jobs:
         run: isee generate-documentation
 
       - name: Package
-        run: python setup.py sdist
+        run: |
+          python setup.py sdist
+          echo "PKG_PATH=dist/$PROJECT_NAME-$VERSION.tar.gz" >> $GITHUB_ENV
 
       - name: Publish
         run: |
-          twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
+          twine upload $PKG_PATH -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} --non-interactive  --skip-existing --disable-progress-bar
           epythet make . github
 
       - name: Push Changes
         run: |
-          git add .
-          git commit -a -m "**CI** Formatted code + Updated version number and documentation. [skip ci]"
-          git push
+          pip install $PKG_PATH
+          pack check-in --commit-message="**CI** Formatted code + Updated version number and documentation. [skip ci]" --auto-choose-default-action --bypass-docstring-validation --bypass-tests --bypass-code-formatting --verbose=True
 
       - name: Tag Repository
-        run: |
-          git tag $VERSION
-          git push origin $VERSION
+        run: isee tag-repo --tag=$VERSION
