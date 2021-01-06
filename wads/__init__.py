@@ -36,6 +36,8 @@ except FileNotFoundError:
             'author': None,
             'license': 'mit',
             'description_file': 'README.md',
+            'long_description': 'file:README.md',
+            'long_description_content_type': 'text/markdown',
             'keywords': None,
             'install_requires': None,
             'verbose': None,
