@@ -88,7 +88,7 @@ jobs:
       - name: Push Changes
         run: |
           pip install $PKG_PATH
-          pack check-in --commit-message="**CI** Formatted code + Updated version number and documentation. [skip ci]" --auto-choose-default-action --bypass-docstring-validation --bypass-tests --bypass-code-formatting --verbose
+          pack check-in "**CI** Formatted code + Updated version number and documentation. [skip ci]" --auto-choose-default-action --bypass-docstring-validation --bypass-tests --bypass-code-formatting --verbose
 
       - name: Tag Repository
-        run: isee tag-repo --tag=$VERSION
+        run: isee tag-repo $VERSION
