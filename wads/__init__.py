@@ -21,6 +21,7 @@ rjoin = lambda *paths: os.path.join(root_dir, *paths)
 data_dir = rjoin('data')
 licenses_json_path = rjoin(data_dir, 'github_licenses.json')
 github_ci_tpl_path = rjoin(data_dir, 'github_ci_tpl.yml')
+gitlab_ci_tpl_path = rjoin(data_dir, 'gitlab_ci_tpl.yml')
 
 pkg_dir = os.path.dirname(root_dir)
 pkg_join = lambda *paths: os.path.join(pkg_dir, *paths)

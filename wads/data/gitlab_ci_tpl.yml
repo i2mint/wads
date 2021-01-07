@@ -1,0 +1,76 @@
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+image: python:3.8-buster
+
+variables:
+  PROJECT_NAME: #PROJECT_NAME#
+  GITLAB_HOSTNAME: #GITLAB_HOSTNAME#
+  PYTHONPATH: "$CI_PROJECT_DIR"
+
+# Commands to run in the Docker container before starting each job.
+before_script:
+    # CONFIGURE SSH
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan $GITLAB_HOSTNAME >> ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+
+    # CONFIGURE GIT
+    - git config --global user.email "vferon@pentalog.com"
+    - git config --global user.name "GitLab CI Runner"
+
+    # INITIALIZE RESOURCE DIRECTORY
+    - export RESOURCE_DIR=$(mktemp -d)
+
+    # INSTALL DEPENDENCIES
+    - pip -q install axblack isee
+
+    # FORMAT SOURCE CODE
+    - pip -q install axblack
+    - black --line-length=79 .
+
+stages:
+  - Validation
+  - Publish
+
+Validation:
+  stage: Validation
+  only:
+    - branches
+  script:
+    # INSTALL DEPENDENCIES
+    - pip -q install pytest pylint
+
+    # VALIDATE DOCSTRINGS
+    - pylint ./$PROJECT_NAME --ignore=tests,examples --disable=all --enable=C0114,C0115,C0116
+
+    # RUN TESTS
+    - pytest --doctest-modules -v $PROJECT_NAME
+
+Publish:
+  stage: Publish
+  only:
+    - master
+  script:
+    # INSTALL DEPENDENCIES
+    - pip -q install twine
+    - isee install-requires --project-dir=$CI_PROJECT_DIR
+
+    # UPDATE VERSION NUMBER
+    - export VERSION=$(isee gen-semver)
+    - isee update-setup-cfg --project-dir=$CI_PROJECT_DIR
+
+    # GENERATE DOCUMENTATION
+    - isee generate-documentation --project-dir=$CI_PROJECT_DIR
+
+    # PACKAGE
+    - python setup.py sdist
+
+    # PUBLISH
+    - twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u $PYPI_USERNAME -p $PYPI_PASSWORD --non-interactive  --skip-existing --disable-progress-bar
+    - epythet make $CI_PROJECT_DIR html
+
+    # UPDATE AND TAG REPOSITORY
+    - isee check-in --commit-message='Formatted code + Updated version number and documentation.'
+    - isee tag-repo $VERSION
+

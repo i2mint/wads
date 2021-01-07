@@ -2,11 +2,11 @@ import os
 import shutil
 import json
 from collections import ChainMap
-
+from urllib.parse import urlparse
 # from functools import partial
 from typing import List, Optional
 from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
-from wads import pkg_join as wads_join, github_ci_tpl_path
+from wads import pkg_join as wads_join, github_ci_tpl_path, gitlab_ci_tpl_path
 from wads.util import mk_conditional_logger
 from wads.pack import write_configs
 from wads.licensing import license_body
@@ -218,23 +218,24 @@ def populate_pkg_dir(
 
     if not skip_ci_def_gen and root_url:
 
-        def add_github_ci_def():
-            _clog(f'... making a .github/workflows/ci.yml')
-            with open(github_ci_tpl_path) as f_in:
-                ci_tpl = f_in.read()
-                ci_def = ci_tpl.replace('#PROJECT_NAME#', name)
-                output_path = './.github/workflows/ci.yml'
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                with open(output_path, 'w') as f_out:
+        def add_ci_def(ci_def_path, ci_tpl_path):
+            _clog(f'... making a {ci_def_path}')
+            with open(ci_tpl_path) as f_in:
+                ci_def = f_in.read()
+                ci_def = ci_def.replace('#PROJECT_NAME#', name)
+                hostname = urlparse(root_url).netloc
+                ci_def = ci_def.replace('#GITLAB_HOSTNAME#', hostname)
+                os.makedirs(os.path.dirname(f'./{ci_def_path}'), exist_ok=True)
+                with open(ci_def_path, 'w') as f_out:
                     f_out.write(ci_def)
 
-        def add_gitlab_ci_def():
-            raise NotImplementedError()
-
         if 'github.com' in root_url:
-            add_github_ci_def()
+            ci_def_path = '.github/workflows/ci.yml'
+            ci_tpl_path = github_ci_tpl_path
         else:
-            add_gitlab_ci_def()
+            ci_def_path = '.gitlab-ci.yml'
+            ci_tpl_path = gitlab_ci_tpl_path
+        add_ci_def(ci_def_path, ci_tpl_path)
 
     return name
 
