@@ -20,6 +20,7 @@ rjoin = lambda *paths: os.path.join(root_dir, *paths)
 
 data_dir = rjoin('data')
 licenses_json_path = rjoin(data_dir, 'github_licenses.json')
+github_ci_tpl_path = rjoin(data_dir, 'github_ci_tpl.yml')
 
 pkg_dir = os.path.dirname(root_dir)
 pkg_join = lambda *paths: os.path.join(pkg_dir, *paths)
@@ -31,7 +32,7 @@ try:
 except FileNotFoundError:
     wads_configs = {
         'populate_dflts': {
-            'description': "There's a bit of an air of mystery around this project...",
+            'description': "There is a bit of an air of mystery around this project...",
             'root_url': None,
             'author': None,
             'license': 'mit',
@@ -41,6 +42,7 @@ except FileNotFoundError:
             'keywords': None,
             'install_requires': None,
             'verbose': None,
+            'version': '0.0.1'
         }
     }
 

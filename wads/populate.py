@@ -6,7 +6,7 @@ from collections import ChainMap
 # from functools import partial
 from typing import List, Optional
 from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
-from wads import pkg_join as wads_join
+from wads import pkg_join as wads_join, github_ci_tpl_path
 from wads.util import mk_conditional_logger
 from wads.pack import write_configs
 from wads.licensing import license_body
@@ -18,7 +18,7 @@ path_sep = os.path.sep
 populate_dflts = wads_configs.get(
     'populate_dflts',
     {
-        'description': "There's a bit of an air of mystery around this project...",
+        'description': "There is a bit of an air of mystery around this project...",
         'root_url': None,
         'author': None,
         'license': 'mit',
@@ -28,12 +28,13 @@ populate_dflts = wads_configs.get(
         'keywords': None,
         'install_requires': None,
         'verbose': True,
+        'version': '0.0.1'
     },
 )
 
 
 def gen_readme_text(
-    name, text="There's a bit of an air of mystery around this project..."
+    name, text="There is a bit of an air of mystery around this project..."
 ):
     return f'''
 # {name}
@@ -44,6 +45,7 @@ def gen_readme_text(
 # TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file
 def populate_pkg_dir(
     pkg_dir,
+    version: str = populate_dflts['version'],
     description: str = populate_dflts['description'],
     root_url: Optional[str] = populate_dflts['root_url'],
     author: Optional[str] = populate_dflts['author'],
@@ -60,6 +62,7 @@ def populate_pkg_dir(
     overwrite: List = (),
     defaults_from: Optional[str] = None,
     skip_docsrc_gen=False,
+    skip_ci_def_gen=False,
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -74,6 +77,7 @@ def populate_pkg_dir(
     ...                  author='OtoSense')
 
     :param pkg_dir:
+    :param version:
     :param description:
     :param root_url:
     :param author:
@@ -86,6 +90,8 @@ def populate_pkg_dir(
     :param verbose:
     :param default_from: Name of field to look up in wads_configs to get defaults from,
         or 'user_input' to get it from user input.
+    :param skip_docsrc_gen:
+    :param skip_ci_def_gen:
     :param configs:
     :return:
 
@@ -145,6 +151,7 @@ def populate_pkg_dir(
             pass
 
     kwargs = dict(
+        version=version,
         description=description,
         root_url=root_url,
         author=author,
@@ -208,6 +215,25 @@ def populate_pkg_dir(
         from epythet.setup_docsrc import make_docsrc
 
         make_docsrc(pkg_dir, verbose)
+
+    if not skip_ci_def_gen and root_url:
+        def add_github_ci_def():
+            _clog(f'... making a .github/workflows/ci.yml')
+            with open(github_ci_tpl_path) as f_in:
+                ci_tpl = f_in.read()
+                ci_def = ci_tpl.replace('#PROJECT_NAME#', name)
+                output_path = "./.github/workflows/ci.yml"
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                with open(output_path, "w") as f_out:
+                    f_out.write(ci_def)
+
+        def add_gitlab_ci_def():
+            raise NotImplementedError()
+
+        if 'github.com' in root_url:
+            add_github_ci_def()
+        else:
+            add_gitlab_ci_def()
 
     return name
 

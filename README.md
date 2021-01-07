@@ -60,7 +60,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --description DESCRIPTION
-                        "There's a bit of an air of mystery around this project..."
+                        "There is a bit of an air of mystery around this project..."
   -r ROOT_URL, --root-url ROOT_URL
                         -
   -a AUTHOR, --author AUTHOR

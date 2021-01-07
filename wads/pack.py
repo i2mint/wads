@@ -181,6 +181,7 @@ def check_in(
                 for subdir in next(os.walk(current_dir))[1]:
                     run_pylint(os.path.join(current_dir, subdir))
 
+        print_step_title('Validate docstrings')
         run_pylint('.')
 
     def run_tests():
@@ -214,7 +215,6 @@ def check_in(
         )
 
     def stage_changes():
-        print_step_title('Stage changes')
         result = ggit('status')
         if 'Changes not staged for commit' in result:
             if not auto_choose_default_action and not verbose:
@@ -222,6 +222,7 @@ def check_in(
             if confirm(
                 'Do you want to stage all your pending changes', default=True
             ):
+                print_step_title('Stage changes')
                 git('add -A')
 
     def commit_changes():
@@ -232,12 +233,12 @@ def check_in(
         ggit(f'commit --message="{commit_message}"')
 
     def push_changes():
-        print_step_title('Push changes')
         if not confirm(
             'Your changes have been commited. Do you want to push',
             default=True,
         ):
             abort()
+        print_step_title('Push changes')
         ggit('push')
 
     try:
