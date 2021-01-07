@@ -32,7 +32,7 @@ try:
 except FileNotFoundError:
     wads_configs = {
         'populate_dflts': {
-            'description': "There is a bit of an air of mystery around this project...",
+            'description': 'There is a bit of an air of mystery around this project...',
             'root_url': None,
             'author': None,
             'license': 'mit',
@@ -42,7 +42,7 @@ except FileNotFoundError:
             'keywords': None,
             'install_requires': None,
             'verbose': None,
-            'version': '0.0.1'
+            'version': '0.0.1',
         }
     }
 

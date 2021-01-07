@@ -18,7 +18,7 @@ path_sep = os.path.sep
 populate_dflts = wads_configs.get(
     'populate_dflts',
     {
-        'description': "There is a bit of an air of mystery around this project...",
+        'description': 'There is a bit of an air of mystery around this project...',
         'root_url': None,
         'author': None,
         'license': 'mit',
@@ -28,13 +28,13 @@ populate_dflts = wads_configs.get(
         'keywords': None,
         'install_requires': None,
         'verbose': True,
-        'version': '0.0.1'
+        'version': '0.0.1',
     },
 )
 
 
 def gen_readme_text(
-    name, text="There is a bit of an air of mystery around this project..."
+    name, text='There is a bit of an air of mystery around this project...'
 ):
     return f'''
 # {name}
@@ -217,14 +217,15 @@ def populate_pkg_dir(
         make_docsrc(pkg_dir, verbose)
 
     if not skip_ci_def_gen and root_url:
+
         def add_github_ci_def():
             _clog(f'... making a .github/workflows/ci.yml')
             with open(github_ci_tpl_path) as f_in:
                 ci_tpl = f_in.read()
                 ci_def = ci_tpl.replace('#PROJECT_NAME#', name)
-                output_path = "./.github/workflows/ci.yml"
+                output_path = './.github/workflows/ci.yml'
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                with open(output_path, "w") as f_out:
+                with open(output_path, 'w') as f_out:
                     f_out.write(ci_def)
 
         def add_gitlab_ci_def():
