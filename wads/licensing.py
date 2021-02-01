@@ -7,7 +7,7 @@ def license_body(license=None, search_name_and_spdx_id=True, refresh=False):
         license, search_name_and_spdx_id, refresh=refresh
     )
     if _license_info is not None:
-        return _license_info['body']
+        return _license_info["body"]
 
 
 def license_info(license=None, search_name_and_spdx_id=True, refresh=False):
@@ -15,30 +15,30 @@ def license_info(license=None, search_name_and_spdx_id=True, refresh=False):
     if license not in licenses:
         if search_name_and_spdx_id:
             for ll in licenses.values():
-                if license in {ll['name'], ll['spdx_id']}:
+                if license in {ll["name"], ll["spdx_id"]}:
                     return ll
         print(
             "That's not a valid license key. Here is a list of valid license keys:"
         )
-        print('\t', *licenses, sep='\n\t')
+        print("\t", *licenses, sep="\n\t")
     else:
         return licenses[license]
 
 
 def licenses_dict(refresh=False):
     licenses = get_licenses(refresh=refresh)
-    return {x['key']: x for x in licenses}
+    return {x["key"]: x for x in licenses}
 
 
 def get_licenses(refresh=False):
     if refresh:
         try:
             licenses = get_licenses_from_github()
-            json.dump(licenses, open(licenses_json_path, 'w'))
+            json.dump(licenses, open(licenses_json_path, "w"))
         except Exception:
             raise
 
-    return json.load(open(licenses_json_path, 'r'))
+    return json.load(open(licenses_json_path, "r"))
 
 
 def get_licenses_from_github():
