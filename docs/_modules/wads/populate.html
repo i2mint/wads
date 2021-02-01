@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.47 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.48 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -43,7 +43,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">wads</span> <span class="kn">import</span> <span class="n">pkg_path_names</span><span class="p">,</span> <span class="n">root_dir</span><span class="p">,</span> <span class="n">wads_configs</span><span class="p">,</span> <span class="n">wads_configs_file</span>
 <span class="kn">from</span> <span class="nn">wads</span> <span class="kn">import</span> <span class="n">pkg_join</span> <span class="k">as</span> <span class="n">wads_join</span><span class="p">,</span> <span class="n">github_ci_tpl_path</span><span class="p">,</span> <span class="n">gitlab_ci_tpl_path</span>
-<span class="kn">from</span> <span class="nn">wads.util</span> <span class="kn">import</span> <span class="n">mk_conditional_logger</span>
+<span class="kn">from</span> <span class="nn">wads.util</span> <span class="kn">import</span> <span class="n">mk_conditional_logger</span><span class="p">,</span> <span class="n">git</span><span class="p">,</span> <span class="n">ensure_no_slash_suffix</span>
 <span class="kn">from</span> <span class="nn">wads.pack</span> <span class="kn">import</span> <span class="n">write_configs</span>
 <span class="kn">from</span> <span class="nn">wads.licensing</span> <span class="kn">import</span> <span class="n">license_body</span>
 
@@ -78,6 +78,7 @@
 <span class="s1">&#39;&#39;&#39;</span>
 
 
+<span class="c1"># TODO: Function way to long -- break it up</span>
 <span class="c1"># TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file</span>
 <div class="viewcode-block" id="populate_pkg_dir"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.populate_pkg_dir">[docs]</a><span class="k">def</span> <span class="nf">populate_pkg_dir</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">,</span>
@@ -112,10 +113,11 @@
 <span class="sd">    ...                  root_url=f&#39;https://github.com/i2mint&#39;,</span>
 <span class="sd">    ...                  author=&#39;OtoSense&#39;)</span>
 
-<span class="sd">    :param pkg_dir:</span>
-<span class="sd">    :param version:</span>
-<span class="sd">    :param description:</span>
-<span class="sd">    :param root_url:</span>
+<span class="sd">    :param pkg_dir: The relative or absolute path of the working directory. Defaults to &#39;.&#39;.</span>
+<span class="sd">    :type pkg_dir: str, optional</span>
+<span class="sd">    :param version: The desired version</span>
+<span class="sd">    :param description: Short description of project</span>
+<span class="sd">    :param root_url: Root url of the code repository (not the url of the project, but one level up that!)</span>
 <span class="sd">    :param author:</span>
 <span class="sd">    :param license:</span>
 <span class="sd">    :param description_file:</span>
@@ -123,11 +125,12 @@
 <span class="sd">    :param install_requires:</span>
 <span class="sd">    :param long_description:</span>
 <span class="sd">    :param long_description_content_type:</span>
-<span class="sd">    :param verbose:</span>
+<span class="sd">    :param verbose: Set to True if you want to log extra information during the process. Defaults to False.</span>
+<span class="sd">    :type verbose: bool, optional</span>
 <span class="sd">    :param default_from: Name of field to look up in wads_configs to get defaults from,</span>
 <span class="sd">        or &#39;user_input&#39; to get it from user input.</span>
-<span class="sd">    :param skip_docsrc_gen:</span>
-<span class="sd">    :param skip_ci_def_gen:</span>
+<span class="sd">    :param skip_docsrc_gen: Skip the generation of documentation stuff</span>
+<span class="sd">    :param skip_ci_def_gen: Skip the generation of the CI stuff</span>
 <span class="sd">    :param configs:</span>
 <span class="sd">    :return:</span>
 
@@ -157,10 +160,7 @@
     <span class="n">_clog</span> <span class="o">=</span> <span class="n">mk_conditional_logger</span><span class="p">(</span><span class="n">condition</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s1"> is not a directory&#39;</span>
-    <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
-        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[</span>
-            <span class="p">:</span><span class="o">-</span><span class="mi">1</span>
-        <span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
@@ -252,28 +252,58 @@
 
         <span class="n">make_docsrc</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_ci_def_gen</span> <span class="ow">and</span> <span class="n">root_url</span><span class="p">:</span>
-
-        <span class="k">def</span> <span class="nf">add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">):</span>
-            <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making a </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_tpl_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
-                <span class="n">ci_def</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-                <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#PROJECT_NAME#&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-                <span class="n">hostname</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">root_url</span><span class="p">)</span><span class="o">.</span><span class="n">netloc</span>
-                <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#GITLAB_HOSTNAME#&#39;</span><span class="p">,</span> <span class="n">hostname</span><span class="p">)</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;./</span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
-                    <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ci_def</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_ci_def_gen</span><span class="p">:</span>
+        <span class="n">root_url</span> <span class="o">=</span> <span class="n">root_url</span> <span class="ow">or</span> <span class="n">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s1">&#39;github.com&#39;</span> <span class="ow">in</span> <span class="n">root_url</span><span class="p">:</span>
-            <span class="n">ci_def_path</span> <span class="o">=</span> <span class="s1">&#39;.github/workflows/ci.yml&#39;</span>
+            <span class="n">ci_def_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s1">&#39;.github/workflows/ci.yml&#39;</span><span class="p">)</span>
             <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">github_ci_tpl_path</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">ci_def_path</span> <span class="o">=</span> <span class="s1">&#39;.gitlab-ci.yml&#39;</span>
+        <span class="k">elif</span> <span class="s1">&#39;gitlab&#39;</span> <span class="ow">in</span> <span class="n">root_url</span><span class="p">:</span>
+            <span class="n">ci_def_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s1">&#39;.gitlab-ci.yml&#39;</span><span class="p">)</span>
             <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">gitlab_ci_tpl_path</span>
-        <span class="n">add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Unknown root url type: Neither github.com nor gitlab!&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span>
+                <span class="n">pkg_dir</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+            <span class="n">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">name</span></div>
+
+
+<span class="k">def</span> <span class="nf">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">clog</span><span class="p">):</span>
+    <span class="n">clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making a </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_tpl_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+        <span class="n">ci_def</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#PROJECT_NAME#&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">hostname</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">root_url</span><span class="p">)</span><span class="o">.</span><span class="n">netloc</span>
+        <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#GITLAB_HOSTNAME#&#39;</span><span class="p">,</span> <span class="n">hostname</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
+            <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ci_def</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;remote get-url origin&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pkg_git_url</span>
+
+
+<span class="k">def</span> <span class="nf">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir, get the url, and make a root_url from it&quot;&quot;&quot;</span>
+    <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;The pkg_git_url doesn&#39;t end with the pkg name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">), &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;so I won&#39;t try to guess. pkg_git_url is </span><span class="si">{</span><span class="n">pkg_git_url</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;For what ever you&#39;re doing, maybe there&#39;s a way to explicitly specify &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;the root url you&#39;re looking for?&quot;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pkg_git_url</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
 
 
 <div class="viewcode-block" id="update_pack_and_setup_py"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py">[docs]</a><span class="k">def</span> <span class="nf">update_pack_and_setup_py</span><span class="p">(</span>
@@ -281,10 +311,7 @@
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Just copy over setup.py and pack.py (moving the original to be prefixed by &#39;_&#39;&quot;&quot;&quot;</span>
     <span class="n">copy_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">copy_files</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target_pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
-        <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">target_pkg_dir</span><span class="p">[</span>
-            <span class="p">:</span><span class="o">-</span><span class="mi">1</span>
-        <span class="p">]</span>  <span class="c1"># remove the slash suffix (or basename will be empty)</span>
+    <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">contents</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="k">assert</span> <span class="p">{</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>

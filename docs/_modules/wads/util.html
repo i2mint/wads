@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.util &#8212; wads 0.0.47 documentation</title>
+    <title>wads.util &#8212; wads 0.0.48 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -36,11 +36,25 @@
 <span></span><span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
 <span class="kn">import</span> <span class="nn">pkgutil</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 
 <span class="n">standard_lib_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">path_sep</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+
+
+<span class="k">def</span> <span class="nf">ensure_slash_suffix</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">path_sep</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">path_sep</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">s</span>
 
 
 <div class="viewcode-block" id="git"><a class="viewcode-back" href="../../module_docs/wads/util.html#wads.util.git">[docs]</a><span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">git_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -53,16 +67,28 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    </span>
+
 <span class="sd">    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ add myFile</span>
 <span class="sd">    git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m &#39;something&#39;</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">command</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;git &#39;</span><span class="p">):</span>
+        <span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;You don&#39;t need to start your command with &#39;git &#39;. I know it&#39;s a git command. Removing that prefix&quot;</span>
+        <span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">command</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;git &#39;</span><span class="p">)</span> <span class="p">:]</span>
     <span class="n">work_tree</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">work_tree</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">git_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">git_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_tree</span><span class="p">,</span> <span class="s1">&#39;.git&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">git_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Didn&#39;t find the git_dir: </span><span class="si">{</span><span class="n">git_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">git_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">git_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">git_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.git&#39;</span><span class="p">):</span>
+        <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;git_dir doesn&#39;t end with `.git`: </span><span class="si">{</span><span class="n">git_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;git --git-dir=&quot;</span><span class="si">{</span><span class="n">git_dir</span><span class="si">}</span><span class="s1">&quot; --work-tree=&quot;</span><span class="si">{</span><span class="n">work_tree</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">&#39;</span>
-    <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 
 <span class="k">def</span> <span class="nf">is_standard_lib_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
