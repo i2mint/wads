@@ -12,7 +12,7 @@
 def replace_relative_links_to_absolute(
     s: str,
     root_url: str,
-    str_to_match_and_add_root_url_before: str = '\n![png](',
+    str_to_match_and_add_root_url_before: str = "\n![png](",
 ):
     return s.replace(
         str_to_match_and_add_root_url_before,

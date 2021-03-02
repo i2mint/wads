@@ -22,7 +22,7 @@ def ensure_no_slash_suffix(s: str):
     return s
 
 
-def git(command='status', work_tree='.', git_dir=None):
+def git(command="status", work_tree=".", git_dir=None):
     """Launch git commands.
 
     :param command: git command (e.g. 'status', 'branch', 'commit -m "blah"', 'push', etc.)
@@ -37,17 +37,17 @@ def git(command='status', work_tree='.', git_dir=None):
     git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m 'something'
 
     """
-    if command.startswith('git '):
+    if command.startswith("git "):
         warn(
             "You don't need to start your command with 'git '. I know it's a git command. Removing that prefix"
         )
-        command = command[len('git ') :]
+        command = command[len("git ") :]
     work_tree = os.path.abspath(os.path.expanduser(work_tree))
     if git_dir is None:
-        git_dir = os.path.join(work_tree, '.git')
+        git_dir = os.path.join(work_tree, ".git")
     assert os.path.isdir(git_dir), f"Didn't find the git_dir: {git_dir}"
     git_dir = ensure_no_slash_suffix(git_dir)
-    if not git_dir.endswith('.git'):
+    if not git_dir.endswith(".git"):
         warn(f"git_dir doesn't end with `.git`: {git_dir}")
     command = f'git --git-dir="{git_dir}" --work-tree="{work_tree}" {command}'
     r = subprocess.check_output(command, shell=True)
@@ -62,7 +62,7 @@ def is_standard_lib_path(path):
 
 def standard_lib_module_names(
     is_standard_lib_path=is_standard_lib_path,
-    name_filt=lambda name: not name.startswith('_'),
+    name_filt=lambda name: not name.startswith("_"),
 ):
     return filter(
         name_filt,
@@ -102,7 +102,7 @@ def mk_replacer_from_dict(from_to_dict):
     """
 
     p = re.compile(
-        '|'.join(map(r'({})'.format, map(re.escape, from_to_dict.keys())))
+        "|".join(map(r"({})".format, map(re.escape, from_to_dict.keys())))
     )
     f = lambda x: from_to_dict[x.group(0)]
 
@@ -141,18 +141,18 @@ def mk_import_root_replacer(from_to_dict):
     t = dict(
         chain.from_iterable(
             [
-                (f'(?<=from\ ){old}(?=[\.\ ])', f'{new}'),
-                (f'(?<=import\ ){old}(?=[\.\s])', f'{new}'),
+                (f"(?<=from\ ){old}(?=[\.\ ])", f"{new}"),
+                (f"(?<=import\ ){old}(?=[\.\s])", f"{new}"),
             ]
             for old, new in from_to_dict.items()
         )
     )
 
-    p = re.compile('|'.join(map(r'({})'.format, t.keys())))
+    p = re.compile("|".join(map(r"({})".format, t.keys())))
     f = lambda x: from_to_dict[x.group(0)]
 
     def replacer(s):
-        ss = p.sub(f, s + ' ')
+        ss = p.sub(f, s + " ")
         return ss[:-1]
 
     return replacer
@@ -193,19 +193,19 @@ def replace_import_names(
     :return:
     """
 
-    suffix = ''
+    suffix = ""
     if add_comment_at_the_end_of_lines_replaced is False:
-        suffix = ''
+        suffix = ""
     elif add_comment_at_the_end_of_lines_replaced is True:
-        suffix = '# line_was_edited_by_wads'
+        suffix = "# line_was_edited_by_wads"
     elif isinstance(add_comment_at_the_end_of_lines_replaced, str):
         suffix = add_comment_at_the_end_of_lines_replaced
-        if not suffix.startswith('#'):
-            suffix = '# ' + suffix
+        if not suffix.startswith("#"):
+            suffix = "# " + suffix
     else:
         raise TypeError(
             f"Don't know what to do with such a type of add_comment_at_the_end_of_lines_replaced: "
-            f'{add_comment_at_the_end_of_lines_replaced}'
+            f"{add_comment_at_the_end_of_lines_replaced}"
         )
 
     _clog = mk_conditional_logger(condition=verbose, func=print)
@@ -219,7 +219,7 @@ def replace_import_names(
     if source_store == target_store:
         # TODO: Add confirmation (user input) to protect more. Make this an option (so total automatic is possible)
         _clog(
-            'I just wanted you to be aware that you are using the same store for source and target.'
+            "I just wanted you to be aware that you are using the same store for source and target."
             "This means I'm about to overwrite your files!!"
         )
         if dryrun:
@@ -228,10 +228,10 @@ def replace_import_names(
     replacer = replacer_factory(from_to_dict)
 
     if dryrun:
-        replace_prompt = 'will replace'
+        replace_prompt = "will replace"
     else:
-        replace_prompt = '   replacing'
-    with____prompt = '        with'
+        replace_prompt = "   replacing"
+    with____prompt = "        with"
 
     for k, v in source_store.items():
 
@@ -240,7 +240,7 @@ def replace_import_names(
         def gen():
             nonlocal lines_replaced
             for i, line in enumerate(
-                v.split('\n'), 1
+                v.split("\n"), 1
             ):  # TODO: Double traversal. Find online splitter
                 new_line = replacer(line) + suffix
                 yield new_line
@@ -251,10 +251,10 @@ def replace_import_names(
                     clog(
                         verbose or dryrun,
                         print,
-                        f'{k}:{i}:\n{replace_prompt}\t{line}\n{with____prompt}\t{new_line}',
+                        f"{k}:{i}:\n{replace_prompt}\t{line}\n{with____prompt}\t{new_line}",
                     )
 
-        new_v = '\n'.join(gen())
+        new_v = "\n".join(gen())
 
         if not dryrun and lines_replaced > 0:
             target_store[k] = new_v
@@ -263,54 +263,54 @@ def replace_import_names(
 
 
 fc = dict(
-    reset='\033[0m',  # alias for reset_all
-    reset_all='\033[0m',
-    bold='\033[1m',
-    dim='\033[2m',
-    underlined='\033[4m',
-    blink='\033[5m',
-    reverse='\033[7m',
-    hidden='\033[8m',
-    reset_bold='\033[21m',
-    reset_dim='\033[22m',
-    reset_underlined='\033[24m',
-    reset_blink='\033[25m',
-    reset_reverse='\033[27m',
-    reset_hidden='\033[28m',
-    default='\033[39m',
-    black='\033[30m',
-    red='\033[31m',
-    green='\033[32m',
-    yellow='\033[33m',
-    blue='\033[34m',
-    magenta='\033[35m',
-    cyan='\033[36m',
-    gray='\033[37m',
-    dark_gray='\033[90m',
-    dark_red='\033[91m',
-    dark_green='\033[92m',
-    dark_yellow='\033[93m',
-    dark_blue='\033[94m',
-    dark_magenta='\033[95m',
-    dark_cyan='\033[96m',
-    white='\033[97m',
-    background_default='\033[49m',
-    background_black='\033[40m',
-    background_red='\033[41m',
-    background_green='\033[42m',
-    background_yellow='\033[43m',
-    background_blue='\033[44m',
-    background_magenta='\033[45m',
-    background_cyan='\033[46m',
-    background_gray='\033[47m',
-    background_dark_gray='\033[100m',
-    background_dark_red='\033[101m',
-    background_dark_green='\033[102m',
-    background_dark_yellow='\033[103m',
-    background_dark_blue='\033[104m',
-    background_dark_magenta='\033[105m',
-    background_dark_cyan='\033[106m',
-    background_white='\033[107m',
+    reset="\033[0m",  # alias for reset_all
+    reset_all="\033[0m",
+    bold="\033[1m",
+    dim="\033[2m",
+    underlined="\033[4m",
+    blink="\033[5m",
+    reverse="\033[7m",
+    hidden="\033[8m",
+    reset_bold="\033[21m",
+    reset_dim="\033[22m",
+    reset_underlined="\033[24m",
+    reset_blink="\033[25m",
+    reset_reverse="\033[27m",
+    reset_hidden="\033[28m",
+    default="\033[39m",
+    black="\033[30m",
+    red="\033[31m",
+    green="\033[32m",
+    yellow="\033[33m",
+    blue="\033[34m",
+    magenta="\033[35m",
+    cyan="\033[36m",
+    gray="\033[37m",
+    dark_gray="\033[90m",
+    dark_red="\033[91m",
+    dark_green="\033[92m",
+    dark_yellow="\033[93m",
+    dark_blue="\033[94m",
+    dark_magenta="\033[95m",
+    dark_cyan="\033[96m",
+    white="\033[97m",
+    background_default="\033[49m",
+    background_black="\033[40m",
+    background_red="\033[41m",
+    background_green="\033[42m",
+    background_yellow="\033[43m",
+    background_blue="\033[44m",
+    background_magenta="\033[45m",
+    background_cyan="\033[46m",
+    background_gray="\033[47m",
+    background_dark_gray="\033[100m",
+    background_dark_red="\033[101m",
+    background_dark_green="\033[102m",
+    background_dark_yellow="\033[103m",
+    background_dark_blue="\033[104m",
+    background_dark_magenta="\033[105m",
+    background_dark_cyan="\033[106m",
+    background_white="\033[107m",
 )
 
 try:
@@ -323,10 +323,10 @@ except ModuleNotFoundError:
 
 def highlight(
     string,
-    effect=fc['reverse'],
-    beg_mark='[[',
-    end_mark=']]',
-    end_effect=fc['reset_all'],
+    effect=fc["reverse"],
+    beg_mark="[[",
+    end_mark="]]",
+    end_effect=fc["reset_all"],
 ):
     r"""Interprets a string's highlight markers to be able to make highlights in the string.
 

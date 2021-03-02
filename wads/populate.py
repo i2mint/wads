@@ -17,54 +17,57 @@ from wads.licensing import license_body
 path_sep = os.path.sep
 
 populate_dflts = wads_configs.get(
-    'populate_dflts',
+    "populate_dflts",
     {
-        'description': 'There is a bit of an air of mystery around this project...',
-        'root_url': None,
-        'author': None,
-        'license': 'mit',
-        'description_file': 'README.md',
-        'long_description': 'file:README.md',
-        'long_description_content_type': 'text/markdown',
-        'keywords': None,
-        'install_requires': None,
-        'verbose': True,
-        'version': '0.0.1',
+        "description": "There is a bit of an air of mystery around this project...",
+        "root_url": None,
+        "author": None,
+        "license": "mit",
+        "description_file": "README.md",
+        "long_description": "file:README.md",
+        "long_description_content_type": "text/markdown",
+        "keywords": None,
+        "install_requires": None,
+        "verbose": True,
+        "version": "0.0.1",
     },
 )
 
 
 def gen_readme_text(
-    name, text='There is a bit of an air of mystery around this project...'
+    name, text="There is a bit of an air of mystery around this project..."
 ):
-    return f'''
+    return f"""
 # {name}
 {text}
-'''
+"""
 
 
 # TODO: Function way to long -- break it up
 # TODO: Add a `defaults_from` in **configs that allows one to have several named defaults in wads_configs_file
 def populate_pkg_dir(
     pkg_dir,
-    version: str = populate_dflts['version'],
-    description: str = populate_dflts['description'],
-    root_url: Optional[str] = populate_dflts['root_url'],
-    author: Optional[str] = populate_dflts['author'],
-    license: str = populate_dflts['license'],
-    description_file: str = populate_dflts['description_file'],
-    keywords: Optional[List] = populate_dflts['keywords'],
-    install_requires: Optional[List] = populate_dflts['install_requires'],
-    long_description=populate_dflts['long_description'],
+    version: str = populate_dflts["version"],
+    description: str = populate_dflts["description"],
+    root_url: Optional[str] = populate_dflts["root_url"],
+    author: Optional[str] = populate_dflts["author"],
+    license: str = populate_dflts["license"],
+    description_file: str = populate_dflts["description_file"],
+    keywords: Optional[List] = populate_dflts["keywords"],
+    install_requires: Optional[List] = populate_dflts["install_requires"],
+    long_description=populate_dflts["long_description"],
     long_description_content_type=populate_dflts[
-        'long_description_content_type'
+        "long_description_content_type"
     ],
     include_pip_install_instruction_in_readme=True,
-    verbose: bool = populate_dflts['verbose'],
+    verbose: bool = populate_dflts["verbose"],
     overwrite: List = (),
     defaults_from: Optional[str] = None,
     skip_docsrc_gen=False,
     skip_ci_def_gen=False,
+    version_control_system=None,
+    ci_def_path=None,
+    ci_tpl_path=None,
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -96,6 +99,9 @@ def populate_pkg_dir(
         or 'user_input' to get it from user input.
     :param skip_docsrc_gen: Skip the generation of documentation stuff
     :param skip_ci_def_gen: Skip the generation of the CI stuff
+    :param version_control_system: 'github' or 'gitlab'
+    :param ci_def_path: Path of the CI definition
+    :param ci_tpl_path: Pater of the template definition
     :param configs:
     :return:
 
@@ -103,10 +109,10 @@ def populate_pkg_dir(
 
     args_defaults = dict()
     if defaults_from is not None:
-        if defaults_from == 'user_input':  # TODO: Implement!
+        if defaults_from == "user_input":  # TODO: Implement!
             args_defaults = dict()  # ... and then fill with user input
             raise NotImplementedError(
-                'Not immplemented yet'
+                "Not immplemented yet"
             )  # TODO: Implement
         else:
             try:
@@ -124,31 +130,31 @@ def populate_pkg_dir(
 
     _clog = mk_conditional_logger(condition=verbose, func=print)
     pkg_dir = os.path.abspath(os.path.expanduser(pkg_dir))
-    assert os.path.isdir(pkg_dir), f'{pkg_dir} is not a directory'
+    assert os.path.isdir(pkg_dir), f"{pkg_dir} is not a directory"
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
     name = os.path.basename(pkg_dir)
     pjoin = lambda *p: os.path.join(pkg_dir, *p)
 
     if name not in os.listdir(pkg_dir):
         f = pjoin(name)
-        _clog(f'... making directory {pkg_dir}')
+        _clog(f"... making directory {pkg_dir}")
         os.mkdir(f)
-    if '__init__.py' not in os.listdir(pjoin(name)):
-        f = pjoin(name, '__init__.py')
-        _clog(f'... making an empty {f}')
-        with open(f, 'w') as fp:
-            fp.write('')
+    if "__init__.py" not in os.listdir(pjoin(name)):
+        f = pjoin(name, "__init__.py")
+        _clog(f"... making an empty {f}")
+        with open(f, "w") as fp:
+            fp.write("")
 
     # Note: Overkill since we just made those things...
-    if name not in os.listdir(pkg_dir) or '__init__.py' not in os.listdir(
+    if name not in os.listdir(pkg_dir) or "__init__.py" not in os.listdir(
         pjoin(name)
     ):
         raise RuntimeError(
             "You should have a {name}/{name}/__init__.py structure. You don't."
         )
 
-    if os.path.isfile(pjoin('setup.cfg')):
-        with open(pjoin('setup.cfg'), 'r'):
+    if os.path.isfile(pjoin("setup.cfg")):
+        with open(pjoin("setup.cfg"), "r"):
             pass
 
     kwargs = dict(
@@ -168,15 +174,15 @@ def populate_pkg_dir(
     # configs = dict(name=name, **args_defaults, **configs, **kwargs)
     configs = dict(ChainMap(dict(name=name), kwargs, configs, args_defaults))
 
-    kwargs['description-file'] = kwargs.pop('description_file', '')
+    kwargs["description-file"] = kwargs.pop("description_file", "")
 
     assert (
-        configs.get('name', name) == name
+        configs.get("name", name) == name
     ), f"There's a name conflict. pkg_dir tells me the name is {name}, but configs tell me its {configs.get('name')}"
-    configs['display_name'] = configs.get('display_name', configs['name'])
+    configs["display_name"] = configs.get("display_name", configs["name"])
 
     def copy_from_resource(resource_name):
-        _clog(f'... copying {resource_name} from {root_dir} to {pkg_dir}')
+        _clog(f"... copying {resource_name} from {root_dir} to {pkg_dir}")
         shutil.copy(wads_join(resource_name), pjoin(resource_name))
 
     def should_update(resource_name):
@@ -190,26 +196,26 @@ def populate_pkg_dir(
 
     def save_txt_to_pkg(resource_name, content):
         target_path = pjoin(resource_name)
-        assert not os.path.isfile(target_path), f'{target_path} exists already'
-        _clog(f'... making a {resource_name}')
-        with open(pjoin(resource_name), 'wt') as fp:
+        assert not os.path.isfile(target_path), f"{target_path} exists already"
+        _clog(f"... making a {resource_name}")
+        with open(pjoin(resource_name), "wt") as fp:
             fp.write(content)
 
-    if should_update('setup.cfg'):
+    if should_update("setup.cfg"):
         _clog("... making a 'setup.cfg'")
-        if 'pkg-dir' in configs:
-            del configs['pkg-dir']
-        write_configs(pjoin(''), configs)
+        if "pkg-dir" in configs:
+            del configs["pkg-dir"]
+        write_configs(pjoin(""), configs)
 
-    if should_update('LICENSE'):
-        _license_body = license_body(configs['license'])
-        save_txt_to_pkg('LICENSE', _license_body)
+    if should_update("LICENSE"):
+        _license_body = license_body(configs["license"])
+        save_txt_to_pkg("LICENSE", _license_body)
 
-    if should_update('README.md'):
-        readme_text = gen_readme_text(name, configs.get('description'))
+    if should_update("README.md"):
+        readme_text = gen_readme_text(name, configs.get("description"))
         if include_pip_install_instruction_in_readme:
-            readme_text += f'\n\nTo install:\t```pip install {name}```\n'
-        save_txt_to_pkg('README.md', readme_text)
+            readme_text += f"\n\nTo install:\t```pip install {name}```\n"
+        save_txt_to_pkg("README.md", readme_text)
 
     if not skip_docsrc_gen:
         # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
@@ -219,17 +225,12 @@ def populate_pkg_dir(
 
     if not skip_ci_def_gen:
         root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
-
-        if 'github.com' in root_url:
-            ci_def_path = os.path.join(pkg_dir, '.github/workflows/ci.yml')
-            ci_tpl_path = github_ci_tpl_path
-        elif 'gitlab' in root_url:
-            ci_def_path = os.path.join(pkg_dir, '.gitlab-ci.yml')
-            ci_tpl_path = gitlab_ci_tpl_path
-        else:
-            raise ValueError(
-                f'Unknown root url type: Neither github.com nor gitlab!'
-            )
+        version_control_system = (
+            version_control_system or _url_to_version_control_system(root_url)
+        )
+        ci_def_path, ci_tpl_path = _resolve_ci_def_and_tpl_path(
+            ci_def_path, ci_tpl_path, pkg_dir, version_control_system
+        )
         if should_update(ci_def_path):
             assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
                 pkg_dir
@@ -239,22 +240,58 @@ def populate_pkg_dir(
     return name
 
 
+_unknown_version_control_system = object()
+
+
+def _url_to_version_control_system(url):
+    if "github.com" in url:
+        return "github"
+    elif "gitlab" in url:
+        return "gitlab"
+    else:
+        return _unknown_version_control_system
+
+
+def _resolve_ci_def_and_tpl_path(
+    ci_def_path, ci_tpl_path, pkg_dir, version_control_system
+):
+    if ci_def_path is None:
+        if version_control_system == "github":
+            ci_def_path = os.path.join(pkg_dir, ".github/workflows/ci.yml")
+        elif version_control_system == "gitlab":
+            ci_def_path = os.path.join(pkg_dir, ".gitlab-ci.yml")
+        else:
+            raise ValueError(
+                f"Unknown root url type: Neither github.com nor gitlab!"
+            )
+    if ci_tpl_path is None:
+        if version_control_system == "github":
+            ci_tpl_path = github_ci_tpl_path
+        elif version_control_system == "gitlab":
+            ci_tpl_path = gitlab_ci_tpl_path
+        else:
+            raise ValueError(
+                f"Unknown root url type: Neither github.com nor gitlab!"
+            )
+    return ci_def_path, ci_tpl_path
+
+
 def _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, clog):
-    clog(f'... making a {ci_def_path}')
+    clog(f"... making a {ci_def_path}")
     with open(ci_tpl_path) as f_in:
         ci_def = f_in.read()
-        ci_def = ci_def.replace('#PROJECT_NAME#', name)
+        ci_def = ci_def.replace("#PROJECT_NAME#", name)
         hostname = urlparse(root_url).netloc
-        ci_def = ci_def.replace('#GITLAB_HOSTNAME#', hostname)
+        ci_def = ci_def.replace("#GITLAB_HOSTNAME#", hostname)
         os.makedirs(os.path.dirname(ci_def_path), exist_ok=True)
-        with open(ci_def_path, 'w') as f_out:
+        with open(ci_def_path, "w") as f_out:
             f_out.write(ci_def)
 
 
 def _get_pkg_url_from_pkg_dir(pkg_dir):
     """Look in the .git of pkg_dir and get the project url for it"""
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
-    pkg_git_url = git(command='remote get-url origin', work_tree=pkg_dir)
+    pkg_git_url = git(command="remote get-url origin", work_tree=pkg_dir)
     return pkg_git_url
 
 
@@ -272,14 +309,14 @@ def _get_root_url_from_pkg_dir(pkg_dir):
 
 
 def update_pack_and_setup_py(
-    target_pkg_dir, copy_files=('setup.py', 'wads/data/MANIFEST.in')
+    target_pkg_dir, copy_files=("setup.py", "wads/data/MANIFEST.in")
 ):
     """Just copy over setup.py and pack.py (moving the original to be prefixed by '_'"""
     copy_files = set(copy_files)
     target_pkg_dir = ensure_no_slash_suffix(target_pkg_dir)
     name = os.path.basename(target_pkg_dir)
     contents = os.listdir(target_pkg_dir)
-    assert {'setup.py', name}.issubset(
+    assert {"setup.py", name}.issubset(
         contents
     ), f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
 
@@ -289,7 +326,7 @@ def update_pack_and_setup_py(
         print(
             f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}'
         )
-        shutil.move(src=pjoin(resource_name), dst=pjoin('_' + resource_name))
+        shutil.move(src=pjoin(resource_name), dst=pjoin("_" + resource_name))
         shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
 
 
@@ -299,5 +336,5 @@ def main():
     argh.dispatch_command(populate_pkg_dir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
