@@ -86,23 +86,23 @@ def populate_pkg_dir(
     :param version: The desired version
     :param description: Short description of project
     :param root_url: Root url of the code repository (not the url of the project, but one level up that!)
-    :param author:
-    :param license:
-    :param description_file:
-    :param keywords:
-    :param install_requires:
-    :param long_description:
-    :param long_description_content_type:
+    :param author: Author of the package
+    :param license: License name for the package (should be recognized by pypi). Default is 'mit'
+    :param description_file: File name containing a description of the project. Default is 'README.md'
+    :param keywords: Keywords to include in pypi publication
+    :param install_requires: The (pip install) names of of the packages required to install the package we're generating
+    :param long_description: Text of the long description. Default is "file:README.md" (takes contents of README.md)
+    :param long_description_content_type: How to parse the long_description. Default is "text/markdown"
     :param verbose: Set to True if you want to log extra information during the process. Defaults to False.
-    :type verbose: bool, optional
+    :type verbose: bool, optional: Whether to print a lot of stuff as project is being populated.
     :param default_from: Name of field to look up in wads_configs to get defaults from,
         or 'user_input' to get it from user input.
     :param skip_docsrc_gen: Skip the generation of documentation stuff
     :param skip_ci_def_gen: Skip the generation of the CI stuff
-    :param version_control_system: 'github' or 'gitlab'
+    :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
-    :param configs:
+    :param configs: Extra configurations
     :return:
 
     """
