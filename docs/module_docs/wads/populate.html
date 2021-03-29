@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.49 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.50 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -57,22 +57,22 @@
 <li><p><strong>version</strong> – The desired version</p></li>
 <li><p><strong>description</strong> – Short description of project</p></li>
 <li><p><strong>root_url</strong> – Root url of the code repository (not the url of the project, but one level up that!)</p></li>
-<li><p><strong>author</strong> – </p></li>
-<li><p><strong>license</strong> – </p></li>
-<li><p><strong>description_file</strong> – </p></li>
-<li><p><strong>keywords</strong> – </p></li>
-<li><p><strong>install_requires</strong> – </p></li>
-<li><p><strong>long_description</strong> – </p></li>
-<li><p><strong>long_description_content_type</strong> – </p></li>
-<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to True if you want to log extra information during the process. Defaults to False.</p></li>
+<li><p><strong>author</strong> – Author of the package</p></li>
+<li><p><strong>license</strong> – License name for the package (should be recognized by pypi). Default is ‘mit’</p></li>
+<li><p><strong>description_file</strong> – File name containing a description of the project. Default is ‘README.md’</p></li>
+<li><p><strong>keywords</strong> – Keywords to include in pypi publication</p></li>
+<li><p><strong>install_requires</strong> – The (pip install) names of of the packages required to install the package we’re generating</p></li>
+<li><p><strong>long_description</strong> – Text of the long description. Default is “<a class="reference external" href="file:README.md">file:README.md</a>” (takes contents of README.md)</p></li>
+<li><p><strong>long_description_content_type</strong> – How to parse the long_description. Default is “text/markdown”</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional: Whether to print a lot of stuff as project is being populated.</em>) – Set to True if you want to log extra information during the process. Defaults to False.</p></li>
 <li><p><strong>default_from</strong> – Name of field to look up in wads_configs to get defaults from,
 or ‘user_input’ to get it from user input.</p></li>
 <li><p><strong>skip_docsrc_gen</strong> – Skip the generation of documentation stuff</p></li>
 <li><p><strong>skip_ci_def_gen</strong> – Skip the generation of the CI stuff</p></li>
-<li><p><strong>version_control_system</strong> – ‘github’ or ‘gitlab’</p></li>
+<li><p><strong>version_control_system</strong> – ‘github’ or ‘gitlab’ (will TRY to be resolved from root url if not given)</p></li>
 <li><p><strong>ci_def_path</strong> – Path of the CI definition</p></li>
 <li><p><strong>ci_tpl_path</strong> – Pater of the template definition</p></li>
-<li><p><strong>configs</strong> – </p></li>
+<li><p><strong>configs</strong> – Extra configurations</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
