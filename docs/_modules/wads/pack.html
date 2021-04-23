@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.51 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.52 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -877,6 +877,48 @@
     <span class="k">return</span> <span class="n">configs</span></div>
 
 
+<div class="viewcode-block" id="process_missing_module_docstrings"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.process_missing_module_docstrings">[docs]</a><span class="k">def</span> <span class="nf">process_missing_module_docstrings</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
+    <span class="n">exceptions</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">docstr_template</span><span class="o">=</span><span class="s1">&#39;&quot;&quot;&quot;</span><span class="se">\n</span><span class="si">{user_input}</span><span class="se">\n</span><span class="s1">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Goes through modules of package, sees which ones don&#39;t have docstrings, and gives you the option to write one&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">py2store</span> <span class="kn">import</span> <span class="n">LocalTextStore</span><span class="p">,</span> <span class="n">filt_iter</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exceptions</span><span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">filt_iter</span><span class="p">(</span>
+        <span class="n">LocalTextStore</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="p">,</span> <span class="n">max_levels</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+        <span class="n">filt</span><span class="o">=</span><span class="n">exceptions</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">files_and_contents_that_dont_have_docs</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">file_contents</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">contents</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;&quot;&quot;&quot;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">contents</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;&#39;&#39;&quot;</span>
+            <span class="p">):</span>
+                <span class="k">yield</span> <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span>
+
+    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;list&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">file</span>
+            <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span> <span class="ow">in</span> <span class="n">files_and_contents_that_dont_have_docs</span><span class="p">()</span>
+        <span class="p">]</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;count&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">files_and_contents_that_dont_have_docs</span><span class="p">()))</span>
+    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span> <span class="ow">in</span> <span class="n">files_and_contents_that_dont_have_docs</span><span class="p">():</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter a one liner doc for </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> then press enter:</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+            <span class="n">files</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">docstr_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_input</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">+</span> <span class="n">file_contents</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown action: </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
 <span class="n">argh_kwargs</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;namespace&#39;</span><span class="p">:</span> <span class="s1">&#39;pack&#39;</span><span class="p">,</span>
     <span class="s1">&#39;functions&#39;</span><span class="p">:</span> <span class="p">[</span>
@@ -895,6 +937,7 @@
         <span class="n">current_pypi_version</span><span class="p">,</span>
         <span class="n">validate_pkg_dir</span><span class="p">,</span>
         <span class="n">git_commit_and_push</span><span class="p">,</span>
+        <span class="n">process_missing_module_docstrings</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="s1">&#39;namespace_kwargs&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Package Configurations&#39;</span><span class="p">,</span>
