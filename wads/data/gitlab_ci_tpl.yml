@@ -47,10 +47,10 @@ Validation:
       # C0114: missing-module-docstring
       # C0115: missing-class-docstring
       # C0116: missing-function-docstring
-    - pylint ./$PROJECT_NAME --ignore=tests,examples --disable=all --enable=C0114
+    - pylint ./$PROJECT_NAME --ignore=tests,examples,scrap --disable=all --enable=C0114
 
     # RUN TESTS
-    - pytest --doctest-modules -v $PROJECT_NAME
+    - pytest --doctest-modules --ignore=scrap -v $PROJECT_NAME
 
 Publish:
   stage: Publish
