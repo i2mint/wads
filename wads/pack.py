@@ -41,26 +41,26 @@ import pylint.lint
 
 from wads.util import git
 
-CONFIG_FILE_NAME = "setup.cfg"
-METADATA_SECTION = "metadata"
-OPTIONS_SECTION = "options"
+CONFIG_FILE_NAME = 'setup.cfg'
+METADATA_SECTION = 'metadata'
+OPTIONS_SECTION = 'options'
 DFLT_OPTIONS = {
-    "packages": "find:",
-    "include_package_data": True,
-    "zip_safe": False,
+    'packages': 'find:',
+    'include_package_data': True,
+    'zip_safe': False,
 }
 
 pjoin = lambda *p: os.path.join(*p)
-DOCSRC = "docsrc"
+DOCSRC = 'docsrc'
 DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 
 def get_name_from_configs(pkg_dir, assert_exists=True):
     """Get name from local setup.cfg (metadata section)"""
     configs = read_configs(pkg_dir=pkg_dir)
-    name = configs.get("name", None)
+    name = configs.get('name', None)
     if assert_exists:
-        assert name is not None, "No name was found in configs"
+        assert name is not None, 'No name was found in configs'
     return name
 
 
@@ -74,7 +74,7 @@ Path = str
 
 def check_in(
     commit_message: str,
-    work_tree=".",
+    work_tree='.',
     git_dir=None,
     auto_choose_default_action=False,
     bypass_docstring_validation=False,
@@ -110,12 +110,12 @@ def check_in(
     def print_step_title(step_title):
         if verbose:
             print()
-            print(f"============= {step_title.upper()} =============")
+            print(f'============= {step_title.upper()} =============')
         else:
-            print(f"-- {step_title}")
+            print(f'-- {step_title}')
 
     def abort():
-        print("Aborting")
+        print('Aborting')
         sys.exit()
 
     def confirm(action, default):
@@ -124,35 +124,35 @@ def check_in(
         return argh.interaction.confirm(action, default)
 
     def verify_current_changes():
-        print_step_title("Verify current changes")
-        if "nothing to commit, working tree clean" in ggit("status"):
-            print("No changes to check in.")
+        print_step_title('Verify current changes')
+        if 'nothing to commit, working tree clean' in ggit('status'):
+            print('No changes to check in.')
             abort()
 
     def pull_remote_changes():
-        print_step_title("Pull remote changes")
-        ggit("stash")
-        result = ggit("pull")
-        ggit("stash apply")
-        if result != "Already up to date." and not confirm(
-            "Your local repository was not up to date, but it is now. Do you want to continue",
+        print_step_title('Pull remote changes')
+        ggit('stash')
+        result = ggit('pull')
+        ggit('stash apply')
+        if result != 'Already up to date.' and not confirm(
+            'Your local repository was not up to date, but it is now. Do you want to continue',
             default=True,
         ):
             abort()
 
     def validate_docstrings():
         def run_pylint(current_dir):
-            if os.path.exists(os.path.join(current_dir, "__init__.py")):
+            if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
                     [
                         current_dir,
-                        "--disable=all",
-                        "--enable=C0114,C0115,C0116",
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
                     ],
                     do_exit=False,
                 )
-                if result.linter.stats["global_note"] < 10 and not confirm(
-                    f"Docstrings are missing in directory {current_dir}. Do you want to continue",
+                if result.linter.stats['global_note'] < 10 and not confirm(
+                    f'Docstrings are missing in directory {current_dir}. Do you want to continue',
                     default=True,
                 ):
                     abort()
@@ -160,61 +160,65 @@ def check_in(
                 for subdir in next(os.walk(current_dir))[1]:
                     run_pylint(os.path.join(current_dir, subdir))
 
-        print_step_title("Validate docstrings")
-        run_pylint(".")
+        print_step_title('Validate docstrings')
+        run_pylint('.')
 
     def run_tests():
-        print_step_title("Run tests")
-        args = ["--doctest-modules"]
+        print_step_title('Run tests')
+        args = ['--doctest-modules']
         if verbose:
-            args.append("-v")
+            args.append('-v')
         else:
-            args.extend(["-q", "--no-summary"])
+            args.extend(['-q', '--no-summary'])
         result = pytest.main(args)
         if result == pytest.ExitCode.TESTS_FAILED and not confirm(
-            "Tests have failed. Do you want to push anyway", default=False
+            'Tests have failed. Do you want to push anyway', default=False
         ):
             abort()
         elif result not in [
             pytest.ExitCode.OK,
             pytest.ExitCode.NO_TESTS_COLLECTED,
         ]:
-            print("Something went wrong when running tests. Please check the output.")
+            print(
+                'Something went wrong when running tests. Please check the output.'
+            )
             abort()
 
     def format_code():
-        print_step_title("Format code")
+        print_step_title('Format code')
         subprocess.run(
-            "black --line-length=79 .",
+            'black --line-length=79 .',
             shell=True,
             check=True,
             capture_output=not verbose,
         )
 
     def stage_changes():
-        result = ggit("status")
-        if "Changes not staged for commit" in result:
+        result = ggit('status')
+        if 'Changes not staged for commit' in result:
             if not auto_choose_default_action and not verbose:
                 print(result)
-            if confirm("Do you want to stage all your pending changes", default=True):
-                print_step_title("Stage changes")
-                git("add -A")
+            if confirm(
+                'Do you want to stage all your pending changes', default=True
+            ):
+                print_step_title('Stage changes')
+                git('add -A')
 
     def commit_changes():
-        print_step_title("Commit changes")
-        if "no changes added to commit" in ggit("status"):
-            print("No changes to check in.")
+        print_step_title('Commit changes')
+        if 'no changes added to commit' in ggit('status'):
+            print('No changes to check in.')
             abort()
         ggit(f'commit --message="{commit_message}"')
 
     def push_changes():
         if not confirm(
-            "Your changes have been commited. Do you want to push",
+            'Your changes have been commited. Do you want to push',
             default=True,
         ):
             abort()
-        print_step_title("Push changes")
-        ggit("push")
+        print_step_title('Push changes')
+        ggit('push')
 
     try:
         verify_current_changes()
@@ -230,10 +234,10 @@ def check_in(
         push_changes()
 
     except subprocess.CalledProcessError:
-        print("An error occured. Please check the output.")
+        print('An error occured. Please check the output.')
         abort()
 
-    print("Your changes have been checked in successfully!")
+    print('Your changes have been checked in successfully!')
 
 
 def goo(
@@ -289,9 +293,9 @@ def go(
     verbose: bool = True,
     skip_git_commit: bool = False,
     answer_yes_to_all_prompts: bool = False,
-    twine_upload_options_str: str = "",
+    twine_upload_options_str: str = '',
     keep_dist_pkgs=False,
-    commit_message="",
+    commit_message='',
 ):
     """Update version, package and deploy:
     Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist
@@ -328,34 +332,34 @@ def git_commit_and_push(
     version=None,
     verbose: bool = True,
     answer_yes_to_all_prompts: bool = False,
-    commit_message="",
+    commit_message='',
 ):
     def ggit(command):
         r = git(command, work_tree=pkg_dir)
         clog(verbose, r, log_func=print)
 
-    ggit("status")
+    ggit('status')
 
     if not answer_yes_to_all_prompts:
         answer = input("Should I do a 'git add *'? ([Y]/n): ")
-        if answer and answer != "Y":
+        if answer and answer != 'Y':
             print("Okay, I'll stop here.")
             return
-    ggit("add *")
+    ggit('add *')
 
-    ggit("status")  # show status again
+    ggit('status')  # show status again
 
     commit_command = f'commit -m "{version}: {commit_message}"'
     if not answer_yes_to_all_prompts:
-        answer = input(f"Should I {commit_command} and push? ([Y]/n)")
-        if answer and answer != "Y":
+        answer = input(f'Should I {commit_command} and push? ([Y]/n)')
+        if answer and answer != 'Y':
             print("Okay, I'll stop here.")
             return
     ggit(commit_command)
-    ggit(f"push")
+    ggit(f'push')
 
 
-def generate_and_publish_docs(pkg_dir, publish_docs_to="github"):
+def generate_and_publish_docs(pkg_dir, publish_docs_to='github'):
     # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
     from epythet import make_autodocs, make
 
@@ -368,12 +372,12 @@ def delete_pkg_directories(pkg_dir: Path, verbose=True):
     from shutil import rmtree
 
     pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
-    names_to_delete = ["dist", "build", f"{pkg_dirname}.egg-info"]
+    names_to_delete = ['dist', 'build', f'{pkg_dirname}.egg-info']
     for name_to_delete in names_to_delete:
         delete_dirpath = os.path.join(pkg_dir, name_to_delete)
         if os.path.isdir(delete_dirpath):
             if verbose:
-                print(f"Deleting folder: {delete_dirpath}")
+                print(f'Deleting folder: {delete_dirpath}')
             rmtree(delete_dirpath)
 
 
@@ -402,8 +406,8 @@ def validate_pkg_dir(pkg_dir):
     assert pkg_dirname in os.listdir(
         pkg_dir
     ), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_dirname}"
-    assert "__init__.py" in os.listdir(os.path.join(pkg_dir, pkg_dirname)), (
-        f"pkg_dir={pkg_dir} contains a dir named {pkg_dirname}, "
+    assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_dirname)), (
+        f'pkg_dir={pkg_dir} contains a dir named {pkg_dirname}, '
         f"but that dir isn't a package (does not have a __init__.py"
     )
 
@@ -417,7 +421,7 @@ def current_configs(pkg_dir):
 
 def current_configs_version(pkg_dir):
     pkg_dir = _get_pkg_dir(pkg_dir)
-    return read_configs(pkg_dir=pkg_dir)["version"]
+    return read_configs(pkg_dir=pkg_dir)['version']
 
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
@@ -427,11 +431,9 @@ def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir),
-        new_deploy=new_deploy,
-        version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
     )
-    pprint("\n{configs}\n")
+    pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
     write_configs(pkg_dir=pkg_dir, configs=configs)
 
@@ -442,35 +444,38 @@ def set_version(pkg_dir, version):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir)
-    assert isinstance(version, str), "version should be a string"
-    configs["version"] = version
+    assert isinstance(version, str), 'version should be a string'
+    configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
 
 
 def increment_configs_version(
-    pkg_dir,
-    version=None,
+    pkg_dir, version=None,
 ):
     """Update setup.cfg (at this point, just updates the version).
     If version is not given, will ask pypi (via http request) what the current version is, and increment that.
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir=pkg_dir)
-    version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
+    version = _get_version(
+        pkg_dir, version=version, configs=configs, new_deploy=False
+    )
     version = increment_version(version)
-    configs["version"] = version
+    configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
     return version
 
 
 def run_setup(pkg_dir):
     """Run ``python setup.py sdist bdist_wheel``"""
-    print("--------------------------- setup_output ---------------------------")
+    print(
+        '--------------------------- setup_output ---------------------------'
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
     setup_output = subprocess.run(
-        f"{sys.executable} setup.py sdist bdist_wheel".split(" ")
+        f'{sys.executable} setup.py sdist bdist_wheel'.split(' ')
     )
     os.chdir(original_dir)
     # print(f"{setup_output}\n")
@@ -478,17 +483,19 @@ def run_setup(pkg_dir):
 
 def twine_upload_dist(pkg_dir, options_str=None):
     """Publish to pypi. Runs ``python -m twine upload dist/*``"""
-    print("--------------------------- upload_output ---------------------------")
+    print(
+        '--------------------------- upload_output ---------------------------'
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
     # TODO: dist/*? How to publish just last one?
     if options_str:
-        command = f"{sys.executable} -m twine upload {options_str} dist/*"
+        command = f'{sys.executable} -m twine upload {options_str} dist/*'
     else:
-        command = f"{sys.executable} -m twine upload dist/*"
+        command = f'{sys.executable} -m twine upload dist/*'
     # print(command)
-    subprocess.run(command.split(" "))
+    subprocess.run(command.split(' '))
     os.chdir(original_dir)
     # print(f"{upload_output.decode()}\n")
 
@@ -497,7 +504,9 @@ def twine_upload_dist(pkg_dir, options_str=None):
 
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
-def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
+def postprocess_ini_section_items(
+    items: Union[Mapping, Iterable]
+) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
     >>> section_from_ini = {
@@ -509,14 +518,16 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     {'name': 'wads', 'keywords': ['packaging', 'publishing']}
 
     """
-    splitter_re = re.compile("[\n\r\t]+")
+    splitter_re = re.compile('[\n\r\t]+')
     if isinstance(items, Mapping):
         items = items.items()
     for k, v in items:
-        if v.startswith("\n"):
+        if v.startswith('\n'):
             v = splitter_re.split(v[1:])
             v = [vv.strip() for vv in v if vv.strip()]
-            v = [vv for vv in v if not vv.startswith("#")]  # remove commented lines
+            v = [
+                vv for vv in v if not vv.startswith('#')
+            ]  # remove commented lines
         yield k, v
 
 
@@ -539,10 +550,10 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     if isinstance(items, Mapping):
         items = items.items()
     for k, v in items:
-        if isinstance(v, str) and not v.startswith('"') and "," in v:
-            v = list(map(str.strip, v.split(",")))
+        if isinstance(v, str) and not v.startswith('"') and ',' in v:
+            v = list(map(str.strip, v.split(',')))
         if isinstance(v, list):
-            v = "\n\t" + "\n\t".join(v)
+            v = '\n\t' + '\n\t'.join(v)
 
         yield k, v
 
@@ -559,7 +570,7 @@ def read_configs(
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     if os.path.isfile(config_filepath):
-        c.read_file(open(config_filepath, "r"))
+        c.read_file(open(config_filepath, 'r'))
         print(type(section), section)
         try:
             d = c[section]
@@ -585,18 +596,20 @@ def write_configs(
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     if os.path.isfile(config_filepath):
-        c.read_file(open(config_filepath, "r"))
+        c.read_file(open(config_filepath, 'r'))
 
     metadata_dict = dict(preproc(configs))
-    options = dict(dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION))
+    options = dict(
+        dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION)
+    )
 
     # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities.
     for k in [
-        "install_requires",
-        "install-requires",
-        "packages",
-        "zip_safe",
-        "include_package_data",
+        'install_requires',
+        'install-requires',
+        'packages',
+        'zip_safe',
+        'include_package_data',
     ]:
         if k in metadata_dict:
             if k not in options:
@@ -610,7 +623,7 @@ def write_configs(
 
     c[METADATA_SECTION] = metadata_dict
     c[OPTIONS_SECTION] = options
-    with open(config_filepath, "w") as fp:
+    with open(config_filepath, 'w') as fp:
         c.write(fp)
 
 
@@ -618,9 +631,9 @@ def write_configs(
 
 
 def increment_version(version_str):
-    version_nums = list(map(int, version_str.split(".")))
+    version_nums = list(map(int, version_str.split('.')))
     version_nums[-1] += 1
-    return ".".join(map(str, version_nums))
+    return '.'.join(map(str, version_nums))
 
 
 try:
@@ -631,7 +644,9 @@ except ModuleNotFoundError:
     requests_is_installed = False
 
 
-def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
+def http_get_json(
+    url, use_requests=requests_is_installed
+) -> Union[dict, None]:
     """Make ah http request to url and get json, and return as python dict"""
 
     if use_requests:
@@ -641,7 +656,7 @@ def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
         if r.status_code == 200:
             return r.json()
         else:
-            raise ValueError(f"response code was {r.status_code}")
+            raise ValueError(f'response code was {r.status_code}')
     else:
         import urllib.request
         from urllib.error import HTTPError
@@ -652,14 +667,16 @@ def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
             if r.code == 200:
                 return json.loads(r.read())
             else:
-                raise ValueError(f"response code was {r.code}")
+                raise ValueError(f'response code was {r.code}')
         except HTTPError:
             return None  # to indicate (hopefully) that name doesn't exist
         except Exception:
             raise
 
 
-DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = "https://pypi.python.org/pypi/{package}/json"
+DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = (
+    'https://pypi.python.org/pypi/{package}/json'
+)
 
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
@@ -685,19 +702,21 @@ def current_pypi_version(
     name = name or get_name_from_configs(pkg_dir)
     assert (
         pkg_dirname == name
-    ), f"pkg_dirname ({pkg_dirname}) and name ({name}) were not the same"
+    ), f'pkg_dirname ({pkg_dirname}) and name ({name}) were not the same'
     url = url_template.format(package=name)
     t = http_get_json(url, use_requests=use_requests)
-    releases = t.get("releases", [])
+    releases = t.get('releases', [])
     if releases:
-        return sorted(releases, key=lambda r: tuple(map(int, r.split("."))))[-1]
+        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[
+            -1
+        ]
 
 
 def next_version_for_package(
     pkg_dir: Path,
     name: Union[None, str] = None,
     url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
-    version_if_current_version_none="0.0.1",
+    version_if_current_version_none='0.0.1',
     use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
@@ -717,7 +736,7 @@ def _get_version(
     name: Union[None, str] = None,
     new_deploy=False,
 ):
-    version = version or configs.get("version", None)
+    version = version or configs.get('version', None)
     if version is None:
         try:
             if new_deploy:
@@ -730,14 +749,14 @@ def _get_version(
                 )  # when you want to make a new package
         except Exception as e:
             print(
-                f"Got an error trying to get the new version of {name} so will try to get the version from setup.cfg..."
+                f'Got an error trying to get the new version of {name} so will try to get the version from setup.cfg...'
             )
-            print(f"{e}")
-            version = configs.get("version", None)
+            print(f'{e}')
+            version = configs.get('version', None)
             if version is None:
                 raise ValueError(
                     f"Couldn't fetch the next version from PyPi (no API token?), "
-                    f"nor did I find a version in setup.cfg (metadata section)."
+                    f'nor did I find a version in setup.cfg (metadata section).'
                 )
     return version
 
@@ -763,24 +782,24 @@ def read_and_resolve_setup_configs(
 
     # parse out name and root_url
     assert (
-        "root_url" in configs or "url" in configs
+        'root_url' in configs or 'url' in configs
     ), "configs didn't have a root_url or url"
 
-    name = configs["name"] or pkg_dirname
+    name = configs['name'] or pkg_dirname
     if assert_names:
         assert (
             name == pkg_dirname
-        ), f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
+        ), f'config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!'
 
-    if "root_url" in configs:
-        root_url = configs["root_url"]
+    if 'root_url' in configs:
+        root_url = configs['root_url']
         if root_url.endswith(
-            "/"
+            '/'
         ):  # yes, it's a url so it's always forward slash, not the systems' slash os.sep
             root_url = root_url[:-1]
-        url = f"{root_url}/{name}"
-    elif "url" in configs:
-        url = configs["url"]
+        url = f'{root_url}/{name}'
+    elif 'url' in configs:
+        url = configs['url']
     else:
         raise ValueError(
             f"configs didn't have a root_url or url. It should have at least one of these!"
@@ -801,21 +820,21 @@ def read_and_resolve_setup_configs(
 
     def text_of_readme_md_file():
         try:
-            with open("README.md") as f:
+            with open('README.md') as f:
                 return f.read()
         except:
-            return ""
+            return ''
 
     dflt_kwargs = dict(
-        name=f"{name}",
-        version=f"{version}",
+        name=f'{name}',
+        version=f'{version}',
         url=url,
         packages=find_packages(),
         include_package_data=True,
-        platforms="any",
+        platforms='any',
         # long_description=text_of_readme_md_file(),
         # long_description_content_type="text/markdown",
-        description_file="README.md",
+        description_file='README.md',
     )
 
     configs = dict(dflt_kwargs, **setup_kwargs)
@@ -825,10 +844,10 @@ def read_and_resolve_setup_configs(
 
 def _print_some_lines_of_code(file, file_contents, slice_):
     print(
-        f"------------ lines {slice_.start} through {slice_.stop} of {file} ------------"
+        f'------------ lines {slice_.start} through {slice_.stop} of {file} ------------'
     )
-    print("\n".join(file_contents.split("\n")[slice_]))
-    print("---------------------------------------------------------")
+    print('\n'.join(file_contents.split('\n')[slice_]))
+    print('---------------------------------------------------------')
 
 
 def _slice_from_string(string):
@@ -836,7 +855,7 @@ def _slice_from_string(string):
         try:
             return slice(0, int(string))
         except ValueError:
-            return slice(*map(int, string.split(":")))
+            return slice(*map(int, string.split(':')))
     except ValueError:
         return None
 
@@ -847,9 +866,9 @@ def _ask_user_what_to_do_about_this_file(
     ask_again = lambda: _ask_user_what_to_do_about_this_file(
         file, file_contents, dflt_n_lines_slice, start_here
     )
-    r = input(f"\nEnter a one liner doc for {file} then press enter:\n")
+    r = input(f'\nEnter a one liner doc for {file} then press enter:\n')
     r = r.strip()
-    if r == "":
+    if r == '':
         start = start_here
         stop = start_here + dflt_n_lines_slice
         print_these_lines = slice(start, stop)
@@ -863,17 +882,17 @@ def _ask_user_what_to_do_about_this_file(
         # ... and then call the function again, recursively, until exit or some doc string is given
         return ask_again()
     else:
-        if _equals_or_first_letter_of(r, "exit"):
-            print("Exiting...")
-            return "exit"
-        if _equals_or_first_letter_of(r, "skip"):
-            print("Skipping that one...")
-            return "skip"
-        if _equals_or_first_letter_of(r, "funcs"):
+        if _equals_or_first_letter_of(r, 'exit'):
+            print('Exiting...')
+            return 'exit'
+        if _equals_or_first_letter_of(r, 'skip'):
+            print('Skipping that one...')
+            return 'skip'
+        if _equals_or_first_letter_of(r, 'funcs'):
             _print_functions_and_classes(file, file_contents)
             return ask_again()
         if len(r) <= 5:
-            print("---> Your docstring needs to be at least 5 characters")
+            print('---> Your docstring needs to be at least 5 characters')
             return ask_again()
 
         return r
@@ -881,14 +900,16 @@ def _ask_user_what_to_do_about_this_file(
 
 def _print_functions_and_classes(file, file_contents):
     def gen():
-        for line in file_contents.split("\n"):
+        for line in file_contents.split('\n'):
             stripped_line = line.strip()
-            if stripped_line.startswith("def ") or stripped_line.startswith("class "):
+            if stripped_line.startswith('def ') or stripped_line.startswith(
+                'class '
+            ):
                 yield line
 
-    print(f"----------- funcs, classes, and methods of {file} -----------")
-    print("\n".join(gen()))
-    print("---------------------------------------------------------")
+    print(f'----------- funcs, classes, and methods of {file} -----------')
+    print('\n'.join(gen()))
+    print('---------------------------------------------------------')
 
 
 def _equals_or_first_letter_of(input_string, target_string):
@@ -899,7 +920,7 @@ def _equals_or_first_letter_of(input_string, target_string):
 
 def process_missing_module_docstrings(
     pkg_dir: Path,
-    action="input",
+    action='input',
     exceptions=(),
     docstr_template='"""\n{user_input}\n"""\n',
 ):
@@ -935,44 +956,49 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + "{}.py", max_levels=None),
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
         filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
         for file, file_contents in files.items():
             contents = file_contents.strip()
-            if not contents.startswith('"""') and not contents.startswith("'''"):
+            if not contents.startswith('"""') and not contents.startswith(
+                "'''"
+            ):
                 yield file, file_contents
 
-    if action == "list":
+    if action == 'list':
         return [
-            file for file, file_contents in files_and_contents_that_dont_have_docs()
+            file
+            for file, file_contents in files_and_contents_that_dont_have_docs()
         ]
-    elif action == "count":
+    elif action == 'count':
         return len(list(files_and_contents_that_dont_have_docs()))
-    elif action == "input":
+    elif action == 'input':
         were_no_files = True
         for file, file_contents in files_and_contents_that_dont_have_docs():
             were_no_files = False
             r = _ask_user_what_to_do_about_this_file(file, file_contents)
-            if r == "exit":
+            if r == 'exit':
                 return
-            elif r == "skip":
+            elif r == 'skip':
                 continue
 
             files[file] = docstr_template.format(user_input=r) + file_contents
 
         if were_no_files:
-            print("---> Seems like all your modules have docstrings! Congrads!")
+            print(
+                '---> Seems like all your modules have docstrings! Congrads!'
+            )
             return True
     else:
-        raise ValueError(f"Unknown action: {action}")
+        raise ValueError(f'Unknown action: {action}')
 
 
 argh_kwargs = {
-    "namespace": "pack",
-    "functions": [
+    'namespace': 'pack',
+    'functions': [
         generate_and_publish_docs,
         current_configs,
         increment_configs_version,
@@ -990,9 +1016,9 @@ argh_kwargs = {
         git_commit_and_push,
         process_missing_module_docstrings,
     ],
-    "namespace_kwargs": {
-        "title": "Package Configurations",
-        "description": "Utils to package and publish.",
+    'namespace_kwargs': {
+        'title': 'Package Configurations',
+        'description': 'Utils to package and publish.',
     },
 }
 
@@ -1000,8 +1026,8 @@ argh_kwargs = {
 def main():
     import argh  # pip install argh
 
-    argh.dispatch_commands(argh_kwargs.get("functions", None))
+    argh.dispatch_commands(argh_kwargs.get('functions', None))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

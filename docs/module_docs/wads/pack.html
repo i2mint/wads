@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>wads.pack &#8212; wads 0.0.53 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.54 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -182,7 +182,29 @@ If version is not given, will ask pypi (via http request) what the current versi
 <dl class="py function">
 <dt id="wads.pack.process_missing_module_docstrings">
 <code class="sig-prename descclassname">wads.pack.</code><code class="sig-name descname">process_missing_module_docstrings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'input'</span></em>, <em class="sig-param"><span class="n">exceptions</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">docstr_template</span><span class="o">=</span><span class="default_value">'&quot;&quot;&quot;\n{user_input}\n&quot;&quot;&quot;\n'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/pack.html#process_missing_module_docstrings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.pack.process_missing_module_docstrings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goes through modules of package, sees which ones don’t have docstrings, and gives you the option to write one</p>
+<dd><p>Goes through modules of package, sees which ones don’t have docstrings,
+and gives you the option to write one.</p>
+<p>The function will go through all .py files (except those mentioned in exceptions),
+check if there’s a module docstring (that is, that the first non-white characters are
+triple-quotes (double or single)).</p>
+<p>What happens with that depends on the <code class="docutils literal notranslate"><span class="pre">action</span></code> argument,</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">action='list'</span></code>, those modules missing docstrings will be listed.
+If <code class="docutils literal notranslate"><span class="pre">action='count'</span></code>, the count of those modules missing docstrings will be returned.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">action='input'</span></code>, for every module you’ll be given the option to enter a
+SINGLE LINE module docstring (though you could include multi-lines with n).
+Just type the docstring you want and hit enter to go to the next module with missing docstring.
+Or, you can also:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>type exit, or e: To exit this process</p></li>
+<li><p>type skip, or s: To skip the module and go to the next</p></li>
+<li><p>type funcs, or f: To see a print out of functions, classes, and methods</p></li>
+<li><p>just hit enter, to get some lines of code (the first, then the next, etc.)</p></li>
+<li><p>enter a number, or a number:number, to specify what lines you want to see printed</p></li>
+</ul>
+</div></blockquote>
+<p>Printing lines helps you write an informed module docstring</p>
+<p>:keyword module, docstr, docstrings, module doc strings</p>
 </dd></dl>
 
 <dl class="py function">

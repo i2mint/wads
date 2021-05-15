@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.pack &#8212; wads 0.0.53 documentation</title>
+    <title>wads.pack &#8212; wads 0.0.54 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -877,14 +877,117 @@
     <span class="k">return</span> <span class="n">configs</span></div>
 
 
+<span class="k">def</span> <span class="nf">_print_some_lines_of_code</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">,</span> <span class="n">slice_</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;------------ lines </span><span class="si">{</span><span class="n">slice_</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s1"> through </span><span class="si">{</span><span class="n">slice_</span><span class="o">.</span><span class="n">stop</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> ------------&#39;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="n">slice_</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------------------------------------------------------&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_slice_from_string</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_ask_user_what_to_do_about_this_file</span><span class="p">(</span>
+    <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">,</span> <span class="n">dflt_n_lines_slice</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">start_here</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">):</span>
+    <span class="n">ask_again</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">_ask_user_what_to_do_about_this_file</span><span class="p">(</span>
+        <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">,</span> <span class="n">dflt_n_lines_slice</span><span class="p">,</span> <span class="n">start_here</span>
+    <span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter a one liner doc for </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> then press enter:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">start_here</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">start_here</span> <span class="o">+</span> <span class="n">dflt_n_lines_slice</span>
+        <span class="n">print_these_lines</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+        <span class="n">start_here</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">dflt_n_lines_slice</span>  <span class="c1"># so that next time r == &#39;&#39;, we print new lines</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">print_these_lines</span> <span class="o">=</span> <span class="n">_slice_from_string</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">print_these_lines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_print_some_lines_of_code</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">,</span> <span class="n">print_these_lines</span><span class="p">)</span>
+        <span class="c1"># ... and then call the function again, recursively, until exit or some doc string is given</span>
+        <span class="k">return</span> <span class="n">ask_again</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_equals_or_first_letter_of</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s1">&#39;exit&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exiting...&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;exit&#39;</span>
+        <span class="k">if</span> <span class="n">_equals_or_first_letter_of</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Skipping that one...&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;skip&#39;</span>
+        <span class="k">if</span> <span class="n">_equals_or_first_letter_of</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s1">&#39;funcs&#39;</span><span class="p">):</span>
+            <span class="n">_print_functions_and_classes</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ask_again</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---&gt; Your docstring needs to be at least 5 characters&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ask_again</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">_print_functions_and_classes</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="n">stripped_line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">stripped_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;def &#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">stripped_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s1">&#39;class &#39;</span>
+            <span class="p">):</span>
+                <span class="k">yield</span> <span class="n">line</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;----------- funcs, classes, and methods of </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> -----------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gen</span><span class="p">()))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---------------------------------------------------------&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_equals_or_first_letter_of</span><span class="p">(</span><span class="n">input_string</span><span class="p">,</span> <span class="n">target_string</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">input_string</span> <span class="o">==</span> <span class="n">target_string</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">input_string</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">input_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">target_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="process_missing_module_docstrings"><a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.process_missing_module_docstrings">[docs]</a><span class="k">def</span> <span class="nf">process_missing_module_docstrings</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">action</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
     <span class="n">exceptions</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">docstr_template</span><span class="o">=</span><span class="s1">&#39;&quot;&quot;&quot;</span><span class="se">\n</span><span class="si">{user_input}</span><span class="se">\n</span><span class="s1">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Goes through modules of package, sees which ones don&#39;t have docstrings, and gives you the option to write one&quot;&quot;&quot;</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Goes through modules of package, sees which ones don&#39;t have docstrings,</span>
+<span class="sd">    and gives you the option to write one.</span>
+
+<span class="sd">    The function will go through all .py files (except those mentioned in exceptions),</span>
+<span class="sd">    check if there&#39;s a module docstring (that is, that the first non-white characters are</span>
+<span class="sd">    triple-quotes (double or single)).</span>
+
+<span class="sd">    What happens with that depends on the ``action`` argument,</span>
+
+<span class="sd">    If ``action=&#39;list&#39;``, those modules missing docstrings will be listed.</span>
+<span class="sd">    If ``action=&#39;count&#39;``, the count of those modules missing docstrings will be returned.</span>
+
+<span class="sd">    If ``action=&#39;input&#39;``, for every module you&#39;ll be given the option to enter a</span>
+<span class="sd">    SINGLE LINE module docstring (though you could include multi-lines with \n).</span>
+<span class="sd">    Just type the docstring you want and hit enter to go to the next module with missing docstring.</span>
+<span class="sd">    Or, you can also:</span>
+<span class="sd">        - type exit, or e: To exit this process</span>
+<span class="sd">        - type skip, or s: To skip the module and go to the next</span>
+<span class="sd">        - type funcs, or f: To see a print out of functions, classes, and methods</span>
+<span class="sd">        - just hit enter, to get some lines of code (the first, then the next, etc.)</span>
+<span class="sd">        - enter a number, or a number:number, to specify what lines you want to see printed</span>
+<span class="sd">    Printing lines helps you write an informed module docstring</span>
+
+<span class="sd">    :keyword module, docstr, docstrings, module doc strings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">py2store</span> <span class="kn">import</span> <span class="n">LocalTextStore</span><span class="p">,</span> <span class="n">filt_iter</span>
+
+    <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_get_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="n">exceptions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exceptions</span><span class="p">)</span>
     <span class="n">files</span> <span class="o">=</span> <span class="n">filt_iter</span><span class="p">(</span>
@@ -908,13 +1011,22 @@
     <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;count&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">files_and_contents_that_dont_have_docs</span><span class="p">()))</span>
     <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s1">&#39;input&#39;</span><span class="p">:</span>
+        <span class="n">were_no_files</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span> <span class="ow">in</span> <span class="n">files_and_contents_that_dont_have_docs</span><span class="p">():</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Enter a one liner doc for </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1"> then press enter:</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">were_no_files</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">_ask_user_what_to_do_about_this_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;exit&#39;</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;skip&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">files</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="n">docstr_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_input</span><span class="o">=</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="n">file_contents</span>
+
+        <span class="k">if</span> <span class="n">were_no_files</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s1">&#39;---&gt; Seems like all your modules have docstrings! Congrads!&#39;</span>
             <span class="p">)</span>
-            <span class="n">files</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">docstr_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_input</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">+</span> <span class="n">file_contents</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown action: </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
