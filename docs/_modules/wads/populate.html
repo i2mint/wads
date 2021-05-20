@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.55 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.56 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -270,7 +270,11 @@
             <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span>
                 <span class="n">pkg_dir</span>
             <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
-            <span class="n">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">)</span>
+            <span class="c1"># TODO: Handle user_email better than this and make more visible</span>
+            <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_email&#39;</span><span class="p">,</span> <span class="s1">&#39;thorwhalen1@gmail.com&#39;</span><span class="p">)</span>
+            <span class="n">_add_ci_def</span><span class="p">(</span>
+                <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span>
+            <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">name</span></div>
 
@@ -311,13 +315,14 @@
     <span class="k">return</span> <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span>
 
 
-<span class="k">def</span> <span class="nf">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">clog</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">):</span>
     <span class="n">clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... making a </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_tpl_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
         <span class="n">ci_def</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#PROJECT_NAME#&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="n">hostname</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">root_url</span><span class="p">)</span><span class="o">.</span><span class="n">netloc</span>
         <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#GITLAB_HOSTNAME#&#39;</span><span class="p">,</span> <span class="n">hostname</span><span class="p">)</span>
+        <span class="n">ci_def</span> <span class="o">=</span> <span class="n">ci_def</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#USER_EMAIL#&#39;</span><span class="p">,</span> <span class="n">user_email</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_out</span><span class="p">:</span>
             <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ci_def</span><span class="p">)</span>
