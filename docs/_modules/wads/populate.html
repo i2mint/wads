@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wads.populate &#8212; wads 0.0.56 documentation</title>
+    <title>wads.populate &#8212; wads 0.0.57 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
@@ -91,9 +91,7 @@
     <span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">],</span>
     <span class="n">install_requires</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;install_requires&#39;</span><span class="p">],</span>
     <span class="n">long_description</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;long_description&#39;</span><span class="p">],</span>
-    <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span>
-        <span class="s1">&#39;long_description_content_type&#39;</span>
-    <span class="p">],</span>
+    <span class="n">long_description_content_type</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;long_description_content_type&#39;</span><span class="p">],</span>
     <span class="n">include_pip_install_instruction_in_readme</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">],</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">(),</span>
@@ -146,9 +144,7 @@
     <span class="k">if</span> <span class="n">defaults_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">defaults_from</span> <span class="o">==</span> <span class="s1">&#39;user_input&#39;</span><span class="p">:</span>  <span class="c1"># TODO: Implement!</span>
             <span class="n">args_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># ... and then fill with user input</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s1">&#39;Not immplemented yet&#39;</span>
-            <span class="p">)</span>  <span class="c1"># TODO: Implement</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Not immplemented yet&#39;</span><span class="p">)</span>  <span class="c1"># TODO: Implement</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">wads_configs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">wads_configs_file</span><span class="p">))</span>
@@ -181,9 +177,7 @@
             <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
     <span class="c1"># Note: Overkill since we just made those things...</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span>
-        <span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
             <span class="s2">&quot;You should have a </span><span class="si">{name}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">/__init__.py structure. You don&#39;t.&quot;</span>
         <span class="p">)</span>
@@ -272,9 +266,7 @@
             <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
             <span class="c1"># TODO: Handle user_email better than this and make more visible</span>
             <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_email&#39;</span><span class="p">,</span> <span class="s1">&#39;thorwhalen1@gmail.com&#39;</span><span class="p">)</span>
-            <span class="n">_add_ci_def</span><span class="p">(</span>
-                <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span>
-            <span class="p">)</span>
+            <span class="n">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">name</span></div>
 
@@ -300,18 +292,14 @@
         <span class="k">elif</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s1">&#39;gitlab&#39;</span><span class="p">:</span>
             <span class="n">ci_def_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s1">&#39;.gitlab-ci.yml&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Unknown root url type: Neither github.com nor gitlab!&#39;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown root url type: Neither github.com nor gitlab!&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ci_tpl_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s1">&#39;github&#39;</span><span class="p">:</span>
             <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">github_ci_tpl_path</span>
         <span class="k">elif</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s1">&#39;gitlab&#39;</span><span class="p">:</span>
             <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">gitlab_ci_tpl_path</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Unknown root url type: Neither github.com nor gitlab!&#39;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown root url type: Neither github.com nor gitlab!&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span>
 
 
@@ -363,9 +351,7 @@
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">resource_name</span> <span class="ow">in</span> <span class="n">copy_files</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">resource_name</span><span class="p">))</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">wads_join</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span></div>
 
