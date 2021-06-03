@@ -187,7 +187,7 @@ def check_in(
     def format_code():
         print_step_title('Format code')
         subprocess.run(
-            'black --line-length=79 .',
+            'black --line-length=88 .',
             shell=True,
             check=True,
             capture_output=not verbose,
