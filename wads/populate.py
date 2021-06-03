@@ -56,9 +56,7 @@ def populate_pkg_dir(
     keywords: Optional[List] = populate_dflts['keywords'],
     install_requires: Optional[List] = populate_dflts['install_requires'],
     long_description=populate_dflts['long_description'],
-    long_description_content_type=populate_dflts[
-        'long_description_content_type'
-    ],
+    long_description_content_type=populate_dflts['long_description_content_type'],
     include_pip_install_instruction_in_readme=True,
     verbose: bool = populate_dflts['verbose'],
     overwrite: List = (),
@@ -111,9 +109,7 @@ def populate_pkg_dir(
     if defaults_from is not None:
         if defaults_from == 'user_input':  # TODO: Implement!
             args_defaults = dict()  # ... and then fill with user input
-            raise NotImplementedError(
-                'Not immplemented yet'
-            )  # TODO: Implement
+            raise NotImplementedError('Not immplemented yet')  # TODO: Implement
         else:
             try:
                 wads_configs = json.load(open(wads_configs_file))
@@ -146,9 +142,7 @@ def populate_pkg_dir(
             fp.write('')
 
     # Note: Overkill since we just made those things...
-    if name not in os.listdir(pkg_dir) or '__init__.py' not in os.listdir(
-        pjoin(name)
-    ):
+    if name not in os.listdir(pkg_dir) or '__init__.py' not in os.listdir(pjoin(name)):
         raise RuntimeError(
             "You should have a {name}/{name}/__init__.py structure. You don't."
         )
@@ -237,9 +231,7 @@ def populate_pkg_dir(
             ), f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
             # TODO: Handle user_email better than this and make more visible
             user_email = kwargs.get('user_email', 'thorwhalen1@gmail.com')
-            _add_ci_def(
-                ci_def_path, ci_tpl_path, root_url, name, _clog, user_email
-            )
+            _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email)
 
     return name
 
@@ -265,18 +257,14 @@ def _resolve_ci_def_and_tpl_path(
         elif version_control_system == 'gitlab':
             ci_def_path = os.path.join(pkg_dir, '.gitlab-ci.yml')
         else:
-            raise ValueError(
-                f'Unknown root url type: Neither github.com nor gitlab!'
-            )
+            raise ValueError(f'Unknown root url type: Neither github.com nor gitlab!')
     if ci_tpl_path is None:
         if version_control_system == 'github':
             ci_tpl_path = github_ci_tpl_path
         elif version_control_system == 'gitlab':
             ci_tpl_path = gitlab_ci_tpl_path
         else:
-            raise ValueError(
-                f'Unknown root url type: Neither github.com nor gitlab!'
-            )
+            raise ValueError(f'Unknown root url type: Neither github.com nor gitlab!')
     return ci_def_path, ci_tpl_path
 
 
@@ -328,9 +316,7 @@ def update_pack_and_setup_py(
     pjoin = lambda *p: os.path.join(target_pkg_dir, *p)
 
     for resource_name in copy_files:
-        print(
-            f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}'
-        )
+        print(f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}')
         shutil.move(src=pjoin(resource_name), dst=pjoin('_' + resource_name))
         shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
 

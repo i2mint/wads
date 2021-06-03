@@ -144,11 +144,7 @@ def check_in(
         def run_pylint(current_dir):
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [
-                        current_dir,
-                        '--disable=all',
-                        '--enable=C0114,C0115,C0116',
-                    ],
+                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -179,9 +175,7 @@ def check_in(
             pytest.ExitCode.OK,
             pytest.ExitCode.NO_TESTS_COLLECTED,
         ]:
-            print(
-                'Something went wrong when running tests. Please check the output.'
-            )
+            print('Something went wrong when running tests. Please check the output.')
             abort()
 
     def format_code():
@@ -198,9 +192,7 @@ def check_in(
         if 'Changes not staged for commit' in result:
             if not auto_choose_default_action and not verbose:
                 print(result)
-            if confirm(
-                'Do you want to stage all your pending changes', default=True
-            ):
+            if confirm('Do you want to stage all your pending changes', default=True):
                 print_step_title('Stage changes')
                 git('add -A')
 
@@ -213,8 +205,7 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push',
-            default=True,
+            'Your changes have been commited. Do you want to push', default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -319,11 +310,7 @@ def go(
         generate_and_publish_docs(pkg_dir, publish_docs_to)
     if not skip_git_commit:
         git_commit_and_push(
-            pkg_dir,
-            version,
-            verbose,
-            answer_yes_to_all_prompts,
-            commit_message,
+            pkg_dir, version, verbose, answer_yes_to_all_prompts, commit_message,
         )
 
 
@@ -457,9 +444,7 @@ def increment_configs_version(
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir=pkg_dir)
-    version = _get_version(
-        pkg_dir, version=version, configs=configs, new_deploy=False
-    )
+    version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
     version = increment_version(version)
     configs['version'] = version
     write_configs(pkg_dir=pkg_dir, configs=configs)
@@ -468,9 +453,7 @@ def increment_configs_version(
 
 def run_setup(pkg_dir):
     """Run ``python setup.py sdist bdist_wheel``"""
-    print(
-        '--------------------------- setup_output ---------------------------'
-    )
+    print('--------------------------- setup_output ---------------------------')
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
@@ -483,9 +466,7 @@ def run_setup(pkg_dir):
 
 def twine_upload_dist(pkg_dir, options_str=None):
     """Publish to pypi. Runs ``python -m twine upload dist/*``"""
-    print(
-        '--------------------------- upload_output ---------------------------'
-    )
+    print('--------------------------- upload_output ---------------------------')
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
@@ -504,9 +485,7 @@ def twine_upload_dist(pkg_dir, options_str=None):
 
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
-def postprocess_ini_section_items(
-    items: Union[Mapping, Iterable]
-) -> Generator:
+def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
     >>> section_from_ini = {
@@ -525,9 +504,7 @@ def postprocess_ini_section_items(
         if v.startswith('\n'):
             v = splitter_re.split(v[1:])
             v = [vv.strip() for vv in v if vv.strip()]
-            v = [
-                vv for vv in v if not vv.startswith('#')
-            ]  # remove commented lines
+            v = [vv for vv in v if not vv.startswith('#')]  # remove commented lines
         yield k, v
 
 
@@ -559,9 +536,7 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path,
-    postproc=postprocess_ini_section_items,
-    section=METADATA_SECTION,
+    pkg_dir: Path, postproc=postprocess_ini_section_items, section=METADATA_SECTION,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -599,9 +574,7 @@ def write_configs(
         c.read_file(open(config_filepath, 'r'))
 
     metadata_dict = dict(preproc(configs))
-    options = dict(
-        dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION)
-    )
+    options = dict(dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION))
 
     # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities.
     for k in [
@@ -644,9 +617,7 @@ except ModuleNotFoundError:
     requests_is_installed = False
 
 
-def http_get_json(
-    url, use_requests=requests_is_installed
-) -> Union[dict, None]:
+def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
     """Make ah http request to url and get json, and return as python dict"""
 
     if use_requests:
@@ -674,9 +645,7 @@ def http_get_json(
             raise
 
 
-DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = (
-    'https://pypi.python.org/pypi/{package}/json'
-)
+DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = 'https://pypi.python.org/pypi/{package}/json'
 
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
@@ -707,9 +676,7 @@ def current_pypi_version(
     t = http_get_json(url, use_requests=use_requests)
     releases = t.get('releases', [])
     if releases:
-        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[
-            -1
-        ]
+        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[-1]
 
 
 def next_version_for_package(
@@ -730,11 +697,7 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path,
-    version,
-    configs,
-    name: Union[None, str] = None,
-    new_deploy=False,
+    pkg_dir: Path, version, configs, name: Union[None, str] = None, new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -902,9 +865,7 @@ def _print_functions_and_classes(file, file_contents):
     def gen():
         for line in file_contents.split('\n'):
             stripped_line = line.strip()
-            if stripped_line.startswith('def ') or stripped_line.startswith(
-                'class '
-            ):
+            if stripped_line.startswith('def ') or stripped_line.startswith('class '):
                 yield line
 
     print(f'----------- funcs, classes, and methods of {file} -----------')
@@ -956,22 +917,18 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
-        filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
         for file, file_contents in files.items():
             contents = file_contents.strip()
-            if not contents.startswith('"""') and not contents.startswith(
-                "'''"
-            ):
+            if not contents.startswith('"""') and not contents.startswith("'''"):
                 yield file, file_contents
 
     if action == 'list':
         return [
-            file
-            for file, file_contents in files_and_contents_that_dont_have_docs()
+            file for file, file_contents in files_and_contents_that_dont_have_docs()
         ]
     elif action == 'count':
         return len(list(files_and_contents_that_dont_have_docs()))
@@ -988,9 +945,7 @@ def process_missing_module_docstrings(
             files[file] = docstr_template.format(user_input=r) + file_contents
 
         if were_no_files:
-            print(
-                '---> Seems like all your modules have docstrings! Congrads!'
-            )
+            print('---> Seems like all your modules have docstrings! Congrads!')
             return True
     else:
         raise ValueError(f'Unknown action: {action}')

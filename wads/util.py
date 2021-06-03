@@ -101,9 +101,7 @@ def mk_replacer_from_dict(from_to_dict):
     :return: A replacer function that you can apply to strings to carry out the replacements
     """
 
-    p = re.compile(
-        '|'.join(map(r'({})'.format, map(re.escape, from_to_dict.keys())))
-    )
+    p = re.compile('|'.join(map(r'({})'.format, map(re.escape, from_to_dict.keys()))))
     f = lambda x: from_to_dict[x.group(0)]
 
     def replacer(s):
