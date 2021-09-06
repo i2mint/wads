@@ -320,7 +320,7 @@ def git_commit_and_push(
     verbose: bool = True,
     answer_yes_to_all_prompts: bool = False,
     commit_message='',
-    what_to_add='*'
+    what_to_add='*',
 ):
     def ggit(command):
         r = git(command, work_tree=pkg_dir)
