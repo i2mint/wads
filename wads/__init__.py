@@ -20,6 +20,8 @@ rjoin = lambda *paths: os.path.join(root_dir, *paths)
 
 data_dir = rjoin('data')
 licenses_json_path = rjoin(data_dir, 'github_licenses.json')
+setup_tpl_path = rjoin(data_dir, 'setup_tpl.py')
+gitignore_tpl_path = rjoin(data_dir, '.gitignore_tpl')
 github_ci_tpl_path = rjoin(data_dir, 'github_ci_tpl.yml')
 gitlab_ci_tpl_path = rjoin(data_dir, 'gitlab_ci_tpl.yml')
 
@@ -48,7 +50,6 @@ except FileNotFoundError:
     }
 
 pkg_path_names = ('.gitignore', 'setup.py')
-pkg_paths = {pkg_join(name) for name in pkg_path_names}
 
 from wads.populate import populate_pkg_dir
 

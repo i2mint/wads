@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 # from functools import partial
 from typing import List, Optional
 from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
-from wads import pkg_join as wads_join, github_ci_tpl_path, gitlab_ci_tpl_path
+from wads import pkg_join as wads_join, github_ci_tpl_path, gitlab_ci_tpl_path, setup_tpl_path, gitignore_tpl_path
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
 from wads.licensing import license_body
@@ -175,18 +175,10 @@ def populate_pkg_dir(
     ), f"There's a name conflict. pkg_dir tells me the name is {name}, but configs tell me its {configs.get('name')}"
     configs['display_name'] = configs.get('display_name', configs['name'])
 
-    def copy_from_resource(resource_name):
-        _clog(f'... copying {resource_name} from {root_dir} to {pkg_dir}')
-        shutil.copy(wads_join(resource_name), pjoin(resource_name))
-
     def should_update(resource_name):
         return (resource_name in overwrite) or (
             not os.path.isfile(pjoin(resource_name))
         )
-
-    for resource_name in pkg_path_names:
-        if should_update(resource_name):
-            copy_from_resource(resource_name)
 
     def save_txt_to_pkg(resource_name, content):
         target_path = pjoin(resource_name)
@@ -194,6 +186,12 @@ def populate_pkg_dir(
         _clog(f'... making a {resource_name}')
         with open(pjoin(resource_name), 'wt') as fp:
             fp.write(content)
+
+    if should_update('setup.py'):
+        shutil.copy(setup_tpl_path, pjoin('setup.py'))
+
+    if should_update('.gitignore'):
+        shutil.copy(gitignore_tpl_path, pjoin('.gitignore'))
 
     if should_update('setup.cfg'):
         _clog("... making a 'setup.cfg'")
