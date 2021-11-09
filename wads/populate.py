@@ -7,7 +7,13 @@ from urllib.parse import urlparse
 # from functools import partial
 from typing import List, Optional
 from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
-from wads import pkg_join as wads_join, github_ci_tpl_path, gitlab_ci_tpl_path, setup_tpl_path, gitignore_tpl_path
+from wads import (
+    pkg_join as wads_join,
+    github_ci_tpl_path,
+    gitlab_ci_tpl_path,
+    setup_tpl_path,
+    gitignore_tpl_path,
+)
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
 from wads.licensing import license_body
