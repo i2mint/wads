@@ -52,13 +52,13 @@ Validation:
     # RUN TESTS
     - pytest --doctest-modules --ignore=scrap -v $PROJECT_NAME
 
+
 Publish:
   stage: Publish
   only:
     - master
   script:
     # INSTALL DEPENDENCIES
-    - pip -q install twine
     - isee install-requires --project-dir=$CI_PROJECT_DIR
 
     # UPDATE VERSION NUMBER
@@ -68,14 +68,20 @@ Publish:
     # GENERATE DOCUMENTATION
     - isee generate-documentation --project-dir=$CI_PROJECT_DIR
 
+    # MAKE HTML DOCS
+    - epythet make $CI_PROJECT_DIR html
+
     # PACKAGE
     - python setup.py sdist
 
-    # PUBLISH
-    - twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u $PYPI_USERNAME -p $PYPI_PASSWORD --non-interactive  --skip-existing --disable-progress-bar
-    - epythet make $CI_PROJECT_DIR html
+    # PUBLISH TO PYPI
+    # !!! Only do this if you're okay to make this PUBLIC!!!
+#    - pip -q install twine
+#    - twine upload dist/$PROJECT_NAME-$VERSION.tar.gz -u $PYPI_USERNAME -p $PYPI_PASSWORD --non-interactive  --skip-existing --disable-progress-bar
+
 
     # UPDATE AND TAG REPOSITORY
     - isee check-in --commit-message='Formatted code + Updated version number and documentation.'
     - isee tag-repo $VERSION
+
 
