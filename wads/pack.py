@@ -414,8 +414,9 @@ def current_configs_version(pkg_dir):
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
 def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
-    """Update setup.cfg (at this point, just updates the version).
-    If version is not given, will ask pypi (via http request) what the current version is, and increment that.
+    """Update setup.cfg.
+    If version is not given, will ask pypi (via http request) what the current version
+    is, and increment that.
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
@@ -427,8 +428,7 @@ def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
 
 
 def set_version(pkg_dir, version):
-    """Update setup.cfg (at this point, just updates the version).
-    If version is not given, will ask pypi (via http request) what the current version is, and increment that.
+    """Update version setup.cfg
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir)
@@ -440,8 +440,7 @@ def set_version(pkg_dir, version):
 def increment_configs_version(
     pkg_dir, version=None,
 ):
-    """Update setup.cfg (at this point, just updates the version).
-    If version is not given, will ask pypi (via http request) what the current version is, and increment that.
+    """Increment version setup.cfg.
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir=pkg_dir)

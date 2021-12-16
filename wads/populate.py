@@ -176,9 +176,11 @@ def populate_pkg_dir(
 
     kwargs['description-file'] = kwargs.pop('description_file', '')
 
-    assert (
-        configs.get('name', name) == name
-    ), f"There's a name conflict. pkg_dir tells me the name is {name}, but configs tell me its {configs.get('name')}"
+    assert configs.get('name', name) == name, (
+        f"There's a name conflict. pkg_dir tells me the name is {name}, "
+        f"but configs tell me its {configs.get('name')}"
+    )
+    _ensure_url_from_url_root_and_name(configs)
     configs['display_name'] = configs.get('display_name', configs['name'])
 
     def should_update(resource_name):
@@ -241,6 +243,14 @@ def populate_pkg_dir(
 
 
 _unknown_version_control_system = object()
+
+
+def _ensure_url_from_url_root_and_name(configs: dict):
+    if 'url' not in configs and 'url_root' in configs and 'name' in configs:
+        if not configs['url_root'].endswith('/'):
+            configs['urls_root'] += '/'
+        configs['url'] = configs['urls_root'] + configs['name']
+    return configs
 
 
 def _url_to_version_control_system(url):
