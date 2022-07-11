@@ -312,11 +312,11 @@ fc = dict(
 )
 
 try:
-    from py2store.sources import DictAttr
+    from py2store.sources import AttrDict
 
-    fc = DictAttr(**fc)
+    fc = AttrDict(**fc)
 except ModuleNotFoundError:
-    pass  # DictAttr is convenient, but not necessary
+    pass  # AttrDict is convenient, but not necessary
 
 
 def highlight(
