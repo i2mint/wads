@@ -7,7 +7,6 @@ To see available commands
 
     wads --help
 
-
 """
 
 import setuptools  # to avoid a warning due to distutils_patch.py
