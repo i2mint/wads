@@ -19,12 +19,16 @@ def generate_package(
     module_path: Union[str, Path],
     install_requires: List[str],
     output_path: Union[str, Path],
+    glob_pattern: str = None,
+    version: str = '1.0.0',
 ):
-    """
+    """Generate Python module package including wheels for requirements linked to git repos
 
     :param module_path: Path to python folder or .py file to package
     :param install_requires: required package list like in setup.py or requirements.txt
     :param output_path: Folder to output package. Must not already exist.
+    :param glob_pattern: pattern searched from module path, i.e. "*.pkl"
+    :param version: semantic version, i.e. "1.0.0"
     :return:
     """
     module_path = Path(module_path)
@@ -40,10 +44,17 @@ def generate_package(
         generate_module_folder(module_path, dst_path=temp_path)
 
         (temp_path / 'setup.cfg').write_text(
-            setup_cfg_template(install_requires, name=module_path.stem)
+            setup_cfg_template(
+                install_requires,
+                name=module_path.stem,
+                version=version,
+                glob_pattern=glob_pattern,
+            )
         )
         (temp_path / 'setup.py').write_text(setup_py)
-        (temp_path / 'MANIFEST.in').write_text(manifest_in)
+        (temp_path / 'MANIFEST.in').write_text(
+            manifest_in_template(module_path.stem, glob_pattern)
+        )
 
         shutil.copytree(temp_path, output_path)
 
@@ -59,8 +70,18 @@ def generate_module_folder(module_path: Path, dst_path: Path):
         raise ValueError('module path must be a directory or .py file')
 
 
+def manifest_in_template(module_name: str, glob_pattern: str):
+    manifest_in = 'recursive-include dist *.whl'
+    if glob_pattern:
+        manifest_in += f'\nrecursive-include {module_name} {glob_pattern}'
+    return manifest_in
+
+
 def setup_cfg_template(
-    install_requires: List[str], name: str, version: str = '1.0.0'
+    install_requires: List[str],
+    name: str,
+    version: str = '1.0.0',
+    glob_pattern: str = None,
 ) -> str:
     setup_cfg = f'''[metadata]
 name = {name}
@@ -86,6 +107,14 @@ install_requires =
     for r in install_requires:
         if r != 'wads':
             setup_cfg += f'    {r}\n'
+
+    if glob_pattern:
+        setup_cfg += f'''
+[options.package_data]
+* =
+  {glob_pattern}
+'''
+
     return setup_cfg
 
 
@@ -231,4 +260,3 @@ embedded_wheel_setup = partial(
 setup_py = (
     'from wads.package_module import embedded_wheel_setup\nembedded_wheel_setup()'
 )
-manifest_in = 'recursive-include dist *.whl'
