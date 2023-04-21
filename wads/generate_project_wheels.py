@@ -16,6 +16,7 @@ def clone_repository(url, branch=None, target_dir=None, quiet=False):
         args.append(target_dir)
     subprocess.check_output(args).decode().strip()
 
+
 def _update_file(path, pattern, replace):
     with open(path, 'r+') as file:
         content = file.read()
