@@ -19,7 +19,7 @@ def generate_package(
     module_path: Union[str, Path],
     install_requires: List[str],
     output_path: Union[str, Path],
-    glob_pattern: str = None,
+    glob_pattern: Union[str, List[str]] = None,
     version: str = '1.0.0',
 ):
     """Generate Python module package including wheels for requirements linked to git repos
@@ -36,6 +36,7 @@ def generate_package(
     assert not os.path.exists(
         output_path
     ), f'output path already exists: "{output_path}"'
+    glob_pattern = [glob_pattern] if isinstance(glob_pattern, str) else glob_pattern
 
     with tempfile.TemporaryDirectory() as temp_dir:
         print('Created temporary directory:', temp_dir)
@@ -70,10 +71,11 @@ def generate_module_folder(module_path: Path, dst_path: Path):
         raise ValueError('module path must be a directory or .py file')
 
 
-def manifest_in_template(module_name: str, glob_pattern: str):
+def manifest_in_template(module_name: str, glob_pattern: List[str]):
     manifest_in = 'recursive-include dist *.whl'
     if glob_pattern:
-        manifest_in += f'\nrecursive-include {module_name} {glob_pattern}'
+        for gp in glob_pattern:
+            manifest_in += f'\nrecursive-include {module_name} {gp}'
     return manifest_in
 
 
@@ -81,7 +83,7 @@ def setup_cfg_template(
     install_requires: List[str],
     name: str,
     version: str = '1.0.0',
-    glob_pattern: str = None,
+    glob_pattern: List[str] = None,
 ) -> str:
     setup_cfg = f'''[metadata]
 name = {name}
@@ -109,11 +111,9 @@ install_requires =
             setup_cfg += f'    {r}\n'
 
     if glob_pattern:
-        setup_cfg += f'''
-[options.package_data]
-* =
-  {glob_pattern}
-'''
+        setup_cfg += '\n[options.package_data]\n* =\n'
+        for gp in glob_pattern:
+            setup_cfg += f'    {gp}\n'
 
     return setup_cfg
 
