@@ -20,10 +20,15 @@ def test_generate_package_from_file():
             output_path=output_path,
             version='8.8.8',
         )
+        try:
+            subprocess.check_output(
+                [sys.executable, 'setup.py', 'sdist'], cwd=output_path,
+            )
+        except subprocess.CalledProcessError as e:
+            error_message = e.output.decode('utf-8')  # Decode the output if needed
+            print('Error message:', error_message)
+            raise e
 
-        subprocess.check_output(
-            [sys.executable, 'setup.py', 'sdist'], cwd=output_path,
-        )
         i2_whl = next((output_path / 'dist').glob('i2-*.whl'))
         assert i2_whl, 'wheel not built from specified git repo'
         module_tar_gz = next((output_path / 'dist').glob('*.tar.gz'))
@@ -51,9 +56,14 @@ def test_generate_package_from_dir():
             glob_pattern=['*.pkl', '*.json'],
         )
 
-        subprocess.check_output(
-            [sys.executable, 'setup.py', 'sdist'], cwd=output_path,
-        )
+        try:
+            subprocess.check_output(
+                [sys.executable, 'setup.py', 'sdist'], cwd=output_path,
+            )
+        except subprocess.CalledProcessError as e:
+            error_message = e.output.decode('utf-8')  # Decode the output if needed
+            print('Error message:', error_message)
+            raise e
         i2_whl = next((output_path / 'dist').glob('i2-*.whl'))
         assert i2_whl, 'wheel not built from specified git repo'
         module_tar_gz = next((output_path / 'dist').glob('*.tar.gz'))
