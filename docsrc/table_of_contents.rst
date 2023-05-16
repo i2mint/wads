@@ -9,5 +9,7 @@
    module_docs/wads/package_module
    module_docs/wads/populate
    module_docs/wads/scrap/handle_non_python_installs
+   module_docs/wads/tests/data/example_module
+   module_docs/wads/tests/test_package_generation
    module_docs/wads/trans
    module_docs/wads/util
