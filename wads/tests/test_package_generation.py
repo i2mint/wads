@@ -16,7 +16,7 @@ def test_generate_package_from_file():
         output_path = tmp_path / 'output'
         generate_package(
             module_path=EXAMPLE_MODULE_FILE,
-            install_requires=['dol', 'i2 @ git+ssh://git@github.com/i2mint/i2.git'],
+            install_requires=['dol', 'i2 @ git+https://git@github.com/i2mint/i2.git'],
             output_path=output_path,
             version='8.8.8',
         )
@@ -50,7 +50,7 @@ def test_generate_package_from_dir():
         output_path = tmp_path / 'output'
         generate_package(
             module_path=EXAMPLE_MODULE_DIR,
-            install_requires=['dol', 'i2 @ git+ssh://git@github.com/i2mint/i2.git'],
+            install_requires=['dol', 'i2 @ git+https://git@github.com/i2mint/i2.git'],
             output_path=output_path,
             version='8.8.8',
             glob_pattern=['*.pkl', '*.json'],
