@@ -31,26 +31,26 @@ def _update_file(path, pattern, replace):
 
 
 def replace_git_urls_from_requirements_file(
-    requirements_filepath, github_credentails=None
+    requirements_filepath, github_credentials=None
 ):
     pattern = r'git\+(ssh:\/\/.*?\.git|https{0,1}:\/\/.*?\.git)@{0,1}(.*){0,1}#egg=(.*)'
     git_info = _replace_git_urls(requirements_filepath, pattern, -1)
-    if github_credentails is not None:
+    if github_credentials is not None:
         for dep_git_info in git_info:
             repo = dep_git_info['url'].split('github.com/')[-1]
-            auth_url = f'{github_credentails}/{repo}'
+            auth_url = f'{github_credentials}/{repo}'
             dep_git_info.update({'url': auth_url})
     print(git_info)
     return git_info
 
 
-def replace_git_urls_from_setup_cfg_file(setup_cfg_filepath, github_credentails=None):
+def replace_git_urls_from_setup_cfg_file(setup_cfg_filepath, github_credentials=None):
     pattern = r'([^\t\s\n]*)\s@\sgit\+(ssh:\/\/.*?\.git|https{0,1}:\/\/.*?\.git)@{0,1}(.*){0,1}'
     git_info = _replace_git_urls(setup_cfg_filepath, pattern)
-    if github_credentails is not None:
+    if github_credentials is not None:
         for dep_git_info in git_info:
             repo = dep_git_info['url'].split('github.com/')[-1]
-            auth_url = f'{github_credentails}/{repo}'
+            auth_url = f'{github_credentials}/{repo}'
             dep_git_info.update({'url': auth_url})
     print(git_info)
     return git_info
@@ -72,21 +72,21 @@ def _replace_git_urls(filepath, pattern, group_idx_offset=0):
     return git_info
 
 
-def generate_project_wheels(project_dir, wheel_generation_dir, github_credentails):
+def generate_project_wheels(project_dir, wheel_generation_dir, github_credentials):
     current_dir = os.getcwd()
     clone_repositories_dir = os.path.join(wheel_generation_dir, 'repositories')
     os.mkdir(clone_repositories_dir)
     wheelhouse_dir = os.path.join(wheel_generation_dir, 'wheelhouse')
     os.mkdir(wheelhouse_dir)
     git_info = _generate_repository_wheels(
-        project_dir, clone_repositories_dir, wheelhouse_dir, github_credentails
+        project_dir, clone_repositories_dir, wheelhouse_dir, github_credentials
     )
     os.chdir(current_dir)
     return git_info
 
 
 def _generate_repository_wheels(
-    current_repository, clone_repositories_dir, wheelhouse_dir, github_credentails
+    current_repository, clone_repositories_dir, wheelhouse_dir, github_credentials
 ):
     requirements_filepath = os.path.join(current_repository, 'requirements.txt')
     setup_cfg_filepath = os.path.join(current_repository, 'setup.cfg')
@@ -98,7 +98,7 @@ def _generate_repository_wheels(
                 requirements_filepath,
                 clone_repositories_dir,
                 wheelhouse_dir,
-                github_credentails,
+                github_credentials,
             )
         )
     if os.path.isfile(setup_cfg_filepath):
@@ -107,38 +107,38 @@ def _generate_repository_wheels(
                 setup_cfg_filepath,
                 clone_repositories_dir,
                 wheelhouse_dir,
-                github_credentails,
+                github_credentials,
             )
         )
     return git_info
 
 
 def _generate_wheels_from_requirements_file(
-    requirements_filepath, clone_repositories_dir, wheelhouse_dir, github_credentails
+    requirements_filepath, clone_repositories_dir, wheelhouse_dir, github_credentials
 ):
     git_info = replace_git_urls_from_requirements_file(
-        requirements_filepath, github_credentails
+        requirements_filepath, github_credentials
     )
     _generation_sub_repositories_wheels(
-        git_info, clone_repositories_dir, wheelhouse_dir, github_credentails
+        git_info, clone_repositories_dir, wheelhouse_dir, github_credentials
     )
     return git_info
 
 
 def _generate_wheels_from_setup_cfg_file(
-    setup_cfg_filepath, clone_repositories_dir, wheelhouse_dir, github_credentails
+    setup_cfg_filepath, clone_repositories_dir, wheelhouse_dir, github_credentials
 ):
     git_info = replace_git_urls_from_setup_cfg_file(
-        setup_cfg_filepath, github_credentails
+        setup_cfg_filepath, github_credentials
     )
     _generation_sub_repositories_wheels(
-        git_info, clone_repositories_dir, wheelhouse_dir, github_credentails
+        git_info, clone_repositories_dir, wheelhouse_dir, github_credentials
     )
     return git_info
 
 
 def _generation_sub_repositories_wheels(
-    git_info, clone_repositories_dir, wheelhouse_dir, github_credentails
+    git_info, clone_repositories_dir, wheelhouse_dir, github_credentials
 ):
     def get_existing_wheel_names():
         def extract_wheel_name(filepath):
@@ -166,7 +166,7 @@ def _generation_sub_repositories_wheels(
                 quiet=True,
             )
             _generate_repository_wheels(
-                target_dir, clone_repositories_dir, wheelhouse_dir, github_credentails
+                target_dir, clone_repositories_dir, wheelhouse_dir, github_credentials
             )
             _run_setup_bdist_wheel(target_dir, wheelhouse_dir)
 

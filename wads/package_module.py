@@ -39,7 +39,6 @@ def generate_package(
     glob_pattern = [glob_pattern] if isinstance(glob_pattern, str) else glob_pattern
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        print('Created temporary directory:', temp_dir)
         temp_path = Path(temp_dir)
 
         generate_module_folder(module_path, dst_path=temp_path)
@@ -198,8 +197,10 @@ class CustomSdistCommand(sdist):
             shutil.rmtree(wheel_generation_dir)
         os.mkdir(wheel_generation_dir)
         print('Generating dependency wheels')
+        if github_credentials := os.environ.get('GITHUB_CREDENTIALS', None):
+            print('Using github credentials from environment variable')
         git_info = generate_project_wheels(
-            project_dir, wheel_generation_dir, github_credentails=None
+            project_dir, wheel_generation_dir, github_credentials=github_credentials
         )
         wheel_package_names = {g['name'] for g in git_info}
         # remove wheels from install_requires to skip pip dependency pre-check
