@@ -12,6 +12,7 @@ jobs:
       matrix:
         python-version: [3.11]
     steps:
+      - uses: actions/checkout@v3
       - uses: otosense/ci-reusable-scripts/actions/validation@master
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -31,6 +32,7 @@ jobs:
       matrix:
         python-version: [3.11]
     steps:
+      - uses: actions/checkout@v3
       - uses: otosense/ci-reusable-scripts/actions/publish@master
         with:
           python-version: ${{ matrix.python-version }}
