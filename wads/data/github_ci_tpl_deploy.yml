@@ -1,0 +1,49 @@
+name: Continuous Integration
+on: [push, pull_request]
+env:
+  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+
+jobs:
+  validation:
+    name: Validation
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: otosense/ci-reusable-scripts/actions/validation@master
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          python-version: ${{ matrix.python-version }}
+          python_packages: ${{ vars.PYTHON_PKGS }}
+          apt_packages: ${{ vars.APT_GET_PKGS }}
+          npm_packages: ${{ vars.NPM_PKGS }}
+          requirements_file: ${{ vars.REQUIREMENTS_FILE_PATH }}
+          test_requirements_file: ${{ vars.TEST_REQUIREMENTS_FILE_PATH }}
+          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+
+  deploy:
+    name: Deploy
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && ( github.ref == 'refs/heads/master')"
+    needs: validation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: otosense/ci-reusable-scripts/actions/deploy@master
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          python-version: ${{ matrix.python-version }}
+          python_packages:  ${{ vars.PYTHON_PKGS }}
+          HOST_IP: ${{ vars.DEV_ENV_HOST_IP }}
+          ENV_HOST_USER: ${{ vars.ENV_HOST_USER }}
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          TARGET_PROJECT_PATH: ${{ vars.TARGET_PROJECT_PATH }}
+          HOST_ENV_CONF_PATH: ${{ vars.HOST_ENV_CONF_PATH }}
+          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+          RUN_SERVER_FILE_NAME: 'run_server.sh'

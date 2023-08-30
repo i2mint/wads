@@ -9,10 +9,11 @@ from typing import List, Optional
 from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
 from wads import (
     pkg_join as wads_join,
-    github_ci_tpl_path,
     gitlab_ci_tpl_path,
     setup_tpl_path,
     gitignore_tpl_path,
+    github_ci_tpl_deploy_path,
+    github_ci_tpl_publish_path,
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
@@ -36,6 +37,7 @@ populate_dflts = wads_configs.get(
         'install_requires': None,
         'verbose': True,
         'version': '0.0.1',
+        'project_type': None
     },
 )
 
@@ -72,6 +74,7 @@ def populate_pkg_dir(
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
+    project_type=None,
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -195,17 +198,23 @@ def populate_pkg_dir(
         with open(pjoin(resource_name), 'wt') as fp:
             fp.write(content)
 
-    if should_update('setup.py'):
-        shutil.copy(setup_tpl_path, pjoin('setup.py'))
 
     if should_update('.gitignore'):
         shutil.copy(gitignore_tpl_path, pjoin('.gitignore'))
 
-    if should_update('setup.cfg'):
-        _clog("... making a 'setup.cfg'")
-        if 'pkg-dir' in configs:
-            del configs['pkg-dir']
-        write_configs(pjoin(''), configs)
+    if project_type == 'app':
+        if should_update('requirements.txt'):
+            with open(pjoin('requirements.txt'), 'w') as f:
+                pass
+
+    elif project_type == 'lib':
+        if should_update('setup.py'):
+            shutil.copy(setup_tpl_path, pjoin('setup.py'))
+        if should_update('setup.cfg'):
+            _clog("... making a 'setup.cfg'")
+            if 'pkg-dir' in configs:
+                del configs['pkg-dir']
+            write_configs(pjoin(''), configs)
 
     if should_update('LICENSE'):
         _license_body = license_body(configs['license'])
@@ -217,11 +226,13 @@ def populate_pkg_dir(
             readme_text += f'\n\nTo install:\t```pip install {name}```\n'
         save_txt_to_pkg('README.md', readme_text)
 
-    if not skip_docsrc_gen:
-        # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
-        from epythet.setup_docsrc import make_docsrc
+    
+    if project_type == 'lib':
+        if not skip_docsrc_gen:
+            # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
+            from epythet.setup_docsrc import make_docsrc
 
-        make_docsrc(pkg_dir, verbose)
+            make_docsrc(pkg_dir, verbose)
 
     if not skip_ci_def_gen:
         root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
@@ -229,7 +240,7 @@ def populate_pkg_dir(
             version_control_system or _url_to_version_control_system(root_url)
         )
         ci_def_path, ci_tpl_path = _resolve_ci_def_and_tpl_path(
-            ci_def_path, ci_tpl_path, pkg_dir, version_control_system
+            ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
         )
         if should_update(ci_def_path):
             assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
@@ -263,7 +274,7 @@ def _url_to_version_control_system(url):
 
 
 def _resolve_ci_def_and_tpl_path(
-    ci_def_path, ci_tpl_path, pkg_dir, version_control_system
+    ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
 ):
     if ci_def_path is None:
         if version_control_system == 'github':
@@ -274,7 +285,12 @@ def _resolve_ci_def_and_tpl_path(
             raise ValueError(f'Unknown root url type: Neither github.com nor gitlab!')
     if ci_tpl_path is None:
         if version_control_system == 'github':
-            ci_tpl_path = github_ci_tpl_path
+            if project_type == 'app':
+                ci_tpl_path = github_ci_tpl_deploy_path
+            elif project_type == 'lib':
+                ci_tpl_path = github_ci_tpl_publish_path
+            else:
+                raise ValueError("Invalid project_type. Choose 'lib' or 'app'.")
         elif version_control_system == 'gitlab':
             ci_tpl_path = gitlab_ci_tpl_path
         else:

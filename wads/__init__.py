@@ -23,6 +23,8 @@ setup_tpl_path = rjoin(data_dir, 'setup_tpl')
 gitignore_tpl_path = rjoin(data_dir, '.gitignore_tpl')
 github_ci_tpl_path = rjoin(data_dir, 'github_ci_tpl.yml')
 gitlab_ci_tpl_path = rjoin(data_dir, 'gitlab_ci_tpl.yml')
+github_ci_tpl_deploy_path = rjoin(data_dir, 'github_ci_tpl_deploy.yml')
+github_ci_tpl_publish_path = rjoin(data_dir, 'github_ci_tpl_publish.yml')
 
 pkg_dir = os.path.dirname(root_dir)
 pkg_join = lambda *paths: os.path.join(pkg_dir, *paths)
