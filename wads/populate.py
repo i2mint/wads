@@ -37,7 +37,7 @@ populate_dflts = wads_configs.get(
         'install_requires': None,
         'verbose': True,
         'version': '0.0.1',
-        'project_type': None
+        'project_type': None,
     },
 )
 
@@ -198,7 +198,6 @@ def populate_pkg_dir(
         with open(pjoin(resource_name), 'wt') as fp:
             fp.write(content)
 
-
     if should_update('.gitignore'):
         shutil.copy(gitignore_tpl_path, pjoin('.gitignore'))
 
@@ -226,7 +225,6 @@ def populate_pkg_dir(
             readme_text += f'\n\nTo install:\t```pip install {name}```\n'
         save_txt_to_pkg('README.md', readme_text)
 
-    
     if project_type == 'lib':
         if not skip_docsrc_gen:
             # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
