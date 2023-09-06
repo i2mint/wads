@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: otosense/ci-reusable-scripts/actions/validation@master
+      - uses: isee/actions/validation@master
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           python-version: ${{ matrix.python-version }}
@@ -35,7 +35,7 @@ jobs:
         python-version: [3.11]
     steps:
       - uses: actions/checkout@v3
-      - uses: otosense/ci-reusable-scripts/actions/deploy@master
+      - uses: isee/actions/deploy@master
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           python-version: ${{ matrix.python-version }}
