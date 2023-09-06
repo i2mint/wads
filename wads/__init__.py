@@ -47,6 +47,7 @@ except FileNotFoundError:
             'install_requires': None,
             'verbose': None,
             'version': '0.0.1',
+            'project_type': 'lib',
         }
     }
 

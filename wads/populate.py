@@ -37,7 +37,7 @@ populate_dflts = wads_configs.get(
         'install_requires': None,
         'verbose': True,
         'version': '0.0.1',
-        'project_type': None,
+        'project_type': 'lib',
     },
 )
 
@@ -74,7 +74,7 @@ def populate_pkg_dir(
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
-    project_type=None,
+    project_type='lib',
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -206,7 +206,7 @@ def populate_pkg_dir(
             with open(pjoin('requirements.txt'), 'w') as f:
                 pass
 
-    elif project_type == 'lib':
+    else:  # project_type == 'lib' or None
         if should_update('setup.py'):
             shutil.copy(setup_tpl_path, pjoin('setup.py'))
         if should_update('setup.cfg'):
@@ -214,6 +214,7 @@ def populate_pkg_dir(
             if 'pkg-dir' in configs:
                 del configs['pkg-dir']
             write_configs(pjoin(''), configs)
+
 
     if should_update('LICENSE'):
         _license_body = license_body(configs['license'])
@@ -225,7 +226,7 @@ def populate_pkg_dir(
             readme_text += f'\n\nTo install:\t```pip install {name}```\n'
         save_txt_to_pkg('README.md', readme_text)
 
-    if project_type == 'lib':
+    if project_type is None or project_type == 'lib':
         if not skip_docsrc_gen:
             # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
             from epythet.setup_docsrc import make_docsrc
@@ -283,12 +284,14 @@ def _resolve_ci_def_and_tpl_path(
             raise ValueError(f'Unknown root url type: Neither github.com nor gitlab!')
     if ci_tpl_path is None:
         if version_control_system == 'github':
-            if project_type == 'app':
-                ci_tpl_path = github_ci_tpl_deploy_path
-            elif project_type == 'lib':
-                ci_tpl_path = github_ci_tpl_publish_path
-            else:
-                raise ValueError("Invalid project_type. Choose 'lib' or 'app'.")
+            ci_tpl_path = github_ci_tpl_deploy_path
+            # Note: Does nothing but check that there is a project type, so replaced with the above
+            # if project_type == 'app':
+            #     ci_tpl_path = github_ci_tpl_deploy_path
+            # elif project_type == 'lib':
+            #     ci_tpl_path = github_ci_tpl_publish_path
+            # else:
+            #     raise ValueError("Invalid project_type. Choose 'lib' or 'app'.")
         elif version_control_system == 'gitlab':
             ci_tpl_path = gitlab_ci_tpl_path
         else:
@@ -320,7 +323,7 @@ def _get_root_url_from_pkg_dir(pkg_dir):
     """Look in the .git of pkg_dir, get the url, and make a root_url from it"""
     pkg_git_url = _get_pkg_url_from_pkg_dir(pkg_dir)
     name = os.path.basename(pkg_dir)
-    assert pkg_git_url.endswith(name), (
+    assert pkg_git_url.endswith(name) or pkg_git_url[:-1].endswith(name), (
         f"The pkg_git_url doesn't end with the pkg name ({name}), "
         f"so I won't try to guess. pkg_git_url is {pkg_git_url}. "
         f"For what ever you're doing, maybe there's a way to explicitly specify "
