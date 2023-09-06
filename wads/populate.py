@@ -215,7 +215,6 @@ def populate_pkg_dir(
                 del configs['pkg-dir']
             write_configs(pjoin(''), configs)
 
-
     if should_update('LICENSE'):
         _license_body = license_body(configs['license'])
         save_txt_to_pkg('LICENSE', _license_body)
