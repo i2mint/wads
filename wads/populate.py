@@ -74,7 +74,7 @@ def populate_pkg_dir(
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
-    project_type='lib',
+    project_type=populate_dflts['project_type'],
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
