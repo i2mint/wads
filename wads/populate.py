@@ -286,13 +286,13 @@ def _resolve_ci_def_and_tpl_path(
             if project_type == 'app':
                 ci_tpl_path = github_ci_tpl_deploy_path
             else:  # project_type == 'lib', etc.
-                print(f"project_type is {project_type}")
+                print(f'project_type is {project_type}')
                 ci_tpl_path = github_ci_tpl_publish_path
         elif version_control_system == 'gitlab':
             ci_tpl_path = gitlab_ci_tpl_path
         else:
             raise ValueError(f'Unknown root url type: Neither github.com nor gitlab!')
-    print(f"{ci_tpl_path=}")
+    print(f'{ci_tpl_path=}')
     return ci_def_path, ci_tpl_path
 
 
