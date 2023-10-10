@@ -100,3 +100,13 @@ jobs:
         uses: i2mint/isee/actions/tag-repository@master
         with:
           tag: $VERSION
+
+  github-pages:
+    name: Publish GitHub Pages
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == 'refs/heads/master'"
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: i2mint/epythet/actions/publish-github-pages@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
