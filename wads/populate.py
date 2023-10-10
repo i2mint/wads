@@ -14,7 +14,7 @@ from wads import (
     github_ci_tpl_deploy_path,
     github_ci_tpl_publish_path,
     wads_configs,
-    wads_configs_file
+    wads_configs_file,
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
