@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 # from functools import partial
 from typing import List, Optional
-from wads import pkg_path_names, root_dir, wads_configs, wads_configs_file
 from wads import (
     pkg_join as wads_join,
     gitlab_ci_tpl_path,
@@ -14,6 +13,8 @@ from wads import (
     gitignore_tpl_path,
     github_ci_tpl_deploy_path,
     github_ci_tpl_publish_path,
+    wads_configs,
+    wads_configs_file
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs

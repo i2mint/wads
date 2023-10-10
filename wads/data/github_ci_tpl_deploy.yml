@@ -1,7 +1,7 @@
 name: Continuous Integration
 on: [push, pull_request]
 env:
-  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  PROJECT_NAME: #PROJECT_NAME#
 
 jobs:
   validation:
@@ -10,40 +10,63 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.11]
+        python-version: [3.8]
 
     steps:
       - uses: actions/checkout@v3
-      - uses: isee/actions/validation@master
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          python-version: ${{ matrix.python-version }}
-          python_packages: ${{ vars.PYTHON_PKGS }}
-          apt_packages: ${{ vars.APT_GET_PKGS }}
-          npm_packages: ${{ vars.NPM_PKGS }}
-          requirements_file: ${{ vars.REQUIREMENTS_FILE_PATH }}
-          test_requirements_file: ${{ vars.TEST_REQUIREMENTS_FILE_PATH }}
-          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
 
-  deploy:
-    name: Deploy
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && ( github.ref == 'refs/heads/master')"
-    needs: validation
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.11]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: isee/actions/deploy@master
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.7.0
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
           python-version: ${{ matrix.python-version }}
-          python_packages:  ${{ vars.PYTHON_PKGS }}
-          HOST_IP: ${{ vars.DEV_ENV_HOST_IP }}
-          ENV_HOST_USER: ${{ vars.ENV_HOST_USER }}
-          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
-          TARGET_PROJECT_PATH: ${{ vars.TARGET_PROJECT_PATH }}
-          HOST_ENV_CONF_PATH: ${{ vars.HOST_ENV_CONF_PATH }}
-          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
-          RUN_SERVER_FILE_NAME: 'run_server.sh'
+
+      - name: Install Dependencies
+        uses: i2mint/isee/actions/install-packages@master
+        with:
+          dependency-files: requirements.txt
+
+      - name: Format Source Code
+        uses: i2mint/isee/actions/format-source-code@master
+
+      - name: Pylint Validation
+        uses: i2mint/isee/actions/pylint-validation@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          enable: C0114,E0401
+
+      - name: Pytest Validation
+        uses: i2mint/isee/actions/pytest-validation@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+
+  # deploy:
+  #   name: Deploy
+  #   if: "!contains(github.event.head_commit.message, '[skip ci]') && ( github.ref == 'refs/heads/master')"
+  #   needs: validation
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [3.8]
+        
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+
+  #     - uses: isee/actions/deploy@master
+  #       with:
+  #         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         python-version: ${{ matrix.python-version }}
+  #         python_packages:  ${{ vars.PYTHON_PKGS }}
+  #         HOST_IP: ${{ vars.DEV_ENV_HOST_IP }}
+  #         ENV_HOST_USER: ${{ vars.ENV_HOST_USER }}
+  #         VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+  #         TARGET_PROJECT_PATH: ${{ vars.TARGET_PROJECT_PATH }}
+  #         HOST_ENV_CONF_PATH: ${{ vars.HOST_ENV_CONF_PATH }}
+  #         PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  #         RUN_SERVER_FILE_NAME: 'run_server.sh'

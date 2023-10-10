@@ -1,7 +1,7 @@
 name: Continuous Integration
 on: [push, pull_request]
 env:
-  PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+  PROJECT_NAME: #PROJECT_NAME#
 
 jobs:
   validation:
@@ -10,35 +10,93 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.11]
+        python-version: [3.8]
+
     steps:
       - uses: actions/checkout@v3
-      - uses: isee/actions/validation@master
+
+      # Uncomment this if you need to install private dependencies
+      # - name: Configure SSH
+      #   uses: webfactory/ssh-agent@v0.7.0
+      #   with:
+      #       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           python-version: ${{ matrix.python-version }}
-          python_packages: ${{ vars.PYTHON_PKGS }}
-          apt_packages: ${{ vars.APT_GET_PKGS }}
-          npm_packages: ${{ vars.NPM_PKGS }}
-          requirements_file: ${{ vars.REQUIREMENTS_FILE_PATH }}
-          test_requirements_file: ${{ vars.TEST_REQUIREMENTS_FILE_PATH }}
+
+      - name: Install Dependencies
+        uses: i2mint/isee/actions/install-packages@master
+        with:
+          dependency-files: setup.cfg
+
+      - name: Format Source Code
+        uses: i2mint/isee/actions/format-source-code@master
+
+      - name: Pylint Validation
+        uses: i2mint/isee/actions/pylint-validation@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          enable: C0114,E0401
+
+      - name: Pytest Validation
+        uses: i2mint/isee/actions/pytest-validation@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
 
   publish:
     name: Publish
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && ( github.ref == 'refs/heads/master')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
     needs: validation
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.11]
+        python-version: [3.8]
     steps:
       - uses: actions/checkout@v3
-      - uses: isee/actions/publish@master
+        with:
+          fetch-depth: 0
+
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Configure Git User
+        uses: i2mint/isee/actions/configure-git-user@master
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          python_packages:  ${{ vars.PYTHON_PKGS }}
-          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
-          PYPI_USERNAME: ${{ vars.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ vars.PYPI_PASSWORD }}
-          GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
-          GIT_USER_NAME: ${{ vars.GIT_USER_NAME }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install axblack wads isee
+          isee install-requires
+
+      - name: Install Dependencies
+        uses: i2mint/isee/actions/install-packages@master
+        with:
+          dependency-files: setup.cfg
+
+      - name: Format Source Code
+        uses: i2mint/isee/actions/format-source-code@master
+
+      - name: Update Version Number
+        uses: i2mint/isee/actions/bump-version-number@master
+
+      - name: Generate Documentation
+        uses: i2mint/isee/actions/generate-documentation@master
+
+      - name: Check In
+        uses: i2mint/isee/actions/check-in@master
+        with:
+          commit-message: "**CI** Formatted code + Updated version number and documentation. [skip ci]"
+
+      - name: Tag Repository With New Version Number
+        uses: i2mint/isee/actions/tag-repository@master
+        with:
+          tag: $VERSION
