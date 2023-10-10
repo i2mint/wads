@@ -41,7 +41,7 @@ jobs:
           paths-to-ignore: scrap
 
   publish:
-    name: Publish
+    name: Publish Package
     if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == 'refs/heads/master'"
     needs: validation
     runs-on: ubuntu-latest
@@ -77,9 +77,6 @@ jobs:
       - name: Update Version Number
         uses: i2mint/isee/actions/bump-version-number@master
 
-      - name: Generate Documentation
-        uses: i2mint/isee/actions/generate-documentation@master
-
       - name: Package
         uses: i2mint/isee/actions/package@master
 
@@ -88,7 +85,6 @@ jobs:
         with:
           pypi-username: ${{ secrets.PYPI_USERNAME }}
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
-          publish-documentation: true
 
       - name: Check In
         uses: i2mint/isee/actions/check-in@master
@@ -99,3 +95,13 @@ jobs:
         uses: i2mint/isee/actions/tag-repository@master
         with:
           tag: $VERSION
+
+  github-pages:
+    name: Publish GitHub Pages
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == 'refs/heads/master'"
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: i2mint/epythet/actions/publish-github-pages@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
