@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.util &mdash; wads 0.1.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/toggleprompt.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="wads.trans" href="trans.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.util</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/util.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.util">
+<span id="wads-util"></span><h1>wads.util<a class="headerlink" href="#module-wads.util" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="wads.util.find_obj">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">find_obj</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">module_and_obj_names</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#find_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.find_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find an object from specified modules, under specified names.</p>
+<p>This function searches for a specified object in a list of specified modules.
+It first tries to import the object from the first module specified, then the
+second, and so on, until it finds the object. If the object is not found in any
+of the specified modules, an ImportError is raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*module_and_obj_names</strong> – A list of pairs of module names and object names.
+The first module specified is searched first, then the second, and so on,
+until the object is found. Each module and object pair is specified as a
+tuple containing two strings. The first string is the module name, and the
+second string is the object name. Alternatively, the module and object pair
+can be specified as a single string containing two space-separated strings,
+where the first string is the module name and the second string is the
+object name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The imported object.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ImportError</strong> – If the object cannot be found in any of the specified modules.</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="n">find_obj</span><span class="p">(</span><span class="s1">&#39;importlib.resources files&#39;</span><span class="p">,</span> <span class="s1">&#39;importlib_resources files&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">callable</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_obj</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;importlib no_such_obj&#39;</span><span class="p">,</span> <span class="s1">&#39;no_such_pkg x&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;wave.no_such_module&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ImportError</span>: <span class="n">All of these import attempts failed:</span>
+<span class="x">    from importlib import no_such_obj</span>
+<span class="x">    from no_such_pkg import x</span>
+<span class="x">    from wave.no_such_module import y</span>
+</pre></div>
+</div>
+<p>See discussion: <a class="reference external" href="https://github.com/i2mint/wads/discussions/10">https://github.com/i2mint/wads/discussions/10</a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.git">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">git</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">command</span><span class="o">=</span><span class="default_value">'status'</span></em>, <em class="sig-param"><span class="n">work_tree</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">git_dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.git" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launch git commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>command</strong> – git command (e.g. ‘status’, ‘branch’, ‘commit -m “blah”’, ‘push’, etc.)</p></li>
+<li><p><strong>work_tree</strong> – The work_tree directory (i.e. where the project is)</p></li>
+<li><p><strong>git_dir</strong> – The .git directory (usually, and by default, will be taken to be “{work_tree}/.git/”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>What ever the command line returns (decoded to string)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.highlight">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">highlight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">effect</span><span class="o">=</span><span class="default_value">'\x1b[7m'</span></em>, <em class="sig-param"><span class="n">beg_mark</span><span class="o">=</span><span class="default_value">'[['</span></em>, <em class="sig-param"><span class="n">end_mark</span><span class="o">=</span><span class="default_value">']]'</span></em>, <em class="sig-param"><span class="n">end_effect</span><span class="o">=</span><span class="default_value">'\x1b[0m'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#highlight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.highlight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interprets a string’s highlight markers to be able to make highlights in the string.</p>
+<p>This is meant for very simple situations. A more powerful and fast function could be made by
+using regular expressions and a map to map “codes” to “effects”.</p>
+<p>Try this:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="s2">&quot;This is [[the section]] that is [[highlighted]].&quot;</span><span class="p">))</span>  
+</pre></div>
+</div>
+<p>Above, “reverse” is used as the default effect.
+But You can change that to bold blue ink on yellow background. That’s three effects:
+1 (for bold), 34, for the blue foreground (ink), and 43 for the “yellow” (more like brown)
+background (paper).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_string</span> <span class="o">=</span> <span class="s2">&quot;This is [[the section]] that is [[highlighted]].&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="n">my_string</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1;34;43m&quot;</span><span class="p">))</span>  
+</pre></div>
+</div>
+<p>033[whaaaa?!? Yeah… well, either you do it that has-no-life-outside-unicode way.
+If so, Ansi help you!
+See [this wiki section](<a class="reference external" href="https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters">https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters</a>).
+or [this tutorial](<a class="reference external" href="https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html#rich-text">https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html#rich-text</a>).</p>
+<p>If not, we’ve prepared a map between human language and effect codes in the form of the
+<cite>fc</cite> variable of this module. It’s a dict (and if you have <code class="docutils literal notranslate"><span class="pre">py2store</span></code>, it’s a mapping containing
+that dict and allowing you access through attributes too).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">wads.util</span> <span class="kn">import</span> <span class="n">fc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">fc</span><span class="p">)[</span><span class="mi">20</span><span class="p">:</span><span class="mi">25</span><span class="p">]</span>
+<span class="go">[&#39;magenta&#39;, &#39;cyan&#39;, &#39;gray&#39;, &#39;dark_gray&#39;, &#39;dark_red&#39;]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>string</strong> – String with highlight formatting</p></li>
+<li><p><strong>effect</strong> – The effect to use for the highlighting (some unicode like “033[21m”)</p></li>
+<li><p><strong>beg_mark</strong> – String that marks the beginning of the highlight</p></li>
+<li><p><strong>end_mark</strong> – String that marks the end of the highlight</p></li>
+<li><p><strong>end_effect</strong> – The unicode to use to reset the effect</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.import_obj">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">import_obj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">module_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">obj_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#import_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.import_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import an object from a specified module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from</strong> (<em>str</em>) – The name of the module to import from.</p></li>
+<li><p><strong>obj_name</strong> (<em>str</em>) – The name of the object to import.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The imported object.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ImportError</strong> – If the module or object cannot be imported.</p></li>
+<li><p><strong>AttributeError</strong> – If the object does not exist in the module.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec_finder</span> <span class="o">=</span> <span class="n">import_obj</span><span class="p">(</span><span class="s1">&#39;importlib.util&#39;</span><span class="p">,</span> <span class="s1">&#39;find_spec&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">callable</span><span class="p">(</span><span class="n">spec_finder</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec_finder</span><span class="o">.</span><span class="vm">__module__</span>
+<span class="go">&#39;importlib.util&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.mk_import_root_replacer">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">mk_import_root_replacer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">from_to_dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#mk_import_root_replacer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.mk_import_root_replacer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a function that does multiple import name replacements.</p>
+<p>For a use case, see replace_import_names. This is just a helper function.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">&#39;foo&#39;</span><span class="p">:</span> <span class="s1">&#39;FOO&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">:</span> <span class="s1">&#39;BAR&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foo import BLAH&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from FOO import BLAH&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foo.bar import BLAH&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from FOO.bar import BLAH&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import bar&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;import BAR&#39;</span>
+</pre></div>
+</div>
+<p>Partial matches are not replaced (that’s a good thing!):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import barmitzvah as oy&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;import barmitzvah as oy&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foobar import hello&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from foobar import hello&#39;</span>
+</pre></div>
+</div>
+<p>Yes, and it works with dotpaths:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">&#39;where.it.was&#39;</span><span class="p">:</span> <span class="s1">&#39;where.it.is.now&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import where.it.was as here&#39;</span><span class="p">)</span>
+<span class="go">&#39;import where.it.is.now as here&#39;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>from_to_dict</strong> – A dict of {to_find: to_replace_by,…} pairs</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A replacer function that you can apply to strings to carry out the replacements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.mk_replacer_from_dict">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">mk_replacer_from_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">from_to_dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#mk_replacer_from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.mk_replacer_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a function that does multiple replacements (in a single pass).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">mk_replacer_from_dict</span><span class="p">({</span><span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="s1">&#39;are&#39;</span><span class="p">,</span> <span class="s1">&#39;life&#39;</span><span class="p">:</span> <span class="s1">&#39;butterflies&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">(</span><span class="s2">&quot;There is no life in the void.&quot;</span><span class="p">)</span>
+<span class="go">&#39;There are no butterflies in the void.&#39;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>from_to_dict</strong> – A dict of {to_find: to_replace_by,…} pairs</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A replacer function that you can apply to strings to carry out the replacements</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.util.replace_import_names">
+<code class="sig-prename descclassname">wads.util.</code><code class="sig-name descname">replace_import_names</code><span class="sig-paren">(</span><em class="sig-param">source_store</em>, <em class="sig-param">from_to_dict</em>, <em class="sig-param">target_store=None</em>, <em class="sig-param">dryrun=True</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">replacer_factory=&lt;function mk_import_root_replacer&gt;</em>, <em class="sig-param">add_comment_at_the_end_of_lines_replaced=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#replace_import_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.util.replace_import_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace import names.</p>
+<p>Use case: You’ve renamed something or moved some modules (remember UNIX? Same as move!) and have to go through
+all your files and notebooks and replace those names.
+Now, if you have a nice IDE, we suggest you use refactoring instead – as long as you have any uses in the scope.
+But sometimes it’s not enough. You might have text/html documments, or jupyter notebooks, etc.
+So you can use this instead.</p>
+<p>Be warned though:
+- You should look at the pattern that is used to match, and make sure it won’t create havoc.
+- Backup your documents so you can revert!
+- Print matches before you actually apply them all in bulk.
+- Use at your own risk!</p>
+<p>For examples, see the mk_import_root_replacer helper function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_store</strong> – </p></li>
+<li><p><strong>from_to_dict</strong> – A dict of {to_find: to_replace_by,…} pairs</p></li>
+<li><p><strong>target_store</strong> – The store</p></li>
+<li><p><strong>dryrun</strong> – </p></li>
+<li><p><strong>verbose</strong> – </p></li>
+<li><p><strong>replacer_factory</strong> – makes the replacer = replacer_factory(from_to_dict)</p></li>
+<li><p><strong>add_comment_at_the_end_of_lines_replaced</strong> – True/False or an actual string to add at the end of replaced lines</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="trans.html" class="btn btn-neutral float-left" title="wads.trans" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 
+2020
+Otosense.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
