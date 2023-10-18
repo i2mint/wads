@@ -15,11 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Configure SSH
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -29,6 +24,7 @@ jobs:
         uses: i2mint/isee/actions/install-packages@master
         with:
           dependency-files: requirements.txt
+          # ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Uncomment this if you need to install private dependencies from source
 
       - name: Format Source Code
         uses: i2mint/isee/actions/format-source-code@master
