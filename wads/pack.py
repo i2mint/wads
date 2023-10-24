@@ -74,6 +74,7 @@ Path = str
 
 def check_in(
     commit_message: str,
+    *,
     work_tree='.',
     git_dir=None,
     auto_choose_default_action=False,
