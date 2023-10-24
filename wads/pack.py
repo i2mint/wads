@@ -55,7 +55,7 @@ DOCSRC = 'docsrc'
 DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 
-def get_name_from_configs(pkg_dir, assert_exists=True):
+def get_name_from_configs(pkg_dir, *, assert_exists=True):
     """Get name from local setup.cfg (metadata section)"""
     configs = read_configs(pkg_dir=pkg_dir)
     name = configs.get('name', None)
@@ -234,6 +234,7 @@ def check_in(
 
 def goo(
     pkg_dir,
+    *,
     commit_message,
     git_dir=None,
     auto_choose_default_action=False,
@@ -280,6 +281,7 @@ def goo(
 # TODO: Git pull and make sure no conflicts before moving on...
 def go(
     pkg_dir,
+    *,
     version=None,
     publish_docs_to=DFLT_PUBLISH_DOCS_TO,
     verbose: bool = True,
@@ -317,6 +319,7 @@ def go(
 
 def git_commit_and_push(
     pkg_dir,
+    *,
     version=None,
     verbose: bool = True,
     answer_yes_to_all_prompts: bool = False,
@@ -348,7 +351,7 @@ def git_commit_and_push(
     ggit(f'push')
 
 
-def generate_and_publish_docs(pkg_dir, publish_docs_to='github'):
+def generate_and_publish_docs(pkg_dir, *, publish_docs_to='github'):
     # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
     from epythet import make_autodocs, make
 
@@ -414,7 +417,7 @@ def current_configs_version(pkg_dir):
 
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
-def update_setup_cfg(pkg_dir, new_deploy=False, version=None, verbose=True):
+def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """Update setup.cfg.
     If version is not given, will ask pypi (via http request) what the current version
     is, and increment that.
@@ -439,7 +442,7 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, version=None,
+    pkg_dir, *, version=None,
 ):
     """Increment version setup.cfg.
     """
@@ -465,7 +468,7 @@ def run_setup(pkg_dir):
     # print(f"{setup_output}\n")
 
 
-def twine_upload_dist(pkg_dir, options_str=None):
+def twine_upload_dist(pkg_dir, *, options_str=None):
     """Publish to pypi. Runs ``python -m twine upload dist/*``"""
     print('--------------------------- upload_output ---------------------------')
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -652,6 +655,7 @@ DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = 'https://pypi.python.org/pypi/{package}/js
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
 def current_pypi_version(
     pkg_dir: Path,
+    *,
     name: Union[None, str] = None,
     url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
     use_requests=requests_is_installed,
@@ -726,7 +730,7 @@ def _get_version(
 
 
 def read_and_resolve_setup_configs(
-    pkg_dir: Path, new_deploy=False, version=None, assert_names=True
+    pkg_dir: Path, *, new_deploy=False, version=None, assert_names=True
 ):
     """make setup params and call setup
 
@@ -882,6 +886,7 @@ def _equals_or_first_letter_of(input_string, target_string):
 
 def process_missing_module_docstrings(
     pkg_dir: Path,
+    *,
     action='input',
     exceptions=(),
     docstr_template='"""\n{user_input}\n"""\n',
