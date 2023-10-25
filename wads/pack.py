@@ -234,8 +234,8 @@ def check_in(
 
 def goo(
     pkg_dir,
-    *,
     commit_message,
+    *,
     git_dir=None,
     auto_choose_default_action=False,
     bypass_docstring_validation=False,
@@ -885,8 +885,8 @@ def _equals_or_first_letter_of(input_string, target_string):
 
 
 def process_missing_module_docstrings(
-    pkg_dir: Path,
     *,
+    pkg_dir: Path,
     action='input',
     exceptions=(),
     docstr_template='"""\n{user_input}\n"""\n',
