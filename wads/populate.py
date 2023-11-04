@@ -321,10 +321,10 @@ def _get_pkg_url_from_pkg_dir(pkg_dir):
     pkg_git_url = git(command='remote get-url origin', work_tree=pkg_dir)
 
     # Check if the URL is an SSH URL and convert it to HTTPS if needed
-    ssh_match = re.match(r"git@(.*?):(.*?)(?:\.git)?$", pkg_git_url)
+    ssh_match = re.match(r'git@(.*?):(.*?)(?:\.git)?$', pkg_git_url)
     if ssh_match:
         domain, repo = ssh_match.groups()
-        pkg_git_url = f"https://{domain}/{repo}"
+        pkg_git_url = f'https://{domain}/{repo}'
 
     return pkg_git_url
 
