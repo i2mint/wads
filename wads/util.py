@@ -17,9 +17,7 @@ def ensure_slash_suffix(s: str):
 
 
 def ensure_no_slash_suffix(s: str):
-    if s.endswith(path_sep):
-        s = s[:-1]
-    return s
+    return s.rstrip(path_sep)
 
 
 def git(command='status', work_tree='.', git_dir=None):
