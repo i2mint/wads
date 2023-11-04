@@ -311,9 +311,21 @@ def _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, clog, user_email):
 
 
 def _get_pkg_url_from_pkg_dir(pkg_dir):
-    """Look in the .git of pkg_dir and get the project url for it"""
+    """Look in the .git of pkg_dir and get the project url for it. 
+    
+    Note: If the url found is an ssh url, it will be converted to an https one.
+    """
+    import re
+
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
     pkg_git_url = git(command='remote get-url origin', work_tree=pkg_dir)
+
+    # Check if the URL is an SSH URL and convert it to HTTPS if needed
+    ssh_match = re.match(r"git@(.*?):(.*?)(?:\.git)?$", pkg_git_url)
+    if ssh_match:
+        domain, repo = ssh_match.groups()
+        pkg_git_url = f"https://{domain}/{repo}"
+
     return pkg_git_url
 
 
