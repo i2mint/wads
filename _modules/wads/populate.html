@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.8 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>wads.populate &mdash; wads 0.1.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -395,9 +395,21 @@
 
 
 <span class="k">def</span> <span class="nf">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it. </span>
+<span class="sd">    </span>
+<span class="sd">    Note: If the url found is an ssh url, it will be converted to an https one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;remote get-url origin&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="c1"># Check if the URL is an SSH URL and convert it to HTTPS if needed</span>
+    <span class="n">ssh_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;git@(.*?):(.*?)(?:\.git)?$&quot;</span><span class="p">,</span> <span class="n">pkg_git_url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ssh_match</span><span class="p">:</span>
+        <span class="n">domain</span><span class="p">,</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">ssh_match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">domain</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&quot;</span>
+
     <span class="k">return</span> <span class="n">pkg_git_url</span>
 
 
