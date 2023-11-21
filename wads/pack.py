@@ -145,7 +145,11 @@ def check_in(
         def run_pylint(current_dir):
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -206,7 +210,8 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -301,10 +306,10 @@ def go(
 
     """
 
-    version = increment_configs_version(pkg_dir, version)
+    version = increment_configs_version(pkg_dir, version=version)
     update_setup_cfg(pkg_dir, verbose=verbose)
     run_setup(pkg_dir)
-    twine_upload_dist(pkg_dir, twine_upload_options_str)
+    twine_upload_dist(pkg_dir, options_str=twine_upload_options_str)
 
     if not keep_dist_pkgs:
         delete_pkg_directories(pkg_dir, verbose)
@@ -313,7 +318,11 @@ def go(
         generate_and_publish_docs(pkg_dir, publish_docs_to)
     if not skip_git_commit:
         git_commit_and_push(
-            pkg_dir, version, verbose, answer_yes_to_all_prompts, commit_message,
+            pkg_dir,
+            version=version,
+            verbose=verbose,
+            answer_yes_to_all_prompts=answer_yes_to_all_prompts,
+            commit_message=commit_message,
         )
 
 
@@ -424,7 +433,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -432,8 +443,7 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
 
 
 def set_version(pkg_dir, version):
-    """Update version setup.cfg
-    """
+    """Update version setup.cfg"""
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir)
     assert isinstance(version, str), 'version should be a string'
@@ -442,10 +452,11 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
-    """Increment version setup.cfg.
-    """
+    """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_configs(pkg_dir=pkg_dir)
     version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
@@ -486,6 +497,7 @@ def twine_upload_dist(pkg_dir, *, options_str=None):
 
 
 # TODO: A lot of work done here to read setup.cfg. setup function apparently does it for you. How to use that?
+
 
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
@@ -540,7 +552,9 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path, postproc=postprocess_ini_section_items, section=METADATA_SECTION,
+    pkg_dir: Path,
+    postproc=postprocess_ini_section_items,
+    section=METADATA_SECTION,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -702,7 +716,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: Path,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -923,7 +941,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
