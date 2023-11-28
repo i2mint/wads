@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v3
@@ -33,13 +33,15 @@ jobs:
         uses: i2mint/isee/actions/pylint-validation@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
-          enable: C0114,E0401
+          enable: missing-module-docstring
+          ignore: tests,examples,scrap
 
       - name: Pytest Validation
         uses: i2mint/isee/actions/pytest-validation@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
-
+          paths-to-ignore: examples,scrap
+          
   # deploy:
   #   name: Deploy
   #   if: "!contains(github.event.head_commit.message, '[skip ci]') && ( github.ref == 'refs/heads/master')"
@@ -47,7 +49,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
-  #       python-version: [3.8]
+  #       python-version: ["3.10"]
         
   #   steps:
   #     - uses: actions/checkout@v3

@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v3
@@ -33,12 +33,14 @@ jobs:
         uses: i2mint/isee/actions/pylint-validation@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
-          enable: C0114,E0401
+          enable: missing-module-docstring
+          ignore: tests,examples,scrap
 
       - name: Pytest Validation
         uses: i2mint/isee/actions/pytest-validation@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
+          paths-to-ignore: examples,scrap
 
   publish:
     name: Publish
@@ -47,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -95,4 +97,6 @@ jobs:
     steps:
       - uses: i2mint/epythet/actions/publish-github-pages@master
         with:
+          # IMPORTANT Note: You don't need to specify GITHUB_TOKEN in your repo secrets.
+          # GITHUB_TOKEN is special & automatically provided to your workflow run.
           github-token: ${{ secrets.GITHUB_TOKEN }}
