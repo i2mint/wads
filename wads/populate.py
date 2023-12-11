@@ -115,6 +115,12 @@ def populate_pkg_dir(
 
     """
 
+    # If the pkg_dir is a github url, then we'll clone it and populate the
+    # resulting folder
+    if pkg_dir.startswith('https://github.com'):
+        url = pkg_dir
+        return populate_proj_from_url(url)
+
     args_defaults = dict()
     if defaults_from is not None:
         if defaults_from == 'user_input':  # TODO: Implement!
@@ -311,8 +317,8 @@ def _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, clog, user_email):
 
 
 def _get_pkg_url_from_pkg_dir(pkg_dir):
-    """Look in the .git of pkg_dir and get the project url for it. 
-    
+    """Look in the .git of pkg_dir and get the project url for it.
+
     Note: If the url found is an ssh url, it will be converted to an https one.
     """
     import re
@@ -360,6 +366,128 @@ def update_pack_and_setup_py(
         print(f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}')
         shutil.move(src=pjoin(resource_name), dst=pjoin('_' + resource_name))
         shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
+
+
+# --------------------------------------------------------------------------------------
+# Extra: Populating a project from a github url
+import contextlib
+import subprocess
+from functools import partial
+
+DFLT_PROJ_ROOT_ENVVAR = 'DFLT_PROJ_ROOT_ENVVAR'
+
+
+def clog(*args, condition=True, log_func=print, **kwargs):
+    if condition:
+        return log_func(*args, **kwargs)
+
+
+@contextlib.contextmanager
+def cd(newdir, verbose=True):
+    """Change your working directory, do stuff, and change back to the original"""
+    _clog = partial(clog, condition=verbose, log_func=print)
+    prevdir = os.getcwd()
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        _clog(f'cd {newdir}')
+        yield
+    finally:
+        _clog(f'cd {prevdir}')
+        os.chdir(prevdir)
+
+
+# TODO: Use config2py to specify these, so user can configure them
+name_for_url_root = {
+    'https://github.com/i2mint': 'i2mint',
+    'https://github.com/thorwhalen': 'thor',
+}
+
+# TODO: Use config2py to specify these, so user can configure them
+proj_root_dir_for_name = {
+    'i2mint': 'i',
+    'thor': 't',
+}
+
+
+def _mk_default_project_description(org_slash_proj: str) -> str:
+    org, proj_name = org_slash_proj.split('/')
+    return f'{proj_name} should say it all, no?'
+
+
+def _get_org_slash_proj(repo: str) -> str:
+    """Gets an org/proj_name string from a url (assuming it's at the end)
+
+    >>> _get_org_slash_proj('https://github.com/thorwhalen/ut/')
+    'thorwhalen/ut'
+    """
+    *_, org, proj_name = ensure_no_slash_suffix(repo).split('/')
+    return f'{org}/{proj_name}'
+
+
+def populate_proj_from_url(
+    url,
+    proj_rootdir=os.environ.get(DFLT_PROJ_ROOT_ENVVAR, None),
+    description=None,
+    license=populate_dflts['license'],
+    **kwargs,
+):
+    """git clone a repository and set the resulting folder up for packaging."""
+    verbose = kwargs.get('verbose', True)
+    _clog = partial(clog, condition=verbose)
+
+    _clog(f"Populating project for {url=}...")
+
+    url = ensure_no_slash_suffix(url)
+
+    assert proj_rootdir, (
+        "Your proj_rootdir was empty -- "
+        "specify it or set the DFLT_PROJ_ROOT_ENVVAR envvar"
+    )
+    _clog(f'{proj_rootdir=}')
+
+    root_url, proj_name = os.path.dirname(url), os.path.basename(url)
+    if description is None:
+        description = get_github_project_description(url)
+    url_name = name_for_url_root.get(root_url, None)
+    if url_name:
+        _clog(f'url_name={url_name}')
+
+    if url_name is not None and url_name in proj_root_dir_for_name:
+        proj_rootdir = os.path.join(proj_rootdir, proj_root_dir_for_name[url_name])
+    _clog(f'proj_rootdir={proj_rootdir}')
+
+    with cd(proj_rootdir):
+        _clog(f'cloning {url}...')
+        subprocess.check_output(f'git clone {url}', shell=True).decode()
+        _clog(f'populating package folder...')
+        populate_pkg_dir(
+            os.path.join(proj_rootdir, proj_name),
+            defaults_from=url_name,
+            description=description,
+            license=license,
+            **kwargs,
+        )
+
+
+def get_github_project_description(
+    repo: str, default_factory=_mk_default_project_description
+):
+    """Get project description from github repository, or default if not found"""
+    import requests
+
+    org_slash_proj = _get_org_slash_proj(repo)
+    api_url = f'https://api.github.com/repos/{org_slash_proj}'
+    r = requests.get(api_url)
+    if r.status_code == 200:
+        description = r.json().get('description', None)
+        if description:
+            return description
+        else:
+            return default_factory(org_slash_proj)
+    else:
+        raise RuntimeError(
+            f"Request response status for {api_url} wasn't 200. Was {r.status_code}"
+        )
 
 
 def main():
