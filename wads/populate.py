@@ -117,7 +117,7 @@ def populate_pkg_dir(
 
     # If the pkg_dir is a github url, then we'll clone it and populate the
     # resulting folder
-    if pkg_dir.startswith('https://github.com'):
+    if pkg_dir.startswith('https://github.com') or pkg_dir.startswith('git@github.com'):
         url = pkg_dir
         return populate_proj_from_url(url)
 
@@ -424,6 +424,32 @@ def _get_org_slash_proj(repo: str) -> str:
     return f'{org}/{proj_name}'
 
 
+def _to_git_https_url(git_url):
+    """
+    Converts gitURLs (namely SSH ones) to their HTTPS equivalent.
+
+    :param git_url: A string containing the Git SSH URL.
+    :return: A string containing the equivalent HTTPS URL.
+    """
+    if git_url.startswith("https://github.com"):
+        return git_url  
+    elif git_url.startswith("http://github.com"):
+        # return https equivalent
+        return git_url.replace("http", "https")
+    elif git_url.startswith("git@github.com"):
+        stripped_url = git_url.replace("git@", "").replace(".git", "")
+        formatted_url = stripped_url.replace(":", "/")
+        https_url = f"https://{formatted_url}"
+        return https_url
+    elif git_url.startswith("github.com"):
+        return f"https://{git_url}"
+    else:
+        owner, repo, *remainder = git_url.split("/")
+        if not remainder:
+            return f"https://github.com/{owner}/{repo}"
+        else:
+            raise ValueError(f"Cannot convert {git_url} to HTTPS URL")
+
 def populate_proj_from_url(
     url,
     proj_rootdir=os.environ.get(DFLT_PROJ_ROOT_ENVVAR, None),
@@ -437,7 +463,8 @@ def populate_proj_from_url(
 
     _clog(f"Populating project for {url=}...")
 
-    url = ensure_no_slash_suffix(url)
+    https_url = _to_git_https_url(url)
+    https_url = ensure_no_slash_suffix(https_url)
 
     assert proj_rootdir, (
         "Your proj_rootdir was empty -- "
@@ -445,9 +472,9 @@ def populate_proj_from_url(
     )
     _clog(f'{proj_rootdir=}')
 
-    root_url, proj_name = os.path.dirname(url), os.path.basename(url)
+    root_url, proj_name = os.path.dirname(https_url), os.path.basename(https_url)
     if description is None:
-        description = get_github_project_description(url)
+        description = get_github_project_description(https_url)
     url_name = name_for_url_root.get(root_url, None)
     if url_name:
         _clog(f'url_name={url_name}')
