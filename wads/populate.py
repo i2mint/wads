@@ -431,24 +431,25 @@ def _to_git_https_url(git_url):
     :param git_url: A string containing the Git SSH URL.
     :return: A string containing the equivalent HTTPS URL.
     """
-    if git_url.startswith("https://github.com"):
-        return git_url  
-    elif git_url.startswith("http://github.com"):
+    if git_url.startswith('https://github.com'):
+        return git_url
+    elif git_url.startswith('http://github.com'):
         # return https equivalent
-        return git_url.replace("http", "https")
-    elif git_url.startswith("git@github.com"):
-        stripped_url = git_url.replace("git@", "").replace(".git", "")
-        formatted_url = stripped_url.replace(":", "/")
-        https_url = f"https://{formatted_url}"
+        return git_url.replace('http', 'https')
+    elif git_url.startswith('git@github.com'):
+        stripped_url = git_url.replace('git@', '').replace('.git', '')
+        formatted_url = stripped_url.replace(':', '/')
+        https_url = f'https://{formatted_url}'
         return https_url
-    elif git_url.startswith("github.com"):
-        return f"https://{git_url}"
+    elif git_url.startswith('github.com'):
+        return f'https://{git_url}'
     else:
-        owner, repo, *remainder = git_url.split("/")
+        owner, repo, *remainder = git_url.split('/')
         if not remainder:
-            return f"https://github.com/{owner}/{repo}"
+            return f'https://github.com/{owner}/{repo}'
         else:
-            raise ValueError(f"Cannot convert {git_url} to HTTPS URL")
+            raise ValueError(f'Cannot convert {git_url} to HTTPS URL')
+
 
 def populate_proj_from_url(
     url,
@@ -461,14 +462,14 @@ def populate_proj_from_url(
     verbose = kwargs.get('verbose', True)
     _clog = partial(clog, condition=verbose)
 
-    _clog(f"Populating project for {url=}...")
+    _clog(f'Populating project for {url=}...')
 
     https_url = _to_git_https_url(url)
     https_url = ensure_no_slash_suffix(https_url)
 
     assert proj_rootdir, (
-        "Your proj_rootdir was empty -- "
-        "specify it or set the DFLT_PROJ_ROOT_ENVVAR envvar"
+        'Your proj_rootdir was empty -- '
+        'specify it or set the DFLT_PROJ_ROOT_ENVVAR envvar'
     )
     _clog(f'{proj_rootdir=}')
 
