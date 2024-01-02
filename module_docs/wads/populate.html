@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>wads.populate &mdash; wads 0.1.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -87,6 +87,18 @@
   <section id="module-wads.populate">
 <span id="wads-populate"></span><h1>wads.populate<a class="headerlink" href="#module-wads.populate" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
+<dt id="wads.populate.cd">
+<code class="sig-prename descclassname">wads.populate.</code><code class="sig-name descname">cd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">newdir</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#cd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.populate.cd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change your working directory, do stuff, and change back to the original</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.populate.get_github_project_description">
+<code class="sig-prename descclassname">wads.populate.</code><code class="sig-name descname">get_github_project_description</code><span class="sig-paren">(</span><em class="sig-param">repo: str</em>, <em class="sig-param">default_factory=&lt;function _mk_default_project_description&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#get_github_project_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.populate.get_github_project_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get project description from github repository, or default if not found</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="wads.populate.populate_pkg_dir">
 <code class="sig-prename descclassname">wads.populate.</code><code class="sig-name descname">populate_pkg_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pkg_dir</span></em>, <em class="sig-param"><span class="n">version</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'0.0.1'</span></em>, <em class="sig-param"><span class="n">description</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'There is a bit of an air of mystery around this project...'</span></em>, <em class="sig-param"><span class="n">root_url</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">, </span>None<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">author</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">, </span>None<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">license</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'mit'</span></em>, <em class="sig-param"><span class="n">description_file</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'README.md'</span></em>, <em class="sig-param"><span class="n">keywords</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">, </span>None<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">install_requires</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">, </span>None<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">long_description</span><span class="o">=</span><span class="default_value">'file:README.md'</span></em>, <em class="sig-param"><span class="n">long_description_content_type</span><span class="o">=</span><span class="default_value">'text/markdown'</span></em>, <em class="sig-param"><span class="n">include_pip_install_instruction_in_readme</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">overwrite</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="default_value">()</span></em>, <em class="sig-param"><span class="n">defaults_from</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">, </span>None<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">skip_docsrc_gen</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">version_control_system</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ci_def_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ci_tpl_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_type</span><span class="o">=</span><span class="default_value">'lib'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">configs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#populate_pkg_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.populate.populate_pkg_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Populate project directory root with useful packaging files, if they’re missing.</p>
@@ -129,6 +141,12 @@ or ‘user_input’ to get it from user input.</p></li>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="wads.populate.populate_proj_from_url">
+<code class="sig-prename descclassname">wads.populate.</code><code class="sig-name descname">populate_proj_from_url</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="n">proj_rootdir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">description</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">license</span><span class="o">=</span><span class="default_value">'mit'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#populate_proj_from_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wads.populate.populate_proj_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>git clone a repository and set the resulting folder up for packaging.</p>
 </dd></dl>
 
 <dl class="py function">

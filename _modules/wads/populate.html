@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.9 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>wads.populate &mdash; wads 0.1.10 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
@@ -198,6 +198,12 @@
 <span class="sd">    :return:</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If the pkg_dir is a github url, then we&#39;ll clone it and populate the</span>
+    <span class="c1"># resulting folder</span>
+    <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;https://github.com&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;git@github.com&#39;</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">pkg_dir</span>
+        <span class="k">return</span> <span class="n">populate_proj_from_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 
     <span class="n">args_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">defaults_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -395,8 +401,8 @@
 
 
 <span class="k">def</span> <span class="nf">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it. </span>
-<span class="sd">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it.</span>
+
 <span class="sd">    Note: If the url found is an ssh url, it will be converted to an https one.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">re</span>
@@ -405,10 +411,10 @@
     <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">git</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s1">&#39;remote get-url origin&#39;</span><span class="p">,</span> <span class="n">work_tree</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="c1"># Check if the URL is an SSH URL and convert it to HTTPS if needed</span>
-    <span class="n">ssh_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;git@(.*?):(.*?)(?:\.git)?$&quot;</span><span class="p">,</span> <span class="n">pkg_git_url</span><span class="p">)</span>
+    <span class="n">ssh_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;git@(.*?):(.*?)(?:\.git)?$&#39;</span><span class="p">,</span> <span class="n">pkg_git_url</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ssh_match</span><span class="p">:</span>
         <span class="n">domain</span><span class="p">,</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">ssh_match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">domain</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;https://</span><span class="si">{</span><span class="n">domain</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s1">&#39;</span>
 
     <span class="k">return</span> <span class="n">pkg_git_url</span>
 
@@ -444,6 +450,155 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">resource_name</span><span class="p">))</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">wads_join</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span></div>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Extra: Populating a project from a github url</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="n">DFLT_PROJ_ROOT_ENVVAR</span> <span class="o">=</span> <span class="s1">&#39;DFLT_PROJ_ROOT_ENVVAR&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">clog</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">log_func</span><span class="o">=</span><span class="nb">print</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">log_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cd"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.cd">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">cd</span><span class="p">(</span><span class="n">newdir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Change your working directory, do stuff, and change back to the original&quot;&quot;&quot;</span>
+    <span class="n">_clog</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">clog</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">log_func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
+    <span class="n">prevdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">newdir</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cd </span><span class="si">{</span><span class="n">newdir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cd </span><span class="si">{</span><span class="n">prevdir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">prevdir</span><span class="p">)</span></div>
+
+
+<span class="c1"># TODO: Use config2py to specify these, so user can configure them</span>
+<span class="n">name_for_url_root</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;https://github.com/i2mint&#39;</span><span class="p">:</span> <span class="s1">&#39;i2mint&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;https://github.com/thorwhalen&#39;</span><span class="p">:</span> <span class="s1">&#39;thor&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># TODO: Use config2py to specify these, so user can configure them</span>
+<span class="n">proj_root_dir_for_name</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;i2mint&#39;</span><span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;thor&#39;</span><span class="p">:</span> <span class="s1">&#39;t&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_mk_default_project_description</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">org</span><span class="p">,</span> <span class="n">proj_name</span> <span class="o">=</span> <span class="n">org_slash_proj</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">proj_name</span><span class="si">}</span><span class="s1"> should say it all, no?&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_get_org_slash_proj</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets an org/proj_name string from a url (assuming it&#39;s at the end)</span>
+
+<span class="sd">    &gt;&gt;&gt; _get_org_slash_proj(&#39;https://github.com/thorwhalen/ut/&#39;)</span>
+<span class="sd">    &#39;thorwhalen/ut&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">org</span><span class="p">,</span> <span class="n">proj_name</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">proj_name</span><span class="si">}</span><span class="s1">&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_to_git_https_url</span><span class="p">(</span><span class="n">git_url</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts gitURLs (namely SSH ones) to their HTTPS equivalent.</span>
+
+<span class="sd">    :param git_url: A string containing the Git SSH URL.</span>
+<span class="sd">    :return: A string containing the equivalent HTTPS URL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">git_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https://github.com&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">git_url</span>  
+    <span class="k">elif</span> <span class="n">git_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http://github.com&quot;</span><span class="p">):</span>
+        <span class="c1"># return https equivalent</span>
+        <span class="k">return</span> <span class="n">git_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">,</span> <span class="s2">&quot;https&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">git_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;git@github.com&quot;</span><span class="p">):</span>
+        <span class="n">stripped_url</span> <span class="o">=</span> <span class="n">git_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;git@&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.git&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">formatted_url</span> <span class="o">=</span> <span class="n">stripped_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">https_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">formatted_url</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">https_url</span>
+    <span class="k">elif</span> <span class="n">git_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;github.com&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">git_url</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="o">*</span><span class="n">remainder</span> <span class="o">=</span> <span class="n">git_url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">remainder</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://github.com/</span><span class="si">{</span><span class="n">owner</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot convert </span><span class="si">{</span><span class="n">git_url</span><span class="si">}</span><span class="s2"> to HTTPS URL&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="populate_proj_from_url"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.populate_proj_from_url">[docs]</a><span class="k">def</span> <span class="nf">populate_proj_from_url</span><span class="p">(</span>
+    <span class="n">url</span><span class="p">,</span>
+    <span class="n">proj_rootdir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">DFLT_PROJ_ROOT_ENVVAR</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">license</span><span class="o">=</span><span class="n">populate_dflts</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">],</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;git clone a repository and set the resulting folder up for packaging.&quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">_clog</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">clog</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Populating project for </span><span class="si">{</span><span class="n">url</span><span class="si">=}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+    <span class="n">https_url</span> <span class="o">=</span> <span class="n">_to_git_https_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">https_url</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">https_url</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">proj_rootdir</span><span class="p">,</span> <span class="p">(</span>
+        <span class="s2">&quot;Your proj_rootdir was empty -- &quot;</span>
+        <span class="s2">&quot;specify it or set the DFLT_PROJ_ROOT_ENVVAR envvar&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">proj_rootdir</span><span class="si">=}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">root_url</span><span class="p">,</span> <span class="n">proj_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">https_url</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">https_url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">get_github_project_description</span><span class="p">(</span><span class="n">https_url</span><span class="p">)</span>
+    <span class="n">url_name</span> <span class="o">=</span> <span class="n">name_for_url_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">root_url</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">url_name</span><span class="p">:</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;url_name=</span><span class="si">{</span><span class="n">url_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">url_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">url_name</span> <span class="ow">in</span> <span class="n">proj_root_dir_for_name</span><span class="p">:</span>
+        <span class="n">proj_rootdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">proj_rootdir</span><span class="p">,</span> <span class="n">proj_root_dir_for_name</span><span class="p">[</span><span class="n">url_name</span><span class="p">])</span>
+    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;proj_rootdir=</span><span class="si">{</span><span class="n">proj_rootdir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">cd</span><span class="p">(</span><span class="n">proj_rootdir</span><span class="p">):</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cloning </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;git clone </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;populating package folder...&#39;</span><span class="p">)</span>
+        <span class="n">populate_pkg_dir</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">proj_rootdir</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">),</span>
+            <span class="n">defaults_from</span><span class="o">=</span><span class="n">url_name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_github_project_description"><a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.get_github_project_description">[docs]</a><span class="k">def</span> <span class="nf">get_github_project_description</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_factory</span><span class="o">=</span><span class="n">_mk_default_project_description</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get project description from github repository, or default if not found&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">requests</span>
+
+    <span class="n">org_slash_proj</span> <span class="o">=</span> <span class="n">_get_org_slash_proj</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">api_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;https://api.github.com/repos/</span><span class="si">{</span><span class="n">org_slash_proj</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">description</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default_factory</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Request response status for </span><span class="si">{</span><span class="n">api_url</span><span class="si">}</span><span class="s2"> wasn&#39;t 200. Was </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
