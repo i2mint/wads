@@ -237,7 +237,7 @@ def populate_pkg_dir(
             # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
             from epythet.setup_docsrc import make_docsrc
 
-            make_docsrc(pkg_dir, verbose)
+            make_docsrc(pkg_dir, verbose=verbose)
 
     if not skip_ci_def_gen:
         root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
