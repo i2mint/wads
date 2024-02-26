@@ -23,6 +23,7 @@ If you're crazy (or know what you're doing) just do
     python pack.py go
 
 """
+
 import subprocess
 from setuptools import find_packages
 import json
@@ -145,7 +146,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -190,25 +195,17 @@ def check_in(
             capture_output=not verbose,
         )
 
-    def stage_changes():
-        result = ggit('status')
-        if 'Changes not staged for commit' in result:
-            if not auto_choose_default_action and not verbose:
-                print(result)
-            if confirm('Do you want to stage all your pending changes', default=True):
-                print_step_title('Stage changes')
-                git('add -A')
-
     def commit_changes():
         print_step_title('Commit changes')
         if 'no changes added to commit' in ggit('status'):
             print('No changes to check in.')
             abort()
-        ggit(f'commit --message="{commit_message}"')
+        ggit(f'commit --all --message="{commit_message}"')
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -223,7 +220,6 @@ def check_in(
             run_tests()
         if not bypass_code_formatting:
             format_code()
-        stage_changes()
         commit_changes()
         push_changes()
 
@@ -430,7 +426,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -447,7 +445,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -545,7 +545,9 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path, postproc=postprocess_ini_section_items, section=METADATA_SECTION,
+    pkg_dir: Path,
+    postproc=postprocess_ini_section_items,
+    section=METADATA_SECTION,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -707,7 +709,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: Path,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -928,7 +934,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
