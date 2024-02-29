@@ -197,9 +197,6 @@ def check_in(
 
     def commit_changes():
         print_step_title('Commit changes')
-        if 'no changes added to commit' in ggit('status'):
-            print('No changes to check in.')
-            abort()
         ggit(f'commit --all --message="{commit_message}"')
 
     def push_changes():
@@ -220,6 +217,7 @@ def check_in(
             run_tests()
         if not bypass_code_formatting:
             format_code()
+            verify_current_changes()  # check again after formatting
         commit_changes()
         push_changes()
 
