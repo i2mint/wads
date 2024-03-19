@@ -31,7 +31,7 @@ import re
 import sys
 from pprint import pprint
 from warnings import warn
-from typing import Union, Mapping, Iterable, Generator
+from typing import Union, Mapping, Iterable, Generator, Sequence, Optional
 from configparser import ConfigParser
 from functools import partial
 import os
@@ -74,13 +74,14 @@ Path = str
 def check_in(
     commit_message: str,
     *,
-    work_tree='.',
-    git_dir=None,
-    auto_choose_default_action=False,
-    bypass_docstring_validation=False,
-    bypass_tests=False,
-    bypass_code_formatting=False,
-    verbose=False,
+    work_tree: str = '.',
+    git_dir: Optional[str] = None,
+    auto_choose_default_action: bool = False,
+    bypass_docstring_validation: bool = False,
+    bypass_tests: bool = False,
+    bypass_code_formatting: bool = False,
+    verbose: bool = False,
+    pre_git_hooks: Sequence[str] = (),
 ):
     """Validate, normalize, stage, commit and push your local changes to a remote repository.
 
@@ -100,9 +101,10 @@ def check_in(
     :type bypass_code_formatting: bool, optional
     :param verbose: Set to True if you want to log extra information during the process. Defaults to False.
     :type verbose: bool, optional
+    :param pre_git_hooks: A sequence of git commands to run before the git commit. Defaults to ().
     """
 
-    def ggit(command):
+    def ggit(command: str):
         r = git(command, work_tree=work_tree, git_dir=git_dir)
         clog(verbose, r, log_func=print)
         return r
@@ -146,7 +148,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -197,13 +203,16 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
         ggit('push')
 
     try:
+        for pre_git_hook in pre_git_hooks or []:
+            ggit(pre_git_hook)
         verify_current_changes()
         pull_remote_changes()
         if not bypass_docstring_validation:
@@ -419,7 +428,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -436,7 +447,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -534,7 +547,9 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path, postproc=postprocess_ini_section_items, section=METADATA_SECTION,
+    pkg_dir: Path,
+    postproc=postprocess_ini_section_items,
+    section=METADATA_SECTION,
 ):
     assert isinstance(
         pkg_dir, Path
@@ -696,7 +711,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: Path,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -917,7 +936,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
