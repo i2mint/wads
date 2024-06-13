@@ -159,7 +159,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -210,7 +214,8 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -516,7 +521,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -533,7 +540,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -783,12 +792,6 @@ def versions_from_pypi(
     """
     Return version of package on pypi.python.org using json.
 
-    ::
-
-        current_pypi_version('py2store')
-        '0.0.7'
-
-
     :param package: Name of the package
     :return: A version (string) or None if there was an exception (usually means there
     """
@@ -815,11 +818,8 @@ def highest_pypi_version(
     """
     Return version of package on pypi.python.org using json.
 
-    ::
-
-        current_pypi_version('py2store')
-        '0.0.7'
-
+    >>> highest_pypi_version('wads')  # doctest: +SKIP
+    '0.1.19'
 
     :param package: Name of the package
     :return: A version (string) or None if there was an exception (usually means there
@@ -830,7 +830,16 @@ def highest_pypi_version(
     # else: return None
 
 
-def current_pypi_version(pkg_dir: PathStr,) -> Union[str, None]:
+def current_pypi_version(
+    pkg_dir: PathStr,
+) -> Union[str, None]:
+    """
+    Return version of package on pypi.python.org using json.
+
+    >>> current_pypi_version('wads')  # doctest: +SKIP
+    '0.1.19'
+
+    """
     name = get_pkg_name(pkg_dir)
     url = PYPI_PACKAGE_JSON_URL.format(package=name)
     response = requests.get(url)
@@ -856,7 +865,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: PathStr, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: PathStr,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -1148,13 +1161,14 @@ def process_missing_module_docstrings(
 
     :keyword module, docstr, docstrings, module doc strings
     """
-    from py2store import LocalTextStore, filt_iter
+    from dol import TextFiles, filt_iter
 
     pkg_dir, _ = _get_pkg_dir_and_name(pkg_dir)
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        TextFiles(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():

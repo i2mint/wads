@@ -312,12 +312,9 @@ fc = dict(
     background_white='\033[107m',
 )
 
-try:
-    from py2store.sources import AttrDict
+from types import SimpleNamespace
 
-    fc = AttrDict(**fc)
-except ModuleNotFoundError:
-    pass  # AttrDict is convenient, but not necessary
+fc = SimpleNamespace(**fc)
 
 
 def highlight(
