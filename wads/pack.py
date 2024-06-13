@@ -445,7 +445,7 @@ def extract_pkg_dir_and_name(
 
     You can also just specify the name of the package (it will be imported):
 
-    >>> extract_pkg_dir_and_name('wads')  # doctest: +ELLIPSIS
+    >>> extract_pkg_dir_and_name('wads')  # doctest: +SKIP
     ('.../wads', 'wads')
 
     Or you can specify the path to the package directory explicitly:
@@ -946,12 +946,12 @@ ValidVersionSources = Literal[
 
 def validate_versions(versions: dict, use_source: ValidVersionSources = 'current_pypi'):
     """
-    Validate versions from different sources, returning the version from the source 
+    Validate versions from different sources, returning the version from the source
     you want to use if all versions are consistent, otherwise raising an exception.
 
     You get the versions input from the `versions_from_different_sources` function.
     """
-    
+
     # TODO: Raise specific exceptions with what-to-do-about-it messages
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 

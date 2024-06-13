@@ -137,7 +137,7 @@ def mk_import_root_replacer(from_to_dict):
     :param from_to_dict: A dict of {to_find: to_replace_by,...} pairs
     :return: A replacer function that you can apply to strings to carry out the replacements
 
-    """
+    r"""
     t = dict(
         chain.from_iterable(
             [
