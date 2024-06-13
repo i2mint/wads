@@ -20,7 +20,23 @@ def ensure_no_slash_suffix(s: str):
     return s.rstrip(path_sep)
 
 
-def git(command='status', work_tree='.', git_dir=None):
+def _build_git_command(command: str = 'status', work_tree='.', git_dir=None):
+    if command.startswith('git '):
+        warn(
+            "You don't need to start your command with 'git '. I know it's a git command. Removing that prefix"
+        )
+        command = command[len('git ') :]
+    work_tree = os.path.abspath(os.path.expanduser(work_tree))
+    if git_dir is None:
+        git_dir = os.path.join(work_tree, '.git')
+    assert os.path.isdir(git_dir), f"Didn't find the git_dir: {git_dir}"
+    git_dir = ensure_no_slash_suffix(git_dir)
+    if not git_dir.endswith('.git'):
+        warn(f"git_dir doesn't end with `.git`: {git_dir}")
+    return f'git --git-dir="{git_dir}" --work-tree="{work_tree}" {command}'
+
+
+def git(command: str = 'status', work_tree='.', git_dir=None):
     """Launch git commands.
 
     :param command: git command (e.g. 'status', 'branch', 'commit -m "blah"', 'push', etc.)
@@ -35,20 +51,8 @@ def git(command='status', work_tree='.', git_dir=None):
     git --git-dir=/path/to/my/directory/.git/ --work-tree=/path/to/my/directory/ commit -m 'something'
 
     """
-    if command.startswith('git '):
-        warn(
-            "You don't need to start your command with 'git '. I know it's a git command. Removing that prefix"
-        )
-        command = command[len('git ') :]
-    work_tree = os.path.abspath(os.path.expanduser(work_tree))
-    if git_dir is None:
-        git_dir = os.path.join(work_tree, '.git')
-    assert os.path.isdir(git_dir), f"Didn't find the git_dir: {git_dir}"
-    git_dir = ensure_no_slash_suffix(git_dir)
-    if not git_dir.endswith('.git'):
-        warn(f"git_dir doesn't end with `.git`: {git_dir}")
-    command = f'git --git-dir="{git_dir}" --work-tree="{work_tree}" {command}'
-    r = subprocess.check_output(command, shell=True)
+    command_str = _build_git_command(command, work_tree, git_dir)
+    r = subprocess.check_output(command_str, shell=True)
     if isinstance(r, bytes):
         r = r.decode()
     return r.strip()
