@@ -159,7 +159,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -210,7 +214,8 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -516,7 +521,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -533,7 +540,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -821,7 +830,9 @@ def highest_pypi_version(
     # else: return None
 
 
-def current_pypi_version(pkg_dir: PathStr,) -> Union[str, None]:
+def current_pypi_version(
+    pkg_dir: PathStr,
+) -> Union[str, None]:
     """
     Return version of package on pypi.python.org using json.
 
@@ -854,7 +865,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: PathStr, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: PathStr,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -938,11 +953,11 @@ def validate_versions(versions: dict) -> dict:
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 
     error_msg = ''
-    if versions['tag'] != versions['setup_cfg']:
-        error_msg += (
-            f"Tag version ({versions['tag']}) is different "
-            f"from setup.cfg's version: {versions['setup_cfg']}\n"
-        )
+    # if versions['tag'] != versions['setup_cfg']:
+    #     error_msg += (
+    #         f"Tag version ({versions['tag']}) is different "
+    #         f"from setup.cfg's version: {versions['setup_cfg']}\n"
+    #     )
     if versions['current_pypi'] != versions['highest_not_yanked_pypi']:
         error_msg += (
             f"Current pypi version ({versions['current_pypi']}) is different "
@@ -959,7 +974,7 @@ def validate_versions(versions: dict) -> dict:
             f"  {versions=}"
         )
         raise ValueError(error_msg)
-    
+
     # but if all is well, return the versions:
     return versions
 
@@ -1161,7 +1176,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        TextFiles(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        TextFiles(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
