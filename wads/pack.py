@@ -36,7 +36,7 @@ import os
 from types import ModuleType
 from pprint import pprint
 from warnings import warn
-from typing import Union, Mapping, Iterable, Generator, Sequence, Optional, Tuple
+from typing import Union, Mapping, Iterable, Generator, Sequence, Optional, Tuple, List
 from configparser import ConfigParser
 from functools import partial
 
@@ -70,9 +70,6 @@ def get_name_from_configs(pkg_dir, *, assert_exists=True):
 def clog(condition, *args, log_func=pprint, **kwargs):
     if condition:
         log_func(*args, **kwargs)
-
-
-PathStr = str
 
 
 def check_in(
@@ -368,6 +365,11 @@ def generate_and_publish_docs(pkg_dir, *, publish_docs_to='github'):
         make(pkg_dir, publish_docs_to)
 
 
+PathStr = str
+PkgName = str
+PkgSpec = Union[PathStr, ModuleType, pathlib.Path, PkgName]
+
+
 def delete_pkg_directories(pkg_dir: PathStr, verbose=True):
     from shutil import rmtree
 
@@ -379,22 +381,6 @@ def delete_pkg_directories(pkg_dir: PathStr, verbose=True):
             if verbose:
                 print(f'Deleting folder: {delete_dirpath}')
             rmtree(delete_dirpath)
-
-
-# def update_version(version):
-#     """Updates version (writes to setup.cfg)"""
-#     pass
-def _get_pkg_dir(pkg_dir: PathStr, validate=True) -> PathStr:
-    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_dir, validate=validate)
-    return pkg_dir
-
-
-def _get_pkg_dir_and_name(pkg_dir):
-    pkg_dir = os.path.realpath(pkg_dir)
-    if pkg_dir.endswith(os.sep):
-        pkg_dir = pkg_dir[:-1]
-    pkg_dirname = os.path.basename(pkg_dir)
-    return pkg_dir, pkg_dirname
 
 
 def get_module_path(module: ModuleType) -> str:
@@ -422,7 +408,17 @@ def get_module_path(module: ModuleType) -> str:
     return module
 
 
-def extract_pkg_dir_and_name(pkg_spec, *, validate: bool = True) -> Tuple[str, str]:
+def _get_pkg_dir_and_name(pkg_dir):
+    pkg_dir = os.path.realpath(pkg_dir)
+    if pkg_dir.endswith(os.sep):
+        pkg_dir = pkg_dir[:-1]
+    pkg_dirname = os.path.basename(pkg_dir)
+    return pkg_dir, pkg_dirname
+
+
+def extract_pkg_dir_and_name(
+    pkg_spec: PkgSpec, *, validate: bool = True
+) -> Tuple[str, str]:
     """
     Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`.
     Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py file)
@@ -473,6 +469,28 @@ def extract_pkg_dir_and_name(pkg_spec, *, validate: bool = True) -> Tuple[str, s
         )
 
     return pkg_dir, pkg_name
+
+
+def get_pkg_name(pkg_spec: PkgSpec, validate=True) -> PkgName:
+    """
+    Get the name of the package from a package name, module object or path.
+    Optionally validates some naming rules.
+    """
+    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_spec, validate=validate)
+    configs_pkg_name = get_name_from_configs(pkg_dir)
+    if validate:
+        assert (
+            pkg_dirname == configs_pkg_name
+        ), f'({pkg_dirname=} and {configs_pkg_name=} were not the same'
+    return configs_pkg_name
+
+
+def _get_pkg_dir(pkg_spec: PkgSpec, validate=True) -> PathStr:
+    """
+    Get the path to the package directory from a package name, module object or path.
+    """
+    pkg_dir, _ = extract_pkg_dir_and_name(pkg_spec, validate=validate)
+    return pkg_dir
 
 
 def current_configs(pkg_dir):
@@ -556,6 +574,9 @@ def twine_upload_dist(pkg_dir, *, options_str=None):
     # print(f"{upload_output.decode()}\n")
 
 
+# -----------------------------------------------------------------------------
+# setup.cfg reading and writing
+
 # TODO: A lot of work done here to read setup.cfg. setup function apparently does it for you. How to use that?
 
 
@@ -615,6 +636,8 @@ def read_configs(
     pkg_dir: PathStr,
     postproc=postprocess_ini_section_items,
     section=METADATA_SECTION,
+    *,
+    verbose=False,
 ):
     assert isinstance(
         pkg_dir, PathStr
@@ -624,7 +647,8 @@ def read_configs(
     c = ConfigParser()
     if os.path.isfile(config_filepath):
         c.read_file(open(config_filepath, 'r'))
-        print(type(section), section)
+        if verbose:
+            print(f"{section=}, {type(section)=}")
         try:
             d = c[section]
         except KeyError:
@@ -678,7 +702,29 @@ def write_configs(
         c.write(fp)
 
 
-# dflt_formatter = Formatter()
+# -----------------------------------------------------------------------------
+# Versioning
+
+from packaging.version import parse
+
+
+def sorted_versions(strings: Iterable[str], version_patch_prefix=''):
+    """
+    Filter out and return version strings in (versioning) descending order.
+    """
+    version_pattern = re.compile(rf'^(\d+.){{2}}{version_patch_prefix}\d+$')
+
+    # Filter and sort the versions in descending order
+    sorted_versions = sorted(
+        (
+            x.replace(f'{version_patch_prefix}', '')
+            for x in strings
+            if version_pattern.match(x)
+        ),
+        key=parse,
+        reverse=True,
+    )
+    return sorted_versions
 
 
 def increment_version(version_str):
@@ -723,15 +769,14 @@ def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
             raise
 
 
-DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = 'https://pypi.python.org/pypi/{package}/json'
+PYPI_PACKAGE_JSON_URL = 'https://pypi.python.org/pypi/{package}/json'
 
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
-def current_pypi_version(
+def versions_from_pypi(
     pkg_dir: PathStr,
     *,
     name: Union[None, str] = None,
-    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
     use_requests=requests_is_installed,
 ) -> Union[str, None]:
     """
@@ -746,29 +791,65 @@ def current_pypi_version(
     :param package: Name of the package
     :return: A version (string) or None if there was an exception (usually means there
     """
-    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_dir)
-    name = name or get_name_from_configs(pkg_dir)
-    assert (
-        pkg_dirname == name
-    ), f'pkg_dirname ({pkg_dirname}) and name ({name}) were not the same'
-    url = url_template.format(package=name)
-    t = http_get_json(url, use_requests=use_requests)
-    releases = t.get('releases', [])
-    if releases:
-        return sorted(releases, key=lambda r: tuple(map(int, r.split('.'))))[-1]
+    name = get_pkg_name(pkg_dir)
+    url = PYPI_PACKAGE_JSON_URL.format(package=name)
+
+    pkg_info = http_get_json(url, use_requests=use_requests)
+    releases = pkg_info.get('releases', [])
+
+    # keep only the versions that don't have yanked=True
+    def yanked_release(release_info_list):
+        return any(x.get('yanked', False) for x in release_info_list)
+
+    releases = [k for k, v in releases.items() if not yanked_release(v)]
+    return sorted_versions(releases)
+
+
+def highest_pypi_version(
+    pkg_dir: PathStr,
+    *,
+    name: Union[None, str] = None,
+    use_requests=requests_is_installed,
+) -> List[str]:
+    """
+    Return version of package on pypi.python.org using json.
+
+    ::
+
+        current_pypi_version('py2store')
+        '0.0.7'
+
+
+    :param package: Name of the package
+    :return: A version (string) or None if there was an exception (usually means there
+    """
+    versions = versions_from_pypi(pkg_dir, name=name, use_requests=use_requests)
+    if versions:
+        return versions[0]
+    # else: return None
+
+
+def current_pypi_version(
+    pkg_dir: PathStr,
+) -> Union[str, None]:
+    name = get_pkg_name(pkg_dir)
+    url = PYPI_PACKAGE_JSON_URL.format(package=name)
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data["info"]["version"]
+    else:
+        raise Exception(f"Failed to get information for {package_name}")
 
 
 def next_version_for_package(
     pkg_dir: PathStr,
     name: Union[None, str] = None,
-    url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
     version_if_current_version_none='0.0.1',
     use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
-    current_version = current_pypi_version(
-        name, url_template, use_requests=use_requests
-    )
+    current_version = current_pypi_version(name, use_requests=use_requests)
     if current_version is not None:
         return increment_version(current_version)
     else:
@@ -805,6 +886,67 @@ def _get_version(
                     f'nor did I find a version in setup.cfg (metadata section).'
                 )
     return version
+
+
+def versions_from_tags(pkg_spec: PkgSpec, version_patch_prefix: str = ''):
+    pkg_dir, pkg_name = extract_pkg_dir_and_name(pkg_spec)
+    tags = [x.strip() for x in git('tag', work_tree=pkg_dir).split('\n')]
+    # Pattern to match versions with the patch prefix
+    pattern = rf'^(\d+.){{2}}{version_patch_prefix}\d+$'
+    # Filter and sort the versions in descending order
+    sorted_versions = sorted(
+        [
+            x.replace(f'{version_patch_prefix}', '')
+            for x in tags
+            if re.match(pattern, x)
+        ],
+        key=parse,
+        reverse=True,
+    )
+    return sorted_versions
+
+
+def highest_tag_version(pkg_spec: PkgSpec, version_patch_prefix: str = ''):
+    sorted_tag_versions = versions_from_tags(pkg_spec, version_patch_prefix)
+    if len(sorted_tag_versions) > 0:
+        return sorted_tag_versions[0]
+    return None
+
+
+def setup_cfg_version(pkg_spec: PkgSpec):
+    """Get version from setup.cfg file."""
+    pkg_dir, _ = extract_pkg_dir_and_name(pkg_spec)
+    configs = read_configs(pkg_dir=pkg_dir)
+    return configs.get('version', None)
+
+
+def versions_from_different_sources(pkg_spec: PkgSpec):
+    return {
+        'tag': highest_tag_version(pkg_spec),
+        'current_pypi': current_pypi_version(pkg_spec),
+        'highest_not_yanked_pypi': highest_pypi_version(pkg_spec),
+        'setup_cfg': setup_cfg_version(pkg_spec),
+    }
+
+
+def versions_validation(versions):
+    """
+    tag != setup_cfg are different => NOT valid
+    pypi > setup_cfg  => NOT valid
+    All other cases, it's valid
+    """
+    # TODO: Raise specific exceptions with what-to-do-about-it messages
+    #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
+    if versions['tag'] != versions['setup_cfg']:
+        return False
+    if versions['current_pypi'] != versions['highest_not_yanked_pypi']:
+        return False
+    if versions['current_pypi'] > versions['setup_cfg']:
+        return False
+    return True
+
+
+# -----------------------------------------------------------------------------
 
 
 def read_and_resolve_setup_configs(
@@ -1034,6 +1176,9 @@ def process_missing_module_docstrings(
             return True
     else:
         raise ValueError(f'Unknown action: {action}')
+
+
+# -----------------------------------------------------------------------------
 
 
 argh_kwargs = {
