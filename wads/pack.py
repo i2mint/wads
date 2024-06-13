@@ -159,11 +159,7 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [
-                        current_dir,
-                        '--disable=all',
-                        '--enable=C0114,C0115,C0116',
-                    ],
+                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -214,8 +210,7 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push',
-            default=True,
+            'Your changes have been commited. Do you want to push', default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -413,7 +408,7 @@ def get_module_path(module: ModuleType) -> str:
     if isinstance(module, ModuleType):
         loader = pkgutil.get_loader(module)
         if loader is None or loader.get_filename() is None:
-            raise ValueError(f"Cannot find the filename for module {module.__name__}")
+            raise ValueError(f'Cannot find the filename for module {module.__name__}')
         return os.path.dirname(loader.get_filename())
     return module
 
@@ -521,9 +516,7 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir),
-        new_deploy=new_deploy,
-        version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -540,9 +533,7 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir,
-    *,
-    version=None,
+    pkg_dir, *, version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -658,7 +649,7 @@ def read_configs(
     if os.path.isfile(config_filepath):
         c.read_file(open(config_filepath, 'r'))
         if verbose:
-            print(f"{section=}, {type(section)=}")
+            print(f'{section=}, {type(section)=}')
         try:
             d = c[section]
         except KeyError:
@@ -839,17 +830,15 @@ def highest_pypi_version(
     # else: return None
 
 
-def current_pypi_version(
-    pkg_dir: PathStr,
-) -> Union[str, None]:
+def current_pypi_version(pkg_dir: PathStr,) -> Union[str, None]:
     name = get_pkg_name(pkg_dir)
     url = PYPI_PACKAGE_JSON_URL.format(package=name)
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        return data["info"]["version"]
+        return data['info']['version']
     else:
-        raise Exception(f"Failed to get information for {package_name}")
+        raise Exception(f'Failed to get information for {package_name}')
 
 
 def next_version_for_package(
@@ -867,11 +856,7 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: PathStr,
-    version,
-    configs,
-    name: Union[None, str] = None,
-    new_deploy=False,
+    pkg_dir: PathStr, version, configs, name: Union[None, str] = None, new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -1170,8 +1155,7 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
-        filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
