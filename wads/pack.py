@@ -937,21 +937,30 @@ def validate_versions(versions: dict) -> dict:
     # TODO: Raise specific exceptions with what-to-do-about-it messages
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 
+    error_msg = ''
     if versions['tag'] != versions['setup_cfg']:
-        raise ValueError(
+        error_msg += (
             f"Tag version ({versions['tag']}) is different "
-            f"from setup.cfg's version: {versions['setup_cfg']}"
+            f"from setup.cfg's version: {versions['setup_cfg']}\n"
         )
     if versions['current_pypi'] != versions['highest_not_yanked_pypi']:
-        raise ValueError(
+        error_msg += (
             f"Current pypi version ({versions['current_pypi']}) is different "
-            f"from the highest not yanked pypi version: {versions['highest_not_yanked_pypi']}"
+            f"from the highest not yanked pypi version: {versions['highest_not_yanked_pypi']}\n"
         )
     if versions['current_pypi'] > versions['setup_cfg']:
-        raise ValueError(
+        error_msg += (
             f"Current pypi version ({versions['current_pypi']}) is higher "
-            f"than setup.cfg's version: {versions['setup_cfg']}"
+            f"than setup.cfg's version: {versions['setup_cfg']}\n"
         )
+    if error_msg:
+        error_msg += (
+            f"Please make sure the versions are consistent and then try again: \n"
+            f"  {versions=}"
+        )
+        raise ValueError(error_msg)
+    
+    # but if all is well, return the versions:
     return versions
 
 
