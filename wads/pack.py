@@ -970,8 +970,8 @@ def validate_versions(versions: dict) -> dict:
         )
     if error_msg:
         error_msg += (
-            f"Please make sure the versions are consistent and then try again: \n"
-            f"  {versions=}"
+            f'Please make sure the versions are consistent and then try again: \n'
+            f'  {versions=}'
         )
         raise ValueError(error_msg)
 
