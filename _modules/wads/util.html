@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.util &mdash; wads 0.1.18 documentation</title>
+  <title>wads.util &mdash; wads 0.1.19 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=9969ed3f"></script>
+        <script src="../../_static/documentation_options.js?v=3d116926"></script>
         <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -412,12 +412,10 @@
     <span class="n">background_white</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[107m&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">py2store.sources</span> <span class="kn">import</span> <span class="n">AttrDict</span>
+<span class="c1"># Make a namespace out of the fc dict</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">SimpleNamespace</span>
 
-    <span class="n">fc</span> <span class="o">=</span> <span class="n">AttrDict</span><span class="p">(</span><span class="o">**</span><span class="n">fc</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
-    <span class="k">pass</span>  <span class="c1"># AttrDict is convenient, but not necessary</span>
+<span class="n">fcc</span> <span class="o">=</span> <span class="n">SimpleNamespace</span><span class="p">(</span><span class="o">**</span><span class="n">fc</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="highlight">
