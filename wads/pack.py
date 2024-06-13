@@ -24,17 +24,21 @@ If you're crazy (or know what you're doing) just do
 
 """
 
+import importlib
 import subprocess
+import pathlib
 from setuptools import find_packages
 import json
 import re
 import sys
+import pkgutil
+import os
+from types import ModuleType
 from pprint import pprint
 from warnings import warn
-from typing import Union, Mapping, Iterable, Generator, Sequence, Optional
+from typing import Union, Mapping, Iterable, Generator, Sequence, Optional, Tuple
 from configparser import ConfigParser
 from functools import partial
-import os
 
 import argh
 
@@ -68,7 +72,7 @@ def clog(condition, *args, log_func=pprint, **kwargs):
         log_func(*args, **kwargs)
 
 
-Path = str
+PathStr = str
 
 
 def check_in(
@@ -148,7 +152,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -199,7 +207,8 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -359,10 +368,10 @@ def generate_and_publish_docs(pkg_dir, *, publish_docs_to='github'):
         make(pkg_dir, publish_docs_to)
 
 
-def delete_pkg_directories(pkg_dir: Path, verbose=True):
+def delete_pkg_directories(pkg_dir: PathStr, verbose=True):
     from shutil import rmtree
 
-    pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
+    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_dir)
     names_to_delete = ['dist', 'build', f'{pkg_dirname}.egg-info']
     for name_to_delete in names_to_delete:
         delete_dirpath = os.path.join(pkg_dir, name_to_delete)
@@ -375,10 +384,8 @@ def delete_pkg_directories(pkg_dir: Path, verbose=True):
 # def update_version(version):
 #     """Updates version (writes to setup.cfg)"""
 #     pass
-def _get_pkg_dir(pkg_dir: Path, validate=True) -> Path:
-    pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
-    if validate:
-        validate_pkg_dir(pkg_dir)
+def _get_pkg_dir(pkg_dir: PathStr, validate=True) -> PathStr:
+    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_dir, validate=validate)
     return pkg_dir
 
 
@@ -390,19 +397,82 @@ def _get_pkg_dir_and_name(pkg_dir):
     return pkg_dir, pkg_dirname
 
 
-def validate_pkg_dir(pkg_dir):
-    """Asserts that the pkg_dir is actually one (has a pkg_name/__init__.py file)"""
-    pkg_dir, pkg_dirname = _get_pkg_dir_and_name(pkg_dir)
-    assert os.path.isdir(pkg_dir), f"Directory {pkg_dir} wasn't found"
-    assert pkg_dirname in os.listdir(
-        pkg_dir
-    ), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_dirname}"
-    assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_dirname)), (
-        f'pkg_dir={pkg_dir} contains a dir named {pkg_dirname}, '
-        f"but that dir isn't a package (does not have a __init__.py"
-    )
+def get_module_path(module: ModuleType) -> str:
+    """
+    Get the path to the directory containing the module's code file.
 
-    return pkg_dir, pkg_dirname
+    >>> import os
+    >>> get_module_path(os)  # doctest: +SKIP
+    '/usr/lib/python3.8'
+    >>> import sklearn  # doctest: +SKIP
+    >>> get_module_path(sklearn)  # doctest: +SKIP
+    '/usr/local/lib/python3.8/dist-packages/sklearn'
+    >>> import local_package  # doctest: +SKIP
+    >>> get_module_path(local_package)  # doctest: +SKIP
+    '/home/user/projects/local_package/local_package'
+
+    Read more: https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632
+
+    """
+    if isinstance(module, ModuleType):
+        loader = pkgutil.get_loader(module)
+        if loader is None or loader.get_filename() is None:
+            raise ValueError(f"Cannot find the filename for module {module.__name__}")
+        return os.path.dirname(loader.get_filename())
+    return module
+
+
+def extract_pkg_dir_and_name(pkg_spec, *, validate: bool = True) -> Tuple[str, str]:
+    """
+    Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`.
+    Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py file)
+
+    Also processes input to get a path from a pathlib.Path object, or a module object,
+    or a module/package name string.
+
+    `pkg_spec` can be an imported package (must be a locally developped package)
+    whose name and containing directory is the same):
+
+    >>> import wads
+    >>> extract_pkg_dir_and_name(wads)  # doctest: +ELLIPSIS
+    (.../wads', 'wads')
+
+    You can also just specify the name of the package (it will be imported):
+
+    >>> extract_pkg_dir_and_name('wads')  # doctest: +ELLIPSIS
+    ('.../wads', 'wads')
+
+    Or you can specify the path to the package directory explicitly:
+
+    >>> extract_pkg_dir_and_name('/home/user/projects/wads')  # doctest: +SKIP
+    ('/home/user/projects/wads', 'wads')
+
+    """
+    if isinstance(pkg_spec, pathlib.Path):
+        pkg_spec = str(pkg_spec)
+    # if pkg_spec has only alphanumeric characters, assume it's a package name and import it
+    if isinstance(pkg_spec, str) and not os.path.isdir(pkg_spec) and pkg_spec.isalnum():
+        pkg_spec = importlib.import_module(pkg_spec)
+    # if pkg_spec is a module object, get the path to the module
+    if isinstance(pkg_spec, ModuleType):
+        module_dir = get_module_path(pkg_spec)
+        # package dir is the parent of module dir
+        # Note that this is only true for packages developped locally
+        pkg_spec = os.path.dirname(module_dir)
+
+    pkg_dir, pkg_name = _get_pkg_dir_and_name(pkg_spec)
+
+    if validate:
+        assert os.path.isdir(pkg_dir), f"Directory {pkg_dir} wasn't found"
+        assert pkg_name in os.listdir(
+            pkg_dir
+        ), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_name}"
+        assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_name)), (
+            f'pkg_dir={pkg_dir} contains a dir named {pkg_name}, '
+            f"but that dir isn't a package (does not have a __init__.py"
+        )
+
+    return pkg_dir, pkg_name
 
 
 def current_configs(pkg_dir):
@@ -412,7 +482,7 @@ def current_configs(pkg_dir):
 
 def current_configs_version(pkg_dir):
     pkg_dir = _get_pkg_dir(pkg_dir)
-    return read_configs(pkg_dir=pkg_dir)['version']
+    return read_configs(pkg_dir=pkg_dir).get('version')
 
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
@@ -423,7 +493,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -440,7 +512,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -538,10 +612,12 @@ def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 def read_configs(
-    pkg_dir: Path, postproc=postprocess_ini_section_items, section=METADATA_SECTION,
+    pkg_dir: PathStr,
+    postproc=postprocess_ini_section_items,
+    section=METADATA_SECTION,
 ):
     assert isinstance(
-        pkg_dir, Path
+        pkg_dir, PathStr
     ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
@@ -561,13 +637,13 @@ def read_configs(
 
 
 def write_configs(
-    pkg_dir: Path,
+    pkg_dir: PathStr,
     configs,
     preproc=preprocess_ini_section_items,
     dflt_options=DFLT_OPTIONS,
 ):
     assert isinstance(
-        pkg_dir, Path
+        pkg_dir, PathStr
     ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
@@ -652,7 +728,7 @@ DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE = 'https://pypi.python.org/pypi/{package}/js
 
 # TODO: Perhaps there's a safer way to analyze errors (and determine if the package exists or other HTTPError)
 def current_pypi_version(
-    pkg_dir: Path,
+    pkg_dir: PathStr,
     *,
     name: Union[None, str] = None,
     url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
@@ -670,7 +746,7 @@ def current_pypi_version(
     :param package: Name of the package
     :return: A version (string) or None if there was an exception (usually means there
     """
-    pkg_dir, pkg_dirname = validate_pkg_dir(pkg_dir)
+    pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_dir)
     name = name or get_name_from_configs(pkg_dir)
     assert (
         pkg_dirname == name
@@ -683,7 +759,7 @@ def current_pypi_version(
 
 
 def next_version_for_package(
-    pkg_dir: Path,
+    pkg_dir: PathStr,
     name: Union[None, str] = None,
     url_template=DLFT_PYPI_PACKAGE_JSON_URL_TEMPLATE,
     version_if_current_version_none='0.0.1',
@@ -700,7 +776,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: Path, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: PathStr,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -728,7 +808,7 @@ def _get_version(
 
 
 def read_and_resolve_setup_configs(
-    pkg_dir: Path, *, new_deploy=False, version=None, assert_names=True
+    pkg_dir: PathStr, *, new_deploy=False, version=None, assert_names=True
 ):
     """make setup params and call setup
 
@@ -742,7 +822,7 @@ def read_and_resolve_setup_configs(
     # read the config file (get a dict with it's contents)
     pkg_dir, pkg_dirname = _get_pkg_dir_and_name(pkg_dir)
     if assert_names:
-        validate_pkg_dir(pkg_dir)
+        extract_pkg_dir_and_name(pkg_dir)
 
     configs = read_configs(pkg_dir)
 
@@ -884,7 +964,7 @@ def _equals_or_first_letter_of(input_string, target_string):
 
 def process_missing_module_docstrings(
     *,
-    pkg_dir: Path,
+    pkg_dir: PathStr,
     action='input',
     exceptions=(),
     docstr_template='"""\n{user_input}\n"""\n',
@@ -921,7 +1001,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        LocalTextStore(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        LocalTextStore(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
@@ -971,7 +1052,7 @@ argh_kwargs = {
         get_name_from_configs,
         run_setup,
         current_pypi_version,
-        validate_pkg_dir,
+        extract_pkg_dir_and_name,
         git_commit_and_push,
         process_missing_module_docstrings,
     ],
