@@ -312,9 +312,10 @@ fc = dict(
     background_white='\033[107m',
 )
 
+# Make a namespace out of the fc dict
 from types import SimpleNamespace
 
-fc = SimpleNamespace(**fc)
+fcc = SimpleNamespace(**fc)
 
 
 def highlight(
