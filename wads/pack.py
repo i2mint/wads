@@ -36,7 +36,17 @@ import os
 from types import ModuleType
 from pprint import pprint
 from warnings import warn
-from typing import Union, Mapping, Iterable, Generator, Sequence, Optional, Tuple, List
+from typing import (
+    Union,
+    Mapping,
+    Iterable,
+    Generator,
+    Sequence,
+    Optional,
+    Tuple,
+    List,
+    Literal,
+)
 from configparser import ConfigParser
 from functools import partial
 
@@ -929,21 +939,38 @@ def versions_from_different_sources(pkg_spec: PkgSpec):
     }
 
 
-def versions_validation(versions):
+ValidVersionSources = Literal[
+    'tag', 'current_pypi', 'highest_not_yanked_pypi', 'setup_cfg'
+]
+
+
+def validate_versions(versions: dict, use_source: ValidVersionSources = 'current_pypi'):
     """
-    tag != setup_cfg are different => NOT valid
-    pypi > setup_cfg  => NOT valid
-    All other cases, it's valid
+    Validate versions from different sources, returning the version from the source 
+    you want to use if all versions are consistent, otherwise raising an exception.
+
+    You get the versions input from the `versions_from_different_sources` function.
     """
+    
     # TODO: Raise specific exceptions with what-to-do-about-it messages
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
+
     if versions['tag'] != versions['setup_cfg']:
-        return False
+        raise ValueError(
+            f"Tag version ({versions['tag']}) is different "
+            f"from setup.cfg's version: {versions['setup_cfg']}"
+        )
     if versions['current_pypi'] != versions['highest_not_yanked_pypi']:
-        return False
+        raise ValueError(
+            f"Current pypi version ({versions['current_pypi']}) is different "
+            f"from the highest not yanked pypi version: {versions['highest_not_yanked_pypi']}"
+        )
     if versions['current_pypi'] > versions['setup_cfg']:
-        return False
-    return True
+        raise ValueError(
+            f"Current pypi version ({versions['current_pypi']}) is higher "
+            f"than setup.cfg's version: {versions['setup_cfg']}"
+        )
+    return versions[use_source]
 
 
 # -----------------------------------------------------------------------------
