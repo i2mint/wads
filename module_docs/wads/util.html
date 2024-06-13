@@ -4,11 +4,11 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.util &mdash; wads 0.1.16 documentation</title>
+  <title>wads.util &mdash; wads 0.1.17 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
 
   
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=d50bcae4"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/documentation_options.js?v=71734efd"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
         <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,7 +143,7 @@ object name.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.util.git">
-<span class="sig-prename descclassname"><span class="pre">wads.util.</span></span><span class="sig-name descname"><span class="pre">git</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'status'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#git"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.util.git" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.util.</span></span><span class="sig-name descname"><span class="pre">git</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'status'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_tree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#git"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.util.git" title="Link to this definition"></a></dt>
 <dd><p>Launch git commands.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -266,6 +266,7 @@ that dict and allowing you access through attributes too).</p>
 <dd class="field-even"><p>A replacer function that you can apply to strings to carry out the replacements</p>
 </dd>
 </dl>
+<p>r</p>
 </dd></dl>
 
 <dl class="py function">
@@ -305,11 +306,11 @@ So you can use this instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source_store</strong> – </p></li>
+<li><p><strong>source_store</strong></p></li>
 <li><p><strong>from_to_dict</strong> – A dict of {to_find: to_replace_by,…} pairs</p></li>
 <li><p><strong>target_store</strong> – The store</p></li>
-<li><p><strong>dryrun</strong> – </p></li>
-<li><p><strong>verbose</strong> – </p></li>
+<li><p><strong>dryrun</strong></p></li>
+<li><p><strong>verbose</strong></p></li>
 <li><p><strong>replacer_factory</strong> – makes the replacer = replacer_factory(from_to_dict)</p></li>
 <li><p><strong>add_comment_at_the_end_of_lines_replaced</strong> – True/False or an actual string to add at the end of replaced lines</p></li>
 </ul>
