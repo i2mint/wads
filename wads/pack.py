@@ -944,10 +944,9 @@ ValidVersionSources = Literal[
 ]
 
 
-def validate_versions(versions: dict, use_source: ValidVersionSources = 'current_pypi'):
+def validate_versions(versions: dict) -> dict:
     """
-    Validate versions from different sources, returning the version from the source
-    you want to use if all versions are consistent, otherwise raising an exception.
+    Validate versions from different sources.
 
     You get the versions input from the `versions_from_different_sources` function.
     """
@@ -970,7 +969,7 @@ def validate_versions(versions: dict, use_source: ValidVersionSources = 'current
             f"Current pypi version ({versions['current_pypi']}) is higher "
             f"than setup.cfg's version: {versions['setup_cfg']}"
         )
-    return versions[use_source]
+    return versions
 
 
 # -----------------------------------------------------------------------------
