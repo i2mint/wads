@@ -942,22 +942,32 @@ ValidVersionSources = Literal[
 ]
 
 
-def validate_versions(versions: dict) -> dict:
+def raise_error(msg, error_type=ValueError):
+    raise error_type(msg)
+
+
+def validate_versions(versions: dict, action_when_not_valid=raise_error) -> dict:
     """
     Validate versions from different sources.
 
     You get the versions input from the `versions_from_different_sources` function.
+
+    :param versions: A dictionary with the versions from different sources
+    :param action_when_not_valid: A function that will be called when the versions are not valid
+        Default is to raise a ValueError with the error message. 
+        Another option is to print the error message, log it, or issue a warning.
+    :return: The versions if they are valid
     """
 
     # TODO: Raise specific exceptions with what-to-do-about-it messages
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 
     error_msg = ''
-    # if versions['tag'] != versions['setup_cfg']:
-    #     error_msg += (
-    #         f"Tag version ({versions['tag']}) is different "
-    #         f"from setup.cfg's version: {versions['setup_cfg']}\n"
-    #     )
+    if versions['tag'] != versions['setup_cfg']:
+        error_msg += (
+            f"Tag version ({versions['tag']}) is different "
+            f"from setup.cfg's version: {versions['setup_cfg']}\n"
+        )
     if versions['current_pypi'] != versions['highest_not_yanked_pypi']:
         error_msg += (
             f"Current pypi version ({versions['current_pypi']}) is different "
@@ -973,7 +983,7 @@ def validate_versions(versions: dict) -> dict:
             f'Please make sure the versions are consistent and then try again: \n'
             f'  {versions=}'
         )
-        raise ValueError(error_msg)
+        action_when_not_valid(error_msg)
 
     # but if all is well, return the versions:
     return versions
