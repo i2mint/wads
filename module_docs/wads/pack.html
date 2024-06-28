@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.20 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.22 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=17aaaefc"></script>
+        <script src="../../_static/documentation_options.js?v=842aa08f"></script>
         <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -404,9 +404,22 @@ is, and increment that.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.pack.validate_versions">
-<span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">validate_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">versions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#validate_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.validate_versions" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">validate_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">versions:</span> <span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_when_not_valid=&lt;function</span> <span class="pre">raise_error&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#validate_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.validate_versions" title="Link to this definition"></a></dt>
 <dd><p>Validate versions from different sources.</p>
 <p>You get the versions input from the <cite>versions_from_different_sources</cite> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>versions</strong> – A dictionary with the versions from different sources</p></li>
+<li><p><strong>action_when_not_valid</strong> – A function that will be called when the versions are not valid
+Default is to raise a ValueError with the error message.
+Another option is to print the error message, log it, or issue a warning.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The versions if they are valid</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

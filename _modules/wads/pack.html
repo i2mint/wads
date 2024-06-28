@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.20 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.22 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=17aaaefc"></script>
+        <script src="../../_static/documentation_options.js?v=842aa08f"></script>
         <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -252,7 +252,11 @@
 
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="s1">&#39;__init__.py&#39;</span><span class="p">)):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">pylint</span><span class="o">.</span><span class="n">lint</span><span class="o">.</span><span class="n">Run</span><span class="p">(</span>
-                    <span class="p">[</span><span class="n">current_dir</span><span class="p">,</span> <span class="s1">&#39;--disable=all&#39;</span><span class="p">,</span> <span class="s1">&#39;--enable=C0114,C0115,C0116&#39;</span><span class="p">,],</span>
+                    <span class="p">[</span>
+                        <span class="n">current_dir</span><span class="p">,</span>
+                        <span class="s1">&#39;--disable=all&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--enable=C0114,C0115,C0116&#39;</span><span class="p">,</span>
+                    <span class="p">],</span>
                     <span class="n">do_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">linter</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;global_note&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
@@ -303,7 +307,8 @@
 
     <span class="k">def</span> <span class="nf">push_changes</span><span class="p">():</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span>
-            <span class="s1">&#39;Your changes have been commited. Do you want to push&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;Your changes have been commited. Do you want to push&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="n">abort</span><span class="p">()</span>
         <span class="n">print_step_title</span><span class="p">(</span><span class="s1">&#39;Push changes&#39;</span><span class="p">)</span>
@@ -627,7 +632,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">configs</span> <span class="o">=</span> <span class="n">read_and_resolve_setup_configs</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="o">=</span><span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="n">new_deploy</span><span class="o">=</span><span class="n">new_deploy</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">pkg_dir</span><span class="o">=</span><span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+        <span class="n">new_deploy</span><span class="o">=</span><span class="n">new_deploy</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">pprint</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{configs}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">clog</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">pprint</span><span class="p">(</span><span class="n">configs</span><span class="p">))</span>
@@ -650,7 +657,9 @@
 <div class="viewcode-block" id="increment_configs_version">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.increment_configs_version">[docs]</a>
 <span class="k">def</span> <span class="nf">increment_configs_version</span><span class="p">(</span>
-    <span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">pkg_dir</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Increment version setup.cfg.&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
@@ -965,7 +974,9 @@
 
 <div class="viewcode-block" id="current_pypi_version">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.current_pypi_version">[docs]</a>
-<span class="k">def</span> <span class="nf">current_pypi_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">current_pypi_version</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return version of package on pypi.python.org using json.</span>
 
@@ -999,7 +1010,11 @@
 
 
 <span class="k">def</span> <span class="nf">_get_version</span><span class="p">(</span>
-    <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">,</span>
+    <span class="n">configs</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">version</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1075,13 +1090,23 @@
 <span class="p">]</span>
 
 
+<span class="k">def</span> <span class="nf">raise_error</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">error_type</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="n">error_type</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="validate_versions">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.validate_versions">[docs]</a>
-<span class="k">def</span> <span class="nf">validate_versions</span><span class="p">(</span><span class="n">versions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">validate_versions</span><span class="p">(</span><span class="n">versions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">action_when_not_valid</span><span class="o">=</span><span class="n">raise_error</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate versions from different sources.</span>
 
 <span class="sd">    You get the versions input from the `versions_from_different_sources` function.</span>
+
+<span class="sd">    :param versions: A dictionary with the versions from different sources</span>
+<span class="sd">    :param action_when_not_valid: A function that will be called when the versions are not valid</span>
+<span class="sd">        Default is to raise a ValueError with the error message. </span>
+<span class="sd">        Another option is to print the error message, log it, or issue a warning.</span>
+<span class="sd">    :return: The versions if they are valid</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># TODO: Raise specific exceptions with what-to-do-about-it messages</span>
@@ -1105,11 +1130,11 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">error_msg</span><span class="p">:</span>
         <span class="n">error_msg</span> <span class="o">+=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Please make sure the versions are consistent and then try again: </span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">versions</span><span class="si">=}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s1">&#39;Please make sure the versions are consistent and then try again: </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">versions</span><span class="si">=}</span><span class="s1">&#39;</span>
         <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
-    
+        <span class="n">action_when_not_valid</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
     <span class="c1"># but if all is well, return the versions:</span>
     <span class="k">return</span> <span class="n">versions</span></div>
 
@@ -1317,7 +1342,8 @@
 
     <span class="n">exceptions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exceptions</span><span class="p">)</span>
     <span class="n">files</span> <span class="o">=</span> <span class="n">filt_iter</span><span class="p">(</span>
-        <span class="n">TextFiles</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="p">,</span> <span class="n">max_levels</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span> <span class="n">filt</span><span class="o">=</span><span class="n">exceptions</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">,</span>
+        <span class="n">TextFiles</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="p">,</span> <span class="n">max_levels</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+        <span class="n">filt</span><span class="o">=</span><span class="n">exceptions</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">files_and_contents_that_dont_have_docs</span><span class="p">():</span>
