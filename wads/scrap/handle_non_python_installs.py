@@ -1,28 +1,27 @@
 """Handle non python installs, depending on the system"""
 
-
 # TODO: Instead of os.system, use subprocess.run?
 
 from typing import Iterable, Callable, NewType, Union
 
-InstallCommand = NewType('InstallCommand', str)
-InstallCommandsStr = NewType('InstallCommandsStr', str)
+InstallCommand = NewType("InstallCommand", str)
+InstallCommandsStr = NewType("InstallCommandsStr", str)
 InstallCommands = Union[InstallCommand, InstallCommandsStr, Iterable[InstallCommand]]
 
 
 # TODO: Tried to make return_annotation InstallCommandsStr, but linter complained
-def ensure_new_line_separated_strings(strings: InstallCommands, sep='\n') -> str:
+def ensure_new_line_separated_strings(strings: InstallCommands, sep="\n") -> str:
     if isinstance(strings, str):
         return strings
-    assert isinstance(strings, Iterable), f'Not an iterable: {strings}'
+    assert isinstance(strings, Iterable), f"Not an iterable: {strings}"
     return sep.join(strings)
 
 
 # TODO: Tried to make return_annotation Iterable[InstallCommand], but linter complained
-def ensure_iterable_of_strings(strings, sep='\n') -> Iterable[str]:
+def ensure_iterable_of_strings(strings, sep="\n") -> Iterable[str]:
     if isinstance(strings, str):
         return strings.split(sep)
-    assert isinstance(strings, Iterable), f'Not an iterable: {strings}'
+    assert isinstance(strings, Iterable), f"Not an iterable: {strings}"
     return strings
 
 
@@ -41,11 +40,11 @@ def make_install_instructions_for_readme(commands_for_os: dict) -> str:
     '### Linux\\n\\n```\\npip install .\\n```\\n'
 
     """
-    return '\n'.join(
-        f'### {os_name}\n\n'
-        f'```\n'
-        f'{ensure_new_line_separated_strings(commands)}\n'
-        f'```\n'
+    return "\n".join(
+        f"### {os_name}\n\n"
+        f"```\n"
+        f"{ensure_new_line_separated_strings(commands)}\n"
+        f"```\n"
         for os_name, commands in commands_for_os.items()
     )
 
@@ -64,10 +63,10 @@ def make_install_instructions_for_ci(commands_for_os: dict) -> str:
     '- name: Install on Linux\\n  run: |\\n    pip install .\\n'
 
     """
-    return '\n'.join(
-        f'- name: Install on {os_name}\n'
-        f'  run: |\n'
-        f'    {ensure_new_line_separated_strings(commands)}\n'
+    return "\n".join(
+        f"- name: Install on {os_name}\n"
+        f"  run: |\n"
+        f"    {ensure_new_line_separated_strings(commands)}\n"
         for os_name, commands in commands_for_os.items()
     )
 
@@ -75,12 +74,12 @@ def make_install_instructions_for_ci(commands_for_os: dict) -> str:
 def warn_about_error(command, error_obj):
     from warnings import warn
 
-    warn(f'Failed to run command: {command}.\nError: {error_obj}')
+    warn(f"Failed to run command: {command}.\nError: {error_obj}")
     return True
 
 
 def raise_error(command, error_obj):
-    raise RuntimeError(f'Failed to run command: {command}.\nError: {error_obj}')
+    raise RuntimeError(f"Failed to run command: {command}.\nError: {error_obj}")
 
 
 def run_install_commands(
@@ -103,7 +102,7 @@ def run_install_commands(
 
     os_name = os.name
     if os_name not in commands_for_os:
-        raise ValueError(f'OS not supported: {os_name}')
+        raise ValueError(f"OS not supported: {os_name}")
 
     commands = commands_for_os[os_name]
 

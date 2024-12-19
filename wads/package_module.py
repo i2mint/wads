@@ -20,7 +20,7 @@ def generate_package(
     install_requires: List[str],
     output_path: Union[str, Path],
     glob_pattern: Union[str, List[str]] = None,
-    version: str = '1.0.0',
+    version: str = "1.0.0",
 ):
     """Generate Python module package including wheels for requirements linked to git repos
 
@@ -43,7 +43,7 @@ def generate_package(
 
         generate_module_folder(module_path, dst_path=temp_path)
 
-        (temp_path / 'setup.cfg').write_text(
+        (temp_path / "setup.cfg").write_text(
             setup_cfg_template(
                 install_requires,
                 name=module_path.stem,
@@ -51,8 +51,8 @@ def generate_package(
                 glob_pattern=glob_pattern,
             )
         )
-        (temp_path / 'setup.py').write_text(setup_py)
-        (temp_path / 'MANIFEST.in').write_text(
+        (temp_path / "setup.py").write_text(setup_py)
+        (temp_path / "MANIFEST.in").write_text(
             manifest_in_template(module_path.stem, glob_pattern)
         )
 
@@ -62,29 +62,29 @@ def generate_package(
 def generate_module_folder(module_path: Path, dst_path: Path):
     if module_path.is_dir():
         shutil.copytree(module_path, dst_path / module_path.name)
-    elif module_path.is_file() and module_path.suffix == '.py':
+    elif module_path.is_file() and module_path.suffix == ".py":
         module_folder = dst_path / module_path.stem
         module_folder.mkdir()
-        shutil.copy(module_path, module_folder / '__init__.py')
+        shutil.copy(module_path, module_folder / "__init__.py")
     else:
-        raise ValueError('module path must be a directory or .py file')
+        raise ValueError("module path must be a directory or .py file")
 
 
 def manifest_in_template(module_name: str, glob_pattern: List[str]):
-    manifest_in = 'recursive-include dist *.whl'
+    manifest_in = "recursive-include dist *.whl"
     if glob_pattern:
         for gp in glob_pattern:
-            manifest_in += f'\nrecursive-include {module_name} {gp}'
+            manifest_in += f"\nrecursive-include {module_name} {gp}"
     return manifest_in
 
 
 def setup_cfg_template(
     install_requires: List[str],
     name: str,
-    version: str = '1.0.0',
+    version: str = "1.0.0",
     glob_pattern: List[str] = None,
 ) -> str:
-    setup_cfg = f'''[metadata]
+    setup_cfg = f"""[metadata]
 name = {name}
 version = {version}
 url = https://github.com/i2mint/wads
@@ -104,15 +104,15 @@ include_package_data = True
 zip_safe = False
 install_requires = 
     wads
-'''
+"""
     for r in install_requires:
-        if r != 'wads':
-            setup_cfg += f'    {r}\n'
+        if r != "wads":
+            setup_cfg += f"    {r}\n"
 
     if glob_pattern:
-        setup_cfg += '\n[options.package_data]\n* =\n'
+        setup_cfg += "\n[options.package_data]\n* =\n"
         for gp in glob_pattern:
-            setup_cfg += f'    {gp}\n'
+            setup_cfg += f"    {gp}\n"
 
     return setup_cfg
 
@@ -120,19 +120,19 @@ install_requires =
 class CustomSdistCommand(sdist):
     """Custom sdist command to include wheels in the distribution"""
 
-    description = 'create a source distribution tarball with embedded wheels'
+    description = "create a source distribution tarball with embedded wheels"
 
     def _remove_wheels_from_install_requires(self, wheel_package_names):
         project_dir = os.getcwd()
-        requirements_filepath = os.path.join(project_dir, 'requirements.txt')
-        setup_cfg_filepath = os.path.join(project_dir, 'setup.cfg')
+        requirements_filepath = os.path.join(project_dir, "requirements.txt")
+        setup_cfg_filepath = os.path.join(project_dir, "setup.cfg")
         if os.path.isfile(requirements_filepath):
             self._remove_lines(requirements_filepath, wheel_package_names)
         if os.path.isfile(setup_cfg_filepath):
             self._remove_lines(setup_cfg_filepath, wheel_package_names)
 
     def _remove_lines(self, filepath, exclude_lines):
-        with open(filepath, 'r') as file:
+        with open(filepath, "r") as file:
             lines = file.readlines()
 
         # Find the line to delete and remove it
@@ -141,24 +141,24 @@ class CustomSdistCommand(sdist):
             if line.strip() not in exclude_lines:
                 new_lines.append(line)
             else:
-                print(f'Removing {line.strip()} from {filepath}')
+                print(f"Removing {line.strip()} from {filepath}")
 
         # Write the new lines back to the file
-        with open(filepath, 'w') as file:
+        with open(filepath, "w") as file:
             file.writelines(new_lines)
 
     def _save_original_files(self):
         project_dir = os.getcwd()
 
-        requirements_filepath = os.path.join(project_dir, 'requirements.txt')
-        setup_cfg_filepath = os.path.join(project_dir, 'setup.cfg')
+        requirements_filepath = os.path.join(project_dir, "requirements.txt")
+        setup_cfg_filepath = os.path.join(project_dir, "setup.cfg")
         if os.path.isfile(requirements_filepath):
-            with open(requirements_filepath, 'r') as f:
+            with open(requirements_filepath, "r") as f:
                 self._requirements_txt = f.read()
         else:
             self._requirements_txt = None
         if os.path.isfile(setup_cfg_filepath):
-            with open(setup_cfg_filepath, 'r') as f:
+            with open(setup_cfg_filepath, "r") as f:
                 self._setup_cfg = f.read()
         else:
             self._setup_cfg = None
@@ -167,51 +167,51 @@ class CustomSdistCommand(sdist):
         project_dir = os.getcwd()
 
         if self._requirements_txt:
-            print('Restoring requirements.txt')
-            requirements_filepath = os.path.join(project_dir, 'requirements.txt')
+            print("Restoring requirements.txt")
+            requirements_filepath = os.path.join(project_dir, "requirements.txt")
             if os.path.isfile(requirements_filepath):
-                with open(requirements_filepath, 'w') as f:
+                with open(requirements_filepath, "w") as f:
                     f.write(self._requirements_txt)
         if self._setup_cfg:
-            print('Restoring setup.cfg')
-            setup_cfg_filepath = os.path.join(project_dir, 'setup.cfg')
+            print("Restoring setup.cfg")
+            setup_cfg_filepath = os.path.join(project_dir, "setup.cfg")
             if os.path.isfile(setup_cfg_filepath):
-                with open(setup_cfg_filepath, 'w') as f:
+                with open(setup_cfg_filepath, "w") as f:
                     f.write(self._setup_cfg)
 
     def _generate_wheels(self):
 
         if self.dist_dir is None:
-            self.dist_dir = 'dist'
+            self.dist_dir = "dist"
         if os.path.exists(self.dist_dir):
-            print(f'Deleting {self.dist_dir}')
+            print(f"Deleting {self.dist_dir}")
             shutil.rmtree(self.dist_dir)
         os.mkdir(self.dist_dir)
 
         # create a temporary directory to store the wheels
         project_dir = os.getcwd()
-        wheel_generation_dir = os.path.join(project_dir, 'wheels')
+        wheel_generation_dir = os.path.join(project_dir, "wheels")
         if os.path.exists(wheel_generation_dir):
-            print(f'Deleting {wheel_generation_dir}')
+            print(f"Deleting {wheel_generation_dir}")
 
             shutil.rmtree(wheel_generation_dir)
         os.mkdir(wheel_generation_dir)
-        print('Generating dependency wheels')
-        if github_credentials := os.environ.get('GITHUB_CREDENTIALS', None):
-            print('Using github credentials from environment variable')
+        print("Generating dependency wheels")
+        if github_credentials := os.environ.get("GITHUB_CREDENTIALS", None):
+            print("Using github credentials from environment variable")
         git_info = generate_project_wheels(
             project_dir, wheel_generation_dir, github_credentials=github_credentials
         )
-        wheel_package_names = {g['name'] for g in git_info}
+        wheel_package_names = {g["name"] for g in git_info}
         # remove wheels from install_requires to skip pip dependency pre-check
         self._remove_wheels_from_install_requires(wheel_package_names)
         # copy the wheels into the package directory
-        wheelhouse_dir = os.path.join(wheel_generation_dir, 'wheelhouse')
+        wheelhouse_dir = os.path.join(wheel_generation_dir, "wheelhouse")
         for wheel_file in os.listdir(wheelhouse_dir):
-            if wheel_file.endswith('.whl'):
+            if wheel_file.endswith(".whl"):
                 copy_wheel_file = os.path.join(wheelhouse_dir, wheel_file)
                 shutil.copy2(copy_wheel_file, self.dist_dir)
-                print(f'Copying to {copy_wheel_file}')
+                print(f"Copying to {copy_wheel_file}")
 
         # cleanup the temporary directory
         shutil.rmtree(wheel_generation_dir)
@@ -238,16 +238,16 @@ class CustomInstallCommand(_install):
         temp_dir = os.getcwd()
 
         # Install wheels from the dist directory of the tarball
-        if os.path.isdir(dist_dir := os.path.join(temp_dir, 'dist')):
+        if os.path.isdir(dist_dir := os.path.join(temp_dir, "dist")):
             for wheel in os.listdir(dist_dir):
-                if wheel.endswith('.whl'):
-                    print(f'Installing {wheel}')
+                if wheel.endswith(".whl"):
+                    print(f"Installing {wheel}")
                     self.spawn(
                         [
-                            'pip',
-                            'install',
+                            "pip",
+                            "install",
                             os.path.join(dist_dir, wheel),
-                            f'--find-links={dist_dir}',
+                            f"--find-links={dist_dir}",
                         ]
                     )
 
@@ -256,8 +256,8 @@ class CustomInstallCommand(_install):
 
 
 embedded_wheel_setup = partial(
-    setup, cmdclass={'install': CustomInstallCommand, 'sdist': CustomSdistCommand}
+    setup, cmdclass={"install": CustomInstallCommand, "sdist": CustomSdistCommand}
 )
 setup_py = (
-    'from wads.package_module import embedded_wheel_setup\nembedded_wheel_setup()'
+    "from wads.package_module import embedded_wheel_setup\nembedded_wheel_setup()"
 )
