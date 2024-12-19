@@ -1,27 +1,25 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.22 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.23 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=842aa08f"></script>
-        <script src="../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
-        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=20522496"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -411,6 +409,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># TODO: Would like version to be decremented if the publication attempt fails!</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">increment_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
     <span class="n">update_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">run_setup</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
@@ -521,12 +520,28 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
         <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">pkg_dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_dirname</span>
+    <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> wasn&#39;t found&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pkg_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+            <span class="n">name_candidates</span> <span class="o">=</span> <span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name_candidates</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;pkg_dir=</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> doesn&#39;t itself contain a dir named </span><span class="si">{</span><span class="n">pkg_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">name_candidates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;pkg_dir=</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> contains multiple dirs with __init__.py files: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name_candidates</span><span class="si">}</span><span class="s2">, so I don&#39;t know which to chose as the package name&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">name_candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span>
 
 
 <div class="viewcode-block" id="extract_pkg_dir_and_name">
@@ -575,15 +590,35 @@
 
     <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Directory </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> wasn&#39;t found&quot;</span>
-        <span class="k">assert</span> <span class="n">pkg_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span>
-            <span class="n">pkg_dir</span>
-        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;pkg_dir=</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> doesn&#39;t itself contain a dir named </span><span class="si">{</span><span class="n">pkg_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pkg_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;pkg_dir=</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> doesn&#39;t itself contain a dir named </span><span class="si">{</span><span class="n">pkg_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="k">assert</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span><span class="p">)),</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s1">&#39;pkg_dir=</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s1"> contains a dir named </span><span class="si">{</span><span class="n">pkg_name</span><span class="si">}</span><span class="s1">, &#39;</span>
             <span class="sa">f</span><span class="s2">&quot;but that dir isn&#39;t a package (does not have a __init__.py&quot;</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span></div>
+
+
+
+<div class="viewcode-block" id="folders_that_have_init_py_files">
+<a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">[docs]</a>
+<span class="k">def</span> <span class="nf">folders_that_have_init_py_files</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of folders in the package directory that have an __init__.py file.</span>
+
+<span class="sd">    &gt;&gt;&gt; folders_that_have_init_py_files(&#39;/home/user/projects/wads&#39;)  # doctest: +SKIP</span>
+<span class="sd">    [&#39;wads&#39;, &#39;wads/util&#39;, &#39;wads/pack&#39;, &#39;wads/docs_gen&#39;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">d</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+        <span class="ow">and</span> <span class="s1">&#39;__init__.py&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+    <span class="p">]</span></div>
 
 
 
@@ -1104,7 +1139,7 @@
 
 <span class="sd">    :param versions: A dictionary with the versions from different sources</span>
 <span class="sd">    :param action_when_not_valid: A function that will be called when the versions are not valid</span>
-<span class="sd">        Default is to raise a ValueError with the error message. </span>
+<span class="sd">        Default is to raise a ValueError with the error message.</span>
 <span class="sd">        Another option is to print the error message, log it, or issue a warning.</span>
 <span class="sd">    :return: The versions if they are valid</span>
 <span class="sd">    &quot;&quot;&quot;</span>
