@@ -159,7 +159,11 @@ def check_in(
 
             if os.path.exists(os.path.join(current_dir, '__init__.py')):
                 result = pylint.lint.Run(
-                    [current_dir, '--disable=all', '--enable=C0114,C0115,C0116',],
+                    [
+                        current_dir,
+                        '--disable=all',
+                        '--enable=C0114,C0115,C0116',
+                    ],
                     do_exit=False,
                 )
                 if result.linter.stats['global_note'] < 10 and not confirm(
@@ -210,7 +214,8 @@ def check_in(
 
     def push_changes():
         if not confirm(
-            'Your changes have been commited. Do you want to push', default=True,
+            'Your changes have been commited. Do you want to push',
+            default=True,
         ):
             abort()
         print_step_title('Push changes')
@@ -307,6 +312,7 @@ def go(
 
     """
 
+    # TODO: Would like version to be decremented if the publication attempt fails!
     version = increment_configs_version(pkg_dir, version=version)
     update_setup_cfg(pkg_dir, verbose=verbose)
     run_setup(pkg_dir)
@@ -413,12 +419,28 @@ def get_module_path(module: ModuleType) -> str:
     return module
 
 
-def _get_pkg_dir_and_name(pkg_dir):
+def _get_pkg_dir_and_name(pkg_dir, validate=True):
     pkg_dir = os.path.realpath(pkg_dir)
     if pkg_dir.endswith(os.sep):
         pkg_dir = pkg_dir[:-1]
-    pkg_dirname = os.path.basename(pkg_dir)
-    return pkg_dir, pkg_dirname
+    pkg_name = os.path.basename(pkg_dir)
+    if validate:
+        if not os.path.isdir(pkg_dir):
+            raise AssertionError(f"Directory {pkg_dir} wasn't found")
+        if pkg_name not in os.listdir(pkg_dir):
+            name_candidates = folders_that_have_init_py_files(pkg_dir)
+            if not name_candidates:
+                raise AssertionError(
+                    f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_name}"
+                )
+            elif len(name_candidates) > 1:
+                raise AssertionError(
+                    f"pkg_dir={pkg_dir} contains multiple dirs with __init__.py files: "
+                    f"{name_candidates}, so I don't know which to chose as the package name"
+                )
+            else:
+                pkg_name = name_candidates[0]
+    return pkg_dir, pkg_name
 
 
 def extract_pkg_dir_and_name(
@@ -465,15 +487,32 @@ def extract_pkg_dir_and_name(
 
     if validate:
         assert os.path.isdir(pkg_dir), f"Directory {pkg_dir} wasn't found"
-        assert pkg_name in os.listdir(
-            pkg_dir
-        ), f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_name}"
+        if not pkg_name in os.listdir(pkg_dir):
+            raise AssertionError(
+                f"pkg_dir={pkg_dir} doesn't itself contain a dir named {pkg_name}"
+            )
         assert '__init__.py' in os.listdir(os.path.join(pkg_dir, pkg_name)), (
             f'pkg_dir={pkg_dir} contains a dir named {pkg_name}, '
             f"but that dir isn't a package (does not have a __init__.py"
         )
 
     return pkg_dir, pkg_name
+
+
+def folders_that_have_init_py_files(pkg_dir: PathStr) -> List[str]:
+    """
+    Get a list of folders in the package directory that have an __init__.py file.
+
+    >>> folders_that_have_init_py_files('/home/user/projects/wads')  # doctest: +SKIP
+    ['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']
+
+    """
+    return [
+        d
+        for d in os.listdir(pkg_dir)
+        if os.path.isdir(os.path.join(pkg_dir, d))
+        and '__init__.py' in os.listdir(os.path.join(pkg_dir, d))
+    ]
 
 
 def get_pkg_name(pkg_spec: PkgSpec, validate=True) -> PkgName:
@@ -516,7 +555,9 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     """
     pkg_dir = _get_pkg_dir(pkg_dir)
     configs = read_and_resolve_setup_configs(
-        pkg_dir=_get_pkg_dir(pkg_dir), new_deploy=new_deploy, version=version,
+        pkg_dir=_get_pkg_dir(pkg_dir),
+        new_deploy=new_deploy,
+        version=version,
     )
     pprint('\n{configs}\n')
     clog(verbose, pprint(configs))
@@ -533,7 +574,9 @@ def set_version(pkg_dir, version):
 
 
 def increment_configs_version(
-    pkg_dir, *, version=None,
+    pkg_dir,
+    *,
+    version=None,
 ):
     """Increment version setup.cfg."""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -821,7 +864,9 @@ def highest_pypi_version(
     # else: return None
 
 
-def current_pypi_version(pkg_dir: PathStr,) -> Union[str, None]:
+def current_pypi_version(
+    pkg_dir: PathStr,
+) -> Union[str, None]:
     """
     Return version of package on pypi.python.org using json.
 
@@ -854,7 +899,11 @@ def next_version_for_package(
 
 
 def _get_version(
-    pkg_dir: PathStr, version, configs, name: Union[None, str] = None, new_deploy=False,
+    pkg_dir: PathStr,
+    version,
+    configs,
+    name: Union[None, str] = None,
+    new_deploy=False,
 ):
     version = version or configs.get('version', None)
     if version is None:
@@ -939,7 +988,7 @@ def validate_versions(versions: dict, action_when_not_valid=raise_error) -> dict
 
     :param versions: A dictionary with the versions from different sources
     :param action_when_not_valid: A function that will be called when the versions are not valid
-        Default is to raise a ValueError with the error message. 
+        Default is to raise a ValueError with the error message.
         Another option is to print the error message, log it, or issue a warning.
     :return: The versions if they are valid
     """
@@ -1171,7 +1220,8 @@ def process_missing_module_docstrings(
 
     exceptions = set(exceptions)
     files = filt_iter(
-        TextFiles(pkg_dir + '{}.py', max_levels=None), filt=exceptions.isdisjoint,
+        TextFiles(pkg_dir + '{}.py', max_levels=None),
+        filt=exceptions.isdisjoint,
     )
 
     def files_and_contents_that_dont_have_docs():
