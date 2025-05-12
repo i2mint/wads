@@ -5,17 +5,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scrap.handle_non_python_installs &mdash; wads 0.1.23 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+  <title>wads.scrap.handle_non_python_installs &mdash; wads 0.1.25 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=20522496"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/documentation_options.js?v=4fa33042"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -86,35 +86,34 @@
   <h1>Source code for wads.scrap.handle_non_python_installs</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Handle non python installs, depending on the system&quot;&quot;&quot;</span>
 
-
 <span class="c1"># TODO: Instead of os.system, use subprocess.run?</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">NewType</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">NewType</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="n">InstallCommand</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s1">&#39;InstallCommand&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-<span class="n">InstallCommandsStr</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s1">&#39;InstallCommandsStr&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+<span class="n">InstallCommand</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s2">&quot;InstallCommand&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+<span class="n">InstallCommandsStr</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s2">&quot;InstallCommandsStr&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
 <span class="n">InstallCommands</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">InstallCommand</span><span class="p">,</span> <span class="n">InstallCommandsStr</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">InstallCommand</span><span class="p">]]</span>
 
 
 <span class="c1"># TODO: Tried to make return_annotation InstallCommandsStr, but linter complained</span>
-<span class="k">def</span> <span class="nf">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">strings</span><span class="p">:</span> <span class="n">InstallCommands</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">strings</span><span class="p">:</span> <span class="n">InstallCommands</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">strings</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Not an iterable: </span><span class="si">{</span><span class="n">strings</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Not an iterable: </span><span class="si">{</span><span class="n">strings</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">return</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span>
 
 
 <span class="c1"># TODO: Tried to make return_annotation Iterable[InstallCommand], but linter complained</span>
-<span class="k">def</span> <span class="nf">ensure_iterable_of_strings</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_iterable_of_strings</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">strings</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;Not an iterable: </span><span class="si">{</span><span class="n">strings</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strings</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Not an iterable: </span><span class="si">{</span><span class="n">strings</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">return</span> <span class="n">strings</span>
 
 
 <div class="viewcode-block" id="make_install_instructions_for_readme">
 <a class="viewcode-back" href="../../../module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_readme">[docs]</a>
-<span class="k">def</span> <span class="nf">make_install_instructions_for_readme</span><span class="p">(</span><span class="n">commands_for_os</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_install_instructions_for_readme</span><span class="p">(</span><span class="n">commands_for_os</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param commands_for_os: A dictionary containing the commands for each OS,</span>
@@ -129,11 +128,11 @@
 <span class="sd">    &#39;### Linux\\n\\n```\\npip install .\\n```\\n&#39;</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;### </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="se">\n\n</span><span class="s1">&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;```</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;### </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">for</span> <span class="n">os_name</span><span class="p">,</span> <span class="n">commands</span> <span class="ow">in</span> <span class="n">commands_for_os</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">)</span></div>
 
@@ -141,7 +140,7 @@
 
 <div class="viewcode-block" id="make_install_instructions_for_ci">
 <a class="viewcode-back" href="../../../module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_ci">[docs]</a>
-<span class="k">def</span> <span class="nf">make_install_instructions_for_ci</span><span class="p">(</span><span class="n">commands_for_os</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_install_instructions_for_ci</span><span class="p">(</span><span class="n">commands_for_os</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    :param commands_for_os: A dictionary containing the commands for each OS,</span>
@@ -155,29 +154,29 @@
 <span class="sd">    &#39;- name: Install on Linux\\n  run: |\\n    pip install .\\n&#39;</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;- name: Install on </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;  run: |</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;- name: Install on </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;  run: |</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">ensure_new_line_separated_strings</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">for</span> <span class="n">os_name</span><span class="p">,</span> <span class="n">commands</span> <span class="ow">in</span> <span class="n">commands_for_os</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">)</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">warn_about_error</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">error_obj</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">warn_about_error</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">error_obj</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
-    <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to run command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">Error: </span><span class="si">{</span><span class="n">error_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to run command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">Error: </span><span class="si">{</span><span class="n">error_obj</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">raise_error</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">error_obj</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to run command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">Error: </span><span class="si">{</span><span class="n">error_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">raise_error</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">error_obj</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to run command: </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">Error: </span><span class="si">{</span><span class="n">error_obj</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="run_install_commands">
 <a class="viewcode-back" href="../../../module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands">[docs]</a>
-<span class="k">def</span> <span class="nf">run_install_commands</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_install_commands</span><span class="p">(</span>
     <span class="n">commands_for_os</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">on_error</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">InstallCommand</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">warn_about_error</span><span class="p">,</span>
 <span class="p">):</span>
@@ -193,11 +192,11 @@
 <span class="sd">    continue running the commands or not.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
     <span class="n">os_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span>
     <span class="k">if</span> <span class="n">os_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">commands_for_os</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;OS not supported: </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OS not supported: </span><span class="si">{</span><span class="n">os_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">commands</span> <span class="o">=</span> <span class="n">commands_for_os</span><span class="p">[</span><span class="n">os_name</span><span class="p">]</span>
 

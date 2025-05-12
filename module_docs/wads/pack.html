@@ -6,17 +6,17 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.23 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+  <title>wads.pack &mdash; wads 0.1.25 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=20522496"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/documentation_options.js?v=4fa33042"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -169,7 +169,7 @@ Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py fil
 or a module/package name string.</p>
 <p><cite>pkg_spec</cite> can be an imported package (must be a locally developped package)
 whose name and containing directory is the same):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">wads</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">wads</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">wads</span><span class="p">)</span>  
 <span class="go">(.../wads&#39;, &#39;wads&#39;)</span>
 </pre></div>
@@ -200,13 +200,13 @@ whose name and containing directory is the same):</p>
 <dt class="sig sig-object py" id="wads.pack.get_module_path">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">get_module_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleType</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#get_module_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.get_module_path" title="Link to this definition"></a></dt>
 <dd><p>Get the path to the directory containing the module’s code file.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">os</span><span class="p">)</span>  
 <span class="go">&#39;/usr/lib/python3.8&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sklearn</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">sklearn</span>  
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">sklearn</span><span class="p">)</span>  
 <span class="go">&#39;/usr/local/lib/python3.8/dist-packages/sklearn&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">local_package</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">local_package</span>  
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">local_package</span><span class="p">)</span>  
 <span class="go">&#39;/home/user/projects/local_package/local_package&#39;</span>
 </pre></div>

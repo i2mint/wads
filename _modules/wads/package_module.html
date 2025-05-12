@@ -5,17 +5,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.package_module &mdash; wads 0.1.23 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+  <title>wads.package_module &mdash; wads 0.1.25 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=20522496"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/documentation_options.js?v=4fa33042"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -88,27 +88,27 @@
 <span class="sd">install them.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">tempfile</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">distutils.command.sdist</span> <span class="kn">import</span> <span class="n">sdist</span>
-<span class="kn">from</span> <span class="nn">setuptools</span> <span class="kn">import</span> <span class="n">setup</span>
-<span class="kn">from</span> <span class="nn">setuptools.command.install</span> <span class="kn">import</span> <span class="n">install</span> <span class="k">as</span> <span class="n">_install</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">distutils.command.sdist</span><span class="w"> </span><span class="kn">import</span> <span class="n">sdist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools.command.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">install</span> <span class="k">as</span> <span class="n">_install</span>
 
-<span class="kn">from</span> <span class="nn">wads.generate_project_wheels</span> <span class="kn">import</span> <span class="n">generate_project_wheels</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.generate_project_wheels</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_project_wheels</span>
 
 
 <div class="viewcode-block" id="generate_package">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.generate_package">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_package</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_package</span><span class="p">(</span>
     <span class="n">module_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">install_requires</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">output_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="n">glob_pattern</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate Python module package including wheels for requirements linked to git repos</span>
 
@@ -131,7 +131,7 @@
 
         <span class="n">generate_module_folder</span><span class="p">(</span><span class="n">module_path</span><span class="p">,</span> <span class="n">dst_path</span><span class="o">=</span><span class="n">temp_path</span><span class="p">)</span>
 
-        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="n">setup_cfg_template</span><span class="p">(</span>
                 <span class="n">install_requires</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">module_path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
@@ -139,8 +139,8 @@
                 <span class="n">glob_pattern</span><span class="o">=</span><span class="n">glob_pattern</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s1">&#39;setup.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">setup_py</span><span class="p">)</span>
-        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s1">&#39;MANIFEST.in&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s2">&quot;setup.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">setup_py</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">temp_path</span> <span class="o">/</span> <span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="n">manifest_in_template</span><span class="p">(</span><span class="n">module_path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="p">)</span>
         <span class="p">)</span>
 
@@ -148,82 +148,82 @@
 
 
 
-<span class="k">def</span> <span class="nf">generate_module_folder</span><span class="p">(</span><span class="n">module_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dst_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_module_folder</span><span class="p">(</span><span class="n">module_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dst_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">module_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">module_path</span><span class="p">,</span> <span class="n">dst_path</span> <span class="o">/</span> <span class="n">module_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">module_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">module_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">&#39;.py&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">module_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">module_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.py&quot;</span><span class="p">:</span>
         <span class="n">module_folder</span> <span class="o">=</span> <span class="n">dst_path</span> <span class="o">/</span> <span class="n">module_path</span><span class="o">.</span><span class="n">stem</span>
         <span class="n">module_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">module_path</span><span class="p">,</span> <span class="n">module_folder</span> <span class="o">/</span> <span class="s1">&#39;__init__.py&#39;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">module_path</span><span class="p">,</span> <span class="n">module_folder</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;module path must be a directory or .py file&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;module path must be a directory or .py file&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">manifest_in_template</span><span class="p">(</span><span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-    <span class="n">manifest_in</span> <span class="o">=</span> <span class="s1">&#39;recursive-include dist *.whl&#39;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">manifest_in_template</span><span class="p">(</span><span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">glob_pattern</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="n">manifest_in</span> <span class="o">=</span> <span class="s2">&quot;recursive-include dist *.whl&quot;</span>
     <span class="k">if</span> <span class="n">glob_pattern</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">gp</span> <span class="ow">in</span> <span class="n">glob_pattern</span><span class="p">:</span>
-            <span class="n">manifest_in</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">recursive-include </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">gp</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="n">manifest_in</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">recursive-include </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">gp</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">return</span> <span class="n">manifest_in</span>
 
 
-<span class="k">def</span> <span class="nf">setup_cfg_template</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_cfg_template</span><span class="p">(</span>
     <span class="n">install_requires</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
     <span class="n">glob_pattern</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">setup_cfg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;[metadata]</span>
-<span class="s1">name = </span><span class="si">{</span><span class="n">name</span><span class="si">}</span>
-<span class="s1">version = </span><span class="si">{</span><span class="n">version</span><span class="si">}</span>
-<span class="s1">url = https://github.com/i2mint/wads</span>
-<span class="s1">platforms = any</span>
-<span class="s1">description_file = README.md</span>
-<span class="s1">root_url = https://github.com/i2mint/</span>
-<span class="s1">license = None</span>
-<span class="s1">author = i2mint/wads</span>
-<span class="s1">author_email = andie.phan@analog.com</span>
-<span class="s1">description = </span><span class="si">{</span><span class="n">name</span><span class="si">}</span>
-<span class="s1">long_description = file:README.md</span>
-<span class="s1">long_description_content_type = text/markdown</span>
+    <span class="n">setup_cfg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;[metadata]</span>
+<span class="s2">name = </span><span class="si">{</span><span class="n">name</span><span class="si">}</span>
+<span class="s2">version = </span><span class="si">{</span><span class="n">version</span><span class="si">}</span>
+<span class="s2">url = https://github.com/i2mint/wads</span>
+<span class="s2">platforms = any</span>
+<span class="s2">description_file = README.md</span>
+<span class="s2">root_url = https://github.com/i2mint/</span>
+<span class="s2">license = None</span>
+<span class="s2">author = i2mint/wads</span>
+<span class="s2">author_email = andie.phan@analog.com</span>
+<span class="s2">description = </span><span class="si">{</span><span class="n">name</span><span class="si">}</span>
+<span class="s2">long_description = file:README.md</span>
+<span class="s2">long_description_content_type = text/markdown</span>
 
-<span class="s1">[options]</span>
-<span class="s1">packages = find:</span>
-<span class="s1">include_package_data = True</span>
-<span class="s1">zip_safe = False</span>
-<span class="s1">install_requires = </span>
-<span class="s1">    wads</span>
-<span class="s1">&#39;&#39;&#39;</span>
+<span class="s2">[options]</span>
+<span class="s2">packages = find:</span>
+<span class="s2">include_package_data = True</span>
+<span class="s2">zip_safe = False</span>
+<span class="s2">install_requires = </span>
+<span class="s2">    wads</span>
+<span class="s2">&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">install_requires</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="s1">&#39;wads&#39;</span><span class="p">:</span>
-            <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="s2">&quot;wads&quot;</span><span class="p">:</span>
+            <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
 
     <span class="k">if</span> <span class="n">glob_pattern</span><span class="p">:</span>
-        <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[options.package_data]</span><span class="se">\n</span><span class="s1">* =</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[options.package_data]</span><span class="se">\n</span><span class="s2">* =</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="k">for</span> <span class="n">gp</span> <span class="ow">in</span> <span class="n">glob_pattern</span><span class="p">:</span>
-            <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">gp</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">setup_cfg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">gp</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
 
     <span class="k">return</span> <span class="n">setup_cfg</span>
 
 
 <div class="viewcode-block" id="CustomSdistCommand">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand">[docs]</a>
-<span class="k">class</span> <span class="nc">CustomSdistCommand</span><span class="p">(</span><span class="n">sdist</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomSdistCommand</span><span class="p">(</span><span class="n">sdist</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom sdist command to include wheels in the distribution&quot;&quot;&quot;</span>
 
-    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;create a source distribution tarball with embedded wheels&#39;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;create a source distribution tarball with embedded wheels&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_remove_wheels_from_install_requires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wheel_package_names</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_wheels_from_install_requires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wheel_package_names</span><span class="p">):</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;requirements.txt&#39;</span><span class="p">)</span>
-        <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+        <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
+        <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_lines</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">,</span> <span class="n">wheel_package_names</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_lines</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">,</span> <span class="n">wheel_package_names</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_remove_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">exclude_lines</span><span class="p">):</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">exclude_lines</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
 
         <span class="c1"># Find the line to delete and remove it</span>
@@ -232,84 +232,84 @@
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude_lines</span><span class="p">:</span>
                 <span class="n">new_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Removing </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removing </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Write the new lines back to the file</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">new_lines</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_save_original_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_original_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 
-        <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;requirements.txt&#39;</span><span class="p">)</span>
-        <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+        <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
+        <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_requirements_txt</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_requirements_txt</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_setup_cfg</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_setup_cfg</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">_restore_original_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_restore_original_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_requirements_txt</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Restoring requirements.txt&#39;</span><span class="p">)</span>
-            <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;requirements.txt&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Restoring requirements.txt&quot;</span><span class="p">)</span>
+            <span class="n">requirements_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">requirements_filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_requirements_txt</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setup_cfg</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Restoring setup.cfg&#39;</span><span class="p">)</span>
-            <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Restoring setup.cfg&quot;</span><span class="p">)</span>
+            <span class="n">setup_cfg_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">setup_cfg_filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setup_cfg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_generate_wheels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_wheels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span> <span class="o">=</span> <span class="s1">&#39;dist&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span> <span class="o">=</span> <span class="s2">&quot;dist&quot;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Deleting </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleting </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="p">)</span>
 
         <span class="c1"># create a temporary directory to store the wheels</span>
         <span class="n">project_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">wheel_generation_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;wheels&#39;</span><span class="p">)</span>
+        <span class="n">wheel_generation_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;wheels&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Deleting </span><span class="si">{</span><span class="n">wheel_generation_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleting </span><span class="si">{</span><span class="n">wheel_generation_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating dependency wheels&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">github_credentials</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_CREDENTIALS&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using github credentials from environment variable&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating dependency wheels&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">github_credentials</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_CREDENTIALS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using github credentials from environment variable&quot;</span><span class="p">)</span>
         <span class="n">git_info</span> <span class="o">=</span> <span class="n">generate_project_wheels</span><span class="p">(</span>
             <span class="n">project_dir</span><span class="p">,</span> <span class="n">wheel_generation_dir</span><span class="p">,</span> <span class="n">github_credentials</span><span class="o">=</span><span class="n">github_credentials</span>
         <span class="p">)</span>
-        <span class="n">wheel_package_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">git_info</span><span class="p">}</span>
+        <span class="n">wheel_package_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">git_info</span><span class="p">}</span>
         <span class="c1"># remove wheels from install_requires to skip pip dependency pre-check</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_wheels_from_install_requires</span><span class="p">(</span><span class="n">wheel_package_names</span><span class="p">)</span>
         <span class="c1"># copy the wheels into the package directory</span>
-        <span class="n">wheelhouse_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">,</span> <span class="s1">&#39;wheelhouse&#39;</span><span class="p">)</span>
+        <span class="n">wheelhouse_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">,</span> <span class="s2">&quot;wheelhouse&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">wheel_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">wheelhouse_dir</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">wheel_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.whl&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">wheel_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.whl&quot;</span><span class="p">):</span>
                 <span class="n">copy_wheel_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wheelhouse_dir</span><span class="p">,</span> <span class="n">wheel_file</span><span class="p">)</span>
                 <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">copy_wheel_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_dir</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Copying to </span><span class="si">{</span><span class="n">copy_wheel_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copying to </span><span class="si">{</span><span class="n">copy_wheel_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># cleanup the temporary directory</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">wheel_generation_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CustomSdistCommand.initialize_options">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand.initialize_options">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">initialize_options</span><span class="p">()</span>
         <span class="c1"># generating wheels here to modify setup.cfg before it&#39;s automatically copied</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_original_files</span><span class="p">()</span>
@@ -322,7 +322,7 @@
 
 <div class="viewcode-block" id="CustomSdistCommand.run">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand.run">[docs]</a>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_restore_original_files</span><span class="p">()</span></div>
 </div>
@@ -331,25 +331,25 @@
 
 <div class="viewcode-block" id="CustomInstallCommand">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.CustomInstallCommand">[docs]</a>
-<span class="k">class</span> <span class="nc">CustomInstallCommand</span><span class="p">(</span><span class="n">_install</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomInstallCommand</span><span class="p">(</span><span class="n">_install</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom pip install command to install embedded wheels&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="CustomInstallCommand.run">
 <a class="viewcode-back" href="../../module_docs/wads/package_module.html#wads.package_module.CustomInstallCommand.run">[docs]</a>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 
         <span class="c1"># Install wheels from the dist directory of the tarball</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dist_dir</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dist_dir</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">wheel</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dist_dir</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">wheel</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.whl&#39;</span><span class="p">):</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Installing </span><span class="si">{</span><span class="n">wheel</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">wheel</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.whl&quot;</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing </span><span class="si">{</span><span class="n">wheel</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span>
                         <span class="p">[</span>
-                            <span class="s1">&#39;pip&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;install&#39;</span><span class="p">,</span>
+                            <span class="s2">&quot;pip&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;install&quot;</span><span class="p">,</span>
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dist_dir</span><span class="p">,</span> <span class="n">wheel</span><span class="p">),</span>
-                            <span class="sa">f</span><span class="s1">&#39;--find-links=</span><span class="si">{</span><span class="n">dist_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;--find-links=</span><span class="si">{</span><span class="n">dist_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="p">]</span>
                     <span class="p">)</span>
 
@@ -360,10 +360,10 @@
 
 
 <span class="n">embedded_wheel_setup</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
-    <span class="n">setup</span><span class="p">,</span> <span class="n">cmdclass</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;install&#39;</span><span class="p">:</span> <span class="n">CustomInstallCommand</span><span class="p">,</span> <span class="s1">&#39;sdist&#39;</span><span class="p">:</span> <span class="n">CustomSdistCommand</span><span class="p">}</span>
+    <span class="n">setup</span><span class="p">,</span> <span class="n">cmdclass</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;install&quot;</span><span class="p">:</span> <span class="n">CustomInstallCommand</span><span class="p">,</span> <span class="s2">&quot;sdist&quot;</span><span class="p">:</span> <span class="n">CustomSdistCommand</span><span class="p">}</span>
 <span class="p">)</span>
 <span class="n">setup_py</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s1">&#39;from wads.package_module import embedded_wheel_setup</span><span class="se">\n</span><span class="s1">embedded_wheel_setup()&#39;</span>
+    <span class="s2">&quot;from wads.package_module import embedded_wheel_setup</span><span class="se">\n</span><span class="s2">embedded_wheel_setup()&quot;</span>
 <span class="p">)</span>
 </pre></div>
 
