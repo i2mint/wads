@@ -47,11 +47,11 @@ populate_dflts = wads_configs.get(
 def gen_readme_text(
     name, text="There is a bit of an air of mystery around this project..."
 ):
-    return (f"""
+    return f"""
 # {name}
 
 {text}
-""")
+"""
 
 
 # TODO: Function way to long -- break it up
