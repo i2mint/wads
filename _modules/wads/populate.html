@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.27 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=dc233e31"></script>
+      <script src="../../_static/documentation_options.js?v=34399df3"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -125,6 +125,7 @@
         <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
         <span class="s2">&quot;project_type&quot;</span><span class="p">:</span> <span class="s2">&quot;lib&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;create_docsrc&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">)</span>
 
@@ -132,10 +133,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">gen_readme_text</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;There is a bit of an air of mystery around this project...&quot;</span>
 <span class="p">):</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2"># </span><span class="si">{</span><span class="n">name</span><span class="si">}</span>
+
 <span class="si">{</span><span class="n">text</span><span class="si">}</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
 
 
 <span class="c1"># TODO: Function way to long -- break it up</span>
@@ -158,6 +160,7 @@
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">],</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="n">defaults_from</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">create_docsrc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;create_docsrc&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
     <span class="n">skip_docsrc_gen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">version_control_system</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -194,6 +197,7 @@
 <span class="sd">    :param default_from: Name of field to look up in wads_configs to get defaults from,</span>
 <span class="sd">        or &#39;user_input&#39; to get it from user input.</span>
 <span class="sd">    :param skip_docsrc_gen: Skip the generation of documentation stuff</span>
+<span class="sd">    :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).</span>
 <span class="sd">    :param skip_ci_def_gen: Skip the generation of the CI stuff</span>
 <span class="sd">    :param version_control_system: &#39;github&#39; or &#39;gitlab&#39; (will TRY to be resolved from root url if not given)</span>
 <span class="sd">    :param ci_def_path: Path of the CI definition</span>
@@ -321,11 +325,19 @@
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">,</span> <span class="n">readme_text</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">project_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">project_type</span> <span class="o">==</span> <span class="s2">&quot;lib&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_docsrc_gen</span><span class="p">:</span>
+        <span class="c1"># Respect both the new `create_docsrc` flag and the existing</span>
+        <span class="c1"># `skip_docsrc_gen` for backward compatibility. `skip_docsrc_gen`</span>
+        <span class="c1"># takes precedence when True. By default `create_docsrc` is False</span>
+        <span class="c1"># so docsrc won&#39;t be created unless explicitly requested.</span>
+        <span class="k">if</span> <span class="n">skip_docsrc_gen</span><span class="p">:</span>
+            <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... skipping docsrc generation because skip_docsrc_gen=True&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">create_docsrc</span><span class="p">:</span>
             <span class="c1"># TODO: Figure out epythet and wads relationship -- right now, there&#39;s a reflexive dependency</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">epythet.setup_docsrc</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_docsrc</span>
 
             <span class="n">make_docsrc</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... not creating docsrc by default (create_docsrc=False)&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_ci_def_gen</span><span class="p">:</span>
         <span class="n">root_url</span> <span class="o">=</span> <span class="n">root_url</span> <span class="ow">or</span> <span class="n">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
