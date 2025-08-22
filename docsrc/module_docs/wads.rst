@@ -1,4 +1,0 @@
-wads
-====
-.. automodule:: wads
-   :members:
