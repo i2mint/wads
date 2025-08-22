@@ -39,6 +39,7 @@ populate_dflts = wads_configs.get(
         "verbose": True,
         "version": "0.0.1",
         "project_type": "lib",
+        "create_docsrc": False,
     },
 )
 
@@ -46,10 +47,11 @@ populate_dflts = wads_configs.get(
 def gen_readme_text(
     name, text="There is a bit of an air of mystery around this project..."
 ):
-    return f"""
+    return (f"""
 # {name}
+
 {text}
-"""
+""")
 
 
 # TODO: Function way to long -- break it up
@@ -70,6 +72,7 @@ def populate_pkg_dir(
     verbose: bool = populate_dflts["verbose"],
     overwrite: List = (),
     defaults_from: Optional[str] = None,
+    create_docsrc: bool = populate_dflts.get("create_docsrc", False),
     skip_docsrc_gen=False,
     skip_ci_def_gen=False,
     version_control_system=None,
@@ -106,6 +109,7 @@ def populate_pkg_dir(
     :param default_from: Name of field to look up in wads_configs to get defaults from,
         or 'user_input' to get it from user input.
     :param skip_docsrc_gen: Skip the generation of documentation stuff
+    :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).
     :param skip_ci_def_gen: Skip the generation of the CI stuff
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
@@ -233,11 +237,19 @@ def populate_pkg_dir(
         save_txt_to_pkg("README.md", readme_text)
 
     if project_type is None or project_type == "lib":
-        if not skip_docsrc_gen:
+        # Respect both the new `create_docsrc` flag and the existing
+        # `skip_docsrc_gen` for backward compatibility. `skip_docsrc_gen`
+        # takes precedence when True. By default `create_docsrc` is False
+        # so docsrc won't be created unless explicitly requested.
+        if skip_docsrc_gen:
+            _clog("... skipping docsrc generation because skip_docsrc_gen=True")
+        elif create_docsrc:
             # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
             from epythet.setup_docsrc import make_docsrc
 
             make_docsrc(pkg_dir, verbose=verbose)
+        else:
+            _clog("... not creating docsrc by default (create_docsrc=False)")
 
     if not skip_ci_def_gen:
         root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
