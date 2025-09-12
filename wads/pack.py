@@ -866,8 +866,12 @@ def versions_from_pypi(
     name = get_pkg_name(pkg_dir)
     url = PYPI_PACKAGE_JSON_URL.format(package=name)
 
-    pkg_info = http_get_json(url, use_requests=use_requests)
-    releases = pkg_info.get("releases", [])
+    try:
+        pkg_info = http_get_json(url, use_requests=use_requests)
+        releases = pkg_info.get("releases", [])
+    except Exception as e:
+        warn(f"Got an exception trying to get the versions from pypi: {e}")
+        return []
 
     # keep only the versions that don't have yanked=True
     def yanked_release(release_info_list):
