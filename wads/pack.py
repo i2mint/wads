@@ -915,7 +915,8 @@ def current_pypi_version(
         data = response.json()
         return data["info"]["version"]
     else:
-        raise Exception(f"Failed to get information for package {name=}, {pkg_dir=}")
+        # raise Exception(f"Failed to get information for package {name=}, {pkg_dir=}")
+        return None
 
 
 def next_version_for_package(
