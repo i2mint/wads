@@ -61,6 +61,7 @@ DFLT_OPTIONS = {
     "packages": "find:",
     "include_package_data": True,
     "zip_safe": False,
+    "extras_require_testing": [],
 }
 
 pjoin = lambda *p: os.path.join(*p)
@@ -720,6 +721,10 @@ def write_configs(
         c.read_file(open(config_filepath, "r"))
 
     metadata_dict = dict(preproc(configs))
+
+    # Filter out None values and convert non-strings to strings for ConfigParser
+    metadata_dict = {k: str(v) for k, v in metadata_dict.items() if v is not None}
+
     options = dict(dflt_options, **read_configs(pkg_dir, preproc, OPTIONS_SECTION))
 
     # TODO: Legacy. Reorg key to [section][key] mapping to avoid such ugly complexities.
@@ -740,8 +745,37 @@ def write_configs(
                     k
                 )  # if it's both in metadata and in options, just get it out of metadata
 
+    # Handle nested sections like extras_require
+    # Extract any keys that look like extras_require_* from both metadata and options
+    extras_require = {}
+
+    # Check metadata_dict first
+    for key, value in list(metadata_dict.items()):
+        if key.startswith('extras_require_'):
+            extra_name = key.replace('extras_require_', '')
+            extras_require[extra_name] = value
+            metadata_dict.pop(key)
+
+    # Check options dict too (since extras_require_testing might end up there via DFLT_OPTIONS)
+    for key, value in list(options.items()):
+        if key.startswith('extras_require_'):
+            extra_name = key.replace('extras_require_', '')
+            extras_require[extra_name] = value
+            options.pop(key)
+
     c[METADATA_SECTION] = metadata_dict
     c[OPTIONS_SECTION] = options
+
+    # Add extras_require section if we have any
+    if extras_require:
+        if 'options.extras_require' not in c:
+            c['options.extras_require'] = {}
+        for extra_name, packages in extras_require.items():
+            # Preprocess the packages (convert list to newline format if needed)
+            if isinstance(packages, list):
+                packages = "\n\t" + "\n\t".join(packages)
+            c['options.extras_require'][extra_name] = packages
+
     with open(config_filepath, "w") as fp:
         c.write(fp)
 
@@ -881,7 +915,7 @@ def current_pypi_version(
         data = response.json()
         return data["info"]["version"]
     else:
-        raise Exception(f"Failed to get information for {package_name}")
+        raise Exception(f"Failed to get information for {pkg_name}")
 
 
 def next_version_for_package(

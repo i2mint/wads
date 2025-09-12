@@ -38,6 +38,7 @@ populate_dflts = wads_configs.get(
         "install_requires": None,
         "verbose": True,
         "version": "0.0.1",
+        "extras_require_testing": [],
         "project_type": "lib",
         "create_docsrc": False,
     },
