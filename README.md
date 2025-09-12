@@ -89,16 +89,20 @@ It will edit the `setup.cfg` file if it's present (and missing some entries).
 
 Note that `defaults-from` option in the `populate` help.
 That's probably the most convenient argument of all.
-Go check out a file named `wads_confgis.json` in the root directory of the project.
+Go check out a file named `wads_configs.json` in the root directory of the project.
 (If you don't know how to find that file, try this command:
 `python -c "import wads; print(wads)"` to get a clue).
 
-That `wads_confgis.json` file contains key-value entries that are used in the wads package.
+That `wads_configs.json` file contains key-value entries that are used in the wads package.
 The `"populate_dflts"` key is used by the populate script.
 If you edit that, you'll get different defaults out of the box.
 
-But you can also add your own key-value pairs if you work on different kinds of projects that need
-different kinds of defaults.
+Note that an even better way than editing the existing `wads_configs.json` file is 
+to write your own configs file, calling it what you want and putting it where you want, 
+and just adding a `WADS_CONFIGS_FILE` environment variable pointing to it. 
+(Gotcha: Note the plural on `CONFIGS`).
+
+But you can also add your own key-value pairs if you work on different kinds of projects that need different kinds of defaults.
 For your convenience we added a `"custom_dflts_example_you_should_change"` key to illustrate this.
 
 ## pack
