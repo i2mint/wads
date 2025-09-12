@@ -751,15 +751,15 @@ def write_configs(
 
     # Check metadata_dict first
     for key, value in list(metadata_dict.items()):
-        if key.startswith('extras_require_'):
-            extra_name = key.replace('extras_require_', '')
+        if key.startswith("extras_require_"):
+            extra_name = key.replace("extras_require_", "")
             extras_require[extra_name] = value
             metadata_dict.pop(key)
 
     # Check options dict too (since extras_require_testing might end up there via DFLT_OPTIONS)
     for key, value in list(options.items()):
-        if key.startswith('extras_require_'):
-            extra_name = key.replace('extras_require_', '')
+        if key.startswith("extras_require_"):
+            extra_name = key.replace("extras_require_", "")
             extras_require[extra_name] = value
             options.pop(key)
 
@@ -768,13 +768,13 @@ def write_configs(
 
     # Add extras_require section if we have any
     if extras_require:
-        if 'options.extras_require' not in c:
-            c['options.extras_require'] = {}
+        if "options.extras_require" not in c:
+            c["options.extras_require"] = {}
         for extra_name, packages in extras_require.items():
             # Preprocess the packages (convert list to newline format if needed)
             if isinstance(packages, list):
                 packages = "\n\t" + "\n\t".join(packages)
-            c['options.extras_require'][extra_name] = packages
+            c["options.extras_require"][extra_name] = packages
 
     with open(config_filepath, "w") as fp:
         c.write(fp)
