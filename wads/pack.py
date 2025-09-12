@@ -1036,7 +1036,7 @@ def validate_versions(versions: dict, action_when_not_valid=raise_error) -> dict
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 
     error_msg = ""
-    if versions["tag"] != versions["setup_cfg"]:
+    if versions.get("tag", None) != versions["setup_cfg"]:
         error_msg += (
             f"Tag version ({versions['tag']}) is different "
             f"from setup.cfg's version: {versions['setup_cfg']}\n"
