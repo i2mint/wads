@@ -1036,9 +1036,10 @@ def validate_versions(versions: dict, action_when_not_valid=raise_error) -> dict
     #   Tip: Write the instructions in a github wiki/discussion/issue and provide link
 
     error_msg = ""
-    if versions.get("tag", None) != versions["setup_cfg"]:
+    tag_version = versions.get("tag", None)
+    if tag_version is not None and tag_version != versions["setup_cfg"]:
         error_msg += (
-            f"Tag version ({versions['tag']}) is different "
+            f"Tag version ({tag_version}) is different "
             f"from setup.cfg's version: {versions['setup_cfg']}\n"
         )
     if versions["current_pypi"] != versions["highest_not_yanked_pypi"]:
