@@ -91,13 +91,31 @@ jobs:
 
   github-pages:
     name: Publish GitHub Pages
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
     needs: publish
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure gh-pages branch exists
+        run: |
+          # Fetch all branches
+          git fetch origin
+          # Check if gh-pages exists
+          if ! git ls-remote --exit-code --heads origin gh-pages; then
+            # Create empty branch
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# GitHub Pages" > README.md
+            git add README.md
+            git commit -m "Initialize gh-pages branch"
+            git push origin gh-pages
+            git checkout ${{ github.ref_name }}  # Switch back to the triggering branch
+          fi
+  
       - uses: i2mint/epythet/actions/publish-github-pages@master
         with:
-          # IMPORTANT Note: You don't need to specify GITHUB_TOKEN in your repo secrets.
-          # GITHUB_TOKEN is special & automatically provided to your workflow run.
           github-token: ${{ secrets.GITHUB_TOKEN }}
           ignore: "tests/,scrap/"
