@@ -113,7 +113,7 @@ def mk_replacer_from_dict(from_to_dict):
 
 
 def mk_import_root_replacer(from_to_dict):
-    """Make a function that does multiple import name replacements.
+    r"""Make a function that does multiple import name replacements.
 
     For a use case, see replace_import_names. This is just a helper function.
 
@@ -137,12 +137,12 @@ def mk_import_root_replacer(from_to_dict):
     :param from_to_dict: A dict of {to_find: to_replace_by,...} pairs
     :return: A replacer function that you can apply to strings to carry out the replacements
 
-    r"""
+    """
     t = dict(
         chain.from_iterable(
             [
-                (f"(?<=from\ ){old}(?=[\.\ ])", f"{new}"),
-                (f"(?<=import\ ){old}(?=[\.\s])", f"{new}"),
+                (rf"(?<=from\ ){old}(?=[\.\ ])", f"{new}"),
+                (rf"(?<=import\ ){old}(?=[\.\s])", f"{new}"),
             ]
             for old, new in from_to_dict.items()
         )
