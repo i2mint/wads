@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.39 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f48ec9ae"></script>
+      <script src="../../_static/documentation_options.js?v=967b4925"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -124,15 +124,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Union</span><span class="p">,</span>
-    <span class="n">Mapping</span><span class="p">,</span>
-    <span class="n">Iterable</span><span class="p">,</span>
-    <span class="n">Generator</span><span class="p">,</span>
-    <span class="n">Sequence</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
     <span class="n">List</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParser</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
@@ -178,7 +175,7 @@
     <span class="n">commit_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">work_tree</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
-    <span class="n">git_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">git_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">auto_choose_default_action</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">bypass_docstring_validation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">bypass_tests</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -549,7 +546,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.extract_pkg_dir_and_name">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">extract_pkg_dir_and_name</span><span class="p">(</span>
     <span class="n">pkg_spec</span><span class="p">:</span> <span class="n">PkgSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`.</span>
 <span class="sd">    Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py file)</span>
@@ -606,7 +603,7 @@
 
 <div class="viewcode-block" id="folders_that_have_init_py_files">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">folders_that_have_init_py_files</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">folders_that_have_init_py_files</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a list of folders in the package directory that have an __init__.py file.</span>
 
@@ -754,7 +751,7 @@
 <span class="c1"># TODO: Find out if configparse has an option to do this processing alreadys</span>
 <div class="viewcode-block" id="postprocess_ini_section_items">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.postprocess_ini_section_items">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">postprocess_ini_section_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">postprocess_ini_section_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Transform newline-separated string values into actual list of strings (assuming that intent)</span>
 
 <span class="sd">    &gt;&gt;&gt; section_from_ini = {</span>
@@ -781,7 +778,7 @@
 <span class="c1"># TODO: Find out if configparse has an option to do this processing already</span>
 <div class="viewcode-block" id="preprocess_ini_section_items">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.preprocess_ini_section_items">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">preprocess_ini_section_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">preprocess_ini_section_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform list values into newline-separated strings, in view of writing the value to a ini formatted section</span>
 
 <span class="sd">    &gt;&gt;&gt; section = {</span>
@@ -822,7 +819,7 @@
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">):</span>
-        <span class="n">c</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">))</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">=}</span><span class="s2">, </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">section</span><span class="p">)</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -849,7 +846,7 @@
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">):</span>
-        <span class="n">c</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">))</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">))</span>
 
     <span class="n">metadata_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">preproc</span><span class="p">(</span><span class="n">configs</span><span class="p">))</span>
 
@@ -955,7 +952,7 @@
 
 <div class="viewcode-block" id="http_get_json">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.http_get_json">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">http_get_json</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">http_get_json</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make ah http request to url and get json, and return as python dict&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">use_requests</span><span class="p">:</span>
@@ -993,9 +990,9 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">versions_from_pypi</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return version of package on pypi.python.org using json.</span>
 
@@ -1026,9 +1023,9 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">highest_pypi_version</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return version of package on pypi.python.org using json.</span>
 
@@ -1049,7 +1046,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.current_pypi_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">current_pypi_version</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return version of package on pypi.python.org using json.</span>
 
@@ -1071,7 +1068,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">next_version_for_package</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">version_if_current_version_none</span><span class="o">=</span><span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
     <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1087,7 +1084,7 @@
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
     <span class="n">version</span><span class="p">,</span>
     <span class="n">configs</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">version</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
