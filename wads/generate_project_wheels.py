@@ -60,7 +60,7 @@ def _replace_git_urls(filepath, pattern, group_idx_offset=0):
     def _get_idx(raw_idx):
         return (raw_idx + group_idx_offset) % 3
 
-    with open(filepath, "r") as file:
+    with open(filepath) as file:
         content = file.read()
         git_info = [
             {"name": t[_get_idx(0)], "url": t[_get_idx(1)], "branch": t[_get_idx(2)]}

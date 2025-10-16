@@ -61,18 +61,18 @@ def populate_pkg_dir(
     pkg_dir,
     version: str = populate_dflts["version"],
     description: str = populate_dflts["description"],
-    root_url: Optional[str] = populate_dflts["root_url"],
-    author: Optional[str] = populate_dflts["author"],
+    root_url: str | None = populate_dflts["root_url"],
+    author: str | None = populate_dflts["author"],
     license: str = populate_dflts["license"],
     description_file: str = populate_dflts["description_file"],
-    keywords: Optional[List] = populate_dflts["keywords"],
-    install_requires: Optional[List] = populate_dflts["install_requires"],
+    keywords: list | None = populate_dflts["keywords"],
+    install_requires: list | None = populate_dflts["install_requires"],
     long_description=populate_dflts["long_description"],
     long_description_content_type=populate_dflts["long_description_content_type"],
     include_pip_install_instruction_in_readme=True,
     verbose: bool = populate_dflts["verbose"],
-    overwrite: List = (),
-    defaults_from: Optional[str] = None,
+    overwrite: list = (),
+    defaults_from: str | None = None,
     create_docsrc: bool = populate_dflts.get("create_docsrc", False),
     skip_docsrc_gen=False,
     skip_ci_def_gen=False,
@@ -169,7 +169,7 @@ def populate_pkg_dir(
         )
 
     if os.path.isfile(pjoin("setup.cfg")):
-        with open(pjoin("setup.cfg"), "r"):
+        with open(pjoin("setup.cfg")):
             pass
 
     kwargs = dict(
@@ -207,7 +207,7 @@ def populate_pkg_dir(
         target_path = pjoin(resource_name)
         assert not os.path.isfile(target_path), f"{target_path} exists already"
         _clog(f"... making a {resource_name}")
-        with open(pjoin(resource_name), "wt") as fp:
+        with open(pjoin(resource_name), "w") as fp:
             fp.write(content)
 
     if should_update(".gitignore"):

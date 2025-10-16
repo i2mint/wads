@@ -16,10 +16,10 @@ from wads.generate_project_wheels import generate_project_wheels
 
 
 def generate_package(
-    module_path: Union[str, Path],
-    install_requires: List[str],
-    output_path: Union[str, Path],
-    glob_pattern: Union[str, List[str]] = None,
+    module_path: str | Path,
+    install_requires: list[str],
+    output_path: str | Path,
+    glob_pattern: str | list[str] = None,
     version: str = "1.0.0",
 ):
     """Generate Python module package including wheels for requirements linked to git repos
@@ -70,7 +70,7 @@ def generate_module_folder(module_path: Path, dst_path: Path):
         raise ValueError("module path must be a directory or .py file")
 
 
-def manifest_in_template(module_name: str, glob_pattern: List[str]):
+def manifest_in_template(module_name: str, glob_pattern: list[str]):
     manifest_in = "recursive-include dist *.whl"
     if glob_pattern:
         for gp in glob_pattern:
@@ -79,10 +79,10 @@ def manifest_in_template(module_name: str, glob_pattern: List[str]):
 
 
 def setup_cfg_template(
-    install_requires: List[str],
+    install_requires: list[str],
     name: str,
     version: str = "1.0.0",
-    glob_pattern: List[str] = None,
+    glob_pattern: list[str] = None,
 ) -> str:
     setup_cfg = f"""[metadata]
 name = {name}
@@ -132,7 +132,7 @@ class CustomSdistCommand(sdist):
             self._remove_lines(setup_cfg_filepath, wheel_package_names)
 
     def _remove_lines(self, filepath, exclude_lines):
-        with open(filepath, "r") as file:
+        with open(filepath) as file:
             lines = file.readlines()
 
         # Find the line to delete and remove it
@@ -153,12 +153,12 @@ class CustomSdistCommand(sdist):
         requirements_filepath = os.path.join(project_dir, "requirements.txt")
         setup_cfg_filepath = os.path.join(project_dir, "setup.cfg")
         if os.path.isfile(requirements_filepath):
-            with open(requirements_filepath, "r") as f:
+            with open(requirements_filepath) as f:
                 self._requirements_txt = f.read()
         else:
             self._requirements_txt = None
         if os.path.isfile(setup_cfg_filepath):
-            with open(setup_cfg_filepath, "r") as f:
+            with open(setup_cfg_filepath) as f:
                 self._setup_cfg = f.read()
         else:
             self._setup_cfg = None

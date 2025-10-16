@@ -34,7 +34,7 @@ def get_licenses(refresh=False):
         except Exception:
             raise
 
-    return json.load(open(licenses_json_path, "r"))
+    return json.load(open(licenses_json_path))
 
 
 def get_licenses_from_github():

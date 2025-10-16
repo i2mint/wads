@@ -2,7 +2,8 @@
 
 # TODO: Instead of os.system, use subprocess.run?
 
-from typing import Iterable, Callable, NewType, Union
+from typing import NewType, Union
+from collections.abc import Iterable, Callable
 
 InstallCommand = NewType("InstallCommand", str)
 InstallCommandsStr = NewType("InstallCommandsStr", str)

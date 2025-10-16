@@ -38,15 +38,12 @@ from pprint import pprint
 from warnings import warn
 from typing import (
     Union,
-    Mapping,
-    Iterable,
-    Generator,
-    Sequence,
     Optional,
     Tuple,
     List,
     Literal,
 )
+from collections.abc import Mapping, Iterable, Generator, Sequence
 from configparser import ConfigParser
 from functools import partial
 
@@ -87,7 +84,7 @@ def check_in(
     commit_message: str,
     *,
     work_tree: str = ".",
-    git_dir: Optional[str] = None,
+    git_dir: str | None = None,
     auto_choose_default_action: bool = False,
     bypass_docstring_validation: bool = False,
     bypass_tests: bool = False,
@@ -446,7 +443,7 @@ def _get_pkg_dir_and_name(pkg_dir, validate=True):
 
 def extract_pkg_dir_and_name(
     pkg_spec: PkgSpec, *, validate: bool = True
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`.
     Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py file)
@@ -500,7 +497,7 @@ def extract_pkg_dir_and_name(
     return pkg_dir, pkg_name
 
 
-def folders_that_have_init_py_files(pkg_dir: PathStr) -> List[str]:
+def folders_that_have_init_py_files(pkg_dir: PathStr) -> list[str]:
     """
     Get a list of folders in the package directory that have an __init__.py file.
 
@@ -627,7 +624,7 @@ def twine_upload_dist(pkg_dir, *, options_str=None):
 
 # TODO: postprocess_ini_section_items and preprocess_ini_section_items: Add comma separated possibility?
 # TODO: Find out if configparse has an option to do this processing alreadys
-def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
+def postprocess_ini_section_items(items: Mapping | Iterable) -> Generator:
     r"""Transform newline-separated string values into actual list of strings (assuming that intent)
 
     >>> section_from_ini = {
@@ -651,7 +648,7 @@ def postprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
 
 
 # TODO: Find out if configparse has an option to do this processing already
-def preprocess_ini_section_items(items: Union[Mapping, Iterable]) -> Generator:
+def preprocess_ini_section_items(items: Mapping | Iterable) -> Generator:
     """Transform list values into newline-separated strings, in view of writing the value to a ini formatted section
 
     >>> section = {
@@ -691,7 +688,7 @@ def read_configs(
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     if os.path.isfile(config_filepath):
-        c.read_file(open(config_filepath, "r"))
+        c.read_file(open(config_filepath))
         if verbose:
             print(f"{section=}, {type(section)=}")
         try:
@@ -718,7 +715,7 @@ def write_configs(
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     if os.path.isfile(config_filepath):
-        c.read_file(open(config_filepath, "r"))
+        c.read_file(open(config_filepath))
 
     metadata_dict = dict(preproc(configs))
 
@@ -819,7 +816,7 @@ except ModuleNotFoundError:
     requests_is_installed = False
 
 
-def http_get_json(url, use_requests=requests_is_installed) -> Union[dict, None]:
+def http_get_json(url, use_requests=requests_is_installed) -> dict | None:
     """Make ah http request to url and get json, and return as python dict"""
 
     if use_requests:
@@ -854,9 +851,9 @@ PYPI_PACKAGE_JSON_URL = "https://pypi.python.org/pypi/{package}/json"
 def versions_from_pypi(
     pkg_dir: PathStr,
     *,
-    name: Union[None, str] = None,
+    name: None | str = None,
     use_requests=requests_is_installed,
-) -> Union[str, None]:
+) -> str | None:
     """
     Return version of package on pypi.python.org using json.
 
@@ -884,9 +881,9 @@ def versions_from_pypi(
 def highest_pypi_version(
     pkg_dir: PathStr,
     *,
-    name: Union[None, str] = None,
+    name: None | str = None,
     use_requests=requests_is_installed,
-) -> List[str]:
+) -> list[str]:
     """
     Return version of package on pypi.python.org using json.
 
@@ -904,7 +901,7 @@ def highest_pypi_version(
 
 def current_pypi_version(
     pkg_dir: PathStr,
-) -> Union[str, None]:
+) -> str | None:
     """
     Return version of package on pypi.python.org using json.
 
@@ -925,7 +922,7 @@ def current_pypi_version(
 
 def next_version_for_package(
     pkg_dir: PathStr,
-    name: Union[None, str] = None,
+    name: None | str = None,
     version_if_current_version_none="0.0.1",
     use_requests=requests_is_installed,
 ) -> str:
@@ -941,7 +938,7 @@ def _get_version(
     pkg_dir: PathStr,
     version,
     configs,
-    name: Union[None, str] = None,
+    name: None | str = None,
     new_deploy=False,
 ):
     version = version or configs.get("version", None)
