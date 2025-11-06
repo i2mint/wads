@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.package_module &mdash; wads 0.1.41 documentation</title>
+  <title>wads.package_module &mdash; wads 0.1.42 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3203cd3c"></script>
+      <script src="../../_static/documentation_options.js?v=05fb4756"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -104,7 +104,7 @@
 install them.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.package_module.CustomInstallCommand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomInstallCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomInstallCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomInstallCommand" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomInstallCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Distribution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomInstallCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomInstallCommand" title="Link to this definition"></a></dt>
 <dd><p>Custom pip install command to install embedded wheels</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomInstallCommand.run">
@@ -116,30 +116,22 @@ install them.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomSdistCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomSdistCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Distribution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand" title="Link to this definition"></a></dt>
 <dd><p>Custom sdist command to include wheels in the distribution</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand.initialize_options">
 <span class="sig-name descname"><span class="pre">initialize_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand.initialize_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand.initialize_options" title="Link to this definition"></a></dt>
-<dd><p>Set default values for all the options that this command
-supports.  Note that these defaults may be overridden by other
-commands, by the setup script, by config files, or by the
-command-line.  Thus, this is not the place to code dependencies
-between options; generally, ‘initialize_options()’ implementations
-are just a bunch of “self.foo = None” assignments.</p>
-<p>This method must be implemented by all command classes.</p>
+<dd><p>Set or (reset) all options/attributes/caches used by the command
+to their default values. Note that these values may be overwritten during
+the build.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand.run" title="Link to this definition"></a></dt>
-<dd><p>A command’s raison d’etre: carry out the action it exists to
-perform, controlled by the options initialized in
-‘initialize_options()’, customized by other commands, the setup
-script, the command-line, and config files, and finalized in
-‘finalize_options()’.  All terminal output and filesystem
-interaction should be done by ‘run()’.</p>
-<p>This method must be implemented by all command classes.</p>
+<dd><p>Execute the actions intended by the command.
+(Side effects <strong>SHOULD</strong> only take place when <a class="reference internal" href="#wads.package_module.CustomSdistCommand.run" title="wads.package_module.CustomSdistCommand.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> is executed,
+for example, creating new files or writing to the terminal output).</p>
 </dd></dl>
 
 </dd></dl>
