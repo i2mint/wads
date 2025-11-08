@@ -50,8 +50,16 @@ from functools import partial
 import argh
 
 from wads.util import git
+from wads.toml_util import (
+    read_pyproject_toml,
+    write_pyproject_toml,
+    get_project_version,
+    set_project_version,
+    get_project_name,
+)
 
 CONFIG_FILE_NAME = "setup.cfg"
+PYPROJECT_FILE_NAME = "pyproject.toml"
 METADATA_SECTION = "metadata"
 OPTIONS_SECTION = "options"
 DFLT_OPTIONS = {
@@ -66,10 +74,26 @@ DOCSRC = "docsrc"
 DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 
+def _has_pyproject_toml(pkg_dir: str) -> bool:
+    """Check if package uses pyproject.toml"""
+    pkg_dir = os.path.realpath(pkg_dir)
+    if pkg_dir.endswith(os.sep):
+        pkg_dir = pkg_dir[:-1]
+    pyproject_path = os.path.join(pkg_dir, PYPROJECT_FILE_NAME)
+    return os.path.isfile(pyproject_path)
+
+
 def get_name_from_configs(pkg_dir, *, assert_exists=True):
-    """Get name from local setup.cfg (metadata section)"""
-    configs = read_configs(pkg_dir=pkg_dir)
-    name = configs.get("name", None)
+    """Get name from local config file (pyproject.toml or setup.cfg)"""
+    pkg_dir = _get_pkg_dir(pkg_dir)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        name = get_project_name(pkg_dir)
+    else:
+        configs = read_configs(pkg_dir=pkg_dir)
+        name = configs.get("name", None)
+
     if assert_exists:
         assert name is not None, "No name was found in configs"
     return name
@@ -542,7 +566,12 @@ def current_configs(pkg_dir):
 
 def current_configs_version(pkg_dir):
     pkg_dir = _get_pkg_dir(pkg_dir)
-    return read_configs(pkg_dir=pkg_dir).get("version")
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        return get_project_version(pkg_dir)
+    else:
+        return read_configs(pkg_dir=pkg_dir).get("version")
 
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
@@ -563,12 +592,17 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
 
 
 def set_version(pkg_dir, version):
-    """Update version setup.cfg"""
+    """Update version in config file (pyproject.toml or setup.cfg)"""
     pkg_dir = _get_pkg_dir(pkg_dir)
-    configs = read_configs(pkg_dir)
     assert isinstance(version, str), "version should be a string"
-    configs["version"] = version
-    write_configs(pkg_dir=pkg_dir, configs=configs)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        set_project_version(pkg_dir, version)
+    else:
+        configs = read_configs(pkg_dir)
+        configs["version"] = version
+        write_configs(pkg_dir=pkg_dir, configs=configs)
 
 
 def increment_configs_version(
@@ -576,27 +610,54 @@ def increment_configs_version(
     *,
     version=None,
 ):
-    """Increment version setup.cfg."""
+    """Increment version in config file (pyproject.toml or setup.cfg)."""
     pkg_dir = _get_pkg_dir(pkg_dir)
-    configs = read_configs(pkg_dir=pkg_dir)
-    version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
-    version = increment_version(version)
-    configs["version"] = version
-    write_configs(pkg_dir=pkg_dir, configs=configs)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        # Get current version
+        current_version = get_project_version(pkg_dir)
+        if version is None:
+            version = increment_version(current_version) if current_version else "0.0.1"
+        set_project_version(pkg_dir, version)
+    else:
+        configs = read_configs(pkg_dir=pkg_dir)
+        version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
+        version = increment_version(version)
+        configs["version"] = version
+        write_configs(pkg_dir=pkg_dir, configs=configs)
+
     return version
 
 
 def run_setup(pkg_dir):
-    """Run ``python setup.py sdist bdist_wheel``"""
-    print("--------------------------- setup_output ---------------------------")
+    """Run ``python -m build`` (modern PEP 517 compliant build)"""
+    print("--------------------------- build_output ---------------------------")
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
-    setup_output = subprocess.run(
-        f"{sys.executable} setup.py sdist bdist_wheel".split(" ")
-    )
+
+    # Use python -m build (PEP 517 standard)
+    # Falls back to legacy setup.py if build module not available
+    try:
+        build_output = subprocess.run(
+            [sys.executable, "-m", "build"],
+            capture_output=True,
+            text=True
+        )
+        if build_output.returncode != 0:
+            print(f"Build stderr: {build_output.stderr}")
+            build_output.check_returncode()
+        print(build_output.stdout)
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        # Fallback to legacy method if build module not installed
+        print("Warning: 'build' module not found, falling back to setup.py")
+        print("Consider installing: pip install build")
+        build_output = subprocess.run(
+            f"{sys.executable} setup.py sdist bdist_wheel".split(" ")
+        )
+
     os.chdir(original_dir)
-    # print(f"{setup_output}\n")
 
 
 def twine_upload_dist(pkg_dir, *, options_str=None):

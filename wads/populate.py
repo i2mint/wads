@@ -10,6 +10,7 @@ from wads import (
     pkg_join as wads_join,
     gitlab_ci_tpl_path,
     setup_tpl_path,
+    pyproject_toml_tpl_path,
     gitignore_tpl_path,
     github_ci_tpl_deploy_path,
     github_ci_tpl_publish_path,
@@ -18,6 +19,7 @@ from wads import (
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
+from wads.toml_util import write_pyproject_toml
 from wads.licensing import license_body
 
 # from wads.pack_util import write_configs
@@ -53,6 +55,89 @@ def gen_readme_text(
 
 {text}
 """
+
+
+def write_pyproject_configs(pkg_dir: str, configs: dict):
+    """
+    Write pyproject.toml file from template and configs.
+
+    Args:
+        pkg_dir: Path to package directory
+        configs: Dictionary of configuration values
+    """
+    # Read the template
+    with open(pyproject_toml_tpl_path, 'r') as f:
+        template = f.read()
+
+    # Prepare the data for template substitution
+    name = configs.get('name', 'mypackage')
+    version = configs.get('version', '0.0.1')
+    description = configs.get('description', 'Package description')
+    url = configs.get('url', '')
+    license_name = configs.get('license', 'mit')
+
+    # Fill in the template
+    pyproject_content = template.format(
+        name=name,
+        version=version,
+        description=description,
+        url=url,
+        license=license_name
+    )
+
+    # Handle optional fields that may need more complex processing
+    data = {}
+
+    # Parse the filled template first
+    import sys
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        try:
+            import tomli as tomllib
+        except ImportError:
+            # Fallback: just write the template as-is
+            pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+            with open(pyproject_path, 'w') as f:
+                f.write(pyproject_content)
+            return
+
+    try:
+        import tomli_w
+    except ImportError:
+        # Fallback: just write the template as-is
+        pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+        with open(pyproject_path, 'w') as f:
+            f.write(pyproject_content)
+        return
+
+    # Parse the template to get a base structure
+    data = tomllib.loads(pyproject_content)
+
+    # Add optional fields if present
+    if configs.get('keywords'):
+        keywords = configs['keywords']
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(',')]
+        data['project']['keywords'] = keywords
+
+    if configs.get('author'):
+        authors = configs['author']
+        if isinstance(authors, str):
+            data['project']['authors'] = [{'name': authors}]
+        elif isinstance(authors, list):
+            data['project']['authors'] = [{'name': a} if isinstance(a, str) else a for a in authors]
+
+    if configs.get('install_requires'):
+        deps = configs['install_requires']
+        if isinstance(deps, str):
+            deps = [d.strip() for d in deps.split(',') if d.strip()]
+        data['project']['dependencies'] = deps
+
+    # Write the pyproject.toml
+    pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+    with open(pyproject_path, 'wb') as f:
+        tomli_w.dump(data, f)
 
 
 # TODO: Function way to long -- break it up
@@ -168,9 +253,12 @@ def populate_pkg_dir(
             "You should have a {name}/{name}/__init__.py structure. You don't."
         )
 
-    if os.path.isfile(pjoin("setup.cfg")):
-        with open(pjoin("setup.cfg")):
-            pass
+    # Check for existing config files (prioritize pyproject.toml over setup.cfg)
+    if os.path.isfile(pjoin("pyproject.toml")):
+        pass  # Will be handled later
+    elif os.path.isfile(pjoin("setup.cfg")):
+        _clog("... found existing setup.cfg (consider migrating to pyproject.toml)")
+        pass
 
     kwargs = dict(
         version=version,
@@ -219,13 +307,14 @@ def populate_pkg_dir(
                 pass
 
     else:  # project_type == 'lib' or None
-        if should_update("setup.py"):
-            shutil.copy(setup_tpl_path, pjoin("setup.py"))
-        if should_update("setup.cfg"):
-            _clog("... making a 'setup.cfg'")
+        if should_update("pyproject.toml"):
+            _clog("... making a 'pyproject.toml'")
             if "pkg-dir" in configs:
                 del configs["pkg-dir"]
-            write_configs(pjoin(""), configs)
+            write_pyproject_configs(pjoin(""), configs)
+        # Keep setup.py for backward compatibility, but minimal
+        if should_update("setup.py"):
+            shutil.copy(setup_tpl_path, pjoin("setup.py"))
 
     if should_update("LICENSE"):
         _license_body = license_body(configs["license"])
