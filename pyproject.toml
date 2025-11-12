@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wads"
+version = "0.1.43"
+description = "Tools for packaging and publishing to pypi for those who just don not want to deal with it"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Apache Software License"}
+keywords = ["documentation", "packaging", "publishing"]
+authors = [
+    {name = "Otosense"}
+]
+dependencies = [
+    "argh",
+    "epythet",
+    "pytest",
+    "pylint",
+    "wheel",
+    "build",  # For python -m build
+    "packaging",  # For version parsing
+    "requests",  # For PyPI API access
+    "tomli>=1.0.0; python_version<'3.11'",  # For reading TOML on Python <3.11
+    "tomli-w>=0.4.0",  # For writing TOML
+]
+
+[project.urls]
+Homepage = "https://github.com/i2mint/wads"
+
+[project.scripts]
+pack = "wads.pack:main"
+populate = "wads.populate:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wads"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # pycodestyle, pyflakes, isort
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["wads/tests"]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]

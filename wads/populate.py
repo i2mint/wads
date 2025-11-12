@@ -3,6 +3,7 @@ import shutil
 import json
 from collections import ChainMap
 from urllib.parse import urlparse
+from warnings import warn
 
 # from functools import partial
 from typing import List, Optional
@@ -10,14 +11,17 @@ from wads import (
     pkg_join as wads_join,
     gitlab_ci_tpl_path,
     setup_tpl_path,
+    pyproject_toml_tpl_path,
     gitignore_tpl_path,
     github_ci_tpl_deploy_path,
     github_ci_tpl_publish_path,
+    github_ci_publish_2025_path,
     wads_configs,
     wads_configs_file,
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
+from wads.toml_util import write_pyproject_toml
 from wads.licensing import license_body
 
 # from wads.pack_util import write_configs
@@ -53,6 +57,100 @@ def gen_readme_text(
 
 {text}
 """
+
+
+def write_pyproject_configs(pkg_dir: str, configs: dict):
+    """
+    Write pyproject.toml file from template and configs.
+
+    Args:
+        pkg_dir: Path to package directory
+        configs: Dictionary of configuration values
+    """
+    # Read the template
+    with open(pyproject_toml_tpl_path, 'r') as f:
+        template = f.read()
+
+    # Prepare the data for template substitution
+    name = configs.get('name', 'mypackage')
+    version = configs.get('version', '0.0.1')
+    description = configs.get('description', 'Package description')
+    url = configs.get('url', '')
+    license_name = configs.get('license', 'mit')
+
+    # Warn if URL is missing or empty
+    if not url:
+        warn(
+            f"No URL provided for package '{name}'. "
+            f"PyPI requires a URL for package uploads. "
+            f"Please add 'url' or 'root_url' to your configuration."
+        )
+
+    # Fill in the template
+    pyproject_content = template.format(
+        name=name,
+        version=version,
+        description=description,
+        url=url,
+        license=license_name,
+    )
+
+    # Handle optional fields that may need more complex processing
+    data = {}
+
+    # Parse the filled template first
+    import sys
+
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        try:
+            import tomli as tomllib
+        except ImportError:
+            # Fallback: just write the template as-is
+            pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+            with open(pyproject_path, 'w') as f:
+                f.write(pyproject_content)
+            return
+
+    try:
+        import tomli_w
+    except ImportError:
+        # Fallback: just write the template as-is
+        pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+        with open(pyproject_path, 'w') as f:
+            f.write(pyproject_content)
+        return
+
+    # Parse the template to get a base structure
+    data = tomllib.loads(pyproject_content)
+
+    # Add optional fields if present
+    if configs.get('keywords'):
+        keywords = configs['keywords']
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(',')]
+        data['project']['keywords'] = keywords
+
+    if configs.get('author'):
+        authors = configs['author']
+        if isinstance(authors, str):
+            data['project']['authors'] = [{'name': authors}]
+        elif isinstance(authors, list):
+            data['project']['authors'] = [
+                {'name': a} if isinstance(a, str) else a for a in authors
+            ]
+
+    if configs.get('install_requires'):
+        deps = configs['install_requires']
+        if isinstance(deps, str):
+            deps = [d.strip() for d in deps.split(',') if d.strip()]
+        data['project']['dependencies'] = deps
+
+    # Write the pyproject.toml
+    pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+    with open(pyproject_path, 'wb') as f:
+        tomli_w.dump(data, f)
 
 
 # TODO: Function way to long -- break it up
@@ -168,9 +266,12 @@ def populate_pkg_dir(
             "You should have a {name}/{name}/__init__.py structure. You don't."
         )
 
-    if os.path.isfile(pjoin("setup.cfg")):
-        with open(pjoin("setup.cfg")):
-            pass
+    # Check for existing config files (prioritize pyproject.toml over setup.cfg)
+    if os.path.isfile(pjoin("pyproject.toml")):
+        pass  # Will be handled later
+    elif os.path.isfile(pjoin("setup.cfg")):
+        _clog("... found existing setup.cfg (consider migrating to pyproject.toml)")
+        pass
 
     kwargs = dict(
         version=version,
@@ -219,13 +320,28 @@ def populate_pkg_dir(
                 pass
 
     else:  # project_type == 'lib' or None
-        if should_update("setup.py"):
-            shutil.copy(setup_tpl_path, pjoin("setup.py"))
-        if should_update("setup.cfg"):
-            _clog("... making a 'setup.cfg'")
+        if should_update("pyproject.toml"):
+            _clog("... making a 'pyproject.toml'")
             if "pkg-dir" in configs:
                 del configs["pkg-dir"]
-            write_configs(pjoin(""), configs)
+            write_pyproject_configs(pjoin(""), configs)
+        else:
+            # If pyproject.toml exists but URL is missing/empty, update it
+            if configs.get("url"):
+                from wads.toml_util import update_project_url, read_pyproject_toml
+
+                existing_data = read_pyproject_toml(pjoin(""))
+                existing_url = (
+                    existing_data.get("project", {}).get("urls", {}).get("Homepage", "")
+                )
+                if not existing_url:
+                    _clog(
+                        f"... updating URL in existing pyproject.toml to {configs['url']}"
+                    )
+                    update_project_url(pjoin(""), configs["url"])
+        # Keep setup.py for backward compatibility, but minimal
+        if should_update("setup.py"):
+            shutil.copy(setup_tpl_path, pjoin("setup.py"))
 
     if should_update("LICENSE"):
         _license_body = license_body(configs["license"])
@@ -275,10 +391,14 @@ _unknown_version_control_system = object()
 
 
 def _ensure_url_from_url_root_and_name(configs: dict):
-    if "url" not in configs and "url_root" in configs and "name" in configs:
-        if not configs["url_root"].endswith("/"):
-            configs["urls_root"] += "/"
-        configs["url"] = configs["urls_root"] + configs["name"]
+    """Ensure configs has a 'url' field, constructing it from root_url/url_root if needed."""
+    # Handle both 'root_url' and 'url_root' for backward compatibility
+    root_url = configs.get("root_url") or configs.get("url_root")
+
+    if "url" not in configs and root_url and "name" in configs:
+        if not root_url.endswith("/"):
+            root_url += "/"
+        configs["url"] = root_url + configs["name"]
     return configs
 
 
@@ -307,7 +427,7 @@ def _resolve_ci_def_and_tpl_path(
                 ci_tpl_path = github_ci_tpl_deploy_path
             else:  # project_type == 'lib', etc.
                 print(f"project_type is {project_type}")
-                ci_tpl_path = github_ci_tpl_publish_path
+                ci_tpl_path = github_ci_publish_2025_path
         elif version_control_system == "gitlab":
             ci_tpl_path = gitlab_ci_tpl_path
         else:
@@ -497,14 +617,22 @@ def populate_proj_from_url(
         proj_rootdir = os.path.join(proj_rootdir, proj_root_dir_for_name[url_name])
     _clog(f"proj_rootdir={proj_rootdir}")
 
+    proj_path = os.path.join(proj_rootdir, proj_name)
+
     with cd(proj_rootdir):
-        _clog(f"cloning {url}...")
-        subprocess.check_output(f"git clone {url}", shell=True).decode()
+        # Only clone if the directory doesn't exist
+        if not os.path.isdir(proj_path):
+            _clog(f"cloning {url}...")
+            subprocess.check_output(f"git clone {url}", shell=True).decode()
+        else:
+            _clog(f"Directory {proj_path} already exists, skipping clone...")
+
         _clog(f"populating package folder...")
         populate_pkg_dir(
-            os.path.join(proj_rootdir, proj_name),
+            proj_path,
             defaults_from=url_name,
             description=description,
+            root_url=root_url,  # Pass root_url explicitly
             license=license,
             **kwargs,
         )

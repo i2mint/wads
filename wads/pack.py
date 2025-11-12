@@ -50,8 +50,16 @@ from functools import partial
 import argh
 
 from wads.util import git
+from wads.toml_util import (
+    read_pyproject_toml,
+    write_pyproject_toml,
+    get_project_version,
+    set_project_version,
+    get_project_name,
+)
 
 CONFIG_FILE_NAME = "setup.cfg"
+PYPROJECT_FILE_NAME = "pyproject.toml"
 METADATA_SECTION = "metadata"
 OPTIONS_SECTION = "options"
 DFLT_OPTIONS = {
@@ -66,10 +74,26 @@ DOCSRC = "docsrc"
 DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 
+def _has_pyproject_toml(pkg_dir: str) -> bool:
+    """Check if package uses pyproject.toml"""
+    pkg_dir = os.path.realpath(pkg_dir)
+    if pkg_dir.endswith(os.sep):
+        pkg_dir = pkg_dir[:-1]
+    pyproject_path = os.path.join(pkg_dir, PYPROJECT_FILE_NAME)
+    return os.path.isfile(pyproject_path)
+
+
 def get_name_from_configs(pkg_dir, *, assert_exists=True):
-    """Get name from local setup.cfg (metadata section)"""
-    configs = read_configs(pkg_dir=pkg_dir)
-    name = configs.get("name", None)
+    """Get name from local config file (pyproject.toml or setup.cfg)"""
+    pkg_dir = _get_pkg_dir(pkg_dir)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        name = get_project_name(pkg_dir)
+    else:
+        configs = read_configs(pkg_dir=pkg_dir)
+        name = configs.get("name", None)
+
     if assert_exists:
         assert name is not None, "No name was found in configs"
     return name
@@ -542,12 +566,17 @@ def current_configs(pkg_dir):
 
 def current_configs_version(pkg_dir):
     pkg_dir = _get_pkg_dir(pkg_dir)
-    return read_configs(pkg_dir=pkg_dir).get("version")
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        return get_project_version(pkg_dir)
+    else:
+        return read_configs(pkg_dir=pkg_dir).get("version")
 
 
 # TODO: Both setup and twine are python. Change to use python objects directly.
 def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
-    """Update setup.cfg.
+    """Update setup.cfg or pyproject.toml.
     If version is not given, will ask pypi (via http request) what the current version
     is, and increment that.
     """
@@ -559,16 +588,45 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
     )
     pprint("\n{configs}\n")
     clog(verbose, pprint(configs))
-    write_configs(pkg_dir=pkg_dir, configs=configs)
+
+    # Write to pyproject.toml if it exists, otherwise setup.cfg
+    if _has_pyproject_toml(pkg_dir):
+        # Update pyproject.toml with the resolved configs
+        pyproject_data = read_pyproject_toml(pkg_dir)
+        if "project" not in pyproject_data:
+            pyproject_data["project"] = {}
+
+        # Map key fields back to pyproject.toml format
+        project = pyproject_data["project"]
+
+        if "version" in configs:
+            project["version"] = configs["version"]
+        if "description" in configs:
+            project["description"] = configs["description"]
+        if "name" in configs:
+            project["name"] = configs["name"]
+        if "url" in configs:
+            if "urls" not in project:
+                project["urls"] = {}
+            project["urls"]["Homepage"] = configs["url"]
+
+        write_pyproject_toml(pkg_dir, pyproject_data)
+    else:
+        write_configs(pkg_dir=pkg_dir, configs=configs)
 
 
 def set_version(pkg_dir, version):
-    """Update version setup.cfg"""
+    """Update version in config file (pyproject.toml or setup.cfg)"""
     pkg_dir = _get_pkg_dir(pkg_dir)
-    configs = read_configs(pkg_dir)
     assert isinstance(version, str), "version should be a string"
-    configs["version"] = version
-    write_configs(pkg_dir=pkg_dir, configs=configs)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        set_project_version(pkg_dir, version)
+    else:
+        configs = read_configs(pkg_dir)
+        configs["version"] = version
+        write_configs(pkg_dir=pkg_dir, configs=configs)
 
 
 def increment_configs_version(
@@ -576,27 +634,54 @@ def increment_configs_version(
     *,
     version=None,
 ):
-    """Increment version setup.cfg."""
+    """Increment version in config file (pyproject.toml or setup.cfg)."""
     pkg_dir = _get_pkg_dir(pkg_dir)
-    configs = read_configs(pkg_dir=pkg_dir)
-    version = _get_version(pkg_dir, version=version, configs=configs, new_deploy=False)
-    version = increment_version(version)
-    configs["version"] = version
-    write_configs(pkg_dir=pkg_dir, configs=configs)
+
+    # Prefer pyproject.toml if it exists
+    if _has_pyproject_toml(pkg_dir):
+        # Get current version
+        current_version = get_project_version(pkg_dir)
+        if version is None:
+            version = increment_version(current_version) if current_version else "0.0.1"
+        set_project_version(pkg_dir, version)
+    else:
+        configs = read_configs(pkg_dir=pkg_dir)
+        version = _get_version(
+            pkg_dir, version=version, configs=configs, new_deploy=False
+        )
+        version = increment_version(version)
+        configs["version"] = version
+        write_configs(pkg_dir=pkg_dir, configs=configs)
+
     return version
 
 
 def run_setup(pkg_dir):
-    """Run ``python setup.py sdist bdist_wheel``"""
-    print("--------------------------- setup_output ---------------------------")
+    """Run ``python -m build`` (modern PEP 517 compliant build)"""
+    print("--------------------------- build_output ---------------------------")
     pkg_dir = _get_pkg_dir(pkg_dir)
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
-    setup_output = subprocess.run(
-        f"{sys.executable} setup.py sdist bdist_wheel".split(" ")
-    )
+
+    # Use python -m build (PEP 517 standard)
+    # Falls back to legacy setup.py if build module not available
+    try:
+        build_output = subprocess.run(
+            [sys.executable, "-m", "build"], capture_output=True, text=True
+        )
+        if build_output.returncode != 0:
+            print(f"Build stderr: {build_output.stderr}")
+            build_output.check_returncode()
+        print(build_output.stdout)
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        # Fallback to legacy method if build module not installed
+        print("Warning: 'build' module not found, falling back to setup.py")
+        print("Consider installing: pip install build")
+        build_output = subprocess.run(
+            f"{sys.executable} setup.py sdist bdist_wheel".split(" ")
+        )
+
     os.chdir(original_dir)
-    # print(f"{setup_output}\n")
 
 
 def twine_upload_dist(pkg_dir, *, options_str=None):
@@ -685,6 +770,59 @@ def read_configs(
         pkg_dir, PathStr
     ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
     pkg_dir = _get_pkg_dir(pkg_dir)
+
+    # Try pyproject.toml first (modern approach)
+    pyproject_filepath = pjoin(pkg_dir, PYPROJECT_FILE_NAME)
+    if os.path.isfile(pyproject_filepath):
+        pyproject_data = read_pyproject_toml(pkg_dir)
+        project_metadata = pyproject_data.get("project", {})
+
+        # Convert pyproject.toml format to setup.cfg format for compatibility
+        d = {}
+        if project_metadata:
+            # Map common fields
+            if "name" in project_metadata:
+                d["name"] = project_metadata["name"]
+            if "version" in project_metadata:
+                d["version"] = project_metadata["version"]
+            if "description" in project_metadata:
+                d["description"] = project_metadata["description"]
+            if "urls" in project_metadata:
+                urls = project_metadata["urls"]
+                if isinstance(urls, dict):
+                    # Try to get a root_url or homepage
+                    if "Homepage" in urls:
+                        d["url"] = urls["Homepage"]
+                    elif "repository" in urls:
+                        d["url"] = urls["repository"]
+                    elif "Repository" in urls:
+                        d["url"] = urls["Repository"]
+            # Handle authors
+            if "authors" in project_metadata:
+                authors = project_metadata["authors"]
+                if isinstance(authors, list) and authors:
+                    # Join author names
+                    d["author"] = ", ".join(
+                        a.get("name", "") for a in authors if a.get("name")
+                    )
+            if "license" in project_metadata:
+                license_info = project_metadata["license"]
+                if isinstance(license_info, dict):
+                    d["license"] = license_info.get("text", "")
+                else:
+                    d["license"] = str(license_info)
+            if "keywords" in project_metadata:
+                keywords = project_metadata["keywords"]
+                if isinstance(keywords, list):
+                    d["keywords"] = keywords
+            if "dependencies" in project_metadata:
+                d["install_requires"] = project_metadata["dependencies"]
+
+        if verbose:
+            print(f"Read configs from pyproject.toml: {d}")
+        return d
+
+    # Fall back to setup.cfg (legacy approach)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
     if os.path.isfile(config_filepath):
@@ -1083,11 +1221,25 @@ def read_and_resolve_setup_configs(
     configs = read_configs(pkg_dir)
 
     # parse out name and root_url
-    assert (
-        "root_url" in configs or "url" in configs
-    ), "configs didn't have a root_url or url"
+    # If URL is missing, try to infer it from git
+    if "root_url" not in configs and "url" not in configs:
+        try:
+            from wads.populate import _get_pkg_url_from_pkg_dir
 
-    name = configs["name"] or pkg_dirname
+            git_url = _get_pkg_url_from_pkg_dir(pkg_dir)
+            configs["url"] = git_url
+            warn(
+                f"No url or root_url found in configs. Inferred from git: {git_url}. "
+                f"Consider adding it to your pyproject.toml or setup.cfg."
+            )
+        except Exception as e:
+            raise ValueError(
+                f"configs didn't have a root_url or url, and couldn't infer from git. "
+                f"Please add a url field to your pyproject.toml [project.urls] section "
+                f"or setup.cfg [metadata] section. Git error: {e}"
+            )
+
+    name = configs.get("name") or pkg_dirname
     if assert_names:
         assert (
             name == pkg_dirname
