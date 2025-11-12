@@ -22,7 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Dependencies
-        uses: i2mint/isee/actions/install-deps@master
+        uses: i2mint/wads/actions/install-deps@master
         with:
           dependency-files: pyproject.toml
           extras: dev,test
@@ -31,21 +31,20 @@ jobs:
           # ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Uncomment for private dependencies
 
       - name: Format Source Code
-        uses: i2mint/isee/actions/ruff-format@master
+        uses: i2mint/wads/actions/ruff-format@master
         with:
           line-length: 88
           target-path: .
 
       - name: Lint Validation
-        uses: i2mint/isee/actions/ruff-lint@master
+        uses: i2mint/wads/actions/ruff-lint@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
-          select: E,F,I,N,W  # Error, pyflakes, import, naming, warnings
-          exclude: tests,examples,scrap
           output-format: github
+          # Ruff will read configuration from pyproject.toml
 
       - name: Run Tests
-        uses: i2mint/isee/actions/run-tests@master
+        uses: i2mint/wads/actions/run-tests@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
           exclude: examples,scrap
@@ -73,17 +72,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Format Source Code
-        uses: i2mint/isee/actions/ruff-format@master
+        uses: i2mint/wads/actions/ruff-format@master
 
       - name: Update Version Number
         id: version
-        uses: i2mint/isee/actions/version-bump@master
+        uses: i2mint/wads/actions/version-bump@master
         # Specify config file if needed:
         # with:
         #   config-file: pyproject.toml
 
       - name: Build Distribution
-        uses: i2mint/isee/actions/build-dist@master
+        uses: i2mint/wads/actions/build-dist@master
         with:
           sdist: true
           wheel: true
@@ -92,21 +91,21 @@ jobs:
         #   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Publish to PyPI
-        uses: i2mint/isee/actions/pypi-upload@master
+        uses: i2mint/wads/actions/pypi-upload@master
         with:
           pypi-username: ${{ secrets.PYPI_USERNAME }}
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
           skip-existing: false
 
       - name: Commit Changes
-        uses: i2mint/isee/actions/git-commit@master
+        uses: i2mint/wads/actions/git-commit@master
         with:
           commit-message: "**CI** Formatted code + Updated version to ${{ steps.version.outputs.version }} [skip ci]"
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           push: true
 
       - name: Tag Repository
-        uses: i2mint/isee/actions/git-tag@master
+        uses: i2mint/wads/actions/git-tag@master
         with:
           tag: ${{ steps.version.outputs.version }}
           message: "Release version ${{ steps.version.outputs.version }}"

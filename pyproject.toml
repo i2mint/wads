@@ -39,9 +39,16 @@ packages = ["wads"]
 [tool.ruff]
 line-length = 88
 target-version = "py38"
+exclude = ["tests", "examples", "scrap"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]  # pycodestyle, pyflakes, isort
+# Only fail on missing module docstring
+select = ["D100"]  # D100 = missing module docstring (pydocstyle)
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]  # don't enforce docstrings in tests
+"examples/*" = ["D"]
+"scrap/*" = ["D"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
