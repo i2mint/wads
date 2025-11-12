@@ -143,3 +143,24 @@ def update_project_metadata(pkg_dir: str, **kwargs) -> None:
 
     data["project"].update(kwargs)
     write_pyproject_toml(pkg_dir, data)
+
+
+def update_project_url(pkg_dir: str, url: str, url_key: str = "Homepage") -> None:
+    """
+    Update or add a URL in the [project.urls] section of pyproject.toml.
+
+    Args:
+        pkg_dir: Path to the package directory
+        url: The URL to set
+        url_key: The key to use in the urls dict (default: "Homepage")
+    """
+    data = read_pyproject_toml(pkg_dir)
+
+    if "project" not in data:
+        data["project"] = {}
+
+    if "urls" not in data["project"]:
+        data["project"]["urls"] = {}
+
+    data["project"]["urls"][url_key] = url
+    write_pyproject_toml(pkg_dir, data)
