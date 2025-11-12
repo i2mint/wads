@@ -1,0 +1,40 @@
+name: "Bump version number"
+description: "Bump the version number in setup.cfg and save it to the environment variable VERSION"
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      uses: i2mint/isee/actions/install-packages@master
+      with:
+        pypi-packages: 'isee'
+    - name: Generate Version Number
+      shell: bash
+      id: gen_version
+      run: |
+        set -e
+        # Generate the new version with explicit print mode
+        VERSION=$(isee gen-semver --output-mode=print)
+        
+        # Validate the version string
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Invalid version: $VERSION"
+          exit 1
+        fi
+        
+        # Export the version to the GitHub environment
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Also make it available in the current shell
+        export VERSION="$VERSION"
+        echo "Generated version: $VERSION"
+    
+    - name: Update setup.cfg
+      shell: bash
+      run: |
+        # Get the version from the previous step
+        VERSION="${{ steps.gen_version.outputs.version }}"
+        echo "Updating setup.cfg with version: $VERSION"
+        
+        # Update the setup.cfg with the new version
+        isee update-setup-cfg --version="$VERSION"
