@@ -19,7 +19,16 @@ Homepage = ""
 [tool.ruff]
 line-length = 88
 target-version = "py310"
-exclude = ["tests", "examples", "scrap"]
+exclude = [
+    "**/*.ipynb", 
+    ".git", 
+    ".venv", 
+    "build", 
+    "dist",
+    "tests",
+    "examples",
+    "scrap",
+]
 
 [tool.ruff.lint]
 # Select the rules you want to enable. 
