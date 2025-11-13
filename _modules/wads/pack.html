@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.43 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -172,6 +172,15 @@
         <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PYPROJECT_FILE_NAME</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if package has setup.cfg&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">setup_cfg_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg_path</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="get_name_from_configs">
@@ -736,14 +745,18 @@
 <div class="viewcode-block" id="set_version">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.set_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update version in config file (pyproject.toml or setup.cfg)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update version in config file (pyproject.toml and/or setup.cfg)&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="s2">&quot;version should be a string&quot;</span>
 
-    <span class="c1"># Prefer pyproject.toml if it exists</span>
-    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+    <span class="c1"># Update both files if both exist to keep them in sync</span>
+    <span class="n">has_pyproject</span> <span class="o">=</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">has_setup_cfg</span> <span class="o">=</span> <span class="n">_has_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">has_pyproject</span><span class="p">:</span>
         <span class="n">set_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">has_setup_cfg</span><span class="p">:</span>
         <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
         <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
         <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
@@ -757,22 +770,33 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Increment version in config file (pyproject.toml or setup.cfg).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Increment version in config file (pyproject.toml and/or setup.cfg).&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
-    <span class="c1"># Prefer pyproject.toml if it exists</span>
-    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-        <span class="c1"># Get current version</span>
-        <span class="n">current_version</span> <span class="o">=</span> <span class="n">get_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Check which config files exist</span>
+    <span class="n">has_pyproject</span> <span class="o">=</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">has_setup_cfg</span> <span class="o">=</span> <span class="n">_has_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="c1"># Determine the version to use</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">has_pyproject</span><span class="p">:</span>
+            <span class="c1"># Get current version from pyproject.toml</span>
+            <span class="n">current_version</span> <span class="o">=</span> <span class="n">get_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
             <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">current_version</span><span class="p">)</span> <span class="k">if</span> <span class="n">current_version</span> <span class="k">else</span> <span class="s2">&quot;0.0.1&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get version from setup.cfg</span>
+            <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">_get_version</span><span class="p">(</span>
+                <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+    <span class="c1"># Update both files if both exist to keep them in sync</span>
+    <span class="k">if</span> <span class="n">has_pyproject</span><span class="p">:</span>
         <span class="n">set_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
-        <span class="n">version</span> <span class="o">=</span> <span class="n">_get_version</span><span class="p">(</span>
-            <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span>
-        <span class="p">)</span>
-        <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">has_setup_cfg</span><span class="p">:</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
         <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
         <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span>
 
@@ -1664,9 +1688,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 
-2020
-Otosense.</p>
+    <p>&#169; Copyright NO COPYRIGHT.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
