@@ -75,11 +75,7 @@ jobs:
         uses: i2mint/wads/actions/ruff-format@master
 
       - name: Update Version Number
-        id: version
-        uses: i2mint/wads/actions/version-bump@master
-        # Specify config file if needed:
-        # with:
-        #   config-file: pyproject.toml
+        uses: i2mint/isee/actions/bump-version-number@master
 
       - name: Build Distribution
         uses: i2mint/wads/actions/build-dist@master
