@@ -13,6 +13,7 @@ from wads import (
     setup_tpl_path,
     pyproject_toml_tpl_path,
     gitignore_tpl_path,
+    gitattributes_tpl_path,
     github_ci_tpl_deploy_path,
     github_ci_tpl_publish_path,
     github_ci_publish_2025_path,
@@ -169,6 +170,8 @@ def populate_pkg_dir(
     create_docsrc: bool = populate_dflts.get("create_docsrc", False),
     skip_docsrc_gen=False,
     skip_ci_def_gen=False,
+    migrate: bool = False,
+    create_gitattributes: bool = True,
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
@@ -205,6 +208,9 @@ def populate_pkg_dir(
     :param skip_docsrc_gen: Skip the generation of documentation stuff
     :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).
     :param skip_ci_def_gen: Skip the generation of the CI stuff
+    :param migrate: If True, migrate existing setup.cfg to pyproject.toml and old CI to new CI format.
+        Will fail if old CI has unmappable content.
+    :param create_gitattributes: If True (default), create a .gitattributes file with '*.ipynb linguist-documentation'.
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
@@ -309,6 +315,10 @@ def populate_pkg_dir(
     if should_update(".gitignore"):
         shutil.copy(gitignore_tpl_path, pjoin(".gitignore"))
 
+    if create_gitattributes and should_update(".gitattributes"):
+        _clog("... making a .gitattributes")
+        shutil.copy(gitattributes_tpl_path, pjoin(".gitattributes"))
+
     if project_type == "app":
         if should_update("requirements.txt"):
             with open(pjoin("requirements.txt"), "w") as f:
@@ -316,10 +326,10 @@ def populate_pkg_dir(
 
     else:  # project_type == 'lib' or None
         if should_update("pyproject.toml"):
-            # Check if setup.cfg exists and migrate it first
+            # Check if setup.cfg exists and migrate flag is set
             setup_cfg_path = pjoin("setup.cfg")
-            if os.path.isfile(setup_cfg_path):
-                _clog("... found setup.cfg, migrating to pyproject.toml")
+            if migrate and os.path.isfile(setup_cfg_path):
+                _clog("... migrating setup.cfg to pyproject.toml")
                 from wads.migration import migrate_setuptools_to_hatching
 
                 # Migrate setup.cfg to pyproject.toml
@@ -413,9 +423,37 @@ def populate_pkg_dir(
             assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
                 pkg_dir
             ), f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
-            # TODO: Handle user_email better than this and make more visible
-            user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
-            _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email)
+
+            # Check if we should migrate old CI to new format
+            if migrate and version_control_system == "github":
+                old_ci_path = pjoin(".github/workflows/ci.yml")
+                if os.path.isfile(old_ci_path):
+                    _clog(f"... migrating old CI from {old_ci_path} to {ci_def_path}")
+                    from wads.migration import migrate_github_ci_old_to_new
+
+                    try:
+                        new_ci_content = migrate_github_ci_old_to_new(
+                            old_ci_path, defaults={'project_name': name}
+                        )
+                        os.makedirs(os.path.dirname(ci_def_path), exist_ok=True)
+                        with open(ci_def_path, "w") as f:
+                            f.write(new_ci_content)
+                        _clog(f"... successfully migrated CI to {ci_def_path}")
+                    except Exception as e:
+                        raise RuntimeError(
+                            f"Failed to migrate CI file {old_ci_path}: {e}\n"
+                            f"The old CI may contain configurations that cannot be automatically migrated."
+                        ) from e
+                else:
+                    # No old CI to migrate, create new one from template
+                    user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
+                    _add_ci_def(
+                        ci_def_path, ci_tpl_path, root_url, name, _clog, user_email
+                    )
+            else:
+                # Not migrating or not github, use template
+                user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
+                _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email)
 
     return name
 
