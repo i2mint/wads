@@ -38,7 +38,7 @@ populate_dflts = wads_configs.get(
     {
         "description": "There is a bit of an air of mystery around this project...",
         "root_url": None,
-        "author": os.environ.get('WADS_DFLT_AUTHOR'),
+        "author": os.environ.get("WADS_DFLT_AUTHOR"),
         "license": "mit",
         "description_file": "README.md",
         "long_description": "file:README.md",
@@ -88,15 +88,15 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
         raise ImportError("tomli_w package required for writing TOML")
 
     # Read and parse the template as TOML
-    with open(pyproject_toml_tpl_path, 'rb') as f:
+    with open(pyproject_toml_tpl_path, "rb") as f:
         data = tomllib.load(f)
 
     # Prepare the data for substitution
-    name = configs.get('name', 'mypackage')
-    version = configs.get('version', '0.0.1')
-    description = configs.get('description', 'Package description')
-    url = configs.get('url', '')
-    license_name = configs.get('license', 'mit')
+    name = configs.get("name", "mypackage")
+    version = configs.get("version", "0.0.1")
+    description = configs.get("description", "Package description")
+    url = configs.get("url", "")
+    license_name = configs.get("license", "mit")
 
     # Warn if URL is missing or empty
     if not url:
@@ -107,45 +107,45 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
         )
 
     # Update the parsed data with actual values
-    data['project']['name'] = name
-    data['project']['version'] = version
-    data['project']['description'] = description
+    data["project"]["name"] = name
+    data["project"]["version"] = version
+    data["project"]["description"] = description
 
     # Handle URLs - update homepage and repository
     if url:
-        if 'urls' not in data['project']:
-            data['project']['urls'] = {}
-        data['project']['urls']['Homepage'] = url
-        data['project']['urls']['Repository'] = url
+        if "urls" not in data["project"]:
+            data["project"]["urls"] = {}
+        data["project"]["urls"]["Homepage"] = url
+        data["project"]["urls"]["Repository"] = url
 
     # Update license using inline table syntax
-    data['project']['license'] = {'text': license_name}
+    data["project"]["license"] = {"text": license_name}
 
     # Add optional fields if present
-    if configs.get('keywords'):
-        keywords = configs['keywords']
+    if configs.get("keywords"):
+        keywords = configs["keywords"]
         if isinstance(keywords, str):
-            keywords = [k.strip() for k in keywords.split(',')]
-        data['project']['keywords'] = keywords
+            keywords = [k.strip() for k in keywords.split(",")]
+        data["project"]["keywords"] = keywords
 
-    if configs.get('author'):
-        authors = configs['author']
+    if configs.get("author"):
+        authors = configs["author"]
         if isinstance(authors, str):
-            data['project']['authors'] = [{'name': authors}]
+            data["project"]["authors"] = [{"name": authors}]
         elif isinstance(authors, list):
-            data['project']['authors'] = [
-                {'name': a} if isinstance(a, str) else a for a in authors
+            data["project"]["authors"] = [
+                {"name": a} if isinstance(a, str) else a for a in authors
             ]
 
-    if configs.get('install_requires'):
-        deps = configs['install_requires']
+    if configs.get("install_requires"):
+        deps = configs["install_requires"]
         if isinstance(deps, str):
-            deps = [d.strip() for d in deps.split(',') if d.strip()]
-        data['project']['dependencies'] = deps
+            deps = [d.strip() for d in deps.split(",") if d.strip()]
+        data["project"]["dependencies"] = deps
 
     # Write the pyproject.toml
     pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
-    with open(pyproject_path, 'wb') as f:
+    with open(pyproject_path, "wb") as f:
         tomli_w.dump(data, f)
 
 
@@ -381,14 +381,14 @@ def populate_pkg_dir(
         if os.path.isfile(pjoin("pyproject.toml")):
             try:
                 pyproject_data = read_pyproject_toml(pjoin(""))
-                pyproject_authors = pyproject_data.get('project', {}).get('authors')
+                pyproject_authors = pyproject_data.get("project", {}).get("authors")
             except Exception:
                 pass  # If reading fails, continue without pyproject authors
 
         resolved_author = resolve_author(
-            author=configs.get('author'),
+            author=configs.get("author"),
             pyproject_authors=pyproject_authors,
-            url=configs.get('url'),
+            url=configs.get("url"),
         )
 
         # Substitute placeholders in license
@@ -442,7 +442,7 @@ def populate_pkg_dir(
 
                     try:
                         new_ci_content = migrate_github_ci_old_to_new(
-                            old_ci_path, defaults={'project_name': name}
+                            old_ci_path, defaults={"project_name": name}
                         )
                         os.makedirs(os.path.dirname(ci_def_path), exist_ok=True)
                         with open(ci_def_path, "w") as f:

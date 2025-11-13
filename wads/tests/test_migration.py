@@ -50,7 +50,7 @@ console_scripts =
 
 def test_normalize_setup_cfg_dict():
     """Test normalizing dict input."""
-    cfg_dict = {'metadata': {'name': 'test'}}
+    cfg_dict = {"metadata": {"name": "test"}}
     result = _normalize_setup_cfg_input(cfg_dict)
     assert result == cfg_dict
 
@@ -58,22 +58,22 @@ def test_normalize_setup_cfg_dict():
 def test_normalize_setup_cfg_string():
     """Test normalizing string content input."""
     result = _normalize_setup_cfg_input(SAMPLE_SETUP_CFG)
-    assert 'metadata' in result
-    assert result['metadata']['name'] == 'testproject'
+    assert "metadata" in result
+    assert result["metadata"]["name"] == "testproject"
 
 
 def test_parse_list_field_multiline():
     """Test parsing multi-line list fields."""
     field = "\n    testing\n    migration\n"
     result = _parse_list_field(field)
-    assert result == ['testing', 'migration']
+    assert result == ["testing", "migration"]
 
 
 def test_parse_list_field_comma_separated():
     """Test parsing comma-separated list fields."""
     field = "testing, migration, tools"
     result = _parse_list_field(field)
-    assert result == ['testing', 'migration', 'tools']
+    assert result == ["testing", "migration", "tools"]
 
 
 def test_parse_list_field_empty():
@@ -104,14 +104,14 @@ version = 1.0.0
 """
 
     defaults = {
-        'description': 'A minimal project',
-        'url': 'https://example.com',
-        'license': 'MIT',
+        "description": "A minimal project",
+        "url": "https://example.com",
+        "license": "MIT",
     }
 
     result = migrate_setuptools_to_hatching(minimal_cfg, defaults=defaults)
     assert 'name = "minimal"' in result
-    assert 'A minimal project' in result
+    assert "A minimal project" in result
 
 
 def test_migrate_setuptools_missing_required_fields():
@@ -130,7 +130,7 @@ name = minimal
 
 def test_migrate_setuptools_from_file():
     """Test migration from actual file."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.cfg', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".cfg", delete=False) as f:
         f.write(SAMPLE_SETUP_CFG)
         temp_path = f.name
 
@@ -146,9 +146,9 @@ def test_migrate_setuptools_dependencies():
     result = migrate_setuptools_to_hatching(SAMPLE_SETUP_CFG)
 
     # Check dependencies section (format may vary)
-    assert 'dependencies' in result
-    assert '"requests"' in result or 'requests' in result
-    assert 'click' in result
+    assert "dependencies" in result
+    assert '"requests"' in result or "requests" in result
+    assert "click" in result
 
 
 def test_migrate_ci_missing_project_name():
@@ -174,10 +174,10 @@ env:
 """
 
     result = migrate_github_ci_old_to_new(
-        old_ci, defaults={'project_name': 'myproject'}
+        old_ci, defaults={"project_name": "myproject"}
     )
 
-    assert 'PROJECT_NAME: myproject' in result
+    assert "PROJECT_NAME: myproject" in result
 
 
 def test_migrate_ci_extracts_project_name():
@@ -189,26 +189,26 @@ env:
 """
 
     result = migrate_github_ci_old_to_new(old_ci)
-    assert 'PROJECT_NAME: existing_project' in result
+    assert "PROJECT_NAME: existing_project" in result
 
 
 def test_custom_rules():
     """Test using custom transformation rules."""
     custom_rules = {
-        'project.name': lambda cfg: cfg.get('metadata', {}).get('name', '').upper(),
-        'project.version': lambda cfg: cfg.get('metadata', {}).get('version'),
-        'project.description': lambda cfg: "Custom description",
-        'project.url': lambda cfg: "https://custom.url",
-        'project.license': lambda cfg: "MIT",
+        "project.name": lambda cfg: cfg.get("metadata", {}).get("name", "").upper(),
+        "project.version": lambda cfg: cfg.get("metadata", {}).get("version"),
+        "project.description": lambda cfg: "Custom description",
+        "project.url": lambda cfg: "https://custom.url",
+        "project.license": lambda cfg: "MIT",
     }
 
     cfg_dict = {
-        'metadata': {
-            'name': 'test',
-            'version': '1.0.0',
+        "metadata": {
+            "name": "test",
+            "version": "1.0.0",
         }
     }
 
     result = migrate_setuptools_to_hatching(cfg_dict, rules=custom_rules)
     assert 'name = "TEST"' in result
-    assert 'Custom description' in result
+    assert "Custom description" in result

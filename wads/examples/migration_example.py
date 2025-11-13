@@ -13,19 +13,19 @@ def example_migrate_setup_cfg():
 
     # Example 1: From a dictionary
     setup_cfg_dict = {
-        'metadata': {
-            'name': 'example-project',
-            'version': '1.0.0',
-            'description': 'An example project',
-            'url': 'https://github.com/example/example-project',
-            'license': 'MIT',
-            'author': 'Example Author',
-            'author_email': 'author@example.com',
-            'keywords': 'example\nproject\nmigration',
+        "metadata": {
+            "name": "example-project",
+            "version": "1.0.0",
+            "description": "An example project",
+            "url": "https://github.com/example/example-project",
+            "license": "MIT",
+            "author": "Example Author",
+            "author_email": "author@example.com",
+            "keywords": "example\nproject\nmigration",
         },
-        'options': {
-            'packages': 'find:',
-            'install_requires': 'requests\nclick>=7.0',
+        "options": {
+            "packages": "find:",
+            "install_requires": "requests\nclick>=7.0",
         },
     }
 
@@ -39,16 +39,16 @@ def example_migrate_setup_cfg():
 
     # Example 3: With defaults for missing fields
     minimal_cfg = {
-        'metadata': {
-            'name': 'minimal-project',
-            'version': '0.1.0',
+        "metadata": {
+            "name": "minimal-project",
+            "version": "0.1.0",
         }
     }
 
     defaults = {
-        'description': 'A minimal example project',
-        'url': 'https://github.com/example/minimal',
-        'license': 'Apache-2.0',
+        "description": "A minimal example project",
+        "url": "https://github.com/example/minimal",
+        "license": "Apache-2.0",
     }
 
     pyproject_content = migrate_setuptools_to_hatching(minimal_cfg, defaults=defaults)
@@ -80,7 +80,7 @@ jobs:
     print(new_ci)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("=" * 70)
     print("EXAMPLE: Migrating setup.cfg to pyproject.toml")
     print("=" * 70 + "\n")

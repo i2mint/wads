@@ -19,9 +19,9 @@ def find_projects_with_setup_cfg(base_dir: str, limit: int = 5):
     base_path = Path(base_dir)
     projects = []
 
-    for setup_cfg in base_path.rglob('setup.cfg'):
+    for setup_cfg in base_path.rglob("setup.cfg"):
         # Skip if it's in a hidden directory or a venv
-        if any(part.startswith('.') or part == 'venv' for part in setup_cfg.parts):
+        if any(part.startswith(".") or part == "venv" for part in setup_cfg.parts):
             continue
 
         project_root = setup_cfg.parent
@@ -46,8 +46,8 @@ def migrate_project(project_root: Path, dry_run: bool = True):
     print(f"Location: {project_root}")
     print(f"{'='*70}\n")
 
-    setup_cfg = project_root / 'setup.cfg'
-    pyproject_toml = project_root / 'pyproject.toml'
+    setup_cfg = project_root / "setup.cfg"
+    pyproject_toml = project_root / "pyproject.toml"
 
     if not setup_cfg.exists():
         print("❌ No setup.cfg found")
@@ -74,12 +74,12 @@ def migrate_project(project_root: Path, dry_run: bool = True):
             print(f"\n✅ Created {pyproject_toml}")
 
         # Try to migrate CI if it exists
-        ci_dir = project_root / '.github' / 'workflows'
+        ci_dir = project_root / ".github" / "workflows"
         if ci_dir.exists():
-            old_ci_files = list(ci_dir.glob('*.yml')) + list(ci_dir.glob('*.yaml'))
+            old_ci_files = list(ci_dir.glob("*.yml")) + list(ci_dir.glob("*.yaml"))
 
             for old_ci in old_ci_files:
-                if 'ci' in old_ci.name.lower():
+                if "ci" in old_ci.name.lower():
                     print(f"\n📝 Found CI file: {old_ci.name}")
                     try:
                         new_ci_content = migrate_github_ci_old_to_new(str(old_ci))
@@ -87,7 +87,7 @@ def migrate_project(project_root: Path, dry_run: bool = True):
                         if dry_run:
                             print("✅ CI migration successful (dry run)!")
                         else:
-                            new_ci_path = ci_dir / f'{old_ci.stem}_new{old_ci.suffix}'
+                            new_ci_path = ci_dir / f"{old_ci.stem}_new{old_ci.suffix}"
                             new_ci_path.write_text(new_ci_content)
                             print(f"✅ Created {new_ci_path}")
                     except MigrationError as e:
@@ -113,18 +113,18 @@ def main():
     print("=" * 70)
 
     example_cfg = {
-        'metadata': {
-            'name': 'example-lib',
-            'version': '2.3.4',
-            'description': 'An example library for demonstration',
-            'url': 'https://github.com/i2mint/example-lib',
-            'license': 'MIT',
-            'author': 'i2mint',
-            'keywords': 'example\nlibrary\nmigration',
+        "metadata": {
+            "name": "example-lib",
+            "version": "2.3.4",
+            "description": "An example library for demonstration",
+            "url": "https://github.com/i2mint/example-lib",
+            "license": "MIT",
+            "author": "i2mint",
+            "keywords": "example\nlibrary\nmigration",
         },
-        'options': {
-            'packages': 'find:',
-            'install_requires': 'requests>=2.28.0\nclick>=8.0',
+        "options": {
+            "packages": "find:",
+            "install_requires": "requests>=2.28.0\nclick>=8.0",
         },
     }
 
@@ -169,5 +169,5 @@ def main():
     print("  migrate_project(Path('/path/to/project'), dry_run=False)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
