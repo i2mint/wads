@@ -1,3 +1,5 @@
+"""wads util"""
+
 import re
 from itertools import chain
 import pkgutil

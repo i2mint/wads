@@ -1136,17 +1136,24 @@ def setup_cfg_version(pkg_spec: PkgSpec):
     return configs.get("version", None)
 
 
+def pyproject_toml_version(pkg_spec: PkgSpec):
+    """Get version from pyproject.toml file."""
+    pkg_dir, _ = extract_pkg_dir_and_name(pkg_spec)
+    return get_project_version(pkg_dir)
+
+
 def versions_from_different_sources(pkg_spec: PkgSpec):
     return {
         "tag": highest_tag_version(pkg_spec),
         "current_pypi": current_pypi_version(pkg_spec),
         "highest_not_yanked_pypi": highest_pypi_version(pkg_spec),
         "setup_cfg": setup_cfg_version(pkg_spec),
+        "pyproject_toml": pyproject_toml_version(pkg_spec),
     }
 
 
 ValidVersionSources = Literal[
-    "tag", "current_pypi", "highest_not_yanked_pypi", "setup_cfg"
+    "tag", "current_pypi", "highest_not_yanked_pypi", "setup_cfg", "pyproject_toml"
 ]
 
 

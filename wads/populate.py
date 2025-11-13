@@ -21,8 +21,12 @@ from wads import (
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
-from wads.toml_util import write_pyproject_toml
-from wads.licensing import license_body
+from wads.toml_util import write_pyproject_toml, read_pyproject_toml
+from wads.licensing import (
+    license_body,
+    resolve_author,
+    substitute_license_placeholders,
+)
 
 # from wads.pack_util import write_configs
 
@@ -33,7 +37,7 @@ populate_dflts = wads_configs.get(
     {
         "description": "There is a bit of an air of mystery around this project...",
         "root_url": None,
-        "author": None,
+        "author": os.environ.get('WADS_DFLT_AUTHOR'),
         "license": "mit",
         "description_file": "README.md",
         "long_description": "file:README.md",
@@ -67,11 +71,26 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
         pkg_dir: Path to package directory
         configs: Dictionary of configuration values
     """
-    # Read the template
-    with open(pyproject_toml_tpl_path, 'r') as f:
-        template = f.read()
+    import sys
 
-    # Prepare the data for template substitution
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        try:
+            import tomli as tomllib
+        except ImportError:
+            raise ImportError("tomli package required for Python < 3.11")
+
+    try:
+        import tomli_w
+    except ImportError:
+        raise ImportError("tomli_w package required for writing TOML")
+
+    # Read and parse the template as TOML
+    with open(pyproject_toml_tpl_path, 'rb') as f:
+        data = tomllib.load(f)
+
+    # Prepare the data for substitution
     name = configs.get('name', 'mypackage')
     version = configs.get('version', '0.0.1')
     description = configs.get('description', 'Package description')
@@ -86,44 +105,20 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
             f"Please add 'url' or 'root_url' to your configuration."
         )
 
-    # Fill in the template
-    pyproject_content = template.format(
-        name=name,
-        version=version,
-        description=description,
-        url=url,
-        license=license_name,
-    )
+    # Update the parsed data with actual values
+    data['project']['name'] = name
+    data['project']['version'] = version
+    data['project']['description'] = description
 
-    # Handle optional fields that may need more complex processing
-    data = {}
+    # Handle URLs - update homepage and repository
+    if url:
+        if 'urls' not in data['project']:
+            data['project']['urls'] = {}
+        data['project']['urls']['Homepage'] = url
+        data['project']['urls']['Repository'] = url
 
-    # Parse the filled template first
-    import sys
-
-    if sys.version_info >= (3, 11):
-        import tomllib
-    else:
-        try:
-            import tomli as tomllib
-        except ImportError:
-            # Fallback: just write the template as-is
-            pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
-            with open(pyproject_path, 'w') as f:
-                f.write(pyproject_content)
-            return
-
-    try:
-        import tomli_w
-    except ImportError:
-        # Fallback: just write the template as-is
-        pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
-        with open(pyproject_path, 'w') as f:
-            f.write(pyproject_content)
-        return
-
-    # Parse the template to get a base structure
-    data = tomllib.loads(pyproject_content)
+    # Update license using inline table syntax
+    data['project']['license'] = {'text': license_name}
 
     # Add optional fields if present
     if configs.get('keywords'):
@@ -345,6 +340,29 @@ def populate_pkg_dir(
 
     if should_update("LICENSE"):
         _license_body = license_body(configs["license"])
+
+        # Resolve author for license placeholder substitution
+        # Try to get authors from existing pyproject.toml if it exists
+        pyproject_authors = None
+        if os.path.isfile(pjoin("pyproject.toml")):
+            try:
+                pyproject_data = read_pyproject_toml(pjoin(""))
+                pyproject_authors = pyproject_data.get('project', {}).get('authors')
+            except Exception:
+                pass  # If reading fails, continue without pyproject authors
+
+        resolved_author = resolve_author(
+            author=configs.get('author'),
+            pyproject_authors=pyproject_authors,
+            url=configs.get('url'),
+        )
+
+        # Substitute placeholders in license
+        _license_body = substitute_license_placeholders(
+            _license_body,
+            author=resolved_author,
+        )
+
         save_txt_to_pkg("LICENSE", _license_body)
 
     if should_update("README.md"):

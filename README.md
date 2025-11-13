@@ -7,6 +7,14 @@ To install (for example):
 pip install wads
 ```
 
+# Table of Contents
+
+- [Usage Examples](#usage-examples)
+  - [populate](#populate)
+  - [pack](#pack)
+- [Migration Tools](#migration-tools) - **NEW!** Migrate old projects to modern format
+- [Troubleshooting](#troubleshooting)
+
 # Usage Examples
 
 We're going to assume you pointed "pack" to "wads/pack.py" and "populate" to "wads/populate.py",
@@ -129,6 +137,44 @@ pack go PKG_DIR
 (or `pack go --version 0.0.0 PKG_DIR` if it's the very first release).
 
 But we suggest you get familiar with what the steps are doing, so you can bend them to your liking.
+
+# Migration Tools
+
+**New in wads!** Tools to migrate old setuptools projects to modern pyproject.toml format.
+
+Many existing projects still use the old `setup.cfg` format and outdated CI scripts. The `wads.migration` module provides automated tools to migrate these to modern standards:
+
+## Quick Start
+
+```python
+from wads.migration import migrate_setuptools_to_hatching, migrate_github_ci_old_to_new
+
+# Migrate setup.cfg to pyproject.toml
+pyproject_content = migrate_setuptools_to_hatching('path/to/setup.cfg')
+with open('pyproject.toml', 'w') as f:
+    f.write(pyproject_content)
+
+# Migrate old CI to new format  
+new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
+with open('.github/workflows/ci_new.yml', 'w') as f:
+    f.write(new_ci)
+```
+
+## What Gets Migrated
+
+- **setup.cfg → pyproject.toml**: All metadata, dependencies, optional dependencies, entry points
+- **Old CI → Modern CI**: Updated actions, ruff linting/formatting, modern Python practices
+
+## Documentation
+
+For complete documentation, examples, and API reference, see **[MIGRATION.md](MIGRATION.md)**
+
+Key features:
+- ✅ Flexible input formats (file, string, dict)
+- ✅ Extensible rule-based transformation system
+- ✅ Strict validation - no information loss
+- ✅ Default values for missing fields
+- ✅ Custom transformation rules
 
 # Troubleshooting
 

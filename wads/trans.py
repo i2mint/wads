@@ -1,3 +1,5 @@
+"""trans functions"""
+
 # TODO: notebook -> md with more parametrization, normalization, and cleaning up
 
 # TODO: Get rid of html junk in ipynb -> md
