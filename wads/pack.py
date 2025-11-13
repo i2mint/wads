@@ -83,6 +83,15 @@ def _has_pyproject_toml(pkg_dir: str) -> bool:
     return os.path.isfile(pyproject_path)
 
 
+def _has_setup_cfg(pkg_dir: str) -> bool:
+    """Check if package has setup.cfg"""
+    pkg_dir = os.path.realpath(pkg_dir)
+    if pkg_dir.endswith(os.sep):
+        pkg_dir = pkg_dir[:-1]
+    setup_cfg_path = os.path.join(pkg_dir, CONFIG_FILE_NAME)
+    return os.path.isfile(setup_cfg_path)
+
+
 def get_name_from_configs(pkg_dir, *, assert_exists=True):
     """Get name from local config file (pyproject.toml or setup.cfg)"""
     pkg_dir = _get_pkg_dir(pkg_dir)
@@ -616,14 +625,18 @@ def update_setup_cfg(pkg_dir, *, new_deploy=False, version=None, verbose=True):
 
 
 def set_version(pkg_dir, version):
-    """Update version in config file (pyproject.toml or setup.cfg)"""
+    """Update version in config file (pyproject.toml and/or setup.cfg)"""
     pkg_dir = _get_pkg_dir(pkg_dir)
     assert isinstance(version, str), "version should be a string"
 
-    # Prefer pyproject.toml if it exists
-    if _has_pyproject_toml(pkg_dir):
+    # Update both files if both exist to keep them in sync
+    has_pyproject = _has_pyproject_toml(pkg_dir)
+    has_setup_cfg = _has_setup_cfg(pkg_dir)
+
+    if has_pyproject:
         set_project_version(pkg_dir, version)
-    else:
+
+    if has_setup_cfg:
         configs = read_configs(pkg_dir)
         configs["version"] = version
         write_configs(pkg_dir=pkg_dir, configs=configs)
@@ -634,22 +647,33 @@ def increment_configs_version(
     *,
     version=None,
 ):
-    """Increment version in config file (pyproject.toml or setup.cfg)."""
+    """Increment version in config file (pyproject.toml and/or setup.cfg)."""
     pkg_dir = _get_pkg_dir(pkg_dir)
 
-    # Prefer pyproject.toml if it exists
-    if _has_pyproject_toml(pkg_dir):
-        # Get current version
-        current_version = get_project_version(pkg_dir)
-        if version is None:
+    # Check which config files exist
+    has_pyproject = _has_pyproject_toml(pkg_dir)
+    has_setup_cfg = _has_setup_cfg(pkg_dir)
+
+    # Determine the version to use
+    if version is None:
+        if has_pyproject:
+            # Get current version from pyproject.toml
+            current_version = get_project_version(pkg_dir)
             version = increment_version(current_version) if current_version else "0.0.1"
+        else:
+            # Get version from setup.cfg
+            configs = read_configs(pkg_dir=pkg_dir)
+            version = _get_version(
+                pkg_dir, version=version, configs=configs, new_deploy=False
+            )
+            version = increment_version(version)
+
+    # Update both files if both exist to keep them in sync
+    if has_pyproject:
         set_project_version(pkg_dir, version)
-    else:
-        configs = read_configs(pkg_dir=pkg_dir)
-        version = _get_version(
-            pkg_dir, version=version, configs=configs, new_deploy=False
-        )
-        version = increment_version(version)
+
+    if has_setup_cfg:
+        configs = read_configs(pkg_dir)
         configs["version"] = version
         write_configs(pkg_dir=pkg_dir, configs=configs)
 
