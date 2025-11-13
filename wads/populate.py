@@ -326,20 +326,29 @@ def populate_pkg_dir(
 
     else:  # project_type == 'lib' or None
         if should_update("pyproject.toml"):
-            # Check if setup.cfg exists and migrate flag is set
             setup_cfg_path = pjoin("setup.cfg")
-            if migrate and os.path.isfile(setup_cfg_path):
-                _clog("... migrating setup.cfg to pyproject.toml")
+
+            # Check if setup.cfg exists (with or without migrate flag)
+            if os.path.isfile(setup_cfg_path):
+                _clog("... found setup.cfg, migrating to pyproject.toml")
                 from wads.migration import migrate_setuptools_to_hatching
 
-                # Migrate setup.cfg to pyproject.toml
-                pyproject_content = migrate_setuptools_to_hatching(
-                    setup_cfg_path, defaults=configs
-                )
+                try:
+                    # Migrate setup.cfg to pyproject.toml
+                    pyproject_content = migrate_setuptools_to_hatching(
+                        setup_cfg_path, defaults=configs
+                    )
 
-                # Write the migrated content
-                with open(pjoin("pyproject.toml"), "w") as f:
-                    f.write(pyproject_content)
+                    # Write the migrated content
+                    with open(pjoin("pyproject.toml"), "w") as f:
+                        f.write(pyproject_content)
+                except Exception as e:
+                    _clog(
+                        f"... migration failed ({e}), falling back to template-based creation"
+                    )
+                    if "pkg-dir" in configs:
+                        del configs["pkg-dir"]
+                    write_pyproject_configs(pjoin(""), configs)
             else:
                 _clog("... making a 'pyproject.toml'")
                 if "pkg-dir" in configs:
