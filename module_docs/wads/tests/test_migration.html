@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_migration &mdash; wads 0.1.43 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="wads.tests.test_package_generation" href="test_package_generation.html" />
+    <link rel="prev" title="wads.tests.data.example_module" href="data/example_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_migration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_custom_rules"><code class="docutils literal notranslate"><span class="pre">test_custom_rules()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_ci_extracts_project_name"><code class="docutils literal notranslate"><span class="pre">test_migrate_ci_extracts_project_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_ci_missing_project_name"><code class="docutils literal notranslate"><span class="pre">test_migrate_ci_missing_project_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_ci_with_defaults"><code class="docutils literal notranslate"><span class="pre">test_migrate_ci_with_defaults()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_setuptools_basic"><code class="docutils literal notranslate"><span class="pre">test_migrate_setuptools_basic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_setuptools_dependencies"><code class="docutils literal notranslate"><span class="pre">test_migrate_setuptools_dependencies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_setuptools_from_file"><code class="docutils literal notranslate"><span class="pre">test_migrate_setuptools_from_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_setuptools_missing_required_fields"><code class="docutils literal notranslate"><span class="pre">test_migrate_setuptools_missing_required_fields()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_migrate_setuptools_with_defaults"><code class="docutils literal notranslate"><span class="pre">test_migrate_setuptools_with_defaults()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_normalize_setup_cfg_dict"><code class="docutils literal notranslate"><span class="pre">test_normalize_setup_cfg_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_normalize_setup_cfg_string"><code class="docutils literal notranslate"><span class="pre">test_normalize_setup_cfg_string()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_parse_list_field_comma_separated"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_comma_separated()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_parse_list_field_empty"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_empty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_migration.test_parse_list_field_multiline"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_multiline()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.tests.test_migration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/wads/tests/test_migration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.tests.test_migration">
+<span id="wads-tests-test-migration"></span><h1>wads.tests.test_migration<a class="headerlink" href="#module-wads.tests.test_migration" title="Link to this heading"></a></h1>
+<p>Tests for migration module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_custom_rules">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_custom_rules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_custom_rules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_custom_rules" title="Link to this definition"></a></dt>
+<dd><p>Test using custom transformation rules.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_ci_extracts_project_name">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_ci_extracts_project_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_ci_extracts_project_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_ci_extracts_project_name" title="Link to this definition"></a></dt>
+<dd><p>Test CI migration extracts existing project name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_ci_missing_project_name">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_ci_missing_project_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_ci_missing_project_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_ci_missing_project_name" title="Link to this definition"></a></dt>
+<dd><p>Test CI migration raises error when project name is missing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_ci_with_defaults">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_ci_with_defaults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_ci_with_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_ci_with_defaults" title="Link to this definition"></a></dt>
+<dd><p>Test CI migration with defaults.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_setuptools_basic">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_setuptools_basic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_setuptools_basic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_setuptools_basic" title="Link to this definition"></a></dt>
+<dd><p>Test basic migration from setup.cfg to pyproject.toml.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_setuptools_dependencies">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_setuptools_dependencies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_setuptools_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_setuptools_dependencies" title="Link to this definition"></a></dt>
+<dd><p>Test that dependencies are properly migrated.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_setuptools_from_file">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_setuptools_from_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_setuptools_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_setuptools_from_file" title="Link to this definition"></a></dt>
+<dd><p>Test migration from actual file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_setuptools_missing_required_fields">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_setuptools_missing_required_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_setuptools_missing_required_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_setuptools_missing_required_fields" title="Link to this definition"></a></dt>
+<dd><p>Test that missing required fields raise MigrationError.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_migrate_setuptools_with_defaults">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_migrate_setuptools_with_defaults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_migrate_setuptools_with_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_migrate_setuptools_with_defaults" title="Link to this definition"></a></dt>
+<dd><p>Test migration with defaults for missing fields.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_normalize_setup_cfg_dict">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_normalize_setup_cfg_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_normalize_setup_cfg_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_normalize_setup_cfg_dict" title="Link to this definition"></a></dt>
+<dd><p>Test normalizing dict input.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_normalize_setup_cfg_string">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_normalize_setup_cfg_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_normalize_setup_cfg_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_normalize_setup_cfg_string" title="Link to this definition"></a></dt>
+<dd><p>Test normalizing string content input.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_parse_list_field_comma_separated">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_parse_list_field_comma_separated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_parse_list_field_comma_separated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_parse_list_field_comma_separated" title="Link to this definition"></a></dt>
+<dd><p>Test parsing comma-separated list fields.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_parse_list_field_empty">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_parse_list_field_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_parse_list_field_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_parse_list_field_empty" title="Link to this definition"></a></dt>
+<dd><p>Test parsing empty field.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_migration.test_parse_list_field_multiline">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_migration.</span></span><span class="sig-name descname"><span class="pre">test_parse_list_field_multiline</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_migration.html#test_parse_list_field_multiline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_migration.test_parse_list_field_multiline" title="Link to this definition"></a></dt>
+<dd><p>Test parsing multi-line list fields.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data/example_module.html" class="btn btn-neutral float-left" title="wads.tests.data.example_module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="test_package_generation.html" class="btn btn-neutral float-right" title="wads.tests.test_package_generation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 
+2020
+Otosense.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

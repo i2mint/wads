@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.licensing &mdash; wads 0.1.42 documentation</title>
+  <title>wads.licensing &mdash; wads 0.1.43 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=05fb4756"></script>
+      <script src="../../_static/documentation_options.js?v=a183c34f"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="wads.pack" href="pack.html" />
+    <link rel="next" title="wads.migration" href="migration.html" />
     <link rel="prev" title="wads.generate_project_wheels" href="generate_project_wheels.html" /> 
 </head>
 
@@ -53,14 +53,21 @@
 <li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">wads.licensing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wads.licensing.get_licenses_from_github"><code class="docutils literal notranslate"><span class="pre">get_licenses_from_github()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.licensing.resolve_author"><code class="docutils literal notranslate"><span class="pre">resolve_author()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.licensing.substitute_license_placeholders"><code class="docutils literal notranslate"><span class="pre">substitute_license_placeholders()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
 </ul>
@@ -91,6 +98,7 @@
              
   <section id="module-wads.licensing">
 <span id="wads-licensing"></span><h1>wads.licensing<a class="headerlink" href="#module-wads.licensing" title="Link to this heading"></a></h1>
+<p>Licensing</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.licensing.get_licenses_from_github">
 <span class="sig-prename descclassname"><span class="pre">wads.licensing.</span></span><span class="sig-name descname"><span class="pre">get_licenses_from_github</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/licensing.html#get_licenses_from_github"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.licensing.get_licenses_from_github" title="Link to this definition"></a></dt>
@@ -102,6 +110,66 @@ See pygithub for details.
 <span class="pre">`</span></code></p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.licensing.resolve_author">
+<span class="sig-prename descclassname"><span class="pre">wads.licensing.</span></span><span class="sig-name descname"><span class="pre">resolve_author</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyproject_authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/licensing.html#resolve_author"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.licensing.resolve_author" title="Link to this definition"></a></dt>
+<dd><p>Resolve the author name following a priority chain.</p>
+<p>Priority order:
+1. If author is explicitly provided, use it
+2. If pyproject_authors is provided, use the first author’s name
+3. If url is a GitHub URL, extract the org/user from it
+4. If WADS_DFLT_AUTHOR env variable is set, use it
+5. Return placeholder if nothing else works</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>author</strong> – Explicitly provided author name</p></li>
+<li><p><strong>pyproject_authors</strong> – List of author dicts from pyproject.toml</p></li>
+<li><p><strong>url</strong> – Project URL (e.g., GitHub URL)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Resolved author name or placeholder</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="s1">&#39;John Doe&#39;</span><span class="p">)</span>
+<span class="go">&#39;John Doe&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">pyproject_authors</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Jane Smith&#39;</span><span class="p">}])</span>
+<span class="go">&#39;Jane Smith&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://github.com/myorg/myrepo&#39;</span><span class="p">)</span>
+<span class="go">&#39;myorg&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.licensing.substitute_license_placeholders">
+<span class="sig-prename descclassname"><span class="pre">wads.licensing.</span></span><span class="sig-name descname"><span class="pre">substitute_license_placeholders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">license_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/licensing.html#substitute_license_placeholders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.licensing.substitute_license_placeholders" title="Link to this definition"></a></dt>
+<dd><p>Replace placeholders in license text with actual values.</p>
+<p>Common placeholders:
+- [yyyy], [year] -&gt; current year
+- [fullname], [name of copyright owner] -&gt; author name
+- (c) -&gt; © (optional enhancement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>license_text</strong> – License text with placeholders</p></li>
+<li><p><strong>author</strong> – Author/copyright owner name (if None, placeholder remains)</p></li>
+<li><p><strong>year</strong> – Year for copyright (if None, uses current year)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>License text with substituted values</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Copyright [yyyy] [fullname]&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">&#39;John&#39;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2025</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">&#39;Copyright 2025 John&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 
@@ -109,7 +177,7 @@ See pygithub for details.
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="generate_project_wheels.html" class="btn btn-neutral float-left" title="wads.generate_project_wheels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pack.html" class="btn btn-neutral float-right" title="wads.pack" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="migration.html" class="btn btn-neutral float-right" title="wads.migration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

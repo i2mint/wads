@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_migration &mdash; wads 0.1.43 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_migration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_migration</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for migration module.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">migrate_setuptools_to_hatching</span><span class="p">,</span>
+    <span class="n">migrate_github_ci_old_to_new</span><span class="p">,</span>
+    <span class="n">MigrationError</span><span class="p">,</span>
+    <span class="n">_normalize_setup_cfg_input</span><span class="p">,</span>
+    <span class="n">_parse_list_field</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Sample setup.cfg content for testing</span>
+<span class="n">SAMPLE_SETUP_CFG</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">[metadata]</span>
+<span class="s2">name = testproject</span>
+<span class="s2">version = 0.1.0</span>
+<span class="s2">url = https://github.com/test/testproject</span>
+<span class="s2">description = A test project</span>
+<span class="s2">license = MIT</span>
+<span class="s2">keywords =</span>
+<span class="s2">    testing</span>
+<span class="s2">    migration</span>
+<span class="s2">author = Test Author</span>
+<span class="s2">author_email = test@example.com</span>
+
+<span class="s2">[options]</span>
+<span class="s2">packages = find:</span>
+<span class="s2">include_package_data = True</span>
+<span class="s2">zip_safe = False</span>
+<span class="s2">install_requires =</span>
+<span class="s2">    requests</span>
+<span class="s2">    click&gt;=7.0</span>
+
+<span class="s2">[options.extras_require]</span>
+<span class="s2">dev =</span>
+<span class="s2">    pytest</span>
+<span class="s2">    black</span>
+
+<span class="s2">[options.entry_points]</span>
+<span class="s2">console_scripts =</span>
+<span class="s2">    testcli = testproject.cli:main</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="test_normalize_setup_cfg_dict">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_normalize_setup_cfg_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_normalize_setup_cfg_dict</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test normalizing dict input.&quot;&quot;&quot;</span>
+    <span class="n">cfg_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;test&#39;</span><span class="p">}}</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_normalize_setup_cfg_input</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">cfg_dict</span></div>
+
+
+
+<div class="viewcode-block" id="test_normalize_setup_cfg_string">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_normalize_setup_cfg_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_normalize_setup_cfg_string</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test normalizing string content input.&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_normalize_setup_cfg_input</span><span class="p">(</span><span class="n">SAMPLE_SETUP_CFG</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s1">&#39;metadata&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;testproject&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="test_parse_list_field_multiline">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_multiline">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_parse_list_field_multiline</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test parsing multi-line list fields.&quot;&quot;&quot;</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    testing</span><span class="se">\n</span><span class="s2">    migration</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_parse_list_field</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="s1">&#39;migration&#39;</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="test_parse_list_field_comma_separated">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_comma_separated">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_parse_list_field_comma_separated</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test parsing comma-separated list fields.&quot;&quot;&quot;</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="s2">&quot;testing, migration, tools&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_parse_list_field</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="s1">&#39;migration&#39;</span><span class="p">,</span> <span class="s1">&#39;tools&#39;</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="test_parse_list_field_empty">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_empty">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_parse_list_field_empty</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test parsing empty field.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">_parse_list_field</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[]</span>
+    <span class="k">assert</span> <span class="n">_parse_list_field</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_setuptools_basic">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_basic">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_setuptools_basic</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test basic migration from setup.cfg to pyproject.toml.&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">SAMPLE_SETUP_CFG</span><span class="p">)</span>
+
+    <span class="c1"># Check it&#39;s valid TOML-ish output</span>
+    <span class="k">assert</span> <span class="s1">&#39;name = &quot;testproject&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;version = &quot;0.1.0&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;description = &quot;A test project&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="c1"># Keywords should be present (format may vary)</span>
+    <span class="k">assert</span> <span class="s1">&#39;&quot;testing&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;&quot;migration&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_setuptools_with_defaults">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_with_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_setuptools_with_defaults</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test migration with defaults for missing fields.&quot;&quot;&quot;</span>
+    <span class="n">minimal_cfg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">[metadata]</span>
+<span class="s2">name = minimal</span>
+<span class="s2">version = 1.0.0</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;A minimal project&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://example.com&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;MIT&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">minimal_cfg</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="n">defaults</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s1">&#39;name = &quot;minimal&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;A minimal project&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_setuptools_missing_required_fields">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_missing_required_fields">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_setuptools_missing_required_fields</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that missing required fields raise MigrationError.&quot;&quot;&quot;</span>
+    <span class="n">minimal_cfg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">[metadata]</span>
+<span class="s2">name = minimal</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">MigrationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+        <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">minimal_cfg</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;Missing required fields&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_setuptools_from_file">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_setuptools_from_file</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test migration from actual file.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.cfg&#39;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">SAMPLE_SETUP_CFG</span><span class="p">)</span>
+        <span class="n">temp_path</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">temp_path</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s1">&#39;name = &quot;testproject&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">temp_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_setuptools_dependencies">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_setuptools_dependencies</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that dependencies are properly migrated.&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">SAMPLE_SETUP_CFG</span><span class="p">)</span>
+
+    <span class="c1"># Check dependencies section (format may vary)</span>
+    <span class="k">assert</span> <span class="s1">&#39;dependencies&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;&quot;requests&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">or</span> <span class="s1">&#39;requests&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;click&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_ci_missing_project_name">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_missing_project_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_missing_project_name</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test CI migration raises error when project name is missing.&quot;&quot;&quot;</span>
+    <span class="n">old_ci</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">name: Old CI</span>
+<span class="s2">env:</span>
+<span class="s2">  PROJECT_NAME: #PROJECT_NAME#</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">MigrationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+        <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s2">&quot;PROJECT_NAME&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_ci_with_defaults">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_with_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_with_defaults</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test CI migration with defaults.&quot;&quot;&quot;</span>
+    <span class="n">old_ci</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">name: Old CI</span>
+<span class="s2">env:</span>
+<span class="s2">  PROJECT_NAME: #PROJECT_NAME#</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span>
+        <span class="n">old_ci</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;project_name&#39;</span><span class="p">:</span> <span class="s1">&#39;myproject&#39;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">assert</span> <span class="s1">&#39;PROJECT_NAME: myproject&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="test_migrate_ci_extracts_project_name">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_extracts_project_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_extracts_project_name</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test CI migration extracts existing project name.&quot;&quot;&quot;</span>
+    <span class="n">old_ci</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">name: Old CI</span>
+<span class="s2">env:</span>
+<span class="s2">  PROJECT_NAME: existing_project</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s1">&#39;PROJECT_NAME: existing_project&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="test_custom_rules">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_custom_rules">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_custom_rules</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test using custom transformation rules.&quot;&quot;&quot;</span>
+    <span class="n">custom_rules</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;project.name&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="s1">&#39;project.version&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;project.description&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="s2">&quot;Custom description&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;project.url&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="s2">&quot;https://custom.url&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;project.license&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">cfg_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">,</span> <span class="n">rules</span><span class="o">=</span><span class="n">custom_rules</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s1">&#39;name = &quot;TEST&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+    <span class="k">assert</span> <span class="s1">&#39;Custom description&#39;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 
+2020
+Otosense.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

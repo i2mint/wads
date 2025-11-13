@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.42 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.43 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=05fb4756"></script>
+      <script src="../../_static/documentation_options.js?v=a183c34f"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -49,12 +49,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
 </ul>
@@ -136,8 +141,16 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">argh</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">git</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">read_pyproject_toml</span><span class="p">,</span>
+    <span class="n">write_pyproject_toml</span><span class="p">,</span>
+    <span class="n">get_project_version</span><span class="p">,</span>
+    <span class="n">set_project_version</span><span class="p">,</span>
+    <span class="n">get_project_name</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s2">&quot;setup.cfg&quot;</span>
+<span class="n">PYPROJECT_FILE_NAME</span> <span class="o">=</span> <span class="s2">&quot;pyproject.toml&quot;</span>
 <span class="n">METADATA_SECTION</span> <span class="o">=</span> <span class="s2">&quot;metadata&quot;</span>
 <span class="n">OPTIONS_SECTION</span> <span class="o">=</span> <span class="s2">&quot;options&quot;</span>
 <span class="n">DFLT_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
@@ -152,12 +165,28 @@
 <span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &#39;github&#39;</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if package uses pyproject.toml&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PYPROJECT_FILE_NAME</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="get_name_from_configs">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.get_name_from_configs">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">assert_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get name from local setup.cfg (metadata section)&quot;&quot;&quot;</span>
-    <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get name from local config file (pyproject.toml or setup.cfg)&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="c1"># Prefer pyproject.toml if it exists</span>
+    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">get_project_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">assert_exists</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;No name was found in configs&quot;</span>
     <span class="k">return</span> <span class="n">name</span></div>
@@ -652,14 +681,19 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">current_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Prefer pyproject.toml if it exists</span>
+    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span>
 
 
 <span class="c1"># TODO: Both setup and twine are python. Change to use python objects directly.</span>
 <div class="viewcode-block" id="update_setup_cfg">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.update_setup_cfg">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">update_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update setup.cfg.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update setup.cfg or pyproject.toml.</span>
 <span class="sd">    If version is not given, will ask pypi (via http request) what the current version</span>
 <span class="sd">    is, and increment that.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -671,19 +705,48 @@
     <span class="p">)</span>
     <span class="n">pprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{configs}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">clog</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="n">pprint</span><span class="p">(</span><span class="n">configs</span><span class="p">))</span>
-    <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
+
+    <span class="c1"># Write to pyproject.toml if it exists, otherwise setup.cfg</span>
+    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+        <span class="c1"># Update pyproject.toml with the resolved configs</span>
+        <span class="n">pyproject_data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;project&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pyproject_data</span><span class="p">:</span>
+            <span class="n">pyproject_data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Map key fields back to pyproject.toml format</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+            <span class="n">project</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;description&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+            <span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+            <span class="n">project</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;url&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;urls&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">project</span><span class="p">:</span>
+                <span class="n">project</span><span class="p">[</span><span class="s2">&quot;urls&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">project</span><span class="p">[</span><span class="s2">&quot;urls&quot;</span><span class="p">][</span><span class="s2">&quot;Homepage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+
+        <span class="n">write_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pyproject_data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="set_version">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.set_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update version setup.cfg&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update version in config file (pyproject.toml or setup.cfg)&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="s2">&quot;version should be a string&quot;</span>
-    <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
-    <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
+
+    <span class="c1"># Prefer pyproject.toml if it exists</span>
+    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+        <span class="n">set_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span></div>
 
 
 
@@ -694,13 +757,25 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Increment version setup.cfg.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Increment version in config file (pyproject.toml or setup.cfg).&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">version</span> <span class="o">=</span> <span class="n">_get_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
-    <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
-    <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span>
+
+    <span class="c1"># Prefer pyproject.toml if it exists</span>
+    <span class="k">if</span> <span class="n">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
+        <span class="c1"># Get current version</span>
+        <span class="n">current_version</span> <span class="o">=</span> <span class="n">get_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">current_version</span><span class="p">)</span> <span class="k">if</span> <span class="n">current_version</span> <span class="k">else</span> <span class="s2">&quot;0.0.1&quot;</span>
+        <span class="n">set_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">_get_version</span><span class="p">(</span>
+            <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">,</span> <span class="n">new_deploy</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+        <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="n">write_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="n">configs</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">version</span></div>
 
 
@@ -708,17 +783,32 @@
 <div class="viewcode-block" id="run_setup">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.run_setup">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_setup</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run ``python setup.py sdist bdist_wheel``&quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------- setup_output ---------------------------&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run ``python -m build`` (modern PEP 517 compliant build)&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------- build_output ---------------------------&quot;</span><span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">original_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">setup_output</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s2"> setup.py sdist bdist_wheel&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-    <span class="p">)</span>
+
+    <span class="c1"># Use python -m build (PEP 517 standard)</span>
+    <span class="c1"># Falls back to legacy setup.py if build module not available</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">build_output</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">build_output</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Build stderr: </span><span class="si">{</span><span class="n">build_output</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">build_output</span><span class="o">.</span><span class="n">check_returncode</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">build_output</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Fallback to legacy method if build module not installed</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: &#39;build&#39; module not found, falling back to setup.py&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Consider installing: pip install build&quot;</span><span class="p">)</span>
+        <span class="n">build_output</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="si">}</span><span class="s2"> setup.py sdist bdist_wheel&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">original_dir</span><span class="p">)</span></div>
 
-    <span class="c1"># print(f&quot;{setup_output}\n&quot;)</span>
 
 
 <div class="viewcode-block" id="twine_upload_dist">
@@ -816,6 +906,59 @@
         <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
     <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="c1"># Try pyproject.toml first (modern approach)</span>
+    <span class="n">pyproject_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PYPROJECT_FILE_NAME</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_filepath</span><span class="p">):</span>
+        <span class="n">pyproject_data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+        <span class="n">project_metadata</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># Convert pyproject.toml format to setup.cfg format for compatibility</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">project_metadata</span><span class="p">:</span>
+            <span class="c1"># Map common fields</span>
+            <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;description&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;urls&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">urls</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;urls&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="c1"># Try to get a root_url or homepage</span>
+                    <span class="k">if</span> <span class="s2">&quot;Homepage&quot;</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span>
+                        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urls</span><span class="p">[</span><span class="s2">&quot;Homepage&quot;</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="s2">&quot;repository&quot;</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span>
+                        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urls</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="s2">&quot;Repository&quot;</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span>
+                        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urls</span><span class="p">[</span><span class="s2">&quot;Repository&quot;</span><span class="p">]</span>
+            <span class="c1"># Handle authors</span>
+            <span class="k">if</span> <span class="s2">&quot;authors&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">authors</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;authors&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">authors</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">authors</span><span class="p">:</span>
+                    <span class="c1"># Join author names</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">authors</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;license&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">license_info</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">license_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">license_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">license_info</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;keywords&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">keywords</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;keywords&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keywords</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;keywords&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span>
+            <span class="k">if</span> <span class="s2">&quot;dependencies&quot;</span> <span class="ow">in</span> <span class="n">project_metadata</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;install_requires&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_metadata</span><span class="p">[</span><span class="s2">&quot;dependencies&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Read configs from pyproject.toml: </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="c1"># Fall back to setup.cfg (legacy approach)</span>
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">config_filepath</span><span class="p">):</span>
@@ -1147,17 +1290,27 @@
 
 
 
+<div class="viewcode-block" id="pyproject_toml_version">
+<a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.pyproject_toml_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pyproject_toml_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">:</span> <span class="n">PkgSpec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get version from pyproject.toml file.&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_project_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">versions_from_different_sources</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">:</span> <span class="n">PkgSpec</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;tag&quot;</span><span class="p">:</span> <span class="n">highest_tag_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">),</span>
         <span class="s2">&quot;current_pypi&quot;</span><span class="p">:</span> <span class="n">current_pypi_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">),</span>
         <span class="s2">&quot;highest_not_yanked_pypi&quot;</span><span class="p">:</span> <span class="n">highest_pypi_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">),</span>
         <span class="s2">&quot;setup_cfg&quot;</span><span class="p">:</span> <span class="n">setup_cfg_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">),</span>
+        <span class="s2">&quot;pyproject_toml&quot;</span><span class="p">:</span> <span class="n">pyproject_toml_version</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">),</span>
     <span class="p">}</span>
 
 
 <span class="n">ValidVersionSources</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
-    <span class="s2">&quot;tag&quot;</span><span class="p">,</span> <span class="s2">&quot;current_pypi&quot;</span><span class="p">,</span> <span class="s2">&quot;highest_not_yanked_pypi&quot;</span><span class="p">,</span> <span class="s2">&quot;setup_cfg&quot;</span>
+    <span class="s2">&quot;tag&quot;</span><span class="p">,</span> <span class="s2">&quot;current_pypi&quot;</span><span class="p">,</span> <span class="s2">&quot;highest_not_yanked_pypi&quot;</span><span class="p">,</span> <span class="s2">&quot;setup_cfg&quot;</span><span class="p">,</span> <span class="s2">&quot;pyproject_toml&quot;</span>
 <span class="p">]</span>
 
 
@@ -1237,11 +1390,25 @@
     <span class="n">configs</span> <span class="o">=</span> <span class="n">read_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="c1"># parse out name and root_url</span>
-    <span class="k">assert</span> <span class="p">(</span>
-        <span class="s2">&quot;root_url&quot;</span> <span class="ow">in</span> <span class="n">configs</span> <span class="ow">or</span> <span class="s2">&quot;url&quot;</span> <span class="ow">in</span> <span class="n">configs</span>
-    <span class="p">),</span> <span class="s2">&quot;configs didn&#39;t have a root_url or url&quot;</span>
+    <span class="c1"># If URL is missing, try to infer it from git</span>
+    <span class="k">if</span> <span class="s2">&quot;root_url&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">configs</span> <span class="ow">and</span> <span class="s2">&quot;url&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.populate</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_pkg_url_from_pkg_dir</span>
 
-    <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">pkg_dirname</span>
+            <span class="n">git_url</span> <span class="o">=</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">git_url</span>
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No url or root_url found in configs. Inferred from git: </span><span class="si">{</span><span class="n">git_url</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Consider adding it to your pyproject.toml or setup.cfg.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;configs didn&#39;t have a root_url or url, and couldn&#39;t infer from git. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Please add a url field to your pyproject.toml [project.urls] section &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;or setup.cfg [metadata] section. Git error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_dirname</span>
     <span class="k">if</span> <span class="n">assert_names</span><span class="p">:</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span>

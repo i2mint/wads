@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.migration_quick_ref &mdash; wads 0.1.43 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.pack" href="pack.html" />
+    <link rel="prev" title="wads.migration" href="migration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.migration_quick_ref</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-reference-guide-for-wads-migration">Quick Reference Guide for wads.migration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-setup-cfg-migration">BASIC SETUP.CFG MIGRATION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-defaults-for-missing-fields">WITH DEFAULTS FOR MISSING FIELDS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-transformation-rules">CUSTOM TRANSFORMATION RULES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-handling">ERROR HANDLING</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ci-migration">CI MIGRATION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complete-migration-workflow">COMPLETE MIGRATION WORKFLOW</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#available-transformation-rules">AVAILABLE TRANSFORMATION RULES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-new-rules">ADDING NEW RULES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#common-patterns">COMMON PATTERNS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.migration_quick_ref</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/migration_quick_ref.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.migration_quick_ref">
+<span id="wads-migration-quick-ref"></span><h1>wads.migration_quick_ref<a class="headerlink" href="#module-wads.migration_quick_ref" title="Link to this heading"></a></h1>
+<section id="quick-reference-guide-for-wads-migration">
+<h2>Quick Reference Guide for wads.migration<a class="headerlink" href="#quick-reference-guide-for-wads-migration" title="Link to this heading"></a></h2>
+<section id="basic-setup-cfg-migration">
+<h3>BASIC SETUP.CFG MIGRATION<a class="headerlink" href="#basic-setup-cfg-migration" title="Link to this heading"></a></h3>
+<dl>
+<dt>From file:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_setuptools_to_hatching</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;pyproject.toml&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>  
+<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>From string:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">setup_cfg_text</span> <span class="o">=</span> <span class="s2">&quot;[metadata]</span><span class="se">\n</span><span class="s2">name=myproj</span><span class="se">\n</span><span class="s2">version=1.0.0&quot;</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">setup_cfg_text</span><span class="p">)</span>  
+</pre></div>
+</div>
+</dd>
+<dt>From dict:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;myproj&#39;</span><span class="p">,</span> <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">}}</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="with-defaults-for-missing-fields">
+<h3>WITH DEFAULTS FOR MISSING FIELDS<a class="headerlink" href="#with-defaults-for-missing-fields" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span>  
+<span class="gp">... </span>    <span class="s1">&#39;setup.cfg&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;My awesome project&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://github.com/user/project&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;MIT&#39;</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-transformation-rules">
+<h3>CUSTOM TRANSFORMATION RULES<a class="headerlink" href="#custom-transformation-rules" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">custom_rules</span> <span class="o">=</span> <span class="p">{</span>  
+<span class="gp">... </span>    <span class="s1">&#39;project.name&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+<span class="gp">... </span>    <span class="s1">&#39;project.version&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">][</span><span class="s1">&#39;version&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s1">&#39;project.description&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">cfg</span><span class="p">:</span> <span class="s2">&quot;Custom description&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">,</span> <span class="n">rules</span><span class="o">=</span><span class="n">custom_rules</span><span class="p">)</span>  
+</pre></div>
+</div>
+</section>
+<section id="error-handling">
+<h3>ERROR HANDLING<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">MigrationError</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>  
+<span class="gp">... </span>    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">incomplete_cfg</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">MigrationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c1"># Provide defaults and retry</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-migration">
+<h3>CI MIGRATION<a class="headerlink" href="#ci-migration" title="Link to this heading"></a></h3>
+<dl>
+<dt>From file:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_github_ci_old_to_new</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="s1">&#39;.github/workflows/ci.yml&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;.github/workflows/ci_new.yml&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>  
+<span class="gp">... </span>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_ci</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>With defaults:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span>  
+<span class="gp">... </span>    <span class="s1">&#39;ci.yml&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;project_name&#39;</span><span class="p">:</span> <span class="s1">&#39;myproject&#39;</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="complete-migration-workflow">
+<h3>COMPLETE MIGRATION WORKFLOW<a class="headerlink" href="#complete-migration-workflow" title="Link to this heading"></a></h3>
+<p>Migrate setup.cfg and CI files:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  
+<span class="gp">... </span>    <span class="n">migrate_setuptools_to_hatching</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">migrate_github_ci_old_to_new</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">project</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;/path/to/project&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">))</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;pyproject.toml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">old_ci</span> <span class="o">=</span> <span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;.github/workflows/ci.yml&#39;</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">old_ci</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>  
+<span class="gp">... </span>    <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;.github/workflows/ci_new.yml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new_ci</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="available-transformation-rules">
+<h3>AVAILABLE TRANSFORMATION RULES<a class="headerlink" href="#available-transformation-rules" title="Link to this heading"></a></h3>
+<p>The following fields are automatically extracted from setup.cfg:</p>
+<blockquote>
+<div><p>project.name                     - Project name
+project.version                  - Version number
+project.description              - Description
+project.url                      - Homepage URL
+project.license                  - License identifier
+project.keywords                 - Keywords list
+project.authors                  - Author information
+project.dependencies             - install_requires → dependencies
+project.optional-dependencies    - extras_require
+project.scripts                  - console_scripts entry points</p>
+</div></blockquote>
+</section>
+<section id="adding-new-rules">
+<h3>ADDING NEW RULES<a class="headerlink" href="#adding-new-rules" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_cfg_to_pyproject_toml_rules</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">_rule_custom_field</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;custom&#39;</span><span class="p">,</span> <span class="s1">&#39;default&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">setup_cfg_to_pyproject_toml_rules</span><span class="p">[</span><span class="s1">&#39;project.custom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rule_custom_field</span>
+</pre></div>
+</div>
+</section>
+<section id="common-patterns">
+<h3>COMMON PATTERNS<a class="headerlink" href="#common-patterns" title="Link to this heading"></a></h3>
+<dl>
+<dt>Check if migration needed:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">project</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;/path/to/project&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">needs_migration</span> <span class="o">=</span> <span class="p">(</span>  
+<span class="gp">... </span>    <span class="p">(</span><span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span>
+<span class="gp">... </span>    <span class="ow">not</span> <span class="p">(</span><span class="n">project</span> <span class="o">/</span> <span class="s1">&#39;pyproject.toml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Batch migration:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;proj1&#39;</span><span class="p">,</span> <span class="s1">&#39;proj2&#39;</span><span class="p">,</span> <span class="s1">&#39;proj3&#39;</span><span class="p">]]</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">proj</span> <span class="ow">in</span> <span class="n">projects</span><span class="p">:</span>  
+<span class="gp">... </span>    <span class="k">if</span> <span class="p">(</span><span class="n">proj</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">proj</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">))</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="n">proj</span> <span class="o">/</span> <span class="s1">&#39;pyproject.toml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Dry-run (show what would be done):</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_setuptools_to_hatching</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pyproject</span><span class="p">[:</span><span class="mi">500</span><span class="p">])</span>  
+<span class="go">[build-system]</span>
+<span class="go">requires = [</span>
+<span class="go">    &quot;hatchling&quot;,</span>
+<span class="go">]</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>For complete documentation, see MIGRATION.md</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="migration.html" class="btn btn-neutral float-left" title="wads.migration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pack.html" class="btn btn-neutral float-right" title="wads.pack" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 
+2020
+Otosense.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

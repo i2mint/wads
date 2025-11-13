@@ -1,0 +1,471 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_populate_and_pack &mdash; wads 0.1.43 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_populate_and_pack</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_populate_and_pack</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Comprehensive tests for populate and pack functionality with pyproject.toml.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.populate</span><span class="w"> </span><span class="kn">import</span> <span class="n">populate_pkg_dir</span><span class="p">,</span> <span class="n">write_pyproject_configs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.pack</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_name_from_configs</span><span class="p">,</span>
+    <span class="n">current_configs_version</span><span class="p">,</span>
+    <span class="n">increment_configs_version</span><span class="p">,</span>
+    <span class="n">set_version</span><span class="p">,</span>
+    <span class="n">run_setup</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pyproject_toml</span><span class="p">,</span> <span class="n">get_project_version</span><span class="p">,</span> <span class="n">get_project_name</span>
+
+
+<div class="viewcode-block" id="setup_git_repo">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.setup_git_repo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">remote_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to initialize a git repo for testing&quot;&quot;&quot;</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;init&quot;</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;user.email&quot;</span><span class="p">,</span> <span class="s2">&quot;test@example.com&quot;</span><span class="p">],</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;user.name&quot;</span><span class="p">,</span> <span class="s2">&quot;Test User&quot;</span><span class="p">],</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;remote&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">remote_url</span><span class="p">],</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TestPopulate">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestPopulate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the populate functionality&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestPopulate.test_populate_creates_pyproject_toml">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_populate_creates_pyproject_toml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that populate creates pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;testpkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/testpkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">author</span><span class="o">=</span><span class="s2">&quot;Test Author&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Skip CI generation for simpler test</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Check that pyproject.toml was created</span>
+            <span class="n">pyproject_file</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+            <span class="k">assert</span> <span class="n">pyproject_file</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">&quot;pyproject.toml should be created&quot;</span>
+
+            <span class="c1"># Check that the package directory was created</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;testpkg&quot;</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+            <span class="c1"># Check that README was created</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;README.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+            <span class="c1"># Check that LICENSE was created</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;LICENSE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestPopulate.test_populate_creates_correct_metadata">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_populate_creates_correct_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that populate creates correct metadata in pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;mypkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/myorg/mypkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;My test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/myorg&quot;</span><span class="p">,</span>
+                <span class="n">author</span><span class="o">=</span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.2.3&quot;</span><span class="p">,</span>
+                <span class="n">keywords</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;package&quot;</span><span class="p">],</span>
+                <span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;requests&quot;</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">],</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Read the pyproject.toml</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+
+            <span class="c1"># Check metadata</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;mypkg&quot;</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1.2.3&quot;</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;My test package&quot;</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;keywords&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;package&quot;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;dependencies&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;requests&quot;</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;authors&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;John Doe&quot;</span><span class="p">}]</span></div>
+
+
+<div class="viewcode-block" id="TestPopulate.test_write_pyproject_configs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_write_pyproject_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test writing pyproject.toml from configs&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
+
+            <span class="n">configs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;testpkg&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;A test package&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/test/testpkg&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;apache-2.0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;keywords&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;demo&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Test Author&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;install_requires&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="s2">&quot;pandas&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+
+            <span class="n">write_pyproject_configs</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="n">configs</span><span class="p">)</span>
+
+            <span class="c1"># Check that file was created and can be read</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;testpkg&quot;</span>
+            <span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;0.2.0&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestPackWithPyprojectToml">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestPackWithPyprojectToml</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test pack.py functions with pyproject.toml&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestPackWithPyprojectToml.test_get_name_from_configs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_get_name_from_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test getting package name from pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;mypkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/mypkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;mypkg&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestPackWithPyprojectToml.test_current_configs_version">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_current_configs_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test getting current version from pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;versionpkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/versionpkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.2.3&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">version</span> <span class="o">=</span> <span class="n">current_configs_version</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;1.2.3&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestPackWithPyprojectToml.test_set_version">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_set_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test setting version in pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;verpkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/verpkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Set new version</span>
+            <span class="n">set_version</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="s2">&quot;2.0.0&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Verify it was updated</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">get_project_version</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;2.0.0&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestPackWithPyprojectToml.test_increment_configs_version">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_increment_configs_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test incrementing version in pyproject.toml&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;incpkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/incpkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.2.3&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Increment version</span>
+            <span class="n">new_version</span> <span class="o">=</span> <span class="n">increment_configs_version</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+
+            <span class="c1"># Should be incremented to 1.2.4</span>
+            <span class="k">assert</span> <span class="n">new_version</span> <span class="o">==</span> <span class="s2">&quot;1.2.4&quot;</span>
+
+            <span class="c1"># Verify it was updated in file</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">get_project_version</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;1.2.4&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestBuild">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestBuild</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test building packages&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestBuild.test_generated_package_can_be_built">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild.test_generated_package_can_be_built">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_generated_package_can_be_built</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that a package generated by populate can be built&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;buildpkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/buildpkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A buildable package&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+                <span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;requests&quot;</span><span class="p">],</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Try to build the package</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">run_setup</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+
+                <span class="c1"># Check that dist directory was created</span>
+                <span class="n">dist_dir</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;dist&quot;</span>
+                <span class="k">assert</span> <span class="n">dist_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">&quot;dist directory should be created&quot;</span>
+
+                <span class="c1"># Check that wheel and sdist were created</span>
+                <span class="n">dist_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dist_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">))</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Build should create distribution files&quot;</span>
+
+                <span class="c1"># Should have at least a .tar.gz and .whl</span>
+                <span class="n">extensions</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">suffix</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dist_files</span><span class="p">}</span>
+                <span class="k">assert</span> <span class="s2">&quot;.whl&quot;</span> <span class="ow">in</span> <span class="n">extensions</span> <span class="ow">or</span> <span class="s2">&quot;.gz&quot;</span> <span class="ow">in</span> <span class="n">extensions</span>
+
+            <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Print output for debugging</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Build failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">pytest</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Package build failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestBuild.test_built_package_passes_twine_check">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_built_package_passes_twine_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that built packages pass twine check&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;twinepkg&quot;</span>
+            <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="n">setup_git_repo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;https://github.com/test/twinepkg&quot;</span><span class="p">)</span>
+
+            <span class="n">populate_pkg_dir</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A package for twine checking&quot;</span><span class="p">,</span>
+                <span class="n">root_url</span><span class="o">=</span><span class="s2">&quot;https://github.com/test&quot;</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+                <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Build the package</span>
+            <span class="n">run_setup</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
+
+            <span class="c1"># Run twine check</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;twine&quot;</span><span class="p">,</span> <span class="s2">&quot;check&quot;</span><span class="p">,</span> <span class="s2">&quot;dist/*&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Skip if twine not installed</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s2">&quot;No module named twine&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;twine not installed&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Twine check should pass</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Twine check failed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">assert</span> <span class="s2">&quot;PASSED&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestCompatibility">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCompatibility</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test backward compatibility with setup.cfg&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestCompatibility.test_can_read_legacy_setup_cfg">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_can_read_legacy_setup_cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that pack can still read legacy setup.cfg files&quot;&quot;&quot;</span>
+        <span class="c1"># This test would require a legacy setup.cfg file</span>
+        <span class="c1"># For now, just ensure the functions don&#39;t crash when pyproject.toml is missing</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 
+2020
+Otosense.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

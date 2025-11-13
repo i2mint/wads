@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; wads 0.1.42 documentation</title>
+  <title>Index &mdash; wads 0.1.43 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=05fb4756"></script>
+      <script src="_static/documentation_options.js?v=a183c34f"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -49,12 +49,17 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/pack.html">wads.pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/util.html">wads.util</a></li>
 </ul>
@@ -151,11 +156,17 @@
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.get_module_path">get_module_path() (in module wads.pack)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.get_name_from_configs">get_name_from_configs() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.get_pkg_name">get_pkg_name() (in module wads.pack)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.get_project_metadata">get_project_metadata() (in module wads.toml_util)</a>
+</li>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.get_project_name">get_project_name() (in module wads.toml_util)</a>
+</li>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.get_project_version">get_project_version() (in module wads.toml_util)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.git">git() (in module wads.util)</a>
 </li>
@@ -201,6 +212,12 @@
 </li>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_readme">make_install_instructions_for_readme() (in module wads.scrap.handle_non_python_installs)</a>
 </li>
+      <li><a href="module_docs/wads/migration.html#wads.migration.migrate_github_ci_old_to_new">migrate_github_ci_old_to_new() (in module wads.migration)</a>
+</li>
+      <li><a href="module_docs/wads/migration.html#wads.migration.migrate_setuptools_to_hatching">migrate_setuptools_to_hatching() (in module wads.migration)</a>
+</li>
+      <li><a href="module_docs/wads/migration.html#wads.migration.MigrationError">MigrationError</a>
+</li>
       <li><a href="module_docs/wads/util.html#wads.util.mk_import_root_replacer">mk_import_root_replacer() (in module wads.util)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.mk_replacer_from_dict">mk_replacer_from_dict() (in module wads.util)</a>
@@ -215,6 +232,10 @@
 </li>
         <li><a href="module_docs/wads/licensing.html#module-wads.licensing">wads.licensing</a>
 </li>
+        <li><a href="module_docs/wads/migration.html#module-wads.migration">wads.migration</a>
+</li>
+        <li><a href="module_docs/wads/migration_quick_ref.html#module-wads.migration_quick_ref">wads.migration_quick_ref</a>
+</li>
         <li><a href="module_docs/wads/pack.html#module-wads.pack">wads.pack</a>
 </li>
         <li><a href="module_docs/wads/package_module.html#module-wads.package_module">wads.package_module</a>
@@ -225,7 +246,13 @@
 </li>
         <li><a href="module_docs/wads/tests/data/example_module.html#module-wads.tests.data.example_module">wads.tests.data.example_module</a>
 </li>
+        <li><a href="module_docs/wads/tests/test_migration.html#module-wads.tests.test_migration">wads.tests.test_migration</a>
+</li>
         <li><a href="module_docs/wads/tests/test_package_generation.html#module-wads.tests.test_package_generation">wads.tests.test_package_generation</a>
+</li>
+        <li><a href="module_docs/wads/tests/test_populate_and_pack.html#module-wads.tests.test_populate_and_pack">wads.tests.test_populate_and_pack</a>
+</li>
+        <li><a href="module_docs/wads/toml_util.html#module-wads.toml_util">wads.toml_util</a>
 </li>
         <li><a href="module_docs/wads/trans.html#module-wads.trans">wads.trans</a>
 </li>
@@ -242,13 +269,15 @@
 </li>
       <li><a href="module_docs/wads/populate.html#wads.populate.populate_proj_from_url">populate_proj_from_url() (in module wads.populate)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.postprocess_ini_section_items">postprocess_ini_section_items() (in module wads.pack)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.preprocess_ini_section_items">preprocess_ini_section_items() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.process_missing_module_docstrings">process_missing_module_docstrings() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/pack.html#wads.pack.pyproject_toml_version">pyproject_toml_version() (in module wads.pack)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -258,16 +287,20 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.read_and_resolve_setup_configs">read_and_resolve_setup_configs() (in module wads.pack)</a>
 </li>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.read_pyproject_toml">read_pyproject_toml() (in module wads.toml_util)</a>
+</li>
       <li><a href="module_docs/wads/util.html#wads.util.replace_import_names">replace_import_names() (in module wads.util)</a>
 </li>
+      <li><a href="module_docs/wads/licensing.html#wads.licensing.resolve_author">resolve_author() (in module wads.licensing)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/package_module.html#wads.package_module.CustomInstallCommand.run">run() (wads.package_module.CustomInstallCommand method)</a>
 
       <ul>
         <li><a href="module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand.run">(wads.package_module.CustomSdistCommand method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands">run_install_commands() (in module wads.scrap.handle_non_python_installs)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.run_setup">run_setup() (in module wads.pack)</a>
@@ -278,13 +311,19 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.set_project_version">set_project_version() (in module wads.toml_util)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.set_version">set_version() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/pack.html#wads.pack.setup_cfg_version">setup_cfg_version() (in module wads.pack)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/wads/pack.html#wads.pack.setup_cfg_version">setup_cfg_version() (in module wads.pack)</a>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.setup_git_repo">setup_git_repo() (in module wads.tests.test_populate_and_pack)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.sorted_versions">sorted_versions() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/licensing.html#wads.licensing.substitute_license_placeholders">substitute_license_placeholders() (in module wads.licensing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -292,6 +331,64 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check">test_built_package_passes_twine_check() (wads.tests.test_populate_and_pack.TestBuild method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg">test_can_read_legacy_setup_cfg() (wads.tests.test_populate_and_pack.TestCompatibility method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version">test_current_configs_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_custom_rules">test_custom_rules() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild.test_generated_package_can_be_built">test_generated_package_can_be_built() (wads.tests.test_populate_and_pack.TestBuild method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs">test_get_name_from_configs() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version">test_increment_configs_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_extracts_project_name">test_migrate_ci_extracts_project_name() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_missing_project_name">test_migrate_ci_missing_project_name() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_with_defaults">test_migrate_ci_with_defaults() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_basic">test_migrate_setuptools_basic() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_dependencies">test_migrate_setuptools_dependencies() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_from_file">test_migrate_setuptools_from_file() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_missing_required_fields">test_migrate_setuptools_missing_required_fields() (in module wads.tests.test_migration)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_with_defaults">test_migrate_setuptools_with_defaults() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_normalize_setup_cfg_dict">test_normalize_setup_cfg_dict() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_normalize_setup_cfg_string">test_normalize_setup_cfg_string() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_comma_separated">test_parse_list_field_comma_separated() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_empty">test_parse_list_field_empty() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_multiline">test_parse_list_field_multiline() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata">test_populate_creates_correct_metadata() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml">test_populate_creates_pyproject_toml() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version">test_set_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs">test_write_pyproject_configs() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild">TestBuild (class in wads.tests.test_populate_and_pack)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility">TestCompatibility (class in wads.tests.test_populate_and_pack)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml">TestPackWithPyprojectToml (class in wads.tests.test_populate_and_pack)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate">TestPopulate (class in wads.tests.test_populate_and_pack)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.twine_upload_dist">twine_upload_dist() (in module wads.pack)</a>
 </li>
   </ul></td>
@@ -302,8 +399,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py">update_pack_and_setup_py() (in module wads.populate)</a>
 </li>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.update_project_metadata">update_project_metadata() (in module wads.toml_util)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.update_project_url">update_project_url() (in module wads.toml_util)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.update_setup_cfg">update_setup_cfg() (in module wads.pack)</a>
 </li>
   </ul></td>
@@ -346,6 +447,20 @@
 </li>
       </ul></li>
       <li>
+    wads.migration
+
+      <ul>
+        <li><a href="module_docs/wads/migration.html#module-wads.migration">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.migration_quick_ref
+
+      <ul>
+        <li><a href="module_docs/wads/migration_quick_ref.html#module-wads.migration_quick_ref">module</a>
+</li>
+      </ul></li>
+      <li>
     wads.pack
 
       <ul>
@@ -366,8 +481,6 @@
         <li><a href="module_docs/wads/populate.html#module-wads.populate">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scrap.handle_non_python_installs
 
@@ -375,6 +488,8 @@
         <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#module-wads.scrap.handle_non_python_installs">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.tests.data.example_module
 
@@ -383,10 +498,31 @@
 </li>
       </ul></li>
       <li>
+    wads.tests.test_migration
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_migration.html#module-wads.tests.test_migration">module</a>
+</li>
+      </ul></li>
+      <li>
     wads.tests.test_package_generation
 
       <ul>
         <li><a href="module_docs/wads/tests/test_package_generation.html#module-wads.tests.test_package_generation">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_populate_and_pack
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_populate_and_pack.html#module-wads.tests.test_populate_and_pack">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.toml_util
+
+      <ul>
+        <li><a href="module_docs/wads/toml_util.html#module-wads.toml_util">module</a>
 </li>
       </ul></li>
       <li>
@@ -403,6 +539,10 @@
         <li><a href="module_docs/wads/util.html#module-wads.util">module</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/wads/populate.html#wads.populate.write_pyproject_configs">write_pyproject_configs() (in module wads.populate)</a>
+</li>
+      <li><a href="module_docs/wads/toml_util.html#wads.toml_util.write_pyproject_toml">write_pyproject_toml() (in module wads.toml_util)</a>
+</li>
   </ul></td>
 </tr></table>
 
