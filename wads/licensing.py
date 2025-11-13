@@ -47,8 +47,8 @@ def resolve_author(
     if pyproject_authors and isinstance(pyproject_authors, list):
         if pyproject_authors:
             first_author = pyproject_authors[0]
-            if isinstance(first_author, dict) and 'name' in first_author:
-                return first_author['name']
+            if isinstance(first_author, dict) and "name" in first_author:
+                return first_author["name"]
             elif isinstance(first_author, str):
                 return first_author
 
@@ -56,9 +56,9 @@ def resolve_author(
     if url:
         # Handle both https and git URLs
         github_patterns = [
-            r'https://github\.com/([^/]+)',
-            r'git@github\.com:([^/]+)',
-            r'http://github\.com/([^/]+)',
+            r"https://github\.com/([^/]+)",
+            r"git@github\.com:([^/]+)",
+            r"http://github\.com/([^/]+)",
         ]
         for pattern in github_patterns:
             match = re.search(pattern, url)
@@ -66,12 +66,12 @@ def resolve_author(
                 return match.group(1)
 
     # 4. Environment variable
-    env_author = os.environ.get('WADS_DFLT_AUTHOR')
+    env_author = os.environ.get("WADS_DFLT_AUTHOR")
     if env_author:
         return env_author
 
     # 5. Return placeholder
-    return '[fullname]'
+    return "[fullname]"
 
 
 def substitute_license_placeholders(
@@ -111,20 +111,20 @@ def substitute_license_placeholders(
 
     # Replace year placeholders
     year_patterns = [
-        (r'\[yyyy\]', str(year)),
-        (r'\[year\]', str(year)),
-        (r'\(yyyy\)', str(year)),
+        (r"\[yyyy\]", str(year)),
+        (r"\[year\]", str(year)),
+        (r"\(yyyy\)", str(year)),
     ]
 
     for pattern, replacement in year_patterns:
         result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
     # Replace author/name placeholders only if author is provided
-    if author and author != '[fullname]':
+    if author and author != "[fullname]":
         name_patterns = [
-            r'\[fullname\]',
-            r'\[name of copyright owner\]',
-            r'\[name\]',
+            r"\[fullname\]",
+            r"\[name of copyright owner\]",
+            r"\[name\]",
         ]
 
         for pattern in name_patterns:
