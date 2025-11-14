@@ -12,16 +12,14 @@ Key Components:
 Example:
     >>> from wads.github_ci_ops import GitHubWorkflow, compare_workflows
     >>>
-    >>> # Parse a workflow file
-    >>> workflow = GitHubWorkflow('path/to/ci.yml')
+    >>> # Parse a workflow from YAML string
+    >>> yaml_str = 'name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest'
+    >>> workflow = GitHubWorkflow(yaml_str)
     >>>
     >>> # Access as a mapping
     >>> jobs = workflow['jobs']
-    >>>
-    >>> # Compare two workflows
-    >>> old = GitHubWorkflow('old_ci.yml')
-    >>> new = GitHubWorkflow('new_ci.yml')
-    >>> diff = compare_workflows(old, new)
+    >>> jobs['test']['runs-on']
+    'ubuntu-latest'
 """
 
 import os
@@ -247,16 +245,22 @@ def diff_nested(
             new_val = new[key]
 
             # If both are mappings or sequences, recurse
-            if isinstance(old_val, (Mapping, list)) and isinstance(new_val, (Mapping, list)):
+            if isinstance(old_val, (Mapping, list)) and isinstance(
+                new_val, (Mapping, list)
+            ):
                 nested_diff = diff_nested(
                     old_val,
                     new_val,
                     path=f"{path}.{key}" if path else str(key),
-                    equivalence_func=equivalence_func
+                    equivalence_func=equivalence_func,
                 )
 
                 # Only include in modified if there are actual differences
-                if nested_diff['added'] or nested_diff['removed'] or nested_diff['modified']:
+                if (
+                    nested_diff['added']
+                    or nested_diff['removed']
+                    or nested_diff['modified']
+                ):
                     result['modified'][key] = nested_diff
             elif not equivalence_func(old_val, new_val):
                 result['modified'][key] = {
@@ -388,10 +392,7 @@ def extract_job_names(workflow: Union[GitHubWorkflow, Mapping]) -> list:
     return list(jobs.keys())
 
 
-def extract_steps(
-    workflow: Union[GitHubWorkflow, Mapping],
-    job_name: str
-) -> list:
+def extract_steps(workflow: Union[GitHubWorkflow, Mapping], job_name: str) -> list:
     """
     Extract all steps from a specific job.
 
@@ -411,9 +412,7 @@ def extract_steps(
 
 
 def find_step_by_name(
-    workflow: Union[GitHubWorkflow, Mapping],
-    job_name: str,
-    step_name: str
+    workflow: Union[GitHubWorkflow, Mapping], job_name: str, step_name: str
 ) -> Optional[dict]:
     """
     Find a specific step by name within a job.
@@ -473,5 +472,5 @@ def summarize_workflow(workflow: Union[GitHubWorkflow, Mapping]) -> dict:
                 'needs': job.get('needs', []),
             }
             for job_name, job in workflow.get('jobs', {}).items()
-        }
+        },
     }

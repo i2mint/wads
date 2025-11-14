@@ -56,6 +56,7 @@ class MigrationRule:
             a dict with findings
         severity: 'critical', 'warning', or 'info'
     """
+
     name: str
     description: str
     check_func: Callable[[Mapping, Mapping], dict]
@@ -77,6 +78,7 @@ class MigrationDiagnosis:
         info: List of informational items
         summary: Dict summarizing the migration
     """
+
     old_workflow: GitHubWorkflow
     new_workflow: GitHubWorkflow
     raw_diff: dict
@@ -135,12 +137,14 @@ def rule_check_python_versions(old: Mapping, new: Mapping) -> dict:
         new_versions = new_matrix.get('python-version', [])
 
         if old_versions != new_versions:
-            findings.append({
-                'job': job_name,
-                'old_versions': old_versions,
-                'new_versions': new_versions,
-                'message': f'Python versions changed in {job_name}: {old_versions} → {new_versions}'
-            })
+            findings.append(
+                {
+                    'job': job_name,
+                    'old_versions': old_versions,
+                    'new_versions': new_versions,
+                    'message': f'Python versions changed in {job_name}: {old_versions} → {new_versions}',
+                }
+            )
 
     return {
         'status': 'changed' if findings else 'ok',
@@ -171,31 +175,39 @@ def rule_check_custom_steps(old: Mapping, new: Mapping) -> dict:
             uses = step.get('uses', '')
 
             # Check if it's a custom action
-            is_standard = any(uses.startswith(prefix) for prefix in standard_action_prefixes)
+            is_standard = any(
+                uses.startswith(prefix) for prefix in standard_action_prefixes
+            )
 
             if uses and not is_standard:
-                custom_steps.append({
-                    'job': job_name,
-                    'step_name': step_name,
-                    'uses': uses,
-                    'message': f'Custom action in {job_name}: {step_name} ({uses})'
-                })
+                custom_steps.append(
+                    {
+                        'job': job_name,
+                        'step_name': step_name,
+                        'uses': uses,
+                        'message': f'Custom action in {job_name}: {step_name} ({uses})',
+                    }
+                )
             elif 'run' in step:
                 # Check for custom run commands
                 run_cmd = step['run']
                 # Skip simple/standard commands
                 if len(run_cmd) > 50 or '\n' in run_cmd:
-                    custom_steps.append({
-                        'job': job_name,
-                        'step_name': step_name,
-                        'run': run_cmd[:100] + '...' if len(run_cmd) > 100 else run_cmd,
-                        'message': f'Custom run command in {job_name}: {step_name}'
-                    })
+                    custom_steps.append(
+                        {
+                            'job': job_name,
+                            'step_name': step_name,
+                            'run': (
+                                run_cmd[:100] + '...' if len(run_cmd) > 100 else run_cmd
+                            ),
+                            'message': f'Custom run command in {job_name}: {step_name}',
+                        }
+                    )
 
     return {
         'status': 'action_required' if custom_steps else 'ok',
         'findings': custom_steps,
-        'message': f'Found {len(custom_steps)} custom steps that may need review'
+        'message': f'Found {len(custom_steps)} custom steps that may need review',
     }
 
 
@@ -218,12 +230,18 @@ def rule_check_dependencies(old: Mapping, new: Mapping) -> dict:
         new_dep_step = None
 
         for step in old_steps:
-            if 'install' in step.get('name', '').lower() and 'depend' in step.get('name', '').lower():
+            if (
+                'install' in step.get('name', '').lower()
+                and 'depend' in step.get('name', '').lower()
+            ):
                 old_dep_step = step
                 break
 
         for step in new_steps:
-            if 'install' in step.get('name', '').lower() and 'depend' in step.get('name', '').lower():
+            if (
+                'install' in step.get('name', '').lower()
+                and 'depend' in step.get('name', '').lower()
+            ):
                 new_dep_step = step
                 break
 
@@ -233,12 +251,14 @@ def rule_check_dependencies(old: Mapping, new: Mapping) -> dict:
             new_uses_pyproject = 'pyproject.toml' in str(new_dep_step)
 
             if old_uses_setup_cfg and new_uses_pyproject:
-                findings.append({
-                    'job': job_name,
-                    'message': f'Migration from setup.cfg to pyproject.toml needed in {job_name}',
-                    'old_approach': 'setup.cfg',
-                    'new_approach': 'pyproject.toml',
-                })
+                findings.append(
+                    {
+                        'job': job_name,
+                        'message': f'Migration from setup.cfg to pyproject.toml needed in {job_name}',
+                        'old_approach': 'setup.cfg',
+                        'new_approach': 'pyproject.toml',
+                    }
+                )
 
     return {
         'status': 'warning' if findings else 'ok',
@@ -275,17 +295,19 @@ def rule_check_formatting_linting(old: Mapping, new: Mapping) -> dict:
             if old_uses_pylint:
                 old_tools.append('Pylint')
 
-            findings.append({
-                'job': job_name,
-                'message': f'Linting/formatting migration in {job_name}: {" + ".join(old_tools)} → Ruff',
-                'old_tools': old_tools,
-                'new_tool': 'Ruff',
-            })
+            findings.append(
+                {
+                    'job': job_name,
+                    'message': f'Linting/formatting migration in {job_name}: {" + ".join(old_tools)} → Ruff',
+                    'old_tools': old_tools,
+                    'new_tool': 'Ruff',
+                }
+            )
 
     return {
         'status': 'info' if findings else 'ok',
         'findings': findings,
-        'message': 'Ruff combines formatting and linting into one tool'
+        'message': 'Ruff combines formatting and linting into one tool',
     }
 
 
@@ -297,6 +319,7 @@ def rule_check_secrets(old: Mapping, new: Mapping) -> dict:
         """Recursively find all ${{ secrets.* }} references."""
         if isinstance(data, str):
             import re
+
             matches = re.findall(r'\$\{\{\s*secrets\.(\w+)\s*\}\}', data)
             all_secrets.update(matches)
         elif isinstance(data, dict):
@@ -311,7 +334,7 @@ def rule_check_secrets(old: Mapping, new: Mapping) -> dict:
     return {
         'status': 'info',
         'secrets': sorted(all_secrets),
-        'message': f'Secrets required: {", ".join(sorted(all_secrets))}'
+        'message': f'Secrets required: {", ".join(sorted(all_secrets))}',
     }
 
 
@@ -406,7 +429,11 @@ def diagnose_migration(
 
     # Parse workflows
     old_wf = old_ci if isinstance(old_ci, GitHubWorkflow) else GitHubWorkflow(old_ci)
-    new_wf = new_template if isinstance(new_template, GitHubWorkflow) else GitHubWorkflow(new_template)
+    new_wf = (
+        new_template
+        if isinstance(new_template, GitHubWorkflow)
+        else GitHubWorkflow(new_template)
+    )
 
     # Substitute project name if provided
     if project_name:
@@ -431,30 +458,41 @@ def diagnose_migration(
 
             # Categorize by severity
             if finding.get('status') in ('action_required', 'error'):
-                diagnosis.critical_issues.append({
-                    'rule': rule.name,
-                    'description': rule.description,
-                    'finding': finding,
-                })
-            elif finding.get('status') in ('changed', 'warning') or rule.severity == 'warning':
-                diagnosis.warnings.append({
-                    'rule': rule.name,
-                    'description': rule.description,
-                    'finding': finding,
-                })
+                diagnosis.critical_issues.append(
+                    {
+                        'rule': rule.name,
+                        'description': rule.description,
+                        'finding': finding,
+                    }
+                )
+            elif (
+                finding.get('status') in ('changed', 'warning')
+                or rule.severity == 'warning'
+            ):
+                diagnosis.warnings.append(
+                    {
+                        'rule': rule.name,
+                        'description': rule.description,
+                        'finding': finding,
+                    }
+                )
             else:
-                diagnosis.info.append({
-                    'rule': rule.name,
-                    'description': rule.description,
-                    'finding': finding,
-                })
+                diagnosis.info.append(
+                    {
+                        'rule': rule.name,
+                        'description': rule.description,
+                        'finding': finding,
+                    }
+                )
         except Exception as e:
             # Don't let one rule failure stop the whole diagnosis
-            diagnosis.warnings.append({
-                'rule': rule.name,
-                'description': f'Rule failed: {e}',
-                'finding': {'status': 'error', 'error': str(e)},
-            })
+            diagnosis.warnings.append(
+                {
+                    'rule': rule.name,
+                    'description': f'Rule failed: {e}',
+                    'finding': {'status': 'error', 'error': str(e)},
+                }
+            )
 
     # Create summary
     diagnosis.summary = {
@@ -475,7 +513,9 @@ def diagnose_migration(
 # --------------------------------------------------------------------------------------
 
 
-def create_migration_report(diagnosis: MigrationDiagnosis, *, verbose: bool = False) -> str:
+def create_migration_report(
+    diagnosis: MigrationDiagnosis, *, verbose: bool = False
+) -> str:
     """
     Generate a human-readable migration report from a diagnosis.
 
@@ -491,7 +531,7 @@ def create_migration_report(diagnosis: MigrationDiagnosis, *, verbose: bool = Fa
         >>> old = 'name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest'
         >>> diag = diagnose_migration(old, github_ci_publish_2025_path)
         >>> report = create_migration_report(diag)
-        >>> 'Migration Report' in report
+        >>> 'CI MIGRATION REPORT' in report
         True
     """
     lines = []
@@ -622,11 +662,13 @@ def get_migration_checklist(diagnosis: MigrationDiagnosis) -> list[str]:
             checklist.append(f"[ ] Review: {warning['finding']['message']}")
 
     # General steps
-    checklist.extend([
-        "[ ] Update workflow file with new template",
-        "[ ] Test the new workflow in a branch",
-        "[ ] Verify all required secrets are configured",
-        "[ ] Check that all jobs complete successfully",
-    ])
+    checklist.extend(
+        [
+            "[ ] Update workflow file with new template",
+            "[ ] Test the new workflow in a branch",
+            "[ ] Verify all required secrets are configured",
+            "[ ] Check that all jobs complete successfully",
+        ]
+    )
 
     return checklist
