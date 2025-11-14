@@ -9,7 +9,11 @@ This script demonstrates:
 """
 
 from wads.github_ci_ops import GitHubWorkflow, compare_workflows, summarize_workflow
-from wads.ci_migration import diagnose_migration, create_migration_report, get_migration_checklist
+from wads.ci_migration import (
+    diagnose_migration,
+    create_migration_report,
+    get_migration_checklist,
+)
 from wads import github_ci_publish_2025_path
 
 # Example 1: Parse a workflow
@@ -82,9 +86,9 @@ print("=" * 80)
 new_template = GitHubWorkflow(github_ci_publish_2025_path)
 diff = compare_workflows(workflow, new_template)
 
-print("Added keys:", list(diff.get('added', {}).keys()))
-print("Removed keys:", list(diff.get('removed', {}).keys()))
-print("Modified keys:", list(diff.get('modified', {}).keys()))
+print("Added keys:", list(diff.get("added", {}).keys()))
+print("Removed keys:", list(diff.get("removed", {}).keys()))
+print("Modified keys:", list(diff.get("modified", {}).keys()))
 print()
 
 # Example 4: Diagnose migration
@@ -93,9 +97,7 @@ print("Example 4: Migration diagnosis")
 print("=" * 80)
 
 diagnosis = diagnose_migration(
-    old_ci_yaml,
-    github_ci_publish_2025_path,
-    project_name='myproject'
+    old_ci_yaml, github_ci_publish_2025_path, project_name="myproject"
 )
 
 print(f"Critical issues: {len(diagnosis.critical_issues)}")
@@ -148,7 +150,7 @@ jobs:
 
 wf = GitHubWorkflow(yaml_with_comments)
 # Modify it
-wf['env']['PROJECT_NAME'] = 'newproject'
+wf["env"]["PROJECT_NAME"] = "newproject"
 # Convert back to YAML - comments should be preserved
 output = wf.to_yaml()
 print("Output YAML (comments preserved):")

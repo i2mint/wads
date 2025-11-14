@@ -95,7 +95,7 @@ class GitHubWorkflow(MutableMapping):
             src_str = str(src)
             if os.path.isfile(src_str):
                 # Load from file
-                with open(src_str, 'r') as f:
+                with open(src_str, "r") as f:
                     self._data = self._yaml.load(f)
             else:
                 # Parse as YAML string
@@ -137,7 +137,7 @@ class GitHubWorkflow(MutableMapping):
         Args:
             path: File path to save to
         """
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             self._yaml.dump(self._data, f)
 
     # MutableMapping interface implementation
@@ -213,17 +213,17 @@ def diff_nested(
         equivalence_func = lambda x, y: x == y
 
     result = {
-        'added': {},
-        'removed': {},
-        'modified': {},
+        "added": {},
+        "removed": {},
+        "modified": {},
     }
 
     # Handle the case where types differ
     if type(old) != type(new):
         return {
-            'added': new,
-            'removed': old,
-            'modified': {},
+            "added": new,
+            "removed": old,
+            "modified": {},
         }
 
     # Handle dict/mapping comparison
@@ -233,11 +233,11 @@ def diff_nested(
 
         # Keys only in new (added)
         for key in new_keys - old_keys:
-            result['added'][key] = new[key]
+            result["added"][key] = new[key]
 
         # Keys only in old (removed)
         for key in old_keys - new_keys:
-            result['removed'][key] = old[key]
+            result["removed"][key] = old[key]
 
         # Keys in both (potentially modified)
         for key in old_keys & new_keys:
@@ -257,15 +257,15 @@ def diff_nested(
 
                 # Only include in modified if there are actual differences
                 if (
-                    nested_diff['added']
-                    or nested_diff['removed']
-                    or nested_diff['modified']
+                    nested_diff["added"]
+                    or nested_diff["removed"]
+                    or nested_diff["modified"]
                 ):
-                    result['modified'][key] = nested_diff
+                    result["modified"][key] = nested_diff
             elif not equivalence_func(old_val, new_val):
-                result['modified'][key] = {
-                    'old': old_val,
-                    'new': new_val,
+                result["modified"][key] = {
+                    "old": old_val,
+                    "new": new_val,
                 }
 
     # Handle list/sequence comparison
@@ -280,25 +280,25 @@ def diff_nested(
             removed_items = [x for x in old if str(x) not in new_set]
 
             if added_items:
-                result['added'] = added_items
+                result["added"] = added_items
             if removed_items:
-                result['removed'] = removed_items
+                result["removed"] = removed_items
 
             # Also track if the order changed
             if old_set == new_set and old != new:
-                result['modified'] = {
-                    'note': 'Order changed',
-                    'old': old,
-                    'new': new,
+                result["modified"] = {
+                    "note": "Order changed",
+                    "old": old,
+                    "new": new,
                 }
 
     # For non-nested values
     else:
         if not equivalence_func(old, new):
             return {
-                'added': new,
-                'removed': old,
-                'modified': {},
+                "added": new,
+                "removed": old,
+                "modified": {},
             }
 
     return result
@@ -388,7 +388,7 @@ def extract_job_names(workflow: Union[GitHubWorkflow, Mapping]) -> list:
     if isinstance(workflow, GitHubWorkflow):
         workflow = dict(workflow)
 
-    jobs = workflow.get('jobs', {})
+    jobs = workflow.get("jobs", {})
     return list(jobs.keys())
 
 
@@ -406,9 +406,9 @@ def extract_steps(workflow: Union[GitHubWorkflow, Mapping], job_name: str) -> li
     if isinstance(workflow, GitHubWorkflow):
         workflow = dict(workflow)
 
-    jobs = workflow.get('jobs', {})
+    jobs = workflow.get("jobs", {})
     job = jobs.get(job_name, {})
-    return job.get('steps', [])
+    return job.get("steps", [])
 
 
 def find_step_by_name(
@@ -427,7 +427,7 @@ def find_step_by_name(
     """
     steps = extract_steps(workflow, job_name)
     for step in steps:
-        if step.get('name') == step_name:
+        if step.get("name") == step_name:
             return step
     return None
 
@@ -445,7 +445,7 @@ def get_workflow_env_vars(workflow: Union[GitHubWorkflow, Mapping]) -> dict:
     if isinstance(workflow, GitHubWorkflow):
         workflow = dict(workflow)
 
-    return workflow.get('env', {})
+    return workflow.get("env", {})
 
 
 def summarize_workflow(workflow: Union[GitHubWorkflow, Mapping]) -> dict:
@@ -462,15 +462,15 @@ def summarize_workflow(workflow: Union[GitHubWorkflow, Mapping]) -> dict:
         workflow = dict(workflow)
 
     return {
-        'name': workflow.get('name', 'Unnamed'),
-        'triggers': workflow.get('on', []),
-        'env_vars': get_workflow_env_vars(workflow),
-        'jobs': {
+        "name": workflow.get("name", "Unnamed"),
+        "triggers": workflow.get("on", []),
+        "env_vars": get_workflow_env_vars(workflow),
+        "jobs": {
             job_name: {
-                'runs_on': job.get('runs-on', 'unknown'),
-                'steps_count': len(job.get('steps', [])),
-                'needs': job.get('needs', []),
+                "runs_on": job.get("runs-on", "unknown"),
+                "steps_count": len(job.get("steps", [])),
+                "needs": job.get("needs", []),
             }
-            for job_name, job in workflow.get('jobs', {}).items()
+            for job_name, job in workflow.get("jobs", {}).items()
         },
     }

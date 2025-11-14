@@ -35,7 +35,7 @@ def test_generate_package_from_file():
         module_tar_gz = next((output_path / "dist").glob("*.tar.gz"))
         assert module_tar_gz.is_file()
         with tarfile.open(module_tar_gz, "r:gz") as tar:
-            tar.extractall(tmp_path / "unpacked", filter='data')
+            tar.extractall(tmp_path / "unpacked", filter="data")
         unpacked_dist = (
             tmp_path / "unpacked" / module_tar_gz.name[: -len(".tar.gz")] / "dist"
         )
@@ -71,7 +71,7 @@ def test_generate_package_from_dir():
         module_tar_gz = next((output_path / "dist").glob("*.tar.gz"))
         assert module_tar_gz.is_file()
         with tarfile.open(module_tar_gz, "r:gz") as tar:
-            tar.extractall(tmp_path / "unpacked", filter='data')
+            tar.extractall(tmp_path / "unpacked", filter="data")
         unpacked_dir = tmp_path / "unpacked" / module_tar_gz.name[: -len(".tar.gz")]
         unpacked_dist = unpacked_dir / "dist"
         unpacked_module = unpacked_dir / EXAMPLE_MODULE_DIR.stem

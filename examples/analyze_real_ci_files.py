@@ -7,7 +7,11 @@ to help with migration planning.
 
 import requests
 from wads.github_ci_ops import GitHubWorkflow, compare_workflows
-from wads.ci_migration import diagnose_migration, create_migration_report, get_migration_checklist
+from wads.ci_migration import (
+    diagnose_migration,
+    create_migration_report,
+    get_migration_checklist,
+)
 from wads import github_ci_publish_2025_path
 
 
@@ -20,10 +24,10 @@ def fetch_ci_from_url(url: str) -> str:
 
 # CI file URLs
 ci_files = {
-    'oldest (hum)': 'https://raw.githubusercontent.com/i2mint/hum/refs/heads/master/.github/workflows/ci.yml',
-    'old (extrude)': 'https://raw.githubusercontent.com/i2mint/extrude/refs/heads/master/.github/workflows/ci.yml',
-    'newish (dol)': 'https://raw.githubusercontent.com/i2mint/dol/refs/heads/master/.github/workflows/ci.yml',
-    'new (pyrompt)': 'https://raw.githubusercontent.com/thorwhalen/pyrompt/refs/heads/main/.github/workflows/ci.yml',
+    "oldest (hum)": "https://raw.githubusercontent.com/i2mint/hum/refs/heads/master/.github/workflows/ci.yml",
+    "old (extrude)": "https://raw.githubusercontent.com/i2mint/extrude/refs/heads/master/.github/workflows/ci.yml",
+    "newish (dol)": "https://raw.githubusercontent.com/i2mint/dol/refs/heads/master/.github/workflows/ci.yml",
+    "new (pyrompt)": "https://raw.githubusercontent.com/thorwhalen/pyrompt/refs/heads/main/.github/workflows/ci.yml",
 }
 
 print("=" * 80)
@@ -59,8 +63,10 @@ for name, wf in workflows.items():
     print(f"  Triggers: {summary['triggers']}")
     print(f"  Env vars: {summary['env_vars']}")
     print(f"  Jobs: {list(summary['jobs'].keys())}")
-    for job_name, job_info in summary['jobs'].items():
-        print(f"    - {job_name}: {job_info['steps_count']} steps on {job_info['runs_on']}")
+    for job_name, job_info in summary["jobs"].items():
+        print(
+            f"    - {job_name}: {job_info['steps_count']} steps on {job_info['runs_on']}"
+        )
 
 print()
 print("=" * 80)
@@ -69,7 +75,7 @@ print("=" * 80)
 
 # Analyze migration from each old CI to the new template
 for name, wf in workflows.items():
-    if name == 'new (pyrompt)':
+    if name == "new (pyrompt)":
         # Skip the newest one - it's already similar to the template
         continue
 
@@ -80,12 +86,14 @@ for name, wf in workflows.items():
     print()
 
     # Extract project name from env if available
-    project_name = wf.get('env', {}).get('PROJECT_NAME', 'unknown')
-    if '#PROJECT_NAME#' in str(project_name):
-        project_name = name.split('(')[1].strip(')')  # Extract from label
+    project_name = wf.get("env", {}).get("PROJECT_NAME", "unknown")
+    if "#PROJECT_NAME#" in str(project_name):
+        project_name = name.split("(")[1].strip(")")  # Extract from label
 
     # Diagnose migration
-    diagnosis = diagnose_migration(wf, github_ci_publish_2025_path, project_name=project_name)
+    diagnosis = diagnose_migration(
+        wf, github_ci_publish_2025_path, project_name=project_name
+    )
 
     # Generate report
     report = create_migration_report(diagnosis, verbose=False)
@@ -104,9 +112,9 @@ print("COMPARISON: Oldest vs Newest")
 print("=" * 80)
 print()
 
-if 'oldest (hum)' in workflows and 'new (pyrompt)' in workflows:
-    oldest = workflows['oldest (hum)']
-    newest = workflows['new (pyrompt)']
+if "oldest (hum)" in workflows and "new (pyrompt)" in workflows:
+    oldest = workflows["oldest (hum)"]
+    newest = workflows["new (pyrompt)"]
 
     diff = compare_workflows(oldest, newest)
 
@@ -118,8 +126,8 @@ if 'oldest (hum)' in workflows and 'new (pyrompt)' in workflows:
     print()
 
     # Show job differences
-    if 'jobs' in diff.get('modified', {}):
-        jobs_diff = diff['modified']['jobs']
+    if "jobs" in diff.get("modified", {}):
+        jobs_diff = diff["modified"]["jobs"]
         print("Job changes:")
         print(f"  Jobs added: {list(jobs_diff.get('added', {}).keys())}")
         print(f"  Jobs removed: {list(jobs_diff.get('removed', {}).keys())}")
