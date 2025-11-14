@@ -1,0 +1,830 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_migration &mdash; wads 0.1.46 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.ci_migration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.ci_migration</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CI Migration - Diagnosis and migration tools for GitHub Actions workflows.</span>
+
+<span class="sd">This module provides tools to analyze differences between old CI scripts and new</span>
+<span class="sd">templates, helping to identify what needs to be carried over during migration.</span>
+
+<span class="sd">Key Functions:</span>
+<span class="sd">    diagnose_migration: Analyze what needs to change when migrating from old to new</span>
+<span class="sd">    create_migration_report: Generate a human-readable migration report</span>
+<span class="sd">    apply_migration_rules: Apply customizable rules to identify critical differences</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    &gt;&gt;&gt; from wads.ci_migration import diagnose_migration, create_migration_report</span>
+<span class="sd">    &gt;&gt;&gt; from wads import github_ci_publish_2025_path</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Diagnose migration for a specific project</span>
+<span class="sd">    &gt;&gt;&gt; diagnosis = diagnose_migration(  # doctest: +SKIP</span>
+<span class="sd">    ...     &#39;old_ci.yml&#39;,</span>
+<span class="sd">    ...     github_ci_publish_2025_path</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Generate a report</span>
+<span class="sd">    &gt;&gt;&gt; report = create_migration_report(diagnosis)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; print(report)  # doctest: +SKIP</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.github_ci_ops</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GitHubWorkflow</span><span class="p">,</span>
+    <span class="n">compare_workflows</span><span class="p">,</span>
+    <span class="n">diff_nested</span><span class="p">,</span>
+    <span class="n">extract_job_names</span><span class="p">,</span>
+    <span class="n">extract_steps</span><span class="p">,</span>
+    <span class="n">get_workflow_env_vars</span><span class="p">,</span>
+    <span class="n">summarize_workflow</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Migration rules and configuration</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="MigrationRule">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.MigrationRule">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MigrationRule</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A rule for identifying important differences during migration.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name: Human-readable name of the rule</span>
+<span class="sd">        description: What this rule checks for</span>
+<span class="sd">        check_func: Function that takes (old_workflow, new_workflow) and returns</span>
+<span class="sd">            a dict with findings</span>
+<span class="sd">        severity: &#39;critical&#39;, &#39;warning&#39;, or &#39;info&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">check_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="nb">dict</span><span class="p">]</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;info&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="MigrationDiagnosis">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.MigrationDiagnosis">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MigrationDiagnosis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Results of a migration diagnosis.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        old_workflow: The old workflow being migrated from</span>
+<span class="sd">        new_workflow: The new workflow/template being migrated to</span>
+<span class="sd">        raw_diff: The raw diff from compare_workflows</span>
+<span class="sd">        rule_findings: Dict of findings from each migration rule</span>
+<span class="sd">        critical_issues: List of critical issues that must be addressed</span>
+<span class="sd">        warnings: List of warnings to consider</span>
+<span class="sd">        info: List of informational items</span>
+<span class="sd">        summary: Dict summarizing the migration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">old_workflow</span><span class="p">:</span> <span class="n">GitHubWorkflow</span>
+    <span class="n">new_workflow</span><span class="p">:</span> <span class="n">GitHubWorkflow</span>
+    <span class="n">raw_diff</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">rule_findings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">critical_issues</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Built-in migration rules</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="rule_check_project_name">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_project_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_project_name</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if PROJECT_NAME needs to be updated.&quot;&quot;&quot;</span>
+    <span class="n">old_env</span> <span class="o">=</span> <span class="n">get_workflow_env_vars</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="n">new_env</span> <span class="o">=</span> <span class="n">get_workflow_env_vars</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="n">old_name</span> <span class="o">=</span> <span class="n">old_env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PROJECT_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">new_name</span> <span class="o">=</span> <span class="n">new_env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PROJECT_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;#PROJECT_NAME#&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;action_required&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Need to set PROJECT_NAME (was: </span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;old_value&#39;</span><span class="p">:</span> <span class="n">old_name</span><span class="p">,</span>
+            <span class="s1">&#39;new_value&#39;</span><span class="p">:</span> <span class="n">new_name</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">elif</span> <span class="n">old_name</span> <span class="ow">and</span> <span class="n">new_name</span> <span class="ow">and</span> <span class="n">old_name</span> <span class="o">!=</span> <span class="n">new_name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;changed&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;PROJECT_NAME changed from </span><span class="si">{</span><span class="n">old_name</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;old_value&#39;</span><span class="p">:</span> <span class="n">old_name</span><span class="p">,</span>
+            <span class="s1">&#39;new_value&#39;</span><span class="p">:</span> <span class="n">new_name</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="rule_check_python_versions">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_python_versions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_python_versions</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if Python versions changed.&quot;&quot;&quot;</span>
+    <span class="n">findings</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">old_jobs</span> <span class="o">=</span> <span class="n">old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">new_jobs</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">old_jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="n">old_job</span> <span class="o">=</span> <span class="n">old_jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">new_job</span> <span class="o">=</span> <span class="n">new_jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">old_matrix</span> <span class="o">=</span> <span class="n">old_job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;strategy&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;matrix&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">new_matrix</span> <span class="o">=</span> <span class="n">new_job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;strategy&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;matrix&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">old_versions</span> <span class="o">=</span> <span class="n">old_matrix</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;python-version&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">new_versions</span> <span class="o">=</span> <span class="n">new_matrix</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;python-version&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="k">if</span> <span class="n">old_versions</span> <span class="o">!=</span> <span class="n">new_versions</span><span class="p">:</span>
+            <span class="n">findings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="n">job_name</span><span class="p">,</span>
+                    <span class="s1">&#39;old_versions&#39;</span><span class="p">:</span> <span class="n">old_versions</span><span class="p">,</span>
+                    <span class="s1">&#39;new_versions&#39;</span><span class="p">:</span> <span class="n">new_versions</span><span class="p">,</span>
+                    <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Python versions changed in </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">old_versions</span><span class="si">}</span><span class="s1"> → </span><span class="si">{</span><span class="n">new_versions</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;changed&#39;</span> <span class="k">if</span> <span class="n">findings</span> <span class="k">else</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;findings&#39;</span><span class="p">:</span> <span class="n">findings</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="rule_check_custom_steps">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_custom_steps">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_custom_steps</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Identify custom steps in old workflow that might need to be carried over.</span>
+
+<span class="sd">    Custom steps are those that don&#39;t use standard actions from i2mint/wads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">old_jobs</span> <span class="o">=</span> <span class="n">old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">custom_steps</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">standard_action_prefixes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;actions/&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;i2mint/wads/actions/&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;i2mint/isee/actions/&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;i2mint/epythet/actions/&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">old_jobs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+            <span class="n">step_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uses&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Check if it&#39;s a custom action</span>
+            <span class="n">is_standard</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">uses</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">standard_action_prefixes</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">uses</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_standard</span><span class="p">:</span>
+                <span class="n">custom_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="n">job_name</span><span class="p">,</span>
+                        <span class="s1">&#39;step_name&#39;</span><span class="p">:</span> <span class="n">step_name</span><span class="p">,</span>
+                        <span class="s1">&#39;uses&#39;</span><span class="p">:</span> <span class="n">uses</span><span class="p">,</span>
+                        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Custom action in </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">step_name</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="s1">&#39;run&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                <span class="c1"># Check for custom run commands</span>
+                <span class="n">run_cmd</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]</span>
+                <span class="c1"># Skip simple/standard commands</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run_cmd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">50</span> <span class="ow">or</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">run_cmd</span><span class="p">:</span>
+                    <span class="n">custom_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="n">job_name</span><span class="p">,</span>
+                            <span class="s1">&#39;step_name&#39;</span><span class="p">:</span> <span class="n">step_name</span><span class="p">,</span>
+                            <span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">run_cmd</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">run_cmd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100</span> <span class="k">else</span> <span class="n">run_cmd</span>
+                            <span class="p">),</span>
+                            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Custom run command in </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">step_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;action_required&#39;</span> <span class="k">if</span> <span class="n">custom_steps</span> <span class="k">else</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;findings&#39;</span><span class="p">:</span> <span class="n">custom_steps</span><span class="p">,</span>
+        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">custom_steps</span><span class="p">)</span><span class="si">}</span><span class="s1"> custom steps that may need review&#39;</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="rule_check_dependencies">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_dependencies</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if dependency installation approach changed.&quot;&quot;&quot;</span>
+    <span class="n">findings</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">old_jobs</span> <span class="o">=</span> <span class="n">old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">new_jobs</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">old_jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">old_job</span> <span class="o">=</span> <span class="n">old_jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">new_job</span> <span class="o">=</span> <span class="n">new_jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">old_steps</span> <span class="o">=</span> <span class="n">old_job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">new_steps</span> <span class="o">=</span> <span class="n">new_job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="c1"># Look for dependency installation steps</span>
+        <span class="n">old_dep_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">new_dep_step</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">old_steps</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s1">&#39;install&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="ow">and</span> <span class="s1">&#39;depend&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="n">old_dep_step</span> <span class="o">=</span> <span class="n">step</span>
+                <span class="k">break</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">new_steps</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="s1">&#39;install&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="ow">and</span> <span class="s1">&#39;depend&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="n">new_dep_step</span> <span class="o">=</span> <span class="n">step</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">old_dep_step</span> <span class="ow">and</span> <span class="n">new_dep_step</span><span class="p">:</span>
+            <span class="c1"># Check if setup.cfg vs pyproject.toml</span>
+            <span class="n">old_uses_setup_cfg</span> <span class="o">=</span> <span class="s1">&#39;setup.cfg&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">old_dep_step</span><span class="p">)</span>
+            <span class="n">new_uses_pyproject</span> <span class="o">=</span> <span class="s1">&#39;pyproject.toml&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_dep_step</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">old_uses_setup_cfg</span> <span class="ow">and</span> <span class="n">new_uses_pyproject</span><span class="p">:</span>
+                <span class="n">findings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="n">job_name</span><span class="p">,</span>
+                        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Migration from setup.cfg to pyproject.toml needed in </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;old_approach&#39;</span><span class="p">:</span> <span class="s1">&#39;setup.cfg&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;new_approach&#39;</span><span class="p">:</span> <span class="s1">&#39;pyproject.toml&#39;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;warning&#39;</span> <span class="k">if</span> <span class="n">findings</span> <span class="k">else</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;findings&#39;</span><span class="p">:</span> <span class="n">findings</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="rule_check_formatting_linting">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_formatting_linting">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_formatting_linting</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if formatting/linting approach changed.</span>
+
+<span class="sd">    Common migration: Black + Pylint → Ruff (format + lint)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">findings</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">old_jobs</span> <span class="o">=</span> <span class="n">old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">new_jobs</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">old_jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">old_steps</span> <span class="o">=</span> <span class="n">extract_steps</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+        <span class="n">new_steps</span> <span class="o">=</span> <span class="n">extract_steps</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+
+        <span class="c1"># Check old approach</span>
+        <span class="n">old_uses_black</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;black&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">old_steps</span><span class="p">)</span>
+        <span class="n">old_uses_pylint</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;pylint&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">old_steps</span><span class="p">)</span>
+
+        <span class="c1"># Check new approach</span>
+        <span class="n">new_uses_ruff</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;ruff&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">new_steps</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">old_uses_black</span> <span class="ow">or</span> <span class="n">old_uses_pylint</span><span class="p">)</span> <span class="ow">and</span> <span class="n">new_uses_ruff</span><span class="p">:</span>
+            <span class="n">old_tools</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">old_uses_black</span><span class="p">:</span>
+                <span class="n">old_tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Black&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">old_uses_pylint</span><span class="p">:</span>
+                <span class="n">old_tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Pylint&#39;</span><span class="p">)</span>
+
+            <span class="n">findings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;job&#39;</span><span class="p">:</span> <span class="n">job_name</span><span class="p">,</span>
+                    <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Linting/formatting migration in </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="s2">&quot; + &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">old_tools</span><span class="p">)</span><span class="si">}</span><span class="s1"> → Ruff&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;old_tools&#39;</span><span class="p">:</span> <span class="n">old_tools</span><span class="p">,</span>
+                    <span class="s1">&#39;new_tool&#39;</span><span class="p">:</span> <span class="s1">&#39;Ruff&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;info&#39;</span> <span class="k">if</span> <span class="n">findings</span> <span class="k">else</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;findings&#39;</span><span class="p">:</span> <span class="n">findings</span><span class="p">,</span>
+        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Ruff combines formatting and linting into one tool&#39;</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="rule_check_secrets">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_secrets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rule_check_secrets</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identify secrets that might need to be configured.&quot;&quot;&quot;</span>
+    <span class="n">all_secrets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_secrets</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively find all ${{ secrets.* }} references.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$\{\{\s*secrets\.(\w+)\s*\}\}&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="n">all_secrets</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">extract_secrets</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">extract_secrets</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="n">extract_secrets</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;secrets&#39;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_secrets</span><span class="p">),</span>
+        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Secrets required: </span><span class="si">{</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">all_secrets</span><span class="p">))</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># Default migration rules</span>
+<span class="n">DEFAULT_MIGRATION_RULES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;project_name&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Check PROJECT_NAME configuration&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_project_name</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;critical&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;python_versions&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Check if Python versions changed&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_python_versions</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;custom_steps&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Identify custom steps that need review&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_custom_steps</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dependencies&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Check dependency installation approach&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_dependencies</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;formatting_linting&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Check formatting/linting tool changes&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_formatting_linting</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">MigrationRule</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;secrets&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Identify required secrets&#39;</span><span class="p">,</span>
+        <span class="n">check_func</span><span class="o">=</span><span class="n">rule_check_secrets</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Main diagnosis function</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="diagnose_migration">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.diagnose_migration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_migration</span><span class="p">(</span>
+    <span class="n">old_ci</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">],</span>
+    <span class="n">new_template</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">MigrationRule</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MigrationDiagnosis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Diagnose what needs to change when migrating from old CI to new template.</span>
+
+<span class="sd">    This function performs a comprehensive analysis of differences between an old</span>
+<span class="sd">    CI script and a new template, applying a set of migration rules to identify</span>
+<span class="sd">    what needs to be carried over, what can be replaced, and what requires attention.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old_ci: Old CI workflow (path, YAML string, or GitHubWorkflow)</span>
+<span class="sd">        new_template: New CI template (path, YAML string, or GitHubWorkflow)</span>
+<span class="sd">        rules: Custom migration rules (defaults to DEFAULT_MIGRATION_RULES)</span>
+<span class="sd">        project_name: Optional project name to substitute in new template</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MigrationDiagnosis object with detailed findings</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from wads import github_ci_publish_2025_path</span>
+<span class="sd">        &gt;&gt;&gt; old = &#39;&#39;&#39;</span>
+<span class="sd">        ... name: CI</span>
+<span class="sd">        ... env:</span>
+<span class="sd">        ...   PROJECT_NAME: myproject</span>
+<span class="sd">        ... on: [push]</span>
+<span class="sd">        ... jobs:</span>
+<span class="sd">        ...   test:</span>
+<span class="sd">        ...     runs-on: ubuntu-latest</span>
+<span class="sd">        ...     steps:</span>
+<span class="sd">        ...       - uses: actions/checkout@v3</span>
+<span class="sd">        ... &#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; diagnosis = diagnose_migration(old, github_ci_publish_2025_path)</span>
+<span class="sd">        &gt;&gt;&gt; diagnosis.old_workflow[&#39;name&#39;]</span>
+<span class="sd">        &#39;CI&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rules</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="n">DEFAULT_MIGRATION_RULES</span>
+
+    <span class="c1"># Parse workflows</span>
+    <span class="n">old_wf</span> <span class="o">=</span> <span class="n">old_ci</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_ci</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">)</span> <span class="k">else</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="n">new_wf</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">new_template</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_template</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">new_template</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Substitute project name if provided</span>
+    <span class="k">if</span> <span class="n">project_name</span><span class="p">:</span>
+        <span class="n">new_yaml</span> <span class="o">=</span> <span class="n">new_wf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#PROJECT_NAME#&#39;</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+        <span class="n">new_wf</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">new_yaml</span><span class="p">)</span>
+
+    <span class="c1"># Perform basic comparison</span>
+    <span class="n">raw_diff</span> <span class="o">=</span> <span class="n">compare_workflows</span><span class="p">(</span><span class="n">old_wf</span><span class="p">,</span> <span class="n">new_wf</span><span class="p">)</span>
+
+    <span class="c1"># Initialize diagnosis</span>
+    <span class="n">diagnosis</span> <span class="o">=</span> <span class="n">MigrationDiagnosis</span><span class="p">(</span>
+        <span class="n">old_workflow</span><span class="o">=</span><span class="n">old_wf</span><span class="p">,</span>
+        <span class="n">new_workflow</span><span class="o">=</span><span class="n">new_wf</span><span class="p">,</span>
+        <span class="n">raw_diff</span><span class="o">=</span><span class="n">raw_diff</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Apply migration rules</span>
+    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">finding</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">check_func</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">old_wf</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">new_wf</span><span class="p">))</span>
+            <span class="n">diagnosis</span><span class="o">.</span><span class="n">rule_findings</span><span class="p">[</span><span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">finding</span>
+
+            <span class="c1"># Categorize by severity</span>
+            <span class="k">if</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;action_required&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">):</span>
+                <span class="n">diagnosis</span><span class="o">.</span><span class="n">critical_issues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;rule&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                        <span class="s1">&#39;finding&#39;</span><span class="p">:</span> <span class="n">finding</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;changed&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">rule</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="s1">&#39;warning&#39;</span>
+            <span class="p">):</span>
+                <span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;rule&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                        <span class="s1">&#39;finding&#39;</span><span class="p">:</span> <span class="n">finding</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">diagnosis</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;rule&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                        <span class="s1">&#39;finding&#39;</span><span class="p">:</span> <span class="n">finding</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Don&#39;t let one rule failure stop the whole diagnosis</span>
+            <span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s1">&#39;rule&#39;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;Rule failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;finding&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Create summary</span>
+    <span class="n">diagnosis</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;old_name&#39;</span><span class="p">:</span> <span class="n">old_wf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;new_name&#39;</span><span class="p">:</span> <span class="n">new_wf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;old_jobs&#39;</span><span class="p">:</span> <span class="n">extract_job_names</span><span class="p">(</span><span class="n">old_wf</span><span class="p">),</span>
+        <span class="s1">&#39;new_jobs&#39;</span><span class="p">:</span> <span class="n">extract_job_names</span><span class="p">(</span><span class="n">new_wf</span><span class="p">),</span>
+        <span class="s1">&#39;critical_count&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">critical_issues</span><span class="p">),</span>
+        <span class="s1">&#39;warning_count&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="p">),</span>
+        <span class="s1">&#39;info_count&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">info</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">diagnosis</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Reporting and output</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="create_migration_report">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.create_migration_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_migration_report</span><span class="p">(</span>
+    <span class="n">diagnosis</span><span class="p">:</span> <span class="n">MigrationDiagnosis</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a human-readable migration report from a diagnosis.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        diagnosis: MigrationDiagnosis object</span>
+<span class="sd">        verbose: If True, include detailed diff information</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Formatted report string</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from wads import github_ci_publish_2025_path</span>
+<span class="sd">        &gt;&gt;&gt; old = &#39;name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest&#39;</span>
+<span class="sd">        &gt;&gt;&gt; diag = diagnose_migration(old, github_ci_publish_2025_path)</span>
+<span class="sd">        &gt;&gt;&gt; report = create_migration_report(diag)</span>
+<span class="sd">        &gt;&gt;&gt; &#39;CI MIGRATION REPORT&#39; in report</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;CI MIGRATION REPORT&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Summary</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Old workflow: </span><span class="si">{</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;old_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New workflow: </span><span class="si">{</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;new_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Old jobs: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;old_jobs&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New jobs: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;new_jobs&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Critical issues</span>
+    <span class="k">if</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">critical_issues</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;CRITICAL ISSUES (must be addressed):&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">critical_issues</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">issue</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="s1">&#39;findings&#39;</span> <span class="ow">in</span> <span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">finding</span> <span class="ow">in</span> <span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;findings&#39;</span><span class="p">]:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">finding</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Warnings</span>
+    <span class="k">if</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;WARNINGS (should review):&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">warning</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="s1">&#39;findings&#39;</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">finding</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;findings&#39;</span><span class="p">]:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - </span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">finding</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Info</span>
+    <span class="k">if</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;INFORMATION:&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Detailed diff (if verbose)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">raw_diff</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;DETAILED DIFFERENCES:&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="n">_format_diff</span><span class="p">(</span><span class="n">diagnosis</span><span class="o">.</span><span class="n">raw_diff</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_diff</span><span class="p">(</span><span class="n">diff</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to format diff dict recursively.&quot;&quot;&quot;</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span>
+
+    <span class="k">if</span> <span class="s1">&#39;added&#39;</span> <span class="ow">in</span> <span class="n">diff</span> <span class="ow">and</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;added&#39;</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">Added:&quot;</span><span class="p">)</span>
+        <span class="n">_format_value</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="s1">&#39;added&#39;</span><span class="p">],</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;removed&#39;</span> <span class="ow">in</span> <span class="n">diff</span> <span class="ow">and</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;removed&#39;</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">Removed:&quot;</span><span class="p">)</span>
+        <span class="n">_format_value</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="s1">&#39;removed&#39;</span><span class="p">],</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;modified&#39;</span> <span class="ow">in</span> <span class="n">diff</span> <span class="ow">and</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">Modified:&quot;</span><span class="p">)</span>
+        <span class="n">_format_value</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">],</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;~&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to format values with indentation.&quot;&quot;&quot;</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;old&#39;</span> <span class="ow">in</span> <span class="n">v</span> <span class="ow">and</span> <span class="s1">&#39;new&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;old&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;new&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+                <span class="n">_format_value</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_migration_checklist">
+<a class="viewcode-back" href="../../module_docs/wads/ci_migration.html#wads.ci_migration.get_migration_checklist">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_migration_checklist</span><span class="p">(</span><span class="n">diagnosis</span><span class="p">:</span> <span class="n">MigrationDiagnosis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate an actionable checklist for migration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        diagnosis: MigrationDiagnosis object</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of action items</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from wads import github_ci_publish_2025_path</span>
+<span class="sd">        &gt;&gt;&gt; old = &#39;name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest&#39;</span>
+<span class="sd">        &gt;&gt;&gt; diag = diagnose_migration(old, github_ci_publish_2025_path)</span>
+<span class="sd">        &gt;&gt;&gt; checklist = get_migration_checklist(diag)</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(checklist, list)</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">checklist</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Critical items first</span>
+    <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">critical_issues</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+            <span class="n">checklist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ ] CRITICAL: </span><span class="si">{</span><span class="n">issue</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Then warnings</span>
+    <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">]:</span>
+            <span class="n">checklist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ ] Review: </span><span class="si">{</span><span class="n">warning</span><span class="p">[</span><span class="s1">&#39;finding&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># General steps</span>
+    <span class="n">checklist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;[ ] Update workflow file with new template&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;[ ] Test the new workflow in a branch&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;[ ] Verify all required secrets are configured&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;[ ] Check that all jobs complete successfully&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">checklist</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

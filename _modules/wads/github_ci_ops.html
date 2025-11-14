@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.github_ci_ops &mdash; wads 0.1.46 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.github_ci_ops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.github_ci_ops</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">GitHub CI Operations - Tools for analyzing and comparing GitHub Actions workflows.</span>
+
+<span class="sd">This module provides utilities for parsing, analyzing, and comparing GitHub Actions</span>
+<span class="sd">CI/CD scripts, with a focus on migration from old to new CI templates.</span>
+
+<span class="sd">Key Components:</span>
+<span class="sd">    GitHubWorkflow: Parse and manipulate GitHub Actions YAML files while preserving comments</span>
+<span class="sd">    compare_workflows: Compare two workflows and identify differences</span>
+<span class="sd">    diff_nested: General-purpose nested structure comparison</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    &gt;&gt;&gt; from wads.github_ci_ops import GitHubWorkflow, compare_workflows</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Parse a workflow from YAML string</span>
+<span class="sd">    &gt;&gt;&gt; yaml_str = &#39;name: CI\\non: [push]\\njobs:\\n  test:\\n    runs-on: ubuntu-latest&#39;</span>
+<span class="sd">    &gt;&gt;&gt; workflow = GitHubWorkflow(yaml_str)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Access as a mapping</span>
+<span class="sd">    &gt;&gt;&gt; jobs = workflow[&#39;jobs&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; jobs[&#39;test&#39;][&#39;runs-on&#39;]</span>
+<span class="sd">    &#39;ubuntu-latest&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableMapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ruamel.yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAML</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ruamel.yaml.comments</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommentedMap</span><span class="p">,</span> <span class="n">CommentedSeq</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+        <span class="s2">&quot;ruamel.yaml is required for GitHub CI operations. &quot;</span>
+        <span class="s2">&quot;Install with: pip install ruamel.yaml&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># YAML parsing with comment preservation</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="GitHubWorkflow">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GitHubWorkflow</span><span class="p">(</span><span class="n">MutableMapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Mapping view of a GitHub Actions workflow file that preserves comments.</span>
+
+<span class="sd">    This class parses GitHub Actions YAML files using ruamel.yaml to maintain</span>
+<span class="sd">    comments and formatting. It provides a dict-like interface for accessing</span>
+<span class="sd">    and modifying the workflow structure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        src: Either a file path (str/Path), YAML string content, or a dict/Mapping</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        _data: The parsed YAML data (CommentedMap from ruamel.yaml)</span>
+<span class="sd">        _yaml: The YAML parser instance</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # From file path</span>
+<span class="sd">        &gt;&gt;&gt; wf = GitHubWorkflow(&#39;ci.yml&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # From YAML string</span>
+<span class="sd">        &gt;&gt;&gt; yaml_str = &#39;&#39;&#39;</span>
+<span class="sd">        ... name: CI</span>
+<span class="sd">        ... on: [push]</span>
+<span class="sd">        ... jobs:</span>
+<span class="sd">        ...   test:</span>
+<span class="sd">        ...     runs-on: ubuntu-latest</span>
+<span class="sd">        ... &#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; wf = GitHubWorkflow(yaml_str)</span>
+<span class="sd">        &gt;&gt;&gt; wf[&#39;name&#39;]</span>
+<span class="sd">        &#39;CI&#39;</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Access nested values</span>
+<span class="sd">        &gt;&gt;&gt; wf[&#39;jobs&#39;][&#39;test&#39;][&#39;runs-on&#39;]</span>
+<span class="sd">        &#39;ubuntu-latest&#39;</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Convert back to YAML</span>
+<span class="sd">        &gt;&gt;&gt; yaml_output = wf.to_yaml()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span> <span class="o">=</span> <span class="n">YAML</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">preserve_quotes</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">default_flow_style</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">4096</span>  <span class="c1"># Prevent line wrapping</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="c1"># Convert dict to CommentedMap</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+            <span class="n">src_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">src_str</span><span class="p">):</span>
+                <span class="c1"># Load from file</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">src_str</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Parse as YAML string</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">src_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;src must be a file path, YAML string, or Mapping, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">CommentedMap</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GitHubWorkflow.to_yaml">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow.to_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the workflow back to a YAML string.</span>
+
+<span class="sd">        Preserves comments and formatting from the original file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string representation of the workflow</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GitHubWorkflow.to_dict">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert to a plain Python dictionary (loses comments).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Plain dict representation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GitHubWorkflow.save">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the workflow to a file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: File path to save to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+
+    <span class="c1"># MutableMapping interface implementation</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;GitHubWorkflow(</span><span class="si">{</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Nested structure comparison</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="diff_nested">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.diff_nested">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diff_nested</span><span class="p">(</span>
+    <span class="n">old</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">new</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">equivalence_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively compare two nested structures and identify differences.</span>
+
+<span class="sd">    This function compares two nested data structures (dicts, lists, etc.) and</span>
+<span class="sd">    returns a detailed report of the differences. It&#39;s the foundation for</span>
+<span class="sd">    comparing GitHub Actions workflows.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old: The old/source structure</span>
+<span class="sd">        new: The new/target structure</span>
+<span class="sd">        path: Internal use - tracks the current path in the structure</span>
+<span class="sd">        equivalence_func: Optional custom function to determine if two values</span>
+<span class="sd">            are equivalent. If None, uses standard equality (==).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict with the following structure:</span>
+<span class="sd">        {</span>
+<span class="sd">            &#39;added&#39;: {...},      # Keys/values present in new but not in old</span>
+<span class="sd">            &#39;removed&#39;: {...},    # Keys/values present in old but not in new</span>
+<span class="sd">            &#39;modified&#39;: {...},   # Keys present in both but with different values</span>
+<span class="sd">            &#39;unchanged&#39;: {...},  # Keys present in both with same values (optional)</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; old = {&#39;a&#39;: 1, &#39;b&#39;: {&#39;bb&#39;: 1}, &#39;c&#39;: 3}</span>
+<span class="sd">        &gt;&gt;&gt; new = {&#39;a&#39;: 1, &#39;b&#39;: {&#39;bb&#39;: 2}, &#39;d&#39;: 4}</span>
+<span class="sd">        &gt;&gt;&gt; diff = diff_nested(old, new)</span>
+<span class="sd">        &gt;&gt;&gt; diff[&#39;removed&#39;]</span>
+<span class="sd">        {&#39;c&#39;: 3}</span>
+<span class="sd">        &gt;&gt;&gt; diff[&#39;added&#39;]</span>
+<span class="sd">        {&#39;d&#39;: 4}</span>
+<span class="sd">        &gt;&gt;&gt; &#39;b&#39; in diff[&#39;modified&#39;]</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">equivalence_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">equivalence_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;added&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s1">&#39;removed&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s1">&#39;modified&#39;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Handle the case where types differ</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">old</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">new</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;added&#39;</span><span class="p">:</span> <span class="n">new</span><span class="p">,</span>
+            <span class="s1">&#39;removed&#39;</span><span class="p">:</span> <span class="n">old</span><span class="p">,</span>
+            <span class="s1">&#39;modified&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Handle dict/mapping comparison</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">old_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">old</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">new_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">new</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="c1"># Keys only in new (added)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_keys</span> <span class="o">-</span> <span class="n">old_keys</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s1">&#39;added&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># Keys only in old (removed)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">old_keys</span> <span class="o">-</span> <span class="n">new_keys</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s1">&#39;removed&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">old</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># Keys in both (potentially modified)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">old_keys</span> <span class="o">&amp;</span> <span class="n">new_keys</span><span class="p">:</span>
+            <span class="n">old_val</span> <span class="o">=</span> <span class="n">old</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">new_val</span> <span class="o">=</span> <span class="n">new</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="c1"># If both are mappings or sequences, recurse</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_val</span><span class="p">,</span> <span class="p">(</span><span class="n">Mapping</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">new_val</span><span class="p">,</span> <span class="p">(</span><span class="n">Mapping</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">nested_diff</span> <span class="o">=</span> <span class="n">diff_nested</span><span class="p">(</span>
+                    <span class="n">old_val</span><span class="p">,</span>
+                    <span class="n">new_val</span><span class="p">,</span>
+                    <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
+                    <span class="n">equivalence_func</span><span class="o">=</span><span class="n">equivalence_func</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Only include in modified if there are actual differences</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">nested_diff</span><span class="p">[</span><span class="s1">&#39;added&#39;</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">nested_diff</span><span class="p">[</span><span class="s1">&#39;removed&#39;</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">nested_diff</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="n">result</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">nested_diff</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">equivalence_func</span><span class="p">(</span><span class="n">old_val</span><span class="p">,</span> <span class="n">new_val</span><span class="p">):</span>
+                <span class="n">result</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;old&#39;</span><span class="p">:</span> <span class="n">old_val</span><span class="p">,</span>
+                    <span class="s1">&#39;new&#39;</span><span class="p">:</span> <span class="n">new_val</span><span class="p">,</span>
+                <span class="p">}</span>
+
+    <span class="c1"># Handle list/sequence comparison</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">old</span> <span class="o">!=</span> <span class="n">new</span><span class="p">:</span>
+            <span class="c1"># For lists, we track added/removed items</span>
+            <span class="c1"># This is simplified - could be enhanced with LCS algorithm</span>
+            <span class="n">old_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">old</span><span class="p">)</span>  <span class="c1"># Convert to strings for comparison</span>
+            <span class="n">new_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">new</span><span class="p">)</span>
+
+            <span class="n">added_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">new</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_set</span><span class="p">]</span>
+            <span class="n">removed_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">old</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_set</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">added_items</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="s1">&#39;added&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">added_items</span>
+            <span class="k">if</span> <span class="n">removed_items</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="s1">&#39;removed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">removed_items</span>
+
+            <span class="c1"># Also track if the order changed</span>
+            <span class="k">if</span> <span class="n">old_set</span> <span class="o">==</span> <span class="n">new_set</span> <span class="ow">and</span> <span class="n">old</span> <span class="o">!=</span> <span class="n">new</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;note&#39;</span><span class="p">:</span> <span class="s1">&#39;Order changed&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;old&#39;</span><span class="p">:</span> <span class="n">old</span><span class="p">,</span>
+                    <span class="s1">&#39;new&#39;</span><span class="p">:</span> <span class="n">new</span><span class="p">,</span>
+                <span class="p">}</span>
+
+    <span class="c1"># For non-nested values</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">equivalence_func</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;added&#39;</span><span class="p">:</span> <span class="n">new</span><span class="p">,</span>
+                <span class="s1">&#39;removed&#39;</span><span class="p">:</span> <span class="n">old</span><span class="p">,</span>
+                <span class="s1">&#39;modified&#39;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="compare_workflows">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.compare_workflows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_workflows</span><span class="p">(</span>
+    <span class="n">old</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">new</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">focus_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">equivalence_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two GitHub Actions workflows and identify differences.</span>
+
+<span class="sd">    This is a specialized comparison for GitHub Actions workflows, with support</span>
+<span class="sd">    for focusing on specific keys or ignoring certain keys.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old: Old workflow (GitHubWorkflow, Mapping, file path, or YAML string)</span>
+<span class="sd">        new: New workflow (GitHubWorkflow, Mapping, file path, or YAML string)</span>
+<span class="sd">        focus_keys: If provided, only compare these top-level keys</span>
+<span class="sd">        ignore_keys: If provided, ignore these top-level keys in comparison</span>
+<span class="sd">        equivalence_func: Optional custom equivalence function</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Detailed diff dict with &#39;added&#39;, &#39;removed&#39;, &#39;modified&#39; sections</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; old_yaml = &#39;&#39;&#39;</span>
+<span class="sd">        ... name: Old CI</span>
+<span class="sd">        ... on: [push]</span>
+<span class="sd">        ... jobs:</span>
+<span class="sd">        ...   test:</span>
+<span class="sd">        ...     runs-on: ubuntu-latest</span>
+<span class="sd">        ... &#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; new_yaml = &#39;&#39;&#39;</span>
+<span class="sd">        ... name: New CI</span>
+<span class="sd">        ... on: [push, pull_request]</span>
+<span class="sd">        ... jobs:</span>
+<span class="sd">        ...   test:</span>
+<span class="sd">        ...     runs-on: ubuntu-latest</span>
+<span class="sd">        ...   lint:</span>
+<span class="sd">        ...     runs-on: ubuntu-latest</span>
+<span class="sd">        ... &#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; diff = compare_workflows(old_yaml, new_yaml)</span>
+<span class="sd">        &gt;&gt;&gt; &#39;lint&#39; in diff[&#39;modified&#39;][&#39;jobs&#39;][&#39;added&#39;]</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure both are GitHubWorkflow instances</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">old</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="c1"># Apply focus/ignore filters</span>
+    <span class="n">old_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="n">new_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">focus_keys</span><span class="p">:</span>
+        <span class="n">old_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">old_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">focus_keys</span><span class="p">}</span>
+        <span class="n">new_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">focus_keys</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">ignore_keys</span><span class="p">:</span>
+        <span class="n">old_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">old_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_keys</span><span class="p">}</span>
+        <span class="n">new_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_keys</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">diff_nested</span><span class="p">(</span><span class="n">old_data</span><span class="p">,</span> <span class="n">new_data</span><span class="p">,</span> <span class="n">equivalence_func</span><span class="o">=</span><span class="n">equivalence_func</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Workflow analysis utilities</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="extract_job_names">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.extract_job_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_job_names</span><span class="p">(</span><span class="n">workflow</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract all job names from a workflow.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        workflow: GitHubWorkflow or dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of job names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span>
+
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="extract_steps">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.extract_steps">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_steps</span><span class="p">(</span><span class="n">workflow</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">job_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract all steps from a specific job.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        workflow: GitHubWorkflow or dict</span>
+<span class="sd">        job_name: Name of the job to extract steps from</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of step dicts</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span>
+
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_name</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">return</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[])</span></div>
+
+
+
+<div class="viewcode-block" id="find_step_by_name">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.find_step_by_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_step_by_name</span><span class="p">(</span>
+    <span class="n">workflow</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">job_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find a specific step by name within a job.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        workflow: GitHubWorkflow or dict</span>
+<span class="sd">        job_name: Name of the job</span>
+<span class="sd">        step_name: Name of the step to find</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Step dict if found, None otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">extract_steps</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">step_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">step</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="get_workflow_env_vars">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.get_workflow_env_vars">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_workflow_env_vars</span><span class="p">(</span><span class="n">workflow</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract top-level environment variables from a workflow.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        workflow: GitHubWorkflow or dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict of environment variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;env&#39;</span><span class="p">,</span> <span class="p">{})</span></div>
+
+
+
+<div class="viewcode-block" id="summarize_workflow">
+<a class="viewcode-back" href="../../module_docs/wads/github_ci_ops.html#wads.github_ci_ops.summarize_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize_workflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">GitHubWorkflow</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a high-level summary of a workflow.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        workflow: GitHubWorkflow or dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Summary dict with name, triggers, jobs, and env vars</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">GitHubWorkflow</span><span class="p">):</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;triggers&#39;</span><span class="p">:</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;on&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+        <span class="s1">&#39;env_vars&#39;</span><span class="p">:</span> <span class="n">get_workflow_env_vars</span><span class="p">(</span><span class="n">workflow</span><span class="p">),</span>
+        <span class="s1">&#39;jobs&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">job_name</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;runs_on&#39;</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runs-on&#39;</span><span class="p">,</span> <span class="s1">&#39;unknown&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;steps_count&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[])),</span>
+                <span class="s1">&#39;needs&#39;</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;needs&#39;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jobs&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
