@@ -51,6 +51,33 @@ jobs:
           coverage: true
           pytest-args: -v --tb=short
 
+  windows-validation:
+    name: Windows Tests (Informational)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: windows-latest
+    continue-on-error: true  # Don't fail the entire workflow if Windows tests fail
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        uses: i2mint/wads/actions/install-deps@master
+        with:
+          dependency-files: pyproject.toml
+          extras: dev,test
+
+      - name: Run Windows Tests
+        uses: i2mint/wads/actions/windows-tests@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          exclude: examples,scrap
+          pytest-args: -v --tb=short
+
   publish:
     name: Publish
     if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"

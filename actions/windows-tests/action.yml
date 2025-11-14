@@ -1,0 +1,76 @@
+name: "Run Windows Tests (Non-blocking)"
+description: "Run pytest tests on Windows - informational only, won't fail the job"
+
+inputs:
+  root-dir:
+    description: "Root directory containing tests (defaults to current directory)"
+    required: false
+    default: "."
+  exclude:
+    description: "Comma-separated paths to exclude (e.g., 'examples,scrap')"
+    required: false
+  pytest-args:
+    description: "Additional arguments to pass to pytest"
+    required: false
+    default: "-v"
+  python-version:
+    description: "Python version to test with"
+    required: false
+    default: "3.10"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Pytest
+      shell: pwsh
+      run: |
+        python -m pip install pytest
+
+    - name: Install Testing Extras
+      shell: pwsh
+      continue-on-error: true
+      run: |
+        # Try to install testing extras from pyproject.toml
+        if (Test-Path "pyproject.toml") {
+          Write-Host "Installing testing extras from pyproject.toml"
+          python -m pip install -e ".[testing]" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            python -m pip install -e ".[test]" 2>$null
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "No testing extras found in pyproject.toml"
+            }
+          }
+        }
+
+    - name: Run Tests
+      shell: pwsh
+      continue-on-error: true
+      run: |
+        $pytest_args = "${{ inputs.pytest-args }}"
+
+        # Build ignore flags
+        if ("${{ inputs.exclude }}" -ne "") {
+          $exclude_paths = "${{ inputs.exclude }}" -split ','
+          foreach ($path in $exclude_paths) {
+            $path = $path.Trim()
+            if ($path -ne "") {
+              $pytest_args += " --ignore=${{ inputs.root-dir }}/$path"
+            }
+          }
+        }
+
+        Write-Host "Running: pytest $pytest_args --doctest-modules ${{ inputs.root-dir }}"
+        
+        # Run tests and capture result
+        python -m pytest $pytest_args.Split() --doctest-modules `
+          -o doctest_optionflags="ELLIPSIS IGNORE_EXCEPTION_DETAIL" `
+          "${{ inputs.root-dir }}"
+        
+        $test_result = $LASTEXITCODE
+        
+        if ($test_result -eq 0) {
+          Write-Host "✅ Windows tests PASSED"
+        } else {
+          Write-Host "⚠️ Windows tests FAILED (exit code: $test_result)"
+          Write-Host "Note: This is informational only and won't block the pipeline"
+        }
