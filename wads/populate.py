@@ -1,3 +1,10 @@
+"""
+Populate a package directory with useful packaging files.
+
+Provides the `populate_pkg_dir` function to add standard files like
+README.md, pyproject.toml, and .gitignore.
+"""
+
 import os
 import shutil
 import json
