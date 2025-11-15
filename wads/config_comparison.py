@@ -373,8 +373,10 @@ def compare_ci_workflow(
             recommendations = []
 
             # Check for outdated action versions
-            if 'jobs' in actual.data:
-                for job_name, job_data in actual.data['jobs'].items():
+            # Use _data attribute to access the workflow data
+            workflow_data = actual._data if hasattr(actual, '_data') else actual
+            if 'jobs' in workflow_data:
+                for job_name, job_data in workflow_data['jobs'].items():
                     if 'steps' in job_data:
                         for step in job_data['steps']:
                             if 'uses' in step:
@@ -386,7 +388,7 @@ def compare_ci_workflow(
                                     )
 
             # Check for missing modern features
-            if 'tool.ruff' not in str(actual.data).lower():
+            if 'tool.ruff' not in str(workflow_data).lower():
                 recommendations.append(
                     "CI doesn't use ruff for linting - consider modern CI template"
                 )

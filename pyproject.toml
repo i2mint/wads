@@ -1,5 +1,7 @@
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling",
+]
 build-backend = "hatchling.build"
 
 [project]
@@ -8,10 +10,13 @@ version = "0.1.47"
 description = "Tools for packaging and publishing to pypi for those who just do not want to deal with it"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "Apache Software License"}
-keywords = ["documentation", "packaging", "publishing"]
+keywords = [
+    "documentation",
+    "packaging",
+    "publishing",
+]
 authors = [
-    {name = "Thor Whalen"}
+    { name = "Thor Whalen" },
 ]
 dependencies = [
     "argh",
@@ -20,12 +25,15 @@ dependencies = [
     "pytest",
     "pylint",
     "wheel",
-    "build",  # For python -m build
-    "packaging",  # For version parsing
-    "requests",  # For PyPI API access
-    "tomli>=1.0.0; python_version<'3.11'",  # For reading TOML on Python <3.11
-    "tomli-w>=0.4.0",  # For writing TOML
+    "build",
+    "packaging",
+    "requests",
+    "tomli>=1.0.0; python_version<'3.11'",
+    "tomli-w>=0.4.0",
 ]
+
+[project.license]
+text = "Apache Software License"
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"
@@ -35,23 +43,48 @@ pack = "wads.pack:main"
 populate = "wads.populate:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["wads"]
+packages = [
+    "wads",
+]
+include = [
+    "*/docs_gen/_static/**/*",
+    "requirements.txt",
+    "setup.cfg",
+    "README.md",
+    "wads/data/*",
+]
 
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-exclude = ["tests", "examples", "scrap"]
+exclude = [
+    "tests",
+    "examples",
+    "scrap",
+]
 
 [tool.ruff.lint]
-# Only fail on missing module docstring
-select = ["D100"]  # D100 = missing module docstring (pydocstyle)
+select = [
+    "D100",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D"]  # don't enforce docstrings in tests
-"examples/*" = ["D"]
-"scrap/*" = ["D"]
+"tests/*" = [
+    "D",
+]
+"examples/*" = [
+    "D",
+]
+"scrap/*" = [
+    "D",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = ["wads/tests"]
-doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
+testpaths = [
+    "wads/tests",
+]
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "ELLIPSIS",
+]

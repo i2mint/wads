@@ -21,6 +21,11 @@ from wads import (
     pyproject_toml_tpl_path,
     gitignore_tpl_path,
     gitattributes_tpl_path,
+    editorconfig_tpl_path,
+    bug_report_tpl_path,
+    feature_request_tpl_path,
+    pull_request_template_tpl_path,
+    dependabot_tpl_path,
     github_ci_tpl_deploy_path,
     # github_ci_tpl_publish_path,  # old publish path
     github_ci_publish_2025_path,
@@ -407,6 +412,50 @@ def populate_pkg_dir(
     elif create_gitattributes:
         tracker.skip(".gitattributes")
 
+    # Create .editorconfig for consistent formatting
+    if should_update(".editorconfig"):
+        shutil.copy(editorconfig_tpl_path, pjoin(".editorconfig"))
+        tracker.add(".editorconfig")
+    else:
+        tracker.skip(".editorconfig")
+
+    # Create GitHub issue templates
+    github_issue_template_dir = pjoin(".github", "ISSUE_TEMPLATE")
+    os.makedirs(github_issue_template_dir, exist_ok=True)
+
+    if should_update(pjoin(github_issue_template_dir, "bug_report.md")):
+        shutil.copy(
+            bug_report_tpl_path, pjoin(github_issue_template_dir, "bug_report.md")
+        )
+        tracker.add(".github/ISSUE_TEMPLATE/bug_report.md")
+    else:
+        tracker.skip(".github/ISSUE_TEMPLATE/bug_report.md")
+
+    if should_update(pjoin(github_issue_template_dir, "feature_request.md")):
+        shutil.copy(
+            feature_request_tpl_path,
+            pjoin(github_issue_template_dir, "feature_request.md"),
+        )
+        tracker.add(".github/ISSUE_TEMPLATE/feature_request.md")
+    else:
+        tracker.skip(".github/ISSUE_TEMPLATE/feature_request.md")
+
+    # Create PR template
+    if should_update(pjoin(".github", "PULL_REQUEST_TEMPLATE.md")):
+        shutil.copy(
+            pull_request_template_tpl_path, pjoin(".github", "PULL_REQUEST_TEMPLATE.md")
+        )
+        tracker.add(".github/PULL_REQUEST_TEMPLATE.md")
+    else:
+        tracker.skip(".github/PULL_REQUEST_TEMPLATE.md")
+
+    # Create Dependabot config
+    if should_update(pjoin(".github", "dependabot.yml")):
+        shutil.copy(dependabot_tpl_path, pjoin(".github", "dependabot.yml"))
+        tracker.add(".github/dependabot.yml")
+    else:
+        tracker.skip(".github/dependabot.yml")
+
     if project_type == "app":
         if should_update("requirements.txt"):
             with open(pjoin("requirements.txt"), "w") as f:
@@ -631,11 +680,118 @@ def populate_pkg_dir(
         _clog("\n👀 Found MANIFEST.in (needs Hatchling migration)...")
         manifest_comparison = compare_manifest_in(manifest_path)
         if manifest_comparison.get("needs_migration"):
-            tracker.attention(
-                "MANIFEST.in",
-                "Needs migration to Hatchling [tool.hatch.build.targets.wheel]",
-            )
-            if verbose:
+            # If migrate flag is set, automatically add to pyproject.toml
+            if migrate and manifest_comparison.get("hatchling_config"):
+                pyproject_path = pjoin("pyproject.toml")
+                if os.path.isfile(pyproject_path):
+                    try:
+                        # Read existing pyproject.toml
+                        from wads.toml_util import read_pyproject_toml
+                        import tomli_w
+
+                        existing_data = read_pyproject_toml(pjoin(""))
+
+                        # Parse the hatchling config suggestion
+                        hatchling_lines = manifest_comparison["hatchling_config"].split(
+                            '\n'
+                        )
+
+                        # Extract include/exclude lists from the suggestion
+                        include_items = []
+                        exclude_items = []
+                        current_section = None
+
+                        for line in hatchling_lines:
+                            line = line.strip()
+                            if 'include = [' in line:
+                                current_section = 'include'
+                            elif 'exclude = [' in line:
+                                current_section = 'exclude'
+                            elif line.startswith('"') and current_section:
+                                # Extract the item (remove quotes, backslashes, and trailing comma)
+                                item = (
+                                    line.strip('"')
+                                    .strip('\\')
+                                    .rstrip(',')
+                                    .strip()
+                                    .strip('"')
+                                )
+                                if current_section == 'include':
+                                    include_items.append(item)
+                                else:
+                                    exclude_items.append(item)
+                            elif line == ']':
+                                current_section = None
+
+                        # Check if migration already done - only update if items missing
+                        if 'tool' not in existing_data:
+                            existing_data['tool'] = {}
+                        if 'hatch' not in existing_data['tool']:
+                            existing_data['tool']['hatch'] = {}
+                        if 'build' not in existing_data['tool']['hatch']:
+                            existing_data['tool']['hatch']['build'] = {}
+                        if 'targets' not in existing_data['tool']['hatch']['build']:
+                            existing_data['tool']['hatch']['build']['targets'] = {}
+                        if (
+                            'wheel'
+                            not in existing_data['tool']['hatch']['build']['targets']
+                        ):
+                            existing_data['tool']['hatch']['build']['targets'][
+                                'wheel'
+                            ] = {}
+
+                        wheel_config = existing_data['tool']['hatch']['build'][
+                            'targets'
+                        ]['wheel']
+
+                        # Check if items already present - skip if migration already done
+                        existing_include = set(wheel_config.get('include', []))
+                        existing_exclude = set(wheel_config.get('exclude', []))
+                        new_include = set(include_items)
+                        new_exclude = set(exclude_items)
+
+                        needs_update = False
+                        if include_items and not new_include.issubset(existing_include):
+                            wheel_config['include'] = include_items
+                            needs_update = True
+                        if exclude_items and not new_exclude.issubset(existing_exclude):
+                            wheel_config['exclude'] = exclude_items
+                            needs_update = True
+
+                        # Only write if changes needed
+                        if needs_update:
+                            with open(pyproject_path, 'wb') as f:
+                                tomli_w.dump(existing_data, f)
+
+                            _clog(
+                                "✅ Migrated MANIFEST.in → pyproject.toml [tool.hatch.build.targets.wheel]"
+                            )
+                            tracker.add("pyproject.toml (updated with MANIFEST.in)")
+                        else:
+                            _clog("✓ MANIFEST.in already migrated to pyproject.toml")
+                            tracker.skip(
+                                "pyproject.toml (MANIFEST.in already migrated)"
+                            )
+                    except Exception as e:
+                        _clog(f"⚠️  Could not auto-migrate MANIFEST.in: {e}")
+                        tracker.attention(
+                            "MANIFEST.in",
+                            "Auto-migration failed - see suggestions below",
+                        )
+                else:
+                    tracker.attention(
+                        "MANIFEST.in",
+                        "Needs migration but pyproject.toml not found",
+                    )
+            else:
+                tracker.attention(
+                    "MANIFEST.in",
+                    "Needs migration to Hatchling [tool.hatch.build.targets.wheel]",
+                )
+
+            if verbose and not (
+                migrate and manifest_comparison.get("hatchling_config")
+            ):
                 _clog("  MANIFEST.in is not directly supported by Hatchling")
                 for rec in manifest_comparison.get("recommendations", [])[:2]:
                     _clog(f"  • {rec}")
