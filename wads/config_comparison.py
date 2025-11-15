@@ -13,8 +13,7 @@ Key Functions:
     compare_ci_workflow: Compare CI workflow against template
 
 Example:
-    >>> # Check if project config needs updates
-    >>> from wads.config_comparison import summarize_config_status
+    >>> from wads.config_comparison import summarize_config_status  # doctest: +SKIP
     >>> status = summarize_config_status('/path/to/project')  # doctest: +SKIP
     >>> if status['needs_attention']:  # doctest: +SKIP
     ...     print(status['recommendations'])  # doctest: +SKIP
@@ -190,11 +189,10 @@ def compare_pyproject_toml(
         - 'needs_attention': boolean flag
 
     Example:
-        >>> # doctest: +SKIP
-        >>> diff = compare_pyproject_toml('my_project/pyproject.toml')
-        >>> if diff['needs_attention']:
-        ...     for rec in diff['recommendations']:
-        ...         print(f"  - {rec}")
+        >>> diff = compare_pyproject_toml('my_project/pyproject.toml')  # doctest: +SKIP
+        >>> if diff['needs_attention']:  # doctest: +SKIP
+        ...     for rec in diff['recommendations']:  # doctest: +SKIP
+        ...         print(f"  - {rec}")  # doctest: +SKIP
     """
     ignore_keys = ignore_keys or {
         'project.name',
@@ -251,10 +249,9 @@ def compare_setup_cfg(
         Dictionary with migration recommendations
 
     Example:
-        >>> # doctest: +SKIP
-        >>> analysis = compare_setup_cfg('old_project/setup.cfg')
-        >>> if analysis['should_migrate']:
-        ...     print(analysis['recommendations'])
+        >>> analysis = compare_setup_cfg('old_project/setup.cfg')  # doctest: +SKIP
+        >>> if analysis['should_migrate']:  # doctest: +SKIP
+        ...     print(analysis['recommendations'])  # doctest: +SKIP
     """
     from configparser import ConfigParser
 
@@ -308,10 +305,9 @@ def compare_manifest_in(
         Dictionary with migration recommendations
 
     Example:
-        >>> # doctest: +SKIP
-        >>> analysis = compare_manifest_in('old_project/MANIFEST.in')
-        >>> if analysis['needs_migration']:
-        ...     print(analysis['hatchling_config'])
+        >>> analysis = compare_manifest_in('MANIFEST.in')  # doctest: +SKIP
+        >>> if analysis['needs_migration']:  # doctest: +SKIP
+        ...     print(analysis['hatchling_config'])  # doctest: +SKIP
     """
     from wads.migration import analyze_manifest_in
 
@@ -356,10 +352,9 @@ def compare_ci_workflow(
         Dictionary with comparison results and recommendations
 
     Example:
-        >>> # doctest: +SKIP
-        >>> diff = compare_ci_workflow('.github/workflows/ci.yml')
-        >>> if diff['needs_attention']:
-        ...     print("CI might be outdated")
+        >>> diff = compare_ci_workflow('.github/workflows/ci.yml')  # doctest: +SKIP
+        >>> if diff['needs_attention']:  # doctest: +SKIP
+        ...     print("CI might be outdated")  # doctest: +SKIP
     """
     with suppress(ImportError):
         from wads.github_ci_ops import compare_workflows, GitHubWorkflow
@@ -447,10 +442,9 @@ def summarize_config_status(
         - Details for each file type
 
     Example:
-        >>> # doctest: +SKIP
-        >>> status = summarize_config_status('/path/to/project')
-        >>> for issue in status['needs_attention']:
-        ...     print(f"⚠️  {issue}")
+        >>> status = summarize_config_status('/path/to/project')  # doctest: +SKIP
+        >>> for issue in status['needs_attention']:  # doctest: +SKIP
+        ...     print(f"⚠️  {issue}")  # doctest: +SKIP
     """
     pkg_dir = Path(pkg_dir)
     pyproject_path = pkg_dir / 'pyproject.toml'

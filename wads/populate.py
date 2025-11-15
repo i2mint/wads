@@ -21,16 +21,17 @@ from wads import (
     pyproject_toml_tpl_path,
     gitignore_tpl_path,
     gitattributes_tpl_path,
+    github_ci_tpl_deploy_path,
+    # github_ci_tpl_publish_path,  # old publish path
+    wads_configs,
+    wads_configs_file,
+    # New stuff:
+    github_ci_publish_2025_path,
     editorconfig_tpl_path,
     bug_report_tpl_path,
     feature_request_tpl_path,
     pull_request_template_tpl_path,
     dependabot_tpl_path,
-    github_ci_tpl_deploy_path,
-    # github_ci_tpl_publish_path,  # old publish path
-    github_ci_publish_2025_path,
-    wads_configs,
-    wads_configs_file,
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
@@ -257,6 +258,7 @@ def populate_pkg_dir(
     migrate: bool = False,
     create_gitattributes: bool = True,
     create_setup_py: bool = False,
+    create_community_files: bool = False,
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
@@ -294,6 +296,7 @@ def populate_pkg_dir(
     :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).
     :param skip_ci_def_gen: Skip the generation of the CI stuff
     :param create_setup_py: If True, create setup.py for backward compatibility (default: False, not needed with Hatchling).
+    :param create_community_files: If True, create community files (.editorconfig, issue/PR templates, dependabot.yml). Default: False.
     :param migrate: If True, migrate existing setup.cfg to pyproject.toml and old CI to new CI format.
         Will fail if old CI has unmappable content.
     :param create_gitattributes: If True (default), create a .gitattributes file with '*.ipynb linguist-documentation'.
@@ -412,49 +415,52 @@ def populate_pkg_dir(
     elif create_gitattributes:
         tracker.skip(".gitattributes")
 
-    # Create .editorconfig for consistent formatting
-    if should_update(".editorconfig"):
-        shutil.copy(editorconfig_tpl_path, pjoin(".editorconfig"))
-        tracker.add(".editorconfig")
-    else:
-        tracker.skip(".editorconfig")
+    # Create community files only if requested
+    if create_community_files:
+        # Create .editorconfig for consistent formatting
+        if should_update(".editorconfig"):
+            shutil.copy(editorconfig_tpl_path, pjoin(".editorconfig"))
+            tracker.add(".editorconfig")
+        else:
+            tracker.skip(".editorconfig")
 
-    # Create GitHub issue templates
-    github_issue_template_dir = pjoin(".github", "ISSUE_TEMPLATE")
-    os.makedirs(github_issue_template_dir, exist_ok=True)
+        # Create GitHub issue templates
+        github_issue_template_dir = pjoin(".github", "ISSUE_TEMPLATE")
+        os.makedirs(github_issue_template_dir, exist_ok=True)
 
-    if should_update(pjoin(github_issue_template_dir, "bug_report.md")):
-        shutil.copy(
-            bug_report_tpl_path, pjoin(github_issue_template_dir, "bug_report.md")
-        )
-        tracker.add(".github/ISSUE_TEMPLATE/bug_report.md")
-    else:
-        tracker.skip(".github/ISSUE_TEMPLATE/bug_report.md")
+        if should_update(pjoin(github_issue_template_dir, "bug_report.md")):
+            shutil.copy(
+                bug_report_tpl_path, pjoin(github_issue_template_dir, "bug_report.md")
+            )
+            tracker.add(".github/ISSUE_TEMPLATE/bug_report.md")
+        else:
+            tracker.skip(".github/ISSUE_TEMPLATE/bug_report.md")
 
-    if should_update(pjoin(github_issue_template_dir, "feature_request.md")):
-        shutil.copy(
-            feature_request_tpl_path,
-            pjoin(github_issue_template_dir, "feature_request.md"),
-        )
-        tracker.add(".github/ISSUE_TEMPLATE/feature_request.md")
-    else:
-        tracker.skip(".github/ISSUE_TEMPLATE/feature_request.md")
+        if should_update(pjoin(github_issue_template_dir, "feature_request.md")):
+            shutil.copy(
+                feature_request_tpl_path,
+                pjoin(github_issue_template_dir, "feature_request.md"),
+            )
+            tracker.add(".github/ISSUE_TEMPLATE/feature_request.md")
+        else:
+            tracker.skip(".github/ISSUE_TEMPLATE/feature_request.md")
 
-    # Create PR template
-    if should_update(pjoin(".github", "PULL_REQUEST_TEMPLATE.md")):
-        shutil.copy(
-            pull_request_template_tpl_path, pjoin(".github", "PULL_REQUEST_TEMPLATE.md")
-        )
-        tracker.add(".github/PULL_REQUEST_TEMPLATE.md")
-    else:
-        tracker.skip(".github/PULL_REQUEST_TEMPLATE.md")
+        # Create PR template
+        if should_update(pjoin(".github", "PULL_REQUEST_TEMPLATE.md")):
+            shutil.copy(
+                pull_request_template_tpl_path,
+                pjoin(".github", "PULL_REQUEST_TEMPLATE.md"),
+            )
+            tracker.add(".github/PULL_REQUEST_TEMPLATE.md")
+        else:
+            tracker.skip(".github/PULL_REQUEST_TEMPLATE.md")
 
-    # Create Dependabot config
-    if should_update(pjoin(".github", "dependabot.yml")):
-        shutil.copy(dependabot_tpl_path, pjoin(".github", "dependabot.yml"))
-        tracker.add(".github/dependabot.yml")
-    else:
-        tracker.skip(".github/dependabot.yml")
+        # Create Dependabot config
+        if should_update(pjoin(".github", "dependabot.yml")):
+            shutil.copy(dependabot_tpl_path, pjoin(".github", "dependabot.yml"))
+            tracker.add(".github/dependabot.yml")
+        else:
+            tracker.skip(".github/dependabot.yml")
 
     if project_type == "app":
         if should_update("requirements.txt"):
