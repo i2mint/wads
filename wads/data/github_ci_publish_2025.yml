@@ -120,6 +120,13 @@ jobs:
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
           skip-existing: false
 
+      - name: Track Code Metrics
+        uses: i2mint/umpyre/actions/track-metrics@master
+        continue-on-error: true  # Don't fail CI if metrics collection fails
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: .github/umpyre-config.yml  # Optional: defaults to .umpyre.yml
+
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
         with:

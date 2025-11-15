@@ -22,7 +22,7 @@ from wads import (
     gitignore_tpl_path,
     gitattributes_tpl_path,
     github_ci_tpl_deploy_path,
-    github_ci_tpl_publish_path,
+    # github_ci_tpl_publish_path,  # old publish path
     github_ci_publish_2025_path,
     wads_configs,
     wads_configs_file,
@@ -39,6 +39,77 @@ from wads.licensing import (
 # from wads.pack_util import write_configs
 
 path_sep = os.path.sep
+
+
+# --------------------------------------------------------------------------------------
+# Tracking and summary helpers for populate
+# --------------------------------------------------------------------------------------
+
+
+class PopulateTracker:
+    """Track actions during populate for summary reporting."""
+
+    def __init__(self):
+        self.skipped = []  # Files that existed and weren't overwritten
+        self.needs_attention = []  # Files with issues or misalignments
+        self.added = []  # Files that were created
+        self.errors = []  # Files that raised errors
+
+    def skip(self, filename: str):
+        """Record a file that was skipped (already exists)."""
+        self.skipped.append(filename)
+
+    def attention(self, filename: str, reason: str = None):
+        """Record a file that needs attention with optional reason."""
+        if reason:
+            self.needs_attention.append((filename, reason))
+        else:
+            self.needs_attention.append(filename)
+
+    def add(self, filename: str):
+        """Record a file that was added."""
+        self.added.append(filename)
+
+    def error(self, filename: str, error: str):
+        """Record a file operation that failed."""
+        self.errors.append((filename, error))
+
+    def print_summary(self, verbose=True):
+        """Print emoji-based summary of what happened."""
+        print("\n" + "=" * 60)
+        print("POPULATE SUMMARY")
+        print("=" * 60)
+
+        if self.skipped:
+            print("\n✓ Skipped (already exists):")
+            for item in self.skipped:
+                print(f"  • {item}")
+
+        if self.needs_attention:
+            print("\n👀 Needs attention:")
+            for item in self.needs_attention:
+                if isinstance(item, tuple):
+                    filename, reason = item
+                    print(f"  • {filename}")
+                    if verbose:
+                        print(f"    └─ {reason}")
+                else:
+                    print(f"  • {item}")
+
+        if self.added:
+            print("\n✅ Added:")
+            for item in self.added:
+                print(f"  • {item}")
+
+        if self.errors:
+            print("\n❌ Errors:")
+            for filename, error in self.errors:
+                print(f"  • {filename}")
+                if verbose:
+                    print(f"    └─ {error}")
+
+        print("\n" + "=" * 60)
+
 
 populate_dflts = wads_configs.get(
     "populate_dflts",
@@ -252,6 +323,7 @@ def populate_pkg_dir(
         overwrite = set(overwrite)
 
     _clog = mk_conditional_logger(condition=verbose, func=print)
+    tracker = PopulateTracker()
     pkg_dir = os.path.abspath(os.path.expanduser(pkg_dir))
     assert os.path.isdir(pkg_dir), f"{pkg_dir} is not a directory"
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
@@ -321,15 +393,24 @@ def populate_pkg_dir(
 
     if should_update(".gitignore"):
         shutil.copy(gitignore_tpl_path, pjoin(".gitignore"))
+        tracker.add(".gitignore")
+    else:
+        tracker.skip(".gitignore")
 
     if create_gitattributes and should_update(".gitattributes"):
         _clog("... making a .gitattributes")
         shutil.copy(gitattributes_tpl_path, pjoin(".gitattributes"))
+        tracker.add(".gitattributes")
+    elif create_gitattributes:
+        tracker.skip(".gitattributes")
 
     if project_type == "app":
         if should_update("requirements.txt"):
             with open(pjoin("requirements.txt"), "w") as f:
                 pass
+            tracker.add("requirements.txt")
+        else:
+            tracker.skip("requirements.txt")
 
     else:  # project_type == 'lib' or None
         if should_update("pyproject.toml"):
@@ -349,19 +430,25 @@ def populate_pkg_dir(
                     # Write the migrated content
                     with open(pjoin("pyproject.toml"), "w") as f:
                         f.write(pyproject_content)
+                    tracker.add("pyproject.toml")
+                    _clog("✅ Migrated setup.cfg → pyproject.toml")
                 except Exception as e:
                     _clog(
                         f"... migration failed ({e}), falling back to template-based creation"
                     )
+                    tracker.error("pyproject.toml", f"Migration failed: {e}")
                     if "pkg-dir" in configs:
                         del configs["pkg-dir"]
                     write_pyproject_configs(pjoin(""), configs)
+                    tracker.add("pyproject.toml")
             else:
                 _clog("... making a 'pyproject.toml'")
                 if "pkg-dir" in configs:
                     del configs["pkg-dir"]
                 write_pyproject_configs(pjoin(""), configs)
+                tracker.add("pyproject.toml")
         else:
+            tracker.skip("pyproject.toml")
             # If pyproject.toml exists but URL is missing/empty, update it
             if configs.get("url"):
                 from wads.toml_util import update_project_url, read_pyproject_toml
@@ -378,6 +465,9 @@ def populate_pkg_dir(
         # Keep setup.py for backward compatibility, but minimal
         if should_update("setup.py"):
             shutil.copy(setup_tpl_path, pjoin("setup.py"))
+            tracker.add("setup.py")
+        else:
+            tracker.skip("setup.py")
 
     if should_update("LICENSE"):
         _license_body = license_body(configs["license"])
@@ -405,12 +495,18 @@ def populate_pkg_dir(
         )
 
         save_txt_to_pkg("LICENSE", _license_body)
+        tracker.add("LICENSE")
+    else:
+        tracker.skip("LICENSE")
 
     if should_update("README.md"):
         readme_text = gen_readme_text(name, configs.get("description"))
         if include_pip_install_instruction_in_readme:
             readme_text += f"\n\nTo install:\t```pip install {name}```\n"
         save_txt_to_pkg("README.md", readme_text)
+        tracker.add("README.md")
+    else:
+        tracker.skip("README.md")
 
     if project_type is None or project_type == "lib":
         # Respect both the new `create_docsrc` flag and the existing
@@ -455,7 +551,12 @@ def populate_pkg_dir(
                         with open(ci_def_path, "w") as f:
                             f.write(new_ci_content)
                         _clog(f"... successfully migrated CI to {ci_def_path}")
+                        tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
                     except Exception as e:
+                        tracker.error(
+                            ci_def_path.replace(pkg_dir + os.sep, ""),
+                            f"Migration failed: {e}",
+                        )
                         raise RuntimeError(
                             f"Failed to migrate CI file {old_ci_path}: {e}\n"
                             f"The old CI may contain configurations that cannot be automatically migrated."
@@ -466,10 +567,82 @@ def populate_pkg_dir(
                     _add_ci_def(
                         ci_def_path, ci_tpl_path, root_url, name, _clog, user_email
                     )
+                    tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
             else:
                 # Not migrating or not github, use template
                 user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
                 _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email)
+                tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
+        else:
+            tracker.skip(ci_def_path.replace(pkg_dir + os.sep, ""))
+
+    # -------------------------------------------------------------------------
+    # Compare existing files against templates and add attention items
+    # -------------------------------------------------------------------------
+    from wads.config_comparison import (
+        compare_pyproject_toml,
+        compare_setup_cfg,
+        compare_ci_workflow,
+    )
+
+    # Check pyproject.toml alignment
+    pyproject_path = pjoin("pyproject.toml")
+    if os.path.isfile(pyproject_path) and "pyproject.toml" not in tracker.added:
+        _clog("\n👀 Checking pyproject.toml alignment with template...")
+        comparison = compare_pyproject_toml(pyproject_path, project_name=name)
+        if comparison.get("needs_attention"):
+            reasons = []
+            if comparison.get("missing_sections"):
+                reasons.append(
+                    f"Missing sections: {', '.join(comparison['missing_sections'][:3])}"
+                    + ("..." if len(comparison['missing_sections']) > 3 else "")
+                )
+            for rec in comparison.get("recommendations", []):
+                reasons.append(rec)
+
+            tracker.attention("pyproject.toml", " | ".join(reasons))
+            if verbose:
+                _clog("  Issues found:")
+                for rec in comparison.get("recommendations", []):
+                    _clog(f"    • {rec}")
+
+    # Check setup.cfg (warn about deprecation)
+    setup_cfg_path = pjoin("setup.cfg")
+    if os.path.isfile(setup_cfg_path):
+        _clog("\n👀 Found setup.cfg (deprecated)...")
+        comparison = compare_setup_cfg(setup_cfg_path)
+        if comparison.get("should_migrate"):
+            tracker.attention(
+                "setup.cfg", "Deprecated format. Run: populate . --migrate"
+            )
+            if verbose:
+                _clog("  Consider migrating to pyproject.toml")
+                _clog("  Run: populate . --migrate")
+
+    # Check CI workflow alignment
+    ci_path = pjoin(".github/workflows/ci.yml")
+    if (
+        os.path.isfile(ci_path)
+        and ci_path.replace(pkg_dir + os.sep, "") not in tracker.added
+    ):
+        _clog("\n👀 Checking CI workflow alignment with template...")
+        ci_comparison = compare_ci_workflow(ci_path, project_name=name)
+        if ci_comparison.get("needs_attention"):
+            reasons = [rec for rec in ci_comparison.get("recommendations", [])]
+            tracker.attention(
+                ".github/workflows/ci.yml",
+                " | ".join(reasons[:2]) + ("..." if len(reasons) > 2 else ""),
+            )
+            if verbose:
+                _clog("  Issues found:")
+                for rec in ci_comparison.get("recommendations", []):
+                    _clog(f"    • {rec}")
+
+    # Print summary
+    if verbose:
+        tracker.print_summary(verbose=True)
+    else:
+        tracker.print_summary(verbose=False)
 
     return name
 
