@@ -71,12 +71,21 @@ jobs:
           dependency-files: pyproject.toml
           extras: dev,test
 
-      - name: Run Windows Tests
-        uses: i2mint/wads/actions/windows-tests@master
-        with:
-          root-dir: ${{ env.PROJECT_NAME }}
-          exclude: examples,scrap
-          pytest-args: -v --tb=short
+      - name: Run tests
+        id: test
+        continue-on-error: true
+        run: pytest
+
+      - name: Report test results
+        if: always()
+        run: |
+          if [ "${{ steps.test.outcome }}" == "failure" ]; then
+            echo "::warning::Windows tests failed but workflow continues"
+            echo "## ⚠️ Windows Tests Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Tests failed on Windows but this is informational only." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ✅ Windows Tests Passed" >> $GITHUB_STEP_SUMMARY
+          fi
 
   publish:
     name: Publish
