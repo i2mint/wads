@@ -1,5 +1,9 @@
 """Generate Python Package with setup.cfg and setup.py configured to embed dependency wheels and
 install them.
+
+DEPRECATED: This module uses setuptools for embedded wheel packaging, which is largely
+obsolete with modern Python packaging (pyproject.toml + Hatchling). Consider using
+standard dependency management instead.
 """
 
 import tempfile
@@ -8,9 +12,11 @@ from pathlib import Path
 from typing import List, Union
 import os
 import shutil
-from distutils.command.sdist import sdist
-from setuptools import setup
-from setuptools.command.install import install as _install
+
+# Remove top-level setuptools imports
+# from setuptools.command.sdist import sdist
+# from setuptools import setup
+# from setuptools.command.install import install as _install
 
 from wads.generate_project_wheels import generate_project_wheels
 
@@ -24,6 +30,8 @@ def generate_package(
 ):
     """Generate Python module package including wheels for requirements linked to git repos
 
+    DEPRECATED: Consider using modern Python packaging with pyproject.toml instead.
+
     :param module_path: Path to python folder or .py file to package
     :param install_requires: required package list like in setup.py or requirements.txt
     :param output_path: Folder to output package. Must not already exist.
@@ -31,6 +39,15 @@ def generate_package(
     :param version: semantic version, i.e. "1.0.0"
     :return:
     """
+    from warnings import warn
+
+    warn(
+        "package_module functionality is deprecated. Consider using modern Python "
+        "packaging with pyproject.toml and standard dependency management instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     module_path = Path(module_path)
     assert module_path.exists(), f'module does not exist: "{str(module_path)}"'
     assert not os.path.exists(
@@ -60,6 +77,7 @@ def generate_package(
 
 
 def generate_module_folder(module_path: Path, dst_path: Path):
+    """Generate module folder structure from source path."""
     if module_path.is_dir():
         shutil.copytree(module_path, dst_path / module_path.name)
     elif module_path.is_file() and module_path.suffix == ".py":
@@ -71,6 +89,7 @@ def generate_module_folder(module_path: Path, dst_path: Path):
 
 
 def manifest_in_template(module_name: str, glob_pattern: list[str]):
+    """Generate MANIFEST.in content for package."""
     manifest_in = "recursive-include dist *.whl"
     if glob_pattern:
         for gp in glob_pattern:
@@ -84,6 +103,7 @@ def setup_cfg_template(
     version: str = "1.0.0",
     glob_pattern: list[str] = None,
 ) -> str:
+    """Generate setup.cfg content for package."""
     setup_cfg = f"""[metadata]
 name = {name}
 version = {version}
@@ -117,12 +137,28 @@ install_requires =
     return setup_cfg
 
 
-class CustomSdistCommand(sdist):
-    """Custom sdist command to include wheels in the distribution"""
+class CustomSdistCommand:
+    """Custom sdist command to include wheels in the distribution
+
+    DEPRECATED: This uses old setuptools patterns. Import setuptools lazily.
+    """
 
     description = "create a source distribution tarball with embedded wheels"
 
+    def __init__(self, *args, **kwargs):
+        try:
+            from setuptools.command.sdist import sdist
+        except ImportError:
+            raise ImportError(
+                "setuptools is required for embedded wheel packaging. "
+                "Install wads with setuptools support: pip install 'wads[setuptools]'"
+            )
+        # Make this class inherit from sdist dynamically
+        self.__class__.__bases__ = (sdist,)
+        super().__init__(*args, **kwargs)
+
     def _remove_wheels_from_install_requires(self, wheel_package_names):
+        """Remove wheel package names from install_requires."""
         project_dir = os.getcwd()
         requirements_filepath = os.path.join(project_dir, "requirements.txt")
         setup_cfg_filepath = os.path.join(project_dir, "setup.cfg")
@@ -132,6 +168,7 @@ class CustomSdistCommand(sdist):
             self._remove_lines(setup_cfg_filepath, wheel_package_names)
 
     def _remove_lines(self, filepath, exclude_lines):
+        """Remove specified lines from file."""
         with open(filepath) as file:
             lines = file.readlines()
 
@@ -148,6 +185,7 @@ class CustomSdistCommand(sdist):
             file.writelines(new_lines)
 
     def _save_original_files(self):
+        """Save original requirements.txt and setup.cfg content."""
         project_dir = os.getcwd()
 
         requirements_filepath = os.path.join(project_dir, "requirements.txt")
@@ -164,6 +202,7 @@ class CustomSdistCommand(sdist):
             self._setup_cfg = None
 
     def _restore_original_files(self):
+        """Restore original requirements.txt and setup.cfg content."""
         project_dir = os.getcwd()
 
         if self._requirements_txt:
@@ -180,7 +219,7 @@ class CustomSdistCommand(sdist):
                     f.write(self._setup_cfg)
 
     def _generate_wheels(self):
-
+        """Generate dependency wheels."""
         if self.dist_dir is None:
             self.dist_dir = "dist"
         if os.path.exists(self.dist_dir):
@@ -217,6 +256,7 @@ class CustomSdistCommand(sdist):
         shutil.rmtree(wheel_generation_dir)
 
     def initialize_options(self) -> None:
+        """Initialize command options and generate wheels."""
         super().initialize_options()
         # generating wheels here to modify setup.cfg before it's automatically copied
         self._save_original_files()
@@ -227,14 +267,31 @@ class CustomSdistCommand(sdist):
             raise e
 
     def run(self):
+        """Run the sdist command."""
         super().run()
         self._restore_original_files()
 
 
-class CustomInstallCommand(_install):
-    """Custom pip install command to install embedded wheels"""
+class CustomInstallCommand:
+    """Custom pip install command to install embedded wheels
+
+    DEPRECATED: This uses old setuptools patterns. Import setuptools lazily.
+    """
+
+    def __init__(self, *args, **kwargs):
+        try:
+            from setuptools.command.install import install as _install
+        except ImportError:
+            raise ImportError(
+                "setuptools is required for embedded wheel packaging. "
+                "Install wads with setuptools support: pip install 'wads[setuptools]'"
+            )
+        # Make this class inherit from _install dynamically
+        self.__class__.__bases__ = (_install,)
+        super().__init__(*args, **kwargs)
 
     def run(self):
+        """Run the install command, installing embedded wheels first."""
         temp_dir = os.getcwd()
 
         # Install wheels from the dist directory of the tarball
@@ -252,12 +309,36 @@ class CustomInstallCommand(_install):
                     )
 
         # Run Normal Install
-        _install.run(self)
+        super().run()
 
 
-embedded_wheel_setup = partial(
-    setup, cmdclass={"install": CustomInstallCommand, "sdist": CustomSdistCommand}
-)
+def embedded_wheel_setup():
+    """Setup function for embedded wheel packaging.
+
+    DEPRECATED: This functionality is deprecated. Consider using modern packaging.
+    """
+    try:
+        from setuptools import setup
+    except ImportError:
+        raise ImportError(
+            "setuptools is required for embedded wheel packaging. "
+            "Install wads with setuptools support: pip install 'wads[setuptools]'"
+        )
+
+    from warnings import warn
+
+    warn(
+        "embedded_wheel_setup is deprecated. Consider using modern Python "
+        "packaging with pyproject.toml instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    return setup(
+        cmdclass={"install": CustomInstallCommand, "sdist": CustomSdistCommand}
+    )
+
+
 setup_py = (
     "from wads.package_module import embedded_wheel_setup\nembedded_wheel_setup()"
 )

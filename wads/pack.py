@@ -27,7 +27,14 @@ If you're crazy (or know what you're doing) just do
 import importlib
 import subprocess
 import pathlib
-from setuptools import find_packages
+from wads.util import git
+from wads.toml_util import (
+    read_pyproject_toml,
+    write_pyproject_toml,
+    get_project_version,
+    set_project_version,
+    get_project_name,
+)
 import json
 import re
 import sys
@@ -48,15 +55,6 @@ from configparser import ConfigParser
 from functools import partial
 
 import argh
-
-from wads.util import git
-from wads.toml_util import (
-    read_pyproject_toml,
-    write_pyproject_toml,
-    get_project_version,
-    set_project_version,
-    get_project_name,
-)
 
 CONFIG_FILE_NAME = "setup.cfg"
 PYPROJECT_FILE_NAME = "pyproject.toml"
@@ -400,7 +398,20 @@ def git_commit_and_push(
 
 def generate_and_publish_docs(pkg_dir, *, publish_docs_to="github"):
     # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
-    from epythet import make_autodocs, make
+    try:
+        from epythet import make_autodocs, make
+    except ImportError:
+        raise ImportError(
+            "Documentation operations require epythet. "
+            "Install wads with documentation support: pip install wads[docs]"
+        )
+
+    warn(
+        "generate_and_publish_docs is deprecated and requires epythet. "
+        "Install wads with documentation support: pip install wads[docs]",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     make_autodocs(pkg_dir)
     if publish_docs_to:

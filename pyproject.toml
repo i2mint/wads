@@ -20,7 +20,6 @@ authors = [
 ]
 dependencies = [
     "argh",
-    "epythet",
     "ruamel.yaml",
     "pytest",
     "pylint",
@@ -34,6 +33,14 @@ dependencies = [
 
 [project.license]
 text = "Apache Software License"
+
+[project.optional-dependencies]
+docs = [
+    "epythet",
+]
+setuptools = [
+    "setuptools>=65.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"

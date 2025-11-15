@@ -1,15 +1,43 @@
+"""Tests for package_module functionality (DEPRECATED).
+
+These tests cover the deprecated embedded wheel packaging functionality that requires
+setuptools. The tests are automatically skipped if setuptools is not installed.
+
+To run these tests, install wads with setuptools support:
+    pip install 'wads[setuptools]'
+
+Note: This functionality is deprecated in favor of modern Python packaging with
+pyproject.toml and standard dependency management.
+"""
+
 import subprocess
 import sys
 import tarfile
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from wads.package_module import generate_package
 
 EXAMPLE_MODULE_FILE = Path(__file__).parent / "data" / "example_module.py"
 EXAMPLE_MODULE_DIR = Path(__file__).parent / "data"
 
+# Check if setuptools is available (needed for deprecated package_module functionality)
+try:
+    import setuptools
 
+    HAS_SETUPTOOLS = True
+except ImportError:
+    HAS_SETUPTOOLS = False
+
+skip_if_no_setuptools = pytest.mark.skipif(
+    not HAS_SETUPTOOLS,
+    reason="setuptools not installed - required for deprecated package_module functionality. Install with: pip install 'wads[setuptools]'",
+)
+
+
+@skip_if_no_setuptools
 def test_generate_package_from_file():
     with tempfile.TemporaryDirectory() as tmp_folder:
         tmp_path = Path(tmp_folder)
@@ -45,6 +73,7 @@ def test_generate_package_from_file():
         ), ".tar.gz does not include dependency wheel"
 
 
+@skip_if_no_setuptools
 def test_generate_package_from_dir():
     with tempfile.TemporaryDirectory() as tmp_folder:
         tmp_path = Path(tmp_folder)

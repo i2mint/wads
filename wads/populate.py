@@ -576,7 +576,20 @@ def populate_pkg_dir(
             _clog("... skipping docsrc generation because skip_docsrc_gen=True")
         elif create_docsrc:
             # TODO: Figure out epythet and wads relationship -- right now, there's a reflexive dependency
-            from epythet.setup_docsrc import make_docsrc
+            try:
+                from epythet.setup_docsrc import make_docsrc
+            except ImportError:
+                raise ImportError(
+                    "Documentation operations require epythet. "
+                    "Install wads with documentation support: pip install wads[docs]"
+                )
+
+            warn(
+                "Documentation generation with epythet is deprecated. "
+                "Install wads with documentation support: pip install wads[docs]",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
             make_docsrc(pkg_dir, verbose=verbose)
         else:
