@@ -1,5 +1,5 @@
 """
-Compare project configuration files (pyproject.toml, setup.cfg) against templates.
+Compare project configuration files (pyproject.toml, setup.cfg, MANIFEST.in) against templates.
 
 This module provides tools to analyze project configurations and identify
 differences from standard templates, helping users maintain up-to-date
@@ -8,6 +8,7 @@ project structures.
 Key Functions:
     compare_pyproject_toml: Compare actual pyproject.toml against template
     compare_setup_cfg: Analyze setup.cfg and recommend migration
+    compare_manifest_in: Analyze MANIFEST.in and recommend Hatchling migration
     summarize_config_status: Overall project config health check
     compare_ci_workflow: Compare CI workflow against template
 
@@ -294,6 +295,44 @@ def compare_setup_cfg(
     }
 
 
+def compare_manifest_in(
+    actual_path: str | Path,
+) -> Dict[str, Any]:
+    """
+    Analyze MANIFEST.in and recommend migration to Hatchling configuration.
+
+    Args:
+        actual_path: Path to MANIFEST.in file
+
+    Returns:
+        Dictionary with migration recommendations
+
+    Example:
+        >>> # doctest: +SKIP
+        >>> analysis = compare_manifest_in('old_project/MANIFEST.in')
+        >>> if analysis['needs_migration']:
+        ...     print(analysis['hatchling_config'])
+    """
+    from wads.migration import analyze_manifest_in
+
+    result = analyze_manifest_in(actual_path)
+
+    if not result['exists']:
+        return {
+            'exists': False,
+            'needs_migration': False,
+        }
+
+    return {
+        'exists': True,
+        'needs_migration': result['needs_migration'],
+        'directives': result['directives'],
+        'recommendations': result['recommendations'],
+        'hatchling_config': result['hatchling_config'],
+        'needs_attention': result['needs_migration'],
+    }
+
+
 # --------------------------------------------------------------------------------------
 # CI workflow comparison
 # --------------------------------------------------------------------------------------
@@ -414,11 +453,13 @@ def summarize_config_status(
     pkg_dir = Path(pkg_dir)
     pyproject_path = pkg_dir / 'pyproject.toml'
     setup_cfg_path = pkg_dir / 'setup.cfg'
+    manifest_path = pkg_dir / 'MANIFEST.in'
     ci_path = pkg_dir / '.github' / 'workflows' / 'ci.yml'
 
     result = {
         'has_pyproject': pyproject_path.exists(),
         'has_setup_cfg': setup_cfg_path.exists(),
+        'has_manifest_in': manifest_path.exists(),
         'has_ci': ci_path.exists(),
         'needs_attention': [],
         'recommendations': [],
@@ -445,6 +486,15 @@ def summarize_config_status(
             result['recommendations'].extend(
                 setup_cfg_status.get('recommendations', [])
             )
+
+    # Check MANIFEST.in
+    if result['has_manifest_in']:
+        manifest_status = compare_manifest_in(manifest_path)
+        result['manifest_status'] = manifest_status
+
+        if manifest_status.get('needs_attention'):
+            result['needs_attention'].append('MANIFEST.in')
+            result['recommendations'].extend(manifest_status.get('recommendations', []))
 
     # Check CI
     if check_ci and result['has_ci']:

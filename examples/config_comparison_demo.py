@@ -4,6 +4,7 @@ Example demonstrating the new config comparison and populate summary features.
 This example shows:
 1. How to use config_comparison to check project alignment with templates
 2. How populate now provides emoji-based summaries
+3. How MANIFEST.in analysis works with Hatchling migration
 """
 
 from pathlib import Path
@@ -12,6 +13,7 @@ from wads.populate import populate_pkg_dir
 from wads.config_comparison import (
     compare_pyproject_toml,
     compare_setup_cfg,
+    compare_manifest_in,
     summarize_config_status,
 )
 
@@ -123,11 +125,63 @@ build-backend = "setuptools.build_meta"
                     print(f"   - {section}")
 
 
+def demo_manifest_in_analysis():
+    """Demonstrate MANIFEST.in analysis and Hatchling migration."""
+    print("\n" + "=" * 60)
+    print("MANIFEST.IN ANALYSIS DEMO")
+    print("=" * 60)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir) / "old_project"
+        project_dir.mkdir()
+
+        # Create a typical MANIFEST.in from an old setuptools project
+        (project_dir / "MANIFEST.in").write_text(
+            """
+# Include important files
+include README.md LICENSE AUTHORS
+recursive-include mypackage/data *.json *.yaml
+graft docs
+
+# Exclude unwanted files
+prune tests
+global-exclude *.pyc __pycache__
+recursive-exclude * *.pyo
+"""
+        )
+
+        print("\n1. Analyzing MANIFEST.in...")
+        result = compare_manifest_in(project_dir / "MANIFEST.in")
+
+        if result['needs_migration']:
+            print("   ⚠️  MANIFEST.in needs migration to Hatchling")
+            print(f"\n   Found {len(result['directives'])} directives")
+
+            print("\n2. Migration recommendations:")
+            for rec in result['recommendations'][:2]:
+                print(f"   • {rec}")
+
+            if result['hatchling_config']:
+                print("\n3. Suggested pyproject.toml configuration:")
+                print("   " + "-" * 56)
+                for line in result['hatchling_config'].split('\n'):
+                    print(f"   {line}")
+                print("   " + "-" * 56)
+
+        # Also show in overall status
+        print("\n4. Overall project status:")
+        status = summarize_config_status(project_dir, check_ci=False)
+        print(f"   Has MANIFEST.in: {status['has_manifest_in']}")
+        if 'MANIFEST.in' in status['needs_attention']:
+            print("   ⚠️  MANIFEST.in needs attention")
+
+
 if __name__ == '__main__':
     # Run all demos
     demo_config_comparison()
     demo_populate_with_summary()
     demo_comparison_on_existing_project()
+    demo_manifest_in_analysis()
 
     print("\n" + "=" * 60)
     print("✅ All demos completed!")

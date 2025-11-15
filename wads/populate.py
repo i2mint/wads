@@ -233,6 +233,7 @@ def populate_pkg_dir(
     pkg_dir,
     version: str = populate_dflts["version"],
     description: str = populate_dflts["description"],
+    *,
     root_url: str | None = populate_dflts["root_url"],
     author: str | None = populate_dflts["author"],
     license: str = populate_dflts["license"],
@@ -250,6 +251,7 @@ def populate_pkg_dir(
     skip_ci_def_gen=False,
     migrate: bool = False,
     create_gitattributes: bool = True,
+    create_setup_py: bool = False,
     version_control_system=None,
     ci_def_path=None,
     ci_tpl_path=None,
@@ -286,6 +288,7 @@ def populate_pkg_dir(
     :param skip_docsrc_gen: Skip the generation of documentation stuff
     :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).
     :param skip_ci_def_gen: Skip the generation of the CI stuff
+    :param create_setup_py: If True, create setup.py for backward compatibility (default: False, not needed with Hatchling).
     :param migrate: If True, migrate existing setup.cfg to pyproject.toml and old CI to new CI format.
         Will fail if old CI has unmappable content.
     :param create_gitattributes: If True (default), create a .gitattributes file with '*.ipynb linguist-documentation'.
@@ -462,11 +465,12 @@ def populate_pkg_dir(
                         f"... updating URL in existing pyproject.toml to {configs['url']}"
                     )
                     update_project_url(pjoin(""), configs["url"])
-        # Keep setup.py for backward compatibility, but minimal
-        if should_update("setup.py"):
+        # setup.py is no longer needed with Hatchling, but can be created for backward compatibility
+        if create_setup_py and should_update("setup.py"):
             shutil.copy(setup_tpl_path, pjoin("setup.py"))
             tracker.add("setup.py")
-        else:
+        elif not create_setup_py and os.path.isfile(pjoin("setup.py")):
+            # If setup.py exists but we're not creating it, just skip it
             tracker.skip("setup.py")
 
     if should_update("LICENSE"):
@@ -618,6 +622,27 @@ def populate_pkg_dir(
             if verbose:
                 _clog("  Consider migrating to pyproject.toml")
                 _clog("  Run: populate . --migrate")
+
+    # Check MANIFEST.in (warn about migration needed)
+    manifest_path = pjoin("MANIFEST.in")
+    if os.path.isfile(manifest_path):
+        from wads.config_comparison import compare_manifest_in
+
+        _clog("\n👀 Found MANIFEST.in (needs Hatchling migration)...")
+        manifest_comparison = compare_manifest_in(manifest_path)
+        if manifest_comparison.get("needs_migration"):
+            tracker.attention(
+                "MANIFEST.in",
+                "Needs migration to Hatchling [tool.hatch.build.targets.wheel]",
+            )
+            if verbose:
+                _clog("  MANIFEST.in is not directly supported by Hatchling")
+                for rec in manifest_comparison.get("recommendations", [])[:2]:
+                    _clog(f"  • {rec}")
+                if manifest_comparison.get("hatchling_config"):
+                    _clog("\n  Suggested pyproject.toml configuration:")
+                    for line in manifest_comparison["hatchling_config"].split('\n'):
+                        _clog(f"    {line}")
 
     # Check CI workflow alignment
     ci_path = pjoin(".github/workflows/ci.yml")

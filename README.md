@@ -44,10 +44,15 @@ What that will do is create and populate some files for you.
 Namely, it will ensure your package directory has the following files (if not present already)
 ```
 ./LICENSE
-./setup.cfg
+./pyproject.toml
 ./PKG_NAME/__init__.py
 ./README.md
+./.gitignore
+./.gitattributes
 ```
+
+**Note:** `setup.py` is no longer created by default (not needed with modern Hatchling build backend). 
+Use `--create-setup-py` if you need it for backward compatibility.
 
 The `PKG_NAME` will be taken to be the same as the name of the `PKG_DIR`.
 
@@ -163,7 +168,24 @@ with open('.github/workflows/ci_new.yml', 'w') as f:
 ## What Gets Migrated
 
 - **setup.cfg → pyproject.toml**: All metadata, dependencies, optional dependencies, entry points
+- **MANIFEST.in → Hatchling config**: Detects and provides migration guidance for package data
 - **Old CI → Modern CI**: Updated actions, ruff linting/formatting, modern Python practices
+
+## Modern Setup (Hatchling)
+
+**Note:** With the modern Hatchling build backend, **`setup.py` is no longer needed**. 
+
+By default, `populate` no longer creates `setup.py`. If you need it for backward compatibility, use:
+
+```bash
+populate . --create-setup-py
+```
+
+Or in Python:
+```python
+from wads.populate import populate_pkg_dir
+populate_pkg_dir('.', create_setup_py=True)  # Only if you need backward compatibility
+```
 
 ## Documentation
 

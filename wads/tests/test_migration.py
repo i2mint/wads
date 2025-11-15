@@ -212,3 +212,103 @@ def test_custom_rules():
     result = migrate_setuptools_to_hatching(cfg_dict, rules=custom_rules)
     assert 'name = "TEST"' in result
     assert "Custom description" in result
+
+
+def test_parse_manifest_in():
+    """Test MANIFEST.in parsing."""
+    from wads.migration import _parse_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+
+        manifest_content = """
+# Comments should be ignored
+include README.md
+recursive-include data *.json
+graft docs
+prune tests
+global-exclude *.pyc
+"""
+        manifest_path.write_text(manifest_content)
+
+        result = _parse_manifest_in(manifest_path)
+
+        assert result['needs_migration'] == True
+        assert len(result['directives']) == 5  # Should not include comments/blank lines
+        assert ('include', 'README.md') in result['directives']
+        assert ('graft', 'docs') in result['directives']
+        assert ('prune', 'tests') in result['directives']
+
+
+def test_analyze_manifest_in_with_includes():
+    """Test MANIFEST.in analysis with include directives."""
+    from wads.migration import analyze_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+
+        manifest_content = """
+include README.md LICENSE
+recursive-include mypackage/data *.json *.yaml
+graft docs
+"""
+        manifest_path.write_text(manifest_content)
+
+        result = analyze_manifest_in(manifest_path)
+
+        assert result['exists'] == True
+        assert result['needs_migration'] == True
+        assert len(result['recommendations']) > 0
+
+        # Should have hatchling config
+        config = result['hatchling_config']
+        assert config is not None
+        assert '[tool.hatch.build.targets.wheel]' in config
+        assert 'include' in config
+
+
+def test_analyze_manifest_in_with_excludes():
+    """Test MANIFEST.in analysis with exclude directives."""
+    from wads.migration import analyze_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+
+        manifest_content = """
+prune tests
+global-exclude *.pyc __pycache__
+recursive-exclude * *.pyo
+"""
+        manifest_path.write_text(manifest_content)
+
+        result = analyze_manifest_in(manifest_path)
+
+        assert result['exists'] == True
+        assert result['needs_migration'] == True
+
+        # Should suggest excludes
+        config = result['hatchling_config']
+        assert config is not None
+        assert 'exclude' in config
+
+
+def test_analyze_manifest_in_empty():
+    """Test MANIFEST.in analysis with empty/comment-only file."""
+    from wads.migration import analyze_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+
+        # Only comments and blank lines
+        manifest_content = """
+# Just a comment
+# Another comment
+
+"""
+        manifest_path.write_text(manifest_content)
+
+        result = analyze_manifest_in(manifest_path)
+
+        assert result['exists'] == True
+        assert result['needs_migration'] == False
+        assert result['hatchling_config'] is None

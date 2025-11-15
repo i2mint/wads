@@ -47,7 +47,45 @@ To migrate, run: populate . --migrate
 Or use: from wads.migration import migrate_setuptools_to_hatching
 ```
 
-### 3. Compare CI Workflow
+### 3. Check `MANIFEST.in` (Hatchling Migration)
+
+Analyze `MANIFEST.in` and get Hatchling configuration recommendations:
+
+```python
+from wads.config_comparison import compare_manifest_in
+
+result = compare_manifest_in('path/to/MANIFEST.in')
+
+if result['needs_migration']:
+    print("MANIFEST.in needs migration to Hatchling!")
+    for rec in result['recommendations']:
+        print(f"  • {rec}")
+    
+    # Get suggested pyproject.toml configuration
+    if result['hatchling_config']:
+        print("\nSuggested configuration:")
+        print(result['hatchling_config'])
+```
+
+**What it does:**
+- Parses MANIFEST.in directives (include, graft, prune, etc.)
+- Converts to equivalent Hatchling configuration
+- Suggests `[tool.hatch.build.targets.wheel]` settings
+
+**Example output:**
+```toml
+[tool.hatch.build.targets.wheel]
+include = [
+  "mypackage/data/**/*.json",
+  "docs/**/*"
+]
+exclude = [
+  "tests/",
+  "**/*.pyc"
+]
+```
+
+### 4. Compare CI Workflow
 
 Check if your GitHub Actions workflow is up-to-date:
 
@@ -66,7 +104,7 @@ if result['needs_attention']:
 - Missing modern tools (ruff)
 - CI structure alignment
 
-### 4. Overall Project Health Check
+### 5. Overall Project Health Check
 
 Get a comprehensive status of all config files:
 
@@ -77,6 +115,7 @@ status = summarize_config_status('/path/to/project')
 
 print(f"Has pyproject.toml: {status['has_pyproject']}")
 print(f"Has setup.cfg: {status['has_setup_cfg']}")
+print(f"Has MANIFEST.in: {status['has_manifest_in']}")
 
 if status['needs_attention']:
     print("Files needing attention:")

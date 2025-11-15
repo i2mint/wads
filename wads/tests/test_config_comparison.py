@@ -158,5 +158,62 @@ def test_compare_setup_cfg_missing():
     assert result['should_migrate'] == False
 
 
+def test_manifest_in_parsing():
+    """Test MANIFEST.in parsing."""
+    from wads.migration import analyze_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+
+        # Create a sample MANIFEST.in
+        manifest_content = """
+# Include data files
+include README.md
+include LICENSE
+recursive-include mypackage/data *.json
+graft docs
+prune tests
+global-exclude *.pyc
+"""
+        manifest_path.write_text(manifest_content)
+
+        result = analyze_manifest_in(manifest_path)
+
+        assert result['exists'] == True
+        assert result['needs_migration'] == True
+        assert len(result['directives']) > 0
+        assert len(result['recommendations']) > 0
+        assert result['hatchling_config'] is not None
+
+        # Check that hatchling config is generated
+        assert '[tool.hatch.build.targets.wheel]' in result['hatchling_config']
+
+
+def test_manifest_in_nonexistent():
+    """Test MANIFEST.in analysis when file doesn't exist."""
+    from wads.migration import analyze_manifest_in
+
+    result = analyze_manifest_in('/nonexistent/MANIFEST.in')
+
+    assert result['exists'] == False
+    assert result['needs_migration'] == False
+    assert result['hatchling_config'] is None
+
+
+def test_compare_manifest_in():
+    """Test MANIFEST.in comparison function."""
+    from wads.config_comparison import compare_manifest_in
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+        manifest_path.write_text('include README.md\n')
+
+        result = compare_manifest_in(manifest_path)
+
+        assert result['exists'] == True
+        assert result['needs_migration'] == True
+        assert result['needs_attention'] == True
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

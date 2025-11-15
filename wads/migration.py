@@ -62,6 +62,182 @@ from wads import (
 
 
 # --------------------------------------------------------------------------------------
+# MANIFEST.in parsing and migration
+# --------------------------------------------------------------------------------------
+
+
+def _parse_manifest_in(filepath: str) -> dict:
+    """
+    Parse MANIFEST.in file and extract directives.
+
+    Returns a dict with:
+        - directives: list of (command, patterns) tuples
+        - needs_migration: bool
+        - recommendations: list of strings
+    """
+    if not os.path.isfile(filepath):
+        return {'directives': [], 'needs_migration': False, 'recommendations': []}
+
+    directives = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) >= 1:
+                command = parts[0]
+                pattern = parts[1] if len(parts) > 1 else ''
+                directives.append((command, pattern))
+
+    if not directives:
+        return {'directives': [], 'needs_migration': False, 'recommendations': []}
+
+    # Analyze directives and generate recommendations
+    recommendations = []
+    include_patterns = []
+    exclude_patterns = []
+
+    for command, pattern in directives:
+        if command in ('include', 'recursive-include', 'graft'):
+            include_patterns.append(pattern)
+        elif command in ('exclude', 'recursive-exclude', 'prune', 'global-exclude'):
+            exclude_patterns.append(pattern)
+
+    # Generate Hatchling configuration suggestions
+    if include_patterns or exclude_patterns:
+        recommendations.append(
+            "MANIFEST.in detected. With Hatchling, package data is handled differently."
+        )
+
+        if include_patterns:
+            example_includes = '\n  '.join(f'"{p}",' for p in include_patterns[:3])
+            if len(include_patterns) > 3:
+                example_includes += '\n  # ... and more'
+            recommendations.append(
+                f"To include extra files, add to pyproject.toml:\n"
+                f"[tool.hatch.build.targets.wheel]\n"
+                f"include = [\n  {example_includes}\n]"
+            )
+
+        if exclude_patterns:
+            example_excludes = '\n  '.join(f'"{p}",' for p in exclude_patterns[:3])
+            if len(exclude_patterns) > 3:
+                example_excludes += '\n  # ... and more'
+            recommendations.append(
+                f"To exclude files, add to pyproject.toml:\n"
+                f"[tool.hatch.build.targets.wheel]\n"
+                f"exclude = [\n  {example_excludes}\n]"
+            )
+
+        recommendations.append(
+            "Note: Hatchling includes all package files by default. "
+            "Only use explicit include/exclude if you need non-default behavior."
+        )
+
+    return {
+        'directives': directives,
+        'needs_migration': len(directives) > 0,
+        'recommendations': recommendations,
+    }
+
+
+def analyze_manifest_in(manifest_path: Union[str, Path]) -> dict:
+    """
+    Analyze MANIFEST.in file and provide migration guidance for Hatchling.
+
+    Args:
+        manifest_path: Path to MANIFEST.in file
+
+    Returns:
+        Dictionary with:
+            - exists: bool - whether file exists
+            - needs_migration: bool - whether migration is needed
+            - directives: list of (command, pattern) tuples
+            - recommendations: list of strings with migration guidance
+            - hatchling_config: suggested pyproject.toml configuration
+
+    Example:
+        >>> # If MANIFEST.in doesn't exist
+        >>> result = analyze_manifest_in('nonexistent/MANIFEST.in')
+        >>> result['exists']
+        False
+        >>> result['needs_migration']
+        False
+    """
+    manifest_path = str(manifest_path)
+
+    if not os.path.isfile(manifest_path):
+        return {
+            'exists': False,
+            'needs_migration': False,
+            'directives': [],
+            'recommendations': [],
+            'hatchling_config': None,
+        }
+
+    parsed = _parse_manifest_in(manifest_path)
+
+    # Build suggested hatchling config
+    hatchling_config = None
+    if parsed['needs_migration']:
+        include_patterns = []
+        exclude_patterns = []
+
+        for command, pattern in parsed['directives']:
+            if command in ('include', 'recursive-include', 'graft'):
+                # Convert MANIFEST.in patterns to hatchling patterns
+                if command == 'graft':
+                    # graft dir -> include dir/**/*
+                    include_patterns.append(f"{pattern}/**/*")
+                elif command == 'recursive-include':
+                    # recursive-include dir pattern -> dir/**/pattern
+                    parts = pattern.split(None, 1)
+                    if len(parts) == 2:
+                        dir_path, file_pattern = parts
+                        include_patterns.append(f"{dir_path}/**/{file_pattern}")
+                    else:
+                        include_patterns.append(pattern)
+                else:
+                    include_patterns.append(pattern)
+            elif command in ('exclude', 'recursive-exclude', 'prune', 'global-exclude'):
+                if command == 'prune':
+                    exclude_patterns.append(f"{pattern}/")
+                elif command == 'global-exclude':
+                    exclude_patterns.append(f"**/{pattern}")
+                elif command == 'recursive-exclude':
+                    parts = pattern.split(None, 1)
+                    if len(parts) == 2:
+                        dir_path, file_pattern = parts
+                        exclude_patterns.append(f"{dir_path}/**/{file_pattern}")
+                    else:
+                        exclude_patterns.append(pattern)
+                else:
+                    exclude_patterns.append(pattern)
+
+        config_parts = []
+        if include_patterns:
+            includes = ',\n  '.join(f'"{p}"' for p in include_patterns)
+            config_parts.append(f"include = [\n  {includes}\n]")
+        if exclude_patterns:
+            excludes = ',\n  '.join(f'"{p}"' for p in exclude_patterns)
+            config_parts.append(f"exclude = [\n  {excludes}\n]")
+
+        if config_parts:
+            hatchling_config = "[tool.hatch.build.targets.wheel]\n" + '\n'.join(
+                config_parts
+            )
+
+    return {
+        'exists': True,
+        'needs_migration': parsed['needs_migration'],
+        'directives': parsed['directives'],
+        'recommendations': parsed['recommendations'],
+        'hatchling_config': hatchling_config,
+    }
+
+
+# --------------------------------------------------------------------------------------
 # Setup.cfg to pyproject.toml migration
 # --------------------------------------------------------------------------------------
 
