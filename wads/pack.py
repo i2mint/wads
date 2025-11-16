@@ -1321,11 +1321,18 @@ def read_and_resolve_setup_configs(
         except:
             return ""
 
+    # Get packages list - use what's in configs, or discover from directory structure
+    packages_list = configs.get("packages")
+    if not packages_list:
+        # For modern pyproject.toml, packages are in [tool.hatch.build.targets.wheel]
+        # For legacy setup.cfg, fall back to simple discovery
+        packages_list = folders_that_have_init_py_files(pkg_dir)
+
     dflt_kwargs = dict(
         name=f"{name}",
         version=f"{version}",
         url=url,
-        packages=find_packages(),
+        packages=packages_list,
         include_package_data=True,
         platforms="any",
         # long_description=text_of_readme_md_file(),
