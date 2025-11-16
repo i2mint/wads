@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.46 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
@@ -58,8 +59,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
@@ -91,7 +92,14 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.populate</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Populate a package directory with useful packaging files.</span>
+
+<span class="sd">Provides the `populate_pkg_dir` function to add standard files like</span>
+<span class="sd">README.md, pyproject.toml, and .gitignore.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainMap</span>
@@ -108,10 +116,16 @@
     <span class="n">gitignore_tpl_path</span><span class="p">,</span>
     <span class="n">gitattributes_tpl_path</span><span class="p">,</span>
     <span class="n">github_ci_tpl_deploy_path</span><span class="p">,</span>
-    <span class="n">github_ci_tpl_publish_path</span><span class="p">,</span>
-    <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
+    <span class="c1"># github_ci_tpl_publish_path,  # old publish path</span>
     <span class="n">wads_configs</span><span class="p">,</span>
     <span class="n">wads_configs_file</span><span class="p">,</span>
+    <span class="c1"># New stuff:</span>
+    <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
+    <span class="n">editorconfig_tpl_path</span><span class="p">,</span>
+    <span class="n">bug_report_tpl_path</span><span class="p">,</span>
+    <span class="n">feature_request_tpl_path</span><span class="p">,</span>
+    <span class="n">pull_request_template_tpl_path</span><span class="p">,</span>
+    <span class="n">dependabot_tpl_path</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">mk_conditional_logger</span><span class="p">,</span> <span class="n">git</span><span class="p">,</span> <span class="n">ensure_no_slash_suffix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.pack</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_configs</span>
@@ -125,6 +139,95 @@
 <span class="c1"># from wads.pack_util import write_configs</span>
 
 <span class="n">path_sep</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Tracking and summary helpers for populate</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="PopulateTracker">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PopulateTracker</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Track actions during populate for summary reporting.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Files that existed and weren&#39;t overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_attention</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Files with issues or misalignments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">added</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Files that were created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Files that raised errors</span>
+
+<div class="viewcode-block" id="PopulateTracker.skip">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker.skip">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">skip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record a file that was skipped (already exists).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PopulateTracker.attention">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker.attention">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record a file that needs attention with optional reason.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">needs_attention</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">reason</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">needs_attention</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PopulateTracker.add">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker.add">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record a file that was added.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PopulateTracker.error">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker.error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record a file operation that failed.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="PopulateTracker.print_summary">
+<a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.PopulateTracker.print_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print emoji-based summary of what happened.&quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POPULATE SUMMARY&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✓ Skipped (already exists):&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_attention</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">👀 Needs attention:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_attention</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">filename</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="n">item</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    └─ </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">added</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Added:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">added</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">❌ Errors:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    └─ </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span></div>
+</div>
+
+
 
 <span class="n">populate_dflts</span> <span class="o">=</span> <span class="n">wads_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
     <span class="s2">&quot;populate_dflts&quot;</span><span class="p">,</span>
@@ -253,6 +356,7 @@
     <span class="n">pkg_dir</span><span class="p">,</span>
     <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">],</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
     <span class="n">root_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;root_url&quot;</span><span class="p">],</span>
     <span class="n">author</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">],</span>
     <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">populate_dflts</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">],</span>
@@ -270,6 +374,8 @@
     <span class="n">skip_ci_def_gen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">migrate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">create_gitattributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">create_setup_py</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">create_community_files</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">version_control_system</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">ci_def_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">ci_tpl_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -306,6 +412,8 @@
 <span class="sd">    :param skip_docsrc_gen: Skip the generation of documentation stuff</span>
 <span class="sd">    :param create_docsrc: If True, create and populate a `docsrc/` directory (overrides skip_docsrc_gen).</span>
 <span class="sd">    :param skip_ci_def_gen: Skip the generation of the CI stuff</span>
+<span class="sd">    :param create_setup_py: If True, create setup.py for backward compatibility (default: False, not needed with Hatchling).</span>
+<span class="sd">    :param create_community_files: If True, create community files (.editorconfig, issue/PR templates, dependabot.yml). Default: False.</span>
 <span class="sd">    :param migrate: If True, migrate existing setup.cfg to pyproject.toml and old CI to new CI format.</span>
 <span class="sd">        Will fail if old CI has unmappable content.</span>
 <span class="sd">    :param create_gitattributes: If True (default), create a .gitattributes file with &#39;*.ipynb linguist-documentation&#39;.</span>
@@ -343,6 +451,7 @@
         <span class="n">overwrite</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">overwrite</span><span class="p">)</span>
 
     <span class="n">_clog</span> <span class="o">=</span> <span class="n">mk_conditional_logger</span><span class="p">(</span><span class="n">condition</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="nb">print</span><span class="p">)</span>
+    <span class="n">tracker</span> <span class="o">=</span> <span class="n">PopulateTracker</span><span class="p">()</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">))</span>
     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2"> is not a directory&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
@@ -412,15 +521,71 @@
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;.gitignore&quot;</span><span class="p">):</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">gitignore_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.gitignore&quot;</span><span class="p">))</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.gitignore&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.gitignore&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">create_gitattributes</span> <span class="ow">and</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;.gitattributes&quot;</span><span class="p">):</span>
         <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... making a .gitattributes&quot;</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">gitattributes_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.gitattributes&quot;</span><span class="p">))</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.gitattributes&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">create_gitattributes</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.gitattributes&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create community files only if requested</span>
+    <span class="k">if</span> <span class="n">create_community_files</span><span class="p">:</span>
+        <span class="c1"># Create .editorconfig for consistent formatting</span>
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;.editorconfig&quot;</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">editorconfig_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.editorconfig&quot;</span><span class="p">))</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.editorconfig&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.editorconfig&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create GitHub issue templates</span>
+        <span class="n">github_issue_template_dir</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github&quot;</span><span class="p">,</span> <span class="s2">&quot;ISSUE_TEMPLATE&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">github_issue_template_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">github_issue_template_dir</span><span class="p">,</span> <span class="s2">&quot;bug_report.md&quot;</span><span class="p">)):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+                <span class="n">bug_report_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">github_issue_template_dir</span><span class="p">,</span> <span class="s2">&quot;bug_report.md&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.github/ISSUE_TEMPLATE/bug_report.md&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.github/ISSUE_TEMPLATE/bug_report.md&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">github_issue_template_dir</span><span class="p">,</span> <span class="s2">&quot;feature_request.md&quot;</span><span class="p">)):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+                <span class="n">feature_request_tpl_path</span><span class="p">,</span>
+                <span class="n">pjoin</span><span class="p">(</span><span class="n">github_issue_template_dir</span><span class="p">,</span> <span class="s2">&quot;feature_request.md&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.github/ISSUE_TEMPLATE/feature_request.md&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.github/ISSUE_TEMPLATE/feature_request.md&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create PR template</span>
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github&quot;</span><span class="p">,</span> <span class="s2">&quot;PULL_REQUEST_TEMPLATE.md&quot;</span><span class="p">)):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+                <span class="n">pull_request_template_tpl_path</span><span class="p">,</span>
+                <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github&quot;</span><span class="p">,</span> <span class="s2">&quot;PULL_REQUEST_TEMPLATE.md&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.github/PULL_REQUEST_TEMPLATE.md&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.github/PULL_REQUEST_TEMPLATE.md&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create Dependabot config</span>
+        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github&quot;</span><span class="p">,</span> <span class="s2">&quot;dependabot.yml&quot;</span><span class="p">)):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">dependabot_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github&quot;</span><span class="p">,</span> <span class="s2">&quot;dependabot.yml&quot;</span><span class="p">))</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;.github/dependabot.yml&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;.github/dependabot.yml&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">project_type</span> <span class="o">==</span> <span class="s2">&quot;app&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">):</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="k">pass</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># project_type == &#39;lib&#39; or None</span>
         <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">):</span>
@@ -440,19 +605,25 @@
                     <span class="c1"># Write the migrated content</span>
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pyproject_content</span><span class="p">)</span>
+                    <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+                    <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;✅ Migrated setup.cfg → pyproject.toml&quot;</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="n">_clog</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;... migration failed (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">), falling back to template-based creation&quot;</span>
                     <span class="p">)</span>
+                    <span class="n">tracker</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Migration failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">if</span> <span class="s2">&quot;pkg-dir&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
                         <span class="k">del</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;pkg-dir&quot;</span><span class="p">]</span>
                     <span class="n">write_pyproject_configs</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">configs</span><span class="p">)</span>
+                    <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... making a &#39;pyproject.toml&#39;&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="s2">&quot;pkg-dir&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
                     <span class="k">del</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;pkg-dir&quot;</span><span class="p">]</span>
                 <span class="n">write_pyproject_configs</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">configs</span><span class="p">)</span>
+                <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
             <span class="c1"># If pyproject.toml exists but URL is missing/empty, update it</span>
             <span class="k">if</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">):</span>
                 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">update_project_url</span><span class="p">,</span> <span class="n">read_pyproject_toml</span>
@@ -466,9 +637,13 @@
                         <span class="sa">f</span><span class="s2">&quot;... updating URL in existing pyproject.toml to </span><span class="si">{</span><span class="n">configs</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                     <span class="n">update_project_url</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>
-        <span class="c1"># Keep setup.py for backward compatibility, but minimal</span>
-        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">):</span>
+        <span class="c1"># setup.py is no longer needed with Hatchling, but can be created for backward compatibility</span>
+        <span class="k">if</span> <span class="n">create_setup_py</span> <span class="ow">and</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">):</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">setup_tpl_path</span><span class="p">,</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">))</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">create_setup_py</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">)):</span>
+            <span class="c1"># If setup.py exists but we&#39;re not creating it, just skip it</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;setup.py&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;LICENSE&quot;</span><span class="p">):</span>
         <span class="n">_license_body</span> <span class="o">=</span> <span class="n">license_body</span><span class="p">(</span><span class="n">configs</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">])</span>
@@ -496,12 +671,18 @@
         <span class="p">)</span>
 
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s2">&quot;LICENSE&quot;</span><span class="p">,</span> <span class="n">_license_body</span><span class="p">)</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;LICENSE&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;LICENSE&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">):</span>
         <span class="n">readme_text</span> <span class="o">=</span> <span class="n">gen_readme_text</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">include_pip_install_instruction_in_readme</span><span class="p">:</span>
             <span class="n">readme_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">To install:</span><span class="se">\t</span><span class="s2">```pip install </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">```</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">,</span> <span class="n">readme_text</span><span class="p">)</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;README.md&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">project_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">project_type</span> <span class="o">==</span> <span class="s2">&quot;lib&quot;</span><span class="p">:</span>
         <span class="c1"># Respect both the new `create_docsrc` flag and the existing</span>
@@ -512,7 +693,20 @@
             <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... skipping docsrc generation because skip_docsrc_gen=True&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">create_docsrc</span><span class="p">:</span>
             <span class="c1"># TODO: Figure out epythet and wads relationship -- right now, there&#39;s a reflexive dependency</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">epythet.setup_docsrc</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_docsrc</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">epythet.setup_docsrc</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_docsrc</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                    <span class="s2">&quot;Documentation operations require epythet. &quot;</span>
+                    <span class="s2">&quot;Install wads with documentation support: pip install wads[docs]&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Documentation generation with epythet is deprecated. &quot;</span>
+                <span class="s2">&quot;Install wads with documentation support: pip install wads[docs]&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
 
             <span class="n">make_docsrc</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -527,9 +721,9 @@
             <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version_control_system</span><span class="p">,</span> <span class="n">project_type</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span>
-                <span class="n">pkg_dir</span>
-            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+            <span class="p">)</span>
 
             <span class="c1"># Check if we should migrate old CI to new format</span>
             <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;github&quot;</span><span class="p">:</span>
@@ -546,7 +740,12 @@
                         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_ci_content</span><span class="p">)</span>
                         <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... successfully migrated CI to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">tracker</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                            <span class="sa">f</span><span class="s2">&quot;Migration failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
                         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                             <span class="sa">f</span><span class="s2">&quot;Failed to migrate CI file </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                             <span class="sa">f</span><span class="s2">&quot;The old CI may contain configurations that cannot be automatically migrated.&quot;</span>
@@ -557,10 +756,210 @@
                     <span class="n">_add_ci_def</span><span class="p">(</span>
                         <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span>
                     <span class="p">)</span>
+                    <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Not migrating or not github, use template</span>
                 <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
                 <span class="n">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">)</span>
+                <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Compare existing files against templates and add attention items</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.config_comparison</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">compare_pyproject_toml</span><span class="p">,</span>
+        <span class="n">compare_setup_cfg</span><span class="p">,</span>
+        <span class="n">compare_ci_workflow</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Check pyproject.toml alignment</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;pyproject.toml&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracker</span><span class="o">.</span><span class="n">added</span><span class="p">:</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">👀 Checking pyproject.toml alignment with template...&quot;</span><span class="p">)</span>
+        <span class="n">comparison</span> <span class="o">=</span> <span class="n">compare_pyproject_toml</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">reasons</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;missing_sections&quot;</span><span class="p">):</span>
+                <span class="n">reasons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Missing sections: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comparison</span><span class="p">[</span><span class="s1">&#39;missing_sections&#39;</span><span class="p">][:</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;...&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comparison</span><span class="p">[</span><span class="s2">&quot;missing_sections&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="n">reasons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+
+            <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reasons</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;  Issues found:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    • </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check setup.cfg (warn about deprecation)</span>
+    <span class="n">setup_cfg_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg_path</span><span class="p">):</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">👀 Found setup.cfg (deprecated)...&quot;</span><span class="p">)</span>
+        <span class="n">comparison</span> <span class="o">=</span> <span class="n">compare_setup_cfg</span><span class="p">(</span><span class="n">setup_cfg_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;should_migrate&quot;</span><span class="p">):</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+                <span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="s2">&quot;Deprecated format. Run: populate . --migrate&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;  Consider migrating to pyproject.toml&quot;</span><span class="p">)</span>
+                <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;  Run: populate . --migrate&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check MANIFEST.in (warn about migration needed)</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.config_comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_manifest_in</span>
+
+        <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">👀 Found MANIFEST.in (needs Hatchling migration)...&quot;</span><span class="p">)</span>
+        <span class="n">manifest_comparison</span> <span class="o">=</span> <span class="n">compare_manifest_in</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">):</span>
+            <span class="c1"># If migrate flag is set, automatically add to pyproject.toml</span>
+            <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">manifest_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">):</span>
+                <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Read existing pyproject.toml</span>
+                        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pyproject_toml</span>
+                        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli_w</span>
+
+                        <span class="n">existing_data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+                        <span class="c1"># Parse the hatchling config suggestion</span>
+                        <span class="n">hatchling_lines</span> <span class="o">=</span> <span class="n">manifest_comparison</span><span class="p">[</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Extract include/exclude lists from the suggestion</span>
+                        <span class="n">include_items</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">exclude_items</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">current_section</span> <span class="o">=</span> <span class="kc">None</span>
+
+                        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">hatchling_lines</span><span class="p">:</span>
+                            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="s2">&quot;include = [&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                                <span class="n">current_section</span> <span class="o">=</span> <span class="s2">&quot;include&quot;</span>
+                            <span class="k">elif</span> <span class="s2">&quot;exclude = [&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                                <span class="n">current_section</span> <span class="o">=</span> <span class="s2">&quot;exclude&quot;</span>
+                            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">current_section</span><span class="p">:</span>
+                                <span class="c1"># Extract the item (remove quotes, backslashes, and trailing comma)</span>
+                                <span class="n">item</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                                    <span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
+                                    <span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                                    <span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                                    <span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                                <span class="p">)</span>
+                                <span class="k">if</span> <span class="n">current_section</span> <span class="o">==</span> <span class="s2">&quot;include&quot;</span><span class="p">:</span>
+                                    <span class="n">include_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">exclude_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                            <span class="k">elif</span> <span class="n">line</span> <span class="o">==</span> <span class="s2">&quot;]&quot;</span><span class="p">:</span>
+                                <span class="n">current_section</span> <span class="o">=</span> <span class="kc">None</span>
+
+                        <span class="c1"># Check if migration already done - only update if items missing</span>
+                        <span class="k">if</span> <span class="s2">&quot;tool&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">:</span>
+                            <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">if</span> <span class="s2">&quot;hatch&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">]:</span>
+                            <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">if</span> <span class="s2">&quot;build&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">]:</span>
+                            <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">if</span> <span class="s2">&quot;targets&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">]:</span>
+                            <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">][</span><span class="s2">&quot;targets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="s2">&quot;wheel&quot;</span>
+                            <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">][</span><span class="s2">&quot;targets&quot;</span><span class="p">]</span>
+                        <span class="p">):</span>
+                            <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">][</span><span class="s2">&quot;targets&quot;</span><span class="p">][</span>
+                                <span class="s2">&quot;wheel&quot;</span>
+                            <span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                        <span class="n">wheel_config</span> <span class="o">=</span> <span class="n">existing_data</span><span class="p">[</span><span class="s2">&quot;tool&quot;</span><span class="p">][</span><span class="s2">&quot;hatch&quot;</span><span class="p">][</span><span class="s2">&quot;build&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;targets&quot;</span>
+                        <span class="p">][</span><span class="s2">&quot;wheel&quot;</span><span class="p">]</span>
+
+                        <span class="c1"># Check if items already present - skip if migration already done</span>
+                        <span class="n">existing_include</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">wheel_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                        <span class="n">existing_exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">wheel_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exclude&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                        <span class="n">new_include</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">include_items</span><span class="p">)</span>
+                        <span class="n">new_exclude</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_items</span><span class="p">)</span>
+
+                        <span class="n">needs_update</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">if</span> <span class="n">include_items</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">new_include</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">existing_include</span><span class="p">):</span>
+                            <span class="n">wheel_config</span><span class="p">[</span><span class="s2">&quot;include&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">include_items</span>
+                            <span class="n">needs_update</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">if</span> <span class="n">exclude_items</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">new_exclude</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">existing_exclude</span><span class="p">):</span>
+                            <span class="n">wheel_config</span><span class="p">[</span><span class="s2">&quot;exclude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exclude_items</span>
+                            <span class="n">needs_update</span> <span class="o">=</span> <span class="kc">True</span>
+
+                        <span class="c1"># Only write if changes needed</span>
+                        <span class="k">if</span> <span class="n">needs_update</span><span class="p">:</span>
+                            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                                <span class="n">tomli_w</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">existing_data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+                            <span class="n">_clog</span><span class="p">(</span>
+                                <span class="s2">&quot;✅ Migrated MANIFEST.in → pyproject.toml [tool.hatch.build.targets.wheel]&quot;</span>
+                            <span class="p">)</span>
+                            <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;pyproject.toml (updated with MANIFEST.in)&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;✓ MANIFEST.in already migrated to pyproject.toml&quot;</span><span class="p">)</span>
+                            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span>
+                                <span class="s2">&quot;pyproject.toml (MANIFEST.in already migrated)&quot;</span>
+                            <span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️  Could not auto-migrate MANIFEST.in: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+                            <span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;Auto-migration failed - see suggestions below&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+                        <span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;Needs migration but pyproject.toml not found&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+                    <span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Needs migration to Hatchling [tool.hatch.build.targets.wheel]&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="n">migrate</span> <span class="ow">and</span> <span class="n">manifest_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;  MANIFEST.in is not directly supported by Hatchling&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">manifest_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[])[:</span><span class="mi">2</span><span class="p">]:</span>
+                    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">manifest_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">):</span>
+                    <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Suggested pyproject.toml configuration:&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">manifest_comparison</span><span class="p">[</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+                        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check CI workflow alignment</span>
+    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tracker</span><span class="o">.</span><span class="n">added</span>
+    <span class="p">):</span>
+        <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">👀 Checking CI workflow alignment with template...&quot;</span><span class="p">)</span>
+        <span class="n">ci_comparison</span> <span class="o">=</span> <span class="n">compare_ci_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ci_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">reasons</span> <span class="o">=</span> <span class="p">[</span><span class="n">rec</span> <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">ci_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[])]</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+                <span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">,</span>
+                <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reasons</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;...&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reasons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;  Issues found:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">ci_comparison</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    • </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Print summary</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">print_summary</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">print_summary</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">name</span></div>
 
@@ -670,14 +1069,14 @@
     <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">contents</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="p">{</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
-        <span class="n">contents</span>
-    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="p">{</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">contents</span><span class="p">),</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">resource_name</span> <span class="ow">in</span> <span class="n">copy_files</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... copying </span><span class="si">{</span><span class="n">resource_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">wads_join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">resource_name</span><span class="p">))</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">wads_join</span><span class="p">(</span><span class="n">resource_name</span><span class="p">),</span> <span class="n">dst</span><span class="o">=</span><span class="n">pjoin</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span></div>
 

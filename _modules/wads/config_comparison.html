@@ -1,0 +1,643 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.config_comparison &mdash; wads 0.1.51 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.config_comparison</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.config_comparison</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compare project configuration files (pyproject.toml, setup.cfg, MANIFEST.in) against templates.</span>
+
+<span class="sd">This module provides tools to analyze project configurations and identify</span>
+<span class="sd">differences from standard templates, helping users maintain up-to-date</span>
+<span class="sd">project structures.</span>
+
+<span class="sd">Key Functions:</span>
+<span class="sd">    compare_pyproject_toml: Compare actual pyproject.toml against template</span>
+<span class="sd">    compare_setup_cfg: Analyze setup.cfg and recommend migration</span>
+<span class="sd">    compare_manifest_in: Analyze MANIFEST.in and recommend Hatchling migration</span>
+<span class="sd">    summarize_config_status: Overall project config health check</span>
+<span class="sd">    compare_ci_workflow: Compare CI workflow against template</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    &gt;&gt;&gt; from wads.config_comparison import summarize_config_status  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; status = summarize_config_status(&#39;/path/to/project&#39;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; if status[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
+<span class="sd">    ...     print(status[&#39;recommendations&#39;])  # doctest: +SKIP</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">suppress</span>
+
+<span class="c1"># Import TOML handling</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">tomllib</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyproject_toml_tpl_path</span><span class="p">,</span> <span class="n">github_ci_publish_2025_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pyproject_toml</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># pyproject.toml comparison</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_nested_get</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get value from nested dict using dot-separated path.</span>
+
+<span class="sd">    &gt;&gt;&gt; d = {&#39;a&#39;: {&#39;b&#39;: {&#39;c&#39;: 1}}}</span>
+<span class="sd">    &gt;&gt;&gt; _nested_get(d, &#39;a.b.c&#39;)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; _nested_get(d, &#39;a.b.x&#39;, &#39;missing&#39;)</span>
+<span class="sd">    &#39;missing&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">d</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flatten_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flatten nested dict into dot-separated keys.</span>
+
+<span class="sd">    &gt;&gt;&gt; d = {&#39;a&#39;: {&#39;b&#39;: 1, &#39;c&#39;: 2}, &#39;d&#39;: 3}</span>
+<span class="sd">    &gt;&gt;&gt; sorted(_flatten_dict(d).items())</span>
+<span class="sd">    [(&#39;a.b&#39;, 1), (&#39;a.c&#39;, 2), (&#39;d&#39;, 3)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent_key</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">parent_key</span> <span class="k">else</span> <span class="n">k</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_dict</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">new_key</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_key</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_missing_sections</span><span class="p">(</span>
+    <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find top-level and nested sections in template missing from actual.&quot;&quot;&quot;</span>
+    <span class="n">flat_template</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">flat_actual</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span>
+
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">flat_template</span><span class="p">:</span>
+        <span class="c1"># Skip ignored keys</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">ignored</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">for</span> <span class="n">ignored</span> <span class="ow">in</span> <span class="n">ignore_keys</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flat_actual</span><span class="p">:</span>
+            <span class="c1"># Only report if it&#39;s a meaningful section (not empty placeholders)</span>
+            <span class="n">template_val</span> <span class="o">=</span> <span class="n">flat_template</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">template_val</span> <span class="ow">and</span> <span class="n">template_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">{}):</span>
+                <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">missing</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_outdated_sections</span><span class="p">(</span>
+    <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find sections in actual that might be outdated or unnecessary.&quot;&quot;&quot;</span>
+    <span class="n">flat_template</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">flat_actual</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span>
+
+    <span class="n">outdated</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">flat_actual</span><span class="p">:</span>
+        <span class="c1"># Skip ignored keys</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">ignored</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">for</span> <span class="n">ignored</span> <span class="ow">in</span> <span class="n">ignore_keys</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check for common outdated patterns</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flat_template</span><span class="p">:</span>
+            <span class="c1"># Check if it&#39;s a known legacy field</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">legacy</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">legacy</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="s2">&quot;manifest&quot;</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">outdated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">outdated</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_recommendations</span><span class="p">(</span>
+    <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">missing</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate actionable recommendations.&quot;&quot;&quot;</span>
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;Some template sections are missing from your pyproject.toml.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check for specific important missing sections</span>
+        <span class="n">critical_missing</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">m</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">missing</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">crit</span> <span class="ow">in</span> <span class="n">m</span> <span class="k">for</span> <span class="n">crit</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;tool.ruff&quot;</span><span class="p">,</span> <span class="s2">&quot;tool.pytest&quot;</span><span class="p">,</span> <span class="s2">&quot;build-system&quot;</span><span class="p">])</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">critical_missing</span><span class="p">:</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Critical sections missing: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">critical_missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Consider running: wads migrate pyproject.toml&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check if using outdated build backend</span>
+    <span class="n">build_backend</span> <span class="o">=</span> <span class="n">actual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-system&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-backend&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">template_backend</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-system&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-backend&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">build_backend</span> <span class="o">!=</span> <span class="n">template_backend</span> <span class="ow">and</span> <span class="s2">&quot;setuptools&quot;</span> <span class="ow">in</span> <span class="n">build_backend</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Consider upgrading build backend from &#39;</span><span class="si">{</span><span class="n">build_backend</span><span class="si">}</span><span class="s2">&#39; to &#39;</span><span class="si">{</span><span class="n">template_backend</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">recommendations</span>
+
+
+<div class="viewcode-block" id="compare_pyproject_toml">
+<a class="viewcode-back" href="../../module_docs/wads/config_comparison.html#wads.config_comparison.compare_pyproject_toml">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_pyproject_toml</span><span class="p">(</span>
+    <span class="n">actual_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">template_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">pyproject_toml_tpl_path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare actual pyproject.toml against template.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        actual_path: Path to the project&#39;s pyproject.toml</span>
+<span class="sd">        template_path: Path to template pyproject.toml</span>
+<span class="sd">        ignore_keys: Keys to ignore in comparison (project-specific values)</span>
+<span class="sd">        project_name: Optional project name for contextual recommendations</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with:</span>
+<span class="sd">        - &#39;missing_sections&#39;: sections in template but not in actual</span>
+<span class="sd">        - &#39;outdated_sections&#39;: sections in actual that might be outdated</span>
+<span class="sd">        - &#39;recommendations&#39;: suggested updates</span>
+<span class="sd">        - &#39;needs_attention&#39;: boolean flag</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; diff = compare_pyproject_toml(&#39;my_project/pyproject.toml&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if diff[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...     for rec in diff[&#39;recommendations&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...         print(f&quot;  - {rec}&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ignore_keys</span> <span class="o">=</span> <span class="n">ignore_keys</span> <span class="ow">or</span> <span class="p">{</span>
+        <span class="s2">&quot;project.name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.version&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.description&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.authors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.urls&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.keywords&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.dependencies&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.optional-dependencies&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project.scripts&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">actual</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not read pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">_find_missing_sections</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">)</span>
+    <span class="n">outdated</span> <span class="o">=</span> <span class="n">_find_outdated_sections</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">)</span>
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="n">_generate_recommendations</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">missing</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;missing_sections&quot;</span><span class="p">:</span> <span class="n">missing</span><span class="p">,</span>
+        <span class="s2">&quot;outdated_sections&quot;</span><span class="p">:</span> <span class="n">outdated</span><span class="p">,</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">missing</span> <span class="ow">or</span> <span class="n">outdated</span> <span class="ow">or</span> <span class="n">recommendations</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># setup.cfg comparison</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="compare_setup_cfg">
+<a class="viewcode-back" href="../../module_docs/wads/config_comparison.html#wads.config_comparison.compare_setup_cfg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_setup_cfg</span><span class="p">(</span>
+    <span class="n">actual_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">warn_about_deprecation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze setup.cfg and recommend migration to pyproject.toml.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        actual_path: Path to setup.cfg file</span>
+<span class="sd">        warn_about_deprecation: Whether to warn about using deprecated format</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with migration recommendations</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; analysis = compare_setup_cfg(&#39;old_project/setup.cfg&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if analysis[&#39;should_migrate&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(analysis[&#39;recommendations&#39;])  # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParser</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;should_migrate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">sections</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">())</span>
+
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">warn_about_deprecation</span><span class="p">:</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;setup.cfg is deprecated in favor of pyproject.toml (PEP 621)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;To migrate, run: populate . --migrate&quot;</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;Or use: from wads.migration import migrate_setuptools_to_hatching&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;sections&quot;</span><span class="p">:</span> <span class="n">sections</span><span class="p">,</span>
+        <span class="s2">&quot;should_migrate&quot;</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="compare_manifest_in">
+<a class="viewcode-back" href="../../module_docs/wads/config_comparison.html#wads.config_comparison.compare_manifest_in">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_manifest_in</span><span class="p">(</span>
+    <span class="n">actual_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze MANIFEST.in and recommend migration to Hatchling configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        actual_path: Path to MANIFEST.in file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with migration recommendations</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; analysis = compare_manifest_in(&#39;MANIFEST.in&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if analysis[&#39;needs_migration&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(analysis[&#39;hatchling_config&#39;])  # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_manifest_in</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">analyze_manifest_in</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;exists&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;directives&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;hatchling_config&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">],</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># CI workflow comparison</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="compare_ci_workflow">
+<a class="viewcode-back" href="../../module_docs/wads/config_comparison.html#wads.config_comparison.compare_ci_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_ci_workflow</span><span class="p">(</span>
+    <span class="n">actual_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">template_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare CI workflow against modern template.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        actual_path: Path to .github/workflows/ci.yml</span>
+<span class="sd">        template_path: Path to template CI workflow</span>
+<span class="sd">        project_name: Optional project name for placeholder replacement</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with comparison results and recommendations</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; diff = compare_ci_workflow(&#39;.github/workflows/ci.yml&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if diff[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(&quot;CI might be outdated&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">ImportError</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.github_ci_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_workflows</span><span class="p">,</span> <span class="n">GitHubWorkflow</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">actual</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+
+            <span class="n">comparison</span> <span class="o">=</span> <span class="n">compare_workflows</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">)</span>
+
+            <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Check for outdated action versions</span>
+            <span class="c1"># Use _data attribute to access the workflow data</span>
+            <span class="n">workflow_data</span> <span class="o">=</span> <span class="n">actual</span><span class="o">.</span><span class="n">_data</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="s2">&quot;_data&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">actual</span>
+            <span class="k">if</span> <span class="s2">&quot;jobs&quot;</span> <span class="ow">in</span> <span class="n">workflow_data</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job_data</span> <span class="ow">in</span> <span class="n">workflow_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s2">&quot;steps&quot;</span> <span class="ow">in</span> <span class="n">job_data</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job_data</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]:</span>
+                            <span class="k">if</span> <span class="s2">&quot;uses&quot;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                                <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;uses&quot;</span><span class="p">]</span>
+                                <span class="c1"># Check for old action versions</span>
+                                <span class="k">if</span> <span class="s2">&quot;@v3&quot;</span> <span class="ow">in</span> <span class="n">uses</span> <span class="ow">or</span> <span class="s2">&quot;@v2&quot;</span> <span class="ow">in</span> <span class="n">uses</span><span class="p">:</span>
+                                    <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                        <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">&#39; might be outdated (consider @v4 or @v5)&quot;</span>
+                                    <span class="p">)</span>
+
+            <span class="c1"># Check for missing modern features</span>
+            <span class="k">if</span> <span class="s2">&quot;tool.ruff&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">&quot;CI doesn&#39;t use ruff for linting - consider modern CI template&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">recommendations</span><span class="p">:</span>
+                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;To update CI, run: populate . --migrate&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;differences&quot;</span><span class="p">:</span> <span class="n">comparison</span><span class="p">,</span>
+                <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+                <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">recommendations</span><span class="p">),</span>
+            <span class="p">}</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not compare CI workflows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;github_ci_ops not available&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Overall project status</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="summarize_config_status">
+<a class="viewcode-back" href="../../module_docs/wads/config_comparison.html#wads.config_comparison.summarize_config_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize_config_status</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">check_ci</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check overall config status of a project.</span>
+
+<span class="sd">    Analyzes pyproject.toml, setup.cfg, CI workflows and returns a comprehensive</span>
+<span class="sd">    summary of what needs attention.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pkg_dir: Path to project directory</span>
+<span class="sd">        check_ci: Whether to check CI workflow</span>
+<span class="sd">        project_name: Optional project name for contextual checks</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with:</span>
+<span class="sd">        - &#39;has_pyproject&#39;: bool</span>
+<span class="sd">        - &#39;has_setup_cfg&#39;: bool</span>
+<span class="sd">        - &#39;has_ci&#39;: bool</span>
+<span class="sd">        - &#39;needs_attention&#39;: list of issues</span>
+<span class="sd">        - &#39;recommendations&#39;: list of recommendations</span>
+<span class="sd">        - Details for each file type</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; status = summarize_config_status(&#39;/path/to/project&#39;)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; for issue in status[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(f&quot;⚠️  {issue}&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+    <span class="n">setup_cfg_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;setup.cfg&quot;</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;MANIFEST.in&quot;</span>
+    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;.github&quot;</span> <span class="o">/</span> <span class="s2">&quot;workflows&quot;</span> <span class="o">/</span> <span class="s2">&quot;ci.yml&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;has_pyproject&quot;</span><span class="p">:</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">&quot;has_setup_cfg&quot;</span><span class="p">:</span> <span class="n">setup_cfg_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">&quot;has_manifest_in&quot;</span><span class="p">:</span> <span class="n">manifest_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">&quot;has_ci&quot;</span><span class="p">:</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Check pyproject.toml</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_pyproject&quot;</span><span class="p">]:</span>
+        <span class="n">pyproject_diff</span> <span class="o">=</span> <span class="n">compare_pyproject_toml</span><span class="p">(</span>
+            <span class="n">pyproject_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pyproject_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyproject_diff</span>
+
+        <span class="k">if</span> <span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+    <span class="c1"># Check setup.cfg</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_setup_cfg&quot;</span><span class="p">]:</span>
+        <span class="n">setup_cfg_status</span> <span class="o">=</span> <span class="n">compare_setup_cfg</span><span class="p">(</span><span class="n">setup_cfg_path</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;setup_cfg_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup_cfg_status</span>
+
+        <span class="k">if</span> <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Check MANIFEST.in</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_manifest_in&quot;</span><span class="p">]:</span>
+        <span class="n">manifest_status</span> <span class="o">=</span> <span class="n">compare_manifest_in</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;manifest_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest_status</span>
+
+        <span class="k">if</span> <span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+    <span class="c1"># Check CI</span>
+    <span class="k">if</span> <span class="n">check_ci</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_ci&quot;</span><span class="p">]:</span>
+        <span class="n">ci_diff</span> <span class="o">=</span> <span class="n">compare_ci_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;ci_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ci_diff</span>
+
+        <span class="k">if</span> <span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

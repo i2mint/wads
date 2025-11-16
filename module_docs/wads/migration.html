@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.46 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,11 +51,13 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">wads.migration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
 </ul>
@@ -66,8 +68,8 @@
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
@@ -133,6 +135,39 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <dt class="sig sig-object py" id="wads.migration.MigrationError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">MigrationError</span></span><a class="reference internal" href="../../_modules/wads/migration.html#MigrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.MigrationError" title="Link to this definition"></a></dt>
 <dd><p>Raised when migration cannot be completed due to missing or unmapped data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.analyze_manifest_in">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">analyze_manifest_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manifest_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#analyze_manifest_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.analyze_manifest_in" title="Link to this definition"></a></dt>
+<dd><p>Analyze MANIFEST.in file and provide migration guidance for Hatchling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>manifest_path</strong> – Path to MANIFEST.in file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>exists: bool - whether file exists</p></li>
+<li><p>needs_migration: bool - whether migration is needed</p></li>
+<li><p>directives: list of (command, pattern) tuples</p></li>
+<li><p>recommendations: list of strings with migration guidance</p></li>
+<li><p>hatchling_config: suggested pyproject.toml configuration</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># If MANIFEST.in doesn&#39;t exist</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">analyze_manifest_in</span><span class="p">(</span><span class="s1">&#39;nonexistent/MANIFEST.in&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;exists&#39;</span><span class="p">]</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;needs_migration&#39;</span><span class="p">]</span>
+<span class="go">False</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Wads’s documentation! &mdash; wads 0.1.46 documentation</title>
+  <title>Welcome to wads’s documentation! &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="_static/documentation_options.js?v=56cc1d78"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -50,6 +50,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licensing.html">wads.licensing</a></li>
@@ -60,8 +61,8 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/trans.html">wads.trans</a></li>
@@ -82,7 +83,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to Wads’s documentation!</li>
+      <li class="breadcrumb-item active">Welcome to wads’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,7 +94,7 @@
            <div itemprop="articleBody">
              
   <section id="welcome-to-wads-s-documentation">
-<h1>Welcome to Wads’s documentation!<a class="headerlink" href="#welcome-to-wads-s-documentation" title="Link to this heading"></a></h1>
+<h1>Welcome to wads’s documentation!<a class="headerlink" href="#welcome-to-wads-s-documentation" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -113,6 +114,14 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_project_name"><code class="docutils literal notranslate"><span class="pre">rule_check_project_name()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_python_versions"><code class="docutils literal notranslate"><span class="pre">rule_check_python_versions()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_secrets"><code class="docutils literal notranslate"><span class="pre">rule_check_secrets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_ci_workflow"><code class="docutils literal notranslate"><span class="pre">compare_ci_workflow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_manifest_in"><code class="docutils literal notranslate"><span class="pre">compare_manifest_in()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">compare_pyproject_toml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_setup_cfg"><code class="docutils literal notranslate"><span class="pre">compare_setup_cfg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.summarize_config_status"><code class="docutils literal notranslate"><span class="pre">summarize_config_status()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
@@ -135,6 +144,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration.html">wads.migration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
 </ul>
@@ -174,10 +184,15 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/package_module.html">wads.package_module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.CustomInstallCommand"><code class="docutils literal notranslate"><span class="pre">CustomInstallCommand</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand"><code class="docutils literal notranslate"><span class="pre">CustomSdistCommand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.embedded_wheel_setup"><code class="docutils literal notranslate"><span class="pre">embedded_wheel_setup()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.generate_module_folder"><code class="docutils literal notranslate"><span class="pre">generate_module_folder()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.generate_package"><code class="docutils literal notranslate"><span class="pre">generate_package()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.manifest_in_template"><code class="docutils literal notranslate"><span class="pre">manifest_in_template()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/package_module.html#wads.package_module.setup_cfg_template"><code class="docutils literal notranslate"><span class="pre">setup_cfg_template()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.PopulateTracker"><code class="docutils literal notranslate"><span class="pre">PopulateTracker</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.cd"><code class="docutils literal notranslate"><span class="pre">cd()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.get_github_project_description"><code class="docutils literal notranslate"><span class="pre">get_github_project_description()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.populate_pkg_dir"><code class="docutils literal notranslate"><span class="pre">populate_pkg_dir()</span></code></a></li>
@@ -193,7 +208,24 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_manifest_in"><code class="docutils literal notranslate"><span class="pre">test_compare_manifest_in()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_pyproject_missing_file"><code class="docutils literal notranslate"><span class="pre">test_compare_pyproject_missing_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_pyproject_toml_with_temp_files"><code class="docutils literal notranslate"><span class="pre">test_compare_pyproject_toml_with_temp_files()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_setup_cfg"><code class="docutils literal notranslate"><span class="pre">test_compare_setup_cfg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_setup_cfg_missing"><code class="docutils literal notranslate"><span class="pre">test_compare_setup_cfg_missing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_find_missing_sections"><code class="docutils literal notranslate"><span class="pre">test_find_missing_sections()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_flatten_dict"><code class="docutils literal notranslate"><span class="pre">test_flatten_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_manifest_in_nonexistent"><code class="docutils literal notranslate"><span class="pre">test_manifest_in_nonexistent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_manifest_in_parsing"><code class="docutils literal notranslate"><span class="pre">test_manifest_in_parsing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_nested_get"><code class="docutils literal notranslate"><span class="pre">test_nested_get()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_summarize_config_status"><code class="docutils literal notranslate"><span class="pre">test_summarize_config_status()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_empty"><code class="docutils literal notranslate"><span class="pre">test_analyze_manifest_in_empty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_with_excludes"><code class="docutils literal notranslate"><span class="pre">test_analyze_manifest_in_with_excludes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_with_includes"><code class="docutils literal notranslate"><span class="pre">test_analyze_manifest_in_with_includes()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_custom_rules"><code class="docutils literal notranslate"><span class="pre">test_custom_rules()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_extracts_project_name"><code class="docutils literal notranslate"><span class="pre">test_migrate_ci_extracts_project_name()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_missing_project_name"><code class="docutils literal notranslate"><span class="pre">test_migrate_ci_missing_project_name()</span></code></a></li>
@@ -208,9 +240,9 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_comma_separated"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_comma_separated()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_empty"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_empty()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_list_field_multiline"><code class="docutils literal notranslate"><span class="pre">test_parse_list_field_multiline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_manifest_in"><code class="docutils literal notranslate"><span class="pre">test_parse_manifest_in()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild"><code class="docutils literal notranslate"><span class="pre">TestBuild</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility"><code class="docutils literal notranslate"><span class="pre">TestCompatibility</span></code></a></li>
@@ -251,8 +283,8 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.1.46</p>
-<p>Last change: Nov 14, 2025</p>
+<p>Release: 0.1.51</p>
+<p>Last change: Nov 16, 2025</p>
 </section>
 
 

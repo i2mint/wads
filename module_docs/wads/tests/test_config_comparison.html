@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_config_comparison &mdash; wads 0.1.51 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="wads.tests.test_migration" href="test_migration.html" />
+    <link rel="prev" title="wads.tests.data.example_module" href="data/example_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_config_comparison</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_compare_manifest_in"><code class="docutils literal notranslate"><span class="pre">test_compare_manifest_in()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_compare_pyproject_missing_file"><code class="docutils literal notranslate"><span class="pre">test_compare_pyproject_missing_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_compare_pyproject_toml_with_temp_files"><code class="docutils literal notranslate"><span class="pre">test_compare_pyproject_toml_with_temp_files()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_compare_setup_cfg"><code class="docutils literal notranslate"><span class="pre">test_compare_setup_cfg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_compare_setup_cfg_missing"><code class="docutils literal notranslate"><span class="pre">test_compare_setup_cfg_missing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_find_missing_sections"><code class="docutils literal notranslate"><span class="pre">test_find_missing_sections()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_flatten_dict"><code class="docutils literal notranslate"><span class="pre">test_flatten_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_manifest_in_nonexistent"><code class="docutils literal notranslate"><span class="pre">test_manifest_in_nonexistent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_manifest_in_parsing"><code class="docutils literal notranslate"><span class="pre">test_manifest_in_parsing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_nested_get"><code class="docutils literal notranslate"><span class="pre">test_nested_get()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_config_comparison.test_summarize_config_status"><code class="docutils literal notranslate"><span class="pre">test_summarize_config_status()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.tests.test_config_comparison</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/wads/tests/test_config_comparison.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.tests.test_config_comparison">
+<span id="wads-tests-test-config-comparison"></span><h1>wads.tests.test_config_comparison<a class="headerlink" href="#module-wads.tests.test_config_comparison" title="Link to this heading"></a></h1>
+<p>Tests for config_comparison module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_compare_manifest_in">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_compare_manifest_in</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_compare_manifest_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_compare_manifest_in" title="Link to this definition"></a></dt>
+<dd><p>Test MANIFEST.in comparison function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_compare_pyproject_missing_file">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_compare_pyproject_missing_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_compare_pyproject_missing_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_compare_pyproject_missing_file" title="Link to this definition"></a></dt>
+<dd><p>Test comparison when file doesn’t exist.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_compare_pyproject_toml_with_temp_files">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_compare_pyproject_toml_with_temp_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_compare_pyproject_toml_with_temp_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_compare_pyproject_toml_with_temp_files" title="Link to this definition"></a></dt>
+<dd><p>Test pyproject.toml comparison with temporary files.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_compare_setup_cfg">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_compare_setup_cfg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_compare_setup_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_compare_setup_cfg" title="Link to this definition"></a></dt>
+<dd><p>Test setup.cfg analysis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_compare_setup_cfg_missing">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_compare_setup_cfg_missing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_compare_setup_cfg_missing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_compare_setup_cfg_missing" title="Link to this definition"></a></dt>
+<dd><p>Test setup.cfg comparison when file missing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_find_missing_sections">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_find_missing_sections</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_find_missing_sections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_find_missing_sections" title="Link to this definition"></a></dt>
+<dd><p>Test detection of missing sections.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_flatten_dict">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_flatten_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_flatten_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_flatten_dict" title="Link to this definition"></a></dt>
+<dd><p>Test dictionary flattening.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_manifest_in_nonexistent">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_manifest_in_nonexistent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_manifest_in_nonexistent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_manifest_in_nonexistent" title="Link to this definition"></a></dt>
+<dd><p>Test MANIFEST.in analysis when file doesn’t exist.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_manifest_in_parsing">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_manifest_in_parsing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_manifest_in_parsing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_manifest_in_parsing" title="Link to this definition"></a></dt>
+<dd><p>Test MANIFEST.in parsing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_nested_get">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_nested_get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_nested_get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_nested_get" title="Link to this definition"></a></dt>
+<dd><p>Test nested dictionary getter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.tests.test_config_comparison.test_summarize_config_status">
+<span class="sig-prename descclassname"><span class="pre">wads.tests.test_config_comparison.</span></span><span class="sig-name descname"><span class="pre">test_summarize_config_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_config_comparison.html#test_summarize_config_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_config_comparison.test_summarize_config_status" title="Link to this definition"></a></dt>
+<dd><p>Test overall config status summary.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data/example_module.html" class="btn btn-neutral float-left" title="wads.tests.data.example_module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="test_migration.html" class="btn btn-neutral float-right" title="wads.tests.test_migration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

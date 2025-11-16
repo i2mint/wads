@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.46 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
@@ -58,8 +59,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
@@ -120,7 +121,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_packages</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">git</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">read_pyproject_toml</span><span class="p">,</span>
+    <span class="n">write_pyproject_toml</span><span class="p">,</span>
+    <span class="n">get_project_version</span><span class="p">,</span>
+    <span class="n">set_project_version</span><span class="p">,</span>
+    <span class="n">get_project_name</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -141,15 +149,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">argh</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">wads.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">git</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">read_pyproject_toml</span><span class="p">,</span>
-    <span class="n">write_pyproject_toml</span><span class="p">,</span>
-    <span class="n">get_project_version</span><span class="p">,</span>
-    <span class="n">set_project_version</span><span class="p">,</span>
-    <span class="n">get_project_name</span><span class="p">,</span>
-<span class="p">)</span>
 
 <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s2">&quot;setup.cfg&quot;</span>
 <span class="n">PYPROJECT_FILE_NAME</span> <span class="o">=</span> <span class="s2">&quot;pyproject.toml&quot;</span>
@@ -505,7 +504,20 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_and_publish_docs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">publish_docs_to</span><span class="o">=</span><span class="s2">&quot;github&quot;</span><span class="p">):</span>
     <span class="c1"># TODO: Figure out epythet and wads relationship -- right now, there&#39;s a reflexive dependency</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">epythet</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_autodocs</span><span class="p">,</span> <span class="n">make</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">epythet</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_autodocs</span><span class="p">,</span> <span class="n">make</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;Documentation operations require epythet. &quot;</span>
+            <span class="s2">&quot;Install wads with documentation support: pip install wads[docs]&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;generate_and_publish_docs is deprecated and requires epythet. &quot;</span>
+        <span class="s2">&quot;Install wads with documentation support: pip install wads[docs]&quot;</span><span class="p">,</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">make_autodocs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">publish_docs_to</span><span class="p">:</span>
@@ -670,9 +682,9 @@
     <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_dirname</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
     <span class="n">configs_pkg_name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span>
-        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
+        <span class="k">assert</span> <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">configs_pkg_name</span></div>
 
 
@@ -928,9 +940,9 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
-    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
+    <span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="c1"># Try pyproject.toml first (modern approach)</span>
@@ -1008,9 +1020,9 @@
     <span class="n">preproc</span><span class="o">=</span><span class="n">preprocess_ini_section_items</span><span class="p">,</span>
     <span class="n">dflt_options</span><span class="o">=</span><span class="n">DFLT_OPTIONS</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
-    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
+    <span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
@@ -1436,9 +1448,9 @@
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_dirname</span>
     <span class="k">if</span> <span class="n">assert_names</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span>
-        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
+        <span class="k">assert</span> <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="s2">&quot;root_url&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
         <span class="n">root_url</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;root_url&quot;</span><span class="p">]</span>
@@ -1474,11 +1486,18 @@
         <span class="k">except</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
+    <span class="c1"># Get packages list - use what&#39;s in configs, or discover from directory structure</span>
+    <span class="n">packages_list</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;packages&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">packages_list</span><span class="p">:</span>
+        <span class="c1"># For modern pyproject.toml, packages are in [tool.hatch.build.targets.wheel]</span>
+        <span class="c1"># For legacy setup.cfg, fall back to simple discovery</span>
+        <span class="n">packages_list</span> <span class="o">=</span> <span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
     <span class="n">dflt_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">version</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
-        <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(),</span>
+        <span class="n">packages</span><span class="o">=</span><span class="n">packages_list</span><span class="p">,</span>
         <span class="n">include_package_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">platforms</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span>
         <span class="c1"># long_description=text_of_readme_md_file(),</span>

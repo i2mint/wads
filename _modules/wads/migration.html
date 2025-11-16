@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.46 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
@@ -58,8 +59,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
@@ -152,6 +153,185 @@
     <span class="n">github_ci_tpl_publish_path</span><span class="p">,</span>
     <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
 <span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># MANIFEST.in parsing and migration</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_manifest_in</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse MANIFEST.in file and extract directives.</span>
+
+<span class="sd">    Returns a dict with:</span>
+<span class="sd">        - directives: list of (command, patterns) tuples</span>
+<span class="sd">        - needs_migration: bool</span>
+<span class="sd">        - recommendations: list of strings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+
+    <span class="n">directives</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">command</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">directives</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">command</span><span class="p">,</span> <span class="n">pattern</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">directives</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+
+    <span class="c1"># Analyze directives and generate recommendations</span>
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">include_patterns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exclude_patterns</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">command</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">directives</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;include&quot;</span><span class="p">,</span> <span class="s2">&quot;recursive-include&quot;</span><span class="p">,</span> <span class="s2">&quot;graft&quot;</span><span class="p">):</span>
+            <span class="n">include_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">command</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;exclude&quot;</span><span class="p">,</span> <span class="s2">&quot;recursive-exclude&quot;</span><span class="p">,</span> <span class="s2">&quot;prune&quot;</span><span class="p">,</span> <span class="s2">&quot;global-exclude&quot;</span><span class="p">):</span>
+            <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="c1"># Generate Hatchling configuration suggestions</span>
+    <span class="k">if</span> <span class="n">include_patterns</span> <span class="ow">or</span> <span class="n">exclude_patterns</span><span class="p">:</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;MANIFEST.in detected. With Hatchling, package data is handled differently.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">include_patterns</span><span class="p">:</span>
+            <span class="n">example_includes</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1">&quot;,&#39;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">include_patterns</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">include_patterns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">example_includes</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  # ... and more&quot;</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;To include extra files, add to pyproject.toml:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;[tool.hatch.build.targets.wheel]</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;include = [</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">example_includes</span><span class="si">}</span><span class="se">\n</span><span class="s2">]&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">exclude_patterns</span><span class="p">:</span>
+            <span class="n">example_excludes</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1">&quot;,&#39;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">exclude_patterns</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exclude_patterns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">example_excludes</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  # ... and more&quot;</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;To exclude files, add to pyproject.toml:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;[tool.hatch.build.targets.wheel]</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;exclude = [</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">example_excludes</span><span class="si">}</span><span class="se">\n</span><span class="s2">]&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;Note: Hatchling includes all package files by default. &quot;</span>
+            <span class="s2">&quot;Only use explicit include/exclude if you need non-default behavior.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="n">directives</span><span class="p">,</span>
+        <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">directives</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="analyze_manifest_in">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.analyze_manifest_in">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_manifest_in</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze MANIFEST.in file and provide migration guidance for Hatchling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        manifest_path: Path to MANIFEST.in file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with:</span>
+<span class="sd">            - exists: bool - whether file exists</span>
+<span class="sd">            - needs_migration: bool - whether migration is needed</span>
+<span class="sd">            - directives: list of (command, pattern) tuples</span>
+<span class="sd">            - recommendations: list of strings with migration guidance</span>
+<span class="sd">            - hatchling_config: suggested pyproject.toml configuration</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; # If MANIFEST.in doesn&#39;t exist</span>
+<span class="sd">        &gt;&gt;&gt; result = analyze_manifest_in(&#39;nonexistent/MANIFEST.in&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; result[&#39;exists&#39;]</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; result[&#39;needs_migration&#39;]</span>
+<span class="sd">        False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;hatchling_config&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_manifest_in</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
+
+    <span class="c1"># Build suggested hatchling config</span>
+    <span class="n">hatchling_config</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">]:</span>
+        <span class="n">include_patterns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">exclude_patterns</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">command</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;directives&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">command</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;include&quot;</span><span class="p">,</span> <span class="s2">&quot;recursive-include&quot;</span><span class="p">,</span> <span class="s2">&quot;graft&quot;</span><span class="p">):</span>
+                <span class="c1"># Convert MANIFEST.in patterns to hatchling patterns</span>
+                <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;graft&quot;</span><span class="p">:</span>
+                    <span class="c1"># graft dir -&gt; include dir/**/*</span>
+                    <span class="n">include_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">/**/*&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;recursive-include&quot;</span><span class="p">:</span>
+                    <span class="c1"># recursive-include dir pattern -&gt; dir/**/pattern</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">dir_path</span><span class="p">,</span> <span class="n">file_pattern</span> <span class="o">=</span> <span class="n">parts</span>
+                        <span class="n">include_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dir_path</span><span class="si">}</span><span class="s2">/**/</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">include_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">include_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">command</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;exclude&quot;</span><span class="p">,</span> <span class="s2">&quot;recursive-exclude&quot;</span><span class="p">,</span> <span class="s2">&quot;prune&quot;</span><span class="p">,</span> <span class="s2">&quot;global-exclude&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;prune&quot;</span><span class="p">:</span>
+                    <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;global-exclude&quot;</span><span class="p">:</span>
+                    <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;**/</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;recursive-exclude&quot;</span><span class="p">:</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">dir_path</span><span class="p">,</span> <span class="n">file_pattern</span> <span class="o">=</span> <span class="n">parts</span>
+                        <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dir_path</span><span class="si">}</span><span class="s2">/**/</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exclude_patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+        <span class="n">config_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">include_patterns</span><span class="p">:</span>
+            <span class="n">includes</span> <span class="o">=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1">&quot;&#39;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">include_patterns</span><span class="p">)</span>
+            <span class="n">config_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;include = [</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">includes</span><span class="si">}</span><span class="se">\n</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude_patterns</span><span class="p">:</span>
+            <span class="n">excludes</span> <span class="o">=</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1">&quot;&#39;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">exclude_patterns</span><span class="p">)</span>
+            <span class="n">config_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;exclude = [</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">excludes</span><span class="si">}</span><span class="se">\n</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config_parts</span><span class="p">:</span>
+            <span class="n">hatchling_config</span> <span class="o">=</span> <span class="s2">&quot;[tool.hatch.build.targets.wheel]</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">config_parts</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;directives&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;hatchling_config&quot;</span><span class="p">:</span> <span class="n">hatchling_config</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
 
 
 <span class="c1"># --------------------------------------------------------------------------------------</span>

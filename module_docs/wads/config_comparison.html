@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.config_comparison &mdash; wads 0.1.51 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.generate_project_wheels" href="generate_project_wheels.html" />
+    <link rel="prev" title="wads.ci_migration" href="ci_migration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.config_comparison</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.config_comparison.compare_ci_workflow"><code class="docutils literal notranslate"><span class="pre">compare_ci_workflow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.config_comparison.compare_manifest_in"><code class="docutils literal notranslate"><span class="pre">compare_manifest_in()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.config_comparison.compare_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">compare_pyproject_toml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.config_comparison.compare_setup_cfg"><code class="docutils literal notranslate"><span class="pre">compare_setup_cfg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.config_comparison.summarize_config_status"><code class="docutils literal notranslate"><span class="pre">summarize_config_status()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.config_comparison</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/config_comparison.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.config_comparison">
+<span id="wads-config-comparison"></span><h1>wads.config_comparison<a class="headerlink" href="#module-wads.config_comparison" title="Link to this heading"></a></h1>
+<p>Compare project configuration files (pyproject.toml, setup.cfg, MANIFEST.in) against templates.</p>
+<p>This module provides tools to analyze project configurations and identify
+differences from standard templates, helping users maintain up-to-date
+project structures.</p>
+<dl class="simple">
+<dt>Key Functions:</dt><dd><p>compare_pyproject_toml: Compare actual pyproject.toml against template
+compare_setup_cfg: Analyze setup.cfg and recommend migration
+compare_manifest_in: Analyze MANIFEST.in and recommend Hatchling migration
+summarize_config_status: Overall project config health check
+compare_ci_workflow: Compare CI workflow against template</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.config_comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">summarize_config_status</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">status</span> <span class="o">=</span> <span class="n">summarize_config_status</span><span class="p">(</span><span class="s1">&#39;/path/to/project&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">status</span><span class="p">[</span><span class="s1">&#39;needs_attention&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;recommendations&#39;</span><span class="p">])</span>  
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.config_comparison.compare_ci_workflow">
+<span class="sig-prename descclassname"><span class="pre">wads.config_comparison.</span></span><span class="sig-name descname"><span class="pre">compare_ci_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/home/runner/work/wads/wads/wads/data/github_ci_publish_2025.yml'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/config_comparison.html#compare_ci_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.config_comparison.compare_ci_workflow" title="Link to this definition"></a></dt>
+<dd><p>Compare CI workflow against modern template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actual_path</strong> – Path to .github/workflows/ci.yml</p></li>
+<li><p><strong>template_path</strong> – Path to template CI workflow</p></li>
+<li><p><strong>project_name</strong> – Optional project name for placeholder replacement</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with comparison results and recommendations</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span> <span class="o">=</span> <span class="n">compare_ci_workflow</span><span class="p">(</span><span class="s1">&#39;.github/workflows/ci.yml&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;needs_attention&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CI might be outdated&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.config_comparison.compare_manifest_in">
+<span class="sig-prename descclassname"><span class="pre">wads.config_comparison.</span></span><span class="sig-name descname"><span class="pre">compare_manifest_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/config_comparison.html#compare_manifest_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.config_comparison.compare_manifest_in" title="Link to this definition"></a></dt>
+<dd><p>Analyze MANIFEST.in and recommend migration to Hatchling configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actual_path</strong> – Path to MANIFEST.in file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with migration recommendations</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analysis</span> <span class="o">=</span> <span class="n">compare_manifest_in</span><span class="p">(</span><span class="s1">&#39;MANIFEST.in&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">analysis</span><span class="p">[</span><span class="s1">&#39;needs_migration&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">analysis</span><span class="p">[</span><span class="s1">&#39;hatchling_config&#39;</span><span class="p">])</span>  
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.config_comparison.compare_pyproject_toml">
+<span class="sig-prename descclassname"><span class="pre">wads.config_comparison.</span></span><span class="sig-name descname"><span class="pre">compare_pyproject_toml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'/home/runner/work/wads/wads/wads/data/pyproject_toml_tpl.toml'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/config_comparison.html#compare_pyproject_toml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.config_comparison.compare_pyproject_toml" title="Link to this definition"></a></dt>
+<dd><p>Compare actual pyproject.toml against template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actual_path</strong> – Path to the project’s pyproject.toml</p></li>
+<li><p><strong>template_path</strong> – Path to template pyproject.toml</p></li>
+<li><p><strong>ignore_keys</strong> – Keys to ignore in comparison (project-specific values)</p></li>
+<li><p><strong>project_name</strong> – Optional project name for contextual recommendations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>‘missing_sections’: sections in template but not in actual</p></li>
+<li><p>’outdated_sections’: sections in actual that might be outdated</p></li>
+<li><p>’recommendations’: suggested updates</p></li>
+<li><p>’needs_attention’: boolean flag</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span> <span class="o">=</span> <span class="n">compare_pyproject_toml</span><span class="p">(</span><span class="s1">&#39;my_project/pyproject.toml&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;needs_attention&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">diff</span><span class="p">[</span><span class="s1">&#39;recommendations&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.config_comparison.compare_setup_cfg">
+<span class="sig-prename descclassname"><span class="pre">wads.config_comparison.</span></span><span class="sig-name descname"><span class="pre">compare_setup_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn_about_deprecation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/config_comparison.html#compare_setup_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.config_comparison.compare_setup_cfg" title="Link to this definition"></a></dt>
+<dd><p>Analyze setup.cfg and recommend migration to pyproject.toml.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actual_path</strong> – Path to setup.cfg file</p></li>
+<li><p><strong>warn_about_deprecation</strong> – Whether to warn about using deprecated format</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with migration recommendations</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analysis</span> <span class="o">=</span> <span class="n">compare_setup_cfg</span><span class="p">(</span><span class="s1">&#39;old_project/setup.cfg&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">analysis</span><span class="p">[</span><span class="s1">&#39;should_migrate&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">analysis</span><span class="p">[</span><span class="s1">&#39;recommendations&#39;</span><span class="p">])</span>  
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.config_comparison.summarize_config_status">
+<span class="sig-prename descclassname"><span class="pre">wads.config_comparison.</span></span><span class="sig-name descname"><span class="pre">summarize_config_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/config_comparison.html#summarize_config_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.config_comparison.summarize_config_status" title="Link to this definition"></a></dt>
+<dd><p>Check overall config status of a project.</p>
+<p>Analyzes pyproject.toml, setup.cfg, CI workflows and returns a comprehensive
+summary of what needs attention.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pkg_dir</strong> – Path to project directory</p></li>
+<li><p><strong>check_ci</strong> – Whether to check CI workflow</p></li>
+<li><p><strong>project_name</strong> – Optional project name for contextual checks</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>‘has_pyproject’: bool</p></li>
+<li><p>’has_setup_cfg’: bool</p></li>
+<li><p>’has_ci’: bool</p></li>
+<li><p>’needs_attention’: list of issues</p></li>
+<li><p>’recommendations’: list of recommendations</p></li>
+<li><p>Details for each file type</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">status</span> <span class="o">=</span> <span class="n">summarize_config_status</span><span class="p">(</span><span class="s1">&#39;/path/to/project&#39;</span><span class="p">)</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">status</span><span class="p">[</span><span class="s1">&#39;needs_attention&#39;</span><span class="p">]:</span>  
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️  </span><span class="si">{</span><span class="n">issue</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ci_migration.html" class="btn btn-neutral float-left" title="wads.ci_migration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="generate_project_wheels.html" class="btn btn-neutral float-right" title="wads.generate_project_wheels" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

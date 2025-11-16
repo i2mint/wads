@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.package_module &mdash; wads 0.1.46 documentation</title>
+  <title>wads.package_module &mdash; wads 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,6 +51,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
@@ -67,14 +68,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.package_module.CustomSdistCommand.run"><code class="docutils literal notranslate"><span class="pre">CustomSdistCommand.run()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.package_module.embedded_wheel_setup"><code class="docutils literal notranslate"><span class="pre">embedded_wheel_setup()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.package_module.generate_module_folder"><code class="docutils literal notranslate"><span class="pre">generate_module_folder()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.package_module.generate_package"><code class="docutils literal notranslate"><span class="pre">generate_package()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.package_module.manifest_in_template"><code class="docutils literal notranslate"><span class="pre">manifest_in_template()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.package_module.setup_cfg_template"><code class="docutils literal notranslate"><span class="pre">setup_cfg_template()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tests/test_package_generation.html">wads.tests.test_package_generation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
@@ -109,44 +114,59 @@
 <span id="wads-package-module"></span><h1>wads.package_module<a class="headerlink" href="#module-wads.package_module" title="Link to this heading"></a></h1>
 <p>Generate Python Package with setup.cfg and setup.py configured to embed dependency wheels and
 install them.</p>
+<p>DEPRECATED: This module uses setuptools for embedded wheel packaging, which is largely
+obsolete with modern Python packaging (pyproject.toml + Hatchling). Consider using
+standard dependency management instead.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.package_module.CustomInstallCommand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomInstallCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Distribution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomInstallCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomInstallCommand" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomInstallCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomInstallCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomInstallCommand" title="Link to this definition"></a></dt>
 <dd><p>Custom pip install command to install embedded wheels</p>
+<p>DEPRECATED: This uses old setuptools patterns. Import setuptools lazily.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomInstallCommand.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomInstallCommand.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomInstallCommand.run" title="Link to this definition"></a></dt>
-<dd><p>Runs the command.</p>
+<dd><p>Run the install command, installing embedded wheels first.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomSdistCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Distribution</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">CustomSdistCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand" title="Link to this definition"></a></dt>
 <dd><p>Custom sdist command to include wheels in the distribution</p>
+<p>DEPRECATED: This uses old setuptools patterns. Import setuptools lazily.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand.initialize_options">
 <span class="sig-name descname"><span class="pre">initialize_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand.initialize_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand.initialize_options" title="Link to this definition"></a></dt>
-<dd><p>Set or (reset) all options/attributes/caches used by the command
-to their default values. Note that these values may be overwritten during
-the build.</p>
+<dd><p>Initialize command options and generate wheels.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.package_module.CustomSdistCommand.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#CustomSdistCommand.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.CustomSdistCommand.run" title="Link to this definition"></a></dt>
-<dd><p>Execute the actions intended by the command.
-(Side effects <strong>SHOULD</strong> only take place when <a class="reference internal" href="#wads.package_module.CustomSdistCommand.run" title="wads.package_module.CustomSdistCommand.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> is executed,
-for example, creating new files or writing to the terminal output).</p>
+<dd><p>Run the sdist command.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.package_module.embedded_wheel_setup">
+<span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">embedded_wheel_setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#embedded_wheel_setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.embedded_wheel_setup" title="Link to this definition"></a></dt>
+<dd><p>Setup function for embedded wheel packaging.</p>
+<p>DEPRECATED: This functionality is deprecated. Consider using modern packaging.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.package_module.generate_module_folder">
+<span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">generate_module_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#generate_module_folder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.generate_module_folder" title="Link to this definition"></a></dt>
+<dd><p>Generate module folder structure from source path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.package_module.generate_package">
 <span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">generate_package</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glob_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1.0.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#generate_package"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.generate_package" title="Link to this definition"></a></dt>
 <dd><p>Generate Python module package including wheels for requirements linked to git repos</p>
+<p>DEPRECATED: Consider using modern Python packaging with pyproject.toml instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -161,6 +181,18 @@ for example, creating new files or writing to the terminal output).</p>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.package_module.manifest_in_template">
+<span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">manifest_in_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glob_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/package_module.html#manifest_in_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.manifest_in_template" title="Link to this definition"></a></dt>
+<dd><p>Generate MANIFEST.in content for package.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.package_module.setup_cfg_template">
+<span class="sig-prename descclassname"><span class="pre">wads.package_module.</span></span><span class="sig-name descname"><span class="pre">setup_cfg_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">install_requires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1.0.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glob_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/package_module.html#setup_cfg_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.package_module.setup_cfg_template" title="Link to this definition"></a></dt>
+<dd><p>Generate setup.cfg content for package.</p>
 </dd></dl>
 
 </section>
