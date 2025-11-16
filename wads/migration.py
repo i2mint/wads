@@ -76,22 +76,22 @@ def _parse_manifest_in(filepath: str) -> dict:
         - recommendations: list of strings
     """
     if not os.path.isfile(filepath):
-        return {'directives': [], 'needs_migration': False, 'recommendations': []}
+        return {"directives": [], "needs_migration": False, "recommendations": []}
 
     directives = []
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
             parts = line.split(None, 1)
             if len(parts) >= 1:
                 command = parts[0]
-                pattern = parts[1] if len(parts) > 1 else ''
+                pattern = parts[1] if len(parts) > 1 else ""
                 directives.append((command, pattern))
 
     if not directives:
-        return {'directives': [], 'needs_migration': False, 'recommendations': []}
+        return {"directives": [], "needs_migration": False, "recommendations": []}
 
     # Analyze directives and generate recommendations
     recommendations = []
@@ -99,9 +99,9 @@ def _parse_manifest_in(filepath: str) -> dict:
     exclude_patterns = []
 
     for command, pattern in directives:
-        if command in ('include', 'recursive-include', 'graft'):
+        if command in ("include", "recursive-include", "graft"):
             include_patterns.append(pattern)
-        elif command in ('exclude', 'recursive-exclude', 'prune', 'global-exclude'):
+        elif command in ("exclude", "recursive-exclude", "prune", "global-exclude"):
             exclude_patterns.append(pattern)
 
     # Generate Hatchling configuration suggestions
@@ -111,9 +111,9 @@ def _parse_manifest_in(filepath: str) -> dict:
         )
 
         if include_patterns:
-            example_includes = '\n  '.join(f'"{p}",' for p in include_patterns[:3])
+            example_includes = "\n  ".join(f'"{p}",' for p in include_patterns[:3])
             if len(include_patterns) > 3:
-                example_includes += '\n  # ... and more'
+                example_includes += "\n  # ... and more"
             recommendations.append(
                 f"To include extra files, add to pyproject.toml:\n"
                 f"[tool.hatch.build.targets.wheel]\n"
@@ -121,9 +121,9 @@ def _parse_manifest_in(filepath: str) -> dict:
             )
 
         if exclude_patterns:
-            example_excludes = '\n  '.join(f'"{p}",' for p in exclude_patterns[:3])
+            example_excludes = "\n  ".join(f'"{p}",' for p in exclude_patterns[:3])
             if len(exclude_patterns) > 3:
-                example_excludes += '\n  # ... and more'
+                example_excludes += "\n  # ... and more"
             recommendations.append(
                 f"To exclude files, add to pyproject.toml:\n"
                 f"[tool.hatch.build.targets.wheel]\n"
@@ -136,9 +136,9 @@ def _parse_manifest_in(filepath: str) -> dict:
         )
 
     return {
-        'directives': directives,
-        'needs_migration': len(directives) > 0,
-        'recommendations': recommendations,
+        "directives": directives,
+        "needs_migration": len(directives) > 0,
+        "recommendations": recommendations,
     }
 
 
@@ -169,28 +169,28 @@ def analyze_manifest_in(manifest_path: Union[str, Path]) -> dict:
 
     if not os.path.isfile(manifest_path):
         return {
-            'exists': False,
-            'needs_migration': False,
-            'directives': [],
-            'recommendations': [],
-            'hatchling_config': None,
+            "exists": False,
+            "needs_migration": False,
+            "directives": [],
+            "recommendations": [],
+            "hatchling_config": None,
         }
 
     parsed = _parse_manifest_in(manifest_path)
 
     # Build suggested hatchling config
     hatchling_config = None
-    if parsed['needs_migration']:
+    if parsed["needs_migration"]:
         include_patterns = []
         exclude_patterns = []
 
-        for command, pattern in parsed['directives']:
-            if command in ('include', 'recursive-include', 'graft'):
+        for command, pattern in parsed["directives"]:
+            if command in ("include", "recursive-include", "graft"):
                 # Convert MANIFEST.in patterns to hatchling patterns
-                if command == 'graft':
+                if command == "graft":
                     # graft dir -> include dir/**/*
                     include_patterns.append(f"{pattern}/**/*")
-                elif command == 'recursive-include':
+                elif command == "recursive-include":
                     # recursive-include dir pattern -> dir/**/pattern
                     parts = pattern.split(None, 1)
                     if len(parts) == 2:
@@ -200,12 +200,12 @@ def analyze_manifest_in(manifest_path: Union[str, Path]) -> dict:
                         include_patterns.append(pattern)
                 else:
                     include_patterns.append(pattern)
-            elif command in ('exclude', 'recursive-exclude', 'prune', 'global-exclude'):
-                if command == 'prune':
+            elif command in ("exclude", "recursive-exclude", "prune", "global-exclude"):
+                if command == "prune":
                     exclude_patterns.append(f"{pattern}/")
-                elif command == 'global-exclude':
+                elif command == "global-exclude":
                     exclude_patterns.append(f"**/{pattern}")
-                elif command == 'recursive-exclude':
+                elif command == "recursive-exclude":
                     parts = pattern.split(None, 1)
                     if len(parts) == 2:
                         dir_path, file_pattern = parts
@@ -217,23 +217,23 @@ def analyze_manifest_in(manifest_path: Union[str, Path]) -> dict:
 
         config_parts = []
         if include_patterns:
-            includes = ',\n  '.join(f'"{p}"' for p in include_patterns)
+            includes = ",\n  ".join(f'"{p}"' for p in include_patterns)
             config_parts.append(f"include = [\n  {includes}\n]")
         if exclude_patterns:
-            excludes = ',\n  '.join(f'"{p}"' for p in exclude_patterns)
+            excludes = ",\n  ".join(f'"{p}"' for p in exclude_patterns)
             config_parts.append(f"exclude = [\n  {excludes}\n]")
 
         if config_parts:
-            hatchling_config = "[tool.hatch.build.targets.wheel]\n" + '\n'.join(
+            hatchling_config = "[tool.hatch.build.targets.wheel]\n" + "\n".join(
                 config_parts
             )
 
     return {
-        'exists': True,
-        'needs_migration': parsed['needs_migration'],
-        'directives': parsed['directives'],
-        'recommendations': parsed['recommendations'],
-        'hatchling_config': hatchling_config,
+        "exists": True,
+        "needs_migration": parsed["needs_migration"],
+        "directives": parsed["directives"],
+        "recommendations": parsed["recommendations"],
+        "hatchling_config": hatchling_config,
     }
 
 

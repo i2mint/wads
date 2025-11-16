@@ -52,7 +52,7 @@ def _nested_get(d: dict, path: str, default=None):
     >>> _nested_get(d, 'a.b.x', 'missing')
     'missing'
     """
-    parts = path.split('.')
+    parts = path.split(".")
     current = d
     for part in parts:
         if isinstance(current, dict):
@@ -64,7 +64,7 @@ def _nested_get(d: dict, path: str, default=None):
     return current
 
 
-def _flatten_dict(d: dict, parent_key: str = '', sep: str = '.') -> dict:
+def _flatten_dict(d: dict, parent_key: str = "", sep: str = ".") -> dict:
     """
     Flatten nested dict into dot-separated keys.
 
@@ -98,7 +98,7 @@ def _find_missing_sections(
         if key not in flat_actual:
             # Only report if it's a meaningful section (not empty placeholders)
             template_val = flat_template[key]
-            if template_val and template_val not in ('', [], {}):
+            if template_val and template_val not in ("", [], {}):
                 missing.append(key)
 
     return missing
@@ -122,7 +122,7 @@ def _find_outdated_sections(
             # Check if it's a known legacy field
             if any(
                 legacy in key.lower()
-                for legacy in ['setup.py', 'setup.cfg', 'manifest']
+                for legacy in ["setup.py", "setup.cfg", "manifest"]
             ):
                 outdated.append(key)
 
@@ -144,7 +144,7 @@ def _generate_recommendations(
         critical_missing = [
             m
             for m in missing
-            if any(crit in m for crit in ['tool.ruff', 'tool.pytest', 'build-system'])
+            if any(crit in m for crit in ["tool.ruff", "tool.pytest", "build-system"])
         ]
 
         if critical_missing:
@@ -154,10 +154,10 @@ def _generate_recommendations(
             recommendations.append("Consider running: wads migrate pyproject.toml")
 
     # Check if using outdated build backend
-    build_backend = actual.get('build-system', {}).get('build-backend', '')
-    template_backend = template.get('build-system', {}).get('build-backend', '')
+    build_backend = actual.get("build-system", {}).get("build-backend", "")
+    template_backend = template.get("build-system", {}).get("build-backend", "")
 
-    if build_backend != template_backend and 'setuptools' in build_backend.lower():
+    if build_backend != template_backend and "setuptools" in build_backend.lower():
         recommendations.append(
             f"Consider upgrading build backend from '{build_backend}' to '{template_backend}'"
         )
@@ -195,15 +195,15 @@ def compare_pyproject_toml(
         ...         print(f"  - {rec}")  # doctest: +SKIP
     """
     ignore_keys = ignore_keys or {
-        'project.name',
-        'project.version',
-        'project.description',
-        'project.authors',
-        'project.urls',
-        'project.keywords',
-        'project.dependencies',
-        'project.optional-dependencies',
-        'project.scripts',
+        "project.name",
+        "project.version",
+        "project.description",
+        "project.authors",
+        "project.urls",
+        "project.keywords",
+        "project.dependencies",
+        "project.optional-dependencies",
+        "project.scripts",
     }
 
     try:
@@ -211,9 +211,9 @@ def compare_pyproject_toml(
         template = read_pyproject_toml(template_path)
     except Exception as e:
         return {
-            'error': str(e),
-            'needs_attention': True,
-            'recommendations': [f"Could not read pyproject.toml: {e}"],
+            "error": str(e),
+            "needs_attention": True,
+            "recommendations": [f"Could not read pyproject.toml: {e}"],
         }
 
     missing = _find_missing_sections(actual, template, ignore_keys)
@@ -221,10 +221,10 @@ def compare_pyproject_toml(
     recommendations = _generate_recommendations(actual, template, missing, project_name)
 
     return {
-        'missing_sections': missing,
-        'outdated_sections': outdated,
-        'recommendations': recommendations,
-        'needs_attention': bool(missing or outdated or recommendations),
+        "missing_sections": missing,
+        "outdated_sections": outdated,
+        "recommendations": recommendations,
+        "needs_attention": bool(missing or outdated or recommendations),
     }
 
 
@@ -257,8 +257,8 @@ def compare_setup_cfg(
 
     if not Path(actual_path).exists():
         return {
-            'exists': False,
-            'should_migrate': False,
+            "exists": False,
+            "should_migrate": False,
         }
 
     config = ConfigParser()
@@ -266,9 +266,9 @@ def compare_setup_cfg(
         config.read(actual_path)
     except Exception as e:
         return {
-            'exists': True,
-            'error': str(e),
-            'needs_attention': True,
+            "exists": True,
+            "error": str(e),
+            "needs_attention": True,
         }
 
     sections = list(config.sections())
@@ -284,11 +284,11 @@ def compare_setup_cfg(
         )
 
     return {
-        'exists': True,
-        'sections': sections,
-        'should_migrate': warn_about_deprecation,
-        'recommendations': recommendations,
-        'needs_attention': warn_about_deprecation,
+        "exists": True,
+        "sections": sections,
+        "should_migrate": warn_about_deprecation,
+        "recommendations": recommendations,
+        "needs_attention": warn_about_deprecation,
     }
 
 
@@ -313,19 +313,19 @@ def compare_manifest_in(
 
     result = analyze_manifest_in(actual_path)
 
-    if not result['exists']:
+    if not result["exists"]:
         return {
-            'exists': False,
-            'needs_migration': False,
+            "exists": False,
+            "needs_migration": False,
         }
 
     return {
-        'exists': True,
-        'needs_migration': result['needs_migration'],
-        'directives': result['directives'],
-        'recommendations': result['recommendations'],
-        'hatchling_config': result['hatchling_config'],
-        'needs_attention': result['needs_migration'],
+        "exists": True,
+        "needs_migration": result["needs_migration"],
+        "directives": result["directives"],
+        "recommendations": result["recommendations"],
+        "hatchling_config": result["hatchling_config"],
+        "needs_attention": result["needs_migration"],
     }
 
 
@@ -369,21 +369,21 @@ def compare_ci_workflow(
 
             # Check for outdated action versions
             # Use _data attribute to access the workflow data
-            workflow_data = actual._data if hasattr(actual, '_data') else actual
-            if 'jobs' in workflow_data:
-                for job_name, job_data in workflow_data['jobs'].items():
-                    if 'steps' in job_data:
-                        for step in job_data['steps']:
-                            if 'uses' in step:
-                                uses = step['uses']
+            workflow_data = actual._data if hasattr(actual, "_data") else actual
+            if "jobs" in workflow_data:
+                for job_name, job_data in workflow_data["jobs"].items():
+                    if "steps" in job_data:
+                        for step in job_data["steps"]:
+                            if "uses" in step:
+                                uses = step["uses"]
                                 # Check for old action versions
-                                if '@v3' in uses or '@v2' in uses:
+                                if "@v3" in uses or "@v2" in uses:
                                     recommendations.append(
                                         f"Action '{uses}' might be outdated (consider @v4 or @v5)"
                                     )
 
             # Check for missing modern features
-            if 'tool.ruff' not in str(workflow_data).lower():
+            if "tool.ruff" not in str(workflow_data).lower():
                 recommendations.append(
                     "CI doesn't use ruff for linting - consider modern CI template"
                 )
@@ -392,21 +392,21 @@ def compare_ci_workflow(
                 recommendations.append(f"To update CI, run: populate . --migrate")
 
             return {
-                'differences': comparison,
-                'recommendations': recommendations,
-                'needs_attention': bool(recommendations),
+                "differences": comparison,
+                "recommendations": recommendations,
+                "needs_attention": bool(recommendations),
             }
 
         except Exception as e:
             return {
-                'error': str(e),
-                'needs_attention': True,
-                'recommendations': [f"Could not compare CI workflows: {e}"],
+                "error": str(e),
+                "needs_attention": True,
+                "recommendations": [f"Could not compare CI workflows: {e}"],
             }
 
     return {
-        'error': 'github_ci_ops not available',
-        'needs_attention': False,
+        "error": "github_ci_ops not available",
+        "needs_attention": False,
     }
 
 
@@ -447,58 +447,58 @@ def summarize_config_status(
         ...     print(f"⚠️  {issue}")  # doctest: +SKIP
     """
     pkg_dir = Path(pkg_dir)
-    pyproject_path = pkg_dir / 'pyproject.toml'
-    setup_cfg_path = pkg_dir / 'setup.cfg'
-    manifest_path = pkg_dir / 'MANIFEST.in'
-    ci_path = pkg_dir / '.github' / 'workflows' / 'ci.yml'
+    pyproject_path = pkg_dir / "pyproject.toml"
+    setup_cfg_path = pkg_dir / "setup.cfg"
+    manifest_path = pkg_dir / "MANIFEST.in"
+    ci_path = pkg_dir / ".github" / "workflows" / "ci.yml"
 
     result = {
-        'has_pyproject': pyproject_path.exists(),
-        'has_setup_cfg': setup_cfg_path.exists(),
-        'has_manifest_in': manifest_path.exists(),
-        'has_ci': ci_path.exists(),
-        'needs_attention': [],
-        'recommendations': [],
+        "has_pyproject": pyproject_path.exists(),
+        "has_setup_cfg": setup_cfg_path.exists(),
+        "has_manifest_in": manifest_path.exists(),
+        "has_ci": ci_path.exists(),
+        "needs_attention": [],
+        "recommendations": [],
     }
 
     # Check pyproject.toml
-    if result['has_pyproject']:
+    if result["has_pyproject"]:
         pyproject_diff = compare_pyproject_toml(
             pyproject_path, project_name=project_name
         )
-        result['pyproject_status'] = pyproject_diff
+        result["pyproject_status"] = pyproject_diff
 
-        if pyproject_diff.get('needs_attention'):
-            result['needs_attention'].append('pyproject.toml')
-            result['recommendations'].extend(pyproject_diff.get('recommendations', []))
+        if pyproject_diff.get("needs_attention"):
+            result["needs_attention"].append("pyproject.toml")
+            result["recommendations"].extend(pyproject_diff.get("recommendations", []))
 
     # Check setup.cfg
-    if result['has_setup_cfg']:
+    if result["has_setup_cfg"]:
         setup_cfg_status = compare_setup_cfg(setup_cfg_path)
-        result['setup_cfg_status'] = setup_cfg_status
+        result["setup_cfg_status"] = setup_cfg_status
 
-        if setup_cfg_status.get('needs_attention'):
-            result['needs_attention'].append('setup.cfg')
-            result['recommendations'].extend(
-                setup_cfg_status.get('recommendations', [])
+        if setup_cfg_status.get("needs_attention"):
+            result["needs_attention"].append("setup.cfg")
+            result["recommendations"].extend(
+                setup_cfg_status.get("recommendations", [])
             )
 
     # Check MANIFEST.in
-    if result['has_manifest_in']:
+    if result["has_manifest_in"]:
         manifest_status = compare_manifest_in(manifest_path)
-        result['manifest_status'] = manifest_status
+        result["manifest_status"] = manifest_status
 
-        if manifest_status.get('needs_attention'):
-            result['needs_attention'].append('MANIFEST.in')
-            result['recommendations'].extend(manifest_status.get('recommendations', []))
+        if manifest_status.get("needs_attention"):
+            result["needs_attention"].append("MANIFEST.in")
+            result["recommendations"].extend(manifest_status.get("recommendations", []))
 
     # Check CI
-    if check_ci and result['has_ci']:
+    if check_ci and result["has_ci"]:
         ci_diff = compare_ci_workflow(ci_path, project_name=project_name)
-        result['ci_status'] = ci_diff
+        result["ci_status"] = ci_diff
 
-        if ci_diff.get('needs_attention'):
-            result['needs_attention'].append('.github/workflows/ci.yml')
-            result['recommendations'].extend(ci_diff.get('recommendations', []))
+        if ci_diff.get("needs_attention"):
+            result["needs_attention"].append(".github/workflows/ci.yml")
+            result["recommendations"].extend(ci_diff.get("recommendations", []))
 
     return result

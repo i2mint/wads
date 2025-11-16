@@ -298,7 +298,7 @@ def rule_check_formatting_linting(old: Mapping, new: Mapping) -> dict:
             findings.append(
                 {
                     "job": job_name,
-                    "message": f'Linting/formatting migration in {job_name}: {" + ".join(old_tools)} → Ruff',
+                    "message": f"Linting/formatting migration in {job_name}: {' + '.join(old_tools)} → Ruff",
                     "old_tools": old_tools,
                     "new_tool": "Ruff",
                 }
@@ -334,7 +334,7 @@ def rule_check_secrets(old: Mapping, new: Mapping) -> dict:
     return {
         "status": "info",
         "secrets": sorted(all_secrets),
-        "message": f'Secrets required: {", ".join(sorted(all_secrets))}',
+        "message": f"Secrets required: {', '.join(sorted(all_secrets))}",
     }
 
 
