@@ -604,9 +604,9 @@ def populate_pkg_dir(
             ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
         )
         if should_update(ci_def_path):
-            assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
-                pkg_dir
-            ), f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+            assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(pkg_dir), (
+                f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+            )
 
             # Check if we should migrate old CI to new format
             if migrate and version_control_system == "github":
@@ -667,7 +667,7 @@ def populate_pkg_dir(
             if comparison.get("missing_sections"):
                 reasons.append(
                     f"Missing sections: {', '.join(comparison['missing_sections'][:3])}"
-                    + ("..." if len(comparison['missing_sections']) > 3 else "")
+                    + ("..." if len(comparison["missing_sections"]) > 3 else "")
                 )
             for rec in comparison.get("recommendations", []):
                 reasons.append(rec)
@@ -712,7 +712,7 @@ def populate_pkg_dir(
 
                         # Parse the hatchling config suggestion
                         hatchling_lines = manifest_comparison["hatchling_config"].split(
-                            '\n'
+                            "\n"
                         )
 
                         # Extract include/exclude lists from the suggestion
@@ -722,64 +722,64 @@ def populate_pkg_dir(
 
                         for line in hatchling_lines:
                             line = line.strip()
-                            if 'include = [' in line:
-                                current_section = 'include'
-                            elif 'exclude = [' in line:
-                                current_section = 'exclude'
+                            if "include = [" in line:
+                                current_section = "include"
+                            elif "exclude = [" in line:
+                                current_section = "exclude"
                             elif line.startswith('"') and current_section:
                                 # Extract the item (remove quotes, backslashes, and trailing comma)
                                 item = (
                                     line.strip('"')
-                                    .strip('\\')
-                                    .rstrip(',')
+                                    .strip("\\")
+                                    .rstrip(",")
                                     .strip()
                                     .strip('"')
                                 )
-                                if current_section == 'include':
+                                if current_section == "include":
                                     include_items.append(item)
                                 else:
                                     exclude_items.append(item)
-                            elif line == ']':
+                            elif line == "]":
                                 current_section = None
 
                         # Check if migration already done - only update if items missing
-                        if 'tool' not in existing_data:
-                            existing_data['tool'] = {}
-                        if 'hatch' not in existing_data['tool']:
-                            existing_data['tool']['hatch'] = {}
-                        if 'build' not in existing_data['tool']['hatch']:
-                            existing_data['tool']['hatch']['build'] = {}
-                        if 'targets' not in existing_data['tool']['hatch']['build']:
-                            existing_data['tool']['hatch']['build']['targets'] = {}
+                        if "tool" not in existing_data:
+                            existing_data["tool"] = {}
+                        if "hatch" not in existing_data["tool"]:
+                            existing_data["tool"]["hatch"] = {}
+                        if "build" not in existing_data["tool"]["hatch"]:
+                            existing_data["tool"]["hatch"]["build"] = {}
+                        if "targets" not in existing_data["tool"]["hatch"]["build"]:
+                            existing_data["tool"]["hatch"]["build"]["targets"] = {}
                         if (
-                            'wheel'
-                            not in existing_data['tool']['hatch']['build']['targets']
+                            "wheel"
+                            not in existing_data["tool"]["hatch"]["build"]["targets"]
                         ):
-                            existing_data['tool']['hatch']['build']['targets'][
-                                'wheel'
+                            existing_data["tool"]["hatch"]["build"]["targets"][
+                                "wheel"
                             ] = {}
 
-                        wheel_config = existing_data['tool']['hatch']['build'][
-                            'targets'
-                        ]['wheel']
+                        wheel_config = existing_data["tool"]["hatch"]["build"][
+                            "targets"
+                        ]["wheel"]
 
                         # Check if items already present - skip if migration already done
-                        existing_include = set(wheel_config.get('include', []))
-                        existing_exclude = set(wheel_config.get('exclude', []))
+                        existing_include = set(wheel_config.get("include", []))
+                        existing_exclude = set(wheel_config.get("exclude", []))
                         new_include = set(include_items)
                         new_exclude = set(exclude_items)
 
                         needs_update = False
                         if include_items and not new_include.issubset(existing_include):
-                            wheel_config['include'] = include_items
+                            wheel_config["include"] = include_items
                             needs_update = True
                         if exclude_items and not new_exclude.issubset(existing_exclude):
-                            wheel_config['exclude'] = exclude_items
+                            wheel_config["exclude"] = exclude_items
                             needs_update = True
 
                         # Only write if changes needed
                         if needs_update:
-                            with open(pyproject_path, 'wb') as f:
+                            with open(pyproject_path, "wb") as f:
                                 tomli_w.dump(existing_data, f)
 
                             _clog(
@@ -816,7 +816,7 @@ def populate_pkg_dir(
                     _clog(f"  • {rec}")
                 if manifest_comparison.get("hatchling_config"):
                     _clog("\n  Suggested pyproject.toml configuration:")
-                    for line in manifest_comparison["hatchling_config"].split('\n'):
+                    for line in manifest_comparison["hatchling_config"].split("\n"):
                         _clog(f"    {line}")
 
     # Check CI workflow alignment
@@ -949,14 +949,14 @@ def update_pack_and_setup_py(
     target_pkg_dir = ensure_no_slash_suffix(target_pkg_dir)
     name = os.path.basename(target_pkg_dir)
     contents = os.listdir(target_pkg_dir)
-    assert {"setup.py", name}.issubset(
-        contents
-    ), f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
+    assert {"setup.py", name}.issubset(contents), (
+        f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
+    )
 
     pjoin = lambda *p: os.path.join(target_pkg_dir, *p)
 
     for resource_name in copy_files:
-        print(f'... copying {resource_name} from {wads_join("")} to {target_pkg_dir}')
+        print(f"... copying {resource_name} from {wads_join('')} to {target_pkg_dir}")
         shutil.move(src=pjoin(resource_name), dst=pjoin("_" + resource_name))
         shutil.copy(src=wads_join(resource_name), dst=pjoin(resource_name))
 

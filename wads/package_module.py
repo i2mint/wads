@@ -50,9 +50,9 @@ def generate_package(
 
     module_path = Path(module_path)
     assert module_path.exists(), f'module does not exist: "{str(module_path)}"'
-    assert not os.path.exists(
-        output_path
-    ), f'output path already exists: "{output_path}"'
+    assert not os.path.exists(output_path), (
+        f'output path already exists: "{output_path}"'
+    )
     glob_pattern = [glob_pattern] if isinstance(glob_pattern, str) else glob_pattern
 
     with tempfile.TemporaryDirectory() as temp_dir:
