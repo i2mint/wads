@@ -1,0 +1,121 @@
+name: Continuous Integration (Modern)
+on: [push, pull_request]
+
+#ENV_BLOCK#
+
+jobs:
+  validation:
+    name: Validation
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: #PYTHON_VERSIONS#
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        uses: i2mint/wads/actions/install-deps@master
+        with:
+          dependency-files: pyproject.toml
+          extras: dev,test
+          # Fallback for projects still using setup.cfg:
+          # dependency-files: setup.cfg
+          # ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Uncomment for private dependencies
+
+#PRE_TEST_STEPS#
+
+      - name: Format Source Code
+        uses: i2mint/wads/actions/ruff-format@master
+        with:
+          line-length: 88
+          target-path: .
+
+      - name: Lint Validation
+        uses: i2mint/wads/actions/ruff-lint@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          output-format: github
+          # Ruff will read configuration from pyproject.toml
+
+      - name: Run Tests
+        uses: i2mint/wads/actions/run-tests@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          exclude: #EXCLUDE_PATHS#
+          coverage: #COVERAGE_ENABLED#
+          pytest-args: #PYTEST_ARGS#
+
+#WINDOWS_VALIDATION_JOB#
+
+  publish:
+    name: Publish
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
+    needs: validation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Format Source Code
+        uses: i2mint/wads/actions/ruff-format@master
+
+      - name: Update Version Number
+        id: version
+        uses: i2mint/isee/actions/bump-version-number@master
+
+      - name: Build Distribution
+        uses: i2mint/wads/actions/build-dist@master
+        with:
+          sdist: #BUILD_SDIST#
+          wheel: #BUILD_WHEEL#
+        # Uncomment for private dependencies:
+        # with:
+        #   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Publish to PyPI
+        uses: i2mint/wads/actions/pypi-upload@master
+        with:
+          pypi-username: ${{ secrets.PYPI_USERNAME }}
+          pypi-password: ${{ secrets.PYPI_PASSWORD }}
+          skip-existing: false
+
+      - name: Track Code Metrics
+        uses: i2mint/umpyre/actions/track-metrics@master
+        continue-on-error: true  # Don't fail CI if metrics collection fails
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: .github/umpyre-config.yml  # Optional: defaults to .umpyre.yml
+
+      - name: Commit Changes
+        uses: i2mint/wads/actions/git-commit@master
+        with:
+          commit-message: "**CI** Formatted code + Updated version to ${{ env.VERSION }} [skip ci]"
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          push: true
+
+      - name: Tag Repository
+        uses: i2mint/wads/actions/git-tag@master
+        with:
+          tag: ${{ env.VERSION }}
+          message: "Release version ${{ env.VERSION }}"
+          push: true
+
+#GITHUB_PAGES_JOB#
