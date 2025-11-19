@@ -195,12 +195,30 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
     data["project"]["version"] = version
     data["project"]["description"] = description
 
-    # Handle URLs - update homepage and repository
+    # Handle URLs - update homepage, repository, and documentation
     if url:
         if "urls" not in data["project"]:
             data["project"]["urls"] = {}
         data["project"]["urls"]["Homepage"] = url
-        data["project"]["urls"]["Repository"] = url
+
+        # Add repository URL - use explicit value if provided, otherwise use homepage
+        repository_url = configs.get("repository") or configs.get("repository_url") or url
+        data["project"]["urls"]["Repository"] = repository_url
+
+        # Add documentation URL
+        # Default to GitHub Pages if homepage is a GitHub URL
+        documentation_url = configs.get("documentation") or configs.get("documentation_url")
+        if not documentation_url and "github.com" in url:
+            # Parse GitHub URL to extract org and repo
+            # Expected format: https://github.com/{org}/{repo}
+            import re
+            match = re.search(r'github\.com[/:]([^/]+)/([^/\s]+?)(?:\.git)?/?$', url)
+            if match:
+                github_org, github_repo = match.groups()
+                documentation_url = f"https://{github_org}.github.io/{github_repo}"
+
+        if documentation_url:
+            data["project"]["urls"]["Documentation"] = documentation_url
 
     # Update license using inline table syntax
     data["project"]["license"] = {"text": license_name}
