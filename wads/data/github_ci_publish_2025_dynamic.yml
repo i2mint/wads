@@ -1,8 +1,7 @@
 name: Continuous Integration (Modern)
 on: [push, pull_request]
 
-env:
-  PROJECT_NAME: wads
+#ENV_BLOCK#
 
 jobs:
   validation:
@@ -11,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: #PYTHON_VERSIONS#
 
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +29,8 @@ jobs:
           # dependency-files: setup.cfg
           # ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Uncomment for private dependencies
 
+#PRE_TEST_STEPS#
+
       - name: Format Source Code
         uses: i2mint/wads/actions/ruff-format@master
         with:
@@ -47,36 +48,11 @@ jobs:
         uses: i2mint/wads/actions/run-tests@master
         with:
           root-dir: ${{ env.PROJECT_NAME }}
-          exclude: examples,scrap
-          coverage: true
-          pytest-args: -v --tb=short
+          exclude: #EXCLUDE_PATHS#
+          coverage: #COVERAGE_ENABLED#
+          pytest-args: #PYTEST_ARGS#
 
-  windows-validation:
-    name: Windows Tests (Informational)
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: windows-latest
-    continue-on-error: true  # Don't fail the entire workflow if Windows tests fail
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.10"
-
-      - name: Install Dependencies
-        uses: i2mint/wads/actions/install-deps@master
-        with:
-          dependency-files: pyproject.toml
-          extras: dev,test
-
-      - name: Run Windows Tests
-        uses: i2mint/wads/actions/windows-tests@master
-        with:
-          root-dir: ${{ env.PROJECT_NAME }}
-          exclude: examples,scrap
-          pytest-args: -v --tb=short
+#WINDOWS_VALIDATION_JOB#
 
   publish:
     name: Publish
@@ -102,13 +78,14 @@ jobs:
         uses: i2mint/wads/actions/ruff-format@master
 
       - name: Update Version Number
+        id: version
         uses: i2mint/isee/actions/bump-version-number@master
 
       - name: Build Distribution
         uses: i2mint/wads/actions/build-dist@master
         with:
-          sdist: true
-          wheel: true
+          sdist: #BUILD_SDIST#
+          wheel: #BUILD_WHEEL#
         # Uncomment for private dependencies:
         # with:
         #   ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -119,6 +96,13 @@ jobs:
           pypi-username: ${{ secrets.PYPI_USERNAME }}
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
           skip-existing: false
+
+      - name: Track Code Metrics
+        uses: i2mint/umpyre/actions/track-metrics@master
+        continue-on-error: true  # Don't fail CI if metrics collection fails
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: .github/umpyre-config.yml  # Optional: defaults to .umpyre.yml
 
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
@@ -134,20 +118,4 @@ jobs:
           message: "Release version ${{ env.VERSION }}"
           push: true
 
-  github-pages:
-    name: Publish GitHub Pages
-
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
-    needs: publish
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: i2mint/epythet/actions/publish-github-pages@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          ignore: "tests/,scrap/,examples/"
+#GITHUB_PAGES_JOB#

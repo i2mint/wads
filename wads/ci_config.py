@@ -1,0 +1,414 @@
+"""
+Utilities for reading and applying CI configuration from pyproject.toml.
+
+This module provides the infrastructure for using pyproject.toml as the single
+source of truth for CI configuration, eliminating hardcoded project-specific
+settings in CI workflow files.
+"""
+
+from typing import Any, Optional
+from pathlib import Path
+import sys
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import tomli as tomllib
+    except ImportError:
+        raise ImportError("tomli package required for Python < 3.11")
+
+
+class CIConfig:
+    """Represents CI configuration extracted from pyproject.toml."""
+
+    def __init__(self, pyproject_data: dict, project_name: str = None):
+        """
+        Initialize CI configuration from pyproject.toml data.
+
+        Args:
+            pyproject_data: Parsed TOML data from pyproject.toml
+            project_name: Project name (defaults to project.name from pyproject)
+        """
+        self.data = pyproject_data
+        self.ci_config = pyproject_data.get("tool", {}).get("wads", {}).get("ci", {})
+        self._project_name = (
+            project_name or self.ci_config.get("project_name")
+            or pyproject_data.get("project", {}).get("name", "")
+        )
+
+    @classmethod
+    def from_file(cls, pyproject_path: str | Path) -> "CIConfig":
+        """
+        Load CI configuration from a pyproject.toml file.
+
+        Args:
+            pyproject_path: Path to pyproject.toml file or directory containing it
+
+        Returns:
+            CIConfig instance
+        """
+        pyproject_path = Path(pyproject_path)
+        if pyproject_path.is_dir():
+            pyproject_path = pyproject_path / "pyproject.toml"
+
+        with open(pyproject_path, "rb") as f:
+            data = tomllib.load(f)
+
+        return cls(data)
+
+    @property
+    def project_name(self) -> str:
+        """Get the project name for CI."""
+        return self._project_name
+
+    # ⚙️ EXECUTION FLOW AND COMMANDS
+    @property
+    def commands_pre_test(self) -> list[str]:
+        """Get pre-test setup commands."""
+        return self.ci_config.get("commands", {}).get("pre_test", [])
+
+    @property
+    def commands_test(self) -> list[str]:
+        """Get test commands (defaults to ['pytest'])."""
+        return self.ci_config.get("commands", {}).get("test", ["pytest"])
+
+    @property
+    def commands_post_test(self) -> list[str]:
+        """Get post-test commands."""
+        return self.ci_config.get("commands", {}).get("post_test", [])
+
+    @property
+    def commands_lint(self) -> list[str]:
+        """Get lint commands."""
+        return self.ci_config.get("commands", {}).get("lint", [])
+
+    @property
+    def commands_format(self) -> list[str]:
+        """Get format commands."""
+        return self.ci_config.get("commands", {}).get("format", [])
+
+    # 🌍 ENVIRONMENT VARIABLES
+    @property
+    def env_vars_required(self) -> list[str]:
+        """Get required environment variable names."""
+        return self.ci_config.get("env", {}).get("required", [])
+
+    @property
+    def env_vars_defaults(self) -> dict[str, str]:
+        """Get default environment variables."""
+        return self.ci_config.get("env", {}).get("defaults", {})
+
+    # ✅ CODE QUALITY AND FORMATTING
+    @property
+    def quality_config(self) -> dict:
+        """Get code quality tool configuration."""
+        return self.ci_config.get("quality", {})
+
+    def is_ruff_enabled(self) -> bool:
+        """Check if Ruff linter is enabled."""
+        return self.quality_config.get("ruff", {}).get("enabled", True)
+
+    def is_black_enabled(self) -> bool:
+        """Check if Black formatter is enabled."""
+        return self.quality_config.get("black", {}).get("enabled", False)
+
+    def is_mypy_enabled(self) -> bool:
+        """Check if Mypy type checker is enabled."""
+        return self.quality_config.get("mypy", {}).get("enabled", False)
+
+    # 🧪 TEST CONFIGURATION
+    @property
+    def testing_config(self) -> dict:
+        """Get testing configuration."""
+        return self.ci_config.get("testing", {})
+
+    @property
+    def python_versions(self) -> list[str]:
+        """Get Python versions to test against."""
+        return self.testing_config.get("python_versions", ["3.10", "3.12"])
+
+    @property
+    def pytest_args(self) -> list[str]:
+        """Get pytest arguments."""
+        return self.testing_config.get("pytest_args", ["-v", "--tb=short"])
+
+    @property
+    def coverage_enabled(self) -> bool:
+        """Check if coverage is enabled."""
+        return self.testing_config.get("coverage_enabled", True)
+
+    @property
+    def coverage_threshold(self) -> int:
+        """Get minimum coverage threshold (0 = no enforcement)."""
+        return self.testing_config.get("coverage_threshold", 0)
+
+    @property
+    def exclude_paths(self) -> list[str]:
+        """Get test paths to exclude."""
+        return self.testing_config.get("exclude_paths", ["examples", "scrap"])
+
+    @property
+    def test_on_windows(self) -> bool:
+        """Check if Windows testing is enabled."""
+        return self.testing_config.get("test_on_windows", True)
+
+    # 📦 BUILD AND PUBLISH SETTINGS
+    @property
+    def build_config(self) -> dict:
+        """Get build configuration."""
+        return self.ci_config.get("build", {})
+
+    @property
+    def build_sdist(self) -> bool:
+        """Check if source distribution should be built."""
+        return self.build_config.get("sdist", True)
+
+    @property
+    def build_wheel(self) -> bool:
+        """Check if wheel should be built."""
+        return self.build_config.get("wheel", True)
+
+    @property
+    def publish_config(self) -> dict:
+        """Get publish configuration."""
+        return self.ci_config.get("publish", {})
+
+    @property
+    def publish_enabled(self) -> bool:
+        """Check if publishing is enabled."""
+        return self.publish_config.get("enabled", True)
+
+    # 📄 DOCUMENTATION SETTINGS
+    @property
+    def docs_config(self) -> dict:
+        """Get documentation configuration."""
+        return self.ci_config.get("docs", {})
+
+    @property
+    def docs_enabled(self) -> bool:
+        """Check if documentation generation is enabled."""
+        return self.docs_config.get("enabled", True)
+
+    @property
+    def docs_builder(self) -> str:
+        """Get documentation builder name."""
+        return self.docs_config.get("builder", "epythet")
+
+    @property
+    def docs_ignore_paths(self) -> list[str]:
+        """Get paths to ignore during documentation generation."""
+        return self.docs_config.get("ignore_paths", ["tests/", "scrap/", "examples/"])
+
+    def to_ci_env_block(self) -> str:
+        """
+        Generate YAML env block for GitHub Actions.
+
+        Returns:
+            YAML string for env section
+        """
+        lines = ["env:"]
+        lines.append(f"  PROJECT_NAME: {self.project_name}")
+
+        # Add default environment variables
+        for key, value in self.env_vars_defaults.items():
+            lines.append(f"  {key}: {value}")
+
+        return "\n".join(lines)
+
+    def to_pre_test_step(self) -> Optional[str]:
+        """
+        Generate YAML step for pre-test commands.
+
+        Returns:
+            YAML string for pre-test step, or None if no commands
+        """
+        if not self.commands_pre_test:
+            return None
+
+        lines = ["      - name: Pre-test Setup"]
+        lines.append("        run: |")
+        for cmd in self.commands_pre_test:
+            lines.append(f"          {cmd}")
+
+        return "\n".join(lines)
+
+    def has_ci_config(self) -> bool:
+        """Check if any CI configuration is present."""
+        return bool(self.ci_config)
+
+    def generate_env_block(self) -> str:
+        """
+        Generate YAML env block for GitHub Actions.
+
+        Returns:
+            YAML string for env section
+        """
+        lines = ["env:"]
+        lines.append(f"  PROJECT_NAME: {self.project_name}")
+
+        # Add default environment variables
+        for key, value in self.env_vars_defaults.items():
+            lines.append(f"  {key}: {value}")
+
+        return "\n".join(lines)
+
+    def generate_pre_test_steps(self) -> str:
+        """
+        Generate YAML steps for pre-test commands.
+
+        Returns:
+            YAML string for pre-test steps, or empty string if no commands
+        """
+        if not self.commands_pre_test:
+            return ""
+
+        lines = ["      - name: Pre-test Setup", "        run: |"]
+        for cmd in self.commands_pre_test:
+            lines.append(f"          {cmd}")
+
+        return "\n".join(lines)
+
+    def generate_windows_validation_job(self) -> str:
+        """
+        Generate YAML for Windows validation job.
+
+        Returns:
+            YAML string for Windows job, or empty string if disabled
+        """
+        if not self.test_on_windows:
+            return ""
+
+        template = """
+  windows-validation:
+    name: Windows Tests (Informational)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: windows-latest
+    continue-on-error: true  # Don't fail the entire workflow if Windows tests fail
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        uses: i2mint/wads/actions/install-deps@master
+        with:
+          dependency-files: pyproject.toml
+          extras: dev,test
+
+      - name: Run Windows Tests
+        uses: i2mint/wads/actions/windows-tests@master
+        with:
+          root-dir: ${{ env.PROJECT_NAME }}
+          exclude: {exclude}
+          pytest-args: {pytest_args}
+"""
+        exclude = ",".join(self.exclude_paths)
+        pytest_args = " ".join(self.pytest_args)
+        return template.format(exclude=exclude, pytest_args=pytest_args)
+
+    def generate_github_pages_job(self) -> str:
+        """
+        Generate YAML for GitHub Pages job.
+
+        Returns:
+            YAML string for GitHub Pages job, or empty string if disabled
+        """
+        if not self.docs_enabled:
+            return ""
+
+        ignore_paths = ",".join(self.docs_ignore_paths)
+        template = f"""
+  github-pages:
+    name: Publish GitHub Pages
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{{0}}', github.event.repository.default_branch)"
+    needs: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: i2mint/epythet/actions/publish-github-pages@master
+        with:
+          github-token: ${{{{ secrets.GITHUB_TOKEN }}}}
+          ignore: "{ignore_paths}"
+"""
+        return template
+
+    def to_ci_template_substitutions(self) -> dict[str, str]:
+        """
+        Generate all template substitutions for CI workflow generation.
+
+        Returns:
+            Dictionary mapping placeholder names to their values
+        """
+        import json
+
+        return {
+            "#ENV_BLOCK#": self.generate_env_block(),
+            "#PYTHON_VERSIONS#": json.dumps(self.python_versions),
+            "#PRE_TEST_STEPS#": self.generate_pre_test_steps(),
+            "#EXCLUDE_PATHS#": ",".join(self.exclude_paths),
+            "#COVERAGE_ENABLED#": str(self.coverage_enabled).lower(),
+            "#PYTEST_ARGS#": " ".join(self.pytest_args),
+            "#WINDOWS_VALIDATION_JOB#": self.generate_windows_validation_job(),
+            "#GITHUB_PAGES_JOB#": self.generate_github_pages_job(),
+            "#BUILD_SDIST#": str(self.build_sdist).lower(),
+            "#BUILD_WHEEL#": str(self.build_wheel).lower(),
+            "#PROJECT_NAME#": self.project_name,
+        }
+
+    def __repr__(self) -> str:
+        return f"CIConfig(project_name={self.project_name!r}, has_config={self.has_ci_config()})"
+
+
+def read_ci_config(pyproject_path: str | Path) -> CIConfig:
+    """
+    Read CI configuration from pyproject.toml.
+
+    Args:
+        pyproject_path: Path to pyproject.toml file or directory containing it
+
+    Returns:
+        CIConfig instance
+
+    Example:
+        >>> config = read_ci_config(".")
+        >>> config.project_name
+        'myproject'
+        >>> config.python_versions
+        ['3.10', '3.12']
+    """
+    return CIConfig.from_file(pyproject_path)
+
+
+def get_ci_config_or_defaults(
+    pyproject_path: str | Path, project_name: str = None
+) -> CIConfig:
+    """
+    Read CI configuration from pyproject.toml, using defaults if file doesn't exist.
+
+    Args:
+        pyproject_path: Path to pyproject.toml file or directory containing it
+        project_name: Default project name if not found in config
+
+    Returns:
+        CIConfig instance with defaults if file doesn't exist
+    """
+    pyproject_path = Path(pyproject_path)
+    if pyproject_path.is_dir():
+        pyproject_path = pyproject_path / "pyproject.toml"
+
+    if not pyproject_path.exists():
+        # Return empty config with defaults
+        return CIConfig({"project": {"name": project_name or ""}}, project_name)
+
+    return read_ci_config(pyproject_path)

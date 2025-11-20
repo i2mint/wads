@@ -195,12 +195,30 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
     data["project"]["version"] = version
     data["project"]["description"] = description
 
-    # Handle URLs - update homepage and repository
+    # Handle URLs - update homepage, repository, and documentation
     if url:
         if "urls" not in data["project"]:
             data["project"]["urls"] = {}
         data["project"]["urls"]["Homepage"] = url
-        data["project"]["urls"]["Repository"] = url
+
+        # Add repository URL - use explicit value if provided, otherwise use homepage
+        repository_url = configs.get("repository") or configs.get("repository_url") or url
+        data["project"]["urls"]["Repository"] = repository_url
+
+        # Add documentation URL
+        # Default to GitHub Pages if homepage is a GitHub URL
+        documentation_url = configs.get("documentation") or configs.get("documentation_url")
+        if not documentation_url and "github.com" in url:
+            # Parse GitHub URL to extract org and repo
+            # Expected format: https://github.com/{org}/{repo}
+            import re
+            match = re.search(r'github\.com[/:]([^/]+)/([^/\s]+?)(?:\.git)?/?$', url)
+            if match:
+                github_org, github_repo = match.groups()
+                documentation_url = f"https://{github_org}.github.io/{github_repo}"
+
+        if documentation_url:
+            data["project"]["urls"]["Documentation"] = documentation_url
 
     # Update license using inline table syntax
     data["project"]["license"] = {"text": license_name}
@@ -637,13 +655,13 @@ def populate_pkg_dir(
                     # No old CI to migrate, create new one from template
                     user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
                     _add_ci_def(
-                        ci_def_path, ci_tpl_path, root_url, name, _clog, user_email
+                        ci_def_path, ci_tpl_path, root_url, name, _clog, user_email, pkg_dir
                     )
                     tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
             else:
                 # Not migrating or not github, use template
                 user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
-                _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email)
+                _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, _clog, user_email, pkg_dir)
                 tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
         else:
             tracker.skip(ci_def_path.replace(pkg_dir + os.sep, ""))
@@ -896,14 +914,57 @@ def _resolve_ci_def_and_tpl_path(
     return ci_def_path, ci_tpl_path
 
 
-def _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, clog, user_email):
+def _add_ci_def(ci_def_path, ci_tpl_path, root_url, name, clog, user_email, pkg_dir=None):
+    """
+    Generate CI definition file from template.
+
+    If pkg_dir is provided and contains a pyproject.toml with [tool.wads.ci]
+    configuration, uses the dynamic template with values from CI config.
+    Otherwise, uses the static template with basic substitutions.
+    """
     clog(f"... making a {ci_def_path}")
+
+    # Try to load CI config from pyproject.toml if pkg_dir provided
+    ci_config = None
+    use_dynamic_template = False
+    if pkg_dir:
+        pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+        if os.path.exists(pyproject_path):
+            try:
+                from wads.ci_config import CIConfig
+
+                ci_config = CIConfig.from_file(pyproject_path)
+                use_dynamic_template = ci_config.has_ci_config()
+                if use_dynamic_template:
+                    clog("... using CI configuration from pyproject.toml [tool.wads.ci]")
+            except Exception as e:
+                clog(f"... could not read CI config from pyproject.toml: {e}")
+
+    # Use dynamic template if CI config is present
+    if use_dynamic_template and ci_config:
+        # Use the dynamic template
+        dynamic_tpl_path = ci_tpl_path.replace(".yml", "_dynamic.yml")
+        if os.path.exists(dynamic_tpl_path):
+            ci_tpl_path = dynamic_tpl_path
+            clog(f"... using dynamic CI template: {os.path.basename(ci_tpl_path)}")
+
     with open(ci_tpl_path) as f_in:
         ci_def = f_in.read()
-        ci_def = ci_def.replace("#PROJECT_NAME#", name)
+
+        # Apply CI config substitutions if available
+        if use_dynamic_template and ci_config:
+            substitutions = ci_config.to_ci_template_substitutions()
+            for placeholder, value in substitutions.items():
+                ci_def = ci_def.replace(placeholder, value)
+        else:
+            # Basic substitutions for static template
+            ci_def = ci_def.replace("#PROJECT_NAME#", name)
+
+        # Common substitutions for all templates
         hostname = urlparse(root_url).netloc
         ci_def = ci_def.replace("#GITLAB_HOSTNAME#", hostname)
         ci_def = ci_def.replace("#USER_EMAIL#", user_email)
+
         os.makedirs(os.path.dirname(ci_def_path), exist_ok=True)
         with open(ci_def_path, "w") as f_out:
             f_out.write(ci_def)

@@ -15,6 +15,26 @@ dependencies = []
 
 [project.urls]
 Homepage = ""
+# Repository = ""  # URL to the source code repository
+# Documentation = ""  # URL to the documentation (e.g., Read the Docs, GitHub Pages)
+# Changelog = ""  # URL to the changelog or release notes
+# Issues = ""  # URL to the issue tracker
+
+# [project.scripts]
+# # Console script entry points - creates command-line executables
+# # Format: "command-name = package.module:function"
+# # Example: my-tool = "mypackage.cli:main"
+
+# [project.gui-scripts]
+# # GUI application entry points - similar to scripts but for GUI apps
+# # Format: "app-name = package.module:function"
+# # Example: my-app = "mypackage.gui:main"
+
+# [project.entry-points."some.group"]
+# # Plugin-style entry points for extensibility
+# # Allows other packages to discover and load plugins
+# # Format: "plugin-name = package.module:object"
+# # Example: json = "mypackage.serializers:JSONSerializer"
 
 [project.optional-dependencies]
 dev = [
@@ -82,3 +102,134 @@ convention = "google" # or "numpy" or "pep257"
 minversion = "6.0"
 testpaths = ["tests"]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
+
+# ============================================================================
+# CI Configuration (Single Source of Truth)
+# ============================================================================
+# This section defines all CI-specific configuration, eliminating the need
+# to hardcode project-specific settings in CI workflow files.
+
+[tool.wads.ci]
+# Project name used in CI workflows (defaults to package name if not specified)
+project_name = ""
+
+# ⚙️ EXECUTION FLOW AND COMMANDS
+# Commands executed during different CI phases
+
+[tool.wads.ci.commands]
+# Pre-test setup commands - run before testing/linting begins
+# Examples: database migrations, data generation, environment setup
+pre_test = [
+    # "python scripts/setup_test_data.py",
+    # "python -m playwright install",
+]
+
+# Test commands - primary test suite execution
+# If not specified, defaults to ["pytest"]
+test = [
+    # "pytest",
+    # "pytest --cov=mypackage --cov-report=xml",
+]
+
+# Post-test commands - run after tests complete (e.g., cleanup, reports)
+post_test = [
+    # "python scripts/generate_coverage_report.py",
+]
+
+# Lint commands - code quality checks
+# If not specified, uses Ruff configuration from [tool.ruff]
+lint = [
+    # "ruff check .",
+]
+
+# Format commands - code formatting
+# If not specified, uses Ruff formatter
+format = [
+    # "ruff format --check .",
+]
+
+# 🌍 ENVIRONMENT VARIABLES
+# Control which environment variables are required or have defaults
+
+[tool.wads.ci.env]
+# Required environment variables - CI will fail if these are not set
+# Format: list of variable names
+required = [
+    # "DATABASE_URL",
+    # "API_KEY",
+]
+
+# Default environment variables - set these if not provided by CI system
+# Format: key-value pairs (inline table syntax)
+# Note: These are template defaults; actual values should be in CI secrets
+# Example: defaults = {"LOG_LEVEL" = "DEBUG", "TESTING" = "true", "PYTHONUNBUFFERED" = "1"}
+defaults = {}
+
+# ✅ CODE QUALITY AND FORMATTING
+# Tool-specific configuration for CI enforcement
+
+[tool.wads.ci.quality]
+# Ruff linter settings for CI (overrides/supplements [tool.ruff])
+[tool.wads.ci.quality.ruff]
+enabled = true
+# line_length = 88  # Uncomment to override [tool.ruff] setting
+# output_format = "github"  # For GitHub Actions annotations
+
+# Black formatter settings (if using Black instead of Ruff format)
+[tool.wads.ci.quality.black]
+enabled = false
+# line_length = 88
+# target_version = ["py310", "py311", "py312"]
+
+# Mypy type checker settings
+[tool.wads.ci.quality.mypy]
+enabled = false
+# strict = true
+# python_version = "3.10"
+# ignore_missing_imports = true
+
+# 🧪 TEST CONFIGURATION
+# Test-specific settings for CI
+
+[tool.wads.ci.testing]
+# Python versions to test against
+python_versions = ["3.10", "3.12"]
+
+# Pytest arguments (supplements [tool.pytest.ini_options])
+pytest_args = ["-v", "--tb=short"]
+
+# Coverage settings
+coverage_enabled = true
+coverage_threshold = 0  # Minimum coverage percentage (0 = no enforcement)
+coverage_report_format = ["term", "xml"]  # terminal, xml, html, etc.
+
+# Test paths to exclude (in addition to pytest configuration)
+exclude_paths = ["examples", "scrap"]
+
+# Run tests on Windows (informational only, may fail)
+test_on_windows = true
+
+# 📦 BUILD AND PUBLISH SETTINGS
+# Control build and publication behavior
+
+[tool.wads.ci.build]
+# Build artifacts to create
+sdist = true
+wheel = true
+
+# Publication settings
+[tool.wads.ci.publish]
+# Publish to PyPI on main/master branch
+enabled = true
+# skip_existing = false  # Skip upload if version already exists
+
+# 📄 DOCUMENTATION SETTINGS
+# Control documentation generation and publishing
+
+[tool.wads.ci.docs]
+# Generate and publish GitHub Pages
+enabled = true
+# Builder to use: "epythet", "sphinx", "mkdocs"
+builder = "epythet"
+# Paths to ignore during documentation generation
+ignore_paths = ["tests/", "scrap/", "examples/"]
