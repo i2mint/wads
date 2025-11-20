@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; wads 0.1.52 documentation</title>
+  <title>&lt;no title&gt; &mdash; wads 0.1.53 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=61349712"></script>
+      <script src="_static/documentation_options.js?v=c54c130b"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
@@ -59,6 +60,9 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
@@ -97,6 +101,12 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads.html#console-scripts">Console Scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig"><code class="docutils literal notranslate"><span class="pre">CIConfig</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_migration.html">wads.ci_migration</a><ul>
@@ -202,6 +212,16 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_ci"><code class="docutils literal notranslate"><span class="pre">make_install_instructions_for_ci()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_readme"><code class="docutils literal notranslate"><span class="pre">make_install_instructions_for_readme()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands"><code class="docutils literal notranslate"><span class="pre">run_install_commands()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.validate_ci_environment"><code class="docutils literal notranslate"><span class="pre">validate_ci_environment()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/conftest.html">wads.tests.conftest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/conftest.html#wads.tests.conftest.pytest_terminal_summary"><code class="docutils literal notranslate"><span class="pre">pytest_terminal_summary()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>

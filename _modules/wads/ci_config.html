@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_config &mdash; wads 0.1.53 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.ci_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.ci_config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for reading and applying CI configuration from pyproject.toml.</span>
+
+<span class="sd">This module provides the infrastructure for using pyproject.toml as the single</span>
+<span class="sd">source of truth for CI configuration, eliminating hardcoded project-specific</span>
+<span class="sd">settings in CI workflow files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;tomli package required for Python &lt; 3.11&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CIConfig">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CIConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents CI configuration extracted from pyproject.toml.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyproject_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize CI configuration from pyproject.toml data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pyproject_data: Parsed TOML data from pyproject.toml</span>
+<span class="sd">            project_name: Project name (defaults to project.name from pyproject)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pyproject_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ci&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_project_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">project_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="CIConfig.from_file">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.from_file">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CIConfig&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load CI configuration from a pyproject.toml file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pyproject_path: Path to pyproject.toml file or directory containing it</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            CIConfig instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the project name for CI.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_name</span>
+
+    <span class="c1"># ⚙️ EXECUTION FLOW AND COMMANDS</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">commands_pre_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pre-test setup commands.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pre_test&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">commands_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test commands (defaults to [&#39;pytest&#39;]).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;pytest&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">commands_post_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get post-test commands.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;post_test&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">commands_lint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get lint commands.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lint&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">commands_format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get format commands.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="c1"># 🌍 ENVIRONMENT VARIABLES</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_required</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get required environment variable names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get default environment variables.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;defaults&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="c1"># ✅ CODE QUALITY AND FORMATTING</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">quality_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get code quality tool configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;quality&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+<div class="viewcode-block" id="CIConfig.is_ruff_enabled">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_ruff_enabled">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_ruff_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Ruff linter is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ruff&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.is_black_enabled">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_black_enabled">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_black_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Black formatter is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.is_mypy_enabled">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_mypy_enabled">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_mypy_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Mypy type checker is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mypy&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="c1"># 🧪 TEST CONFIGURATION</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">testing_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get testing configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;testing&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">python_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Python versions to test against.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;python_versions&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;3.10&quot;</span><span class="p">,</span> <span class="s2">&quot;3.12&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pytest_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pytest arguments.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pytest_args&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;--tb=short&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coverage_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if coverage is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coverage_enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coverage_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get minimum coverage threshold (0 = no enforcement).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coverage_threshold&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exclude_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test paths to exclude.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exclude_paths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;examples&quot;</span><span class="p">,</span> <span class="s2">&quot;scrap&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_on_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Windows testing is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_on_windows&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># 📦 BUILD AND PUBLISH SETTINGS</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get build configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_sdist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if source distribution should be built.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sdist&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_wheel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if wheel should be built.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wheel&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">publish_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get publish configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publish&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">publish_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if publishing is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># 📄 DOCUMENTATION SETTINGS</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">docs_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get documentation configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">docs_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if documentation generation is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">docs_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get documentation builder name.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;builder&quot;</span><span class="p">,</span> <span class="s2">&quot;epythet&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">docs_ignore_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get paths to ignore during documentation generation.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_paths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;tests/&quot;</span><span class="p">,</span> <span class="s2">&quot;scrap/&quot;</span><span class="p">,</span> <span class="s2">&quot;examples/&quot;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="CIConfig.to_ci_env_block">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_env_block">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_ci_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML env block for GitHub Actions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for env section</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;env:&quot;</span><span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add default environment variables</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.to_pre_test_step">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_pre_test_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_pre_test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML step for pre-test commands.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for pre-test step, or None if no commands</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.has_ci_config">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.has_ci_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_ci_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any CI configuration is present.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_env_block">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_block">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML env block for GitHub Actions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for env section</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;env:&quot;</span><span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add default environment variables</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_pre_test_steps">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_pre_test_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML steps for pre-test commands.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for pre-test steps, or empty string if no commands</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">,</span> <span class="s2">&quot;        run: |&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_windows_validation_job">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_windows_validation_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_windows_validation_job</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML for Windows validation job.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for Windows job, or empty string if disabled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">  windows-validation:</span>
+<span class="s2">    name: Windows Tests (Informational)</span>
+<span class="s2">    if: &quot;!contains(github.event.head_commit.message, &#39;[skip ci]&#39;)&quot;</span>
+<span class="s2">    runs-on: windows-latest</span>
+<span class="s2">    continue-on-error: true  # Don&#39;t fail the entire workflow if Windows tests fail</span>
+
+<span class="s2">    steps:</span>
+<span class="s2">      - uses: actions/checkout@v4</span>
+
+<span class="s2">      - name: Set up Python 3.10</span>
+<span class="s2">        uses: actions/setup-python@v6</span>
+<span class="s2">        with:</span>
+<span class="s2">          python-version: &quot;3.10&quot;</span>
+
+<span class="s2">      - name: Install Dependencies</span>
+<span class="s2">        uses: i2mint/wads/actions/install-deps@master</span>
+<span class="s2">        with:</span>
+<span class="s2">          dependency-files: pyproject.toml</span>
+<span class="s2">          extras: dev,test</span>
+
+<span class="s2">      - name: Run Windows Tests</span>
+<span class="s2">        uses: i2mint/wads/actions/windows-tests@master</span>
+<span class="s2">        with:</span>
+<span class="s2">          root-dir: ${{ env.PROJECT_NAME }}</span>
+<span class="s2">          exclude: </span><span class="si">{exclude}</span>
+<span class="s2">          pytest-args: </span><span class="si">{pytest_args}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">)</span>
+        <span class="n">pytest_args</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_github_pages_job">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_github_pages_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_github_pages_job</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML for GitHub Pages job.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string for GitHub Pages job, or empty string if disabled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_enabled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">ignore_paths</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">docs_ignore_paths</span><span class="p">)</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">  github-pages:</span>
+<span class="s2">    name: Publish GitHub Pages</span>
+
+<span class="s2">    permissions:</span>
+<span class="s2">      contents: write</span>
+<span class="s2">      pages: write</span>
+<span class="s2">      id-token: write</span>
+
+<span class="s2">    if: &quot;!contains(github.event.head_commit.message, &#39;[skip ci]&#39;) &amp;&amp; github.ref == format(&#39;refs/heads/</span><span class="se">{{</span><span class="s2">0</span><span class="se">}}</span><span class="s2">&#39;, github.event.repository.default_branch)&quot;</span>
+<span class="s2">    needs: publish</span>
+<span class="s2">    runs-on: ubuntu-latest</span>
+
+<span class="s2">    steps:</span>
+<span class="s2">      - uses: i2mint/epythet/actions/publish-github-pages@master</span>
+<span class="s2">        with:</span>
+<span class="s2">          github-token: $</span><span class="se">{{{{</span><span class="s2"> secrets.GITHUB_TOKEN </span><span class="se">}}}}</span>
+<span class="s2">          ignore: &quot;</span><span class="si">{</span><span class="n">ignore_paths</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">template</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.to_ci_template_substitutions">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_template_substitutions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_ci_template_substitutions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate all template substitutions for CI workflow generation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary mapping placeholder names to their values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;#ENV_BLOCK#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_block</span><span class="p">(),</span>
+            <span class="s2">&quot;#PYTHON_VERSIONS#&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_versions</span><span class="p">),</span>
+            <span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">(),</span>
+            <span class="s2">&quot;#EXCLUDE_PATHS#&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">),</span>
+            <span class="s2">&quot;#COVERAGE_ENABLED#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">&quot;#PYTEST_ARGS#&quot;</span><span class="p">:</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">),</span>
+            <span class="s2">&quot;#WINDOWS_VALIDATION_JOB#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_windows_validation_job</span><span class="p">(),</span>
+            <span class="s2">&quot;#GITHUB_PAGES_JOB#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_github_pages_job</span><span class="p">(),</span>
+            <span class="s2">&quot;#BUILD_SDIST#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">&quot;#BUILD_WHEEL#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">&quot;#PROJECT_NAME#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CIConfig(project_name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">!r}</span><span class="s2">, has_config=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">has_ci_config</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="read_ci_config">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.read_ci_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read CI configuration from pyproject.toml.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pyproject_path: Path to pyproject.toml file or directory containing it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CIConfig instance with project configuration</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        config = read_ci_config(&quot;path/to/project&quot;)</span>
+<span class="sd">        print(config.project_name)        # Project name from pyproject.toml</span>
+<span class="sd">        print(config.python_versions)     # Python versions to test</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_ci_config_or_defaults">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.get_ci_config_or_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_ci_config_or_defaults</span><span class="p">(</span>
+    <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read CI configuration from pyproject.toml, using defaults if file doesn&#39;t exist.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pyproject_path: Path to pyproject.toml file or directory containing it</span>
+<span class="sd">        project_name: Default project name if not found in config</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CIConfig instance with defaults if file doesn&#39;t exist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="c1"># Return empty config with defaults</span>
+        <span class="k">return</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">}},</span> <span class="n">project_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

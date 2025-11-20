@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_config &mdash; wads 0.1.53 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.ci_migration" href="ci_migration.html" />
+    <link rel="prev" title="wads" href="../wads.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.ci_config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.CIConfig"><code class="docutils literal notranslate"><span class="pre">CIConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.build_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.build_sdist"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_sdist</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.build_wheel"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_wheel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.commands_format"><code class="docutils literal notranslate"><span class="pre">CIConfig.commands_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.commands_lint"><code class="docutils literal notranslate"><span class="pre">CIConfig.commands_lint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.commands_post_test"><code class="docutils literal notranslate"><span class="pre">CIConfig.commands_post_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.commands_pre_test"><code class="docutils literal notranslate"><span class="pre">CIConfig.commands_pre_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.commands_test"><code class="docutils literal notranslate"><span class="pre">CIConfig.commands_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.coverage_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.coverage_enabled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.coverage_threshold"><code class="docutils literal notranslate"><span class="pre">CIConfig.coverage_threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_builder"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_builder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_enabled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_ignore_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_ignore_paths</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_defaults"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_defaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_required"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_required</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.exclude_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.exclude_paths</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.from_file"><code class="docutils literal notranslate"><span class="pre">CIConfig.from_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_env_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_github_pages_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_github_pages_job()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_pre_test_steps"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_pre_test_steps()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_windows_validation_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_windows_validation_job()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.has_ci_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_black_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_black_enabled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_mypy_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_mypy_enabled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_ruff_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_ruff_enabled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.project_name"><code class="docutils literal notranslate"><span class="pre">CIConfig.project_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_enabled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.pytest_args"><code class="docutils literal notranslate"><span class="pre">CIConfig.pytest_args</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.python_versions"><code class="docutils literal notranslate"><span class="pre">CIConfig.python_versions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.quality_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.quality_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.test_on_windows"><code class="docutils literal notranslate"><span class="pre">CIConfig.test_on_windows</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.testing_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.testing_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_env_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_template_substitutions"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_template_substitutions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_pre_test_step"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_pre_test_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.ci_config</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/ci_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.ci_config">
+<span id="wads-ci-config"></span><h1>wads.ci_config<a class="headerlink" href="#module-wads.ci_config" title="Link to this heading"></a></h1>
+<p>Utilities for reading and applying CI configuration from pyproject.toml.</p>
+<p>This module provides the infrastructure for using pyproject.toml as the single
+source of truth for CI configuration, eliminating hardcoded project-specific
+settings in CI workflow files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">CIConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig" title="Link to this definition"></a></dt>
+<dd><p>Represents CI configuration extracted from pyproject.toml.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.build_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.build_config" title="Link to this definition"></a></dt>
+<dd><p>Get build configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.build_sdist">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_sdist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.build_sdist" title="Link to this definition"></a></dt>
+<dd><p>Check if source distribution should be built.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.build_wheel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_wheel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.build_wheel" title="Link to this definition"></a></dt>
+<dd><p>Check if wheel should be built.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_format">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">commands_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.commands_format" title="Link to this definition"></a></dt>
+<dd><p>Get format commands.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_lint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">commands_lint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.commands_lint" title="Link to this definition"></a></dt>
+<dd><p>Get lint commands.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_post_test">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">commands_post_test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.commands_post_test" title="Link to this definition"></a></dt>
+<dd><p>Get post-test commands.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_pre_test">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">commands_pre_test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.commands_pre_test" title="Link to this definition"></a></dt>
+<dd><p>Get pre-test setup commands.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_test">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">commands_test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.commands_test" title="Link to this definition"></a></dt>
+<dd><p>Get test commands (defaults to [‘pytest’]).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.coverage_enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coverage_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.coverage_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if coverage is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.coverage_threshold">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coverage_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.coverage_threshold" title="Link to this definition"></a></dt>
+<dd><p>Get minimum coverage threshold (0 = no enforcement).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_builder">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docs_builder</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.docs_builder" title="Link to this definition"></a></dt>
+<dd><p>Get documentation builder name.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docs_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.docs_config" title="Link to this definition"></a></dt>
+<dd><p>Get documentation configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docs_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.docs_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if documentation generation is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_ignore_paths">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">docs_ignore_paths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.docs_ignore_paths" title="Link to this definition"></a></dt>
+<dd><p>Get paths to ignore during documentation generation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_defaults">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_defaults</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_defaults" title="Link to this definition"></a></dt>
+<dd><p>Get default environment variables.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_required">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_required</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_required" title="Link to this definition"></a></dt>
+<dd><p>Get required environment variable names.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.exclude_paths">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude_paths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.exclude_paths" title="Link to this definition"></a></dt>
+<dd><p>Get test paths to exclude.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.from_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><span class="pre">CIConfig</span></a></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.from_file" title="Link to this definition"></a></dt>
+<dd><p>Load CI configuration from a pyproject.toml file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pyproject_path</strong> – Path to pyproject.toml file or directory containing it</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CIConfig instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_env_block">
+<span class="sig-name descname"><span class="pre">generate_env_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_env_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_env_block" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML env block for GitHub Actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for env section</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_github_pages_job">
+<span class="sig-name descname"><span class="pre">generate_github_pages_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_github_pages_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_github_pages_job" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML for GitHub Pages job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for GitHub Pages job, or empty string if disabled</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_pre_test_steps">
+<span class="sig-name descname"><span class="pre">generate_pre_test_steps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_pre_test_steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_pre_test_steps" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML steps for pre-test commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for pre-test steps, or empty string if no commands</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_windows_validation_job">
+<span class="sig-name descname"><span class="pre">generate_windows_validation_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_windows_validation_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_windows_validation_job" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML for Windows validation job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for Windows job, or empty string if disabled</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.has_ci_config">
+<span class="sig-name descname"><span class="pre">has_ci_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.has_ci_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.has_ci_config" title="Link to this definition"></a></dt>
+<dd><p>Check if any CI configuration is present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.is_black_enabled">
+<span class="sig-name descname"><span class="pre">is_black_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.is_black_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.is_black_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if Black formatter is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.is_mypy_enabled">
+<span class="sig-name descname"><span class="pre">is_mypy_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.is_mypy_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.is_mypy_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if Mypy type checker is enabled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.is_ruff_enabled">
+<span class="sig-name descname"><span class="pre">is_ruff_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.is_ruff_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.is_ruff_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if Ruff linter is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.project_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">project_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.project_name" title="Link to this definition"></a></dt>
+<dd><p>Get the project name for CI.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">publish_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.publish_config" title="Link to this definition"></a></dt>
+<dd><p>Get publish configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">publish_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.publish_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if publishing is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.pytest_args">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pytest_args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.pytest_args" title="Link to this definition"></a></dt>
+<dd><p>Get pytest arguments.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.python_versions">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">python_versions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.python_versions" title="Link to this definition"></a></dt>
+<dd><p>Get Python versions to test against.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.quality_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quality_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.quality_config" title="Link to this definition"></a></dt>
+<dd><p>Get code quality tool configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.test_on_windows">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_on_windows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.test_on_windows" title="Link to this definition"></a></dt>
+<dd><p>Check if Windows testing is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.testing_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">testing_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.testing_config" title="Link to this definition"></a></dt>
+<dd><p>Get testing configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.to_ci_env_block">
+<span class="sig-name descname"><span class="pre">to_ci_env_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.to_ci_env_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.to_ci_env_block" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML env block for GitHub Actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for env section</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.to_ci_template_substitutions">
+<span class="sig-name descname"><span class="pre">to_ci_template_substitutions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.to_ci_template_substitutions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.to_ci_template_substitutions" title="Link to this definition"></a></dt>
+<dd><p>Generate all template substitutions for CI workflow generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary mapping placeholder names to their values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.to_pre_test_step">
+<span class="sig-name descname"><span class="pre">to_pre_test_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.to_pre_test_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.to_pre_test_step" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML step for pre-test commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string for pre-test step, or None if no commands</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_config.get_ci_config_or_defaults">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">get_ci_config_or_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><span class="pre">CIConfig</span></a></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#get_ci_config_or_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.get_ci_config_or_defaults" title="Link to this definition"></a></dt>
+<dd><p>Read CI configuration from pyproject.toml, using defaults if file doesn’t exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pyproject_path</strong> – Path to pyproject.toml file or directory containing it</p></li>
+<li><p><strong>project_name</strong> – Default project name if not found in config</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CIConfig instance with defaults if file doesn’t exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_config.read_ci_config">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">read_ci_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><span class="pre">CIConfig</span></a></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#read_ci_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.read_ci_config" title="Link to this definition"></a></dt>
+<dd><p>Read CI configuration from pyproject.toml.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pyproject_path</strong> – Path to pyproject.toml file or directory containing it</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CIConfig instance with project configuration</p>
+</dd>
+</dl>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="s2">&quot;path/to/project&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>        <span class="c1"># Project name from pyproject.toml</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>     <span class="c1"># Python versions to test</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../wads.html" class="btn btn-neutral float-left" title="wads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ci_migration.html" class="btn btn-neutral float-right" title="wads.ci_migration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
