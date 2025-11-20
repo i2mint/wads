@@ -378,14 +378,13 @@ def read_ci_config(pyproject_path: str | Path) -> CIConfig:
         pyproject_path: Path to pyproject.toml file or directory containing it
 
     Returns:
-        CIConfig instance
+        CIConfig instance with project configuration
 
-    Example:
-        >>> config = read_ci_config(".")
-        >>> config.project_name
-        'myproject'
-        >>> config.python_versions
-        ['3.10', '3.12']
+    Usage::
+
+        config = read_ci_config("path/to/project")
+        print(config.project_name)        # Project name from pyproject.toml
+        print(config.python_versions)     # Python versions to test
     """
     return CIConfig.from_file(pyproject_path)
 
