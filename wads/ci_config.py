@@ -33,7 +33,8 @@ class CIConfig:
         self.data = pyproject_data
         self.ci_config = pyproject_data.get("tool", {}).get("wads", {}).get("ci", {})
         self._project_name = (
-            project_name or self.ci_config.get("project_name")
+            project_name
+            or self.ci_config.get("project_name")
             or pyproject_data.get("project", {}).get("name", "")
         )
 
