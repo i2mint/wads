@@ -330,7 +330,7 @@ class CIConfig:
         if windows_deps:
             system_deps_step = f"""
       - name: Install System Dependencies
-        run: choco install -y {' '.join(windows_deps)}
+        run: choco install -y {" ".join(windows_deps)}
 
 """
 
