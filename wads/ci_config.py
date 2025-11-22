@@ -154,6 +154,16 @@ class CIConfig:
         """Check if Windows testing is enabled."""
         return self.testing_config.get("test_on_windows", True)
 
+    @property
+    def system_dependencies(self) -> dict | list:
+        """Get system dependencies for CI environments.
+
+        Returns either:
+        - A list of package names (Ubuntu only)
+        - A dict with platform keys: ubuntu, macos, windows
+        """
+        return self.testing_config.get("system_dependencies", [])
+
     # 📦 BUILD AND PUBLISH SETTINGS
     @property
     def build_config(self) -> dict:
@@ -238,6 +248,24 @@ class CIConfig:
         """Check if any CI configuration is present."""
         return bool(self.ci_config)
 
+    def _normalize_system_deps(self) -> dict[str, list[str]]:
+        """Normalize system_dependencies to platform dict.
+
+        Returns:
+            Dict with keys: ubuntu, macos, windows
+        """
+        deps = self.system_dependencies
+        if isinstance(deps, list):
+            # Simple list means ubuntu-only
+            return {"ubuntu": deps, "macos": [], "windows": []}
+        elif isinstance(deps, dict):
+            return {
+                "ubuntu": deps.get("ubuntu", []),
+                "macos": deps.get("macos", []),
+                "windows": deps.get("windows", []),
+            }
+        return {"ubuntu": [], "macos": [], "windows": []}
+
     def generate_env_block(self) -> str:
         """
         Generate YAML env block for GitHub Actions.
@@ -256,19 +284,33 @@ class CIConfig:
 
     def generate_pre_test_steps(self) -> str:
         """
-        Generate YAML steps for pre-test commands.
+        Generate YAML steps for pre-test commands and system dependencies.
 
         Returns:
-            YAML string for pre-test steps, or empty string if no commands
+            YAML string for pre-test steps, or empty string if no commands/deps
         """
-        if not self.commands_pre_test:
-            return ""
+        steps = []
 
-        lines = ["      - name: Pre-test Setup", "        run: |"]
-        for cmd in self.commands_pre_test:
-            lines.append(f"          {cmd}")
+        # Add system dependencies installation step
+        deps = self._normalize_system_deps()
+        ubuntu_deps = deps.get("ubuntu", [])
 
-        return "\n".join(lines)
+        if ubuntu_deps:
+            steps.append("      - name: Install System Dependencies")
+            steps.append("        run: |")
+            steps.append("          sudo apt-get update")
+            steps.append(f"          sudo apt-get install -y {' '.join(ubuntu_deps)}")
+
+        # Add custom pre-test commands
+        if self.commands_pre_test:
+            if steps:
+                steps.append("")  # Empty line between steps
+            steps.append("      - name: Pre-test Setup")
+            steps.append("        run: |")
+            for cmd in self.commands_pre_test:
+                steps.append(f"          {cmd}")
+
+        return "\n".join(steps) if steps else ""
 
     def generate_windows_validation_job(self) -> str:
         """
@@ -279,6 +321,18 @@ class CIConfig:
         """
         if not self.test_on_windows:
             return ""
+
+        deps = self._normalize_system_deps()
+        windows_deps = deps.get("windows", [])
+
+        # Build system dependencies step if needed
+        system_deps_step = ""
+        if windows_deps:
+            system_deps_step = f"""
+      - name: Install System Dependencies
+        run: choco install -y {' '.join(windows_deps)}
+
+"""
 
         template = """
   windows-validation:
@@ -294,7 +348,7 @@ class CIConfig:
         uses: actions/setup-python@v6
         with:
           python-version: "3.10"
-
+{system_deps_step}
       - name: Install Dependencies
         uses: i2mint/wads/actions/install-deps@master
         with:
@@ -304,13 +358,15 @@ class CIConfig:
       - name: Run Windows Tests
         uses: i2mint/wads/actions/windows-tests@master
         with:
-          root-dir: ${{ env.PROJECT_NAME }}
+          root-dir: ${{{{ env.PROJECT_NAME }}}}
           exclude: {exclude}
           pytest-args: {pytest_args}
 """
         exclude = ",".join(self.exclude_paths)
         pytest_args = " ".join(self.pytest_args)
-        return template.format(exclude=exclude, pytest_args=pytest_args)
+        return template.format(
+            exclude=exclude, pytest_args=pytest_args, system_deps_step=system_deps_step
+        )
 
     def generate_github_pages_job(self) -> str:
         """

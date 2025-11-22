@@ -155,6 +155,67 @@ exclude_paths = ["examples", "scrap", "benchmarks"]
 
 # Enable Windows testing (informational, non-blocking)
 test_on_windows = true
+
+# System dependencies (OS packages needed for tests)
+# Simple form (Ubuntu only):
+system_dependencies = ["ffmpeg", "libsndfile1", "portaudio19-dev"]
+
+# Platform-specific form:
+# system_dependencies = { 
+#     ubuntu = ["ffmpeg", "libsndfile1", "portaudio19-dev"],
+#     macos = ["ffmpeg", "libsndfile", "portaudio"],
+#     windows = ["ffmpeg"]  # Installed via chocolatey
+# }
+```
+
+#### System Dependencies
+
+If your tests require system-level packages (like `ffmpeg`, `libsndfile`, etc.), you can declare them in your CI configuration:
+
+**Simple form** (Ubuntu only):
+```toml
+[tool.wads.ci.testing]
+system_dependencies = ["ffmpeg", "libsndfile1", "portaudio19-dev"]
+```
+
+This generates:
+```yaml
+- name: Install System Dependencies
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y ffmpeg libsndfile1 portaudio19-dev
+```
+
+**Platform-specific form** (for cross-platform testing):
+```toml
+[tool.wads.ci.testing]
+system_dependencies = {
+    ubuntu = ["ffmpeg", "libsndfile1", "portaudio19-dev"],
+    macos = ["ffmpeg", "libsndfile", "portaudio"],
+    windows = ["ffmpeg"]  # Installed via chocolatey on Windows
+}
+```
+
+This automatically:
+- Installs Ubuntu packages via `apt-get` in the main validation job
+- Installs Windows packages via `choco` in the Windows validation job
+- Installs macOS packages via `brew` if macOS testing is enabled (future feature)
+
+**Combined with custom commands:**
+```toml
+[tool.wads.ci.commands]
+pre_test = [
+    "python scripts/download_test_data.py",
+    "python scripts/setup_environment.py"
+]
+
+[tool.wads.ci.testing]
+system_dependencies = ["ffmpeg", "libsndfile1"]
+```
+
+The system dependencies are installed **first**, then your custom pre-test commands run.
+
+See `examples/system_deps_example.py` for complete examples.
 ```
 
 ### 📦 Build and Publish
