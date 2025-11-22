@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.53 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pyproject_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ci&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_project_name</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">project_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">)</span>
+            <span class="n">project_name</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="p">)</span>
 
@@ -265,6 +266,16 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Windows testing is enabled.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_on_windows&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">system_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies for CI environments.</span>
+
+<span class="sd">        Returns either:</span>
+<span class="sd">        - A list of package names (Ubuntu only)</span>
+<span class="sd">        - A dict with platform keys: ubuntu, macos, windows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
     <span class="c1"># 📦 BUILD AND PUBLISH SETTINGS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -358,6 +369,24 @@
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_system_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize system_dependencies to platform dict.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict with keys: ubuntu, macos, windows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_dependencies</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># Simple list means ubuntu-only</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="p">,</span> <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;macos&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+
 <div class="viewcode-block" id="CIConfig.generate_env_block">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_block">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -381,19 +410,33 @@
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_pre_test_steps">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate YAML steps for pre-test commands.</span>
+<span class="sd">        Generate YAML steps for pre-test commands and system dependencies.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            YAML string for pre-test steps, or empty string if no commands</span>
+<span class="sd">            YAML string for pre-test steps, or empty string if no commands/deps</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">,</span> <span class="s2">&quot;        run: |&quot;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Add system dependencies installation step</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+        <span class="n">ubuntu_deps</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">,</span> <span class="p">[])</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">ubuntu_deps</span><span class="p">:</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Install System Dependencies&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;          sudo apt-get update&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          sudo apt-get install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ubuntu_deps</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add custom pre-test commands</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">steps</span><span class="p">:</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># Empty line between steps</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span> <span class="k">if</span> <span class="n">steps</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_windows_validation_job">
@@ -407,6 +450,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+        <span class="n">windows_deps</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="c1"># Build system dependencies step if needed</span>
+        <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">windows_deps</span><span class="p">:</span>
+            <span class="n">system_deps_step</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">      - name: Install System Dependencies</span>
+<span class="s2">        run: choco install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">windows_deps</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
 
         <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">  windows-validation:</span>
@@ -422,7 +477,7 @@
 <span class="s2">        uses: actions/setup-python@v6</span>
 <span class="s2">        with:</span>
 <span class="s2">          python-version: &quot;3.10&quot;</span>
-
+<span class="si">{system_deps_step}</span>
 <span class="s2">      - name: Install Dependencies</span>
 <span class="s2">        uses: i2mint/wads/actions/install-deps@master</span>
 <span class="s2">        with:</span>
@@ -432,13 +487,15 @@
 <span class="s2">      - name: Run Windows Tests</span>
 <span class="s2">        uses: i2mint/wads/actions/windows-tests@master</span>
 <span class="s2">        with:</span>
-<span class="s2">          root-dir: ${{ env.PROJECT_NAME }}</span>
+<span class="s2">          root-dir: ${{{{ env.PROJECT_NAME }}}}</span>
 <span class="s2">          exclude: </span><span class="si">{exclude}</span>
 <span class="s2">          pytest-args: </span><span class="si">{pytest_args}</span>
 <span class="s2">&quot;&quot;&quot;</span>
         <span class="n">exclude</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">)</span>
         <span class="n">pytest_args</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">,</span> <span class="n">system_deps_step</span><span class="o">=</span><span class="n">system_deps_step</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_github_pages_job">

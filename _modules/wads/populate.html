@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.53 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -320,17 +320,22 @@
         <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;urls&quot;</span><span class="p">][</span><span class="s2">&quot;Homepage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">url</span>
 
         <span class="c1"># Add repository URL - use explicit value if provided, otherwise use homepage</span>
-        <span class="n">repository_url</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;repository&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;repository_url&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">url</span>
+        <span class="n">repository_url</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;repository&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;repository_url&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">url</span>
+        <span class="p">)</span>
         <span class="n">data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;urls&quot;</span><span class="p">][</span><span class="s2">&quot;Repository&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">repository_url</span>
 
         <span class="c1"># Add documentation URL</span>
         <span class="c1"># Default to GitHub Pages if homepage is a GitHub URL</span>
-        <span class="n">documentation_url</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;documentation&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;documentation_url&quot;</span><span class="p">)</span>
+        <span class="n">documentation_url</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;documentation&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;documentation_url&quot;</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">documentation_url</span> <span class="ow">and</span> <span class="s2">&quot;github.com&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
             <span class="c1"># Parse GitHub URL to extract org and repo</span>
             <span class="c1"># Expected format: https://github.com/{org}/{repo}</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;github\.com[/:]([^/]+)/([^/\s]+?)(?:\.git)?/?$&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;github\.com[/:]([^/]+)/([^/\s]+?)(?:\.git)?/?$&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                 <span class="n">github_org</span><span class="p">,</span> <span class="n">github_repo</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
                 <span class="n">documentation_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">github_org</span><span class="si">}</span><span class="s2">.github.io/</span><span class="si">{</span><span class="n">github_repo</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -776,13 +781,21 @@
                     <span class="c1"># No old CI to migrate, create new one from template</span>
                     <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
                     <span class="n">_add_ci_def</span><span class="p">(</span>
-                        <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span>
+                        <span class="n">ci_def_path</span><span class="p">,</span>
+                        <span class="n">ci_tpl_path</span><span class="p">,</span>
+                        <span class="n">root_url</span><span class="p">,</span>
+                        <span class="n">name</span><span class="p">,</span>
+                        <span class="n">_clog</span><span class="p">,</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">pkg_dir</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Not migrating or not github, use template</span>
                 <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
-                <span class="n">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">)</span>
+                <span class="n">_add_ci_def</span><span class="p">(</span>
+                    <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span>
+                <span class="p">)</span>
                 <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
@@ -1036,7 +1049,9 @@
     <span class="k">return</span> <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_add_ci_def</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_ci_def</span><span class="p">(</span>
+    <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate CI definition file from template.</span>
 
@@ -1058,7 +1073,9 @@
                 <span class="n">ci_config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
                 <span class="n">use_dynamic_template</span> <span class="o">=</span> <span class="n">ci_config</span><span class="o">.</span><span class="n">has_ci_config</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">use_dynamic_template</span><span class="p">:</span>
-                    <span class="n">clog</span><span class="p">(</span><span class="s2">&quot;... using CI configuration from pyproject.toml [tool.wads.ci]&quot;</span><span class="p">)</span>
+                    <span class="n">clog</span><span class="p">(</span>
+                        <span class="s2">&quot;... using CI configuration from pyproject.toml [tool.wads.ci]&quot;</span>
+                    <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... could not read CI config from pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 

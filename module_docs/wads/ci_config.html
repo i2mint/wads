@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.53 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -84,6 +84,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.pytest_args"><code class="docutils literal notranslate"><span class="pre">CIConfig.pytest_args</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.python_versions"><code class="docutils literal notranslate"><span class="pre">CIConfig.python_versions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.quality_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.quality_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.system_dependencies"><code class="docutils literal notranslate"><span class="pre">CIConfig.system_dependencies</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.test_on_windows"><code class="docutils literal notranslate"><span class="pre">CIConfig.test_on_windows</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.testing_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.testing_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_env_block()</span></code></a></li>
@@ -293,10 +294,10 @@ settings in CI workflow files.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_pre_test_steps">
 <span class="sig-name descname"><span class="pre">generate_pre_test_steps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_pre_test_steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_pre_test_steps" title="Link to this definition"></a></dt>
-<dd><p>Generate YAML steps for pre-test commands.</p>
+<dd><p>Generate YAML steps for pre-test commands and system dependencies.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>YAML string for pre-test steps, or empty string if no commands</p>
+<dd class="field-odd"><p>YAML string for pre-test steps, or empty string if no commands/deps</p>
 </dd>
 </dl>
 </dd></dl>
@@ -370,6 +371,15 @@ settings in CI workflow files.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.quality_config">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quality_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.quality_config" title="Link to this definition"></a></dt>
 <dd><p>Get code quality tool configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.system_dependencies">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system_dependencies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.system_dependencies" title="Link to this definition"></a></dt>
+<dd><p>Get system dependencies for CI environments.</p>
+<p>Returns either:
+- A list of package names (Ubuntu only)
+- A dict with platform keys: ubuntu, macos, windows</p>
 </dd></dl>
 
 <dl class="py property">
