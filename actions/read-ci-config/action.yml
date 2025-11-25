@@ -1,0 +1,117 @@
+name: 'Read CI Config from pyproject.toml'
+description: 'Extract CI configuration from pyproject.toml and export as outputs and env vars'
+branding:
+  icon: 'settings'
+  color: 'blue'
+
+inputs:
+  pyproject-path:
+    description: 'Path to pyproject.toml file or directory containing it'
+    required: false
+    default: '.'
+
+outputs:
+  project-name:
+    description: 'Project name'
+    value: ${{ steps.config.outputs.project-name }}
+  python-versions:
+    description: 'Python versions as JSON array'
+    value: ${{ steps.config.outputs.python-versions }}
+  pytest-args:
+    description: 'Pytest arguments as space-separated string'
+    value: ${{ steps.config.outputs.pytest-args }}
+  coverage-enabled:
+    description: 'Whether coverage is enabled (true/false)'
+    value: ${{ steps.config.outputs.coverage-enabled }}
+  exclude-paths:
+    description: 'Paths to exclude from tests'
+    value: ${{ steps.config.outputs.exclude-paths }}
+  test-on-windows:
+    description: 'Whether to test on Windows (true/false)'
+    value: ${{ steps.config.outputs.test-on-windows }}
+  build-sdist:
+    description: 'Whether to build source distribution (true/false)'
+    value: ${{ steps.config.outputs.build-sdist }}
+  build-wheel:
+    description: 'Whether to build wheel (true/false)'
+    value: ${{ steps.config.outputs.build-wheel }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python for config reading
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+
+    - name: Install wads (for CI config utilities)
+      shell: bash
+      run: |
+        python -m pip install --quiet 'wads>=0.1.48'
+
+    - name: Read CI Configuration
+      id: config
+      shell: bash
+      run: |
+        python - <<'EOF'
+        import json
+        import os
+        from pathlib import Path
+        from wads.ci_config import read_ci_config
+        
+        # Read configuration
+        pyproject_path = "${{ inputs.pyproject-path }}"
+        config = read_ci_config(pyproject_path)
+        
+        # Export as outputs
+        def set_output(name, value):
+            """Set GitHub Actions output"""
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                # Handle multiline values
+                if isinstance(value, (list, dict)):
+                    value = json.dumps(value)
+                elif isinstance(value, bool):
+                    value = str(value).lower()
+                f.write(f"{name}={value}\n")
+        
+        def set_env(name, value):
+            """Set GitHub Actions environment variable"""
+            with open(os.environ['GITHUB_ENV'], 'a') as f:
+                if isinstance(value, (list, dict)):
+                    value = json.dumps(value)
+                elif isinstance(value, bool):
+                    value = str(value).lower()
+                f.write(f"{name}={value}\n")
+        
+        # Project metadata
+        set_output('project-name', config.project_name)
+        set_env('PROJECT_NAME', config.project_name)
+        
+        # Testing configuration
+        set_output('python-versions', config.python_versions)
+        set_output('pytest-args', ' '.join(config.pytest_args))
+        set_output('coverage-enabled', config.coverage_enabled)
+        set_output('exclude-paths', ','.join(config.exclude_paths))
+        set_output('test-on-windows', config.test_on_windows)
+        
+        # Build configuration
+        set_output('build-sdist', config.build_sdist)
+        set_output('build-wheel', config.build_wheel)
+        
+        print("✅ CI configuration loaded successfully")
+        print(f"   Project: {config.project_name}")
+        print(f"   Python versions: {config.python_versions}")
+        print(f"   Coverage: {config.coverage_enabled}")
+        print(f"   Test on Windows: {config.test_on_windows}")
+        EOF
+
+    - name: Display Configuration
+      shell: bash
+      run: |
+        echo "## 🔧 CI Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Project:** ${{ steps.config.outputs.project-name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Python Versions:** ${{ steps.config.outputs.python-versions }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Coverage Enabled:** ${{ steps.config.outputs.coverage-enabled }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Test on Windows:** ${{ steps.config.outputs.test-on-windows }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
