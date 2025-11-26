@@ -432,21 +432,6 @@ install.linux = [
 
 ---
 
-## What About PEP 725?
-
-The PEP 725 implementation (`[external]` and `[tool.wads.external.ops]`) was created but **not integrated** because:
-
-1. PEP 725 is not yet accepted/standardized
-2. The `canonical_id` / DepURL mapping adds complexity
-3. The simpler `[tool.wads.ops.{name}]` format achieves the same goal
-
-**If PEP 725 is accepted**, we can:
-- Keep `[tool.wads.ops]` as the operational format
-- Optionally support `[external]` as a declaration format
-- Map between them automatically
-
----
-
 ## Testing
 
 To test locally before pushing:
@@ -494,7 +479,6 @@ Potential improvements:
 - ✅ Detailed logging and error reporting
 
 **What doesn't work (yet):**
-- ❌ PEP 725 `[external]` format (not integrated)
 - ❌ `generate_pre_test_steps()` in ci_config.py (not called)
 - ❌ Automatic CI workflow generation from pyproject.toml deps
 

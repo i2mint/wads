@@ -216,6 +216,15 @@ class CIConfig:
         """Get paths to ignore during documentation generation."""
         return self.docs_config.get("ignore_paths", ["tests/", "scrap/", "examples/"])
 
+    @property
+    def ops(self) -> dict:
+        """Get system dependencies configuration from [tool.wads.ops.*] sections.
+
+        Returns:
+            Dictionary mapping dependency names to their configuration
+        """
+        return self.data.get("tool", {}).get("wads", {}).get("ops", {})
+
     def to_ci_env_block(self) -> str:
         """
         Generate YAML env block for GitHub Actions.

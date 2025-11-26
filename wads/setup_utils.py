@@ -356,7 +356,7 @@ def install_system_dependencies(
 
     # Get external dependencies
     external_deps = config.external_dependencies
-    external_ops = config.external_ops
+    external_ops = config.ops
 
     # Combine all dependencies
     all_depurls = (
@@ -391,7 +391,7 @@ def install_system_dependencies(
             results.append(InstallResult(
                 success=False,
                 package_name=simple_name,
-                message=f"No operational metadata in [tool.wads.external.ops.{simple_name}]"
+                message=f"No operational metadata in [tool.wads.ops.{simple_name}]"
             ))
             continue
 
@@ -628,7 +628,7 @@ def diagnose_setup(
     # Check system dependencies
     if check_system:
         external_deps = config.external_dependencies
-        external_ops = config.external_ops
+        external_ops = config.ops
 
         all_depurls = (
             external_deps['build'] +
@@ -646,7 +646,7 @@ def diagnose_setup(
             if simple_name not in external_ops:
                 warnings_list.append(
                     f"No operational metadata for {depurl}. "
-                    f"Add [tool.wads.external.ops.{simple_name}] section."
+                    f"Add [tool.wads.ops.{simple_name}] section."
                 )
                 continue
 

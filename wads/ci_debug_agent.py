@@ -108,6 +108,9 @@ def fetch_workflow_logs(repo: str, run_id: int) -> str:
     Returns:
         Log content as string
     """
+    import zipfile
+    import io
+
     if not requests:
         raise ImportError(
             "requests library required. Install with: pip install requests"
@@ -126,7 +129,13 @@ def fetch_workflow_logs(repo: str, run_id: int) -> str:
     response = requests.get(url, headers=headers)
     response.raise_for_status()
 
-    return response.text
+    # GitHub returns logs as a ZIP file
+    with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+        all_logs = []
+        for filename in z.namelist():
+            with z.open(filename) as f:
+                all_logs.append(f.read().decode('utf-8', errors='ignore'))
+        return '\n'.join(all_logs)
 
 
 def parse_pytest_failures(logs: str) -> List[TestFailure]:
@@ -141,11 +150,9 @@ def parse_pytest_failures(logs: str) -> List[TestFailure]:
     """
     failures = []
 
-    # Pattern for pytest failures (even broader: error_type can be anything, non-greedy)
-    failure_pattern = re.compile(r'^FAILED\s+(.+?)\s+-\s+(.+?):\s+(.+)$', re.MULTILINE)
-
-    # Fallback: match lines like 'FAILED <test> - <error>'
-    fallback_pattern = re.compile(r'^FAILED\s+(.+?)\s+-\s+(.+)$', re.MULTILINE)
+    # Pattern for pytest failures: FAILED test - error_message
+    # Match any line with FAILED test - error (flexible format)
+    failure_pattern = re.compile(r'FAILED\s+(.+?)\s+-\s+(.+)$', re.MULTILINE)
 
     # Pattern for tracebacks
     traceback_pattern = re.compile(r'File\s+"(.+?)",\s+line\s+(\d+)', re.MULTILINE)
@@ -153,161 +160,38 @@ def parse_pytest_failures(logs: str) -> List[TestFailure]:
     found = set()
 
     for match in failure_pattern.finditer(logs):
-        test_name = match.group(1)
-        error_type = match.group(2)
-        error_message = match.group(3)
+        test_name = match.group(1).strip()
+        error_info = match.group(2).strip()
+
         found.add(test_name)
 
-        # Try to extract traceback
-        start = max(0, match.start() - 1000)
-        end = min(len(logs), match.end() + 2000)
-        context = logs[start:end]
-
-        traceback = []
-        file_path = None
-        line_number = None
-
-        for tb_match in traceback_pattern.finditer(context):
-            file_path = tb_match.group(1)
-            line_number = int(tb_match.group(2))
-            traceback.append(f"  File \"{file_path}\", line {line_number}")
-
-        failures.append(
-            TestFailure(
-                test_name=test_name,
-                error_type=error_type,
-                error_message=error_message,
-                traceback=traceback,
-                file_path=file_path,
-                line_number=line_number,
-            )
-        )
-
-    # Fallback: catch any other 'FAILED ... - ...' lines not already matched
-    for match in fallback_pattern.finditer(logs):
-        test_name = match.group(1)
-        if test_name in found:
-            continue
-        error_info = match.group(2)
-        # Try to split error_info into error_type and error_message
+        # Parse error info - could be "ErrorType: message" or just "message"
         if ': ' in error_info:
-            error_type, error_message = error_info.split(': ', 1)
+            # Split on first colon to get error type and message
+            parts = error_info.split(': ', 1)
+            error_type = parts[0]
+            error_message = parts[1] if len(parts) > 1 else error_info
         else:
-            error_type, error_message = error_info, ''
+            error_type = "Error"
+            error_message = error_info
 
-        # Try to extract traceback
-        start = max(0, match.start() - 1000)
-        end = min(len(logs), match.end() + 2000)
+        # Try to extract traceback from context around the failure
+        start = max(0, match.start() - 2000)
+        end = min(len(logs), match.end() + 1000)
         context = logs[start:end]
 
         traceback = []
         file_path = None
         line_number = None
 
+        # Look for traceback entries in the context
         for tb_match in traceback_pattern.finditer(context):
-            file_path = tb_match.group(1)
-            line_number = int(tb_match.group(2))
-            traceback.append(f"  File \"{file_path}\", line {line_number}")
-
-        failures.append(
-            TestFailure(
-                test_name=test_name,
-                error_type=error_type,
-                error_message=error_message,
-                traceback=traceback,
-                file_path=file_path,
-                line_number=line_number,
-            )
-        )
-    failures = []
-
-    # Pattern for pytest failures (even broader: error_type can be anything, non-greedy)
-    failure_pattern = re.compile(r'^FAILED\s+(.+?)\s+-\s+(.+?):\s+(.+)$', re.MULTILINE)
-
-    # Fallback: match any line starting with 'FAILED'
-    fallback_pattern = re.compile(r'^FAILED\s+(.+)$', re.MULTILINE)
-
-    # Pattern for tracebacks
-    traceback_pattern = re.compile(r'File\s+"(.+?)",\s+line\s+(\d+)', re.MULTILINE)
-
-    found = set()
-
-    # DEBUG: Print all lines starting with 'FAILED'
-    failed_lines = [
-        line for line in logs.splitlines() if line.strip().startswith('FAILED')
-    ]
-    if failed_lines:
-        print("[DEBUG] Lines starting with 'FAILED':")
-        for line in failed_lines:
-            print("[DEBUG]", line)
-    else:
-        print("[DEBUG] No lines starting with 'FAILED' found in logs.")
-
-    for match in failure_pattern.finditer(logs):
-        test_name = match.group(1)
-        error_type = match.group(2)
-        error_message = match.group(3)
-        found.add(test_name)
-
-        # Try to extract traceback
-        start = max(0, match.start() - 1000)
-        end = min(len(logs), match.end() + 2000)
-        context = logs[start:end]
-
-        traceback = []
-        file_path = None
-        line_number = None
-
-        for tb_match in traceback_pattern.finditer(context):
-            file_path = tb_match.group(1)
-            line_number = int(tb_match.group(2))
-            traceback.append(f"  File \"{file_path}\", line {line_number}")
-
-        failures.append(
-            TestFailure(
-                test_name=test_name,
-                error_type=error_type,
-                error_message=error_message,
-                traceback=traceback,
-                file_path=file_path,
-                line_number=line_number,
-            )
-        )
-
-    # Fallback: catch any other 'FAILED ...' lines not already matched
-    for match in fallback_pattern.finditer(logs):
-        line = match.group(1)
-        # Try to parse as 'test_name - error_type: error_message'
-        dash_idx = line.find(' - ')
-        if dash_idx != -1:
-            test_name = line[:dash_idx]
-            error_info = line[dash_idx + 3 :]
-            if test_name in found:
-                continue
-            if ': ' in error_info:
-                error_type, error_message = error_info.split(': ', 1)
-            else:
-                error_type, error_message = error_info, ''
-        else:
-            # If no dash, treat the whole line as error_type
-            test_name = ''
-            error_type = line
-            error_message = ''
-
-        # Try to extract traceback
-        # Use the match position if available, else search whole logs
-        start = 0
-        end = len(logs)
-        context = logs[start:end]
-
-        traceback = []
-        file_path = None
-        line_number = None
-
-        for tb_match in traceback_pattern.finditer(context):
-            file_path = tb_match.group(1)
-            line_number = int(tb_match.group(2))
-            traceback.append(f"  File \"{file_path}\", line {line_number}")
+            path = tb_match.group(1)
+            line_num = int(tb_match.group(2))
+            traceback.append(f'  File "{path}", line {line_num}')
+            # Use the last file/line as the primary location
+            file_path = path
+            line_number = line_num
 
         failures.append(
             TestFailure(
@@ -454,25 +338,40 @@ def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
     if diagnosis.missing_system_deps:
         lines.append("## Fix System Dependencies")
         lines.append("")
-        lines.append("### Option 1: Use PEP 725 format (recommended)")
+        lines.append("### Option 1: Declare in pyproject.toml (recommended)")
         lines.append("")
         lines.append("Add to your `pyproject.toml`:")
         lines.append("")
-        lines.append("[external]")
-        lines.append("host-requires = [")
         for dep in diagnosis.missing_system_deps:
-            lines.append(f'    "dep:generic/{dep}",')
-        lines.append("]")
+            lines.append(f"[tool.wads.ops.{dep}]")
+            lines.append(f'description = "Description of why {dep} is needed"')
+            if dep == 'msodbcsql18':
+                lines.append('install.linux = [')
+                lines.append('    "curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -",')
+                lines.append('    "curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list",')
+                lines.append('    "sudo apt-get update",')
+                lines.append('    "sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18"')
+                lines.append(']')
+                lines.append('note = "Requires accepting Microsoft EULA"')
+            elif dep == 'unixodbc':
+                lines.append('install.linux = [')
+                lines.append('    "sudo apt-get update",')
+                lines.append('    "sudo apt-get install -y unixodbc unixodbc-dev"')
+                lines.append(']')
+                lines.append('check.linux = "dpkg -s unixodbc || rpm -q unixODBC"')
+            else:
+                lines.append(f'install.linux = "sudo apt-get install -y {dep}"')
+                lines.append(f'check.linux = "which {dep}"')
+            lines.append("")
+
+        lines.append("Then ensure your CI workflow includes:")
         lines.append("")
-
-        lines.append("Then add operational metadata for each:")
-        for dep in diagnosis.missing_system_deps:
-            lines.append(f"")
-            lines.append(f"[tool.wads.external.ops.{dep}]")
-            lines.append(f'canonical_id = "dep:generic/{dep}"')
-            lines.append(f'rationale = "Description of why {dep} is needed"')
-            lines.append(f'install.linux = "sudo apt-get install -y {dep}"')
-
+        lines.append("```yaml")
+        lines.append("      - name: Install System Dependencies")
+        lines.append("        uses: i2mint/wads/actions/install-system-deps@master")
+        lines.append("        with:")
+        lines.append("          pyproject-path: .")
+        lines.append("```")
         lines.append("")
         lines.append("### Option 2: Manual CI fix")
         lines.append("")
@@ -564,7 +463,7 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
             {
                 'type': 'config',
                 'description': 'Add missing system dependencies to pyproject.toml',
-                'action': 'Add [external] and [tool.wads.external.ops] sections',
+                'action': 'Add [tool.wads.ops.*] sections for each dependency',
                 'packages': missing_system_deps,
             }
         )
@@ -573,8 +472,8 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
         proposed_fixes.append(
             {
                 'type': 'workflow',
-                'description': 'Add system dependency installation to CI workflow',
-                'action': 'Add installation step before tests',
+                'description': 'Ensure CI workflow uses install-system-deps action',
+                'action': 'Add install-system-deps action before tests (if not present)',
                 'packages': missing_system_deps,
             }
         )

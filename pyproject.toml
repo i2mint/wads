@@ -1,7 +1,5 @@
 [build-system]
-requires = [
-    "hatchling",
-]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -10,14 +8,8 @@ version = "0.1.56"
 description = "Tools for packaging and publishing to pypi for those who just do not want to deal with it"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = [
-    "documentation",
-    "packaging",
-    "publishing",
-]
-authors = [
-    { name = "Thor Whalen" },
-]
+keywords = ["documentation", "packaging", "publishing"]
+authors = [{ name = "Thor Whalen" }]
 dependencies = [
     "argh",
     "ruamel.yaml",
@@ -35,12 +27,8 @@ dependencies = [
 text = "Apache Software License"
 
 [project.optional-dependencies]
-docs = [
-    "epythet",
-]
-setuptools = [
-    "setuptools>=65.0.0",
-]
+docs = ["epythet"]
+setuptools = ["setuptools>=65.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"
@@ -52,9 +40,7 @@ wads-ci-debug = "wads.ci_debug_agent:main"
 wads-migrate = "wads.migration:main"
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "wads",
-]
+packages = ["wads"]
 include = [
     "*/docs_gen/_static/**/*",
     "requirements.txt",
@@ -66,34 +52,33 @@ include = [
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-exclude = [
-    "tests",
-    "examples",
-    "scrap",
-]
+exclude = ["tests", "examples", "scrap"]
 
 [tool.ruff.lint]
-select = [
-    "D100",
-]
+select = ["D100"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-    "D",
-]
-"examples/*" = [
-    "D",
-]
-"scrap/*" = [
-    "D",
-]
+"tests/*" = ["D"]
+"examples/*" = ["D"]
+"scrap/*" = ["D"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = [
-    "wads/tests",
+testpaths = ["wads/tests"]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
+
+# --------------------------------------------------
+# External tools
+
+[tool.wads.ops.msodbcsql17]
+description = "Description of why msodbcsql17 is needed"
+install.linux = "sudo apt-get install -y msodbcsql17"
+check.linux = "which msodbcsql17"
+
+[tool.wads.ops.unixodbc]
+description = "Description of why unixodbc is needed"
+install.linux = [
+    "sudo apt-get update",
+    "sudo apt-get install -y unixodbc unixodbc-dev",
 ]
-doctest_optionflags = [
-    "NORMALIZE_WHITESPACE",
-    "ELLIPSIS",
-]
+check.linux = "dpkg -s unixodbc || rpm -q unixODBC"
