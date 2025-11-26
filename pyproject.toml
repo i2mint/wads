@@ -67,18 +67,3 @@ minversion = "6.0"
 testpaths = ["wads/tests"]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
 
-# --------------------------------------------------
-# External tools
-
-[tool.wads.ops.msodbcsql17]
-description = "Description of why msodbcsql17 is needed"
-install.linux = "sudo apt-get install -y msodbcsql17"
-check.linux = "which msodbcsql17"
-
-[tool.wads.ops.unixodbc]
-description = "Description of why unixodbc is needed"
-install.linux = [
-    "sudo apt-get update",
-    "sudo apt-get install -y unixodbc unixodbc-dev",
-]
-check.linux = "dpkg -s unixodbc || rpm -q unixODBC"
