@@ -17,202 +17,35 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Ensure tomli is installed (Python < 3.11)
+      shell: bash
+      run: |
+        if python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"; then
+          echo "Python 3.11+, tomllib available"
+        else
+          echo "Python < 3.11, installing tomli"
+          python3 -m pip install --quiet tomli
+        fi
+
     - name: Install System Dependencies from pyproject.toml
       shell: bash
       run: |
-        python3 - <<'EOF'
-        import sys
-        import os
-        import subprocess
-        import platform as platform_module
-        from pathlib import Path
+        echo "::group::Installing system dependencies"
 
-        # Parse inputs
-        pyproject_input = "${{ inputs.pyproject-path }}"
-        platform_input = "${{ inputs.platform }}"
-        skip_check = "${{ inputs.skip-check }}" == "true"
+        # Build arguments
+        ARGS="${{ inputs.pyproject-path }}"
 
-        # Find pyproject.toml
-        if os.path.isdir(pyproject_input):
-            pyproject_path = Path(pyproject_input) / "pyproject.toml"
-        else:
-            pyproject_path = Path(pyproject_input)
+        if [ -n "${{ inputs.platform }}" ]; then
+          ARGS="$ARGS --platform ${{ inputs.platform }}"
+        fi
 
-        if not pyproject_path.exists():
-            print(f"::warning::pyproject.toml not found at {pyproject_path}")
-            sys.exit(0)  # Not an error, just skip
+        if [ "${{ inputs.skip-check }}" = "true" ]; then
+          ARGS="$ARGS --skip-check"
+        fi
 
-        # Detect platform
-        if platform_input:
-            platform = platform_input
-        else:
-            system = platform_module.system().lower()
-            if system == 'linux':
-                platform = 'linux'
-            elif system == 'darwin':
-                platform = 'macos'
-            elif system == 'windows':
-                platform = 'windows'
-            else:
-                print(f"::warning::Unknown platform: {system}")
-                sys.exit(0)
+        # Run the installer script
+        python3 -m wads.install_system_deps $ARGS
 
-        print(f"::group::Installing system dependencies for {platform}")
-        print(f"Reading from: {pyproject_path}")
-
-        # Read pyproject.toml
-        try:
-            if sys.version_info >= (3, 11):
-                import tomllib
-            else:
-                try:
-                    import tomli as tomllib
-                except ImportError:
-                    print("::warning::tomli package required for Python < 3.11. Install with: pip install tomli")
-                    sys.exit(0)
-
-            with open(pyproject_path, 'rb') as f:
-                data = tomllib.load(f)
-        except Exception as e:
-            print(f"::error::Failed to read pyproject.toml: {e}")
-            sys.exit(1)
-
-        # Extract [tool.wads.ops.*] sections
-        ops = data.get('tool', {}).get('wads', {}).get('ops', {})
-
-        if not ops:
-            print("No [tool.wads.ops.*] sections found in pyproject.toml")
-            print("::endgroup::")
-            sys.exit(0)
-
-        print(f"Found {len(ops)} system dependencies")
-
-        # Process each dependency
-        installed_count = 0
-        skipped_count = 0
-        failed_count = 0
-
-        for dep_name, dep_config in ops.items():
-            print(f"\n{'='*70}")
-            print(f"Dependency: {dep_name}")
-
-            description = dep_config.get('description', '')
-            if description:
-                print(f"Description: {description}")
-
-            url = dep_config.get('url', '')
-            if url:
-                print(f"URL: {url}")
-
-            # Check if already installed (unless skip_check)
-            if not skip_check:
-                check_cmds = dep_config.get('check', {}).get(platform)
-
-                if check_cmds:
-                    # Handle string, list, or empty
-                    if isinstance(check_cmds, str):
-                        if check_cmds.strip():
-                            # Handle shell OR logic (||)
-                            check_commands = [check_cmds]
-                        else:
-                            check_commands = []
-                    elif isinstance(check_cmds, list):
-                        check_commands = [cmd for cmd in check_cmds if cmd]
-                    else:
-                        check_commands = []
-
-                    # Try check commands
-                    already_installed = False
-                    for check_cmd in check_commands:
-                        try:
-                            result = subprocess.run(
-                                check_cmd,
-                                shell=True,
-                                capture_output=True,
-                                timeout=10
-                            )
-                            if result.returncode == 0:
-                                print(f"✓ {dep_name} is already installed")
-                                already_installed = True
-                                skipped_count += 1
-                                break
-                        except Exception as e:
-                            # Check command failed, continue to install
-                            pass
-
-                    if already_installed:
-                        continue
-
-            # Get install commands for this platform
-            install_cmds = dep_config.get('install', {}).get(platform)
-
-            if not install_cmds:
-                print(f"::warning::No install command for {dep_name} on {platform}")
-                continue
-
-            # Convert to list of commands
-            if isinstance(install_cmds, str):
-                if install_cmds.strip():
-                    commands = [install_cmds]
-                else:
-                    print(f"::warning::Empty install command for {dep_name}")
-                    continue
-            elif isinstance(install_cmds, list):
-                commands = [cmd for cmd in install_cmds if cmd]
-            else:
-                print(f"::warning::Invalid install command format for {dep_name}")
-                continue
-
-            # Execute install commands
-            print(f"\nInstalling {dep_name}...")
-            for i, cmd in enumerate(commands, 1):
-                if len(commands) > 1:
-                    print(f"  Step {i}/{len(commands)}: {cmd}")
-                else:
-                    print(f"  Command: {cmd}")
-
-                try:
-                    result = subprocess.run(
-                        cmd,
-                        shell=True,
-                        capture_output=False,  # Show output in real-time
-                        timeout=300  # 5 minute timeout
-                    )
-
-                    if result.returncode != 0:
-                        print(f"::error::Installation failed for {dep_name} (exit code {result.returncode})")
-                        failed_count += 1
-                        break
-                except subprocess.TimeoutExpired:
-                    print(f"::error::Installation timed out for {dep_name}")
-                    failed_count += 1
-                    break
-                except Exception as e:
-                    print(f"::error::Installation error for {dep_name}: {e}")
-                    failed_count += 1
-                    break
-            else:
-                # All commands succeeded
-                print(f"✓ {dep_name} installed successfully")
-                installed_count += 1
-
-            # Show note if present
-            note = dep_config.get('note')
-            if note:
-                print(f"Note: {note}")
-
-        # Summary
-        print(f"\n{'='*70}")
-        print("SUMMARY")
-        print(f"{'='*70}")
-        print(f"✓ Installed: {installed_count}")
-        print(f"⊘ Already present: {skipped_count}")
-        if failed_count > 0:
-            print(f"✗ Failed: {failed_count}")
-        print("::endgroup::")
-
-        # Exit with error if any failed
-        if failed_count > 0:
-            sys.exit(1)
-
-        EOF
+        EXIT_CODE=$?
+        echo "::endgroup::"
+        exit $EXIT_CODE

@@ -58,6 +58,11 @@ class CIDiagnosis:
     config_issues: List[str]
     proposed_fixes: List[Dict[str, str]]
     confidence: str  # 'high', 'medium', 'low'
+    warnings: List[str] = None  # CI warnings that may indicate issues
+
+    def __post_init__(self):
+        if self.warnings is None:
+            self.warnings = []
 
 
 def get_github_token() -> Optional[str]:
@@ -237,8 +242,15 @@ def print_diagnosis(diagnosis: CIDiagnosis):
         for dep in diagnosis.missing_python_deps:
             print(f"  • {dep}")
 
+    if diagnosis.warnings:
+        print(f"\n⚠️  CI Warnings ({len(diagnosis.warnings)}):")
+        for warning in diagnosis.warnings[:10]:  # Show first 10
+            print(f"  • {warning}")
+        if len(diagnosis.warnings) > 10:
+            print(f"  ... and {len(diagnosis.warnings) - 10} more warnings")
+
     if diagnosis.config_issues:
-        print(f"\n⚠️  Configuration Issues:")
+        print(f"\n🔧 Configuration Issues:")
         for issue in diagnosis.config_issues:
             print(f"  • {issue}")
 
@@ -315,6 +327,41 @@ def diagnose_missing_python_deps(failures: List[TestFailure]) -> List[str]:
             missing_deps.add(module)
 
     return sorted(missing_deps)
+
+
+def parse_ci_warnings(logs: str) -> List[str]:
+    """
+    Parse CI warnings from logs that may indicate issues.
+
+    Args:
+        logs: Full CI logs
+
+    Returns:
+        List of warning messages
+    """
+    warnings = []
+
+    # GitHub Actions warning format: ::warning::message
+    gh_warning_pattern = re.compile(r'::warning::(.+?)$', re.MULTILINE)
+
+    for match in gh_warning_pattern.finditer(logs):
+        warning = match.group(1).strip()
+        warnings.append(warning)
+
+    # Also look for common warning patterns that aren't GitHub Actions formatted
+    common_warning_patterns = [
+        r'Warning: tomli package required for Python < 3.11',
+        r'WARNING:.*missing.*package',
+        r'DeprecationWarning:.*',
+    ]
+
+    for pattern in common_warning_patterns:
+        for match in re.finditer(pattern, logs, re.IGNORECASE):
+            warning = match.group(0).strip()
+            if warning not in warnings:
+                warnings.append(warning)
+
+    return warnings
 
 
 def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
@@ -445,11 +492,25 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
     failures = parse_pytest_failures(logs)
     print(f"Found {len(failures)} test failures")
 
+    # Parse warnings
+    warnings = parse_ci_warnings(logs)
+    print(f"Found {len(warnings)} CI warnings")
+
     # Diagnose issues
     missing_system_deps = diagnose_missing_system_deps(failures, logs)
     missing_python_deps = diagnose_missing_python_deps(failures)
 
-    config_issues = []
+    # Check warnings for tomli issue
+    tomli_warning = any('tomli' in w.lower() for w in warnings)
+    if tomli_warning and 'tomli' not in missing_python_deps:
+        # tomli is in conditional dependencies, but CI might not install it
+        config_issues = [
+            "tomli package not installed in CI for Python < 3.11 - install-system-deps step failed silently"
+        ]
+        missing_python_deps.append('tomli')
+    else:
+        config_issues = []
+
     proposed_fixes = []
 
     # Generate fix proposals
@@ -507,6 +568,7 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
         config_issues=config_issues,
         proposed_fixes=proposed_fixes,
         confidence=confidence,
+        warnings=warnings,
     )
 
 
