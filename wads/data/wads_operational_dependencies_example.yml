@@ -1,0 +1,167 @@
+# ============================================================================
+# WADS OPERATIONAL DEPENDENCIES
+# ============================================================================
+# System dependencies with platform-specific installation and check commands.
+# Each dependency gets its own section: [tool.wads.ops.{name}]
+# The {name} should be a simple identifier (lowercase, alphanumeric, hyphens ok)
+
+[tool.wads.ops.ffmpeg]
+# Human-readable explanation of why this dependency is needed
+description = "Multimedia framework for video/audio encoding, decoding, and streaming"
+
+# Optional: Link to official documentation
+url = "https://ffmpeg.org/"
+
+# ============================================================================
+# CHECK COMMANDS - Verify if dependency is installed
+# ============================================================================
+# These commands should exit with code 0 if the dependency is present.
+# 
+# FORMATS:
+#   1. Simple string: "command arg1 arg2"
+#   2. Shell OR logic: "cmd1 || cmd2 || cmd3" (tries until one succeeds)
+#   3. List of alternatives: ["cmd1", "cmd2"] (tries each until one succeeds)
+#   4. Empty string "" or empty list [] means "skip check" (not applicable)
+#
+# STRATEGY:
+#   - For executables: use "which {name}" or "command -v {name}"
+#   - For libraries: use package manager queries (dpkg, rpm, brew)
+#   - For virtual deps: check for any implementation
+
+# Linux: Try multiple package managers (Debian/Ubuntu, RedHat/CentOS, Arch)
+# Format: shell OR - tries dpkg, then rpm, then pacman
+check.linux = "dpkg -s ffmpeg || rpm -q ffmpeg || pacman -Q ffmpeg"
+
+# Alternative list format (equivalent to above):
+# check.linux = ["dpkg -s ffmpeg", "rpm -q ffmpeg", "pacman -Q ffmpeg"]
+
+# Alternative: Just check if executable exists (works for any distro)
+# check.linux = "which ffmpeg"
+
+# macOS: Check with Homebrew
+check.macos = "brew list ffmpeg"
+
+# Alternative: Check if executable exists (works regardless of install method)
+# check.macos = "which ffmpeg"
+
+# Windows: Empty string means "skip check" (manual install expected)
+check.windows = ""
+
+# Alternative: If Windows package manager is available
+# check.windows = "choco list --local-only ffmpeg"
+
+# ============================================================================
+# INSTALL COMMANDS - Install the dependency
+# ============================================================================
+# FORMATS:
+#   1. Simple string: "brew install ffmpeg" (single command)
+#   2. List of strings: ["cmd1", "cmd2", "cmd3"] (executed in order, AND logic)
+#   3. Empty string "" or empty list [] means "skip/manual install required"
+#
+# BEST PRACTICES:
+#   - For apt-get: always include "sudo apt-get update" as first step
+#   - Use -y flag to avoid interactive prompts in CI
+#   - Include both runtime and development packages if needed (e.g., libfoo and libfoo-dev)
+
+# Linux: Multi-step installation with apt-get
+# Format: list of commands executed in sequence
+install.linux = [
+    "sudo apt-get update",
+    "sudo apt-get install -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev"
+]
+
+# Alternative: Single command if no update needed
+# install.linux = "sudo apt-get install -y ffmpeg"
+
+# Alternative: Handle multiple distros
+# install.linux = "sudo apt-get install -y ffmpeg || sudo yum install -y ffmpeg || sudo pacman -S ffmpeg"
+
+# macOS: Simple Homebrew install
+install.macos = "brew install ffmpeg"
+
+# Alternative: Install with specific options
+# install.macos = "brew install ffmpeg --with-libvpx --with-opus"
+
+# Windows: Chocolatey install
+install.windows = "choco install ffmpeg -y"
+
+# Alternative: Empty if manual install required
+# install.windows = ""
+
+# ============================================================================
+# OPTIONAL METADATA
+# ============================================================================
+
+# Additional notes for edge cases or special instructions
+note = "On Alpine Linux use: apk add ffmpeg ffmpeg-dev. For minimal builds, consider ffmpeg-static."
+
+# Alternative packages that provide similar functionality
+alternatives = ["libav-tools"]  # Older Ubuntu versions used libav instead
+
+# Optional: Specify which category this belongs to
+# category = "multimedia"  # or "database", "compiler", "tool", etc.
+
+# Optional: Mark as required only for specific features
+# required_for = ["video_processing", "audio_encoding"]
+
+# ============================================================================
+# EXAMPLES OF OTHER DEPENDENCY TYPES
+# ============================================================================
+
+# Example: Library dependency (needs development headers for building)
+# [tool.wads.ops.unixodbc]
+# description = "ODBC driver manager for database connectivity"
+# url = "https://www.unixodbc.org/"
+# 
+# # Libraries don't have executables to check, use package manager
+# check.linux = "dpkg -s unixodbc-dev || rpm -q unixODBC-devel"
+# check.macos = "brew list unixodbc"
+# 
+# # Install both runtime and development packages
+# install.linux = "sudo apt-get install -y unixodbc unixodbc-dev"
+# install.macos = "brew install unixodbc"
+
+# Example: Virtual dependency (any implementation works)
+# [tool.wads.ops.c-compiler]
+# description = "C compiler for building native extensions"
+# 
+# # Check for any common C compiler
+# check.linux = "which gcc || which clang"
+# check.macos = "which clang || which gcc"
+# 
+# # Install platform's default
+# install.linux = "sudo apt-get install -y build-essential"
+# install.macos = "xcode-select --install"
+
+# Example: Simple tool with executable check
+# [tool.wads.ops.git]
+# description = "Version control system"
+# url = "https://git-scm.com/"
+# 
+# # Simple executable check works everywhere
+# check.linux = "which git"
+# check.macos = "which git"
+# check.windows = "where git"
+# 
+# install.linux = "sudo apt-get install -y git"
+# install.macos = "brew install git"
+# install.windows = "choco install git -y"
+
+# Example: Dependency not available on some platforms
+# [tool.wads.ops.msodbcsql18]
+# description = "Microsoft ODBC Driver 18 for SQL Server"
+# 
+# check.linux = "dpkg -s msodbcsql18"
+# check.macos = "brew list msodbcsql18"
+# check.windows = ""  # Typically pre-installed or managed separately
+# 
+# install.linux = [
+#     "curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -",
+#     "curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list",
+#     "sudo apt-get update",
+#     "sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18"
+# ]
+# install.macos = "brew tap microsoft/mssql-release && brew install msodbcsql18"
+# install.windows = ""  # Provide download link in note
+# 
+# note = "Windows: Download from https://docs.microsoft.com/sql/connect/odbc/download-odbc-driver-for-sql-server"

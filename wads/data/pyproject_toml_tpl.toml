@@ -104,6 +104,23 @@ testpaths = ["tests"]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
 
 # ============================================================================
+# SYSTEM DEPENDENCIES
+# ============================================================================
+# System/OS-level dependencies (packages needed for your project to run)
+# See wads_operational_dependencies_example.yml for detailed documentation
+
+# Each dependency gets its own section: [tool.wads.ops.{name}]
+# Example:
+# [tool.wads.ops.ffmpeg]
+# description = "Multimedia framework for video/audio processing"
+# url = "https://ffmpeg.org/"
+# check.linux = "which ffmpeg"
+# check.macos = "which ffmpeg"
+# install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
+# install.macos = "brew install ffmpeg"
+# note = "On Alpine: apk add ffmpeg"
+
+# ============================================================================
 # CI Configuration (Single Source of Truth)
 # ============================================================================
 # This section defines all CI-specific configuration, eliminating the need
@@ -152,6 +169,9 @@ format = [
 # Control which environment variables are required or have defaults
 
 [tool.wads.ci.env]
+# DEPRECATED: System dependencies should now be declared in [external] using DepURLs
+# This section is maintained for backward compatibility only
+
 # Required environment variables - CI will fail if these are not set
 # Format: list of variable names
 required = [
@@ -209,13 +229,7 @@ exclude_paths = ["examples", "scrap"]
 # Run tests on Windows (informational only, may fail)
 test_on_windows = true
 
-# System dependencies (OS packages needed for tests)
-# Simple form (Ubuntu only):
-# system_dependencies = ["ffmpeg", "libsndfile1", "portaudio19-dev"]
-
-# Platform-specific form:
-# system_dependencies = { ubuntu = ["ffmpeg", "libsndfile1"], macos = ["ffmpeg", "libsndfile"], windows = [] }
-
+# ============================================================================
 # 📦 BUILD AND PUBLISH SETTINGS
 # Control build and publication behavior
 

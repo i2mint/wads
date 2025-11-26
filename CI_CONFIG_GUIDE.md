@@ -416,7 +416,7 @@ python -m wads.populate .
 
 The dynamic template is only used if:
 1. `pyproject.toml` exists with `[tool.wads.ci]` section
-2. The dynamic template file exists (`github_ci_publish_2025_dynamic.yml`)
+2. The dynamic template file exists (`github_ci_publish_2025_v2.yml`)
 
 ### Environment validation failing
 
