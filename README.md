@@ -1,220 +1,336 @@
 # wads
 
-Tools for packaging and publishing to pypi for those who just don't want to deal with it
+Modern Python project packaging and CI/CD tools for developers who want to focus on code, not configuration.
 
-To install (for example):
-```
+[![PyPI version](https://img.shields.io/pypi/v/wads.svg)](https://pypi.org/project/wads/)
+[![Python versions](https://img.shields.io/pypi/pyversions/wads.svg)](https://pypi.org/project/wads/)
+
+## What is Wads?
+
+Wads helps you:
+- **Create new Python projects** with modern tooling (pyproject.toml, GitHub Actions)
+- **Manage CI/CD workflows** with configuration-driven GitHub Actions
+- **Handle system dependencies** declaratively in pyproject.toml
+- **Migrate legacy projects** from setup.cfg to modern formats
+- **Debug CI failures** with automated diagnostics
+
+## Installation
+
+```bash
 pip install wads
 ```
 
-# Table of Contents
-
-- [Usage Examples](#usage-examples)
-  - [populate](#populate)
-  - [pack](#pack)
-- [Migration Tools](#migration-tools) - **NEW!** Migrate old projects to modern format
-- [Troubleshooting](#troubleshooting)
-
-# Usage Examples
-
-We're going to assume you pointed "pack" to "wads/pack.py" and "populate" to "wads/populate.py",
-because it's convenient for us to do so. You can achieve this in various ways
-(for example, putting the contents:
-`python /Users/Thor.Whalen/Dropbox/dev/p3/proj/i/wads/wads/pack.py "$@"`
-in a file named "pack" contained in your OS's script path.)
-
-
-## populate
-
-When? When you got a new project and you want to quickly set it up with the packaging goodies.
-
-Basic usage:
-
-```
-populate PKG_DIR
-```
-
-or, assuming you're using the terminal and you're in the `PKG_DIR` root folder of the project, you can just do:
-
-```
-populate .
-```
-
-What that will do is create and populate some files for you.
-Namely, it will ensure your package directory has the following files (if not present already)
-```
-./LICENSE
-./pyproject.toml
-./PKG_NAME/__init__.py
-./README.md
-./.gitignore
-./.gitattributes
-```
-
-**Note:** `setup.py` is no longer created by default (not needed with modern Hatchling build backend). 
-Use `--create-setup-py` if you need it for backward compatibility.
-
-The `PKG_NAME` will be taken to be the same as the name of the `PKG_DIR`.
-
-That will work, it will be minimal and will choose defaults for you.
-You can overwrite many of these, of course.
-For example,
-
-```
-populate -r https:///github.com/i2mint --description "Something about my project..."
-```
-
-Here are the following options:
-
-```
-positional arguments:
-  pkg-dir               -
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --description DESCRIPTION
-                        "There is a bit of an air of mystery around this project..."
-  -r ROOT_URL, --root-url ROOT_URL
-                        -
-  -a AUTHOR, --author AUTHOR
-                        -
-  -l LICENSE, --license LICENSE
-                        'mit'
-  --description-file DESCRIPTION_FILE
-                        'README.md'
-  -k KEYWORDS, --keywords KEYWORDS
-                        -
-  --install-requires INSTALL_REQUIRES
-                        -
-  --include-pip-install-instruction-in-readme
-                        True
-  -v, --verbose         True
-  -o OVERWRITE, --overwrite OVERWRITE
-                        ()
-  --defaults-from DEFAULTS_FROM
-                        -
-```
-
-Note that by default, populate will not overwrite files that all already there.
-It will edit the `setup.cfg` file if it's present (and missing some entries).
-
-## Configuring the defaults of `populate`
-
-Note that `defaults-from` option in the `populate` help.
-That's probably the most convenient argument of all.
-Go check out a file named `wads_configs.json` in the root directory of the project.
-(If you don't know how to find that file, try this command:
-`python -c "import wads; print(wads)"` to get a clue).
-
-That `wads_configs.json` file contains key-value entries that are used in the wads package.
-The `"populate_dflts"` key is used by the populate script.
-If you edit that, you'll get different defaults out of the box.
-
-Note that an even better way than editing the existing `wads_configs.json` file is 
-to write your own configs file, calling it what you want and putting it where you want, 
-and just adding a `WADS_CONFIGS_FILE` environment variable pointing to it. 
-(Gotcha: Note the plural on `CONFIGS`).
-
-But you can also add your own key-value pairs if you work on different kinds of projects that need different kinds of defaults.
-For your convenience we added a `"custom_dflts_example_you_should_change"` key to illustrate this.
-
-## pack
-
-The typical sequence of the methodical and paranoid could be something like this:
-
-```
-python pack.py current-configs  # see what you got
-python pack.py increment-configs-version  # update (increment the version and write that in setup.cfg
-python pack.py current-configs-version  # see that it worked
-python pack.py current-configs  # ... if you really want to see the whole configs again (you're really paranoid)
-python pack.py run-setup  # see that it worked
-python pack.py twine-upload-dist  # publish
-# and then go check things work...
-```
-
-
-If you're are great boilerplate hater you could just do:
-
-```
-pack go PKG_DIR
-```
-
-(or `pack go --version 0.0.0 PKG_DIR` if it's the very first release).
-
-But we suggest you get familiar with what the steps are doing, so you can bend them to your liking.
-
-# Migration Tools
-
-**New in wads!** Tools to migrate old setuptools projects to modern pyproject.toml format.
-
-Many existing projects still use the old `setup.cfg` format and outdated CI scripts. The `wads.migration` module provides automated tools to migrate these to modern standards:
-
 ## Quick Start
+
+### Create a New Project
+
+```bash
+populate my-project --root-url https://github.com/user/my-project
+cd my-project
+```
+
+This creates a complete project structure with:
+- `pyproject.toml` (modern build configuration)
+- `README.md`, `LICENSE`, `.gitignore`
+- Package directory with `__init__.py`
+- GitHub Actions CI/CD workflow (optional)
+
+### Configure CI in pyproject.toml
+
+Edit your `pyproject.toml` to configure CI behavior:
+
+```toml
+[tool.wads.ci.testing]
+python_versions = ["3.10", "3.12"]
+pytest_args = ["-v", "--tb=short"]
+coverage_enabled = true
+test_on_windows = true
+
+[tool.wads.ci.quality.ruff]
+enabled = true
+
+[tool.wads.ci.build]
+sdist = true
+wheel = true
+```
+
+### Declare System Dependencies
+
+Need ffmpeg, ODBC drivers, or other system packages in CI? Declare them in `pyproject.toml`:
+
+```toml
+[tool.wads.ops.ffmpeg]
+description = "Multimedia framework for video/audio processing"
+url = "https://ffmpeg.org/"
+
+check.linux = "which ffmpeg"
+check.macos = "which ffmpeg"
+
+install.linux = "sudo apt-get install -y ffmpeg"
+install.macos = "brew install ffmpeg"
+install.windows = "choco install ffmpeg -y"
+
+note = "Required for audio processing features"
+```
+
+The `install-system-deps` action in your CI workflow will automatically install these.
+
+## Core Features
+
+### 1. Project Setup (`populate`)
+
+Create new Python projects with modern best practices:
+
+```bash
+# Basic usage
+populate my-project
+
+# With custom settings
+populate my-project \
+  --root-url https://github.com/myorg/my-project \
+  --description "My awesome project" \
+  --author "Your Name" \
+  --license apache
+```
+
+**Options:**
+- `--root-url`: GitHub repository URL
+- `--description`: Project description
+- `--author`: Author name
+- `--license`: License type (mit, apache, bsd, etc.)
+- `--keywords`: Comma-separated keywords
+- `--overwrite`: Files to overwrite if they exist
+
+**Tip:** Configure defaults in `wads_configs.json` or use `WADS_CONFIGS_FILE` environment variable to point to your custom config.
+
+### 2. Package and Publish (`pack`)
+
+Build and publish packages to PyPI:
+
+```bash
+# See current configuration
+pack current-configs
+
+# Increment version and publish
+pack go .
+
+# Or step-by-step
+pack increment-configs-version
+pack run-setup
+pack twine-upload-dist
+```
+
+### 3. Migration Tools (`wads-migrate`)
+
+Migrate legacy projects to modern format:
+
+```bash
+# Migrate setup.cfg to pyproject.toml
+wads-migrate setup-to-pyproject setup.cfg -o pyproject.toml
+
+# Migrate old CI workflow to new format
+wads-migrate ci-old-to-new .github/workflows/old-ci.yml -o .github/workflows/ci.yml
+```
+
+**Python API:**
 
 ```python
 from wads.migration import migrate_setuptools_to_hatching, migrate_github_ci_old_to_new
 
-# Migrate setup.cfg to pyproject.toml
-pyproject_content = migrate_setuptools_to_hatching('path/to/setup.cfg')
-with open('pyproject.toml', 'w') as f:
-    f.write(pyproject_content)
+# From setup.cfg file
+pyproject_content = migrate_setuptools_to_hatching('setup.cfg')
 
-# Migrate old CI to new format  
+# From setup.cfg dict
+config = {'metadata': {'name': 'myproject', 'version': '1.0.0'}}
+pyproject_content = migrate_setuptools_to_hatching(config)
+
+# Migrate CI workflow
 new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
-with open('.github/workflows/ci_new.yml', 'w') as f:
-    f.write(new_ci)
 ```
 
-## What Gets Migrated
+### 4. CI Debugging (`wads-ci-debug`)
 
-- **setup.cfg → pyproject.toml**: All metadata, dependencies, optional dependencies, entry points
-- **MANIFEST.in → Hatchling config**: Detects and provides migration guidance for package data
-- **Old CI → Modern CI**: Updated actions, ruff linting/formatting, modern Python practices
-
-## Modern Setup (Hatchling)
-
-**Note:** With the modern Hatchling build backend, **`setup.py` is no longer needed**. 
-
-By default, `populate` no longer creates `setup.py`. If you need it for backward compatibility, use:
+Diagnose and fix GitHub Actions CI failures:
 
 ```bash
-populate . --create-setup-py
+# Analyze latest failure
+wads-ci-debug myorg/myrepo
+
+# Analyze specific run
+wads-ci-debug myorg/myrepo --run-id 1234567890
+
+# Generate fix instructions
+wads-ci-debug myorg/myrepo --fix --local-repo .
 ```
 
-Or in Python:
-```python
-from wads.populate import populate_pkg_dir
-populate_pkg_dir('.', create_setup_py=True)  # Only if you need backward compatibility
+The tool will:
+- Fetch CI logs from GitHub
+- Parse test failures and errors
+- Identify root causes
+- Generate fix instructions with file locations and suggested changes
+
+## CI Configuration Reference
+
+Wads uses `pyproject.toml` as a single source of truth for CI configuration. Here's what you can configure:
+
+### Python Versions and Testing
+
+```toml
+[tool.wads.ci.testing]
+python_versions = ["3.10", "3.11", "3.12"]  # Test matrix
+pytest_args = ["-v", "--tb=short"]           # Pytest arguments
+coverage_enabled = true                      # Enable coverage
+coverage_threshold = 80                      # Minimum coverage %
+exclude_paths = ["examples", "scrap"]        # Paths to exclude
+test_on_windows = true                       # Run Windows tests
 ```
+
+### Code Quality Tools
+
+```toml
+[tool.wads.ci.quality.ruff]
+enabled = true
+# line_length = 88
+
+[tool.wads.ci.quality.mypy]
+enabled = false
+# strict = true
+```
+
+### Custom Commands
+
+```toml
+[tool.wads.ci.commands]
+pre_test = [
+    "python scripts/setup_test_data.py",
+]
+post_test = [
+    "python scripts/cleanup.py",
+]
+```
+
+### Build and Publish
+
+```toml
+[tool.wads.ci.build]
+sdist = true
+wheel = true
+
+[tool.wads.ci.publish]
+enabled = true  # Publish to PyPI on main/master
+```
+
+## System Dependencies
+
+System dependencies are declared using the `[tool.wads.ops.*]` format and automatically installed in CI via the `install-system-deps` action.
+
+**Format:**
+
+```toml
+[tool.wads.ops.{package-name}]
+description = "Description of the package"
+url = "https://package-homepage.com"
+
+# Check if already installed (exit code 0 = present)
+check.linux = "which package-name"
+check.macos = "brew list package-name"
+check.windows = "where package-name"
+
+# Install commands (string or list of strings)
+install.linux = "sudo apt-get install -y package-name"
+install.macos = "brew install package-name"
+install.windows = "choco install package-name -y"
+
+# Optional metadata
+note = "Additional installation notes"
+alternatives = ["alternative-package"]
+```
+
+**Real-world example (ODBC drivers):**
+
+```toml
+[tool.wads.ops.unixodbc]
+description = "ODBC driver interface for database connectivity"
+url = "https://www.unixodbc.org/"
+
+check.linux = "dpkg -s unixodbc || rpm -q unixODBC"
+check.macos = "brew list unixodbc"
+
+install.linux = [
+    "sudo apt-get update",
+    "sudo apt-get install -y unixodbc unixodbc-dev"
+]
+install.macos = "brew install unixodbc"
+
+note = "On Alpine: apk add unixodbc unixodbc-dev"
+alternatives = ["iodbc"]
+```
+
+See [docs/SYSTEM_DEPENDENCIES.md](docs/SYSTEM_DEPENDENCIES.md) for comprehensive examples.
 
 ## Documentation
 
-For complete documentation, examples, and API reference, see **[MIGRATION.md](MIGRATION.md)**
+- **[System Dependencies Guide](docs/SYSTEM_DEPENDENCIES.md)** - `[tool.wads.ops.*]` format and examples
+- **[CI Configuration Reference](docs/CI_CONFIG.md)** - Complete `[tool.wads.ci]` reference
+- **[Migration Guide](docs/MIGRATION.md)** - Migrate from setup.cfg to pyproject.toml
+- **[Utilities Reference](docs/UTILITIES.md)** - CLI tools (`wads-ci-debug`, `wads-migrate`)
 
-Key features:
-- ✅ Flexible input formats (file, string, dict)
-- ✅ Extensible rule-based transformation system
-- ✅ Strict validation - no information loss
-- ✅ Default values for missing fields
-- ✅ Custom transformation rules
+## Troubleshooting
 
-# Troubleshooting
+### Version Tag Misalignment
 
-## Vesion tag misalignment
-
-Sometimes the twine PYPI publishing may fail with such a message:
+If PyPI publishing fails with "appears to already exist":
 
 ```
-WARNING  Skipping PKGNAME-0.1.4-py3-none-any.whl because it appears to already exist 
-WARNING  Skipping PKGNAME-0.1.4.tar.gz because it appears to already exist
+WARNING  Skipping mypackage-0.1.4-py3-none-any.whl because it appears to already exist
 ```
 
-This often means that your git tags are misaligned with the `setup.cfg` version. 
-You can see your git tags here: `https://github.com/ORG/REPO/tags`.
+This means your git tags are misaligned with the version in `pyproject.toml`.
 
-To repair, do this:
+**Fix:**
 
-* go to the https://pypi.org/project/ project page and note the VERSION number
-* enter a VERSION number ABOVE that one in the version key of `setup.cfg`
-* `git tag VERSION`
-* `git push origin VERSION`
+1. Check the current PyPI version: https://pypi.org/project/your-package/
+2. Update `version` in `pyproject.toml` to a higher number
+3. Create and push git tag:
+   ```bash
+   git tag 0.1.5
+   git push origin 0.1.5
+   ```
+
+### CI Failures
+
+Use `wads-ci-debug` to analyze failures:
+
+```bash
+wads-ci-debug myorg/myrepo --fix
+```
+
+Common issues:
+- Missing system dependencies → Add to `[tool.wads.ops.*]`
+- Python version incompatibilities → Check `python_versions` in `[tool.wads.ci.testing]`
+- Test failures → Review generated fix instructions
+
+## Development
+
+### Running Tests
+
+```bash
+pytest wads/tests/
+```
+
+### Building Documentation
+
+```bash
+pip install -e ".[docs]"
+epythet build
+```
+
+## License
+
+Apache Software License 2.0
+
+## Links
+
+- **PyPI:** https://pypi.org/project/wads/
+- **GitHub:** https://github.com/i2mint/wads
+- **Issues:** https://github.com/i2mint/wads/issues

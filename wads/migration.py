@@ -751,3 +751,105 @@ def migrate_github_ci_old_to_new(
         result = "\n".join(lines)
 
     return result
+
+
+def main():
+    """CLI entry point for wads migration tools."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Migrate old setuptools/CI configurations to modern formats'
+    )
+    subparsers = parser.add_subparsers(dest='command', help='Migration command')
+
+    # setup.cfg -> pyproject.toml
+    setup_parser = subparsers.add_parser(
+        'setup-to-pyproject',
+        help='Convert setup.cfg to pyproject.toml'
+    )
+    setup_parser.add_argument(
+        'input',
+        help='Path to setup.cfg file or directory containing it'
+    )
+    setup_parser.add_argument(
+        '-o', '--output',
+        default='pyproject.toml',
+        help='Output file path (default: pyproject.toml)'
+    )
+
+    # Old CI -> New CI
+    ci_parser = subparsers.add_parser(
+        'ci-old-to-new',
+        help='Convert old GitHub CI workflow to new format'
+    )
+    ci_parser.add_argument(
+        'input',
+        help='Path to old CI workflow file'
+    )
+    ci_parser.add_argument(
+        '-o', '--output',
+        help='Output file path (default: print to stdout)'
+    )
+    ci_parser.add_argument(
+        '--project-name',
+        help='Project name (if not in old CI file)'
+    )
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return
+
+    try:
+        if args.command == 'setup-to-pyproject':
+            # Handle input path
+            input_path = Path(args.input)
+            if input_path.is_dir():
+                input_path = input_path / 'setup.cfg'
+
+            if not input_path.exists():
+                print(f"Error: {input_path} not found", file=sys.stderr)
+                sys.exit(1)
+
+            # Perform migration
+            result = migrate_setuptools_to_hatching(str(input_path))
+
+            # Write output
+            output_path = Path(args.output)
+            with open(output_path, 'w') as f:
+                f.write(result)
+
+            print(f"✓ Migrated {input_path} -> {output_path}")
+
+        elif args.command == 'ci-old-to-new':
+            # Handle input path
+            input_path = Path(args.input)
+            if not input_path.exists():
+                print(f"Error: {input_path} not found", file=sys.stderr)
+                sys.exit(1)
+
+            # Prepare defaults
+            defaults = {}
+            if args.project_name:
+                defaults['project_name'] = args.project_name
+
+            # Perform migration
+            result = migrate_github_ci_old_to_new(str(input_path), defaults)
+
+            # Write output
+            if args.output:
+                output_path = Path(args.output)
+                with open(output_path, 'w') as f:
+                    f.write(result)
+                print(f"✓ Migrated {input_path} -> {output_path}")
+            else:
+                print(result)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

@@ -4,11 +4,6 @@ Utilities for reading and applying CI configuration from pyproject.toml.
 This module provides the infrastructure for using pyproject.toml as the single
 source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.
-
-PEP 725/804 Support:
-- Parses [external] table for non-PyPI dependencies using DepURLs
-- Reads [tool.wads.external.ops] for project-local operational metadata
-- Provides backward compatibility with legacy [tool.wads.ci.env] format
 """
 
 from typing import Any, Optional
@@ -24,64 +19,6 @@ else:
         import tomli as tomllib
     except ImportError:
         raise ImportError("tomli package required for Python < 3.11")
-
-
-def _depurl_to_simple_name(depurl: str) -> str:
-    """
-    Convert DepURL to simplified name for ops lookup.
-
-    Examples:
-        "dep:generic/unixodbc" -> "unixodbc"
-        "dep:virtual/compiler/c" -> "compiler-c"
-        "dep:generic/libffi@>=3.0" -> "libffi"
-        "dep:generic/git?foo=bar" -> "git"
-        "dep:generic/openssl#subpath" -> "openssl"
-
-    Args:
-        depurl: A DepURL string (e.g., "dep:generic/unixodbc@1.0")
-
-    Returns:
-        Simplified name suitable for use as a TOML key
-    """
-    # Remove scheme
-    without_scheme = depurl.replace('dep:', '')
-    # Remove version specifier, query params, and fragments
-    without_version = without_scheme.split('@')[0].split('?')[0].split('#')[0]
-    # Get name component
-    parts = without_version.split('/')
-    if len(parts) == 2:
-        # dep:type/name -> name
-        return parts[1]
-    elif len(parts) == 3:
-        # dep:virtual/category/name -> category-name
-        return f"{parts[1]}-{parts[2]}"
-    # Fallback: replace slashes with hyphens
-    return without_version.replace('/', '-')
-
-
-def _validate_depurl(depurl: str) -> bool:
-    """
-    Validate that a string looks like a well-formed DepURL.
-
-    Basic validation according to PEP 725:
-    - Must start with "dep:"
-    - Must have at least type/name format
-
-    Args:
-        depurl: String to validate
-
-    Returns:
-        True if the string looks like a valid DepURL
-    """
-    if not depurl.startswith('dep:'):
-        return False
-
-    # Remove scheme and split on special characters
-    rest = depurl[4:].split('@')[0].split('?')[0].split('#')[0]
-    parts = rest.split('/')
-
-    # Must have at least type/name (2 parts)
-    return len(parts) >= 2 and all(part for part in parts)
 
 
 class CIConfig:
@@ -122,40 +59,6 @@ class CIConfig:
             data = tomllib.load(f)
 
         return cls(data)
-
-    def _parse_external_dependencies(self) -> dict:
-        """
-        Extract DepURLs from [external] table.
-
-        Returns:
-            Dict with keys: 'build', 'host', 'runtime', 'optional_build',
-            'optional_host', 'optional_runtime', 'groups'
-        """
-        external = self.data.get('external', {})
-        return {
-            'build': external.get('build-requires', []),
-            'host': external.get('host-requires', []),
-            'runtime': external.get('dependencies', []),
-            'optional_build': external.get('optional-build-requires', {}),
-            'optional_host': external.get('optional-host-requires', {}),
-            'optional_runtime': external.get('optional-dependencies', {}),
-            'groups': external.get('dependency-groups', {}),
-        }
-
-    def _parse_external_ops(self) -> dict:
-        """
-        Extract operational metadata from [tool.wads.external.ops].
-
-        Returns:
-            Dict keyed by simplified dependency name with check/install commands
-        """
-        ops = (
-            self.data.get('tool', {})
-            .get('wads', {})
-            .get('external', {})
-            .get('ops', {})
-        )
-        return ops
 
     @property
     def project_name(self) -> str:
@@ -257,47 +160,14 @@ class CIConfig:
     def system_dependencies(self) -> dict | list:
         """Get system dependencies for CI environments (DEPRECATED).
 
-        DEPRECATED: Use external_dependencies property instead.
-        This property is maintained for backward compatibility.
+        DEPRECATED: Use [tool.wads.ops.*] format with install-system-deps action instead.
+        This property is maintained for backward compatibility with legacy format.
 
         Returns either:
         - A list of package names (Ubuntu only)
         - A dict with platform keys: ubuntu, macos, windows
         """
         return self.testing_config.get("system_dependencies", [])
-
-    # 🔗 EXTERNAL DEPENDENCIES (PEP 725/804)
-    @property
-    def external_dependencies(self) -> dict:
-        """Get external dependencies from [external] table.
-
-        Returns:
-            Dict with keys: 'build', 'host', 'runtime', 'optional_build',
-            'optional_host', 'optional_runtime', 'groups'
-        """
-        return self._parse_external_dependencies()
-
-    @property
-    def external_ops(self) -> dict:
-        """Get operational metadata from [tool.wads.external.ops].
-
-        Returns:
-            Dict keyed by simplified dependency name
-        """
-        return self._parse_external_ops()
-
-    def has_external_dependencies(self) -> bool:
-        """Check if any external dependencies are declared."""
-        deps = self.external_dependencies
-        return bool(
-            deps['build']
-            or deps['host']
-            or deps['runtime']
-            or deps.get('optional_build')
-            or deps.get('optional_host')
-            or deps.get('optional_runtime')
-            or deps.get('groups')
-        )
 
     # 📦 BUILD AND PUBLISH SETTINGS
     @property
@@ -421,9 +291,7 @@ class CIConfig:
         """
         Generate YAML steps for pre-test commands and system dependencies.
 
-        This method now supports both:
-        1. NEW: [external] with DepURLs and [tool.wads.external.ops]
-        2. LEGACY: [tool.wads.ci.testing.system_dependencies]
+        Supports legacy [tool.wads.ci.testing.system_dependencies] format.
 
         Args:
             platform: Platform identifier ('linux', 'macos', 'windows')
@@ -434,48 +302,6 @@ class CIConfig:
         steps = []
         install_commands = []
 
-        # ---- NEW: Parse external dependencies (PEP 725) ----
-        external_deps = self.external_dependencies
-        external_ops = self.external_ops
-
-        # Combine all dependencies that need to be installed at test time
-        all_depurls = (
-            external_deps['build'] +
-            external_deps['host'] +
-            external_deps['runtime']
-        )
-
-        # For each DepURL, find and add install command
-        for depurl in all_depurls:
-            # Validate DepURL
-            if not _validate_depurl(depurl):
-                warnings.warn(f"Invalid DepURL format: {depurl}", UserWarning)
-                continue
-
-            simple_name = _depurl_to_simple_name(depurl)
-
-            if simple_name in external_ops:
-                dep_ops = external_ops[simple_name]
-
-                # Get platform-specific install command
-                # The structure is: dep_ops['install'][platform]
-                install_section = dep_ops.get('install', {})
-                if platform in install_section:
-                    install_cmd = install_section[platform]
-
-                    # Handle both string and list of strings
-                    if isinstance(install_cmd, str):
-                        install_commands.append(install_cmd)
-                    elif isinstance(install_cmd, list):
-                        install_commands.extend(install_cmd)
-            else:
-                # No operational metadata found
-                warnings.warn(
-                    f"No operational metadata found for {depurl} "
-                    f"(looked for [tool.wads.external.ops.{simple_name}])",
-                    UserWarning
-                )
-
         # ---- LEGACY: Parse system_dependencies (DEPRECATED) ----
         legacy_deps = self._normalize_system_deps()
         platform_key = 'ubuntu' if platform == 'linux' else platform
@@ -484,7 +310,7 @@ class CIConfig:
         if legacy_packages:
             warnings.warn(
                 f"Using deprecated [tool.wads.ci.testing.system_dependencies]. "
-                f"Please migrate to [external] with DepURLs and [tool.wads.external.ops]",
+                f"Please migrate to [tool.wads.ops.*] format with install-system-deps action",
                 DeprecationWarning,
                 stacklevel=2
             )
@@ -515,7 +341,7 @@ class CIConfig:
         """
         Generate YAML for Windows validation job.
 
-        Supports both new [external] format and legacy system_dependencies.
+        Supports legacy system_dependencies format.
 
         Returns:
             YAML string for Windows job, or empty string if disabled
@@ -525,39 +351,6 @@ class CIConfig:
 
         install_commands = []
 
-        # ---- NEW: Parse external dependencies (PEP 725) ----
-        external_deps = self.external_dependencies
-        external_ops = self.external_ops
-
-        # Combine all dependencies that need to be installed
-        all_depurls = (
-            external_deps['build'] +
-            external_deps['host'] +
-            external_deps['runtime']
-        )
-
-        # For each DepURL, find and add Windows install command
-        for depurl in all_depurls:
-            if not _validate_depurl(depurl):
-                continue
-
-            simple_name = _depurl_to_simple_name(depurl)
-
-            if simple_name in external_ops:
-                dep_ops = external_ops[simple_name]
-
-                # Get Windows-specific install command
-                # The structure is: dep_ops['install']['windows']
-                install_section = dep_ops.get('install', {})
-                if 'windows' in install_section:
-                    install_cmd = install_section['windows']
-
-                    # Handle both string and list of strings
-                    if isinstance(install_cmd, str):
-                        install_commands.append(install_cmd)
-                    elif isinstance(install_cmd, list):
-                        install_commands.extend(install_cmd)
-
         # ---- LEGACY: Parse system_dependencies (DEPRECATED) ----
         legacy_deps = self._normalize_system_deps()
         windows_packages = legacy_deps.get("windows", [])
@@ -565,7 +358,7 @@ class CIConfig:
         if windows_packages:
             warnings.warn(
                 f"Using deprecated [tool.wads.ci.testing.system_dependencies]. "
-                f"Please migrate to [external] with DepURLs and [tool.wads.external.ops]",
+                f"Please migrate to [tool.wads.ops.*] format with install-system-deps action",
                 DeprecationWarning,
                 stacklevel=2
             )
