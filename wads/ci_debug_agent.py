@@ -145,7 +145,7 @@ def fetch_workflow_logs(repo: str, run_id: int) -> str:
 
 def parse_pytest_failures(logs: str) -> List[TestFailure]:
     """
-    Parse pytest failures from CI logs.
+    Parse pytest failures and collection errors from CI logs.
 
     Args:
         logs: CI log content
@@ -155,19 +155,65 @@ def parse_pytest_failures(logs: str) -> List[TestFailure]:
     """
     failures = []
 
-    # Pattern for pytest failures: FAILED test - error_message
-    # Match any line with FAILED test - error (flexible format)
+    # Pattern for pytest test failures: FAILED test - error_message
     failure_pattern = re.compile(r'FAILED\s+(.+?)\s+-\s+(.+)$', re.MULTILINE)
+
+    # Pattern for collection errors: ERROR collecting path
+    collection_error_pattern = re.compile(
+        r'ERROR collecting (.+?)$.*?'
+        r'(ImportError|ModuleNotFoundError|SyntaxError|[\w]+Error):\s*(.+?)$',
+        re.MULTILINE | re.DOTALL
+    )
 
     # Pattern for tracebacks
     traceback_pattern = re.compile(r'File\s+"(.+?)",\s+line\s+(\d+)', re.MULTILINE)
 
     found = set()
 
+    # Parse collection errors first
+    for match in collection_error_pattern.finditer(logs):
+        test_name = f"ERROR collecting {match.group(1).strip()}"
+        error_type = match.group(2).strip()
+        error_message = match.group(3).strip()
+
+        if test_name in found:
+            continue
+        found.add(test_name)
+
+        # Extract traceback from context
+        start = max(0, match.start() - 1000)
+        end = min(len(logs), match.end() + 500)
+        context = logs[start:end]
+
+        traceback = []
+        file_path = None
+        line_number = None
+
+        for tb_match in traceback_pattern.finditer(context):
+            path = tb_match.group(1)
+            line_num = int(tb_match.group(2))
+            traceback.append(f'  File "{path}", line {line_num}')
+            file_path = path
+            line_number = line_num
+
+        failures.append(
+            TestFailure(
+                test_name=test_name,
+                error_type=error_type,
+                error_message=error_message,
+                traceback=traceback,
+                file_path=file_path,
+                line_number=line_number,
+            )
+        )
+
+    # Then parse test failures
     for match in failure_pattern.finditer(logs):
         test_name = match.group(1).strip()
         error_info = match.group(2).strip()
 
+        if test_name in found:
+            continue
         found.add(test_name)
 
         # Parse error info - could be "ErrorType: message" or just "message"

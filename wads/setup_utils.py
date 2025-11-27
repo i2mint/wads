@@ -25,11 +25,7 @@ else:
     except ImportError:
         raise ImportError("tomli package required for Python < 3.11")
 
-from wads.ci_config import (
-    CIConfig,
-    _depurl_to_simple_name,
-    _validate_depurl,
-)
+from wads.ci_config import CIConfig
 
 
 @dataclass
@@ -324,199 +320,81 @@ def install_system_dependencies(
     """
     Install system dependencies based on pyproject.toml configuration.
 
+    This is a wrapper around wads.install_system_deps module.
+
     Args:
         pyproject_path: Path to pyproject.toml or directory containing it
         platform: Platform identifier (auto-detected if None)
-        check_first: Use check commands to verify if already installed
+        check_first: Use check commands to verify if already installed (ignored in dry_run)
         dry_run: If True, only show what would be installed
         verbose: Print detailed progress information
-        interactive: Ask for confirmation before installing
+        interactive: Ask for confirmation before installing (not yet implemented)
 
     Returns:
         List of InstallResult objects
     """
-    pyproject_path = Path(pyproject_path)
-    if pyproject_path.is_dir():
-        pyproject_path = pyproject_path / "pyproject.toml"
-
-    if not pyproject_path.exists():
-        raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
-
-    # Load configuration
-    with open(pyproject_path, 'rb') as f:
-        data = tomllib.load(f)
-
-    config = CIConfig(data)
-
-    if platform is None:
-        platform = get_current_platform()
-
-    if verbose:
-        print(f"Platform: {platform}")
-
-    # Get external dependencies
-    external_deps = config.external_dependencies
-    external_ops = config.ops
-
-    # Combine all dependencies
-    all_depurls = (
-        external_deps['build'] +
-        external_deps['host'] +
-        external_deps['runtime']
+    from wads.install_system_deps import (
+        install_system_dependencies as _install_system_deps,
+        read_system_deps,
+        find_pyproject
     )
 
-    if not all_depurls:
-        if verbose:
-            print("No external dependencies declared")
-        return []
+    pyproject_path = Path(pyproject_path)
 
-    results = []
+    if dry_run:
+        # For dry run, just read and display what would be installed
+        try:
+            pyproject = find_pyproject(str(pyproject_path))
+            ops = read_system_deps(pyproject)
 
-    for depurl in all_depurls:
-        if not _validate_depurl(depurl):
-            if verbose:
-                print(f"✗ Invalid DepURL: {depurl}")
-            results.append(InstallResult(
-                success=False,
-                package_name=depurl,
-                message="Invalid DepURL format"
-            ))
-            continue
-
-        simple_name = _depurl_to_simple_name(depurl)
-
-        if simple_name not in external_ops:
-            if verbose:
-                print(f"⚠ No operational metadata for {depurl}")
-            results.append(InstallResult(
-                success=False,
-                package_name=simple_name,
-                message=f"No operational metadata in [tool.wads.ops.{simple_name}]"
-            ))
-            continue
-
-        dep_ops = external_ops[simple_name]
-
-        # Get metadata for display
-        rationale = dep_ops.get('rationale', 'No description available')
-        url = dep_ops.get('url', '')
-
-        if verbose:
-            print(f"\n{'='*70}")
-            print(f"Dependency: {simple_name}")
-            print(f"DepURL: {depurl}")
-            print(f"Purpose: {rationale}")
-            if url:
-                print(f"Info: {url}")
-
-        # Check if already installed
-        if check_first:
-            installed = check_system_dependency(simple_name, dep_ops, platform, verbose)
-            if installed:
-                if verbose:
-                    print(f"✓ {simple_name} is already installed")
+            results = []
+            for dep_name, dep_config in ops.items():
+                description = dep_config.get('description', 'No description')
                 results.append(InstallResult(
                     success=True,
-                    package_name=simple_name,
-                    message="Already installed"
+                    package_name=dep_name,
+                    message=f"Would install: {description}"
                 ))
-                continue
-            elif installed is None:
                 if verbose:
-                    print(f"⚠ Cannot verify if {simple_name} is installed (no check command)")
+                    print(f"Would install {dep_name}: {description}")
 
-        # Get install command
-        install_section = dep_ops.get('install', {})
-        install_cmds = install_section.get(platform)
+            return results
+        except Exception as e:
+            return [InstallResult(success=False, package_name="N/A", message=str(e))]
 
-        if not install_cmds:
-            if verbose:
-                print(f"✗ No install command for platform: {platform}")
-                alternatives = dep_ops.get('alternatives', [])
-                if alternatives:
-                    print(f"  Alternatives: {', '.join(alternatives)}")
-                note = dep_ops.get('note')
-                if note:
-                    print(f"  Note: {note}")
-            results.append(InstallResult(
-                success=False,
-                package_name=simple_name,
-                message=f"No install command for {platform}"
-            ))
-            continue
+    # Call the new standalone installer
+    installed, skipped, failed = _install_system_deps(
+        pyproject_path=str(pyproject_path),
+        platform=platform,
+        skip_check=not check_first,
+        verbose=verbose
+    )
 
-        # Normalize to list
-        if isinstance(install_cmds, str):
-            install_cmds = [install_cmds]
+    # Convert to InstallResult objects for compatibility
+    results = []
 
-        if verbose:
-            print(f"\nInstall commands:")
-            for i, cmd in enumerate(install_cmds, 1):
-                print(f"  {i}. {cmd}")
+    # We don't have detailed per-package results from the new installer,
+    # so we create summary results
+    if installed > 0:
+        results.append(InstallResult(
+            success=True,
+            package_name=f"{installed} packages",
+            message="Successfully installed"
+        ))
 
-        if dry_run:
-            if verbose:
-                print(f"✓ Would install {simple_name} (dry run)")
-            results.append(InstallResult(
-                success=True,
-                package_name=simple_name,
-                message="Dry run - would install",
-                command_executed='; '.join(install_cmds)
-            ))
-            continue
+    if skipped > 0:
+        results.append(InstallResult(
+            success=True,
+            package_name=f"{skipped} packages",
+            message="Already installed"
+        ))
 
-        # Ask for confirmation in interactive mode
-        if interactive:
-            response = input(f"\nInstall {simple_name}? [Y/n] ")
-            if response.lower() in ('n', 'no'):
-                if verbose:
-                    print(f"Skipped {simple_name}")
-                results.append(InstallResult(
-                    success=False,
-                    package_name=simple_name,
-                    message="Skipped by user"
-                ))
-                continue
-
-        # Execute install commands
-        all_success = True
-        for cmd in install_cmds:
-            if verbose:
-                print(f"Executing: {cmd}")
-
-            try:
-                result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    check=True
-                )
-                if verbose and result.stdout:
-                    print(result.stdout)
-            except subprocess.CalledProcessError as e:
-                if verbose:
-                    print(f"✗ Command failed: {cmd}")
-                    print(f"  Error: {e.stderr}")
-                all_success = False
-                break
-
-        if all_success:
-            if verbose:
-                print(f"✓ {simple_name} installed successfully")
-            results.append(InstallResult(
-                success=True,
-                package_name=simple_name,
-                message="Installed successfully",
-                command_executed='; '.join(install_cmds)
-            ))
-        else:
-            results.append(InstallResult(
-                success=False,
-                package_name=simple_name,
-                message="Installation failed",
-                command_executed='; '.join(install_cmds)
-            ))
+    if failed > 0:
+        results.append(InstallResult(
+            success=False,
+            package_name=f"{failed} packages",
+            message="Installation failed"
+        ))
 
     return results
 
@@ -627,50 +505,27 @@ def diagnose_setup(
 
     # Check system dependencies
     if check_system:
-        external_deps = config.external_dependencies
-        external_ops = config.ops
+        ops = config.ops
 
-        all_depurls = (
-            external_deps['build'] +
-            external_deps['host'] +
-            external_deps['runtime']
-        )
-
-        for depurl in all_depurls:
-            if not _validate_depurl(depurl):
-                warnings_list.append(f"Invalid DepURL: {depurl}")
-                continue
-
-            simple_name = _depurl_to_simple_name(depurl)
-
-            if simple_name not in external_ops:
-                warnings_list.append(
-                    f"No operational metadata for {depurl}. "
-                    f"Add [tool.wads.ops.{simple_name}] section."
-                )
-                continue
-
-            dep_ops = external_ops[simple_name]
-
+        for dep_name, dep_config in ops.items():
             # Check if installed
-            installed = check_system_dependency(simple_name, dep_ops, platform, verbose=False)
+            installed = check_system_dependency(dep_name, dep_config, platform, verbose=False)
 
             if installed is False:
                 # Definitely not installed
-                install_cmd = dep_ops.get('install', {}).get(platform)
+                install_cmd = dep_config.get('install', {}).get(platform)
                 missing_system.append({
-                    'name': simple_name,
-                    'depurl': depurl,
-                    'rationale': dep_ops.get('rationale', 'No description'),
-                    'url': dep_ops.get('url', ''),
+                    'name': dep_name,
+                    'description': dep_config.get('description', 'No description'),
+                    'url': dep_config.get('url', ''),
                     'install_command': install_cmd,
-                    'alternatives': dep_ops.get('alternatives', []),
-                    'note': dep_ops.get('note', '')
+                    'alternatives': dep_config.get('alternatives', []),
+                    'note': dep_config.get('note', '')
                 })
             elif installed is None:
                 # Cannot verify
                 warnings_list.append(
-                    f"Cannot verify if {simple_name} is installed (no check command for {platform})"
+                    f"Cannot verify if {dep_name} is installed (no check command for {platform})"
                 )
 
     # Check environment variables
