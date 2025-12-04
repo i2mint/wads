@@ -14,7 +14,7 @@ class TestScriptCLI:
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.read_ci_config", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
         # Should either show help or fail gracefully
         assert result.returncode in [0, 1, 2]
@@ -24,7 +24,7 @@ class TestScriptCLI:
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.build_dist", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode in [0, 2]  # 0 for success, 2 for argparse help
 
@@ -33,7 +33,7 @@ class TestScriptCLI:
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.validate_ci_env", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode in [0, 1, 2]
 
@@ -42,7 +42,7 @@ class TestScriptCLI:
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.install_deps", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode in [0, 2]
 
@@ -51,7 +51,7 @@ class TestScriptCLI:
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.set_env_vars", "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode in [0, 1, 2]
 
@@ -60,21 +60,23 @@ class TestScriptCLI:
         """Test validate_ci_env on a real project structure."""
         # Create minimal pyproject.toml
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text("""
+        pyproject.write_text(
+            """
 [project]
 name = "test-cli-project"
 
 [tool.wads.ci.env]
 required_envvars = []
-""")
-        
+"""
+        )
+
         result = subprocess.run(
             [sys.executable, "-m", "wads.scripts.validate_ci_env"],
             cwd=tmp_path,
             capture_output=True,
-            text=True
+            text=True,
         )
-        
+
         # Should succeed with no required env vars
         assert result.returncode == 0
         assert "✅" in result.stdout or "All required" in result.stdout
@@ -84,7 +86,8 @@ required_envvars = []
         """Test build_dist with a real package."""
         # Create minimal project
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text("""
+        pyproject.write_text(
+            """
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -92,28 +95,32 @@ build-backend = "hatchling.build"
 [project]
 name = "cli-test-pkg"
 version = "0.1.0"
-""")
-        
+"""
+        )
+
         pkg_dir = tmp_path / "cli_test_pkg"
         pkg_dir.mkdir()
         (pkg_dir / "__init__.py").write_text('__version__ = "0.1.0"')
-        
+
         result = subprocess.run(
             [
-                sys.executable, "-m", "wads.scripts.build_dist",
-                "--output-dir", str(tmp_path / "dist"),
+                sys.executable,
+                "-m",
+                "wads.scripts.build_dist",
+                "--output-dir",
+                str(tmp_path / "dist"),
                 "--wheel",
-                "--no-sdist"
+                "--no-sdist",
             ],
             cwd=tmp_path,
             capture_output=True,
             text=True,
-            timeout=120  # Build can take time
+            timeout=120,  # Build can take time
         )
-        
+
         # Should succeed
         assert result.returncode == 0
-        
+
         # Check that dist directory was created
         dist_dir = tmp_path / "dist"
         assert dist_dir.exists()
@@ -125,7 +132,7 @@ version = "0.1.0"
             [sys.executable, "-m", "wads.scripts.read_ci_config"],
             cwd=tmp_path,
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode != 0
         assert "not found" in result.stderr.lower() or "error" in result.stderr.lower()
@@ -139,15 +146,14 @@ version = "0.1.0"
             'wads.scripts.set_env_vars',
             'wads.scripts.validate_ci_env',
         ]
-        
+
         for script in scripts:
             result = subprocess.run(
                 [sys.executable, "-c", f"import {script}"],
                 capture_output=True,
-                text=True
+                text=True,
             )
-            assert result.returncode == 0, \
-                f"Failed to import {script}: {result.stderr}"
+            assert result.returncode == 0, f"Failed to import {script}: {result.stderr}"
 
 
 class TestScriptDocumentation:
@@ -162,7 +168,7 @@ class TestScriptDocumentation:
             set_env_vars,
             validate_ci_env,
         )
-        
+
         modules = [
             read_ci_config,
             build_dist,
@@ -170,10 +176,9 @@ class TestScriptDocumentation:
             set_env_vars,
             validate_ci_env,
         ]
-        
+
         for module in modules:
-            assert module.__doc__ is not None, \
-                f"{module.__name__} missing docstring"
+            assert module.__doc__ is not None, f"{module.__name__} missing docstring"
             assert len(module.__doc__.strip()) > 0
 
     def test_scripts_have_usage_examples_in_docstrings(self):
@@ -185,7 +190,7 @@ class TestScriptDocumentation:
             set_env_vars,
             validate_ci_env,
         )
-        
+
         modules = [
             read_ci_config,
             build_dist,
@@ -193,14 +198,14 @@ class TestScriptDocumentation:
             set_env_vars,
             validate_ci_env,
         ]
-        
+
         for module in modules:
             docstring = module.__doc__ or ""
             # Should have Usage section or python -m example
             assert (
-                'Usage:' in docstring or 
-                'python -m' in docstring or
-                'python3 -m' in docstring
+                'Usage:' in docstring
+                or 'python -m' in docstring
+                or 'python3 -m' in docstring
             ), f"{module.__name__} docstring missing usage example"
 
 

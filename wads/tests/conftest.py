@@ -42,9 +42,10 @@ def sample_package(tmp_path):
     pkg_dir = tmp_path / "test_pkg"
     pkg_dir.mkdir()
     (pkg_dir / "__init__.py").write_text('__version__ = "0.1.0"')
-    
+
     pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text("""
+    pyproject.write_text(
+        """
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -52,8 +53,9 @@ build-backend = "hatchling.build"
 [project]
 name = "test-pkg"
 version = "0.1.0"
-""")
-    
+"""
+    )
+
     return tmp_path
 
 
@@ -65,10 +67,10 @@ def github_env_files(tmp_path):
         'env': tmp_path / 'github_env.txt',
         'summary': tmp_path / 'github_summary.md',
     }
-    
+
     for file in files.values():
         file.touch()
-    
+
     return files
 
 
@@ -90,9 +92,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "integration: mark test as integration test (slower)"
     )
-    config.addinivalue_line(
-        "markers", "requires_git: mark test as requiring git"
-    )
+    config.addinivalue_line("markers", "requires_git: mark test as requiring git")
     config.addinivalue_line(
         "markers", "requires_network: mark test as requiring network access"
     )
