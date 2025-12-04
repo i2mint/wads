@@ -89,6 +89,8 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         for var_name in required_vars:
             if var_name in RESERVED_VARS:
                 skipped_reserved.append(var_name)
+                missing_required.append(var_name)  # Treat as missing
+                print(f"❌ Cannot set reserved env var: {var_name}", file=sys.stderr)
                 continue
 
             if var_name in secrets:
