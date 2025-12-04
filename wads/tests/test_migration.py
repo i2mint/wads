@@ -151,45 +151,9 @@ def test_migrate_setuptools_dependencies():
     assert "click" in result
 
 
-def test_migrate_ci_missing_project_name():
-    """Test CI migration raises error when project name is missing."""
-    old_ci = """
-name: Old CI
-env:
-  PROJECT_NAME: #PROJECT_NAME#
-"""
-
-    with pytest.raises(MigrationError) as exc_info:
-        migrate_github_ci_old_to_new(old_ci)
-
-    assert "PROJECT_NAME" in str(exc_info.value)
-
-
-def test_migrate_ci_with_defaults():
-    """Test CI migration with defaults."""
-    old_ci = """
-name: Old CI
-env:
-  PROJECT_NAME: #PROJECT_NAME#
-"""
-
-    result = migrate_github_ci_old_to_new(
-        old_ci, defaults={"project_name": "myproject"}
-    )
-
-    assert "PROJECT_NAME: myproject" in result
-
-
-def test_migrate_ci_extracts_project_name():
-    """Test CI migration extracts existing project name."""
-    old_ci = """
-name: Old CI
-env:
-  PROJECT_NAME: existing_project
-"""
-
-    result = migrate_github_ci_old_to_new(old_ci)
-    assert "PROJECT_NAME: existing_project" in result
+# Note: CI migration tests for placeholder-based templates were removed.
+# The new 2025 CI template is fully config-driven via pyproject.toml [tool.wads.ci]
+# and does not use placeholders. Use populate_pkg_dir() for new projects.
 
 
 def test_custom_rules():

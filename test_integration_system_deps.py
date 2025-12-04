@@ -64,17 +64,15 @@ pytest_args = ["-v"]
         ci_dir.mkdir(parents=True)
         ci_file = ci_dir / "ci.yml"
 
-        # Get the dynamic template path
+        # Get the CI template path
         from wads import github_ci_publish_2025_path
 
-        dynamic_template = github_ci_publish_2025_path.replace(".yml", "_dynamic.yml")
-
-        print(f"\n✓ Using dynamic CI template: {Path(dynamic_template).name}")
+        print(f"\n✓ Using CI template: {Path(github_ci_publish_2025_path).name}")
 
         # Generate CI file
         _add_ci_def(
             ci_def_path=str(ci_file),
-            ci_tpl_path=dynamic_template,
+            ci_tpl_path=github_ci_publish_2025_path,
             root_url="https://github.com/test/test-audio-project",
             name="test-audio-project",
             clog=print,

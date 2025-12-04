@@ -94,8 +94,23 @@ class CIConfig:
     # 🌍 ENVIRONMENT VARIABLES
     @property
     def env_vars_required(self) -> list[str]:
-        """Get required environment variable names."""
-        return self.ci_config.get("env", {}).get("required", [])
+        """Get required environment variable names (CI fails if not in secrets)."""
+        return self.ci_config.get("env", {}).get("required_envvars", [])
+
+    @property
+    def env_vars_test(self) -> list[str]:
+        """Get test environment variable names (CI warns if not in secrets)."""
+        return self.ci_config.get("env", {}).get("test_envvars", [])
+
+    @property
+    def env_vars_extra(self) -> list[str]:
+        """Get extra/optional environment variable names (no warning if missing)."""
+        return self.ci_config.get("env", {}).get("extra_envvars", [])
+
+    @property
+    def env_vars_all(self) -> list[str]:
+        """Get all environment variable names (required + test + extra)."""
+        return self.env_vars_required + self.env_vars_test + self.env_vars_extra
 
     @property
     def env_vars_defaults(self) -> dict[str, str]:
@@ -216,6 +231,37 @@ class CIConfig:
         """Get paths to ignore during documentation generation."""
         return self.docs_config.get("ignore_paths", ["tests/", "scrap/", "examples/"])
 
+    # 📊 CODE METRICS SETTINGS
+    @property
+    def metrics_config(self) -> dict:
+        """Get code metrics configuration."""
+        return self.ci_config.get("metrics", {})
+
+    @property
+    def metrics_enabled(self) -> bool:
+        """Check if code metrics tracking is enabled."""
+        return self.metrics_config.get("enabled", True)
+
+    @property
+    def metrics_config_path(self) -> str:
+        """Get path to umpyre config file."""
+        return self.metrics_config.get("config_path", ".github/umpyre-config.yml")
+
+    @property
+    def metrics_storage_branch(self) -> str:
+        """Get git branch to store metrics data."""
+        return self.metrics_config.get("storage_branch", "code-metrics")
+
+    @property
+    def metrics_python_version(self) -> str:
+        """Get Python version for metrics collection."""
+        return self.metrics_config.get("python_version", "3.10")
+
+    @property
+    def metrics_force_run(self) -> bool:
+        """Check if metrics should run even on workflow failure."""
+        return self.metrics_config.get("force_run", False)
+
     @property
     def ops(self) -> dict:
         """Get system dependencies configuration from [tool.wads.ops.*] sections.
@@ -284,17 +330,50 @@ class CIConfig:
         """
         Generate YAML env block for GitHub Actions.
 
+        Creates env vars for:
+        - PROJECT_NAME (from config)
+        - Default env vars (from config.env.defaults)
+        - Placeholders for secret-based env vars (set via set-env-vars action)
+
         Returns:
             YAML string for env section
         """
-        lines = ["env:"]
+        lines = []
+
+        # Always include PROJECT_NAME
         lines.append(f"  PROJECT_NAME: {self.project_name}")
 
-        # Add default environment variables
+        # Add default environment variables (literal values, not secrets)
         for key, value in self.env_vars_defaults.items():
             lines.append(f"  {key}: {value}")
 
-        return "\n".join(lines)
+        # Add env vars that come from secrets (using conditional syntax)
+        # These are set conditionally only if the secret exists
+        all_secret_vars = self.env_vars_all
+        for var_name in all_secret_vars:
+            # Use GitHub's conditional syntax to only set if secret exists
+            lines.append(f"  {var_name}: ${{{{ secrets.{var_name} || '' }}}}")
+
+        return "\n".join(lines) if lines else ""
+
+    def generate_env_vars_yaml(self) -> str:
+        """
+        Generate YAML lines for all environment variables to be set from secrets.
+        This is used in the #ENV_VARS# placeholder in CI templates.
+
+        Returns:
+            YAML string with conditional env var assignments
+        """
+        lines = []
+
+        # Add env vars that come from secrets (using conditional syntax)
+        # These are set conditionally only if the secret exists
+        all_secret_vars = self.env_vars_all
+        for var_name in all_secret_vars:
+            # Use GitHub's conditional syntax to only set if secret exists
+            lines.append(f"  {var_name}: ${{{{ secrets.{var_name} || '' }}}}")
+
+        return "\n".join(lines) if lines else "  # No additional env vars configured"
 
     def generate_pre_test_steps(self, platform: str = 'linux') -> str:
         """
@@ -321,12 +400,14 @@ class CIConfig:
                 f"Using deprecated [tool.wads.ci.testing.system_dependencies]. "
                 f"Please migrate to [tool.wads.ops.*] format with install-system-deps action",
                 DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
             # For Ubuntu/Linux, use apt-get
             if platform == 'linux':
                 install_commands.append("sudo apt-get update")
-                install_commands.append(f"sudo apt-get install -y {' '.join(legacy_packages)}")
+                install_commands.append(
+                    f"sudo apt-get install -y {' '.join(legacy_packages)}"
+                )
 
         # ---- Build YAML steps ----
         if install_commands:
@@ -369,7 +450,7 @@ class CIConfig:
                 f"Using deprecated [tool.wads.ci.testing.system_dependencies]. "
                 f"Please migrate to [tool.wads.ops.*] format with install-system-deps action",
                 DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
             # For Windows, use chocolatey
             install_commands.append(f"choco install -y {' '.join(windows_packages)}")
@@ -460,6 +541,7 @@ class CIConfig:
 
         return {
             "#ENV_BLOCK#": self.generate_env_block(),
+            "#ENV_VARS#": self.generate_env_vars_yaml(),
             "#PYTHON_VERSIONS#": json.dumps(self.python_versions),
             "#PRE_TEST_STEPS#": self.generate_pre_test_steps(),
             "#EXCLUDE_PATHS#": ",".join(self.exclude_paths),

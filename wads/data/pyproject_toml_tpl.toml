@@ -8,7 +8,7 @@ version = ""
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = ""}
+license = { text = "" }
 keywords = []
 authors = []
 dependencies = []
@@ -37,24 +37,17 @@ Homepage = ""
 # # Example: json = "mypackage.serializers:JSONSerializer"
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "ruff>=0.1.0",
-]
-docs = [
-    "sphinx>=6.0",
-    "sphinx-rtd-theme>=1.0",
-]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]
+docs = ["sphinx>=6.0", "sphinx-rtd-theme>=1.0"]
 
 [tool.ruff]
 line-length = 88
 target-version = "py310"
 exclude = [
-    "**/*.ipynb", 
-    ".git", 
-    ".venv", 
-    "build", 
+    "**/*.ipynb",
+    ".git",
+    ".venv",
+    "build",
     "dist",
     "tests",
     "examples",
@@ -82,11 +75,11 @@ select = [
 # Ignore specific rules that conflict or are too annoying
 ignore = [
     # Docstring Ignore (Your request)
-    "D203",  # D203: 1 blank line before class docstring (Conflict with other docstring styles)
+    "D203", # D203: 1 blank line before class docstring (Conflict with other docstring styles)
 
     # Common Ignores (Enable and uncomment if you find them annoying)
-    "E501",  # E501: Line too long (If you use an auto-formatter like Black/Ruff format, ignore this)
-    "B905",  # B905: `zip()` without an explicit `strict=` parameter
+    "E501", # E501: Line too long (If you use an auto-formatter like Black/Ruff format, ignore this)
+    "B905", # B905: `zip()` without an explicit `strict=` parameter
 ]
 
 # Configure settings for rule families
@@ -94,7 +87,7 @@ ignore = [
 convention = "google" # or "numpy" or "pep257"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D"]  # don't enforce docstrings in tests
+"tests/*" = ["D"]    # don't enforce docstrings in tests
 "examples/*" = ["D"]
 "scrap/*" = ["D"]
 
@@ -165,23 +158,33 @@ format = [
     # "ruff format --check .",
 ]
 
+# ============================================================================
 # 🌍 ENVIRONMENT VARIABLES
 # Control which environment variables are required or have defaults
 
 [tool.wads.ci.env]
-# Required environment variables - CI will fail if these are not set
+# Required environment variables - CI will FAIL if these are not set in secrets
+# These must be available in GitHub Secrets for CI to run
 # Format: list of variable names
-required = [
-    # "DATABASE_URL",
-    # "API_KEY",
-]
+required_envvars = []
+
+# Test-specific environment variables - CI will WARN if not set in secrets
+# Tests requiring these will be skipped or may fail, but CI continues
+# Format: list of variable names
+test_envvars = []
+
+# Extra/optional environment variables - loaded from secrets if available
+# No warnings if missing; purely optional functionality
+# Format: list of variable names
+extra_envvars = []
 
 # Default environment variables - set these if not provided by CI system
 # Format: key-value pairs (inline table syntax)
-# Note: These are template defaults; actual values should be in CI secrets
+# Note: These are literal defaults, NOT secret values
 # Example: defaults = {"LOG_LEVEL" = "DEBUG", "TESTING" = "true", "PYTHONUNBUFFERED" = "1"}
 defaults = {}
 
+# ============================================================================
 # ✅ CODE QUALITY AND FORMATTING
 # Tool-specific configuration for CI enforcement
 
@@ -205,6 +208,7 @@ enabled = false
 # python_version = "3.10"
 # ignore_missing_imports = true
 
+# ============================================================================
 # 🧪 TEST CONFIGURATION
 # Test-specific settings for CI
 
@@ -217,8 +221,8 @@ pytest_args = ["-v", "--tb=short"]
 
 # Coverage settings
 coverage_enabled = true
-coverage_threshold = 0  # Minimum coverage percentage (0 = no enforcement)
-coverage_report_format = ["term", "xml"]  # terminal, xml, html, etc.
+coverage_threshold = 0                   # Minimum coverage percentage (0 = no enforcement)
+coverage_report_format = ["term", "xml"] # terminal, xml, html, etc.
 
 # Test paths to exclude (in addition to pytest configuration)
 exclude_paths = ["examples", "scrap"]
@@ -226,8 +230,26 @@ exclude_paths = ["examples", "scrap"]
 # Run tests on Windows (informational only, may fail)
 test_on_windows = true
 
+
+# ============================================================================
+# 📊 CODE METRICS TRACKING
+# Track code quality metrics over time using umpyre
+
+[tool.wads.ci.metrics]
+# Enable code metrics collection after successful tests
+enabled = true
+# Path to umpyre config file (relative to repo root)
+config_path = ".github/umpyre-config.yml"
+# Git branch to store metrics data
+storage_branch = "code-metrics"
+# Python version to use for metrics collection
+python_version = "3.10"
+# Run even if workflow failed (not recommended)
+force_run = false
+
 # ============================================================================
 # 📦 BUILD AND PUBLISH SETTINGS
+# ============================================================================
 # Control build and publication behavior
 
 [tool.wads.ci.build]
@@ -241,7 +263,10 @@ wheel = true
 enabled = true
 # skip_existing = false  # Skip upload if version already exists
 
+
+# ============================================================================
 # 📄 DOCUMENTATION SETTINGS
+# ============================================================================
 # Control documentation generation and publishing
 
 [tool.wads.ci.docs]

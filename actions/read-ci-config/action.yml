@@ -35,6 +35,21 @@ outputs:
   build-wheel:
     description: 'Whether to build wheel (true/false)'
     value: ${{ steps.config.outputs.build-wheel }}
+  metrics-enabled:
+    description: 'Whether code metrics tracking is enabled (true/false)'
+    value: ${{ steps.config.outputs.metrics-enabled }}
+  metrics-config-path:
+    description: 'Path to umpyre config file'
+    value: ${{ steps.config.outputs.metrics-config-path }}
+  metrics-storage-branch:
+    description: 'Git branch to store metrics data'
+    value: ${{ steps.config.outputs.metrics-storage-branch }}
+  metrics-python-version:
+    description: 'Python version for metrics collection'
+    value: ${{ steps.config.outputs.metrics-python-version }}
+  metrics-force-run:
+    description: 'Run metrics even if workflow failed (true/false)'
+    value: ${{ steps.config.outputs.metrics-force-run }}
 
 runs:
   using: 'composite'
@@ -53,65 +68,4 @@ runs:
       id: config
       shell: bash
       run: |
-        python - <<'EOF'
-        import json
-        import os
-        from pathlib import Path
-        from wads.ci_config import read_ci_config
-        
-        # Read configuration
-        pyproject_path = "${{ inputs.pyproject-path }}"
-        config = read_ci_config(pyproject_path)
-        
-        # Export as outputs
-        def set_output(name, value):
-            """Set GitHub Actions output"""
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-                # Handle multiline values
-                if isinstance(value, (list, dict)):
-                    value = json.dumps(value)
-                elif isinstance(value, bool):
-                    value = str(value).lower()
-                f.write(f"{name}={value}\n")
-        
-        def set_env(name, value):
-            """Set GitHub Actions environment variable"""
-            with open(os.environ['GITHUB_ENV'], 'a') as f:
-                if isinstance(value, (list, dict)):
-                    value = json.dumps(value)
-                elif isinstance(value, bool):
-                    value = str(value).lower()
-                f.write(f"{name}={value}\n")
-        
-        # Project metadata
-        set_output('project-name', config.project_name)
-        set_env('PROJECT_NAME', config.project_name)
-        
-        # Testing configuration
-        set_output('python-versions', config.python_versions)
-        set_output('pytest-args', ' '.join(config.pytest_args))
-        set_output('coverage-enabled', config.coverage_enabled)
-        set_output('exclude-paths', ','.join(config.exclude_paths))
-        set_output('test-on-windows', config.test_on_windows)
-        
-        # Build configuration
-        set_output('build-sdist', config.build_sdist)
-        set_output('build-wheel', config.build_wheel)
-        
-        print("✅ CI configuration loaded successfully")
-        print(f"   Project: {config.project_name}")
-        print(f"   Python versions: {config.python_versions}")
-        print(f"   Coverage: {config.coverage_enabled}")
-        print(f"   Test on Windows: {config.test_on_windows}")
-        EOF
-
-    - name: Display Configuration
-      shell: bash
-      run: |
-        echo "## 🔧 CI Configuration" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Project:** ${{ steps.config.outputs.project-name }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Python Versions:** ${{ steps.config.outputs.python-versions }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Coverage Enabled:** ${{ steps.config.outputs.coverage-enabled }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Test on Windows:** ${{ steps.config.outputs.test-on-windows }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+        python3 -m wads.scripts.read_ci_config "${{ inputs.pyproject-path }}"

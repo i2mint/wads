@@ -30,58 +30,19 @@ runs:
       with:
         ssh-private-key: ${{ inputs.ssh-private-key }}
 
-    - name: Install Build Tools
-      shell: bash
-      run: |
-        set -e
-        echo "Installing modern build tools"
-        python -m pip install --upgrade pip build
-
-    - name: Install Dependencies
-      shell: bash
-      run: |
-        set -e
-        echo "::group::Installing project dependencies"
-
-        # Try different dependency files
-        if [ -f "pyproject.toml" ]; then
-          echo "Installing from pyproject.toml"
-          python -m pip install -e . || echo "Could not install in editable mode, continuing..."
-        elif [ -f "setup.cfg" ]; then
-          echo "Installing from setup.cfg"
-          python -m pip install -e . || echo "Could not install in editable mode, continuing..."
-        elif [ -f "requirements.txt" ]; then
-          echo "Installing from requirements.txt"
-          python -m pip install -r requirements.txt
-        fi
-
-        echo "::endgroup::"
-
     - name: Build Distributions
       shell: bash
       run: |
         set -e
-        echo "::group::Building distributions"
-
-        # Determine what to build
-        build_args=""
-
-        if [ "${{ inputs.sdist }}" = "true" ] && [ "${{ inputs.wheel }}" = "false" ]; then
-          build_args="--sdist"
-        elif [ "${{ inputs.wheel }}" = "true" ] && [ "${{ inputs.sdist }}" = "false" ]; then
-          build_args="--wheel"
+        
+        build_args="--output-dir=${{ inputs.output-dir }}"
+        
+        if [ "${{ inputs.sdist }}" = "false" ]; then
+          build_args="$build_args --no-sdist"
         fi
-        # If both true or both not specified, build will create both by default
-
-        # Set output directory
-        if [ -n "${{ inputs.output-dir }}" ]; then
-          build_args="$build_args --outdir ${{ inputs.output-dir }}"
+        
+        if [ "${{ inputs.wheel }}" = "false" ]; then
+          build_args="$build_args --no-wheel"
         fi
-
-        echo "Running: python -m build $build_args"
-        python -m build $build_args
-
-        echo "Built distributions:"
-        ls -lh ${{ inputs.output-dir }}/
-
-        echo "::endgroup::"
+        
+        python3 -m wads.scripts.build_dist $build_args

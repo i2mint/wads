@@ -1,6 +1,10 @@
 name: Continuous Integration (2025-11)
 on: [push, pull_request]
 
+# Note: Environment variables (PROJECT_NAME and vars from [tool.wads.ci.env])
+# are set by the read-ci-config action in the setup job and made available
+# to all subsequent jobs via GITHUB_ENV
+
 jobs:
   # First job: Read configuration from pyproject.toml
   setup:
@@ -15,6 +19,11 @@ jobs:
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
+      metrics-enabled: ${{ steps.config.outputs.metrics-enabled }}
+      metrics-config-path: ${{ steps.config.outputs.metrics-config-path }}
+      metrics-storage-branch: ${{ steps.config.outputs.metrics-storage-branch }}
+      metrics-python-version: ${{ steps.config.outputs.metrics-python-version }}
+      metrics-force-run: ${{ steps.config.outputs.metrics-force-run }}
     
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +82,17 @@ jobs:
           exclude: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
           pytest-args: ${{ needs.setup.outputs.pytest-args }}
+
+      - name: Track Code Metrics
+        if: needs.setup.outputs.metrics-enabled == 'true'
+        uses: i2mint/umpyre/actions/track-metrics@master
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: ${{ needs.setup.outputs.metrics-config-path }}
+          storage-branch: ${{ needs.setup.outputs.metrics-storage-branch }}
+          python-version: ${{ needs.setup.outputs.metrics-python-version }}
+          force-run: ${{ needs.setup.outputs.metrics-force-run }}
 
   # Optional Windows testing (if enabled in config)
   windows-validation:
@@ -154,12 +174,6 @@ jobs:
           pypi-username: ${{ secrets.PYPI_USERNAME }}
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
           skip-existing: false
-
-      - name: Track Code Metrics
-        uses: i2mint/umpyre/actions/track-metrics@master
-        continue-on-error: true
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
