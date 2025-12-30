@@ -71,6 +71,55 @@ pjoin = lambda *p: os.path.join(*p)
 DOCSRC = "docsrc"
 DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
+# PEP 508 compliant package name pattern
+# Must begin and end with ASCII letter/digit, contain only ASCII letters/digits, underscores, hyphens, periods
+VALID_PACKAGE_NAME_PATTERN = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$')
+
+
+def validate_package_name(name: str, raise_error: bool = True) -> bool:
+    """Validate that a package name follows PEP 508 naming conventions.
+
+    Package names must:
+    - Begin and end with ASCII letters or digits
+    - Contain only ASCII letters, digits, underscores, hyphens, and periods
+
+    Args:
+        name: The package name to validate
+        raise_error: If True, raises ValueError on invalid name. If False, returns bool.
+
+    Returns:
+        True if valid, False if invalid (when raise_error=False)
+
+    Raises:
+        ValueError: If name is invalid and raise_error=True
+
+    Examples:
+        >>> validate_package_name('wads')
+        True
+        >>> validate_package_name('wads-test')
+        True
+        >>> validate_package_name('wads_test')
+        True
+        >>> validate_package_name('_wads_test', raise_error=False)
+        False
+        >>> validate_package_name('wads-test-', raise_error=False)
+        False
+    """
+    is_valid = bool(VALID_PACKAGE_NAME_PATTERN.match(name))
+
+    if not is_valid and raise_error:
+        raise ValueError(
+            f"Invalid package name: '{name}'\n"
+            f"Package names must:\n"
+            f"  - Begin and end with ASCII letters or digits\n"
+            f"  - Contain only ASCII letters, digits, underscores, hyphens, and periods\n"
+            f"Examples of valid names: 'wads', 'wads-test', 'wads_test', 'wads2'\n"
+            f"Examples of invalid names: '_wads', 'wads-', 'wads_', '-wads'\n"
+            f"See PEP 508 for details: https://peps.python.org/pep-0508/#names"
+        )
+
+    return is_valid
+
 
 def _has_pyproject_toml(pkg_dir: str) -> bool:
     """Check if package uses pyproject.toml"""
@@ -90,7 +139,7 @@ def _has_setup_cfg(pkg_dir: str) -> bool:
     return os.path.isfile(setup_cfg_path)
 
 
-def get_name_from_configs(pkg_dir, *, assert_exists=True):
+def get_name_from_configs(pkg_dir, *, assert_exists=True, validate_name=True):
     """Get name from local config file (pyproject.toml or setup.cfg)"""
     pkg_dir = _get_pkg_dir(pkg_dir)
 
@@ -103,6 +152,10 @@ def get_name_from_configs(pkg_dir, *, assert_exists=True):
 
     if assert_exists:
         assert name is not None, "No name was found in configs"
+
+    if name and validate_name:
+        validate_package_name(name)
+
     return name
 
 
@@ -341,6 +394,11 @@ def go(
 
     """
 
+    # Validate package name early to provide clear error message
+    pkg_name = get_name_from_configs(pkg_dir, validate_name=True)
+    if verbose:
+        print(f"Packaging: {pkg_name}")
+
     # TODO: Would like version to be decremented if the publication attempt fails!
     version = increment_configs_version(pkg_dir, version=version)
     update_setup_cfg(pkg_dir, verbose=verbose)
@@ -565,9 +623,9 @@ def get_pkg_name(pkg_spec: PkgSpec, validate=True) -> PkgName:
     pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_spec, validate=validate)
     configs_pkg_name = get_name_from_configs(pkg_dir)
     if validate:
-        assert pkg_dirname == configs_pkg_name, (
-            f"({pkg_dirname=} and {configs_pkg_name=} were not the same"
-        )
+        assert (
+            pkg_dirname == configs_pkg_name
+        ), f"({pkg_dirname=} and {configs_pkg_name=} were not the same"
     return configs_pkg_name
 
 
@@ -695,6 +753,10 @@ def run_setup(pkg_dir):
     """Run ``python -m build`` (modern PEP 517 compliant build)"""
     print("--------------------------- build_output ---------------------------")
     pkg_dir = _get_pkg_dir(pkg_dir)
+
+    # Validate package name before attempting build
+    pkg_name = get_name_from_configs(pkg_dir, validate_name=True)
+
     original_dir = os.getcwd()
     os.chdir(pkg_dir)
 
@@ -801,9 +863,9 @@ def read_configs(
     *,
     verbose=False,
 ):
-    assert isinstance(pkg_dir, PathStr), (
-        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
-    )
+    assert isinstance(
+        pkg_dir, PathStr
+    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
     pkg_dir = _get_pkg_dir(pkg_dir)
 
     # Try pyproject.toml first (modern approach)
@@ -881,9 +943,9 @@ def write_configs(
     preproc=preprocess_ini_section_items,
     dflt_options=DFLT_OPTIONS,
 ):
-    assert isinstance(pkg_dir, PathStr), (
-        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
-    )
+    assert isinstance(
+        pkg_dir, PathStr
+    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
@@ -1283,9 +1345,9 @@ def read_and_resolve_setup_configs(
 
     name = configs.get("name") or pkg_dirname
     if assert_names:
-        assert name == pkg_dirname, (
-            f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
-        )
+        assert (
+            name == pkg_dirname
+        ), f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
 
     if "root_url" in configs:
         root_url = configs["root_url"]
