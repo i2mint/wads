@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.agents &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.agents.ci_debug_agent" href="agents/ci_debug_agent.html" />
+    <link rel="prev" title="wads" href="../wads.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.agents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.CIDiagnosis"><code class="docutils literal notranslate"><span class="pre">CIDiagnosis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.DependencyIssue"><code class="docutils literal notranslate"><span class="pre">DependencyIssue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.DependencyReport"><code class="docutils literal notranslate"><span class="pre">DependencyReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.TestAnalysisReport"><code class="docutils literal notranslate"><span class="pre">TestAnalysisReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.TestFailure"><code class="docutils literal notranslate"><span class="pre">TestFailure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.TestFailurePattern"><code class="docutils literal notranslate"><span class="pre">TestFailurePattern</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.analyze_dependencies"><code class="docutils literal notranslate"><span class="pre">analyze_dependencies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.diagnose_ci_failure"><code class="docutils literal notranslate"><span class="pre">diagnose_ci_failure()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.agents.parse_pytest_output"><code class="docutils literal notranslate"><span class="pre">parse_pytest_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.agents</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/agents.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.agents">
+<span id="wads-agents"></span><h1>wads.agents<a class="headerlink" href="#module-wads.agents" title="Link to this heading"></a></h1>
+<p>Wads AI Agents</p>
+<p>Autonomous agents for diagnosing and fixing common development issues.</p>
+<p>Available Agents:
+- ci_debug_agent: Analyzes failed CI runs and proposes fixes
+- dependency_resolver: Analyzes import errors and missing dependencies
+- test_analyzer: Analyzes pytest failures and categorizes them</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.CIDiagnosis">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">CIDiagnosis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">failures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agents/ci_debug_agent.html#wads.agents.ci_debug_agent.TestFailure" title="wads.agents.ci_debug_agent.TestFailure"><span class="pre">TestFailure</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_system_deps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_python_deps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_issues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proposed_fixes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/ci_debug_agent.html#CIDiagnosis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.CIDiagnosis" title="Link to this definition"></a></dt>
+<dd><p>Result of CI failure diagnosis.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.DependencyIssue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">DependencyIssue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">import_statement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suggested_package</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_installed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/dependency_resolver.html#DependencyIssue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.DependencyIssue" title="Link to this definition"></a></dt>
+<dd><p>Represents a missing or problematic dependency.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.DependencyReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">DependencyReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">missing_packages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyIssue" title="wads.agents.dependency_resolver.DependencyIssue"><span class="pre">DependencyIssue</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unused_packages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_conflicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recommendations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/dependency_resolver.html#DependencyReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.DependencyReport" title="Link to this definition"></a></dt>
+<dd><p>Result of dependency analysis.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.TestAnalysisReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">TestAnalysisReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_failures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agents/test_analyzer.html#wads.agents.test_analyzer.TestFailurePattern" title="wads.agents.test_analyzer.TestFailurePattern"><span class="pre">TestFailurePattern</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flaky_tests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slow_tests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recommendations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/test_analyzer.html#TestAnalysisReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.TestAnalysisReport" title="Link to this definition"></a></dt>
+<dd><p>Result of test failure analysis.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.TestFailure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">TestFailure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/ci_debug_agent.html#TestFailure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.TestFailure" title="Link to this definition"></a></dt>
+<dd><p>Represents a single test failure.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.agents.TestFailurePattern">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">TestFailurePattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">examples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suggested_fix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/agents/test_analyzer.html#TestFailurePattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.TestFailurePattern" title="Link to this definition"></a></dt>
+<dd><p>Represents a pattern of test failures.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.agents.analyze_dependencies">
+<span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">analyze_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_unused</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyReport" title="wads.agents.dependency_resolver.DependencyReport"><span class="pre">DependencyReport</span></a></span></span><a class="reference internal" href="../../_modules/wads/agents/dependency_resolver.html#analyze_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.analyze_dependencies" title="Link to this definition"></a></dt>
+<dd><p>Analyze project dependencies and identify issues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_path</strong> – Path to project directory</p></li>
+<li><p><strong>error_logs</strong> – Optional error logs to parse</p></li>
+<li><p><strong>check_unused</strong> – Whether to check for unused dependencies</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DependencyReport with analysis results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.agents.diagnose_ci_failure">
+<span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">diagnose_ci_failure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agents/ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis" title="wads.agents.ci_debug_agent.CIDiagnosis"><span class="pre">CIDiagnosis</span></a></span></span><a class="reference internal" href="../../_modules/wads/agents/ci_debug_agent.html#diagnose_ci_failure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.diagnose_ci_failure" title="Link to this definition"></a></dt>
+<dd><p>Diagnose a CI failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repo</strong> – Repository in format ‘owner/name’</p></li>
+<li><p><strong>run_id</strong> – Specific run ID, or None for latest failed run</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CIDiagnosis with analysis results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.agents.parse_pytest_output">
+<span class="sig-prename descclassname"><span class="pre">wads.agents.</span></span><span class="sig-name descname"><span class="pre">parse_pytest_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="agents/test_analyzer.html#wads.agents.test_analyzer.TestAnalysisReport" title="wads.agents.test_analyzer.TestAnalysisReport"><span class="pre">TestAnalysisReport</span></a></span></span><a class="reference internal" href="../../_modules/wads/agents/test_analyzer.html#parse_pytest_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.agents.parse_pytest_output" title="Link to this definition"></a></dt>
+<dd><p>Parse pytest output and analyze failures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output</strong> – Pytest output text</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>TestAnalysisReport with analysis</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../wads.html" class="btn btn-neutral float-left" title="wads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="agents/ci_debug_agent.html" class="btn btn-neutral float-right" title="wads.agents.ci_debug_agent" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

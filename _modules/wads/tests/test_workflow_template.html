@@ -1,0 +1,576 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_workflow_template &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_workflow_template</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_workflow_template</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Test the github_ci_publish_2025.yml workflow template.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestWorkflowTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the CI workflow template structure and validity.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestWorkflowTemplate.template_path">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_path">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to the workflow template.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;github_ci_publish_2025.yml&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.template_content">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_content">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the template file content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">template_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.template_data">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_data">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the template as YAML.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">template_content</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_file_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_file_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_file_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the template file exists.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">template_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">template_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_is_valid_yaml">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_is_valid_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_is_valid_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template is valid YAML.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">template_content</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_has_required_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_required_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_required_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template has required top-level structure.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="c1"># YAML parses &#39;on&#39; as True (boolean), so check for True or &#39;on&#39;</span>
+        <span class="k">assert</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">template_data</span> <span class="ow">or</span> <span class="s1">&#39;on&#39;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="k">assert</span> <span class="s1">&#39;jobs&#39;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_has_required_jobs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_required_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_required_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template has all required jobs.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="n">required_jobs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;setup&#39;</span><span class="p">,</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">required_jobs</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing required job: </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_has_optional_jobs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_optional_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_optional_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template includes optional jobs.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># These jobs should exist but may be conditional</span>
+        <span class="n">optional_jobs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;windows-validation&#39;</span><span class="p">,</span> <span class="s1">&#39;github-pages&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">optional_jobs</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing optional job: </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_setup_job_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_setup_job_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_setup_job_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test setup job has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">setup_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;setup&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">setup_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;runs-on&#39;</span> <span class="ow">in</span> <span class="n">setup_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;outputs&#39;</span> <span class="ow">in</span> <span class="n">setup_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">setup_job</span>
+
+        <span class="c1"># Check that it outputs configuration</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">setup_job</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">]</span>
+        <span class="n">expected_outputs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;python-versions&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pytest-args&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;coverage-enabled&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;test-on-windows&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;build-sdist&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;build-wheel&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">expected_outputs</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing output: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_setup_job_uses_read_ci_config_action">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_setup_job_uses_read_ci_config_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_setup_job_uses_read_ci_config_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that setup job uses read-ci-config action.&quot;&quot;&quot;</span>
+        <span class="n">setup_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;setup&#39;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">setup_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Find the step that reads config</span>
+        <span class="n">config_step</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;config&#39;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">config_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Missing config reading step&quot;</span>
+        <span class="k">assert</span> <span class="s1">&#39;uses&#39;</span> <span class="ow">in</span> <span class="n">config_step</span>
+        <span class="k">assert</span> <span class="s1">&#39;i2mint/wads/actions/read-ci-config@master&#39;</span> <span class="ow">in</span> <span class="n">config_step</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_validation_job_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test validation job has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;needs&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;setup&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span><span class="p">[</span><span class="s1">&#39;needs&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s1">&#39;runs-on&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;strategy&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">validation_job</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_validation_job_uses_matrix">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_uses_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validation job uses matrix strategy.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+        <span class="n">strategy</span> <span class="o">=</span> <span class="n">validation_job</span><span class="p">[</span><span class="s1">&#39;strategy&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;matrix&#39;</span> <span class="ow">in</span> <span class="n">strategy</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">[</span><span class="s1">&#39;matrix&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s1">&#39;python-version&#39;</span> <span class="ow">in</span> <span class="n">matrix</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_validation_job_uses_config_outputs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_config_outputs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_uses_config_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validation job references setup outputs.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Convert to string to search for references</span>
+        <span class="n">job_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">validation_job</span><span class="p">)</span>
+
+        <span class="c1"># Should reference setup job outputs</span>
+        <span class="k">assert</span> <span class="s1">&#39;needs.setup.outputs&#39;</span> <span class="ow">in</span> <span class="n">job_str</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_validation_job_has_required_steps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_has_required_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_has_required_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validation job has required steps.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">validation_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Get step names and uses</span>
+        <span class="n">step_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uses&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span>
+
+        <span class="c1"># Check for essential steps (either in name or uses)</span>
+        <span class="n">essential_keywords</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;checkout&#39;</span><span class="p">,</span>  <span class="c1"># actions/checkout</span>
+            <span class="s1">&#39;python&#39;</span><span class="p">,</span>  <span class="c1"># setup-python or Python in name</span>
+            <span class="s1">&#39;install&#39;</span><span class="p">,</span>  <span class="c1"># install dependencies</span>
+            <span class="s1">&#39;test&#39;</span><span class="p">,</span>  <span class="c1"># run tests</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">essential_keywords</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">keyword</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="n">keyword</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">uses</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">uses</span> <span class="ow">in</span> <span class="n">step_info</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Missing step containing keyword: </span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_validation_job_uses_wads_actions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_wads_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_uses_wads_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validation job uses wads actions.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">validation_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Collect all action uses</span>
+        <span class="n">action_uses</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uses&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="s1">&#39;uses&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+
+        <span class="c1"># Should use wads actions</span>
+        <span class="n">wads_actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">action_uses</span> <span class="k">if</span> <span class="s1">&#39;i2mint/wads/actions/&#39;</span> <span class="ow">in</span> <span class="n">u</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">wads_actions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Validation job should use wads actions&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_publish_job_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test publish job has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;needs&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;validation&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span><span class="p">[</span><span class="s1">&#39;needs&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s1">&#39;runs-on&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span>
+        <span class="k">assert</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_publish_job_conditional_execution">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_conditional_execution">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_conditional_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish job only runs on main/master.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;if&#39;</span> <span class="ow">in</span> <span class="n">publish_job</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">publish_job</span><span class="p">[</span><span class="s1">&#39;if&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Should check branch</span>
+        <span class="k">assert</span> <span class="s1">&#39;github.ref&#39;</span> <span class="ow">in</span> <span class="n">condition</span>
+        <span class="k">assert</span> <span class="s1">&#39;master&#39;</span> <span class="ow">in</span> <span class="n">condition</span> <span class="ow">or</span> <span class="s1">&#39;main&#39;</span> <span class="ow">in</span> <span class="n">condition</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_publish_job_has_version_and_build_steps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_has_version_and_build_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_has_version_and_build_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish job has version bump and build steps.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">publish_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+
+        <span class="n">step_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span>
+
+        <span class="c1"># Should have version and build steps</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;version&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">step_names</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;build&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">step_names</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="s1">&#39;pypi&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s1">&#39;publish&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">step_names</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_windows_validation_is_conditional">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_windows_validation_is_conditional">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_conditional</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that Windows validation is conditional.&quot;&quot;&quot;</span>
+        <span class="n">windows_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;windows-validation&#39;</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="s1">&#39;if&#39;</span> <span class="ow">in</span> <span class="n">windows_job</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">windows_job</span><span class="p">[</span><span class="s1">&#39;if&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Should check test-on-windows output</span>
+        <span class="k">assert</span> <span class="s1">&#39;test-on-windows&#39;</span> <span class="ow">in</span> <span class="n">condition</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_windows_validation_is_non_blocking">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_windows_validation_is_non_blocking">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_non_blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that Windows validation doesn&#39;t block pipeline.&quot;&quot;&quot;</span>
+        <span class="n">windows_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;windows-validation&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Should have continue-on-error</span>
+        <span class="k">assert</span> <span class="s1">&#39;continue-on-error&#39;</span> <span class="ow">in</span> <span class="n">windows_job</span>
+        <span class="k">assert</span> <span class="n">windows_job</span><span class="p">[</span><span class="s1">&#39;continue-on-error&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_all_jobs_skip_on_skip_ci">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_all_jobs_skip_on_skip_ci">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_all_jobs_skip_on_skip_ci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that jobs respect [skip ci] commit message.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Most jobs should skip on [skip ci]</span>
+        <span class="n">conditional_jobs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="s1">&#39;windows-validation&#39;</span><span class="p">,</span> <span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">conditional_jobs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+                <span class="n">job</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">job_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">&#39;if&#39;</span> <span class="ow">in</span> <span class="n">job</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="s1">&#39;[skip ci]&#39;</span> <span class="ow">in</span> <span class="n">job</span><span class="p">[</span><span class="s1">&#39;if&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;skip ci&#39;</span> <span class="ow">in</span> <span class="n">job</span><span class="p">[</span><span class="s1">&#39;if&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_actions_use_correct_versions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_actions_use_correct_versions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_use_correct_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that actions use appropriate version tags.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Collect all action uses</span>
+        <span class="n">all_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="s1">&#39;uses&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">all_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Check wads actions use @master or specific version</span>
+        <span class="n">wads_actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">all_actions</span> <span class="k">if</span> <span class="s1">&#39;i2mint/wads/actions/&#39;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">wads_actions</span><span class="p">:</span>
+            <span class="c1"># Should have version specifier</span>
+            <span class="k">assert</span> <span class="s1">&#39;@&#39;</span> <span class="ow">in</span> <span class="n">action</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Action missing version: </span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_no_hardcoded_secrets">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_no_hardcoded_secrets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_no_hardcoded_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template doesn&#39;t contain hardcoded secrets.&quot;&quot;&quot;</span>
+        <span class="c1"># Common secret patterns</span>
+        <span class="n">secret_patterns</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;password:&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;token:&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;api_key:&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;secret:&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">content_lower</span> <span class="o">=</span> <span class="n">template_content</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">secret_patterns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">content_lower</span><span class="p">:</span>
+                <span class="c1"># Make sure it&#39;s using secrets context</span>
+                <span class="k">assert</span> <span class="s1">&#39;secrets.&#39;</span> <span class="ow">in</span> <span class="n">template_content</span> <span class="ow">or</span> <span class="s1">&#39;${{&#39;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_checkout_actions_have_correct_settings">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_checkout_actions_have_correct_settings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_checkout_actions_have_correct_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that checkout actions have appropriate settings.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;publish&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Find checkout step in publish</span>
+        <span class="n">checkout_step</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">s</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">publish_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">&#39;actions/checkout&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uses&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">checkout_step</span><span class="p">:</span>
+            <span class="n">with_params</span> <span class="o">=</span> <span class="n">checkout_step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;with&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="c1"># Publish should fetch full history for version generation</span>
+            <span class="k">assert</span> <span class="s1">&#39;fetch-depth&#39;</span> <span class="ow">in</span> <span class="n">with_params</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_python_setup_actions_use_matrix">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_python_setup_actions_use_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_python_setup_actions_use_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that Python setup uses matrix variables correctly.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Find Python setup step</span>
+        <span class="n">python_step</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">s</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">validation_job</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">&#39;actions/setup-python&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uses&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">python_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">with_params</span> <span class="o">=</span> <span class="n">python_step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;with&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">assert</span> <span class="s1">&#39;python-version&#39;</span> <span class="ow">in</span> <span class="n">with_params</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_has_proper_permissions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_proper_permissions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_proper_permissions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that jobs have appropriate permissions where needed.&quot;&quot;&quot;</span>
+        <span class="c1"># GitHub pages job should have permissions</span>
+        <span class="k">if</span> <span class="s1">&#39;github-pages&#39;</span> <span class="ow">in</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]:</span>
+            <span class="n">gh_pages_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">][</span><span class="s1">&#39;github-pages&#39;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="s1">&#39;permissions&#39;</span> <span class="ow">in</span> <span class="n">gh_pages_job</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_job_dependencies_are_correct">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_job_dependencies_are_correct">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_job_dependencies_are_correct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that job dependencies form a valid DAG.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># validation depends on setup</span>
+        <span class="k">assert</span> <span class="s1">&#39;setup&#39;</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">][</span><span class="s1">&#39;needs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># publish depends on validation (and setup via validation)</span>
+        <span class="n">needs</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="s1">&#39;publish&#39;</span><span class="p">][</span><span class="s1">&#39;needs&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">needs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="s1">&#39;validation&#39;</span> <span class="ow">in</span> <span class="n">needs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">needs</span> <span class="o">==</span> <span class="s1">&#39;validation&#39;</span>
+
+        <span class="c1"># windows-validation depends on setup</span>
+        <span class="k">assert</span> <span class="s1">&#39;setup&#39;</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s1">&#39;windows-validation&#39;</span><span class="p">][</span><span class="s1">&#39;needs&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestWorkflowTemplate.test_template_uses_latest_action_versions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_uses_latest_action_versions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_uses_latest_action_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that standard actions use recent versions.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Collect all action uses</span>
+        <span class="n">all_actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="s1">&#39;uses&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">all_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="s1">&#39;uses&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Check for outdated versions of common actions</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">all_actions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;actions/checkout@&#39;</span> <span class="ow">in</span> <span class="n">action</span><span class="p">:</span>
+                <span class="c1"># Should use v4 or higher</span>
+                <span class="k">assert</span> <span class="s1">&#39;@v4&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">or</span> <span class="s1">&#39;@v5&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">or</span> <span class="s1">&#39;@v6&#39;</span> <span class="ow">in</span> <span class="n">action</span>
+
+            <span class="k">if</span> <span class="s1">&#39;actions/setup-python@&#39;</span> <span class="ow">in</span> <span class="n">action</span><span class="p">:</span>
+                <span class="c1"># Should use v5 or higher</span>
+                <span class="k">assert</span> <span class="s1">&#39;@v5&#39;</span> <span class="ow">in</span> <span class="n">action</span> <span class="ow">or</span> <span class="s1">&#39;@v6&#39;</span> <span class="ow">in</span> <span class="n">action</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

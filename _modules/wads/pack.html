@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.55 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,11 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -60,12 +65,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
@@ -169,6 +183,58 @@
 <span class="n">DOCSRC</span> <span class="o">=</span> <span class="s2">&quot;docsrc&quot;</span>
 <span class="n">DFLT_PUBLISH_DOCS_TO</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &#39;github&#39;</span>
 
+<span class="c1"># PEP 508 compliant package name pattern</span>
+<span class="c1"># Must begin and end with ASCII letter/digit, contain only ASCII letters/digits, underscores, hyphens, periods</span>
+<span class="n">VALID_PACKAGE_NAME_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_package_name">
+<a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.validate_package_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_package_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">raise_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate that a package name follows PEP 508 naming conventions.</span>
+
+<span class="sd">    Package names must:</span>
+<span class="sd">    - Begin and end with ASCII letters or digits</span>
+<span class="sd">    - Contain only ASCII letters, digits, underscores, hyphens, and periods</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: The package name to validate</span>
+<span class="sd">        raise_error: If True, raises ValueError on invalid name. If False, returns bool.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if valid, False if invalid (when raise_error=False)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If name is invalid and raise_error=True</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; validate_package_name(&#39;wads&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; validate_package_name(&#39;wads-test&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; validate_package_name(&#39;wads_test&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; validate_package_name(&#39;_wads_test&#39;, raise_error=False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; validate_package_name(&#39;wads-test-&#39;, raise_error=False)</span>
+<span class="sd">        False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_valid</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">VALID_PACKAGE_NAME_PATTERN</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span> <span class="ow">and</span> <span class="n">raise_error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid package name: &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Package names must:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  - Begin and end with ASCII letters or digits</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;  - Contain only ASCII letters, digits, underscores, hyphens, and periods</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Examples of valid names: &#39;wads&#39;, &#39;wads-test&#39;, &#39;wads_test&#39;, &#39;wads2&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Examples of invalid names: &#39;_wads&#39;, &#39;wads-&#39;, &#39;wads_&#39;, &#39;-wads&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;See PEP 508 for details: https://peps.python.org/pep-0508/#names&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">is_valid</span></div>
+
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_has_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if package uses pyproject.toml&quot;&quot;&quot;</span>
@@ -190,7 +256,7 @@
 
 <div class="viewcode-block" id="get_name_from_configs">
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.get_name_from_configs">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">assert_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">assert_exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate_name</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get name from local config file (pyproject.toml or setup.cfg)&quot;&quot;&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
@@ -203,6 +269,10 @@
 
     <span class="k">if</span> <span class="n">assert_exists</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;No name was found in configs&quot;</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">validate_name</span><span class="p">:</span>
+        <span class="n">validate_package_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">name</span></div>
 
 
@@ -450,6 +520,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># Validate package name early to provide clear error message</span>
+    <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">validate_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Packaging: </span><span class="si">{</span><span class="n">pkg_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="c1"># TODO: Would like version to be decremented if the publication attempt fails!</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">increment_configs_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
     <span class="n">update_setup_cfg</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
@@ -686,9 +761,9 @@
     <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_dirname</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
     <span class="n">configs_pkg_name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span><span class="p">,</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
-        <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
     <span class="k">return</span> <span class="n">configs_pkg_name</span></div>
 
 
@@ -828,6 +903,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run ``python -m build`` (modern PEP 517 compliant build)&quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------- build_output ---------------------------&quot;</span><span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+
+    <span class="c1"># Validate package name before attempting build</span>
+    <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">validate_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="n">original_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
@@ -944,9 +1023,9 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
-    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
+    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="c1"># Try pyproject.toml first (modern approach)</span>
@@ -1024,9 +1103,9 @@
     <span class="n">preproc</span><span class="o">=</span><span class="n">preprocess_ini_section_items</span><span class="p">,</span>
     <span class="n">dflt_options</span><span class="o">=</span><span class="n">DFLT_OPTIONS</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
-    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
+    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
@@ -1452,9 +1531,9 @@
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_dirname</span>
     <span class="k">if</span> <span class="n">assert_names</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span><span class="p">,</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
-        <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
 
     <span class="k">if</span> <span class="s2">&quot;root_url&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
         <span class="n">root_url</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;root_url&quot;</span><span class="p">]</span>

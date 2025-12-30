@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; wads 0.1.55 documentation</title>
+  <title>Index &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=aabd07df"></script>
+      <script src="_static/documentation_options.js?v=393d09ac"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,11 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -60,12 +65,21 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/util.html">wads.util</a></li>
@@ -136,10 +150,20 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.action_files">action_files() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.actions_dir">actions_dir() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.add">add() (wads.populate.PopulateTracker method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents.html#wads.agents.analyze_dependencies">analyze_dependencies() (in module wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.analyze_dependencies">(in module wads.agents.dependency_resolver)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/migration.html#wads.migration.analyze_manifest_in">analyze_manifest_in() (in module wads.migration)</a>
 </li>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.attention">attention() (wads.populate.PopulateTracker method)</a>
@@ -151,6 +175,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.build_config">build_config (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.build_distributions">build_distributions() (in module wads.scripts.build_dist)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -164,28 +190,42 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.categorize_failure">categorize_failure() (in module wads.agents.test_analyzer)</a>
+</li>
       <li><a href="module_docs/wads/populate.html#wads.populate.cd">cd() (in module wads.populate)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.check_environment_variables">check_environment_variables() (in module wads.setup_utils)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationRule.check_func">check_func (wads.ci_migration.MigrationRule attribute)</a>
 </li>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.check_if_installed">check_if_installed() (in module wads.install_system_deps)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.check_in">check_in() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.check_system_dependency">check_system_dependency() (in module wads.setup_utils)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig">CIConfig (class in wads.ci_config)</a>
 </li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.CIDiagnosis">CIDiagnosis (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis">(class in wads.agents.ci_debug_agent)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_format">commands_format (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_lint">commands_lint (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_post_test">commands_post_test (wads.ci_config.CIConfig property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_pre_test">commands_pre_test (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_test">commands_test (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_ci_workflow">compare_ci_workflow() (in module wads.config_comparison)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_manifest_in">compare_manifest_in() (in module wads.config_comparison)</a>
 </li>
       <li><a href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_pyproject_toml">compare_pyproject_toml() (in module wads.config_comparison)</a>
@@ -214,14 +254,42 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents.html#wads.agents.DependencyIssue">DependencyIssue (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyIssue">(class in wads.agents.dependency_resolver)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.DependencyReport">DependencyReport (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyReport">(class in wads.agents.dependency_resolver)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationRule.description">description (wads.ci_migration.MigrationRule attribute)</a>
 </li>
-      <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.diagnose_migration">diagnose_migration() (in module wads.ci_migration)</a>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.detect_platform">detect_platform() (in module wads.install_system_deps)</a>
 </li>
-      <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.diff_nested">diff_nested() (in module wads.github_ci_ops)</a>
+      <li><a href="module_docs/wads/agents.html#wads.agents.diagnose_ci_failure">diagnose_ci_failure() (in module wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_ci_failure">(in module wads.agents.ci_debug_agent)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.diagnose_migration">diagnose_migration() (in module wads.ci_migration)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_missing_python_deps">diagnose_missing_python_deps() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_missing_system_deps">diagnose_missing_system_deps() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.diagnose_setup">diagnose_setup() (in module wads.setup_utils)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.DiagnosticResult">DiagnosticResult (class in wads.setup_utils)</a>
+</li>
+      <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.diff_nested">diff_nested() (in module wads.github_ci_ops)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.docs_builder">docs_builder (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.docs_config">docs_config (wads.ci_config.CIConfig property)</a>
@@ -238,15 +306,23 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/package_module.html#wads.package_module.embedded_wheel_setup">embedded_wheel_setup() (in module wads.package_module)</a>
 </li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.env_vars_all">env_vars_all (wads.ci_config.CIConfig property)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.env_vars_defaults">env_vars_defaults (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.env_vars_extra">env_vars_extra (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.env_vars_required">env_vars_required (wads.ci_config.CIConfig property)</a>
 </li>
-      <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.error">error() (wads.populate.PopulateTracker method)</a>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.env_vars_test">env_vars_test (wads.ci_config.CIConfig property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.error">error() (wads.populate.PopulateTracker method)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.exclude_paths">exclude_paths (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.extract_imports_from_file">extract_imports_from_file() (in module wads.agents.dependency_resolver)</a>
 </li>
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.extract_job_names">extract_job_names() (in module wads.github_ci_ops)</a>
 </li>
@@ -260,12 +336,18 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/wads/util.html#wads.util.find_obj">find_obj() (in module wads.util)</a>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_logs">fetch_workflow_logs() (in module wads.agents.ci_debug_agent)</a>
 </li>
-      <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.find_step_by_name">find_step_by_name() (in module wads.github_ci_ops)</a>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_runs">fetch_workflow_runs() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/util.html#wads.util.find_obj">find_obj() (in module wads.util)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.find_pyproject">find_pyproject() (in module wads.install_system_deps)</a>
+</li>
+      <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.find_step_by_name">find_step_by_name() (in module wads.github_ci_ops)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">folders_that_have_init_py_files() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.from_file">from_file() (wads.ci_config.CIConfig class method)</a>
@@ -277,6 +359,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_block">generate_env_block() (wads.ci_config.CIConfig method)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_vars_yaml">generate_env_vars_yaml() (wads.ci_config.CIConfig method)</a>
+</li>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.generate_fix_instructions">generate_fix_instructions() (in module wads.agents.ci_debug_agent)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_github_pages_job">generate_github_pages_job() (wads.ci_config.CIConfig method)</a>
 </li>
@@ -290,14 +376,22 @@
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.get_ci_config_or_defaults">get_ci_config_or_defaults() (in module wads.ci_config)</a>
 </li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.get_current_platform">get_current_platform() (in module wads.setup_utils)</a>
+</li>
       <li><a href="module_docs/wads/populate.html#wads.populate.get_github_project_description">get_github_project_description() (in module wads.populate)</a>
 </li>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.get_github_token">get_github_token() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.get_installed_packages">get_installed_packages() (in module wads.agents.dependency_resolver)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.get_installed_pip_packages">get_installed_pip_packages() (in module wads.setup_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/licensing.html#wads.licensing.get_licenses_from_github">get_licenses_from_github() (in module wads.licensing)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.get_migration_checklist">get_migration_checklist() (in module wads.ci_migration)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.get_module_path">get_module_path() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.get_name_from_configs">get_name_from_configs() (in module wads.pack)</a>
@@ -313,6 +407,10 @@
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.get_workflow_env_vars">get_workflow_env_vars() (in module wads.github_ci_ops)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.git">git() (in module wads.util)</a>
+</li>
+      <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.github_actions_env">github_actions_env() (in module wads.tests.conftest)</a>
+</li>
+      <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.github_env_files">github_env_files() (in module wads.tests.conftest)</a>
 </li>
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow">GitHubWorkflow (class in wads.github_ci_ops)</a>
 </li>
@@ -348,13 +446,31 @@
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationDiagnosis.info">info (wads.ci_migration.MigrationDiagnosis attribute)</a>
 </li>
+      <li><a href="module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand.initialize_options">initialize_options() (wads.package_module.CustomSdistCommand method)</a>
+</li>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.install_dependency">install_dependency() (in module wads.install_system_deps)</a>
+</li>
+      <li><a href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.install_from_dependency_files">install_from_dependency_files() (in module wads.scripts.install_deps)</a>
+</li>
+      <li><a href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.install_pypi_packages">install_pypi_packages() (in module wads.scripts.install_deps)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/wads/package_module.html#wads.package_module.CustomSdistCommand.initialize_options">initialize_options() (wads.package_module.CustomSdistCommand method)</a>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.install_python_dependencies">install_python_dependencies() (in module wads.setup_utils)</a>
+</li>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.install_system_dependencies">install_system_dependencies() (in module wads.install_system_deps)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.install_system_dependencies">(in module wads.setup_utils)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.InstallResult">InstallResult (class in wads.setup_utils)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_black_enabled">is_black_enabled() (wads.ci_config.CIConfig method)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_mypy_enabled">is_mypy_enabled() (wads.ci_config.CIConfig method)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.is_package_importable">is_package_importable() (in module wads.setup_utils)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_ruff_enabled">is_ruff_enabled() (wads.ci_config.CIConfig method)</a>
 </li>
@@ -364,13 +480,45 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.main">main() (in module wads.scripts.validate_ci_env)</a>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.main">main() (in module wads.agents.ci_debug_agent)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.main">(in module wads.agents.dependency_resolver)</a>
 </li>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.main">(in module wads.agents.test_analyzer)</a>
+</li>
+        <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.main">(in module wads.install_system_deps)</a>
+</li>
+        <li><a href="module_docs/wads/migration.html#wads.migration.main">(in module wads.migration)</a>
+</li>
+        <li><a href="module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.main">(in module wads.scripts.build_dist)</a>
+</li>
+        <li><a href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.main">(in module wads.scripts.install_deps)</a>
+</li>
+        <li><a href="module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.main">(in module wads.scripts.read_ci_config)</a>
+</li>
+        <li><a href="module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.main">(in module wads.scripts.set_env_vars)</a>
+</li>
+        <li><a href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.main">(in module wads.scripts.validate_ci_env)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_ci">make_install_instructions_for_ci() (in module wads.scrap.handle_non_python_installs)</a>
 </li>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_readme">make_install_instructions_for_readme() (in module wads.scrap.handle_non_python_installs)</a>
 </li>
       <li><a href="module_docs/wads/package_module.html#wads.package_module.manifest_in_template">manifest_in_template() (in module wads.package_module)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_config">metrics_config (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_config_path">metrics_config_path (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_enabled">metrics_enabled (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_force_run">metrics_force_run (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_python_version">metrics_python_version (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.metrics_storage_branch">metrics_storage_branch (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/migration.html#wads.migration.migrate_github_ci_old_to_new">migrate_github_ci_old_to_new() (in module wads.migration)</a>
 </li>
@@ -392,6 +540,14 @@
       <ul>
         <li><a href="module_docs/wads.html#module-wads">wads</a>
 </li>
+        <li><a href="module_docs/wads/agents.html#module-wads.agents">wads.agents</a>
+</li>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#module-wads.agents.ci_debug_agent">wads.agents.ci_debug_agent</a>
+</li>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#module-wads.agents.dependency_resolver">wads.agents.dependency_resolver</a>
+</li>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#module-wads.agents.test_analyzer">wads.agents.test_analyzer</a>
+</li>
         <li><a href="module_docs/wads/ci_config.html#module-wads.ci_config">wads.ci_config</a>
 </li>
         <li><a href="module_docs/wads/ci_migration.html#module-wads.ci_migration">wads.ci_migration</a>
@@ -401,6 +557,8 @@
         <li><a href="module_docs/wads/generate_project_wheels.html#module-wads.generate_project_wheels">wads.generate_project_wheels</a>
 </li>
         <li><a href="module_docs/wads/github_ci_ops.html#module-wads.github_ci_ops">wads.github_ci_ops</a>
+</li>
+        <li><a href="module_docs/wads/install_system_deps.html#module-wads.install_system_deps">wads.install_system_deps</a>
 </li>
         <li><a href="module_docs/wads/licensing.html#module-wads.licensing">wads.licensing</a>
 </li>
@@ -418,17 +576,35 @@
 </li>
         <li><a href="module_docs/wads/scripts.html#module-wads.scripts">wads.scripts</a>
 </li>
+        <li><a href="module_docs/wads/scripts/build_dist.html#module-wads.scripts.build_dist">wads.scripts.build_dist</a>
+</li>
+        <li><a href="module_docs/wads/scripts/install_deps.html#module-wads.scripts.install_deps">wads.scripts.install_deps</a>
+</li>
+        <li><a href="module_docs/wads/scripts/read_ci_config.html#module-wads.scripts.read_ci_config">wads.scripts.read_ci_config</a>
+</li>
+        <li><a href="module_docs/wads/scripts/set_env_vars.html#module-wads.scripts.set_env_vars">wads.scripts.set_env_vars</a>
+</li>
         <li><a href="module_docs/wads/scripts/validate_ci_env.html#module-wads.scripts.validate_ci_env">wads.scripts.validate_ci_env</a>
+</li>
+        <li><a href="module_docs/wads/setup_utils.html#module-wads.setup_utils">wads.setup_utils</a>
 </li>
         <li><a href="module_docs/wads/tests/conftest.html#module-wads.tests.conftest">wads.tests.conftest</a>
 </li>
         <li><a href="module_docs/wads/tests/data/example_module.html#module-wads.tests.data.example_module">wads.tests.data.example_module</a>
+</li>
+        <li><a href="module_docs/wads/tests/test_action_definitions.html#module-wads.tests.test_action_definitions">wads.tests.test_action_definitions</a>
 </li>
         <li><a href="module_docs/wads/tests/test_config_comparison.html#module-wads.tests.test_config_comparison">wads.tests.test_config_comparison</a>
 </li>
         <li><a href="module_docs/wads/tests/test_migration.html#module-wads.tests.test_migration">wads.tests.test_migration</a>
 </li>
         <li><a href="module_docs/wads/tests/test_populate_and_pack.html#module-wads.tests.test_populate_and_pack">wads.tests.test_populate_and_pack</a>
+</li>
+        <li><a href="module_docs/wads/tests/test_script_cli.html#module-wads.tests.test_script_cli">wads.tests.test_script_cli</a>
+</li>
+        <li><a href="module_docs/wads/tests/test_scripts.html#module-wads.tests.test_scripts">wads.tests.test_scripts</a>
+</li>
+        <li><a href="module_docs/wads/tests/test_workflow_template.html#module-wads.tests.test_workflow_template">wads.tests.test_workflow_template</a>
 </li>
         <li><a href="module_docs/wads/toml_util.html#module-wads.toml_util">wads.toml_util</a>
 </li>
@@ -458,11 +634,27 @@
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationDiagnosis.old_workflow">old_workflow (wads.ci_migration.MigrationDiagnosis attribute)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.ops">ops (wads.ci_config.CIConfig property)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.parse_ci_warnings">parse_ci_warnings() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.parse_error_message">parse_error_message() (in module wads.agents.dependency_resolver)</a>
+</li>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.parse_pytest_failures">parse_pytest_failures() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.parse_pytest_output">parse_pytest_output() (in module wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.parse_pytest_output">(in module wads.agents.test_analyzer)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/populate.html#wads.populate.populate_pkg_dir">populate_pkg_dir() (in module wads.populate)</a>
 </li>
       <li><a href="module_docs/wads/populate.html#wads.populate.populate_proj_from_url">populate_proj_from_url() (in module wads.populate)</a>
@@ -473,12 +665,22 @@
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.preprocess_ini_section_items">preprocess_ini_section_items() (in module wads.pack)</a>
 </li>
+      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.print_diagnosis">print_diagnosis() (in module wads.agents.ci_debug_agent)</a>
+</li>
+      <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.print_diagnostic_report">print_diagnostic_report() (in module wads.setup_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.print_report">print_report() (in module wads.agents.dependency_resolver)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.print_report">(in module wads.agents.test_analyzer)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.print_summary">print_summary() (wads.populate.PopulateTracker method)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.process_missing_module_docstrings">process_missing_module_docstrings() (in module wads.pack)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.project_name">project_name (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.publish_config">publish_config (wads.ci_config.CIConfig property)</a>
@@ -488,6 +690,8 @@
       <li><a href="module_docs/wads/pack.html#wads.pack.pyproject_toml_version">pyproject_toml_version() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.pytest_args">pytest_args (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.pytest_configure">pytest_configure() (in module wads.tests.conftest)</a>
 </li>
       <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.pytest_terminal_summary">pytest_terminal_summary() (in module wads.tests.conftest)</a>
 </li>
@@ -509,22 +713,30 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationDiagnosis.raw_diff">raw_diff (wads.ci_migration.MigrationDiagnosis attribute)</a>
 </li>
+      <li><a href="module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.read_and_export_ci_config">read_and_export_ci_config() (in module wads.scripts.read_ci_config)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.read_and_resolve_setup_configs">read_and_resolve_setup_configs() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.read_ci_config">read_ci_config() (in module wads.ci_config)</a>
 </li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.read_project_dependencies">read_project_dependencies() (in module wads.agents.dependency_resolver)</a>
+</li>
       <li><a href="module_docs/wads/toml_util.html#wads.toml_util.read_pyproject_toml">read_pyproject_toml() (in module wads.toml_util)</a>
+</li>
+      <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.read_system_deps">read_system_deps() (in module wads.install_system_deps)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.replace_import_names">replace_import_names() (in module wads.util)</a>
 </li>
       <li><a href="module_docs/wads/licensing.html#wads.licensing.resolve_author">resolve_author() (in module wads.licensing)</a>
 </li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.resolve_package_name">resolve_package_name() (in module wads.agents.dependency_resolver)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_custom_steps">rule_check_custom_steps() (in module wads.ci_migration)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_dependencies">rule_check_dependencies() (in module wads.ci_migration)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_formatting_linting">rule_check_formatting_linting() (in module wads.ci_migration)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_project_name">rule_check_project_name() (in module wads.ci_migration)</a>
@@ -551,7 +763,15 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.sample_package">sample_package() (in module wads.tests.conftest)</a>
+</li>
+      <li><a href="module_docs/wads/tests/conftest.html#wads.tests.conftest.sample_pyproject">sample_pyproject() (in module wads.tests.conftest)</a>
+</li>
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow.save">save() (wads.github_ci_ops.GitHubWorkflow method)</a>
+</li>
+      <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.scan_project_imports">scan_project_imports() (in module wads.agents.dependency_resolver)</a>
+</li>
+      <li><a href="module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables">set_environment_variables() (in module wads.scripts.set_env_vars)</a>
 </li>
       <li><a href="module_docs/wads/toml_util.html#wads.toml_util.set_project_version">set_project_version() (in module wads.toml_util)</a>
 </li>
@@ -561,17 +781,19 @@
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.setup_cfg_version">setup_cfg_version() (in module wads.pack)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.setup_git_repo">setup_git_repo() (in module wads.tests.test_populate_and_pack)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationRule.severity">severity (wads.ci_migration.MigrationRule attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.skip">skip() (wads.populate.PopulateTracker method)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.sorted_versions">sorted_versions() (in module wads.pack)</a>
 </li>
       <li><a href="module_docs/wads/licensing.html#wads.licensing.substitute_license_placeholders">substitute_license_placeholders() (in module wads.licensing)</a>
+</li>
+      <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.suggest_fix">suggest_fix() (in module wads.agents.test_analyzer)</a>
 </li>
       <li><a href="module_docs/wads/config_comparison.html#wads.config_comparison.summarize_config_status">summarize_config_status() (in module wads.config_comparison)</a>
 </li>
@@ -587,15 +809,57 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_content">template_content() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_data">template_data() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.template_path">template_path() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_action_inputs_have_descriptions">test_action_inputs_have_descriptions() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_action_outputs_have_descriptions">test_action_outputs_have_descriptions() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_directory_exists">test_actions_directory_exists() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_dont_hardcode_credentials">test_actions_dont_hardcode_credentials() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_exist">test_actions_exist() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_have_proper_shell_specification">test_actions_have_proper_shell_specification() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_actions_use_correct_versions">test_actions_use_correct_versions() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_use_python3_not_python">test_actions_use_python3_not_python() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_required_fields">test_all_actions_have_required_fields() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_valid_yaml">test_all_actions_have_valid_yaml() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_all_jobs_skip_on_skip_ci">test_all_jobs_skip_on_skip_ci() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_empty">test_analyze_manifest_in_empty() (in module wads.tests.test_migration)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_with_excludes">test_analyze_manifest_in_with_excludes() (in module wads.tests.test_migration)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_analyze_manifest_in_with_includes">test_analyze_manifest_in_with_includes() (in module wads.tests.test_migration)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_bash_steps_have_error_handling">test_bash_steps_have_error_handling() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_build_dist_action_structure">test_build_dist_action_structure() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_module_exists">test_build_dist_module_exists() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_with_real_package">test_build_dist_with_real_package() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestBuildDist.test_build_minimal_package">test_build_minimal_package() (wads.tests.test_scripts.TestBuildDist method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestBuildDist.test_build_wheel_only">test_build_wheel_only() (wads.tests.test_scripts.TestBuildDist method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check">test_built_package_passes_twine_check() (wads.tests.test_populate_and_pack.TestBuild method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg">test_can_read_legacy_setup_cfg() (wads.tests.test_populate_and_pack.TestCompatibility method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_checkout_actions_have_correct_settings">test_checkout_actions_have_correct_settings() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_manifest_in">test_compare_manifest_in() (in module wads.tests.test_config_comparison)</a>
 </li>
@@ -607,9 +871,15 @@
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_compare_setup_cfg_missing">test_compare_setup_cfg_missing() (in module wads.tests.test_config_comparison)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_composite_actions_have_steps">test_composite_actions_have_steps() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version">test_current_configs_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_custom_rules">test_custom_rules() (in module wads.tests.test_migration)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestValidateCiEnv.test_detects_missing_required_vars">test_detects_missing_required_vars() (wads.tests.test_scripts.TestValidateCiEnv method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestSetEnvVars.test_fails_on_missing_required_var">test_fails_on_missing_required_var() (wads.tests.test_scripts.TestSetEnvVars method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_find_missing_sections">test_find_missing_sections() (in module wads.tests.test_config_comparison)</a>
 </li>
@@ -619,17 +889,29 @@
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs">test_get_name_from_configs() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestInstallDeps.test_handles_empty_package_list">test_handles_empty_package_list() (wads.tests.test_scripts.TestInstallDeps method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestInstallDeps.test_handles_missing_file_gracefully">test_handles_missing_file_gracefully() (wads.tests.test_scripts.TestInstallDeps method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestReadCiConfig.test_handles_missing_pyproject">test_handles_missing_pyproject() (wads.tests.test_scripts.TestReadCiConfig method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestValidateCiEnv.test_handles_no_required_vars">test_handles_no_required_vars() (wads.tests.test_scripts.TestValidateCiEnv method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version">test_increment_configs_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_install_deps_action_structure">test_install_deps_action_structure() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_install_deps_module_exists">test_install_deps_module_exists() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestInstallDeps.test_install_from_requirements_file">test_install_from_requirements_file() (wads.tests.test_scripts.TestInstallDeps method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestInstallDeps.test_installs_pypi_packages">test_installs_pypi_packages() (wads.tests.test_scripts.TestInstallDeps method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_job_dependencies_are_correct">test_job_dependencies_are_correct() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_manifest_in_nonexistent">test_manifest_in_nonexistent() (in module wads.tests.test_config_comparison)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_manifest_in_parsing">test_manifest_in_parsing() (in module wads.tests.test_config_comparison)</a>
-</li>
-      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_extracts_project_name">test_migrate_ci_extracts_project_name() (in module wads.tests.test_migration)</a>
-</li>
-      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_missing_project_name">test_migrate_ci_missing_project_name() (in module wads.tests.test_migration)</a>
-</li>
-      <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_ci_with_defaults">test_migrate_ci_with_defaults() (in module wads.tests.test_migration)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_basic">test_migrate_setuptools_basic() (in module wads.tests.test_migration)</a>
 </li>
@@ -637,13 +919,13 @@
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_from_file">test_migrate_setuptools_from_file() (in module wads.tests.test_migration)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_missing_required_fields">test_migrate_setuptools_missing_required_fields() (in module wads.tests.test_migration)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_migrate_setuptools_with_defaults">test_migrate_setuptools_with_defaults() (in module wads.tests.test_migration)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_nested_get">test_nested_get() (in module wads.tests.test_config_comparison)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_no_hardcoded_secrets">test_no_hardcoded_secrets() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_normalize_setup_cfg_dict">test_normalize_setup_cfg_dict() (in module wads.tests.test_migration)</a>
 </li>
@@ -659,25 +941,135 @@
 </li>
       <li><a href="module_docs/wads/tests/test_migration.html#wads.tests.test_migration.test_parse_manifest_in">test_parse_manifest_in() (in module wads.tests.test_migration)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata">test_populate_creates_correct_metadata() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml">test_populate_creates_pyproject_toml() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_conditional_execution">test_publish_job_conditional_execution() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_has_version_and_build_steps">test_publish_job_has_version_and_build_steps() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_publish_job_structure">test_publish_job_structure() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_python_setup_actions_use_matrix">test_python_setup_actions_use_matrix() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_read_ci_config_action_outputs">test_read_ci_config_action_outputs() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_module_exists">test_read_ci_config_module_exists() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestReadCiConfig.test_reads_config_successfully">test_reads_config_successfully() (wads.tests.test_scripts.TestReadCiConfig method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_script_actions_reference_valid_scripts">test_script_actions_reference_valid_scripts() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_scripts_can_be_imported">test_scripts_can_be_imported() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject">test_scripts_fail_gracefully_on_missing_pyproject() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_docstrings">test_scripts_have_docstrings() (wads.tests.test_script_cli.TestScriptDocumentation method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings">test_scripts_have_usage_examples_in_docstrings() (wads.tests.test_script_cli.TestScriptDocumentation method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_set_env_vars_action_structure">test_set_env_vars_action_structure() (wads.tests.test_action_definitions.TestActionDefinitions method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_set_env_vars_module_exists">test_set_env_vars_module_exists() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version">test_set_version() (wads.tests.test_populate_and_pack.TestPackWithPyprojectToml method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestSetEnvVars.test_sets_vars_from_secrets_context">test_sets_vars_from_secrets_context() (wads.tests.test_scripts.TestSetEnvVars method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_setup_job_structure">test_setup_job_structure() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_setup_job_uses_read_ci_config_action">test_setup_job_uses_read_ci_config_action() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestSetEnvVars.test_skips_reserved_vars">test_skips_reserved_vars() (wads.tests.test_scripts.TestSetEnvVars method)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_config_comparison.html#wads.tests.test_config_comparison.test_summarize_config_status">test_summarize_config_status() (in module wads.tests.test_config_comparison)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_file_exists">test_template_file_exists() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_optional_jobs">test_template_has_optional_jobs() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_proper_permissions">test_template_has_proper_permissions() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_required_jobs">test_template_has_required_jobs() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_has_required_structure">test_template_has_required_structure() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_is_valid_yaml">test_template_is_valid_yaml() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_template_uses_latest_action_versions">test_template_uses_latest_action_versions() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_module_exists">test_validate_ci_env_module_exists() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_on_real_project">test_validate_ci_env_on_real_project() (wads.tests.test_script_cli.TestScriptCLI method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestValidateCiEnv.test_validates_required_vars_present">test_validates_required_vars_present() (wads.tests.test_scripts.TestValidateCiEnv method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_has_required_steps">test_validation_job_has_required_steps() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_structure">test_validation_job_structure() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_config_outputs">test_validation_job_uses_config_outputs() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_matrix">test_validation_job_uses_matrix() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_validation_job_uses_wads_actions">test_validation_job_uses_wads_actions() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_windows_validation_is_conditional">test_windows_validation_is_conditional() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate.test_windows_validation_is_non_blocking">test_windows_validation_is_non_blocking() (wads.tests.test_workflow_template.TestWorkflowTemplate method)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestReadCiConfig.test_works_without_github_env">test_works_without_github_env() (wads.tests.test_scripts.TestReadCiConfig method)</a>
+</li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs">test_write_pyproject_configs() (wads.tests.test_populate_and_pack.TestPopulate method)</a>
 </li>
+      <li><a href="module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions">TestActionDefinitions (class in wads.tests.test_action_definitions)</a>
+</li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.TestAnalysisReport">TestAnalysisReport (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.TestAnalysisReport">(class in wads.agents.test_analyzer)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestBuild">TestBuild (class in wads.tests.test_populate_and_pack)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestBuildDist">TestBuildDist (class in wads.tests.test_scripts)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestCompatibility">TestCompatibility (class in wads.tests.test_populate_and_pack)</a>
 </li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.TestFailure">TestFailure (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.TestFailure">(class in wads.agents.ci_debug_agent)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/wads/agents.html#wads.agents.TestFailurePattern">TestFailurePattern (class in wads.agents)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.TestFailurePattern">(class in wads.agents.test_analyzer)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.testing_config">testing_config (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestInstallDeps">TestInstallDeps (class in wads.tests.test_scripts)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml">TestPackWithPyprojectToml (class in wads.tests.test_populate_and_pack)</a>
 </li>
       <li><a href="module_docs/wads/tests/test_populate_and_pack.html#wads.tests.test_populate_and_pack.TestPopulate">TestPopulate (class in wads.tests.test_populate_and_pack)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestReadCiConfig">TestReadCiConfig (class in wads.tests.test_scripts)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI">TestScriptCLI (class in wads.tests.test_script_cli)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation">TestScriptDocumentation (class in wads.tests.test_script_cli)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestSetEnvVars">TestSetEnvVars (class in wads.tests.test_scripts)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_scripts.html#wads.tests.test_scripts.TestValidateCiEnv">TestValidateCiEnv (class in wads.tests.test_scripts)</a>
+</li>
+      <li><a href="module_docs/wads/tests/test_workflow_template.html#wads.tests.test_workflow_template.TestWorkflowTemplate">TestWorkflowTemplate (class in wads.tests.test_workflow_template)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_env_block">to_ci_env_block() (wads.ci_config.CIConfig method)</a>
 </li>
@@ -715,6 +1107,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.validate_ci_environment">validate_ci_environment() (in module wads.scripts.validate_ci_env)</a>
 </li>
+      <li><a href="module_docs/wads/pack.html#wads.pack.validate_package_name">validate_package_name() (in module wads.pack)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.validate_versions">validate_versions() (in module wads.pack)</a>
@@ -732,6 +1126,34 @@
 
       <ul>
         <li><a href="module_docs/wads.html#module-wads">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.agents
+
+      <ul>
+        <li><a href="module_docs/wads/agents.html#module-wads.agents">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.agents.ci_debug_agent
+
+      <ul>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#module-wads.agents.ci_debug_agent">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.agents.dependency_resolver
+
+      <ul>
+        <li><a href="module_docs/wads/agents/dependency_resolver.html#module-wads.agents.dependency_resolver">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.agents.test_analyzer
+
+      <ul>
+        <li><a href="module_docs/wads/agents/test_analyzer.html#module-wads.agents.test_analyzer">module</a>
 </li>
       </ul></li>
       <li>
@@ -767,6 +1189,13 @@
 
       <ul>
         <li><a href="module_docs/wads/github_ci_ops.html#module-wads.github_ci_ops">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.install_system_deps
+
+      <ul>
+        <li><a href="module_docs/wads/install_system_deps.html#module-wads.install_system_deps">module</a>
 </li>
       </ul></li>
       <li>
@@ -811,8 +1240,6 @@
         <li><a href="module_docs/wads/populate.html#module-wads.populate">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scrap.handle_non_python_installs
 
@@ -827,11 +1254,48 @@
         <li><a href="module_docs/wads/scripts.html#module-wads.scripts">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    wads.scripts.build_dist
+
+      <ul>
+        <li><a href="module_docs/wads/scripts/build_dist.html#module-wads.scripts.build_dist">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.scripts.install_deps
+
+      <ul>
+        <li><a href="module_docs/wads/scripts/install_deps.html#module-wads.scripts.install_deps">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.scripts.read_ci_config
+
+      <ul>
+        <li><a href="module_docs/wads/scripts/read_ci_config.html#module-wads.scripts.read_ci_config">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.scripts.set_env_vars
+
+      <ul>
+        <li><a href="module_docs/wads/scripts/set_env_vars.html#module-wads.scripts.set_env_vars">module</a>
+</li>
+      </ul></li>
       <li>
     wads.scripts.validate_ci_env
 
       <ul>
         <li><a href="module_docs/wads/scripts/validate_ci_env.html#module-wads.scripts.validate_ci_env">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.setup_utils
+
+      <ul>
+        <li><a href="module_docs/wads/setup_utils.html#module-wads.setup_utils">module</a>
 </li>
       </ul></li>
       <li>
@@ -846,6 +1310,13 @@
 
       <ul>
         <li><a href="module_docs/wads/tests/data/example_module.html#module-wads.tests.data.example_module">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_action_definitions
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_action_definitions.html#module-wads.tests.test_action_definitions">module</a>
 </li>
       </ul></li>
       <li>
@@ -867,6 +1338,27 @@
 
       <ul>
         <li><a href="module_docs/wads/tests/test_populate_and_pack.html#module-wads.tests.test_populate_and_pack">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_script_cli
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_script_cli.html#module-wads.tests.test_script_cli">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_scripts
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_scripts.html#module-wads.tests.test_scripts">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_workflow_template
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_workflow_template.html#module-wads.tests.test_workflow_template">module</a>
 </li>
       </ul></li>
       <li>

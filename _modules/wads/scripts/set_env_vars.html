@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.scripts.set_env_vars &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.scripts.set_env_vars</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.scripts.set_env_vars</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Set Environment Variables from GitHub Secrets</span>
+
+<span class="sd">This script reads the CI configuration from pyproject.toml and sets environment</span>
+<span class="sd">variables from GitHub Secrets, validating required variables.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    python -m wads.scripts.set_env_vars [path_to_pyproject]</span>
+
+<span class="sd">Environment:</span>
+<span class="sd">    SECRETS_CONTEXT - JSON string of all GitHub Secrets</span>
+<span class="sd">    GITHUB_ENV - Path to GitHub Actions environment file</span>
+<span class="sd">    GITHUB_STEP_SUMMARY - Path to GitHub Actions step summary file</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="c1"># Reserved env vars that should not be set from secrets</span>
+<span class="n">RESERVED_VARS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;GITHUB_TOKEN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_ACTOR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_REPOSITORY&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_REF&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_SHA&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_WORKSPACE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_EVENT_NAME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_EVENT_PATH&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_RUN_ID&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_RUN_NUMBER&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_ACTION&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GITHUB_ACTIONS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;CI&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;HOME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PATH&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;SHELL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;USER&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_env_var</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set environment variable for subsequent GitHub Actions steps.&quot;&quot;&quot;</span>
+    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_ENV&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env_file</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_ENV not set, skipping: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="c1"># Escape multiline values</span>
+        <span class="n">delimiter</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;EOF_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;&lt;</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="set_environment_variables">
+<a class="viewcode-back" href="../../../module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_environment_variables</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set environment variables from GitHub Secrets based on CI config.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pyproject_path: Path to pyproject.toml file or directory containing it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Exit code (0 for success, 1 for failure)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="c1"># Read CI configuration</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+
+        <span class="c1"># Get secrets (GitHub Actions provides this as JSON)</span>
+        <span class="n">secrets_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRETS_CONTEXT&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">secrets</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">secrets_json</span><span class="p">)</span>
+
+        <span class="c1"># Track what we&#39;re setting</span>
+        <span class="n">set_vars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">missing_required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">missing_test</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">skipped_reserved</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Get all env var lists</span>
+        <span class="n">required_vars</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span>
+        <span class="n">test_vars</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_test</span>
+        <span class="n">extra_vars</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_extra</span>
+
+        <span class="c1"># Process required env vars</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">required_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">RESERVED_VARS</span><span class="p">:</span>
+                <span class="n">skipped_reserved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>  <span class="c1"># Treat as missing</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Cannot set reserved env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
+                <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
+                <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Set required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Missing required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+
+        <span class="c1"># Process test env vars</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">test_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">RESERVED_VARS</span><span class="p">:</span>
+                <span class="n">skipped_reserved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
+                <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
+                <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Set test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">missing_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;⚠️  Missing test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> (tests may fail or be skipped)&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Process extra env vars (no warnings)</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">extra_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">RESERVED_VARS</span><span class="p">:</span>
+                <span class="n">skipped_reserved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
+                <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
+                <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Set extra env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Set default env vars</span>
+        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>  <span class="c1"># Don&#39;t override existing</span>
+                <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Set default env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Print summary</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Environment Variables Summary:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Set: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">missing_test</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ⚠️  Missing test vars: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">skipped_reserved</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Skipped reserved vars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+
+        <span class="c1"># Create GitHub Actions step summary</span>
+        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_STEP_SUMMARY&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">summary_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## 🔐 Environment Variables</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">set_vars</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ **Set </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables** from secrets</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">missing_test</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;⚠️  **Missing test variables:** </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;_Tests requiring these may fail or be skipped_</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">skipped_reserved</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;ℹ️  Skipped reserved variables: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># Fail if required vars are missing</span>
+        <span class="k">if</span> <span class="n">missing_required</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">❌ ERROR: Missing required environment variables!&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;   Add these to GitHub Secrets: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_required</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Environment variables configured successfully&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;❌ pyproject.toml not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Error setting environment variables: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;.&quot;</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">set_environment_variables</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">))</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

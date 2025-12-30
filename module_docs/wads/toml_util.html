@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.toml_util &mdash; wads 0.1.55 documentation</title>
+  <title>wads.toml_util &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="wads.trans" href="trans.html" />
-    <link rel="prev" title="wads.tests.test_populate_and_pack" href="tests/test_populate_and_pack.html" /> 
+    <link rel="prev" title="wads.tests.test_workflow_template" href="tests/test_workflow_template.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,11 +50,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -63,12 +68,21 @@
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">wads.toml_util</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wads.toml_util.get_project_metadata"><code class="docutils literal notranslate"><span class="pre">get_project_metadata()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.toml_util.get_project_name"><code class="docutils literal notranslate"><span class="pre">get_project_name()</span></code></a></li>
@@ -239,7 +253,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="tests/test_populate_and_pack.html" class="btn btn-neutral float-left" title="wads.tests.test_populate_and_pack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tests/test_workflow_template.html" class="btn btn-neutral float-left" title="wads.tests.test_workflow_template" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="trans.html" class="btn btn-neutral float-right" title="wads.trans" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

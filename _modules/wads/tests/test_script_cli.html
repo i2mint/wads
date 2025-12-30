@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_script_cli &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_script_cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_script_cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Test CLI interfaces of scripts.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<div class="viewcode-block" id="TestScriptCLI">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestScriptCLI</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test command-line interfaces of scripts.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestScriptCLI.test_read_ci_config_module_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_module_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_read_ci_config_module_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that read_ci_config module can be imported.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.read_ci_config&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Should either show help or fail gracefully</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_build_dist_module_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_module_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_build_dist_module_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that build_dist module can be imported.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.build_dist&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># 0 for success, 2 for argparse help</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_validate_ci_env_module_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_module_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validate_ci_env_module_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validate_ci_env module can be imported.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.validate_ci_env&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_install_deps_module_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_install_deps_module_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_install_deps_module_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that install_deps module can be imported.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.install_deps&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_set_env_vars_module_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_set_env_vars_module_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_set_env_vars_module_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that set_env_vars module can be imported.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.set_env_vars&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_validate_ci_env_on_real_project">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_on_real_project">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validate_ci_env_on_real_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test validate_ci_env on a real project structure.&quot;&quot;&quot;</span>
+        <span class="c1"># Create minimal pyproject.toml</span>
+        <span class="n">pyproject</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">[project]</span>
+<span class="sd">name = &quot;test-cli-project&quot;</span>
+
+<span class="sd">[tool.wads.ci.env]</span>
+<span class="sd">required_envvars = []</span>
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.validate_ci_env&quot;</span><span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Should succeed with no required env vars</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="s2">&quot;✅&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="s2">&quot;All required&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_build_dist_with_real_package">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_with_real_package">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_build_dist_with_real_package</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test build_dist with a real package.&quot;&quot;&quot;</span>
+        <span class="c1"># Create minimal project</span>
+        <span class="n">pyproject</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">[build-system]</span>
+<span class="sd">requires = [&quot;hatchling&quot;]</span>
+<span class="sd">build-backend = &quot;hatchling.build&quot;</span>
+
+<span class="sd">[project]</span>
+<span class="sd">name = &quot;cli-test-pkg&quot;</span>
+<span class="sd">version = &quot;0.1.0&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;cli_test_pkg&quot;</span>
+        <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+        <span class="p">(</span><span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">&#39;__version__ = &quot;0.1.0&quot;&#39;</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+                <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;wads.scripts.build_dist&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--output-dir&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;dist&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;--wheel&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--no-sdist&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>  <span class="c1"># Build can take time</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Should succeed</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+        <span class="c1"># Check that dist directory was created</span>
+        <span class="n">dist_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;dist&quot;</span>
+        <span class="k">assert</span> <span class="n">dist_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_scripts_fail_gracefully_on_missing_pyproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that scripts fail gracefully when pyproject.toml is missing.&quot;&quot;&quot;</span>
+        <span class="c1"># read_ci_config</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.read_ci_config&quot;</span><span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">tmp_path</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="s2">&quot;not found&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_scripts_can_be_imported">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_scripts_can_be_imported">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_scripts_can_be_imported</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that all scripts can be imported as modules.&quot;&quot;&quot;</span>
+        <span class="n">scripts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;wads.scripts.read_ci_config&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;wads.scripts.build_dist&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;wads.scripts.install_deps&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;wads.scripts.set_env_vars&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;wads.scripts.validate_ci_env&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">script</span> <span class="ow">in</span> <span class="n">scripts</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">script</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Failed to import </span><span class="si">{</span><span class="n">script</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestScriptDocumentation">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestScriptDocumentation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that scripts have proper documentation.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestScriptDocumentation.test_scripts_have_docstrings">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_docstrings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_scripts_have_docstrings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that scripts have module-level docstrings.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">read_ci_config</span><span class="p">,</span>
+            <span class="n">build_dist</span><span class="p">,</span>
+            <span class="n">install_deps</span><span class="p">,</span>
+            <span class="n">set_env_vars</span><span class="p">,</span>
+            <span class="n">validate_ci_env</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">modules</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">read_ci_config</span><span class="p">,</span>
+            <span class="n">build_dist</span><span class="p">,</span>
+            <span class="n">install_deps</span><span class="p">,</span>
+            <span class="n">set_env_vars</span><span class="p">,</span>
+            <span class="n">validate_ci_env</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">module</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> missing docstring&quot;</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_scripts_have_usage_examples_in_docstrings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that script docstrings include usage examples.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">read_ci_config</span><span class="p">,</span>
+            <span class="n">build_dist</span><span class="p">,</span>
+            <span class="n">install_deps</span><span class="p">,</span>
+            <span class="n">set_env_vars</span><span class="p">,</span>
+            <span class="n">validate_ci_env</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">modules</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">read_ci_config</span><span class="p">,</span>
+            <span class="n">build_dist</span><span class="p">,</span>
+            <span class="n">install_deps</span><span class="p">,</span>
+            <span class="n">set_env_vars</span><span class="p">,</span>
+            <span class="n">validate_ci_env</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
+            <span class="n">docstring</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="c1"># Should have Usage section or python -m example</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="s1">&#39;Usage:&#39;</span> <span class="ow">in</span> <span class="n">docstring</span>
+                <span class="ow">or</span> <span class="s1">&#39;python -m&#39;</span> <span class="ow">in</span> <span class="n">docstring</span>
+                <span class="ow">or</span> <span class="s1">&#39;python3 -m&#39;</span> <span class="ow">in</span> <span class="n">docstring</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> docstring missing usage example&quot;</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

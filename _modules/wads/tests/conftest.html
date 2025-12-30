@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.conftest &mdash; wads 0.1.55 documentation</title>
+  <title>wads.tests.conftest &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,11 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -60,12 +65,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
@@ -102,6 +116,113 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
+<div class="viewcode-block" id="sample_pyproject">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/conftest.html#wads.tests.conftest.sample_pyproject">[docs]</a>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_pyproject</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a sample pyproject.toml for testing.&quot;&quot;&quot;</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">[project]</span>
+<span class="s2">name = &quot;test-project&quot;</span>
+<span class="s2">version = &quot;0.1.0&quot;</span>
+<span class="s2">description = &quot;A test project&quot;</span>
+
+<span class="s2">[tool.wads.ci.testing]</span>
+<span class="s2">python_versions = [&quot;3.10&quot;, &quot;3.12&quot;]</span>
+<span class="s2">coverage_enabled = true</span>
+<span class="s2">pytest_args = [&quot;-v&quot;]</span>
+<span class="s2">exclude_paths = [&quot;examples&quot;, &quot;scrap&quot;]</span>
+
+<span class="s2">[tool.wads.ci.env]</span>
+<span class="s2">required_envvars = [&quot;API_KEY&quot;]</span>
+<span class="s2">test_envvars = [&quot;TEST_SECRET&quot;]</span>
+<span class="s2">defaults = {LOG_LEVEL = &quot;INFO&quot;}</span>
+
+<span class="s2">[build-system]</span>
+<span class="s2">requires = [&quot;hatchling&quot;]</span>
+<span class="s2">build-backend = &quot;hatchling.build&quot;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+    <span class="n">pyproject</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pyproject</span></div>
+
+
+
+<div class="viewcode-block" id="sample_package">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/conftest.html#wads.tests.conftest.sample_package">[docs]</a>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_package</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a sample package structure for testing.&quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;test_pkg&quot;</span>
+    <span class="n">pkg_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;__init__.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">&#39;__version__ = &quot;0.1.0&quot;&#39;</span><span class="p">)</span>
+
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+    <span class="n">pyproject</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">[build-system]</span>
+<span class="sd">requires = [&quot;hatchling&quot;]</span>
+<span class="sd">build-backend = &quot;hatchling.build&quot;</span>
+
+<span class="sd">[project]</span>
+<span class="sd">name = &quot;test-pkg&quot;</span>
+<span class="sd">version = &quot;0.1.0&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tmp_path</span></div>
+
+
+
+<div class="viewcode-block" id="github_env_files">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/conftest.html#wads.tests.conftest.github_env_files">[docs]</a>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">github_env_files</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create temporary files for GitHub Actions environment.&quot;&quot;&quot;</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;output&#39;</span><span class="p">:</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s1">&#39;github_output.txt&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;env&#39;</span><span class="p">:</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s1">&#39;github_env.txt&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s1">&#39;github_summary.md&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">files</span></div>
+
+
+
+<div class="viewcode-block" id="github_actions_env">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/conftest.html#wads.tests.conftest.github_actions_env">[docs]</a>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">github_actions_env</span><span class="p">(</span><span class="n">github_env_files</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock GitHub Actions environment variables.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;GITHUB_OUTPUT&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">github_env_files</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;GITHUB_ENV&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">github_env_files</span><span class="p">[</span><span class="s1">&#39;env&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;GITHUB_STEP_SUMMARY&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">github_env_files</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;GITHUB_WORKSPACE&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">),</span>
+        <span class="s1">&#39;GITHUB_REPOSITORY&#39;</span><span class="p">:</span> <span class="s1">&#39;test/test-repo&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;GITHUB_REF&#39;</span><span class="p">:</span> <span class="s1">&#39;refs/heads/main&#39;</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="pytest_configure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/conftest.html#wads.tests.conftest.pytest_configure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pytest_configure</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configure pytest with custom markers.&quot;&quot;&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">addinivalue_line</span><span class="p">(</span>
+        <span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="s2">&quot;integration: mark test as integration test (slower)&quot;</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">addinivalue_line</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="s2">&quot;requires_git: mark test as requiring git&quot;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">addinivalue_line</span><span class="p">(</span>
+        <span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="s2">&quot;requires_network: mark test as requiring network access&quot;</span>
+    <span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="pytest_terminal_summary">

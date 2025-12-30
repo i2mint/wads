@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.55 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,11 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -60,12 +65,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
@@ -783,32 +797,17 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        MigrationError: If unmapped elements exist or required fields are missing</span>
 
+<span class="sd">    Note:</span>
+<span class="sd">        The 2025 CI template is fully config-driven via pyproject.toml.</span>
+<span class="sd">        Migration now primarily involves setting up proper [tool.wads.ci] configuration</span>
+<span class="sd">        rather than doing template substitution. For new projects, use populate_pkg_dir()</span>
+<span class="sd">        to generate proper configuration.</span>
+
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; # From file</span>
-<span class="sd">        &gt;&gt;&gt; new_ci = migrate_github_ci_old_to_new(&#39;.github/workflows/ci.yml&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; # From content string with project name</span>
-<span class="sd">        &gt;&gt;&gt; old_ci = &#39;&#39;&#39;</span>
-<span class="sd">        ... name: CI</span>
-<span class="sd">        ... env:</span>
-<span class="sd">        ...   PROJECT_NAME: myproject</span>
-<span class="sd">        ... &#39;&#39;&#39;</span>
-<span class="sd">        &gt;&gt;&gt; result = migrate_github_ci_old_to_new(old_ci)</span>
-<span class="sd">        &gt;&gt;&gt; &#39;PROJECT_NAME: myproject&#39; in result</span>
-<span class="sd">        True</span>
-<span class="sd">        &gt;&gt;&gt;</span>
-<span class="sd">        &gt;&gt;&gt; # With defaults when project name is missing</span>
-<span class="sd">        &gt;&gt;&gt; old_ci_minimal = &#39;&#39;&#39;</span>
-<span class="sd">        ... name: CI</span>
-<span class="sd">        ... env:</span>
-<span class="sd">        ...   PROJECT_NAME: #PROJECT_NAME#</span>
-<span class="sd">        ... &#39;&#39;&#39;</span>
-<span class="sd">        &gt;&gt;&gt; result = migrate_github_ci_old_to_new(</span>
-<span class="sd">        ...     old_ci_minimal,</span>
-<span class="sd">        ...     defaults={&#39;project_name&#39;: &#39;test&#39;}</span>
-<span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; &#39;PROJECT_NAME: test&#39; in result</span>
-<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; # Migration is now about configuration, not template substitution</span>
+<span class="sd">        &gt;&gt;&gt; # For new projects, use populate_pkg_dir() instead</span>
+<span class="sd">        &gt;&gt;&gt; # Old migration approach with placeholders is deprecated</span>
+<span class="sd">        &gt;&gt;&gt; pass  # doctest: +SKIP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
@@ -861,6 +860,104 @@
 
     <span class="k">return</span> <span class="n">result</span></div>
 
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI entry point for wads migration tools.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Migrate old setuptools/CI configurations to modern formats&#39;</span>
+    <span class="p">)</span>
+    <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s1">&#39;command&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Migration command&#39;</span><span class="p">)</span>
+
+    <span class="c1"># setup.cfg -&gt; pyproject.toml</span>
+    <span class="n">setup_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;setup-to-pyproject&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Convert setup.cfg to pyproject.toml&#39;</span>
+    <span class="p">)</span>
+    <span class="n">setup_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to setup.cfg file or directory containing it&#39;</span>
+    <span class="p">)</span>
+    <span class="n">setup_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-o&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;--output&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;pyproject.toml&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file path (default: pyproject.toml)&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Old CI -&gt; New CI</span>
+    <span class="n">ci_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;ci-old-to-new&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Convert old GitHub CI workflow to new format&#39;</span>
+    <span class="p">)</span>
+    <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to old CI workflow file&#39;</span><span class="p">)</span>
+    <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file path (default: print to stdout)&#39;</span>
+    <span class="p">)</span>
+    <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--project-name&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Project name (if not in old CI file)&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;setup-to-pyproject&#39;</span><span class="p">:</span>
+            <span class="c1"># Handle input path</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">input_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">input_path</span> <span class="o">=</span> <span class="n">input_path</span> <span class="o">/</span> <span class="s1">&#39;setup.cfg&#39;</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Perform migration</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">))</span>
+
+            <span class="c1"># Write output</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;ci-old-to-new&#39;</span><span class="p">:</span>
+            <span class="c1"># Handle input path</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Prepare defaults</span>
+            <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">project_name</span><span class="p">:</span>
+                <span class="n">defaults</span><span class="p">[</span><span class="s1">&#39;project_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">project_name</span>
+
+            <span class="c1"># Perform migration</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">),</span> <span class="n">defaults</span><span class="p">)</span>
+
+            <span class="c1"># Write output</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+                <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
            </div>

@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.agents.dependency_resolver &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.agents.dependency_resolver</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.agents.dependency_resolver</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dependency Resolver Agent</span>
+
+<span class="sd">Automatically analyzes import errors, missing dependencies, and suggests fixes.</span>
+<span class="sd">Can scan local code, analyze error messages, and propose dependency additions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">tomllib</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="DependencyIssue">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.DependencyIssue">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DependencyIssue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a missing or problematic dependency.&quot;&quot;&quot;</span>
+
+    <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">import_statement</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">file_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">line_number</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">suggested_package</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">error_message</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_installed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="DependencyReport">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.DependencyReport">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DependencyReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of dependency analysis.&quot;&quot;&quot;</span>
+
+    <span class="n">missing_packages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyIssue</span><span class="p">]</span>
+    <span class="n">unused_packages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">version_conflicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+    <span class="n">recommendations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<span class="c1"># Common import name to package name mappings</span>
+<span class="n">IMPORT_TO_PACKAGE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cv2&#39;</span><span class="p">:</span> <span class="s1">&#39;opencv-python&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;PIL&#39;</span><span class="p">:</span> <span class="s1">&#39;Pillow&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;yaml&#39;</span><span class="p">:</span> <span class="s1">&#39;PyYAML&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sklearn&#39;</span><span class="p">:</span> <span class="s1">&#39;scikit-learn&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;bs4&#39;</span><span class="p">:</span> <span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pytest&#39;</span><span class="p">:</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;numpy&#39;</span><span class="p">:</span> <span class="s1">&#39;numpy&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pandas&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;requests&#39;</span><span class="p">:</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;flask&#39;</span><span class="p">:</span> <span class="s1">&#39;Flask&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;django&#39;</span><span class="p">:</span> <span class="s1">&#39;Django&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">:</span> <span class="s1">&#39;SQLAlchemy&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="extract_imports_from_file">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.extract_imports_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_imports_from_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract all import statements from a Python file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path: Path to Python file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Set of imported module names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imports</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Import</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">alias</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">ImportFrom</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
+                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">SyntaxError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">):</span>
+        <span class="c1"># Skip files with syntax errors or encoding issues</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">imports</span></div>
+
+
+
+<div class="viewcode-block" id="scan_project_imports">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.scan_project_imports">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scan_project_imports</span><span class="p">(</span><span class="n">project_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">exclude_patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scan all Python files in a project for imports.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_path: Root path of project</span>
+<span class="sd">        exclude_patterns: Patterns to exclude (e.g., &#39;tests&#39;, &#39;venv&#39;)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict mapping file paths to sets of imported modules</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">exclude_patterns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exclude_patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;venv&#39;</span><span class="p">,</span> <span class="s1">&#39;.venv&#39;</span><span class="p">,</span> <span class="s1">&#39;__pycache__&#39;</span><span class="p">,</span> <span class="s1">&#39;.git&#39;</span><span class="p">,</span> <span class="s1">&#39;build&#39;</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;.eggs&#39;</span><span class="p">]</span>
+
+    <span class="n">imports_by_file</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">py_file</span> <span class="ow">in</span> <span class="n">project_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">):</span>
+        <span class="c1"># Skip excluded directories</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">pattern</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">py_file</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">exclude_patterns</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">imports</span> <span class="o">=</span> <span class="n">extract_imports_from_file</span><span class="p">(</span><span class="n">py_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">imports</span><span class="p">:</span>
+            <span class="n">imports_by_file</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">py_file</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">project_path</span><span class="p">))]</span> <span class="o">=</span> <span class="n">imports</span>
+
+    <span class="k">return</span> <span class="n">imports_by_file</span></div>
+
+
+
+<div class="viewcode-block" id="get_installed_packages">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.get_installed_packages">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_installed_packages</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of installed packages using pip.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Set of installed package names (lowercase)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s1">&#39;-m&#39;</span><span class="p">,</span> <span class="s1">&#39;pip&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;--format=freeze&#39;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">packages</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;==&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">package_name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">packages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">package_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">packages</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_package_name">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.resolve_package_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_package_name</span><span class="p">(</span><span class="n">import_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolve import name to package name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        import_name: Name used in import statement</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Likely package name for pip install</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check known mappings first</span>
+    <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">IMPORT_TO_PACKAGE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">IMPORT_TO_PACKAGE</span><span class="p">[</span><span class="n">import_name</span><span class="p">]</span>
+
+    <span class="c1"># Otherwise, assume import name is package name</span>
+    <span class="k">return</span> <span class="n">import_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="parse_error_message">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.parse_error_message">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_error_message</span><span class="p">(</span><span class="n">error_msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse error messages to extract missing dependencies.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        error_msg: Error message from Python/pytest</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of DependencyIssue objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">issues</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Pattern: ModuleNotFoundError: No module named &#39;xxx&#39;</span>
+    <span class="n">import_error_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="sa">r</span><span class="s2">&quot;ModuleNotFoundError: No module named &#39;(.+?)&#39;|&quot;</span>
+        <span class="sa">r</span><span class="s2">&quot;ImportError: No module named &#39;?(.+?)&#39;?|&quot;</span>
+        <span class="sa">r</span><span class="s2">&quot;cannot import name &#39;(.+?)&#39; from &#39;(.+?)&#39;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Pattern: File &quot;path&quot;, line N</span>
+    <span class="n">file_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;File &quot;(.+?)&quot;, line (\d+)&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">import_error_pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">error_msg</span><span class="p">):</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">module_name</span><span class="p">:</span>
+            <span class="c1"># Get file path and line number if available</span>
+            <span class="n">file_match</span> <span class="o">=</span> <span class="n">file_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">error_msg</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">500</span><span class="p">))</span>
+
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">file_match</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">line_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">file_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="k">if</span> <span class="n">file_match</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="c1"># Resolve to package name</span>
+            <span class="n">top_level</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">package_name</span> <span class="o">=</span> <span class="n">resolve_package_name</span><span class="p">(</span><span class="n">top_level</span><span class="p">)</span>
+
+            <span class="n">issues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DependencyIssue</span><span class="p">(</span>
+                <span class="n">package_name</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                <span class="n">import_statement</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">file_path</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">line_number</span><span class="o">=</span><span class="n">line_number</span><span class="p">,</span>
+                <span class="n">suggested_package</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                <span class="n">error_message</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">issues</span></div>
+
+
+
+<div class="viewcode-block" id="read_project_dependencies">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.read_project_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_project_dependencies</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read declared dependencies from pyproject.toml.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pyproject_path: Path to pyproject.toml</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (main_dependencies, dev_dependencies)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tomllib</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Get main dependencies</span>
+        <span class="n">main_deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;project&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dependencies&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="c1"># Extract package name (before version specifiers)</span>
+            <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;=\[]&#39;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">main_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
+
+        <span class="c1"># Get optional dependencies</span>
+        <span class="n">dev_deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">group_deps</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;optional-dependencies&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">group_deps</span><span class="p">:</span>
+                <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;=\[]&#39;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">dev_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">main_deps</span><span class="p">,</span> <span class="n">dev_deps</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="analyze_dependencies">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.analyze_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_dependencies</span><span class="p">(</span>
+    <span class="n">project_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">error_logs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">check_unused</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DependencyReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze project dependencies and identify issues.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_path: Path to project directory</span>
+<span class="sd">        error_logs: Optional error logs to parse</span>
+<span class="sd">        check_unused: Whether to check for unused dependencies</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        DependencyReport with analysis results</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">project_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_path</span><span class="p">)</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">project_path</span> <span class="o">/</span> <span class="s1">&#39;pyproject.toml&#39;</span>
+
+    <span class="n">missing_packages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unused_packages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">version_conflicts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Parse error logs if provided</span>
+    <span class="k">if</span> <span class="n">error_logs</span><span class="p">:</span>
+        <span class="n">missing_from_errors</span> <span class="o">=</span> <span class="n">parse_error_message</span><span class="p">(</span><span class="n">error_logs</span><span class="p">)</span>
+        <span class="n">missing_packages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">missing_from_errors</span><span class="p">)</span>
+
+    <span class="c1"># Scan project imports</span>
+    <span class="n">imports_by_file</span> <span class="o">=</span> <span class="n">scan_project_imports</span><span class="p">(</span><span class="n">project_path</span><span class="p">)</span>
+    <span class="n">all_imports</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">imports</span> <span class="ow">in</span> <span class="n">imports_by_file</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">all_imports</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">imports</span><span class="p">)</span>
+
+    <span class="c1"># Get installed packages</span>
+    <span class="n">installed</span> <span class="o">=</span> <span class="n">get_installed_packages</span><span class="p">()</span>
+
+    <span class="c1"># Read declared dependencies</span>
+    <span class="n">declared_main</span><span class="p">,</span> <span class="n">declared_dev</span> <span class="o">=</span> <span class="n">read_project_dependencies</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+    <span class="n">all_declared</span> <span class="o">=</span> <span class="n">declared_main</span> <span class="o">|</span> <span class="n">declared_dev</span>
+
+    <span class="c1"># Find missing dependencies (imported but not declared/installed)</span>
+    <span class="k">for</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">all_imports</span><span class="p">:</span>
+        <span class="c1"># Skip standard library modules</span>
+        <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdlib_module_names</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">package_name</span> <span class="o">=</span> <span class="n">resolve_package_name</span><span class="p">(</span><span class="n">import_name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Check if installed</span>
+        <span class="n">is_installed</span> <span class="o">=</span> <span class="n">package_name</span> <span class="ow">in</span> <span class="n">installed</span>
+
+        <span class="c1"># Check if declared</span>
+        <span class="n">is_declared</span> <span class="o">=</span> <span class="n">package_name</span> <span class="ow">in</span> <span class="n">all_declared</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_declared</span><span class="p">:</span>
+            <span class="c1"># Find which files use this import</span>
+            <span class="n">using_files</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">imports</span> <span class="ow">in</span> <span class="n">imports_by_file</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">imports</span>
+            <span class="p">]</span>
+
+            <span class="n">issue</span> <span class="o">=</span> <span class="n">DependencyIssue</span><span class="p">(</span>
+                <span class="n">package_name</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                <span class="n">import_statement</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">import_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">file_path</span><span class="o">=</span><span class="n">using_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">using_files</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">suggested_package</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                <span class="n">is_installed</span><span class="o">=</span><span class="n">is_installed</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">package_name</span> <span class="o">==</span> <span class="n">package_name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">missing_packages</span><span class="p">):</span>
+                <span class="n">missing_packages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issue</span><span class="p">)</span>
+
+    <span class="c1"># Find unused dependencies</span>
+    <span class="k">if</span> <span class="n">check_unused</span> <span class="ow">and</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">dep_pkg</span> <span class="ow">in</span> <span class="n">all_declared</span><span class="p">:</span>
+            <span class="c1"># Try to find if this package is imported</span>
+            <span class="c1"># (This is approximate - package name != import name always)</span>
+            <span class="n">potential_imports</span> <span class="o">=</span> <span class="p">{</span><span class="n">dep_pkg</span><span class="p">,</span> <span class="n">dep_pkg</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)}</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">imp</span> <span class="ow">in</span> <span class="n">all_imports</span> <span class="k">for</span> <span class="n">imp</span> <span class="ow">in</span> <span class="n">potential_imports</span><span class="p">):</span>
+                <span class="c1"># Double-check it&#39;s not a known mapping</span>
+                <span class="n">reverse_mapped</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">IMPORT_TO_PACKAGE</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">dep_pkg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">imp</span> <span class="ow">in</span> <span class="n">all_imports</span> <span class="k">for</span> <span class="n">imp</span> <span class="ow">in</span> <span class="n">reverse_mapped</span><span class="p">):</span>
+                    <span class="n">unused_packages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep_pkg</span><span class="p">)</span>
+
+    <span class="c1"># Generate recommendations</span>
+    <span class="k">if</span> <span class="n">missing_packages</span><span class="p">:</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Add </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_packages</span><span class="p">)</span><span class="si">}</span><span class="s2"> missing packages to pyproject.toml:&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">missing_packages</span><span class="p">[:</span><span class="mi">10</span><span class="p">]:</span>  <span class="c1"># Show first 10</span>
+            <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">is_installed</span><span class="p">:</span>
+                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (already installed, add to dependencies)&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (needs installation)&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">unused_packages</span><span class="p">:</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Consider removing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unused_packages</span><span class="p">)</span><span class="si">}</span><span class="s2"> potentially unused packages:&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">unused_packages</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>  <span class="c1"># Show first 5</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">pkg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">DependencyReport</span><span class="p">(</span>
+        <span class="n">missing_packages</span><span class="o">=</span><span class="n">missing_packages</span><span class="p">,</span>
+        <span class="n">unused_packages</span><span class="o">=</span><span class="n">unused_packages</span><span class="p">,</span>
+        <span class="n">version_conflicts</span><span class="o">=</span><span class="n">version_conflicts</span><span class="p">,</span>
+        <span class="n">recommendations</span><span class="o">=</span><span class="n">recommendations</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="print_report">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.print_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_report</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="n">DependencyReport</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Print formatted dependency report.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEPENDENCY ANALYSIS REPORT&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_packages</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📦 Missing Packages (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">missing_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_packages</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;✓ installed&quot;</span> <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">is_installed</span> <span class="k">else</span> <span class="s2">&quot;✗ not installed&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Import: </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">import_statement</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">file_path</span><span class="p">:</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">line_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">line_number</span> <span class="k">else</span> <span class="n">issue</span><span class="o">.</span><span class="n">file_path</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Used in: </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">unused_packages</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🗑️  Potentially Unused Packages (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">unused_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">unused_packages</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">pkg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">recommendations</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">💡 Recommendations:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">recommendations</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI entry point for dependency resolver.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Analyze and resolve Python dependencies&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;project_path&#39;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to project directory (default: current directory)&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--error-log&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to error log file to analyze&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--no-check-unused&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Skip checking for unused dependencies&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--fix&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Automatically add missing packages to pyproject.toml&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Read error logs if provided</span>
+    <span class="n">error_logs</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">error_log</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">error_log</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">error_logs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="c1"># Analyze dependencies</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">analyze_dependencies</span><span class="p">(</span>
+        <span class="n">project_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">project_path</span><span class="p">,</span>
+        <span class="n">error_logs</span><span class="o">=</span><span class="n">error_logs</span><span class="p">,</span>
+        <span class="n">check_unused</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_check_unused</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Print report</span>
+    <span class="n">print_report</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+
+    <span class="c1"># Auto-fix if requested</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">fix</span> <span class="ow">and</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_packages</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔧 Auto-fix mode: Adding missing packages to pyproject.toml...&quot;</span><span class="p">)</span>
+        <span class="c1"># TODO: Implement auto-fix</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(Auto-fix not yet implemented)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Exit with error code if issues found</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_packages</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

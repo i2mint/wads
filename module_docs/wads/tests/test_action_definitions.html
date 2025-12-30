@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_action_definitions &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="wads.tests.test_config_comparison" href="test_config_comparison.html" />
+    <link rel="prev" title="wads.tests.data.example_module" href="data/example_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_action_definitions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.action_files"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.action_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.actions_dir"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.actions_dir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_action_inputs_have_descriptions"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_action_inputs_have_descriptions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_action_outputs_have_descriptions"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_action_outputs_have_descriptions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_directory_exists"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_actions_directory_exists()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_dont_hardcode_credentials"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_actions_dont_hardcode_credentials()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_exist"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_actions_exist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_have_proper_shell_specification"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_actions_have_proper_shell_specification()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_use_python3_not_python"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_actions_use_python3_not_python()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_required_fields"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_all_actions_have_required_fields()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_valid_yaml"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_all_actions_have_valid_yaml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_bash_steps_have_error_handling"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_bash_steps_have_error_handling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_build_dist_action_structure"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_build_dist_action_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_composite_actions_have_steps"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_composite_actions_have_steps()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_install_deps_action_structure"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_install_deps_action_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_read_ci_config_action_outputs"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_read_ci_config_action_outputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_script_actions_reference_valid_scripts"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_script_actions_reference_valid_scripts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_set_env_vars_action_structure"><code class="docutils literal notranslate"><span class="pre">TestActionDefinitions.test_set_env_vars_action_structure()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.tests.test_action_definitions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/wads/tests/test_action_definitions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.tests.test_action_definitions">
+<span id="wads-tests-test-action-definitions"></span><h1>wads.tests.test_action_definitions<a class="headerlink" href="#module-wads.tests.test_action_definitions" title="Link to this heading"></a></h1>
+<p>Test GitHub Actions action.yml files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wads.tests.test_action_definitions.</span></span><span class="sig-name descname"><span class="pre">TestActionDefinitions</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions" title="Link to this definition"></a></dt>
+<dd><p>Test that action.yml files are valid and properly structured.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.action_files">
+<span class="sig-name descname"><span class="pre">action_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.action_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.action_files" title="Link to this definition"></a></dt>
+<dd><p>Get all action.yml files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.actions_dir">
+<span class="sig-name descname"><span class="pre">actions_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.actions_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.actions_dir" title="Link to this definition"></a></dt>
+<dd><p>Get actions directory path.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_action_inputs_have_descriptions">
+<span class="sig-name descname"><span class="pre">test_action_inputs_have_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_action_inputs_have_descriptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_action_inputs_have_descriptions" title="Link to this definition"></a></dt>
+<dd><p>Test that action inputs have descriptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_action_outputs_have_descriptions">
+<span class="sig-name descname"><span class="pre">test_action_outputs_have_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_action_outputs_have_descriptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_action_outputs_have_descriptions" title="Link to this definition"></a></dt>
+<dd><p>Test that action outputs have descriptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_actions_directory_exists">
+<span class="sig-name descname"><span class="pre">test_actions_directory_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_actions_directory_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_directory_exists" title="Link to this definition"></a></dt>
+<dd><p>Test that actions directory exists.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_actions_dont_hardcode_credentials">
+<span class="sig-name descname"><span class="pre">test_actions_dont_hardcode_credentials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_actions_dont_hardcode_credentials"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_dont_hardcode_credentials" title="Link to this definition"></a></dt>
+<dd><p>Test that actions don’t contain hardcoded credentials.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_actions_exist">
+<span class="sig-name descname"><span class="pre">test_actions_exist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_actions_exist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_exist" title="Link to this definition"></a></dt>
+<dd><p>Test that action.yml files exist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_actions_have_proper_shell_specification">
+<span class="sig-name descname"><span class="pre">test_actions_have_proper_shell_specification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_actions_have_proper_shell_specification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_have_proper_shell_specification" title="Link to this definition"></a></dt>
+<dd><p>Test that steps specify shell when needed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_actions_use_python3_not_python">
+<span class="sig-name descname"><span class="pre">test_actions_use_python3_not_python</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_actions_use_python3_not_python"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_use_python3_not_python" title="Link to this definition"></a></dt>
+<dd><p>Test that actions use python3 explicitly.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_required_fields">
+<span class="sig-name descname"><span class="pre">test_all_actions_have_required_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_all_actions_have_required_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_required_fields" title="Link to this definition"></a></dt>
+<dd><p>Test that all actions have required fields.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_valid_yaml">
+<span class="sig-name descname"><span class="pre">test_all_actions_have_valid_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_all_actions_have_valid_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_valid_yaml" title="Link to this definition"></a></dt>
+<dd><p>Test that all action.yml files are valid YAML.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_bash_steps_have_error_handling">
+<span class="sig-name descname"><span class="pre">test_bash_steps_have_error_handling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_bash_steps_have_error_handling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_bash_steps_have_error_handling" title="Link to this definition"></a></dt>
+<dd><p>Test that complex bash steps have error handling.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_build_dist_action_structure">
+<span class="sig-name descname"><span class="pre">test_build_dist_action_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_build_dist_action_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_build_dist_action_structure" title="Link to this definition"></a></dt>
+<dd><p>Test build-dist action has correct structure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_composite_actions_have_steps">
+<span class="sig-name descname"><span class="pre">test_composite_actions_have_steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_composite_actions_have_steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_composite_actions_have_steps" title="Link to this definition"></a></dt>
+<dd><p>Test that composite actions have steps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_install_deps_action_structure">
+<span class="sig-name descname"><span class="pre">test_install_deps_action_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_install_deps_action_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_install_deps_action_structure" title="Link to this definition"></a></dt>
+<dd><p>Test install-deps action has correct structure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_read_ci_config_action_outputs">
+<span class="sig-name descname"><span class="pre">test_read_ci_config_action_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_read_ci_config_action_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_read_ci_config_action_outputs" title="Link to this definition"></a></dt>
+<dd><p>Test read-ci-config action has necessary outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_script_actions_reference_valid_scripts">
+<span class="sig-name descname"><span class="pre">test_script_actions_reference_valid_scripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_script_actions_reference_valid_scripts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_script_actions_reference_valid_scripts" title="Link to this definition"></a></dt>
+<dd><p>Test that actions referencing scripts use correct paths.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_action_definitions.TestActionDefinitions.test_set_env_vars_action_structure">
+<span class="sig-name descname"><span class="pre">test_set_env_vars_action_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_action_definitions.html#TestActionDefinitions.test_set_env_vars_action_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_action_definitions.TestActionDefinitions.test_set_env_vars_action_structure" title="Link to this definition"></a></dt>
+<dd><p>Test set-env-vars action has correct structure.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data/example_module.html" class="btn btn-neutral float-left" title="wads.tests.data.example_module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="test_config_comparison.html" class="btn btn-neutral float-right" title="wads.tests.test_config_comparison" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_action_definitions &mdash; wads 0.1.57 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_action_definitions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_action_definitions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Test GitHub Actions action.yml files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<div class="viewcode-block" id="TestActionDefinitions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestActionDefinitions</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that action.yml files are valid and properly structured.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestActionDefinitions.actions_dir">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.actions_dir">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">actions_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get actions directory path.&quot;&quot;&quot;</span>
+        <span class="c1"># Get wads package directory</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">wads</span>
+
+        <span class="n">wads_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">wads</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">actions_path</span> <span class="o">=</span> <span class="n">wads_dir</span> <span class="o">/</span> <span class="s2">&quot;actions&quot;</span>
+
+        <span class="c1"># If not found, try relative to this file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">actions_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">test_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+            <span class="n">actions_path</span> <span class="o">=</span> <span class="n">test_dir</span> <span class="o">/</span> <span class="s2">&quot;actions&quot;</span>
+
+        <span class="k">return</span> <span class="n">actions_path</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.action_files">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.action_files">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all action.yml files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">actions_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actions directory not found: </span><span class="si">{</span><span class="n">actions_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">actions_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;action.yml&quot;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_actions_directory_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_directory_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_directory_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that actions directory exists.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">actions_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;Actions directory not found: </span><span class="si">{</span><span class="n">actions_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">assert</span> <span class="n">actions_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_actions_exist">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_exist">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that action.yml files exist.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;No action.yml files found&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_all_actions_have_valid_yaml">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_valid_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_all_actions_have_valid_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that all action.yml files are valid YAML.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="k">assert</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Empty YAML in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Invalid YAML structure in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_all_actions_have_required_fields">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_all_actions_have_required_fields">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_all_actions_have_required_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that all actions have required fields.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Required fields</span>
+            <span class="k">assert</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing &#39;name&#39; in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">assert</span> <span class="s1">&#39;description&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing &#39;description&#39; in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">assert</span> <span class="s1">&#39;runs&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing &#39;runs&#39; in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="c1"># Runs should have required structure</span>
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;runs&#39;</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="s1">&#39;using&#39;</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing &#39;using&#39; in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">/runs&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_composite_actions_have_steps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_composite_actions_have_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_composite_actions_have_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that composite actions have steps.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;runs&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">runs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;using&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;composite&#39;</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Composite action missing steps: </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="s1">&#39;steps&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_action_inputs_have_descriptions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_action_inputs_have_descriptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_action_inputs_have_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that action inputs have descriptions.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s1">&#39;inputs&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">input_def</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="s1">&#39;description&#39;</span> <span class="ow">in</span> <span class="n">input_def</span>
+                    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Input &#39;</span><span class="si">{</span><span class="n">input_name</span><span class="si">}</span><span class="s2">&#39; missing description in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_action_outputs_have_descriptions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_action_outputs_have_descriptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_action_outputs_have_descriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that action outputs have descriptions.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s1">&#39;outputs&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">output_def</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;outputs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="s1">&#39;description&#39;</span> <span class="ow">in</span> <span class="n">output_def</span>
+                    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Output &#39;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">&#39; missing description in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_script_actions_reference_valid_scripts">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_script_actions_reference_valid_scripts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_script_actions_reference_valid_scripts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that actions referencing scripts use correct paths.&quot;&quot;&quot;</span>
+        <span class="c1"># Actions that should use scripts</span>
+        <span class="n">script_actions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;read-ci-config&#39;</span><span class="p">:</span> <span class="s1">&#39;read_ci_config&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;build-dist&#39;</span><span class="p">:</span> <span class="s1">&#39;build_dist&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;set-env-vars&#39;</span><span class="p">:</span> <span class="s1">&#39;set_env_vars&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">action_name</span><span class="p">,</span> <span class="n">script_name</span> <span class="ow">in</span> <span class="n">script_actions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">action_file</span> <span class="o">=</span> <span class="n">actions_dir</span> <span class="o">/</span> <span class="n">action_name</span> <span class="o">/</span> <span class="s2">&quot;action.yml&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">action_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">continue</span>
+
+            <span class="n">content</span> <span class="o">=</span> <span class="n">action_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+
+            <span class="c1"># Should reference the Python script</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="s1">&#39;wads.scripts&#39;</span> <span class="ow">in</span> <span class="n">content</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action_name</span><span class="si">}</span><span class="s2"> should reference wads.scripts&quot;</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">script_name</span> <span class="ow">in</span> <span class="n">content</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action_name</span><span class="si">}</span><span class="s2"> should reference </span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_actions_use_python3_not_python">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_use_python3_not_python">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_use_python3_not_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that actions use python3 explicitly.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">action_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+
+            <span class="c1"># If it runs python, should use python3 or sys.executable</span>
+            <span class="k">if</span> <span class="s1">&#39;python -m&#39;</span> <span class="ow">in</span> <span class="n">content</span> <span class="ow">and</span> <span class="s1">&#39;python3 -m&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+                <span class="c1"># Allow &#39;python -m pip&#39; as it&#39;s called via sys.executable</span>
+                <span class="k">if</span> <span class="s1">&#39;python -m pip&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+                    <span class="n">pytest</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2"> uses &#39;python&#39; instead of &#39;python3&#39;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_bash_steps_have_error_handling">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_bash_steps_have_error_handling">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_bash_steps_have_error_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that complex bash steps have error handling.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">runs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;using&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;composite&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">runs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shell&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;bash&#39;</span> <span class="ow">and</span> <span class="s1">&#39;run&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">run_script</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]</span>
+                    <span class="c1"># Only check truly complex scripts (not simple wrappers)</span>
+                    <span class="c1"># Check for scripts with multiple commands and logic</span>
+                    <span class="n">line_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">l</span>
+                            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">run_script</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">line_count</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># More than 5 non-comment lines</span>
+                        <span class="c1"># Skip if it&#39;s just calling external tools</span>
+                        <span class="k">if</span> <span class="s1">&#39;python3 -m&#39;</span> <span class="ow">in</span> <span class="n">run_script</span> <span class="ow">or</span> <span class="s1">&#39;python -m&#39;</span> <span class="ow">in</span> <span class="n">run_script</span><span class="p">:</span>
+                            <span class="c1"># Simple Python module wrapper</span>
+                            <span class="k">if</span> <span class="n">line_count</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                                <span class="k">continue</span>
+
+                        <span class="c1"># Should have some form of error handling</span>
+                        <span class="n">has_error_handling</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s1">&#39;set -e&#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                            <span class="ow">or</span> <span class="s1">&#39;set -eo&#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                            <span class="ow">or</span> <span class="s1">&#39;|| &#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                            <span class="ow">or</span> <span class="s1">&#39;EXIT_CODE=$?&#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                            <span class="ow">or</span> <span class="s1">&#39;exit $&#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                            <span class="ow">or</span> <span class="s1">&#39;if &#39;</span> <span class="ow">in</span> <span class="n">run_script</span>
+                        <span class="p">)</span>
+                        <span class="k">assert</span> <span class="p">(</span>
+                            <span class="n">has_error_handling</span>
+                        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Complex bash step in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2"> missing error handling (lines: </span><span class="si">{</span><span class="n">line_count</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_actions_have_proper_shell_specification">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_have_proper_shell_specification">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_have_proper_shell_specification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that steps specify shell when needed.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">runs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;using&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;composite&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">runs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="s1">&#39;run&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="c1"># Composite action steps should specify shell</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="s1">&#39;shell&#39;</span> <span class="ow">in</span> <span class="n">step</span>
+                    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Step with &#39;run&#39; missing &#39;shell&#39; in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_install_deps_action_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_install_deps_action_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_install_deps_action_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test install-deps action has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">action_file</span> <span class="o">=</span> <span class="n">actions_dir</span> <span class="o">/</span> <span class="s2">&quot;install-deps&quot;</span> <span class="o">/</span> <span class="s2">&quot;action.yml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">action_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;install-deps action not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Should have inputs for different package sources</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">assert</span> <span class="s1">&#39;pypi-packages&#39;</span> <span class="ow">in</span> <span class="n">inputs</span> <span class="ow">or</span> <span class="s1">&#39;dependency-files&#39;</span> <span class="ow">in</span> <span class="n">inputs</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_build_dist_action_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_build_dist_action_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_build_dist_action_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test build-dist action has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">action_file</span> <span class="o">=</span> <span class="n">actions_dir</span> <span class="o">/</span> <span class="s2">&quot;build-dist&quot;</span> <span class="o">/</span> <span class="s2">&quot;action.yml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">action_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;build-dist action not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Should have inputs for build options</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">assert</span> <span class="s1">&#39;output-dir&#39;</span> <span class="ow">in</span> <span class="n">inputs</span>
+        <span class="k">assert</span> <span class="s1">&#39;sdist&#39;</span> <span class="ow">in</span> <span class="n">inputs</span> <span class="ow">or</span> <span class="s1">&#39;wheel&#39;</span> <span class="ow">in</span> <span class="n">inputs</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_read_ci_config_action_outputs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_read_ci_config_action_outputs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_read_ci_config_action_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test read-ci-config action has necessary outputs.&quot;&quot;&quot;</span>
+        <span class="n">action_file</span> <span class="o">=</span> <span class="n">actions_dir</span> <span class="o">/</span> <span class="s2">&quot;read-ci-config&quot;</span> <span class="o">/</span> <span class="s2">&quot;action.yml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">action_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;read-ci-config action not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Should have outputs for CI configuration</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">expected_outputs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;python-versions&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pytest-args&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;coverage-enabled&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">expected_outputs</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing output: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_set_env_vars_action_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_set_env_vars_action_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_set_env_vars_action_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test set-env-vars action has correct structure.&quot;&quot;&quot;</span>
+        <span class="n">action_file</span> <span class="o">=</span> <span class="n">actions_dir</span> <span class="o">/</span> <span class="s2">&quot;set-env-vars&quot;</span> <span class="o">/</span> <span class="s2">&quot;action.yml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">action_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">pytest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;set-env-vars action not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">action_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Should accept pyproject path input</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">assert</span> <span class="s1">&#39;pyproject-path&#39;</span> <span class="ow">in</span> <span class="n">inputs</span></div>
+
+
+<div class="viewcode-block" id="TestActionDefinitions.test_actions_dont_hardcode_credentials">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_action_definitions.html#wads.tests.test_action_definitions.TestActionDefinitions.test_actions_dont_hardcode_credentials">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_actions_dont_hardcode_credentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that actions don&#39;t contain hardcoded credentials.&quot;&quot;&quot;</span>
+        <span class="n">sensitive_patterns</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;token&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;api_key&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;secret&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">action_file</span> <span class="ow">in</span> <span class="n">action_files</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">action_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">sensitive_patterns</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+                    <span class="c1"># Make sure it&#39;s using inputs or secrets, not hardcoded</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="s1">&#39;inputs.&#39;</span> <span class="ow">in</span> <span class="n">content</span>
+                        <span class="ow">or</span> <span class="s1">&#39;secrets.&#39;</span> <span class="ow">in</span> <span class="n">content</span>
+                        <span class="ow">or</span> <span class="s1">&#39;${{&#39;</span> <span class="ow">in</span> <span class="n">content</span>
+                    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Possible hardcoded credential in </span><span class="si">{</span><span class="n">action_file</span><span class="si">}</span><span class="s2">&quot;</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

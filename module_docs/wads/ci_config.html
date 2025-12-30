@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.55 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="wads.ci_migration" href="ci_migration.html" />
-    <link rel="prev" title="wads" href="../wads.html" /> 
+    <link rel="prev" title="wads.agents.test_analyzer" href="agents/test_analyzer.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,6 +50,10 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">wads.ci_config</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.CIConfig"><code class="docutils literal notranslate"><span class="pre">CIConfig</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.build_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_config</span></code></a></li>
@@ -66,11 +70,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_enabled</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.docs_ignore_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_ignore_paths</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_all"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_all</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_defaults"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_defaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_extra"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_extra</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_required"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_required</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_test"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_test</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.exclude_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.exclude_paths</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.from_file"><code class="docutils literal notranslate"><span class="pre">CIConfig.from_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_env_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_env_vars_yaml"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_env_vars_yaml()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_github_pages_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_github_pages_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_pre_test_steps"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_pre_test_steps()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_windows_validation_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_windows_validation_job()</span></code></a></li>
@@ -78,6 +86,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_black_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_black_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_mypy_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_mypy_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_ruff_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_ruff_enabled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_config_path"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_config_path</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_enabled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_force_run"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_force_run</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_python_version"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_python_version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_storage_branch"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_storage_branch</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.ops"><code class="docutils literal notranslate"><span class="pre">CIConfig.ops</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.project_name"><code class="docutils literal notranslate"><span class="pre">CIConfig.project_name</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_enabled</span></code></a></li>
@@ -100,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -108,12 +124,21 @@
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
@@ -238,15 +263,33 @@ settings in CI workflow files.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_all">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_all</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_all" title="Link to this definition"></a></dt>
+<dd><p>Get all environment variable names (required + test + extra).</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_defaults">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_defaults</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_defaults" title="Link to this definition"></a></dt>
 <dd><p>Get default environment variables.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_extra">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_extra</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_extra" title="Link to this definition"></a></dt>
+<dd><p>Get extra/optional environment variable names (no warning if missing).</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_required">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_required</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_required" title="Link to this definition"></a></dt>
-<dd><p>Get required environment variable names.</p>
+<dd><p>Get required environment variable names (CI fails if not in secrets).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.env_vars_test">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_vars_test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#wads.ci_config.CIConfig.env_vars_test" title="Link to this definition"></a></dt>
+<dd><p>Get test environment variable names (CI warns if not in secrets).</p>
 </dd></dl>
 
 <dl class="py property">
@@ -273,9 +316,25 @@ settings in CI workflow files.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_env_block">
 <span class="sig-name descname"><span class="pre">generate_env_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_env_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_env_block" title="Link to this definition"></a></dt>
 <dd><p>Generate YAML env block for GitHub Actions.</p>
+<p>Creates env vars for:
+- PROJECT_NAME (from config)
+- Default env vars (from config.env.defaults)
+- Placeholders for secret-based env vars (set via set-env-vars action)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>YAML string for env section</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_env_vars_yaml">
+<span class="sig-name descname"><span class="pre">generate_env_vars_yaml</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_env_vars_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_env_vars_yaml" title="Link to this definition"></a></dt>
+<dd><p>Generate YAML lines for all environment variables to be set from secrets.
+This is used in the #ENV_VARS# placeholder in CI templates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>YAML string with conditional env var assignments</p>
 </dd>
 </dl>
 </dd></dl>
@@ -293,11 +352,15 @@ settings in CI workflow files.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_pre_test_steps">
-<span class="sig-name descname"><span class="pre">generate_pre_test_steps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_pre_test_steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_pre_test_steps" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">generate_pre_test_steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linux'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_pre_test_steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_pre_test_steps" title="Link to this definition"></a></dt>
 <dd><p>Generate YAML steps for pre-test commands and system dependencies.</p>
+<p>Supports legacy [tool.wads.ci.testing.system_dependencies] format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>YAML string for pre-test steps, or empty string if no commands/deps</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>platform</strong> – Platform identifier (‘linux’, ‘macos’, ‘windows’)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>YAML string for pre-test steps, or empty string if no commands/deps</p>
 </dd>
 </dl>
 </dd></dl>
@@ -306,6 +369,7 @@ settings in CI workflow files.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_windows_validation_job">
 <span class="sig-name descname"><span class="pre">generate_windows_validation_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_windows_validation_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_windows_validation_job" title="Link to this definition"></a></dt>
 <dd><p>Generate YAML for Windows validation job.</p>
+<p>Supports legacy system_dependencies format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>YAML string for Windows job, or empty string if disabled</p>
@@ -335,6 +399,53 @@ settings in CI workflow files.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.is_ruff_enabled">
 <span class="sig-name descname"><span class="pre">is_ruff_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.is_ruff_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.is_ruff_enabled" title="Link to this definition"></a></dt>
 <dd><p>Check if Ruff linter is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_config">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_config" title="Link to this definition"></a></dt>
+<dd><p>Get code metrics configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_config_path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_config_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_config_path" title="Link to this definition"></a></dt>
+<dd><p>Get path to umpyre config file.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if code metrics tracking is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_force_run">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_force_run</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_force_run" title="Link to this definition"></a></dt>
+<dd><p>Check if metrics should run even on workflow failure.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_python_version">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_python_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_python_version" title="Link to this definition"></a></dt>
+<dd><p>Get Python version for metrics collection.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.metrics_storage_branch">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics_storage_branch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.metrics_storage_branch" title="Link to this definition"></a></dt>
+<dd><p>Get git branch to store metrics data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.ops">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ops</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.ops" title="Link to this definition"></a></dt>
+<dd><p>Get system dependencies configuration from [tool.wads.ops.*] sections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary mapping dependency names to their configuration</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -376,7 +487,9 @@ settings in CI workflow files.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.system_dependencies">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system_dependencies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.system_dependencies" title="Link to this definition"></a></dt>
-<dd><p>Get system dependencies for CI environments.</p>
+<dd><p>Get system dependencies for CI environments (DEPRECATED).</p>
+<p>DEPRECATED: Use [tool.wads.ops.*] format with install-system-deps action instead.
+This property is maintained for backward compatibility with legacy format.</p>
 <p>Returns either:
 - A list of package names (Ubuntu only)
 - A dict with platform keys: ubuntu, macos, windows</p>
@@ -472,7 +585,7 @@ settings in CI workflow files.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../wads.html" class="btn btn-neutral float-left" title="wads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="agents/test_analyzer.html" class="btn btn-neutral float-left" title="wads.agents.test_analyzer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="ci_migration.html" class="btn btn-neutral float-right" title="wads.ci_migration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

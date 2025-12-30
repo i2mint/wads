@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.55 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,11 +47,16 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
@@ -60,12 +65,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
@@ -107,6 +121,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
@@ -195,8 +211,23 @@
     <span class="c1"># 🌍 ENVIRONMENT VARIABLES</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_required</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get required environment variable names.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get required environment variable names (CI fails if not in secrets).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test environment variable names (CI warns if not in secrets).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_extra</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get extra/optional environment variable names (no warning if missing).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all environment variable names (required + test + extra).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_required</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_test</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_extra</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
@@ -268,7 +299,10 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">system_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies for CI environments.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies for CI environments (DEPRECATED).</span>
+
+<span class="sd">        DEPRECATED: Use [tool.wads.ops.*] format with install-system-deps action instead.</span>
+<span class="sd">        This property is maintained for backward compatibility with legacy format.</span>
 
 <span class="sd">        Returns either:</span>
 <span class="sd">        - A list of package names (Ubuntu only)</span>
@@ -322,6 +356,46 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_ignore_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get paths to ignore during documentation generation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_paths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;tests/&quot;</span><span class="p">,</span> <span class="s2">&quot;scrap/&quot;</span><span class="p">,</span> <span class="s2">&quot;examples/&quot;</span><span class="p">])</span>
+
+    <span class="c1"># 📊 CODE METRICS SETTINGS</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get code metrics configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metrics&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if code metrics tracking is enabled.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_config_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to umpyre config file.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.github/umpyre-config.yml&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_storage_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get git branch to store metrics data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;storage_branch&quot;</span><span class="p">,</span> <span class="s2">&quot;code-metrics&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_python_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Python version for metrics collection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;python_version&quot;</span><span class="p">,</span> <span class="s2">&quot;3.10&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metrics_force_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if metrics should run even on workflow failure.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;force_run&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies configuration from [tool.wads.ops.*] sections.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary mapping dependency names to their configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ops&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
 <div class="viewcode-block" id="CIConfig.to_ci_env_block">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_env_block">[docs]</a>
@@ -393,39 +467,97 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate YAML env block for GitHub Actions.</span>
 
+<span class="sd">        Creates env vars for:</span>
+<span class="sd">        - PROJECT_NAME (from config)</span>
+<span class="sd">        - Default env vars (from config.env.defaults)</span>
+<span class="sd">        - Placeholders for secret-based env vars (set via set-env-vars action)</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for env section</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;env:&quot;</span><span class="p">]</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Always include PROJECT_NAME</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Add default environment variables</span>
+        <span class="c1"># Add default environment variables (literal values, not secrets)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+        <span class="c1"># Add env vars that come from secrets (using conditional syntax)</span>
+        <span class="c1"># These are set conditionally only if the secret exists</span>
+        <span class="n">all_secret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">all_secret_vars</span><span class="p">:</span>
+            <span class="c1"># Use GitHub&#39;s conditional syntax to only set if secret exists</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || &#39;&#39; </span><span class="se">}}}}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_env_vars_yaml">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_vars_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_env_vars_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate YAML lines for all environment variables to be set from secrets.</span>
+<span class="sd">        This is used in the #ENV_VARS# placeholder in CI templates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            YAML string with conditional env var assignments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Add env vars that come from secrets (using conditional syntax)</span>
+        <span class="c1"># These are set conditionally only if the secret exists</span>
+        <span class="n">all_secret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">all_secret_vars</span><span class="p">:</span>
+            <span class="c1"># Use GitHub&#39;s conditional syntax to only set if secret exists</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || &#39;&#39; </span><span class="se">}}}}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">&quot;  # No additional env vars configured&quot;</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_pre_test_steps">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_pre_test_steps">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;linux&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate YAML steps for pre-test commands and system dependencies.</span>
+
+<span class="sd">        Supports legacy [tool.wads.ci.testing.system_dependencies] format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            platform: Platform identifier (&#39;linux&#39;, &#39;macos&#39;, &#39;windows&#39;)</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for pre-test steps, or empty string if no commands/deps</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">install_commands</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># Add system dependencies installation step</span>
-        <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
-        <span class="n">ubuntu_deps</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="c1"># ---- LEGACY: Parse system_dependencies (DEPRECATED) ----</span>
+        <span class="n">legacy_deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+        <span class="n">platform_key</span> <span class="o">=</span> <span class="s1">&#39;ubuntu&#39;</span> <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;linux&#39;</span> <span class="k">else</span> <span class="n">platform</span>
+        <span class="n">legacy_packages</span> <span class="o">=</span> <span class="n">legacy_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform_key</span><span class="p">,</span> <span class="p">[])</span>
 
-        <span class="k">if</span> <span class="n">ubuntu_deps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">legacy_packages</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Using deprecated [tool.wads.ci.testing.system_dependencies]. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Please migrate to [tool.wads.ops.*] format with install-system-deps action&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># For Ubuntu/Linux, use apt-get</span>
+            <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;linux&#39;</span><span class="p">:</span>
+                <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;sudo apt-get update&quot;</span><span class="p">)</span>
+                <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;sudo apt-get install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">legacy_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># ---- Build YAML steps ----</span>
+        <span class="k">if</span> <span class="n">install_commands</span><span class="p">:</span>
             <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Install System Dependencies&quot;</span><span class="p">)</span>
             <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;          sudo apt-get update&quot;</span><span class="p">)</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          sudo apt-get install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ubuntu_deps</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_commands</span><span class="p">:</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Add custom pre-test commands</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
@@ -445,23 +577,38 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate YAML for Windows validation job.</span>
 
+<span class="sd">        Supports legacy system_dependencies format.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for Windows job, or empty string if disabled</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&quot;</span>
 
-        <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
-        <span class="n">windows_deps</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">install_commands</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># ---- LEGACY: Parse system_dependencies (DEPRECATED) ----</span>
+        <span class="n">legacy_deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+        <span class="n">windows_packages</span> <span class="o">=</span> <span class="n">legacy_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="k">if</span> <span class="n">windows_packages</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Using deprecated [tool.wads.ci.testing.system_dependencies]. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Please migrate to [tool.wads.ops.*] format with install-system-deps action&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># For Windows, use chocolatey</span>
+            <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;choco install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">windows_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Build system dependencies step if needed</span>
         <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">windows_deps</span><span class="p">:</span>
-            <span class="n">system_deps_step</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">      - name: Install System Dependencies</span>
-<span class="s2">        run: choco install -y </span><span class="si">{</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">windows_deps</span><span class="p">)</span><span class="si">}</span>
-
-<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">install_commands</span><span class="p">:</span>
+            <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">&quot;      - name: Install System Dependencies</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">&quot;        run: |</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_commands</span><span class="p">:</span>
+                <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
         <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">  windows-validation:</span>
@@ -546,6 +693,7 @@
 
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;#ENV_BLOCK#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_block</span><span class="p">(),</span>
+            <span class="s2">&quot;#ENV_VARS#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_vars_yaml</span><span class="p">(),</span>
             <span class="s2">&quot;#PYTHON_VERSIONS#&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_versions</span><span class="p">),</span>
             <span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">(),</span>
             <span class="s2">&quot;#EXCLUDE_PATHS#&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">),</span>
