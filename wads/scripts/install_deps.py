@@ -50,15 +50,15 @@ def install_pypi_packages(packages: list[str]) -> bool:
     print("\nInstalled package versions:")
     for pkg in packages:
         # Extract package name (remove version specifiers)
-        pkg_name = pkg.split('[')[0].split('=')[0].split('<')[0].split('>')[0]
+        pkg_name = pkg.split("[")[0].split("=")[0].split("<")[0].split(">")[0]
         result = subprocess.run(
             [sys.executable, "-m", "pip", "show", pkg_name],
             capture_output=True,
             text=True,
         )
         if result.returncode == 0:
-            for line in result.stdout.split('\n'):
-                if line.startswith('Name:') or line.startswith('Version:'):
+            for line in result.stdout.split("\n"):
+                if line.startswith("Name:") or line.startswith("Version:"):
                     print(f"  {line}")
 
     return True
@@ -84,15 +84,15 @@ def install_from_dependency_files(
             print(f"⚠️  Dependency file not found: {path}")
             continue
 
-        if path.suffix == '.txt':
+        if path.suffix == ".txt":
             print(f"Installing from requirements file: {path}")
             if not _run_pip_install(["-r", str(path)]):
                 success = False
 
-        elif path.suffix == '.toml':
+        elif path.suffix == ".toml":
             print(f"Installing from pyproject.toml: {path}")
             if extras:
-                extras_str = ','.join(extras)
+                extras_str = ",".join(extras)
                 install_spec = f".[{extras_str}]"
             else:
                 install_spec = "."
@@ -100,7 +100,7 @@ def install_from_dependency_files(
             if not _run_pip_install(["-e", install_spec]):
                 success = False
 
-        elif path.suffix == '.cfg':
+        elif path.suffix == ".cfg":
             print(f"Installing from setup.cfg: {path}")
             # For backward compatibility, use isee if available
             try:
@@ -132,7 +132,7 @@ def main():
     )
     parser.add_argument(
         "--pypi-packages",
-        nargs='+',
+        nargs="+",
         help="Python packages to install (space-separated)",
     )
     parser.add_argument(
@@ -155,8 +155,8 @@ def main():
 
     # Install from dependency files
     if args.dependency_files:
-        files = [f.strip() for f in args.dependency_files.split(',')]
-        extras = [e.strip() for e in args.extras.split(',')] if args.extras else None
+        files = [f.strip() for f in args.dependency_files.split(",")]
+        extras = [e.strip() for e in args.extras.split(",")] if args.extras else None
         if not install_from_dependency_files(files, extras):
             success = False
 

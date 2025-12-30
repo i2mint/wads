@@ -375,7 +375,7 @@ class CIConfig:
 
         return "\n".join(lines) if lines else "  # No additional env vars configured"
 
-    def generate_pre_test_steps(self, platform: str = 'linux') -> str:
+    def generate_pre_test_steps(self, platform: str = "linux") -> str:
         """
         Generate YAML steps for pre-test commands and system dependencies.
 
@@ -392,7 +392,7 @@ class CIConfig:
 
         # ---- LEGACY: Parse system_dependencies (DEPRECATED) ----
         legacy_deps = self._normalize_system_deps()
-        platform_key = 'ubuntu' if platform == 'linux' else platform
+        platform_key = "ubuntu" if platform == "linux" else platform
         legacy_packages = legacy_deps.get(platform_key, [])
 
         if legacy_packages:
@@ -403,7 +403,7 @@ class CIConfig:
                 stacklevel=2,
             )
             # For Ubuntu/Linux, use apt-get
-            if platform == 'linux':
+            if platform == "linux":
                 install_commands.append("sudo apt-get update")
                 install_commands.append(
                     f"sudo apt-get install -y {' '.join(legacy_packages)}"

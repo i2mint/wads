@@ -31,6 +31,7 @@ from wads.ci_config import CIConfig
 @dataclass
 class InstallResult:
     """Result of an installation attempt."""
+
     success: bool
     package_name: str
     message: str
@@ -40,6 +41,7 @@ class InstallResult:
 @dataclass
 class DiagnosticResult:
     """Result of dependency diagnostics."""
+
     missing_python_deps: List[str]
     missing_system_deps: List[Dict[str, str]]
     missing_env_vars: List[str]
@@ -55,13 +57,13 @@ def get_current_platform() -> str:
         Platform string compatible with wads configuration
     """
     system = platform.system().lower()
-    if system == 'darwin':
-        return 'macos'
-    elif system in ('linux', 'windows'):
+    if system == "darwin":
+        return "macos"
+    elif system in ("linux", "windows"):
         return system
     else:
         warnings.warn(f"Unknown platform: {system}, defaulting to 'linux'")
-        return 'linux'
+        return "linux"
 
 
 def is_package_importable(package_name: str) -> bool:
@@ -77,10 +79,10 @@ def is_package_importable(package_name: str) -> bool:
     # Handle common package name variations
     # e.g., "scikit-learn" -> "sklearn", "pillow" -> "PIL"
     import_name_map = {
-        'scikit-learn': 'sklearn',
-        'pillow': 'PIL',
-        'pyyaml': 'yaml',
-        'python-dateutil': 'dateutil',
+        "scikit-learn": "sklearn",
+        "pillow": "PIL",
+        "pyyaml": "yaml",
+        "python-dateutil": "dateutil",
     }
 
     import_name = import_name_map.get(package_name.lower(), package_name)
@@ -88,7 +90,7 @@ def is_package_importable(package_name: str) -> bool:
     # Try the mapped name first, then the package name as-is
     for name in [import_name, package_name]:
         try:
-            importlib.import_module(name.replace('-', '_'))
+            importlib.import_module(name.replace("-", "_"))
             return True
         except (ImportError, ModuleNotFoundError):
             pass
@@ -105,15 +107,15 @@ def get_installed_pip_packages() -> Set[str]:
     """
     try:
         result = subprocess.run(
-            [sys.executable, '-m', 'pip', 'list', '--format=freeze'],
+            [sys.executable, "-m", "pip", "list", "--format=freeze"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         packages = set()
         for line in result.stdout.splitlines():
-            if '==' in line:
-                package_name = line.split('==')[0].lower()
+            if "==" in line:
+                package_name = line.split("==")[0].lower()
                 packages.add(package_name)
         return packages
     except subprocess.CalledProcessError:
@@ -128,7 +130,7 @@ def install_python_dependencies(
     allow_downgrade: bool = False,
     extras: Optional[List[str]] = None,
     dry_run: bool = False,
-    verbose: bool = True
+    verbose: bool = True,
 ) -> List[InstallResult]:
     """
     Install Python dependencies from pyproject.toml.
@@ -154,13 +156,13 @@ def install_python_dependencies(
         raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
 
     # Parse pyproject.toml
-    with open(pyproject_path, 'rb') as f:
+    with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
     # Get dependencies
-    project = data.get('project', {})
-    dependencies = project.get('dependencies', [])
-    optional_deps = project.get('optional-dependencies', {})
+    project = data.get("project", {})
+    dependencies = project.get("dependencies", [])
+    optional_deps = project.get("optional-dependencies", {})
 
     # Add extras if specified
     if extras:
@@ -170,25 +172,39 @@ def install_python_dependencies(
 
     # Filter out excluded packages
     exclude_set = set((exclude or []))
-    to_install = [dep for dep in dependencies if dep.split('[')[0].split('>=')[0].split('==')[0].strip() not in exclude_set]
+    to_install = [
+        dep
+        for dep in dependencies
+        if dep.split("[")[0].split(">=")[0].split("==")[0].strip() not in exclude_set
+    ]
 
     results = []
     installed_packages = get_installed_pip_packages() if check_importable else set()
 
     for dep_spec in to_install:
         # Extract package name from dependency spec
-        package_name = dep_spec.split('[')[0].split('>=')[0].split('==')[0].split('>')[0].split('<')[0].split('!')[0].strip()
+        package_name = (
+            dep_spec.split("[")[0]
+            .split(">=")[0]
+            .split("==")[0]
+            .split(">")[0]
+            .split("<")[0]
+            .split("!")[0]
+            .strip()
+        )
 
         # Check if already available
         if check_importable:
             if is_package_importable(package_name):
                 if verbose:
                     print(f"✓ {package_name} already available (importable)")
-                results.append(InstallResult(
-                    success=True,
-                    package_name=package_name,
-                    message="Already importable"
-                ))
+                results.append(
+                    InstallResult(
+                        success=True,
+                        package_name=package_name,
+                        message="Already importable",
+                    )
+                )
                 continue
 
             # Also check pip list
@@ -196,21 +212,23 @@ def install_python_dependencies(
                 if not upgrade:
                     if verbose:
                         print(f"✓ {package_name} already installed")
-                    results.append(InstallResult(
-                        success=True,
-                        package_name=package_name,
-                        message="Already installed"
-                    ))
+                    results.append(
+                        InstallResult(
+                            success=True,
+                            package_name=package_name,
+                            message="Already installed",
+                        )
+                    )
                     continue
 
         # Build install command
-        cmd = [sys.executable, '-m', 'pip', 'install']
+        cmd = [sys.executable, "-m", "pip", "install"]
 
         if upgrade:
-            cmd.append('--upgrade')
+            cmd.append("--upgrade")
 
         if allow_downgrade:
-            cmd.append('--force-reinstall')
+            cmd.append("--force-reinstall")
 
         cmd.append(dep_spec)
 
@@ -218,12 +236,14 @@ def install_python_dependencies(
             if verbose:
                 print(f"Would install: {dep_spec}")
                 print(f"  Command: {' '.join(cmd)}")
-            results.append(InstallResult(
-                success=True,
-                package_name=package_name,
-                message="Dry run - would install",
-                command_executed=' '.join(cmd)
-            ))
+            results.append(
+                InstallResult(
+                    success=True,
+                    package_name=package_name,
+                    message="Dry run - would install",
+                    command_executed=" ".join(cmd),
+                )
+            )
             continue
 
         # Execute installation
@@ -231,39 +251,35 @@ def install_python_dependencies(
             print(f"Installing {dep_spec}...")
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if verbose:
                 print(f"✓ {package_name} installed successfully")
-            results.append(InstallResult(
-                success=True,
-                package_name=package_name,
-                message="Installed successfully",
-                command_executed=' '.join(cmd)
-            ))
+            results.append(
+                InstallResult(
+                    success=True,
+                    package_name=package_name,
+                    message="Installed successfully",
+                    command_executed=" ".join(cmd),
+                )
+            )
         except subprocess.CalledProcessError as e:
             if verbose:
                 print(f"✗ Failed to install {package_name}")
                 print(f"  Error: {e.stderr}")
-            results.append(InstallResult(
-                success=False,
-                package_name=package_name,
-                message=f"Installation failed: {e.stderr}",
-                command_executed=' '.join(cmd)
-            ))
+            results.append(
+                InstallResult(
+                    success=False,
+                    package_name=package_name,
+                    message=f"Installation failed: {e.stderr}",
+                    command_executed=" ".join(cmd),
+                )
+            )
 
     return results
 
 
 def check_system_dependency(
-    dep_name: str,
-    dep_ops: Dict,
-    platform: str,
-    verbose: bool = True
+    dep_name: str, dep_ops: Dict, platform: str, verbose: bool = True
 ) -> bool:
     """
     Check if a system dependency is installed using check commands.
@@ -277,7 +293,7 @@ def check_system_dependency(
     Returns:
         True if dependency is installed (or no check command available)
     """
-    check_section = dep_ops.get('check', {})
+    check_section = dep_ops.get("check", {})
     check_cmds = check_section.get(platform)
 
     if not check_cmds:
@@ -296,11 +312,7 @@ def check_system_dependency(
         try:
             if verbose:
                 print(f"  Checking with: {' '.join(cmd)}")
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                check=False
-            )
+            result = subprocess.run(cmd, capture_output=True, check=False)
             if result.returncode == 0:
                 return True
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -315,7 +327,7 @@ def install_system_dependencies(
     check_first: bool = True,
     dry_run: bool = False,
     verbose: bool = True,
-    interactive: bool = True
+    interactive: bool = True,
 ) -> List[InstallResult]:
     """
     Install system dependencies based on pyproject.toml configuration.
@@ -336,7 +348,7 @@ def install_system_dependencies(
     from wads.install_system_deps import (
         install_system_dependencies as _install_system_deps,
         read_system_deps,
-        find_pyproject
+        find_pyproject,
     )
 
     pyproject_path = Path(pyproject_path)
@@ -349,12 +361,14 @@ def install_system_dependencies(
 
             results = []
             for dep_name, dep_config in ops.items():
-                description = dep_config.get('description', 'No description')
-                results.append(InstallResult(
-                    success=True,
-                    package_name=dep_name,
-                    message=f"Would install: {description}"
-                ))
+                description = dep_config.get("description", "No description")
+                results.append(
+                    InstallResult(
+                        success=True,
+                        package_name=dep_name,
+                        message=f"Would install: {description}",
+                    )
+                )
                 if verbose:
                     print(f"Would install {dep_name}: {description}")
 
@@ -367,7 +381,7 @@ def install_system_dependencies(
         pyproject_path=str(pyproject_path),
         platform=platform,
         skip_check=not check_first,
-        verbose=verbose
+        verbose=verbose,
     )
 
     # Convert to InstallResult objects for compatibility
@@ -376,32 +390,37 @@ def install_system_dependencies(
     # We don't have detailed per-package results from the new installer,
     # so we create summary results
     if installed > 0:
-        results.append(InstallResult(
-            success=True,
-            package_name=f"{installed} packages",
-            message="Successfully installed"
-        ))
+        results.append(
+            InstallResult(
+                success=True,
+                package_name=f"{installed} packages",
+                message="Successfully installed",
+            )
+        )
 
     if skipped > 0:
-        results.append(InstallResult(
-            success=True,
-            package_name=f"{skipped} packages",
-            message="Already installed"
-        ))
+        results.append(
+            InstallResult(
+                success=True,
+                package_name=f"{skipped} packages",
+                message="Already installed",
+            )
+        )
 
     if failed > 0:
-        results.append(InstallResult(
-            success=False,
-            package_name=f"{failed} packages",
-            message="Installation failed"
-        ))
+        results.append(
+            InstallResult(
+                success=False,
+                package_name=f"{failed} packages",
+                message="Installation failed",
+            )
+        )
 
     return results
 
 
 def check_environment_variables(
-    pyproject_path: str | Path,
-    verbose: bool = True
+    pyproject_path: str | Path, verbose: bool = True
 ) -> Dict[str, Optional[str]]:
     """
     Check required environment variables from pyproject.toml.
@@ -422,7 +441,7 @@ def check_environment_variables(
     if not pyproject_path.exists():
         raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
 
-    with open(pyproject_path, 'rb') as f:
+    with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
     config = CIConfig(data)
@@ -455,7 +474,7 @@ def diagnose_setup(
     check_python: bool = True,
     check_system: bool = True,
     check_env: bool = True,
-    platform: Optional[str] = None
+    platform: Optional[str] = None,
 ) -> DiagnosticResult:
     """
     Diagnose missing dependencies and configuration issues.
@@ -479,7 +498,7 @@ def diagnose_setup(
     if not pyproject_path.exists():
         raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
 
-    with open(pyproject_path, 'rb') as f:
+    with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
     config = CIConfig(data)
@@ -495,11 +514,11 @@ def diagnose_setup(
 
     # Check Python dependencies
     if check_python:
-        project = data.get('project', {})
-        dependencies = project.get('dependencies', [])
+        project = data.get("project", {})
+        dependencies = project.get("dependencies", [])
 
         for dep_spec in dependencies:
-            package_name = dep_spec.split('[')[0].split('>=')[0].split('==')[0].strip()
+            package_name = dep_spec.split("[")[0].split(">=")[0].split("==")[0].strip()
             if not is_package_importable(package_name):
                 missing_python.append(package_name)
 
@@ -509,19 +528,23 @@ def diagnose_setup(
 
         for dep_name, dep_config in ops.items():
             # Check if installed
-            installed = check_system_dependency(dep_name, dep_config, platform, verbose=False)
+            installed = check_system_dependency(
+                dep_name, dep_config, platform, verbose=False
+            )
 
             if installed is False:
                 # Definitely not installed
-                install_cmd = dep_config.get('install', {}).get(platform)
-                missing_system.append({
-                    'name': dep_name,
-                    'description': dep_config.get('description', 'No description'),
-                    'url': dep_config.get('url', ''),
-                    'install_command': install_cmd,
-                    'alternatives': dep_config.get('alternatives', []),
-                    'note': dep_config.get('note', '')
-                })
+                install_cmd = dep_config.get("install", {}).get(platform)
+                missing_system.append(
+                    {
+                        "name": dep_name,
+                        "description": dep_config.get("description", "No description"),
+                        "url": dep_config.get("url", ""),
+                        "install_command": install_cmd,
+                        "alternatives": dep_config.get("alternatives", []),
+                        "note": dep_config.get("note", ""),
+                    }
+                )
             elif installed is None:
                 # Cannot verify
                 warnings_list.append(
@@ -550,7 +573,7 @@ def diagnose_setup(
         )
 
         for dep in missing_system:
-            if dep['install_command']:
+            if dep["install_command"]:
                 recommendations.append(
                     f"  Or manually for {dep['name']}:\n"
                     f"    {dep['install_command'] if isinstance(dep['install_command'], str) else '; '.join(dep['install_command'])}"
@@ -558,8 +581,8 @@ def diagnose_setup(
 
     if missing_env:
         recommendations.append(
-            f"Set required environment variables:\n" +
-            '\n'.join(f"  export {var}=<value>" for var in missing_env)
+            f"Set required environment variables:\n"
+            + "\n".join(f"  export {var}=<value>" for var in missing_env)
         )
 
     return DiagnosticResult(
@@ -567,7 +590,7 @@ def diagnose_setup(
         missing_system_deps=missing_system,
         missing_env_vars=missing_env,
         warnings=warnings_list,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
@@ -578,9 +601,9 @@ def print_diagnostic_report(result: DiagnosticResult):
     Args:
         result: DiagnosticResult to display
     """
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("DEPENDENCY DIAGNOSTIC REPORT")
-    print("="*70)
+    print("=" * 70)
 
     # Python dependencies
     if result.missing_python_deps:
@@ -597,19 +620,19 @@ def print_diagnostic_report(result: DiagnosticResult):
             print(f"\n  • {dep['name']}")
             print(f"    DepURL: {dep['depurl']}")
             print(f"    Purpose: {dep['rationale']}")
-            if dep['url']:
+            if dep["url"]:
                 print(f"    Info: {dep['url']}")
-            if dep['install_command']:
-                cmd = dep['install_command']
+            if dep["install_command"]:
+                cmd = dep["install_command"]
                 if isinstance(cmd, list):
                     print(f"    Install:")
                     for c in cmd:
                         print(f"      {c}")
                 else:
                     print(f"    Install: {cmd}")
-            if dep['alternatives']:
+            if dep["alternatives"]:
                 print(f"    Alternatives: {', '.join(dep['alternatives'])}")
-            if dep['note']:
+            if dep["note"]:
                 print(f"    Note: {dep['note']}")
     else:
         print("\n✓ All system dependencies satisfied (or cannot be verified)")
@@ -634,48 +657,64 @@ def print_diagnostic_report(result: DiagnosticResult):
         for i, rec in enumerate(result.recommendations, 1):
             print(f"\n{i}. {rec}")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
 
 
 # CLI interface
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description='Setup utilities for wads packages'
-    )
-    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    parser = argparse.ArgumentParser(description="Setup utilities for wads packages")
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # install-python command
-    install_py = subparsers.add_parser('install-python', help='Install Python dependencies')
-    install_py.add_argument('path', help='Path to pyproject.toml or directory')
-    install_py.add_argument('--exclude', nargs='+', help='Packages to exclude')
-    install_py.add_argument('--no-check', action='store_true', help='Skip importability check')
-    install_py.add_argument('--upgrade', action='store_true', help='Upgrade packages')
-    install_py.add_argument('--allow-downgrade', action='store_true', help='Allow downgrades')
-    install_py.add_argument('--extras', nargs='+', help='Extras to install')
-    install_py.add_argument('--dry-run', action='store_true', help='Show what would be installed')
+    install_py = subparsers.add_parser(
+        "install-python", help="Install Python dependencies"
+    )
+    install_py.add_argument("path", help="Path to pyproject.toml or directory")
+    install_py.add_argument("--exclude", nargs="+", help="Packages to exclude")
+    install_py.add_argument(
+        "--no-check", action="store_true", help="Skip importability check"
+    )
+    install_py.add_argument("--upgrade", action="store_true", help="Upgrade packages")
+    install_py.add_argument(
+        "--allow-downgrade", action="store_true", help="Allow downgrades"
+    )
+    install_py.add_argument("--extras", nargs="+", help="Extras to install")
+    install_py.add_argument(
+        "--dry-run", action="store_true", help="Show what would be installed"
+    )
 
     # install-system command
-    install_sys = subparsers.add_parser('install-system', help='Install system dependencies')
-    install_sys.add_argument('path', help='Path to pyproject.toml or directory')
-    install_sys.add_argument('--platform', help='Platform (linux, macos, windows)')
-    install_sys.add_argument('--no-check', action='store_true', help='Skip existing installation check')
-    install_sys.add_argument('--dry-run', action='store_true', help='Show what would be installed')
-    install_sys.add_argument('--non-interactive', action='store_true', help='No confirmation prompts')
+    install_sys = subparsers.add_parser(
+        "install-system", help="Install system dependencies"
+    )
+    install_sys.add_argument("path", help="Path to pyproject.toml or directory")
+    install_sys.add_argument("--platform", help="Platform (linux, macos, windows)")
+    install_sys.add_argument(
+        "--no-check", action="store_true", help="Skip existing installation check"
+    )
+    install_sys.add_argument(
+        "--dry-run", action="store_true", help="Show what would be installed"
+    )
+    install_sys.add_argument(
+        "--non-interactive", action="store_true", help="No confirmation prompts"
+    )
 
     # check-env command
-    check_env_parser = subparsers.add_parser('check-env', help='Check environment variables')
-    check_env_parser.add_argument('path', help='Path to pyproject.toml or directory')
+    check_env_parser = subparsers.add_parser(
+        "check-env", help="Check environment variables"
+    )
+    check_env_parser.add_argument("path", help="Path to pyproject.toml or directory")
 
     # diagnose command
-    diagnose = subparsers.add_parser('diagnose', help='Diagnose setup issues')
-    diagnose.add_argument('path', help='Path to pyproject.toml or directory')
-    diagnose.add_argument('--platform', help='Platform (linux, macos, windows)')
+    diagnose = subparsers.add_parser("diagnose", help="Diagnose setup issues")
+    diagnose.add_argument("path", help="Path to pyproject.toml or directory")
+    diagnose.add_argument("--platform", help="Platform (linux, macos, windows)")
 
     args = parser.parse_args()
 
-    if args.command == 'install-python':
+    if args.command == "install-python":
         results = install_python_dependencies(
             args.path,
             exclude=args.exclude,
@@ -683,27 +722,27 @@ if __name__ == '__main__':
             upgrade=args.upgrade,
             allow_downgrade=args.allow_downgrade,
             extras=args.extras,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
         )
 
         success_count = sum(1 for r in results if r.success)
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Installed {success_count}/{len(results)} packages successfully")
 
-    elif args.command == 'install-system':
+    elif args.command == "install-system":
         results = install_system_dependencies(
             args.path,
             platform=args.platform,
             check_first=not args.no_check,
             dry_run=args.dry_run,
-            interactive=not args.non_interactive
+            interactive=not args.non_interactive,
         )
 
         success_count = sum(1 for r in results if r.success)
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Installed {success_count}/{len(results)} dependencies successfully")
 
-    elif args.command == 'check-env':
+    elif args.command == "check-env":
         results = check_environment_variables(args.path)
         missing = [k for k, v in results.items() if v is None]
 
@@ -713,12 +752,16 @@ if __name__ == '__main__':
         else:
             print("\n✓ All required environment variables set")
 
-    elif args.command == 'diagnose':
+    elif args.command == "diagnose":
         result = diagnose_setup(args.path, platform=args.platform)
         print_diagnostic_report(result)
 
         # Exit with error if issues found
-        if result.missing_python_deps or result.missing_system_deps or result.missing_env_vars:
+        if (
+            result.missing_python_deps
+            or result.missing_system_deps
+            or result.missing_env_vars
+        ):
             sys.exit(1)
 
     else:

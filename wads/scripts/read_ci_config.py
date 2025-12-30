@@ -22,14 +22,14 @@ from pathlib import Path
 
 def _set_output(name: str, value):
     """Set GitHub Actions output."""
-    output_file = os.environ.get('GITHUB_OUTPUT')
+    output_file = os.environ.get("GITHUB_OUTPUT")
     if not output_file:
         print(
             f"Warning: GITHUB_OUTPUT not set, skipping output: {name}", file=sys.stderr
         )
         return
 
-    with open(output_file, 'a') as f:
+    with open(output_file, "a") as f:
         # Handle multiline values
         if isinstance(value, (list, dict)):
             value = json.dumps(value)
@@ -40,12 +40,12 @@ def _set_output(name: str, value):
 
 def _set_env(name: str, value):
     """Set GitHub Actions environment variable."""
-    env_file = os.environ.get('GITHUB_ENV')
+    env_file = os.environ.get("GITHUB_ENV")
     if not env_file:
         print(f"Warning: GITHUB_ENV not set, skipping env var: {name}", file=sys.stderr)
         return
 
-    with open(env_file, 'a') as f:
+    with open(env_file, "a") as f:
         if isinstance(value, (list, dict)):
             value = json.dumps(value)
         elif isinstance(value, bool):
@@ -72,26 +72,26 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         # Export as outputs and environment variables
 
         # Project metadata
-        _set_output('project-name', config.project_name)
-        _set_env('PROJECT_NAME', config.project_name)
+        _set_output("project-name", config.project_name)
+        _set_env("PROJECT_NAME", config.project_name)
 
         # Testing configuration
-        _set_output('python-versions', config.python_versions)
-        _set_output('pytest-args', ' '.join(config.pytest_args))
-        _set_output('coverage-enabled', config.coverage_enabled)
-        _set_output('exclude-paths', ','.join(config.exclude_paths))
-        _set_output('test-on-windows', config.test_on_windows)
+        _set_output("python-versions", config.python_versions)
+        _set_output("pytest-args", " ".join(config.pytest_args))
+        _set_output("coverage-enabled", config.coverage_enabled)
+        _set_output("exclude-paths", ",".join(config.exclude_paths))
+        _set_output("test-on-windows", config.test_on_windows)
 
         # Build configuration
-        _set_output('build-sdist', config.build_sdist)
-        _set_output('build-wheel', config.build_wheel)
+        _set_output("build-sdist", config.build_sdist)
+        _set_output("build-wheel", config.build_wheel)
 
         # Metrics configuration
-        _set_output('metrics-enabled', config.metrics_enabled)
-        _set_output('metrics-config-path', config.metrics_config_path)
-        _set_output('metrics-storage-branch', config.metrics_storage_branch)
-        _set_output('metrics-python-version', config.metrics_python_version)
-        _set_output('metrics-force-run', config.metrics_force_run)
+        _set_output("metrics-enabled", config.metrics_enabled)
+        _set_output("metrics-config-path", config.metrics_config_path)
+        _set_output("metrics-storage-branch", config.metrics_storage_branch)
+        _set_output("metrics-python-version", config.metrics_python_version)
+        _set_output("metrics-force-run", config.metrics_force_run)
 
         # Print summary
         print("✅ CI configuration loaded successfully")
@@ -101,9 +101,9 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         print(f"   Test on Windows: {config.test_on_windows}")
 
         # Add to GitHub Actions step summary if available
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+        summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary_file:
-            with open(summary_file, 'a') as f:
+            with open(summary_file, "a") as f:
                 f.write("## 🔧 CI Configuration\n\n")
                 f.write(f"- **Project:** {config.project_name}\n")
                 f.write(f"- **Python Versions:** {config.python_versions}\n")

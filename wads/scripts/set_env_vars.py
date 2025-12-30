@@ -21,34 +21,34 @@ from pathlib import Path
 
 # Reserved env vars that should not be set from secrets
 RESERVED_VARS = {
-    'GITHUB_TOKEN',
-    'GITHUB_ACTOR',
-    'GITHUB_REPOSITORY',
-    'GITHUB_REF',
-    'GITHUB_SHA',
-    'GITHUB_WORKSPACE',
-    'GITHUB_EVENT_NAME',
-    'GITHUB_EVENT_PATH',
-    'GITHUB_RUN_ID',
-    'GITHUB_RUN_NUMBER',
-    'GITHUB_ACTION',
-    'GITHUB_ACTIONS',
-    'CI',
-    'HOME',
-    'PATH',
-    'SHELL',
-    'USER',
+    "GITHUB_TOKEN",
+    "GITHUB_ACTOR",
+    "GITHUB_REPOSITORY",
+    "GITHUB_REF",
+    "GITHUB_SHA",
+    "GITHUB_WORKSPACE",
+    "GITHUB_EVENT_NAME",
+    "GITHUB_EVENT_PATH",
+    "GITHUB_RUN_ID",
+    "GITHUB_RUN_NUMBER",
+    "GITHUB_ACTION",
+    "GITHUB_ACTIONS",
+    "CI",
+    "HOME",
+    "PATH",
+    "SHELL",
+    "USER",
 }
 
 
 def _set_env_var(name: str, value: str):
     """Set environment variable for subsequent GitHub Actions steps."""
-    env_file = os.environ.get('GITHUB_ENV')
+    env_file = os.environ.get("GITHUB_ENV")
     if not env_file:
         print(f"Warning: GITHUB_ENV not set, skipping: {name}", file=sys.stderr)
         return
 
-    with open(env_file, 'a') as f:
+    with open(env_file, "a") as f:
         # Escape multiline values
         delimiter = f"EOF_{name}"
         f.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
@@ -71,7 +71,7 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         config = CIConfig.from_file(pyproject_path)
 
         # Get secrets (GitHub Actions provides this as JSON)
-        secrets_json = os.environ.get('SECRETS_CONTEXT', '{}')
+        secrets_json = os.environ.get("SECRETS_CONTEXT", "{}")
         secrets = json.loads(secrets_json)
 
         # Track what we're setting
@@ -145,9 +145,9 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         print("=" * 70)
 
         # Create GitHub Actions step summary
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+        summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary_file:
-            with open(summary_file, 'a') as f:
+            with open(summary_file, "a") as f:
                 f.write("## 🔐 Environment Variables\n\n")
                 if set_vars:
                     f.write(f"✅ **Set {len(set_vars)} variables** from secrets\n\n")

@@ -67,7 +67,7 @@ class CIDiagnosis:
 
 def get_github_token() -> Optional[str]:
     """Get GitHub token from environment."""
-    return os.environ.get('GITHUB_TOKEN') or os.environ.get('GH_TOKEN')
+    return os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
 
 
 def fetch_workflow_runs(repo: str, limit: int = 5) -> List[Dict]:
@@ -92,14 +92,14 @@ def fetch_workflow_runs(repo: str, limit: int = 5) -> List[Dict]:
 
     url = f"https://api.github.com/repos/{repo}/actions/runs"
     headers = {
-        'Authorization': f'token {token}',
-        'Accept': 'application/vnd.github.v3+json',
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
     }
 
-    response = requests.get(url, headers=headers, params={'per_page': limit})
+    response = requests.get(url, headers=headers, params={"per_page": limit})
     response.raise_for_status()
 
-    return response.json()['workflow_runs']
+    return response.json()["workflow_runs"]
 
 
 def fetch_workflow_logs(repo: str, run_id: int) -> str:
@@ -127,8 +127,8 @@ def fetch_workflow_logs(repo: str, run_id: int) -> str:
 
     url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/logs"
     headers = {
-        'Authorization': f'token {token}',
-        'Accept': 'application/vnd.github.v3+json',
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
     }
 
     response = requests.get(url, headers=headers)
@@ -139,8 +139,8 @@ def fetch_workflow_logs(repo: str, run_id: int) -> str:
         all_logs = []
         for filename in z.namelist():
             with z.open(filename) as f:
-                all_logs.append(f.read().decode('utf-8', errors='ignore'))
-        return '\n'.join(all_logs)
+                all_logs.append(f.read().decode("utf-8", errors="ignore"))
+        return "\n".join(all_logs)
 
 
 def parse_pytest_failures(logs: str) -> List[TestFailure]:
@@ -156,13 +156,13 @@ def parse_pytest_failures(logs: str) -> List[TestFailure]:
     failures = []
 
     # Pattern for pytest test failures: FAILED test - error_message
-    failure_pattern = re.compile(r'FAILED\s+(.+?)\s+-\s+(.+)$', re.MULTILINE)
+    failure_pattern = re.compile(r"FAILED\s+(.+?)\s+-\s+(.+)$", re.MULTILINE)
 
     # Pattern for collection errors: ERROR collecting path
     collection_error_pattern = re.compile(
-        r'ERROR collecting (.+?)$.*?'
-        r'(ImportError|ModuleNotFoundError|SyntaxError|[\w]+Error):\s*(.+?)$',
-        re.MULTILINE | re.DOTALL
+        r"ERROR collecting (.+?)$.*?"
+        r"(ImportError|ModuleNotFoundError|SyntaxError|[\w]+Error):\s*(.+?)$",
+        re.MULTILINE | re.DOTALL,
     )
 
     # Pattern for tracebacks
@@ -217,9 +217,9 @@ def parse_pytest_failures(logs: str) -> List[TestFailure]:
         found.add(test_name)
 
         # Parse error info - could be "ErrorType: message" or just "message"
-        if ': ' in error_info:
+        if ": " in error_info:
             # Split on first colon to get error type and message
-            parts = error_info.split(': ', 1)
+            parts = error_info.split(": ", 1)
             error_type = parts[0]
             error_message = parts[1] if len(parts) > 1 else error_info
         else:
@@ -306,7 +306,7 @@ def print_diagnosis(diagnosis: CIDiagnosis):
             print(f"\n{i}. {fix['description']}")
             print(f"   Type: {fix['type']}")
             print(f"   Action: {fix['action']}")
-            if 'packages' in fix:
+            if "packages" in fix:
                 print(f"   Packages: {', '.join(fix['packages'])}")
 
     print("\n" + "=" * 70)
@@ -328,20 +328,20 @@ def diagnose_missing_system_deps(failures: List[TestFailure], logs: str) -> List
 
     # Common patterns for missing system dependencies
     patterns = {
-        'unixodbc': [
+        "unixodbc": [
             r"Can't open lib.*ODBC.*Driver",
             r"libodbc.*not found",
             r"ODBC.*driver.*not found",
         ],
-        'msodbcsql17': [r"ODBC Driver 17 for SQL Server.*not found"],
-        'msodbcsql18': [r"ODBC Driver 18 for SQL Server.*not found"],
-        'ffmpeg': [r"ffmpeg.*not found", r"libav.*not found"],
-        'libsndfile': [r"libsndfile.*not found", r"sndfile.*not found"],
-        'portaudio': [r"portaudio.*not found", r"libportaudio.*not found"],
+        "msodbcsql17": [r"ODBC Driver 17 for SQL Server.*not found"],
+        "msodbcsql18": [r"ODBC Driver 18 for SQL Server.*not found"],
+        "ffmpeg": [r"ffmpeg.*not found", r"libav.*not found"],
+        "libsndfile": [r"libsndfile.*not found", r"sndfile.*not found"],
+        "portaudio": [r"portaudio.*not found", r"libportaudio.*not found"],
     }
 
     # Check failures and logs
-    all_text = logs + '\n' + '\n'.join(f.error_message for f in failures)
+    all_text = logs + "\n" + "\n".join(f.error_message for f in failures)
 
     for dep, patterns_list in patterns.items():
         for pattern in patterns_list:
@@ -369,7 +369,7 @@ def diagnose_missing_python_deps(failures: List[TestFailure]) -> List[str]:
     for failure in failures:
         match = import_pattern.search(failure.error_message)
         if match:
-            module = match.group(1).split('.')[0]  # Get top-level package
+            module = match.group(1).split(".")[0]  # Get top-level package
             missing_deps.add(module)
 
     return sorted(missing_deps)
@@ -388,7 +388,7 @@ def parse_ci_warnings(logs: str) -> List[str]:
     warnings = []
 
     # GitHub Actions warning format: ::warning::message
-    gh_warning_pattern = re.compile(r'::warning::(.+?)$', re.MULTILINE)
+    gh_warning_pattern = re.compile(r"::warning::(.+?)$", re.MULTILINE)
 
     for match in gh_warning_pattern.finditer(logs):
         warning = match.group(1).strip()
@@ -396,9 +396,9 @@ def parse_ci_warnings(logs: str) -> List[str]:
 
     # Also look for common warning patterns that aren't GitHub Actions formatted
     common_warning_patterns = [
-        r'Warning: tomli package required for Python < 3.11',
-        r'WARNING:.*missing.*package',
-        r'DeprecationWarning:.*',
+        r"Warning: tomli package required for Python < 3.11",
+        r"WARNING:.*missing.*package",
+        r"DeprecationWarning:.*",
     ]
 
     for pattern in common_warning_patterns:
@@ -438,19 +438,23 @@ def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
         for dep in diagnosis.missing_system_deps:
             lines.append(f"[tool.wads.ops.{dep}]")
             lines.append(f'description = "Description of why {dep} is needed"')
-            if dep == 'msodbcsql18':
-                lines.append('install.linux = [')
-                lines.append('    "curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -",')
-                lines.append('    "curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list",')
+            if dep == "msodbcsql18":
+                lines.append("install.linux = [")
+                lines.append(
+                    '    "curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -",'
+                )
+                lines.append(
+                    '    "curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list",'
+                )
                 lines.append('    "sudo apt-get update",')
                 lines.append('    "sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18"')
-                lines.append(']')
+                lines.append("]")
                 lines.append('note = "Requires accepting Microsoft EULA"')
-            elif dep == 'unixodbc':
-                lines.append('install.linux = [')
+            elif dep == "unixodbc":
+                lines.append("install.linux = [")
                 lines.append('    "sudo apt-get update",')
                 lines.append('    "sudo apt-get install -y unixodbc unixodbc-dev"')
-                lines.append(']')
+                lines.append("]")
                 lines.append('check.linux = "dpkg -s unixodbc || rpm -q unixODBC"')
             else:
                 lines.append(f'install.linux = "sudo apt-get install -y {dep}"')
@@ -475,7 +479,7 @@ def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
         lines.append("      - name: Install System Dependencies")
         lines.append("        run: |")
         for dep in diagnosis.missing_system_deps:
-            if dep == 'msodbcsql18':
+            if dep == "msodbcsql18":
                 lines.append(
                     "          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -"
                 )
@@ -486,7 +490,7 @@ def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
                 lines.append(
                     "          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18"
                 )
-            elif dep == 'unixodbc':
+            elif dep == "unixodbc":
                 lines.append("          sudo apt-get update")
                 lines.append("          sudo apt-get install -y unixodbc unixodbc-dev")
             else:
@@ -505,7 +509,7 @@ def generate_fix_instructions(diagnosis: CIDiagnosis, repo_path: Path) -> str:
 
     lines.append("=" * 70)
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 # Restore diagnose_ci_failure function
@@ -524,10 +528,10 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
     if run_id is None:
         runs = fetch_workflow_runs(repo, limit=10)
         # Find first failed run
-        failed_run = next((r for r in runs if r['conclusion'] == 'failure'), None)
+        failed_run = next((r for r in runs if r["conclusion"] == "failure"), None)
         if not failed_run:
             raise ValueError("No failed runs found")
-        run_id = failed_run['id']
+        run_id = failed_run["id"]
         print(f"Analyzing failed run: {run_id} - {failed_run['name']}")
 
     # Fetch logs
@@ -547,13 +551,13 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
     missing_python_deps = diagnose_missing_python_deps(failures)
 
     # Check warnings for tomli issue
-    tomli_warning = any('tomli' in w.lower() for w in warnings)
-    if tomli_warning and 'tomli' not in missing_python_deps:
+    tomli_warning = any("tomli" in w.lower() for w in warnings)
+    if tomli_warning and "tomli" not in missing_python_deps:
         # tomli is in conditional dependencies, but CI might not install it
         config_issues = [
             "tomli package not installed in CI for Python < 3.11 - install-system-deps step failed silently"
         ]
-        missing_python_deps.append('tomli')
+        missing_python_deps.append("tomli")
     else:
         config_issues = []
 
@@ -568,20 +572,20 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
         # Check if pyproject.toml needs updating
         proposed_fixes.append(
             {
-                'type': 'config',
-                'description': 'Add missing system dependencies to pyproject.toml',
-                'action': 'Add [tool.wads.ops.*] sections for each dependency',
-                'packages': missing_system_deps,
+                "type": "config",
+                "description": "Add missing system dependencies to pyproject.toml",
+                "action": "Add [tool.wads.ops.*] sections for each dependency",
+                "packages": missing_system_deps,
             }
         )
 
         # Also propose CI workflow fix
         proposed_fixes.append(
             {
-                'type': 'workflow',
-                'description': 'Ensure CI workflow uses install-system-deps action',
-                'action': 'Add install-system-deps action before tests (if not present)',
-                'packages': missing_system_deps,
+                "type": "workflow",
+                "description": "Ensure CI workflow uses install-system-deps action",
+                "action": "Add install-system-deps action before tests (if not present)",
+                "packages": missing_system_deps,
             }
         )
 
@@ -592,20 +596,20 @@ def diagnose_ci_failure(repo: str, run_id: Optional[int] = None) -> CIDiagnosis:
 
         proposed_fixes.append(
             {
-                'type': 'dependencies',
-                'description': 'Add missing Python packages to pyproject.toml',
-                'action': 'Add to [project.dependencies] or [project.optional-dependencies]',
-                'packages': missing_python_deps,
+                "type": "dependencies",
+                "description": "Add missing Python packages to pyproject.toml",
+                "action": "Add to [project.dependencies] or [project.optional-dependencies]",
+                "packages": missing_python_deps,
             }
         )
 
     # Determine confidence
     if missing_system_deps or missing_python_deps:
-        confidence = 'high'
+        confidence = "high"
     elif failures:
-        confidence = 'medium'
+        confidence = "medium"
     else:
-        confidence = 'low'
+        confidence = "low"
 
     return CIDiagnosis(
         failures=failures,
@@ -623,11 +627,11 @@ def main():
     """CLI entry point for wads CI debug agent."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Diagnose and fix CI failures')
-    parser.add_argument('repo', help='Repository in format owner/name')
-    parser.add_argument('--run-id', type=int, help='Specific workflow run ID')
-    parser.add_argument('--fix', action='store_true', help='Generate fix instructions')
-    parser.add_argument('--local-repo', help='Path to local repository clone')
+    parser = argparse.ArgumentParser(description="Diagnose and fix CI failures")
+    parser.add_argument("repo", help="Repository in format owner/name")
+    parser.add_argument("--run-id", type=int, help="Specific workflow run ID")
+    parser.add_argument("--fix", action="store_true", help="Generate fix instructions")
+    parser.add_argument("--local-repo", help="Path to local repository clone")
 
     args = parser.parse_args()
 
@@ -644,8 +648,8 @@ def main():
             print(instructions)
 
             # Save to file
-            fix_file = repo_path / 'CI_FIX_INSTRUCTIONS.md'
-            with open(fix_file, 'w') as f:
+            fix_file = repo_path / "CI_FIX_INSTRUCTIONS.md"
+            with open(fix_file, "w") as f:
                 f.write(instructions)
             print(f"\n✓ Fix instructions saved to: {fix_file}")
 
@@ -654,5 +658,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

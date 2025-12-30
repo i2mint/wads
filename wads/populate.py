@@ -627,9 +627,9 @@ def populate_pkg_dir(
             ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
         )
         if should_update(ci_def_path):
-            assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
-                pkg_dir
-            ), f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+            assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(pkg_dir), (
+                f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+            )
 
             # Check if we should migrate old CI to new format
             if migrate and version_control_system == "github":
@@ -1023,9 +1023,9 @@ def update_pack_and_setup_py(
     target_pkg_dir = ensure_no_slash_suffix(target_pkg_dir)
     name = os.path.basename(target_pkg_dir)
     contents = os.listdir(target_pkg_dir)
-    assert {"setup.py", name}.issubset(
-        contents
-    ), f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
+    assert {"setup.py", name}.issubset(contents), (
+        f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
+    )
 
     pjoin = lambda *p: os.path.join(target_pkg_dir, *p)
 

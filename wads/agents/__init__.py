@@ -29,15 +29,15 @@ from wads.agents.test_analyzer import (
 
 __all__ = [
     # CI Debug Agent
-    'diagnose_ci_failure',
-    'CIDiagnosis',
-    'TestFailure',
+    "diagnose_ci_failure",
+    "CIDiagnosis",
+    "TestFailure",
     # Dependency Resolver
-    'analyze_dependencies',
-    'DependencyReport',
-    'DependencyIssue',
+    "analyze_dependencies",
+    "DependencyReport",
+    "DependencyIssue",
     # Test Analyzer
-    'parse_pytest_output',
-    'TestAnalysisReport',
-    'TestFailurePattern',
+    "parse_pytest_output",
+    "TestAnalysisReport",
+    "TestFailurePattern",
 ]

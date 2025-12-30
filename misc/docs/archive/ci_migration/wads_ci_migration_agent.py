@@ -104,7 +104,7 @@ def _read_file(path: Path) -> Optional[str]:
     'hello'
     """
     try:
-        return path.read_text(encoding='utf-8')
+        return path.read_text(encoding="utf-8")
     except Exception as e:
         print(f"Warning: Could not read {path}: {e}")
         return None
@@ -139,13 +139,13 @@ def _extract_apt_packages(ci_content: str) -> list[str]:
     """
     packages = []
     # Match: apt-get install ... package1 package2
-    apt_pattern = r'apt-get\s+install\s+(?:-[a-z]+\s+)*([^\n&|;]+)'
+    apt_pattern = r"apt-get\s+install\s+(?:-[a-z]+\s+)*([^\n&|;]+)"
     for match in re.finditer(apt_pattern, ci_content, re.IGNORECASE):
         pkg_line = match.group(1).strip()
         # Remove flags and split by whitespace
-        parts = [p.strip() for p in pkg_line.split() if p and not p.startswith('-')]
+        parts = [p.strip() for p in pkg_line.split() if p and not p.startswith("-")]
         packages.extend(parts)
-    return [p for p in packages if p and not p.startswith('$')]
+    return [p for p in packages if p and not p.startswith("$")]
 
 
 def _extract_brew_packages(ci_content: str) -> list[str]:
@@ -157,12 +157,12 @@ def _extract_brew_packages(ci_content: str) -> list[str]:
     ['unixodbc', 'ffmpeg']
     """
     packages = []
-    brew_pattern = r'brew\s+install\s+([^\n&|;]+)'
+    brew_pattern = r"brew\s+install\s+([^\n&|;]+)"
     for match in re.finditer(brew_pattern, ci_content, re.IGNORECASE):
         pkg_line = match.group(1).strip()
-        parts = [p.strip() for p in pkg_line.split() if p and not p.startswith('-')]
+        parts = [p.strip() for p in pkg_line.split() if p and not p.startswith("-")]
         packages.extend(parts)
-    return [p for p in packages if p and not p.startswith('$')]
+    return [p for p in packages if p and not p.startswith("$")]
 
 
 def _extract_env_vars(ci_content: str) -> dict[str, str]:
@@ -178,15 +178,15 @@ def _extract_env_vars(ci_content: str) -> dict[str, str]:
     env_vars = {}
 
     # Match env: block in YAML
-    env_block_pattern = r'^env:\s*\n((?:  \w+:.*\n?)+)'
+    env_block_pattern = r"^env:\s*\n((?:  \w+:.*\n?)+)"
     match = re.search(env_block_pattern, ci_content, re.MULTILINE)
     if match:
         block = match.group(1)
         # Extract key: value pairs
-        for line in block.split('\n'):
+        for line in block.split("\n"):
             line = line.strip()
-            if ':' in line:
-                key, value = line.split(':', 1)
+            if ":" in line:
+                key, value = line.split(":", 1)
                 env_vars[key.strip()] = value.strip()
 
     return env_vars
@@ -202,7 +202,7 @@ def _extract_python_versions(ci_content: str) -> list[str]:
     """
     versions = []
     # Match: python-version: ["3.10", "3.11"]
-    pattern = r'python-version:\s*\[([^\]]+)\]'
+    pattern = r"python-version:\s*\[([^\]]+)\]"
     match = re.search(pattern, ci_content)
     if match:
         versions_str = match.group(1)
@@ -221,12 +221,12 @@ def _infer_depurl(package_name: str) -> str:
     'dep:virtual/compiler/c'
     """
     # Special cases for virtual dependencies
-    compiler_packages = {'gcc', 'g++', 'clang', 'clang++', 'cc', 'c++'}
+    compiler_packages = {"gcc", "g++", "clang", "clang++", "cc", "c++"}
     if package_name.lower() in compiler_packages:
-        return 'dep:virtual/compiler/c'
+        return "dep:virtual/compiler/c"
 
     # Default to generic
-    return f'dep:generic/{package_name}'
+    return f"dep:generic/{package_name}"
 
 
 def _normalize_package_name(package_name: str) -> str:
@@ -241,14 +241,14 @@ def _normalize_package_name(package_name: str) -> str:
     # Remove common suffixes but be careful with 'lib' prefix
     name = package_name.lower()
     # First remove suffixes that are clearly suffixes
-    for suffix in ['-dev', '-devel', '-headers']:
+    for suffix in ["-dev", "-devel", "-headers"]:
         if name.endswith(suffix):
             name = name[: -len(suffix)]
     # Remove lib prefix only if followed by another word
-    if name.startswith('lib') and len(name) > 3:
+    if name.startswith("lib") and len(name) > 3:
         # Keep 'lib' if it's part of the actual package name like 'libffi'
         pass
-    return name.strip('-_')
+    return name.strip("-_")
 
 
 def _scan_python_imports(project_root: Path) -> set[str]:
@@ -261,18 +261,18 @@ def _scan_python_imports(project_root: Path) -> set[str]:
 
     # Known import → system dependency mappings
     import_to_system = {
-        'pyodbc': 'unixodbc',
-        'soundfile': 'libsndfile',
-        'cv2': 'opencv',
-        'PIL': 'libjpeg',
-        'pycurl': 'libcurl',
+        "pyodbc": "unixodbc",
+        "soundfile": "libsndfile",
+        "cv2": "opencv",
+        "PIL": "libjpeg",
+        "pycurl": "libcurl",
     }
 
     # Scan all .py files
-    for py_file in project_root.rglob('*.py'):
+    for py_file in project_root.rglob("*.py"):
         if any(
             part in py_file.parts
-            for part in ['venv', '.venv', 'site-packages', '__pycache__']
+            for part in ["venv", ".venv", "site-packages", "__pycache__"]
         ):
             continue
 
@@ -281,9 +281,9 @@ def _scan_python_imports(project_root: Path) -> set[str]:
             continue
 
         # Find imports
-        for line in content.split('\n'):
+        for line in content.split("\n"):
             line = line.strip()
-            if line.startswith('import ') or line.startswith('from '):
+            if line.startswith("import ") or line.startswith("from "):
                 for imp_name, sys_dep in import_to_system.items():
                     if imp_name in line:
                         dependencies.add(sys_dep)
@@ -309,19 +309,19 @@ def analyze_project(project_root: Path, *, analyze_code: bool = False) -> dict:
         - inferred_deps: set of dependencies inferred from code (if analyze_code=True)
     """
     result = {
-        'current_config': None,
-        'ci_config': None,
-        'system_packages': {'linux': [], 'macos': [], 'windows': []},
-        'env_vars': {},
-        'python_versions': ['3.10', '3.12'],  # defaults
-        'inferred_deps': set(),
+        "current_config": None,
+        "ci_config": None,
+        "system_packages": {"linux": [], "macos": [], "windows": []},
+        "env_vars": {},
+        "python_versions": ["3.10", "3.12"],  # defaults
+        "inferred_deps": set(),
     }
 
     # 1. Read current config
-    config_file = _find_file(project_root, 'pyproject.toml', 'setup.cfg')
+    config_file = _find_file(project_root, "pyproject.toml", "setup.cfg")
     if config_file:
-        result['current_config'] = _read_file(config_file)
-        result['config_file_name'] = config_file.name
+        result["current_config"] = _read_file(config_file)
+        result["config_file_name"] = config_file.name
         print(f"✓ Found configuration: {config_file.name}")
     else:
         print("⚠ No pyproject.toml or setup.cfg found")
@@ -329,23 +329,23 @@ def analyze_project(project_root: Path, *, analyze_code: bool = False) -> dict:
     # 2. Read CI workflow
     ci_file = _find_file(
         project_root,
-        '.github/workflows/ci.yml',
-        '.github/workflows/publish.yml',
-        '.github/workflows/main.yml',
+        ".github/workflows/ci.yml",
+        ".github/workflows/publish.yml",
+        ".github/workflows/main.yml",
     )
     if ci_file:
-        result['ci_config'] = _read_file(ci_file)
-        result['ci_file_name'] = ci_file.name
+        result["ci_config"] = _read_file(ci_file)
+        result["ci_file_name"] = ci_file.name
         print(f"✓ Found CI workflow: {ci_file.name}")
 
         # Extract info from CI
-        ci_content = result['ci_config']
+        ci_content = result["ci_config"]
         if ci_content:
-            result['system_packages']['linux'] = _extract_apt_packages(ci_content)
-            result['system_packages']['macos'] = _extract_brew_packages(ci_content)
-            result['env_vars'] = _extract_env_vars(ci_content)
-            result['python_versions'] = (
-                _extract_python_versions(ci_content) or result['python_versions']
+            result["system_packages"]["linux"] = _extract_apt_packages(ci_content)
+            result["system_packages"]["macos"] = _extract_brew_packages(ci_content)
+            result["env_vars"] = _extract_env_vars(ci_content)
+            result["python_versions"] = (
+                _extract_python_versions(ci_content) or result["python_versions"]
             )
 
             print(f"  → Found {len(result['system_packages']['linux'])} Linux packages")
@@ -360,12 +360,12 @@ def analyze_project(project_root: Path, *, analyze_code: bool = False) -> dict:
     # 3. Optional: Analyze code
     if analyze_code:
         print("\n🔍 Analyzing Python code for dependencies...")
-        result['inferred_deps'] = _scan_python_imports(project_root)
-        if result['inferred_deps']:
+        result["inferred_deps"] = _scan_python_imports(project_root)
+        if result["inferred_deps"]:
             print(
                 f"  → Inferred {len(result['inferred_deps'])} potential dependencies:"
             )
-            for dep in result['inferred_deps']:
+            for dep in result["inferred_deps"]:
                 print(f"    • {dep}")
 
     return result
@@ -383,7 +383,7 @@ def generate_migration_prompt(analysis: dict) -> str:
     ]
 
     # Add current config
-    if analysis['current_config']:
+    if analysis["current_config"]:
         prompt_parts.extend(
             [
                 "## Current Configuration",
@@ -391,14 +391,14 @@ def generate_migration_prompt(analysis: dict) -> str:
                 f"**File:** `{analysis['config_file_name']}`",
                 "",
                 "```toml",
-                analysis['current_config'],
+                analysis["current_config"],
                 "```",
                 "",
             ]
         )
 
     # Add CI config
-    if analysis['ci_config']:
+    if analysis["ci_config"]:
         prompt_parts.extend(
             [
                 "## Current CI Workflow",
@@ -406,7 +406,7 @@ def generate_migration_prompt(analysis: dict) -> str:
                 f"**File:** `.github/workflows/{analysis['ci_file_name']}`",
                 "",
                 "```yaml",
-                analysis['ci_config'],
+                analysis["ci_config"],
                 "```",
                 "",
             ]
@@ -420,35 +420,35 @@ def generate_migration_prompt(analysis: dict) -> str:
         ]
     )
 
-    if any(analysis['system_packages'].values()):
+    if any(analysis["system_packages"].values()):
         prompt_parts.append("### System Packages")
         prompt_parts.append("")
-        for platform, packages in analysis['system_packages'].items():
+        for platform, packages in analysis["system_packages"].items():
             if packages:
                 prompt_parts.append(f"**{platform.title()}:** {', '.join(packages)}")
         prompt_parts.append("")
 
-    if analysis['env_vars']:
+    if analysis["env_vars"]:
         prompt_parts.append("### Environment Variables")
         prompt_parts.append("")
-        for key, value in analysis['env_vars'].items():
+        for key, value in analysis["env_vars"].items():
             prompt_parts.append(f"- `{key}`: {value}")
         prompt_parts.append("")
 
-    if analysis['python_versions']:
+    if analysis["python_versions"]:
         prompt_parts.append(
             f"**Python Versions:** {', '.join(analysis['python_versions'])}"
         )
         prompt_parts.append("")
 
-    if analysis['inferred_deps']:
+    if analysis["inferred_deps"]:
         prompt_parts.extend(
             [
                 "### Inferred Dependencies (from code analysis)",
                 "",
             ]
         )
-        for dep in analysis['inferred_deps']:
+        for dep in analysis["inferred_deps"]:
             prompt_parts.append(f"- {dep}")
         prompt_parts.append("")
 
@@ -476,7 +476,7 @@ def generate_migration_prompt(analysis: dict) -> str:
         ]
     )
 
-    return '\n'.join(prompt_parts)
+    return "\n".join(prompt_parts)
 
 
 # ============================================================================
@@ -564,24 +564,24 @@ def run_migration_agent(
         print("Install with: pip install anthropic")
         sys.exit(1)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"CI Migration Agent - Wads v3")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
     print(f"Project: {project_root.absolute()}")
     print(f"Code analysis: {'enabled' if analyze_code else 'disabled'}")
-    print(f"\n{'-'*70}\n")
+    print(f"\n{'-' * 70}\n")
 
     # 1. Analyze project
     print("📋 Analyzing project files...\n")
     analysis = analyze_project(project_root, analyze_code=analyze_code)
 
     # 2. Generate prompt
-    print(f"\n{'-'*70}\n")
+    print(f"\n{'-' * 70}\n")
     print("📝 Generating migration prompt...\n")
     user_prompt = generate_migration_prompt(analysis)
 
     # 3. Call Claude
-    print(f"\n{'-'*70}\n")
+    print(f"\n{'-' * 70}\n")
     print("🤖 Consulting Claude for migration...\n")
 
     client = Anthropic(api_key=api_key)
@@ -594,27 +594,27 @@ def run_migration_agent(
     )
 
     # 4. Display results
-    print(f"\n{'-'*70}\n")
+    print(f"\n{'-' * 70}\n")
     print("✅ Migration Analysis Complete\n")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     # Extract the response text
     response_text = response.content[0].text
 
     print(response_text)
 
-    print(f"\n{'='*70}\n")
+    print(f"\n{'=' * 70}\n")
 
     # 5. Save results
-    output_file = project_root / 'pyproject.toml.migrated'
+    output_file = project_root / "pyproject.toml.migrated"
 
     # Extract code blocks from response
-    code_blocks = re.findall(r'```(?:toml)?\n(.*?)```', response_text, re.DOTALL)
+    code_blocks = re.findall(r"```(?:toml)?\n(.*?)```", response_text, re.DOTALL)
 
     if code_blocks:
         # Save the first/largest code block
         largest_block = max(code_blocks, key=len)
-        output_file.write_text(largest_block, encoding='utf-8')
+        output_file.write_text(largest_block, encoding="utf-8")
         print(f"📄 Migrated config saved to: {output_file}")
         print(f"\nNext steps:")
         print(f"1. Review the migrated configuration: {output_file}")
@@ -624,8 +624,8 @@ def run_migration_agent(
     else:
         print("⚠ No TOML code block found in response")
         print("Full response saved to: migration_response.txt")
-        (project_root / 'migration_response.txt').write_text(
-            response_text, encoding='utf-8'
+        (project_root / "migration_response.txt").write_text(
+            response_text, encoding="utf-8"
         )
 
 
@@ -652,18 +652,18 @@ Examples:
         """,
     )
 
-    parser.add_argument('project_root', type=Path, help='Path to the project directory')
+    parser.add_argument("project_root", type=Path, help="Path to the project directory")
 
     parser.add_argument(
-        '--analyze-code',
-        action='store_true',
-        help='Analyze Python code to infer system dependencies',
+        "--analyze-code",
+        action="store_true",
+        help="Analyze Python code to infer system dependencies",
     )
 
     parser.add_argument(
-        '--api-key',
+        "--api-key",
         type=str,
-        help='Anthropic API key (defaults to ANTHROPIC_API_KEY env var)',
+        help="Anthropic API key (defaults to ANTHROPIC_API_KEY env var)",
     )
 
     args = parser.parse_args()
@@ -683,5 +683,5 @@ Examples:
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

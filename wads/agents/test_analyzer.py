@@ -47,33 +47,33 @@ def categorize_failure(error_type: str, error_message: str) -> str:
     Returns:
         Category string
     """
-    if error_type == 'AssertionError':
-        if 'assert' in error_message.lower():
-            return 'assertion'
-        return 'assertion'
+    if error_type == "AssertionError":
+        if "assert" in error_message.lower():
+            return "assertion"
+        return "assertion"
 
-    if 'timeout' in error_message.lower() or 'timed out' in error_message.lower():
-        return 'timeout'
+    if "timeout" in error_message.lower() or "timed out" in error_message.lower():
+        return "timeout"
 
-    if 'fixture' in error_message.lower() or 'setup' in error_message.lower():
-        return 'setup'
+    if "fixture" in error_message.lower() or "setup" in error_message.lower():
+        return "setup"
 
-    if 'teardown' in error_message.lower():
-        return 'teardown'
+    if "teardown" in error_message.lower():
+        return "teardown"
 
-    if 'AttributeError' in error_type:
-        return 'attribute_error'
+    if "AttributeError" in error_type:
+        return "attribute_error"
 
-    if 'TypeError' in error_type:
-        return 'type_error'
+    if "TypeError" in error_type:
+        return "type_error"
 
-    if 'ValueError' in error_type:
-        return 'value_error'
+    if "ValueError" in error_type:
+        return "value_error"
 
-    if 'KeyError' in error_type or 'IndexError' in error_type:
-        return 'data_access_error'
+    if "KeyError" in error_type or "IndexError" in error_type:
+        return "data_access_error"
 
-    return 'exception'
+    return "exception"
 
 
 def suggest_fix(category: str, error_message: str) -> str:
@@ -88,25 +88,27 @@ def suggest_fix(category: str, error_message: str) -> str:
         Suggested fix description
     """
     suggestions = {
-        'assertion': 'Review test expectations and actual values. Check if the test logic is correct.',
-        'timeout': 'Increase timeout value or optimize the code being tested. Check for infinite loops.',
-        'setup': 'Fix test setup/fixture. Ensure required data/mocks are properly initialized.',
-        'teardown': 'Fix test cleanup. Ensure resources are properly released.',
-        'attribute_error': 'Check object attributes. Ensure objects are properly initialized.',
-        'type_error': 'Verify argument types. Add type checking or conversion.',
-        'value_error': 'Validate input values. Add input validation or use correct values.',
-        'data_access_error': 'Check data structure access. Ensure keys/indices exist.',
-        'exception': 'Review the exception and add proper error handling.',
+        "assertion": "Review test expectations and actual values. Check if the test logic is correct.",
+        "timeout": "Increase timeout value or optimize the code being tested. Check for infinite loops.",
+        "setup": "Fix test setup/fixture. Ensure required data/mocks are properly initialized.",
+        "teardown": "Fix test cleanup. Ensure resources are properly released.",
+        "attribute_error": "Check object attributes. Ensure objects are properly initialized.",
+        "type_error": "Verify argument types. Add type checking or conversion.",
+        "value_error": "Validate input values. Add input validation or use correct values.",
+        "data_access_error": "Check data structure access. Ensure keys/indices exist.",
+        "exception": "Review the exception and add proper error handling.",
     }
 
-    base_suggestion = suggestions.get(category, 'Review the error and fix the underlying issue.')
+    base_suggestion = suggestions.get(
+        category, "Review the error and fix the underlying issue."
+    )
 
     # Add specific suggestions based on error message
-    if 'None' in error_message and category == 'attribute_error':
-        base_suggestion += ' (Possible None value - add null check)'
+    if "None" in error_message and category == "attribute_error":
+        base_suggestion += " (Possible None value - add null check)"
 
-    if 'expected' in error_message.lower() and 'got' in error_message.lower():
-        base_suggestion += ' (Values mismatch - verify test expectations)'
+    if "expected" in error_message.lower() and "got" in error_message.lower():
+        base_suggestion += " (Values mismatch - verify test expectations)"
 
     return base_suggestion
 
@@ -128,8 +130,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
 
     # Parse failures and errors
     failure_pattern = re.compile(
-        r'(FAILED|ERROR)\s+(.+?)\s+-\s+(.+?):\s*(.+?)$',
-        re.MULTILINE
+        r"(FAILED|ERROR)\s+(.+?)\s+-\s+(.+?):\s*(.+?)$", re.MULTILINE
     )
 
     for match in failure_pattern.finditer(output):
@@ -138,7 +139,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         error_type = match.group(3).strip()
         error_message = match.group(4).strip()
 
-        if status == 'FAILED':
+        if status == "FAILED":
             total_failures += 1
         else:
             total_errors += 1
@@ -148,11 +149,13 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         if category not in failures_by_category:
             failures_by_category[category] = []
 
-        failures_by_category[category].append({
-            'test': test_name,
-            'error_type': error_type,
-            'error_message': error_message
-        })
+        failures_by_category[category].append(
+            {
+                "test": test_name,
+                "error_type": error_type,
+                "error_message": error_message,
+            }
+        )
 
         all_failures.append(test_name)
 
@@ -163,19 +166,19 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         examples = [f"{f['test']}: {f['error_message'][:100]}" for f in failures[:3]]
 
         # Determine severity
-        if count > 10 or category in ['setup', 'teardown']:
-            severity = 'high'
+        if count > 10 or category in ["setup", "teardown"]:
+            severity = "high"
         elif count > 5:
-            severity = 'medium'
+            severity = "medium"
         else:
-            severity = 'low'
+            severity = "low"
 
         pattern = TestFailurePattern(
             pattern_type=category,
             count=count,
             examples=examples,
-            suggested_fix=suggest_fix(category, failures[0]['error_message']),
-            severity=severity
+            suggested_fix=suggest_fix(category, failures[0]["error_message"]),
+            severity=severity,
         )
         patterns.append(pattern)
 
@@ -187,7 +190,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
     flaky_tests = []
 
     # Parse slow tests
-    slow_pattern = re.compile(r'(\d+\.\d+)s\s+call\s+(.+?)$', re.MULTILINE)
+    slow_pattern = re.compile(r"(\d+\.\d+)s\s+call\s+(.+?)$", re.MULTILINE)
     slow_tests = []
 
     for match in slow_pattern.finditer(output):
@@ -208,9 +211,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         recommendations.append(f"  Fix: {top_pattern.suggested_fix}")
 
     if total_failures > 10:
-        recommendations.append(
-            f"High number of failures ({total_failures}). Consider:"
-        )
+        recommendations.append(f"High number of failures ({total_failures}). Consider:")
         recommendations.append("  - Running tests in isolation to identify root cause")
         recommendations.append("  - Checking for shared state between tests")
 
@@ -220,7 +221,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         )
 
     # Check for setup/teardown issues
-    setup_issues = any(p.pattern_type in ['setup', 'teardown'] for p in patterns)
+    setup_issues = any(p.pattern_type in ["setup", "teardown"] for p in patterns)
     if setup_issues:
         recommendations.append(
             "Setup/teardown failures detected. Fix fixtures before addressing test logic."
@@ -232,7 +233,7 @@ def parse_pytest_output(output: str) -> TestAnalysisReport:
         failure_patterns=patterns,
         flaky_tests=flaky_tests,
         slow_tests=slow_tests,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
@@ -250,8 +251,12 @@ def print_report(report: TestAnalysisReport):
     if report.failure_patterns:
         print(f"\n🔍 Failure Patterns:")
         for pattern in report.failure_patterns:
-            severity_icon = {'high': '🔴', 'medium': '🟡', 'low': '🟢'}[pattern.severity]
-            print(f"\n  {severity_icon} {pattern.pattern_type.upper()} ({pattern.count} occurrences)")
+            severity_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}[
+                pattern.severity
+            ]
+            print(
+                f"\n  {severity_icon} {pattern.pattern_type.upper()} ({pattern.count} occurrences)"
+            )
             print(f"    Severity: {pattern.severity}")
             print(f"    Fix: {pattern.suggested_fix}")
             if pattern.examples:
@@ -277,25 +282,22 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Analyze pytest test failures and suggest fixes'
+        description="Analyze pytest test failures and suggest fixes"
     )
     parser.add_argument(
-        'pytest_output',
-        nargs='?',
-        help='Path to pytest output file (or stdin if not provided)'
+        "pytest_output",
+        nargs="?",
+        help="Path to pytest output file (or stdin if not provided)",
     )
     parser.add_argument(
-        '--verbose',
-        '-v',
-        action='store_true',
-        help='Show detailed analysis'
+        "--verbose", "-v", action="store_true", help="Show detailed analysis"
     )
 
     args = parser.parse_args()
 
     # Read pytest output
     if args.pytest_output:
-        with open(args.pytest_output, 'r') as f:
+        with open(args.pytest_output, "r") as f:
             output = f.read()
     else:
         # Read from stdin
@@ -311,5 +313,5 @@ def main():
     sys.exit(1 if report.total_failures + report.total_errors > 0 else 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

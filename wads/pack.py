@@ -73,7 +73,7 @@ DFLT_PUBLISH_DOCS_TO = None  # 'github'
 
 # PEP 508 compliant package name pattern
 # Must begin and end with ASCII letter/digit, contain only ASCII letters/digits, underscores, hyphens, periods
-VALID_PACKAGE_NAME_PATTERN = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$')
+VALID_PACKAGE_NAME_PATTERN = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$")
 
 
 def validate_package_name(name: str, raise_error: bool = True) -> bool:
@@ -623,9 +623,9 @@ def get_pkg_name(pkg_spec: PkgSpec, validate=True) -> PkgName:
     pkg_dir, pkg_dirname = extract_pkg_dir_and_name(pkg_spec, validate=validate)
     configs_pkg_name = get_name_from_configs(pkg_dir)
     if validate:
-        assert (
-            pkg_dirname == configs_pkg_name
-        ), f"({pkg_dirname=} and {configs_pkg_name=} were not the same"
+        assert pkg_dirname == configs_pkg_name, (
+            f"({pkg_dirname=} and {configs_pkg_name=} were not the same"
+        )
     return configs_pkg_name
 
 
@@ -863,9 +863,9 @@ def read_configs(
     *,
     verbose=False,
 ):
-    assert isinstance(
-        pkg_dir, PathStr
-    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
+    assert isinstance(pkg_dir, PathStr), (
+        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order"
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
 
     # Try pyproject.toml first (modern approach)
@@ -943,9 +943,9 @@ def write_configs(
     preproc=preprocess_ini_section_items,
     dflt_options=DFLT_OPTIONS,
 ):
-    assert isinstance(
-        pkg_dir, PathStr
-    ), "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
+    assert isinstance(pkg_dir, PathStr), (
+        "It doesn't look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order"
+    )
     pkg_dir = _get_pkg_dir(pkg_dir)
     config_filepath = pjoin(pkg_dir, CONFIG_FILE_NAME)
     c = ConfigParser()
@@ -1345,9 +1345,9 @@ def read_and_resolve_setup_configs(
 
     name = configs.get("name") or pkg_dirname
     if assert_names:
-        assert (
-            name == pkg_dirname
-        ), f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
+        assert name == pkg_dirname, (
+            f"config name ({name}) and pkg_dirname ({pkg_dirname}) are not equal!"
+        )
 
     if "root_url" in configs:
         root_url = configs["root_url"]

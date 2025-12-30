@@ -35,22 +35,22 @@ def find_pyproject(path: str) -> Path:
 def detect_platform() -> str:
     """Detect the current platform."""
     system = platform_module.system().lower()
-    if system == 'linux':
-        return 'linux'
-    elif system == 'darwin':
-        return 'macos'
-    elif system == 'windows':
-        return 'windows'
+    if system == "linux":
+        return "linux"
+    elif system == "darwin":
+        return "macos"
+    elif system == "windows":
+        return "windows"
     else:
         raise ValueError(f"Unknown platform: {system}")
 
 
 def read_system_deps(pyproject_path: Path) -> Dict[str, dict]:
     """Read [tool.wads.ops.*] sections from pyproject.toml."""
-    with open(pyproject_path, 'rb') as f:
+    with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
-    return data.get('tool', {}).get('wads', {}).get('ops', {})
+    return data.get("tool", {}).get("wads", {}).get("ops", {})
 
 
 def check_if_installed(dep_name: str, check_cmds: any, timeout: int = 10) -> bool:
@@ -77,10 +77,7 @@ def check_if_installed(dep_name: str, check_cmds: any, timeout: int = 10) -> boo
     for check_cmd in commands:
         try:
             result = subprocess.run(
-                check_cmd,
-                shell=True,
-                capture_output=True,
-                timeout=timeout
+                check_cmd, shell=True, capture_output=True, timeout=timeout
             )
             if result.returncode == 0:
                 return True
@@ -92,9 +89,7 @@ def check_if_installed(dep_name: str, check_cmds: any, timeout: int = 10) -> boo
 
 
 def install_dependency(
-    dep_name: str,
-    install_cmds: any,
-    timeout: int = 300
+    dep_name: str, install_cmds: any, timeout: int = 300
 ) -> Tuple[bool, Optional[str]]:
     """
     Install a dependency using install commands.
@@ -131,7 +126,7 @@ def install_dependency(
                 cmd,
                 shell=True,
                 capture_output=False,  # Show output in real-time
-                timeout=timeout
+                timeout=timeout,
             )
 
             if result.returncode != 0:
@@ -149,7 +144,7 @@ def install_system_dependencies(
     pyproject_path: str = ".",
     platform: Optional[str] = None,
     skip_check: bool = False,
-    verbose: bool = True
+    verbose: bool = True,
 ) -> Tuple[int, int, int]:
     """
     Install system dependencies from pyproject.toml.
@@ -212,20 +207,20 @@ def install_system_dependencies(
 
     for dep_name, dep_config in ops.items():
         if verbose:
-            print(f"{'='*70}")
+            print(f"{'=' * 70}")
             print(f"Dependency: {dep_name}")
 
-            description = dep_config.get('description', '')
+            description = dep_config.get("description", "")
             if description:
                 print(f"Description: {description}")
 
-            url = dep_config.get('url', '')
+            url = dep_config.get("url", "")
             if url:
                 print(f"URL: {url}")
 
         # Check if already installed
         if not skip_check:
-            check_cmds = dep_config.get('check', {}).get(platform)
+            check_cmds = dep_config.get("check", {}).get(platform)
             if check_cmds:
                 if check_if_installed(dep_name, check_cmds):
                     if verbose:
@@ -234,7 +229,7 @@ def install_system_dependencies(
                     continue
 
         # Get install commands
-        install_cmds = dep_config.get('install', {}).get(platform)
+        install_cmds = dep_config.get("install", {}).get(platform)
 
         if not install_cmds:
             if verbose:
@@ -257,7 +252,7 @@ def install_system_dependencies(
             failed_count += 1
 
         # Show note if present
-        note = dep_config.get('note')
+        note = dep_config.get("note")
         if note and verbose:
             print(f"Note: {note}")
 
@@ -266,9 +261,9 @@ def install_system_dependencies(
 
     # Summary
     if verbose:
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print("SUMMARY")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"✓ Installed: {installed_count}")
         print(f"⊘ Already present: {skipped_count}")
         if failed_count > 0:
@@ -280,28 +275,26 @@ def install_system_dependencies(
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='Install system dependencies from [tool.wads.ops.*] in pyproject.toml'
+        description="Install system dependencies from [tool.wads.ops.*] in pyproject.toml"
     )
     parser.add_argument(
-        'pyproject_path',
-        nargs='?',
-        default='.',
-        help='Path to pyproject.toml file or directory containing it (default: current directory)'
+        "pyproject_path",
+        nargs="?",
+        default=".",
+        help="Path to pyproject.toml file or directory containing it (default: current directory)",
     )
     parser.add_argument(
-        '--platform',
-        choices=['linux', 'macos', 'windows'],
-        help='Platform to install for (default: auto-detect)'
+        "--platform",
+        choices=["linux", "macos", "windows"],
+        help="Platform to install for (default: auto-detect)",
     )
     parser.add_argument(
-        '--skip-check',
-        action='store_true',
-        help='Skip checking if dependencies are already installed'
+        "--skip-check",
+        action="store_true",
+        help="Skip checking if dependencies are already installed",
     )
     parser.add_argument(
-        '--quiet',
-        action='store_true',
-        help='Suppress output except errors'
+        "--quiet", action="store_true", help="Suppress output except errors"
     )
 
     args = parser.parse_args()
@@ -310,12 +303,12 @@ def main():
         pyproject_path=args.pyproject_path,
         platform=args.platform,
         skip_check=args.skip_check,
-        verbose=not args.quiet
+        verbose=not args.quiet,
     )
 
     # Exit with error if any failed
     sys.exit(1 if failed > 0 else 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

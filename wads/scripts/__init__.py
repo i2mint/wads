@@ -13,9 +13,9 @@ Available scripts:
 """
 
 __all__ = [
-    'build_dist',
-    'install_deps',
-    'read_ci_config',
-    'set_env_vars',
-    'validate_ci_env',
+    "build_dist",
+    "install_deps",
+    "read_ci_config",
+    "set_env_vars",
+    "validate_ci_env",
 ]
