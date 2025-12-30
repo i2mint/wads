@@ -17,7 +17,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Ensure tomli is installed (Python < 3.11)
+    - name:  Ensure tomli is installed (Python < 3.11)
       shell: bash
       run: |
         if python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)"; then
@@ -26,7 +26,13 @@ runs:
           echo "Python < 3.11, installing tomli"
           python3 -m pip install --quiet tomli
         fi
-
+    
+    - name: Install wads
+      shell: bash
+      run: |
+        echo "Installing wads package..."
+        python3 -m pip install --quiet wads
+    
     - name: Install System Dependencies from pyproject.toml
       shell: bash
       run: |
