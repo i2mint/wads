@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.57 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.58 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../_static/documentation_options.js?v=d127aa6e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -762,9 +762,9 @@
             <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version_control_system</span><span class="p">,</span> <span class="n">project_type</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span>
-                <span class="n">pkg_dir</span>
-            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+            <span class="p">)</span>
 
             <span class="c1"># Check if we should migrate old CI to new format</span>
             <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;github&quot;</span><span class="p">:</span>
@@ -1161,9 +1161,9 @@
     <span class="n">target_pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
     <span class="n">contents</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="p">{</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
-        <span class="n">contents</span>
-    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="p">{</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">contents</span><span class="p">),</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_pkg_dir</span><span class="si">}</span><span class="s2"> needs to have all three: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">({</span><span class="s1">&#39;setup.py&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">})</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 

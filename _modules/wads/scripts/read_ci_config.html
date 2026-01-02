@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.read_ci_config &mdash; wads 0.1.57 documentation</title>
+  <title>wads.scripts.read_ci_config &mdash; wads 0.1.58 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,14 +134,14 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_output</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set GitHub Actions output.&quot;&quot;&quot;</span>
-    <span class="n">output_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_OUTPUT&#39;</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_OUTPUT&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">output_file</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_OUTPUT not set, skipping output: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
         <span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="c1"># Handle multiline values</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -152,12 +152,12 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_env</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set GitHub Actions environment variable.&quot;&quot;&quot;</span>
-    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_ENV&#39;</span><span class="p">)</span>
+    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">env_file</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_ENV not set, skipping env var: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
@@ -186,26 +186,26 @@
         <span class="c1"># Export as outputs and environment variables</span>
 
         <span class="c1"># Project metadata</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;project-name&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
-        <span class="n">_set_env</span><span class="p">(</span><span class="s1">&#39;PROJECT_NAME&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;project-name&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">_set_env</span><span class="p">(</span><span class="s2">&quot;PROJECT_NAME&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
 
         <span class="c1"># Testing configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;python-versions&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;pytest-args&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;coverage-enabled&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;exclude-paths&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">))</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;test-on-windows&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;python-versions&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;pytest-args&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;coverage-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;exclude-paths&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">))</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;test-on-windows&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">)</span>
 
         <span class="c1"># Build configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;build-sdist&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;build-wheel&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;build-sdist&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;build-wheel&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
 
         <span class="c1"># Metrics configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;metrics-enabled&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_enabled</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;metrics-config-path&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_config_path</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;metrics-storage-branch&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_storage_branch</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;metrics-python-version&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_python_version</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s1">&#39;metrics-force-run&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_force_run</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-config-path&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_config_path</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-storage-branch&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_storage_branch</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-python-version&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_python_version</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-force-run&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_force_run</span><span class="p">)</span>
 
         <span class="c1"># Print summary</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ CI configuration loaded successfully&quot;</span><span class="p">)</span>
@@ -215,9 +215,9 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Test on Windows: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Add to GitHub Actions step summary if available</span>
-        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_STEP_SUMMARY&#39;</span><span class="p">)</span>
+        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">summary_file</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## 🔧 CI Configuration</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Project:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Python Versions:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>

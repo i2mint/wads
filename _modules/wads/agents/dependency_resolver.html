@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.agents.dependency_resolver &mdash; wads 0.1.57 documentation</title>
+  <title>wads.agents.dependency_resolver &mdash; wads 0.1.58 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -165,18 +165,18 @@
 
 <span class="c1"># Common import name to package name mappings</span>
 <span class="n">IMPORT_TO_PACKAGE</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;cv2&#39;</span><span class="p">:</span> <span class="s1">&#39;opencv-python&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;PIL&#39;</span><span class="p">:</span> <span class="s1">&#39;Pillow&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;yaml&#39;</span><span class="p">:</span> <span class="s1">&#39;PyYAML&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;sklearn&#39;</span><span class="p">:</span> <span class="s1">&#39;scikit-learn&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;bs4&#39;</span><span class="p">:</span> <span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;pytest&#39;</span><span class="p">:</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;numpy&#39;</span><span class="p">:</span> <span class="s1">&#39;numpy&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;pandas&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;requests&#39;</span><span class="p">:</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;flask&#39;</span><span class="p">:</span> <span class="s1">&#39;Flask&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;django&#39;</span><span class="p">:</span> <span class="s1">&#39;Django&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">:</span> <span class="s1">&#39;SQLAlchemy&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;cv2&quot;</span><span class="p">:</span> <span class="s2">&quot;opencv-python&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;PIL&quot;</span><span class="p">:</span> <span class="s2">&quot;Pillow&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yaml&quot;</span><span class="p">:</span> <span class="s2">&quot;PyYAML&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sklearn&quot;</span><span class="p">:</span> <span class="s2">&quot;scikit-learn&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bs4&quot;</span><span class="p">:</span> <span class="s2">&quot;beautifulsoup4&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pytest&quot;</span><span class="p">:</span> <span class="s2">&quot;pytest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;numpy&quot;</span><span class="p">:</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pandas&quot;</span><span class="p">:</span> <span class="s2">&quot;pandas&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;requests&quot;</span><span class="p">:</span> <span class="s2">&quot;requests&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;flask&quot;</span><span class="p">:</span> <span class="s2">&quot;Flask&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django&quot;</span><span class="p">:</span> <span class="s2">&quot;Django&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sqlalchemy&quot;</span><span class="p">:</span> <span class="s2">&quot;SQLAlchemy&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -195,16 +195,16 @@
     <span class="n">imports</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Import</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
-                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">alias</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">alias</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">ImportFrom</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
-                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">imports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">except</span> <span class="p">(</span><span class="ne">SyntaxError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">):</span>
         <span class="c1"># Skip files with syntax errors or encoding issues</span>
@@ -216,7 +216,9 @@
 
 <div class="viewcode-block" id="scan_project_imports">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/dependency_resolver.html#wads.agents.scan_project_imports">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">scan_project_imports</span><span class="p">(</span><span class="n">project_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">exclude_patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">scan_project_imports</span><span class="p">(</span>
+    <span class="n">project_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">exclude_patterns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scan all Python files in a project for imports.</span>
 
@@ -228,11 +230,19 @@
 <span class="sd">        Dict mapping file paths to sets of imported modules</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">exclude_patterns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">exclude_patterns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;venv&#39;</span><span class="p">,</span> <span class="s1">&#39;.venv&#39;</span><span class="p">,</span> <span class="s1">&#39;__pycache__&#39;</span><span class="p">,</span> <span class="s1">&#39;.git&#39;</span><span class="p">,</span> <span class="s1">&#39;build&#39;</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;.eggs&#39;</span><span class="p">]</span>
+        <span class="n">exclude_patterns</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;venv&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;.venv&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;__pycache__&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;.git&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;build&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dist&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;.eggs&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
 
     <span class="n">imports_by_file</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">for</span> <span class="n">py_file</span> <span class="ow">in</span> <span class="n">project_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">py_file</span> <span class="ow">in</span> <span class="n">project_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.py&quot;</span><span class="p">):</span>
         <span class="c1"># Skip excluded directories</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">pattern</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">py_file</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">exclude_patterns</span><span class="p">):</span>
             <span class="k">continue</span>
@@ -256,16 +266,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s1">&#39;-m&#39;</span><span class="p">,</span> <span class="s1">&#39;pip&#39;</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="s1">&#39;--format=freeze&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="s2">&quot;--format=freeze&quot;</span><span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">packages</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s1">&#39;==&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                <span class="n">package_name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;==&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">package_name</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;==&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
                 <span class="n">packages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">package_name</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">packages</span>
@@ -330,17 +340,19 @@
             <span class="n">line_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">file_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="k">if</span> <span class="n">file_match</span> <span class="k">else</span> <span class="kc">None</span>
 
             <span class="c1"># Resolve to package name</span>
-            <span class="n">top_level</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">top_level</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">package_name</span> <span class="o">=</span> <span class="n">resolve_package_name</span><span class="p">(</span><span class="n">top_level</span><span class="p">)</span>
 
-            <span class="n">issues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DependencyIssue</span><span class="p">(</span>
-                <span class="n">package_name</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
-                <span class="n">import_statement</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">file_path</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span>
-                <span class="n">line_number</span><span class="o">=</span><span class="n">line_number</span><span class="p">,</span>
-                <span class="n">suggested_package</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
-                <span class="n">error_message</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="p">))</span>
+            <span class="n">issues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DependencyIssue</span><span class="p">(</span>
+                    <span class="n">package_name</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                    <span class="n">import_statement</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">module_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">file_path</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span>
+                    <span class="n">line_number</span><span class="o">=</span><span class="n">line_number</span><span class="p">,</span>
+                    <span class="n">suggested_package</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
+                    <span class="n">error_message</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">issues</span></div>
 
@@ -362,22 +374,22 @@
         <span class="k">return</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
         <span class="c1"># Get main dependencies</span>
         <span class="n">main_deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">project</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;project&#39;</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dependencies&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dependencies&quot;</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="c1"># Extract package name (before version specifiers)</span>
-            <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;=\[]&#39;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[&lt;&gt;=\[]&quot;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="n">main_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
 
         <span class="c1"># Get optional dependencies</span>
         <span class="n">dev_deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">group_deps</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;optional-dependencies&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">group_deps</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optional-dependencies&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">group_deps</span><span class="p">:</span>
-                <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;=\[]&#39;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">pkg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[&lt;&gt;=\[]&quot;</span><span class="p">,</span> <span class="n">dep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
                 <span class="n">dev_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">main_deps</span><span class="p">,</span> <span class="n">dev_deps</span>
@@ -392,7 +404,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">analyze_dependencies</span><span class="p">(</span>
     <span class="n">project_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">error_logs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">check_unused</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">check_unused</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DependencyReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Analyze project dependencies and identify issues.</span>
@@ -406,7 +418,7 @@
 <span class="sd">        DependencyReport with analysis results</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">project_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_path</span><span class="p">)</span>
-    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">project_path</span> <span class="o">/</span> <span class="s1">&#39;pyproject.toml&#39;</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">project_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
 
     <span class="n">missing_packages</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">unused_packages</span> <span class="o">=</span> <span class="p">[]</span>
@@ -448,8 +460,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_declared</span><span class="p">:</span>
             <span class="c1"># Find which files use this import</span>
             <span class="n">using_files</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">imports</span> <span class="ow">in</span> <span class="n">imports_by_file</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">imports</span>
+                <span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">imports</span> <span class="ow">in</span> <span class="n">imports_by_file</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">imports</span>
             <span class="p">]</span>
 
             <span class="n">issue</span> <span class="o">=</span> <span class="n">DependencyIssue</span><span class="p">(</span>
@@ -457,7 +468,7 @@
                 <span class="n">import_statement</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import </span><span class="si">{</span><span class="n">import_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">file_path</span><span class="o">=</span><span class="n">using_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">using_files</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">suggested_package</span><span class="o">=</span><span class="n">package_name</span><span class="p">,</span>
-                <span class="n">is_installed</span><span class="o">=</span><span class="n">is_installed</span>
+                <span class="n">is_installed</span><span class="o">=</span><span class="n">is_installed</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">package_name</span> <span class="o">==</span> <span class="n">package_name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">missing_packages</span><span class="p">):</span>
@@ -468,11 +479,13 @@
         <span class="k">for</span> <span class="n">dep_pkg</span> <span class="ow">in</span> <span class="n">all_declared</span><span class="p">:</span>
             <span class="c1"># Try to find if this package is imported</span>
             <span class="c1"># (This is approximate - package name != import name always)</span>
-            <span class="n">potential_imports</span> <span class="o">=</span> <span class="p">{</span><span class="n">dep_pkg</span><span class="p">,</span> <span class="n">dep_pkg</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)}</span>
+            <span class="n">potential_imports</span> <span class="o">=</span> <span class="p">{</span><span class="n">dep_pkg</span><span class="p">,</span> <span class="n">dep_pkg</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)}</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">imp</span> <span class="ow">in</span> <span class="n">all_imports</span> <span class="k">for</span> <span class="n">imp</span> <span class="ow">in</span> <span class="n">potential_imports</span><span class="p">):</span>
                 <span class="c1"># Double-check it&#39;s not a known mapping</span>
-                <span class="n">reverse_mapped</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">IMPORT_TO_PACKAGE</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">dep_pkg</span><span class="p">]</span>
+                <span class="n">reverse_mapped</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">IMPORT_TO_PACKAGE</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">dep_pkg</span>
+                <span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">imp</span> <span class="ow">in</span> <span class="n">all_imports</span> <span class="k">for</span> <span class="n">imp</span> <span class="ow">in</span> <span class="n">reverse_mapped</span><span class="p">):</span>
                     <span class="n">unused_packages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep_pkg</span><span class="p">)</span>
 
@@ -487,9 +500,7 @@
                     <span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (already installed, add to dependencies)&quot;</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (needs installation)&quot;</span>
-                <span class="p">)</span>
+                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (needs installation)&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">unused_packages</span><span class="p">:</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -502,7 +513,7 @@
         <span class="n">missing_packages</span><span class="o">=</span><span class="n">missing_packages</span><span class="p">,</span>
         <span class="n">unused_packages</span><span class="o">=</span><span class="n">unused_packages</span><span class="p">,</span>
         <span class="n">version_conflicts</span><span class="o">=</span><span class="n">version_conflicts</span><span class="p">,</span>
-        <span class="n">recommendations</span><span class="o">=</span><span class="n">recommendations</span>
+        <span class="n">recommendations</span><span class="o">=</span><span class="n">recommendations</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -522,7 +533,11 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Import: </span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">import_statement</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">file_path</span><span class="p">:</span>
-                <span class="n">location</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">line_number</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">line_number</span> <span class="k">else</span> <span class="n">issue</span><span class="o">.</span><span class="n">file_path</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">file_path</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">issue</span><span class="o">.</span><span class="n">line_number</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">line_number</span>
+                    <span class="k">else</span> <span class="n">issue</span><span class="o">.</span><span class="n">file_path</span>
+                <span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Used in: </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">unused_packages</span><span class="p">:</span>
@@ -546,27 +561,24 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Analyze and resolve Python dependencies&#39;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Analyze and resolve Python dependencies&quot;</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s1">&#39;project_path&#39;</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to project directory (default: current directory)&#39;</span>
+        <span class="s2">&quot;project_path&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to project directory (default: current directory)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--error-log&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to error log file to analyze&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--no-check-unused&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip checking for unused dependencies&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s1">&#39;--error-log&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to error log file to analyze&#39;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s1">&#39;--no-check-unused&#39;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Skip checking for unused dependencies&#39;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s1">&#39;--fix&#39;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Automatically add missing packages to pyproject.toml&#39;</span>
+        <span class="s2">&quot;--fix&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Automatically add missing packages to pyproject.toml&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -574,14 +586,14 @@
     <span class="c1"># Read error logs if provided</span>
     <span class="n">error_logs</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">error_log</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">error_log</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">error_log</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">error_logs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="c1"># Analyze dependencies</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">analyze_dependencies</span><span class="p">(</span>
         <span class="n">project_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">project_path</span><span class="p">,</span>
         <span class="n">error_logs</span><span class="o">=</span><span class="n">error_logs</span><span class="p">,</span>
-        <span class="n">check_unused</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_check_unused</span>
+        <span class="n">check_unused</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_check_unused</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Print report</span>
@@ -598,7 +610,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

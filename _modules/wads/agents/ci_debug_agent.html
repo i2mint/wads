@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.agents.ci_debug_agent &mdash; wads 0.1.57 documentation</title>
+  <title>wads.agents.ci_debug_agent &mdash; wads 0.1.58 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -187,7 +187,7 @@
 <a class="viewcode-back" href="../../../module_docs/wads/agents/ci_debug_agent.html#wads.agents.get_github_token">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_github_token</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get GitHub token from environment.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_TOKEN&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GH_TOKEN&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_TOKEN&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GH_TOKEN&quot;</span><span class="p">)</span></div>
 
 
 
@@ -215,14 +215,14 @@
 
     <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/actions/runs&quot;</span>
     <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/vnd.github.v3+json&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/vnd.github.v3+json&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;per_page&#39;</span><span class="p">:</span> <span class="n">limit</span><span class="p">})</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;per_page&quot;</span><span class="p">:</span> <span class="n">limit</span><span class="p">})</span>
     <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;workflow_runs&#39;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;workflow_runs&quot;</span><span class="p">]</span></div>
 
 
 
@@ -253,8 +253,8 @@
 
     <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/actions/runs/</span><span class="si">{</span><span class="n">run_id</span><span class="si">}</span><span class="s2">/logs&quot;</span>
     <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/vnd.github.v3+json&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/vnd.github.v3+json&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
@@ -265,8 +265,8 @@
         <span class="n">all_logs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
             <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">all_logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">))</span>
-        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_logs</span><span class="p">)</span></div>
+                <span class="n">all_logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_logs</span><span class="p">)</span></div>
 
 
 
@@ -285,13 +285,13 @@
     <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Pattern for pytest test failures: FAILED test - error_message</span>
-    <span class="n">failure_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;FAILED\s+(.+?)\s+-\s+(.+)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+    <span class="n">failure_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;FAILED\s+(.+?)\s+-\s+(.+)$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
 
     <span class="c1"># Pattern for collection errors: ERROR collecting path</span>
     <span class="n">collection_error_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-        <span class="sa">r</span><span class="s1">&#39;ERROR collecting (.+?)$.*?&#39;</span>
-        <span class="sa">r</span><span class="s1">&#39;(ImportError|ModuleNotFoundError|SyntaxError|[\w]+Error):\s*(.+?)$&#39;</span><span class="p">,</span>
-        <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span>
+        <span class="sa">r</span><span class="s2">&quot;ERROR collecting (.+?)$.*?&quot;</span>
+        <span class="sa">r</span><span class="s2">&quot;(ImportError|ModuleNotFoundError|SyntaxError|[\w]+Error):\s*(.+?)$&quot;</span><span class="p">,</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Pattern for tracebacks</span>
@@ -346,9 +346,9 @@
         <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">test_name</span><span class="p">)</span>
 
         <span class="c1"># Parse error info - could be &quot;ErrorType: message&quot; or just &quot;message&quot;</span>
-        <span class="k">if</span> <span class="s1">&#39;: &#39;</span> <span class="ow">in</span> <span class="n">error_info</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;: &quot;</span> <span class="ow">in</span> <span class="n">error_info</span><span class="p">:</span>
             <span class="c1"># Split on first colon to get error type and message</span>
-            <span class="n">parts</span> <span class="o">=</span> <span class="n">error_info</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: &#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">error_info</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;: &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">error_type</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">error_message</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">error_info</span>
         <span class="k">else</span><span class="p">:</span>
@@ -438,7 +438,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">fix</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Type: </span><span class="si">{</span><span class="n">fix</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Action: </span><span class="si">{</span><span class="n">fix</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;packages&#39;</span> <span class="ow">in</span> <span class="n">fix</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;packages&quot;</span> <span class="ow">in</span> <span class="n">fix</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Packages: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fix</span><span class="p">[</span><span class="s1">&#39;packages&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span></div>
@@ -463,20 +463,20 @@
 
     <span class="c1"># Common patterns for missing system dependencies</span>
     <span class="n">patterns</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;unixodbc&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;unixodbc&quot;</span><span class="p">:</span> <span class="p">[</span>
             <span class="sa">r</span><span class="s2">&quot;Can&#39;t open lib.*ODBC.*Driver&quot;</span><span class="p">,</span>
             <span class="sa">r</span><span class="s2">&quot;libodbc.*not found&quot;</span><span class="p">,</span>
             <span class="sa">r</span><span class="s2">&quot;ODBC.*driver.*not found&quot;</span><span class="p">,</span>
         <span class="p">],</span>
-        <span class="s1">&#39;msodbcsql17&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ODBC Driver 17 for SQL Server.*not found&quot;</span><span class="p">],</span>
-        <span class="s1">&#39;msodbcsql18&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ODBC Driver 18 for SQL Server.*not found&quot;</span><span class="p">],</span>
-        <span class="s1">&#39;ffmpeg&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ffmpeg.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;libav.*not found&quot;</span><span class="p">],</span>
-        <span class="s1">&#39;libsndfile&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;libsndfile.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;sndfile.*not found&quot;</span><span class="p">],</span>
-        <span class="s1">&#39;portaudio&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;portaudio.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;libportaudio.*not found&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;msodbcsql17&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ODBC Driver 17 for SQL Server.*not found&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;msodbcsql18&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ODBC Driver 18 for SQL Server.*not found&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;ffmpeg&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;ffmpeg.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;libav.*not found&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;libsndfile&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;libsndfile.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;sndfile.*not found&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;portaudio&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;portaudio.*not found&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;libportaudio.*not found&quot;</span><span class="p">],</span>
     <span class="p">}</span>
 
     <span class="c1"># Check failures and logs</span>
-    <span class="n">all_text</span> <span class="o">=</span> <span class="n">logs</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">error_message</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">)</span>
+    <span class="n">all_text</span> <span class="o">=</span> <span class="n">logs</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">error_message</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">dep</span><span class="p">,</span> <span class="n">patterns_list</span> <span class="ow">in</span> <span class="n">patterns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns_list</span><span class="p">:</span>
@@ -507,7 +507,7 @@
     <span class="k">for</span> <span class="n">failure</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">:</span>
         <span class="n">match</span> <span class="o">=</span> <span class="n">import_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">failure</span><span class="o">.</span><span class="n">error_message</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-            <span class="n">module</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Get top-level package</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Get top-level package</span>
             <span class="n">missing_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">missing_deps</span><span class="p">)</span></div>
@@ -529,7 +529,7 @@
     <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># GitHub Actions warning format: ::warning::message</span>
-    <span class="n">gh_warning_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;::warning::(.+?)$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+    <span class="n">gh_warning_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;::warning::(.+?)$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">gh_warning_pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
         <span class="n">warning</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -537,9 +537,9 @@
 
     <span class="c1"># Also look for common warning patterns that aren&#39;t GitHub Actions formatted</span>
     <span class="n">common_warning_patterns</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="sa">r</span><span class="s1">&#39;Warning: tomli package required for Python &lt; 3.11&#39;</span><span class="p">,</span>
-        <span class="sa">r</span><span class="s1">&#39;WARNING:.*missing.*package&#39;</span><span class="p">,</span>
-        <span class="sa">r</span><span class="s1">&#39;DeprecationWarning:.*&#39;</span><span class="p">,</span>
+        <span class="sa">r</span><span class="s2">&quot;Warning: tomli package required for Python &lt; 3.11&quot;</span><span class="p">,</span>
+        <span class="sa">r</span><span class="s2">&quot;WARNING:.*missing.*package&quot;</span><span class="p">,</span>
+        <span class="sa">r</span><span class="s2">&quot;DeprecationWarning:.*&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 
     <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">common_warning_patterns</span><span class="p">:</span>
@@ -582,19 +582,23 @@
         <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">missing_system_deps</span><span class="p">:</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tool.wads.ops.</span><span class="si">{</span><span class="n">dep</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;description = &quot;Description of why </span><span class="si">{</span><span class="n">dep</span><span class="si">}</span><span class="s1"> is needed&quot;&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">dep</span> <span class="o">==</span> <span class="s1">&#39;msodbcsql18&#39;</span><span class="p">:</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;install.linux = [&#39;</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -&quot;,&#39;</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list&quot;,&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dep</span> <span class="o">==</span> <span class="s2">&quot;msodbcsql18&quot;</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;install.linux = [&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s1">&#39;    &quot;curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -&quot;,&#39;</span>
+                <span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s1">&#39;    &quot;curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list&quot;,&#39;</span>
+                <span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;sudo apt-get update&quot;,&#39;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18&quot;&#39;</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;note = &quot;Requires accepting Microsoft EULA&quot;&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">dep</span> <span class="o">==</span> <span class="s1">&#39;unixodbc&#39;</span><span class="p">:</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;install.linux = [&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dep</span> <span class="o">==</span> <span class="s2">&quot;unixodbc&quot;</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;install.linux = [&quot;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;sudo apt-get update&quot;,&#39;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;    &quot;sudo apt-get install -y unixodbc unixodbc-dev&quot;&#39;</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;check.linux = &quot;dpkg -s unixodbc || rpm -q unixODBC&quot;&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;install.linux = &quot;sudo apt-get install -y </span><span class="si">{</span><span class="n">dep</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -619,7 +623,7 @@
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Install System Dependencies&quot;</span><span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">diagnosis</span><span class="o">.</span><span class="n">missing_system_deps</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">dep</span> <span class="o">==</span> <span class="s1">&#39;msodbcsql18&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dep</span> <span class="o">==</span> <span class="s2">&quot;msodbcsql18&quot;</span><span class="p">:</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="s2">&quot;          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -&quot;</span>
                 <span class="p">)</span>
@@ -630,7 +634,7 @@
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="s2">&quot;          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18&quot;</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">dep</span> <span class="o">==</span> <span class="s1">&#39;unixodbc&#39;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">dep</span> <span class="o">==</span> <span class="s2">&quot;unixodbc&quot;</span><span class="p">:</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;          sudo apt-get update&quot;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;          sudo apt-get install -y unixodbc unixodbc-dev&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -649,7 +653,7 @@
 
     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 
 
@@ -671,10 +675,10 @@
     <span class="k">if</span> <span class="n">run_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">runs</span> <span class="o">=</span> <span class="n">fetch_workflow_runs</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
         <span class="c1"># Find first failed run</span>
-        <span class="n">failed_run</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">runs</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;conclusion&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;failure&#39;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">failed_run</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">runs</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;conclusion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;failure&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">failed_run</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No failed runs found&quot;</span><span class="p">)</span>
-        <span class="n">run_id</span> <span class="o">=</span> <span class="n">failed_run</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">run_id</span> <span class="o">=</span> <span class="n">failed_run</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzing failed run: </span><span class="si">{</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">failed_run</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># Fetch logs</span>
@@ -694,13 +698,13 @@
     <span class="n">missing_python_deps</span> <span class="o">=</span> <span class="n">diagnose_missing_python_deps</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span>
 
     <span class="c1"># Check warnings for tomli issue</span>
-    <span class="n">tomli_warning</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;tomli&#39;</span> <span class="ow">in</span> <span class="n">w</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">warnings</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">tomli_warning</span> <span class="ow">and</span> <span class="s1">&#39;tomli&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing_python_deps</span><span class="p">:</span>
+    <span class="n">tomli_warning</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;tomli&quot;</span> <span class="ow">in</span> <span class="n">w</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">warnings</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tomli_warning</span> <span class="ow">and</span> <span class="s2">&quot;tomli&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing_python_deps</span><span class="p">:</span>
         <span class="c1"># tomli is in conditional dependencies, but CI might not install it</span>
         <span class="n">config_issues</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;tomli package not installed in CI for Python &lt; 3.11 - install-system-deps step failed silently&quot;</span>
         <span class="p">]</span>
-        <span class="n">missing_python_deps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tomli&#39;</span><span class="p">)</span>
+        <span class="n">missing_python_deps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;tomli&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">config_issues</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -715,20 +719,20 @@
         <span class="c1"># Check if pyproject.toml needs updating</span>
         <span class="n">proposed_fixes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;config&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Add missing system dependencies to pyproject.toml&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;Add [tool.wads.ops.*] sections for each dependency&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;packages&#39;</span><span class="p">:</span> <span class="n">missing_system_deps</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Add missing system dependencies to pyproject.toml&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;Add [tool.wads.ops.*] sections for each dependency&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;packages&quot;</span><span class="p">:</span> <span class="n">missing_system_deps</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
         <span class="c1"># Also propose CI workflow fix</span>
         <span class="n">proposed_fixes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;workflow&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Ensure CI workflow uses install-system-deps action&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;Add install-system-deps action before tests (if not present)&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;packages&#39;</span><span class="p">:</span> <span class="n">missing_system_deps</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;workflow&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Ensure CI workflow uses install-system-deps action&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;Add install-system-deps action before tests (if not present)&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;packages&quot;</span><span class="p">:</span> <span class="n">missing_system_deps</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
@@ -739,20 +743,20 @@
 
         <span class="n">proposed_fixes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dependencies&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Add missing Python packages to pyproject.toml&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;action&#39;</span><span class="p">:</span> <span class="s1">&#39;Add to [project.dependencies] or [project.optional-dependencies]&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;packages&#39;</span><span class="p">:</span> <span class="n">missing_python_deps</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dependencies&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Add missing Python packages to pyproject.toml&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;Add to [project.dependencies] or [project.optional-dependencies]&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;packages&quot;</span><span class="p">:</span> <span class="n">missing_python_deps</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
     <span class="c1"># Determine confidence</span>
     <span class="k">if</span> <span class="n">missing_system_deps</span> <span class="ow">or</span> <span class="n">missing_python_deps</span><span class="p">:</span>
-        <span class="n">confidence</span> <span class="o">=</span> <span class="s1">&#39;high&#39;</span>
+        <span class="n">confidence</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span>
     <span class="k">elif</span> <span class="n">failures</span><span class="p">:</span>
-        <span class="n">confidence</span> <span class="o">=</span> <span class="s1">&#39;medium&#39;</span>
+        <span class="n">confidence</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">confidence</span> <span class="o">=</span> <span class="s1">&#39;low&#39;</span>
+        <span class="n">confidence</span> <span class="o">=</span> <span class="s2">&quot;low&quot;</span>
 
     <span class="k">return</span> <span class="n">CIDiagnosis</span><span class="p">(</span>
         <span class="n">failures</span><span class="o">=</span><span class="n">failures</span><span class="p">,</span>
@@ -773,11 +777,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI entry point for wads CI debug agent.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Diagnose and fix CI failures&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;repo&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Repository in format owner/name&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--run-id&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specific workflow run ID&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--fix&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Generate fix instructions&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--local-repo&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to local repository clone&#39;</span><span class="p">)</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Diagnose and fix CI failures&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;repo&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Repository in format owner/name&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--run-id&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specific workflow run ID&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--fix&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Generate fix instructions&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--local-repo&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to local repository clone&quot;</span><span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
@@ -794,8 +798,8 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">instructions</span><span class="p">)</span>
 
             <span class="c1"># Save to file</span>
-            <span class="n">fix_file</span> <span class="o">=</span> <span class="n">repo_path</span> <span class="o">/</span> <span class="s1">&#39;CI_FIX_INSTRUCTIONS.md&#39;</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fix_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">fix_file</span> <span class="o">=</span> <span class="n">repo_path</span> <span class="o">/</span> <span class="s2">&quot;CI_FIX_INSTRUCTIONS.md&quot;</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fix_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">instructions</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✓ Fix instructions saved to: </span><span class="si">{</span><span class="n">fix_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -805,7 +809,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.1.57 documentation</title>
+  <title>wads.pack &mdash; wads 0.1.58 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=393d09ac"></script>
+      <script src="../../_static/documentation_options.js?v=d127aa6e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -185,7 +185,7 @@
 
 <span class="c1"># PEP 508 compliant package name pattern</span>
 <span class="c1"># Must begin and end with ASCII letter/digit, contain only ASCII letters/digits, underscores, hyphens, periods</span>
-<span class="n">VALID_PACKAGE_NAME_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$&#39;</span><span class="p">)</span>
+<span class="n">VALID_PACKAGE_NAME_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="validate_package_name">
@@ -761,9 +761,9 @@
     <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_dirname</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">pkg_spec</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
     <span class="n">configs_pkg_name</span> <span class="o">=</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span>
-        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
+        <span class="k">assert</span> <span class="n">pkg_dirname</span> <span class="o">==</span> <span class="n">configs_pkg_name</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">=}</span><span class="s2"> and </span><span class="si">{</span><span class="n">configs_pkg_name</span><span class="si">=}</span><span class="s2"> were not the same&quot;</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">configs_pkg_name</span></div>
 
 
@@ -1023,9 +1023,9 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
-    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and postproc order&quot;</span>
+    <span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
 
     <span class="c1"># Try pyproject.toml first (modern approach)</span>
@@ -1103,9 +1103,9 @@
     <span class="n">preproc</span><span class="o">=</span><span class="n">preprocess_ini_section_items</span><span class="p">,</span>
     <span class="n">dflt_options</span><span class="o">=</span><span class="n">DFLT_OPTIONS</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span>
-    <span class="p">),</span> <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">&quot;It doesn&#39;t look like pkg_dir is a path. Did you perhaps invert pkg_dir and configs order&quot;</span>
+    <span class="p">)</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">_get_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">config_filepath</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
@@ -1531,9 +1531,9 @@
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_dirname</span>
     <span class="k">if</span> <span class="n">assert_names</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span>
-        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
+        <span class="k">assert</span> <span class="n">name</span> <span class="o">==</span> <span class="n">pkg_dirname</span><span class="p">,</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;config name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">) and pkg_dirname (</span><span class="si">{</span><span class="n">pkg_dirname</span><span class="si">}</span><span class="s2">) are not equal!&quot;</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="s2">&quot;root_url&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
         <span class="n">root_url</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="s2">&quot;root_url&quot;</span><span class="p">]</span>
