@@ -1,7 +1,5 @@
 [build-system]
-requires = [
-    "hatchling",
-]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -10,14 +8,8 @@ version = "0.1.58"
 description = "Tools for packaging and publishing to pypi for those who just do not want to deal with it"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = [
-    "documentation",
-    "packaging",
-    "publishing",
-]
-authors = [
-    { name = "Thor Whalen" },
-]
+keywords = ["documentation", "packaging", "publishing"]
+authors = [{ name = "Thor Whalen" }]
 dependencies = [
     "argh",
     "ruamel.yaml",
@@ -36,12 +28,8 @@ dependencies = [
 text = "Apache Software License"
 
 [project.optional-dependencies]
-docs = [
-    "epythet",
-]
-setuptools = [
-    "setuptools>=65.0.0",
-]
+docs = ["epythet"]
+setuptools = ["setuptools>=65.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"
@@ -55,9 +43,7 @@ wads-test-analyze = "wads.agents.test_analyzer:main"
 wads-migrate = "wads.migration:main"
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "wads",
-]
+packages = ["wads"]
 include = [
     "*/docs_gen/_static/**/*",
     "requirements.txt",
@@ -69,34 +55,17 @@ include = [
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-exclude = [
-    "tests",
-    "examples",
-    "scrap",
-]
+exclude = ["tests", "examples", "scrap"]
 
 [tool.ruff.lint]
-select = [
-    "D100",
-]
+select = ["D100"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-    "D",
-]
-"examples/*" = [
-    "D",
-]
-"scrap/*" = [
-    "D",
-]
+"**/tests/*" = ["D"]
+"**/examples/*" = ["D"]
+"**/scrap/*" = ["D"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = [
-    "wads/tests",
-]
-doctest_optionflags = [
-    "NORMALIZE_WHITESPACE",
-    "ELLIPSIS",
-]
+testpaths = ["wads/tests"]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
