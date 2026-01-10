@@ -175,6 +175,10 @@ jobs:
           pypi-password: ${{ secrets.PYPI_PASSWORD }}
           skip-existing: false
 
+      - name: Force SSH for git remote
+        run: |
+          git remote set-url origin git@github.com:${{ github.repository }}.git
+          
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
         with:
