@@ -270,10 +270,10 @@ See [docs/SYSTEM_DEPENDENCIES.md](docs/SYSTEM_DEPENDENCIES.md) for comprehensive
 
 ## Documentation
 
-- **[System Dependencies Guide](docs/SYSTEM_DEPENDENCIES.md)** - `[tool.wads.ops.*]` format and examples
-- **[CI Configuration Reference](docs/CI_CONFIG.md)** - Complete `[tool.wads.ci]` reference
-- **[Migration Guide](docs/MIGRATION.md)** - Migrate from setup.cfg to pyproject.toml
-- **[Utilities Reference](docs/UTILITIES.md)** - CLI tools (`wads-ci-debug`, `wads-migrate`)
+- **[System Dependencies Guide](misc/docs/SYSTEM_DEPENDENCIES.md)** - `[tool.wads.ops.*]` format and examples
+- **[Migration Guide](misc/docs/MIGRATION.md)** - Migrate from setup.cfg to pyproject.toml
+- **[Utilities Reference](misc/docs/UTILITIES.md)** - CLI tools (`wads-ci-debug`, `wads-migrate`)
+- **[CLAUDE.md](CLAUDE.md)** - AI agent guide for working with this project
 
 ## Troubleshooting
 
