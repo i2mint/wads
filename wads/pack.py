@@ -1276,20 +1276,24 @@ def validate_versions(versions: dict, action_when_not_valid=raise_error) -> dict
 
     error_msg = ""
     tag_version = versions.get("tag", None)
-    if tag_version is not None and tag_version != versions["setup_cfg"]:
+    setup_cfg_version = versions.get("setup_cfg", None)
+    current_pypi = versions.get("current_pypi", None)
+    highest_not_yanked_pypi = versions.get("highest_not_yanked_pypi", None)
+
+    if tag_version is not None and setup_cfg_version is not None and tag_version != setup_cfg_version:
         error_msg += (
             f"Tag version ({tag_version}) is different "
-            f"from setup.cfg's version: {versions['setup_cfg']}\n"
+            f"from setup.cfg's version: {setup_cfg_version}\n"
         )
-    if versions["current_pypi"] != versions["highest_not_yanked_pypi"]:
+    if current_pypi is not None and highest_not_yanked_pypi is not None and current_pypi != highest_not_yanked_pypi:
         error_msg += (
-            f"Current pypi version ({versions['current_pypi']}) is different "
-            f"from the highest not yanked pypi version: {versions['highest_not_yanked_pypi']}\n"
+            f"Current pypi version ({current_pypi}) is different "
+            f"from the highest not yanked pypi version: {highest_not_yanked_pypi}\n"
         )
-    if versions["current_pypi"] > versions["setup_cfg"]:
+    if current_pypi is not None and setup_cfg_version is not None and current_pypi > setup_cfg_version:
         error_msg += (
-            f"Current pypi version ({versions['current_pypi']}) is higher "
-            f"than setup.cfg's version: {versions['setup_cfg']}\n"
+            f"Current pypi version ({current_pypi}) is higher "
+            f"than setup.cfg's version: {setup_cfg_version}\n"
         )
     if error_msg:
         error_msg += (
