@@ -45,9 +45,14 @@ def _get_platform_dir(kind: str) -> Path:
         import os
 
         if kind == "config":
-            return Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / APP_NAME
+            return (
+                Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / APP_NAME
+            )
         elif kind in ("data", "cache"):
-            return Path(os.environ.get("LOCALAPPDATA", home / "AppData" / "Local")) / APP_NAME
+            return (
+                Path(os.environ.get("LOCALAPPDATA", home / "AppData" / "Local"))
+                / APP_NAME
+            )
     else:
         # Linux / other Unix — follow XDG
         import os
@@ -55,7 +60,10 @@ def _get_platform_dir(kind: str) -> Path:
         if kind == "config":
             return Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) / APP_NAME
         elif kind == "data":
-            return Path(os.environ.get("XDG_DATA_HOME", home / ".local" / "share")) / APP_NAME
+            return (
+                Path(os.environ.get("XDG_DATA_HOME", home / ".local" / "share"))
+                / APP_NAME
+            )
         elif kind == "cache":
             return Path(os.environ.get("XDG_CACHE_HOME", home / ".cache")) / APP_NAME
 

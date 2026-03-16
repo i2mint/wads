@@ -92,8 +92,10 @@ def install_skills(
             if not force:
                 # Show whether current install is a symlink or copy
                 kind = "symlink" if target.is_symlink() else "copy"
-                log(f"  Skipping {skill_name} (already exists as {kind}, "
-                    f"use --force to overwrite)")
+                log(
+                    f"  Skipping {skill_name} (already exists as {kind}, "
+                    f"use --force to overwrite)"
+                )
                 continue
             # Remove existing (symlink, dir, or file)
             if target.is_symlink() or target.is_file():
@@ -111,8 +113,10 @@ def install_skills(
             log(f"  Copied: /{skill_name} -> {target}")
 
     if installed:
-        log(f"\nInstalled {len(installed)} skill(s) via "
-            f"{'symlink' if use_symlinks else 'copy'}.")
+        log(
+            f"\nInstalled {len(installed)} skill(s) via "
+            f"{'symlink' if use_symlinks else 'copy'}."
+        )
         log("Use /SKILL_NAME in Claude Code to invoke.")
     else:
         log("\nNo new skills to install.")
@@ -128,15 +132,19 @@ def main():
         description="Install wads Claude Code skills to ~/.claude/skills/"
     )
     parser.add_argument(
-        "--list", action="store_true", dest="list_skills",
+        "--list",
+        action="store_true",
+        dest="list_skills",
         help="List available skills without installing",
     )
     parser.add_argument(
-        "--force", action="store_true",
+        "--force",
+        action="store_true",
         help="Overwrite existing skills",
     )
     parser.add_argument(
-        "--copy", action="store_true",
+        "--copy",
+        action="store_true",
         help="Copy files instead of creating symlinks (not recommended)",
     )
 

@@ -365,7 +365,8 @@ def setup_project(
 
         populate_pkg_dir(
             pkg_dir,
-            description=description or "There is a bit of an air of mystery around this project...",
+            description=description
+            or "There is a bit of an air of mystery around this project...",
             root_url=root_url,
             author=author,
             license=license,
