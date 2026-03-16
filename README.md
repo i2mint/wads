@@ -268,6 +268,29 @@ alternatives = ["iodbc"]
 
 See [docs/SYSTEM_DEPENDENCIES.md](docs/SYSTEM_DEPENDENCIES.md) for comprehensive examples.
 
+## Claude Code Skills
+
+Wads ships with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for AI-assisted workflows. Install them globally so they're available in every project:
+
+```bash
+wads-install-skills
+```
+
+This symlinks skills to `~/.claude/skills/`, so they stay in sync when wads is updated:
+
+| Command | Description |
+|---------|-------------|
+| `/setup-py-project` | AI-guided Python project creation: name suggestions, PyPI/GitHub availability checking, repo creation, file population |
+| `/wads-migrate` | Migrate projects to modern wads setup (pyproject.toml + uv CI) |
+
+**Example:**
+```
+/setup-py-project "a tool for audio signal processing"
+```
+
+To list available skills without installing: `wads-install-skills --list`
+To update existing skills: `wads-install-skills --force`
+
 ## Documentation
 
 - **[System Dependencies Guide](misc/docs/SYSTEM_DEPENDENCIES.md)** - `[tool.wads.ops.*]` format and examples
