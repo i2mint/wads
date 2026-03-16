@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_project_setup &mdash; wads 0.1.67 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=946d7960"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_project_setup</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_project_setup</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for wads.project_setup module.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">patch</span><span class="p">,</span> <span class="n">MagicMock</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<div class="viewcode-block" id="TestNameAvailability">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestNameAvailability">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestNameAvailability</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test name availability checking functions.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_pypi_project_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">pypi_project_url</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="n">pypi_project_url</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">url</span> <span class="o">==</span> <span class="s2">&quot;https://pypi.org/project/wads/&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_github_repo_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">github_repo_url</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="n">github_repo_url</span><span class="p">(</span><span class="s2">&quot;myrepo&quot;</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="s2">&quot;myorg&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">url</span> <span class="o">==</span> <span class="s2">&quot;https://github.com/myorg/myrepo&quot;</span>
+
+<div class="viewcode-block" id="TestNameAvailability.test_is_available_on_pypi_existing_package">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestNameAvailability.test_is_available_on_pypi_existing_package">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_is_available_on_pypi_existing_package</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mock: package exists on PyPI → not available.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_available_on_pypi</span>
+
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.http_get_json&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{}}):</span>
+            <span class="k">assert</span> <span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">&quot;some-package&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TestNameAvailability.test_is_available_on_pypi_nonexistent_package">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestNameAvailability.test_is_available_on_pypi_nonexistent_package">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_is_available_on_pypi_nonexistent_package</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mock: package not on PyPI → available.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_available_on_pypi</span>
+
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.http_get_json&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">&quot;nonexistent-package&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestNameAvailability.test_check_name_availability_valid_name">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestNameAvailability.test_check_name_availability_valid_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_check_name_availability_valid_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mock both PyPI and GitHub checks.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_name_availability</span>
+
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_pypi&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_github&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup._resolve_org&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">&quot;testorg&quot;</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">&quot;goodname&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;goodname&quot;</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;valid_pep508&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pypi_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;github_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pypi_url&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>  <span class="c1"># available, so no URL</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;github_url&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_check_name_availability_taken_on_pypi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_name_availability</span>
+
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_pypi&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_github&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup._resolve_org&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">&quot;testorg&quot;</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">&quot;taken&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pypi_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pypi_url&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;https://pypi.org/project/taken/&quot;</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;github_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_check_name_availability_invalid_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_name_availability</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">&quot;_invalid_name_&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;valid_pep508&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pypi_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;github_available&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_check_names_multiple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_names</span>
+
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_pypi&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup.is_available_on_github&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;wads.project_setup._resolve_org&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">&quot;testorg&quot;</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">check_names</span><span class="p">([</span><span class="s2">&quot;name1&quot;</span><span class="p">,</span> <span class="s2">&quot;name2&quot;</span><span class="p">])</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;name1&quot;</span>
+        <span class="k">assert</span> <span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;name2&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="TestNameCandidates">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestNameCandidates">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestNameCandidates</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test name candidate file operations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_parse_name_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">_parse_name_file</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;names.txt&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;# comment</span><span class="se">\n</span><span class="s2">alpha</span><span class="se">\n\n</span><span class="s2">beta</span><span class="se">\n</span><span class="s2"># another comment</span><span class="se">\n</span><span class="s2">gamma</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="n">_parse_name_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_load_name_candidates_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_name_candidates</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pool.txt&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;aaa</span><span class="se">\n</span><span class="s2">bbb</span><span class="se">\n</span><span class="s2">ccc</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="n">load_name_candidates</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;aaa&quot;</span><span class="p">,</span> <span class="s2">&quot;bbb&quot;</span><span class="p">,</span> <span class="s2">&quot;ccc&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_load_name_candidates_deduplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">project_setup</span>
+
+        <span class="n">pool_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;name_candidates&quot;</span>
+        <span class="n">pool_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+        <span class="p">(</span><span class="n">pool_dir</span> <span class="o">/</span> <span class="s2">&quot;a.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;alpha</span><span class="se">\n</span><span class="s2">beta</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">pool_dir</span> <span class="o">/</span> <span class="s2">&quot;b.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;beta</span><span class="se">\n</span><span class="s2">gamma</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">project_setup</span><span class="p">,</span> <span class="s2">&quot;name_candidates_dir&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">pool_dir</span><span class="p">)</span>
+
+        <span class="c1"># Need to also patch the import in list_name_candidate_files</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">user_dirs</span>
+        <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">user_dirs</span><span class="p">,</span> <span class="s2">&quot;name_candidates_dir&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">pool_dir</span><span class="p">)</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="n">project_setup</span><span class="o">.</span><span class="n">load_name_candidates</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="s2">&quot;alpha&quot;</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="k">assert</span> <span class="s2">&quot;beta&quot;</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="k">assert</span> <span class="s2">&quot;gamma&quot;</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># beta not duplicated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_list_name_candidate_files_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">project_setup</span><span class="p">,</span> <span class="n">user_dirs</span>
+
+        <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">user_dirs</span><span class="p">,</span> <span class="s2">&quot;name_candidates_dir&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;nonexistent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Reimport to pick up the monkeypatch</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">project_setup</span><span class="o">.</span><span class="n">list_name_candidate_files</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">files</span> <span class="o">==</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="TestGitHubOperations">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestGitHubOperations">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestGitHubOperations</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test GitHub-related functions.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_detect_github_username_from_gh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_github_username</span>
+
+        <span class="n">mock_result</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_result</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">mock_result</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="s2">&quot;Logged in to github.com account testuser (oauth_token)&quot;</span>
+
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;subprocess.run&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="n">mock_result</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;shutil.which&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="s2">&quot;/usr/bin/gh&quot;</span><span class="p">):</span>
+                <span class="n">username</span> <span class="o">=</span> <span class="n">detect_github_username</span><span class="p">()</span>
+                <span class="k">assert</span> <span class="n">username</span> <span class="o">==</span> <span class="s2">&quot;testuser&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_detect_github_username_from_git_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_github_username</span>
+
+        <span class="c1"># gh not installed</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">mock_which</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s2">&quot;gh&quot;</span> <span class="k">else</span> <span class="s2">&quot;/usr/bin/git&quot;</span>
+
+        <span class="n">mock_result</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
+        <span class="n">mock_result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mock_result</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="s2">&quot;gituser</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;shutil.which&quot;</span><span class="p">,</span> <span class="n">side_effect</span><span class="o">=</span><span class="n">mock_which</span><span class="p">),</span>
+            <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;subprocess.run&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="n">mock_result</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="n">detect_github_username</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">username</span> <span class="o">==</span> <span class="s2">&quot;gituser&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_require_gh_raises_when_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">_require_gh</span>
+
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s2">&quot;shutil.which&quot;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">EnvironmentError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">&quot;GitHub CLI&quot;</span><span class="p">):</span>
+                <span class="n">_require_gh</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="TestCreateMiscDocs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_project_setup.html#wads.tests.test_project_setup.TestCreateMiscDocs">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCreateMiscDocs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test dev docs creation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_creates_default_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_misc_docs</span>
+
+        <span class="n">created</span> <span class="o">=</span> <span class="n">create_misc_docs</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">created</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+
+        <span class="n">docs_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;misc&quot;</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span>
+        <span class="k">assert</span> <span class="n">docs_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">docs_dir</span> <span class="o">/</span> <span class="s2">&quot;research.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">docs_dir</span> <span class="o">/</span> <span class="s2">&quot;design.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">docs_dir</span> <span class="o">/</span> <span class="s2">&quot;roadmap.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_creates_custom_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_misc_docs</span>
+
+        <span class="n">created</span> <span class="o">=</span> <span class="n">create_misc_docs</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">),</span> <span class="n">sections</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;api&quot;</span><span class="p">,</span> <span class="s2">&quot;architecture&quot;</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">created</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;misc&quot;</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span> <span class="o">/</span> <span class="s2">&quot;api.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;misc&quot;</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span> <span class="o">/</span> <span class="s2">&quot;architecture.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_skips_existing_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.project_setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_misc_docs</span>
+
+        <span class="c1"># Create one file first</span>
+        <span class="n">docs_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;misc&quot;</span> <span class="o">/</span> <span class="s2">&quot;docs&quot;</span>
+        <span class="n">docs_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">docs_dir</span> <span class="o">/</span> <span class="s2">&quot;research.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;existing content&quot;</span><span class="p">)</span>
+
+        <span class="n">created</span> <span class="o">=</span> <span class="n">create_misc_docs</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+        <span class="c1"># Should only create design.md and roadmap.md</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">created</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="c1"># Existing file should be untouched</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">docs_dir</span> <span class="o">/</span> <span class="s2">&quot;research.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;existing content&quot;</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
