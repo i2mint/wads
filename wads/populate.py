@@ -27,6 +27,7 @@ from wads import (
     wads_configs_file,
     # New stuff:
     github_ci_publish_2025_path,
+    github_ci_uv_path,
     editorconfig_tpl_path,
     bug_report_tpl_path,
     feature_request_tpl_path,
@@ -918,7 +919,7 @@ def _resolve_ci_def_and_tpl_path(
                 ci_tpl_path = github_ci_tpl_deploy_path
             else:  # project_type == 'lib', etc.
                 print(f"project_type is {project_type}")
-                ci_tpl_path = github_ci_publish_2025_path
+                ci_tpl_path = github_ci_uv_path
         elif version_control_system == "gitlab":
             ci_tpl_path = gitlab_ci_tpl_path
         else:

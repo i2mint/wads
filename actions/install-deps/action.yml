@@ -35,12 +35,18 @@ runs:
       shell: bash
       run: |
         set -e
-        echo "::group::Pip Installation Log"
-        echo "Upgrading pip"
-        python -m pip install --upgrade pip
+        echo "::group::Package Installation Log"
 
-        echo "Installing packages: ${{ inputs.pypi-packages }}"
-        python -m pip install ${{ inputs.pypi-packages }}
+        if command -v uv &> /dev/null; then
+          echo "Using uv for package installation"
+          echo "Installing packages: ${{ inputs.pypi-packages }}"
+          uv pip install --system ${{ inputs.pypi-packages }}
+        else
+          echo "Upgrading pip"
+          python -m pip install --upgrade pip
+          echo "Installing packages: ${{ inputs.pypi-packages }}"
+          python -m pip install ${{ inputs.pypi-packages }}
+        fi
 
         echo "Installed package versions:"
         python -m pip list | grep -E "$(echo ${{ inputs.pypi-packages }} | tr ' ' '|')" || true
@@ -74,7 +80,15 @@ runs:
       run: |
         set -e
         echo "::group::Dependencies Installation Log"
-        python -m pip install --upgrade pip
+
+        # Detect if uv is available for faster installs
+        if command -v uv &> /dev/null; then
+          echo "Using uv for dependency installation"
+          INSTALL_CMD="uv pip install --system"
+        else
+          python -m pip install --upgrade pip
+          INSTALL_CMD="python -m pip install"
+        fi
 
         IFS=',' read -ra paths <<< "${{ inputs.dependency-files }}"
         for path in "${paths[@]}"; do
@@ -82,14 +96,14 @@ runs:
 
           if [[ $path == *.txt ]]; then
             echo "Installing from requirements file: $path"
-            python -m pip install -r "$path"
+            $INSTALL_CMD -r "$path"
 
           elif [[ $path == *.toml ]]; then
             echo "Installing from pyproject.toml: $path"
             if [ -n "${{ inputs.extras }}" ]; then
-              python -m pip install -e ".[${{ inputs.extras }}]"
+              $INSTALL_CMD -e ".[${{ inputs.extras }}]"
             else
-              python -m pip install -e .
+              $INSTALL_CMD -e .
             fi
 
           elif [[ $path == *.cfg ]]; then
@@ -99,11 +113,15 @@ runs:
               isee install-requires
               isee tests-require || true
             else
-              python -m pip install -e .
+              $INSTALL_CMD -e .
             fi
           fi
         done
 
         echo "Installed Python packages:"
-        python -m pip list
+        if command -v uv &> /dev/null; then
+          uv pip list --system
+        else
+          python -m pip list
+        fi
         echo "::endgroup::"

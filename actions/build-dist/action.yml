@@ -34,15 +34,33 @@ runs:
       shell: bash
       run: |
         set -e
-        
-        build_args="--output-dir=${{ inputs.output-dir }}"
-        
-        if [ "${{ inputs.sdist }}" = "false" ]; then
-          build_args="$build_args --no-sdist"
+
+        if command -v uv &> /dev/null; then
+          echo "Using uv for build"
+          build_args="--out-dir ${{ inputs.output-dir }}"
+
+          if [ "${{ inputs.sdist }}" = "false" ]; then
+            build_args="$build_args --no-sdist"
+          fi
+
+          if [ "${{ inputs.wheel }}" = "false" ]; then
+            build_args="$build_args --no-wheel"
+          fi
+
+          uv build $build_args
+        else
+          build_args="--output-dir=${{ inputs.output-dir }}"
+
+          if [ "${{ inputs.sdist }}" = "false" ]; then
+            build_args="$build_args --no-sdist"
+          fi
+
+          if [ "${{ inputs.wheel }}" = "false" ]; then
+            build_args="$build_args --no-wheel"
+          fi
+
+          python3 -m wads.scripts.build_dist $build_args
         fi
-        
-        if [ "${{ inputs.wheel }}" = "false" ]; then
-          build_args="$build_args --no-wheel"
-        fi
-        
-        python3 -m wads.scripts.build_dist $build_args
+
+        echo "Built distributions:"
+        ls -la ${{ inputs.output-dir }}/

@@ -58,6 +58,7 @@ from wads import (
     pyproject_toml_tpl_path,
     github_ci_tpl_publish_path,
     github_ci_publish_2025_path,
+    github_ci_uv_path,
 )
 
 
@@ -738,6 +739,80 @@ def migrate_github_ci_old_to_new(
     return result
 
 
+def migrate_ci_to_uv(
+    old_ci: Union[str, Path],
+    *,
+    defaults: Optional[dict] = None,
+):
+    """Migrate a CI workflow (old or 2025 format) to the uv-based template.
+
+    Since the uv template reads all configuration from pyproject.toml
+    (via the read-ci-config action), the migration is straightforward:
+    replace the workflow file with the uv template.
+
+    Args:
+        old_ci: Path to the existing CI workflow file, or its content as a string.
+        defaults: Optional dict with 'project_name' if it cannot be extracted
+            from the old CI file.
+
+    Returns:
+        The uv CI template content as a string.
+
+    Example:
+        >>> result = migrate_ci_to_uv('name: CI\\non: push')
+        >>> 'astral-sh/setup-uv' in result
+        True
+        >>> 'uv build' in result
+        True
+    """
+    if defaults is None:
+        defaults = {}
+
+    # Read old CI content (for analysis/warnings only)
+    if isinstance(old_ci, Path):
+        old_ci = str(old_ci)
+
+    if os.path.isfile(old_ci):
+        with open(old_ci, "r") as f:
+            old_content = f.read()
+    else:
+        old_content = old_ci
+
+    # Load uv template
+    new_template = _load_ci_template(github_ci_uv_path)
+
+    # Analyze old CI for migration warnings
+    warnings = []
+    if "setuptools" in old_content.lower():
+        warnings.append(
+            "Old CI uses setuptools - ensure pyproject.toml with "
+            "[tool.wads.ci] is ready"
+        )
+    if "pylint" in old_content.lower():
+        warnings.append("Old CI uses pylint - new CI uses ruff for linting")
+    if "PYPI_USERNAME" in old_content and "UV_PUBLISH_TOKEN" not in old_content:
+        warnings.append(
+            "PyPI auth changed: set secrets.PYPI_PASSWORD to a PyPI API token "
+            "(uv publish uses UV_PUBLISH_TOKEN, mapped from PYPI_PASSWORD)"
+        )
+    if "setup.cfg" in old_content:
+        warnings.append(
+            "Old CI references setup.cfg - ensure project is migrated to "
+            "pyproject.toml first (use: wads-migrate setup-to-pyproject)"
+        )
+
+    result = new_template
+
+    # Add warnings as comments if any
+    if warnings:
+        warning_text = "\n".join(f"# MIGRATION NOTE: {w}" for w in warnings)
+        lines = result.split("\n")
+        lines.insert(1, warning_text)
+        result = "\n".join(lines)
+
+    return result
+
+
 def main():
     """CLI entry point for wads migration tools."""
     import argparse
@@ -761,9 +836,9 @@ def main():
         help="Output file path (default: pyproject.toml)",
     )
 
-    # Old CI -> New CI
+    # Old CI -> New CI (2025)
     ci_parser = subparsers.add_parser(
-        "ci-old-to-new", help="Convert old GitHub CI workflow to new format"
+        "ci-old-to-new", help="Convert old GitHub CI workflow to 2025 format"
     )
     ci_parser.add_argument("input", help="Path to old CI workflow file")
     ci_parser.add_argument(
@@ -771,6 +846,19 @@ def main():
     )
     ci_parser.add_argument(
         "--project-name", help="Project name (if not in old CI file)"
+    )
+
+    # Any CI -> uv CI
+    uv_parser = subparsers.add_parser(
+        "ci-to-uv",
+        help="Convert any CI workflow (old or 2025) to uv-based format",
+    )
+    uv_parser.add_argument(
+        "input",
+        help="Path to existing CI workflow file",
+    )
+    uv_parser.add_argument(
+        "-o", "--output", help="Output file path (default: print to stdout)"
     )
 
     args = parser.parse_args()
@@ -823,6 +911,31 @@ def main():
                 print(f"✓ Migrated {input_path} -> {output_path}")
             else:
                 print(result)
+
+        elif args.command == "ci-to-uv":
+            # Handle input path
+            input_path = Path(args.input)
+            if not input_path.exists():
+                print(f"Error: {input_path} not found", file=sys.stderr)
+                sys.exit(1)
+
+            # Perform migration
+            result = migrate_ci_to_uv(str(input_path))
+
+            # Write output
+            if args.output:
+                output_path = Path(args.output)
+                with open(output_path, "w") as f:
+                    f.write(result)
+                print(f"✓ Migrated {input_path} -> {output_path}")
+            else:
+                print(result)
+
+            print(
+                "\nNote: Ensure your pyproject.toml has a [tool.wads.ci] section "
+                "and that secrets.PYPI_PASSWORD is a PyPI API token.",
+                file=sys.stderr,
+            )
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

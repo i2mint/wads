@@ -29,6 +29,8 @@ github_ci_tpl_deploy_path = rjoin(data_dir, "github_ci_tpl_deploy.yml")
 github_ci_tpl_publish_path = rjoin(data_dir, "github_ci_tpl_publish.yml")
 # New CI workflow for 2025:
 github_ci_publish_2025_path = rjoin(data_dir, "github_ci_publish_2025.yml")
+# UV-based CI workflow (modern default):
+github_ci_uv_path = rjoin(data_dir, "github_ci_uv.yml")
 bug_report_tpl_path = rjoin(data_dir, "bug_report_tpl.md")
 feature_request_tpl_path = rjoin(data_dir, "feature_request_tpl.md")
 pull_request_template_tpl_path = rjoin(data_dir, "pull_request_template_tpl.md")

@@ -65,6 +65,12 @@ class CIConfig:
         """Get the project name for CI."""
         return self._project_name
 
+    # 🔧 INSTALLER CONFIGURATION
+    @property
+    def installer(self) -> str:
+        """Get the package installer to use in CI ('uv' or 'pip')."""
+        return self.ci_config.get("installer", "uv")
+
     # ⚙️ EXECUTION FLOW AND COMMANDS
     @property
     def commands_pre_test(self) -> list[str]:

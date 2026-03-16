@@ -86,6 +86,9 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("build-sdist", config.build_sdist)
         _set_output("build-wheel", config.build_wheel)
 
+        # Installer configuration
+        _set_output("installer", config.installer)
+
         # Metrics configuration
         _set_output("metrics-enabled", config.metrics_enabled)
         _set_output("metrics-config-path", config.metrics_config_path)
