@@ -59,7 +59,9 @@ jobs:
           enable-cache: true
 
       - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
+        run: |
+          uv python install ${{ matrix.python-version }}
+          uv venv --python ${{ matrix.python-version }}
 
       - name: Install System Dependencies
         uses: i2mint/wads/actions/install-system-deps@master
@@ -68,7 +70,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          uv pip install --system -e ".[dev,test]"
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
 
       - name: Format Source Code
         run: uvx ruff format .
@@ -78,6 +81,7 @@ jobs:
 
       - name: Run Tests
         run: |
+          source .venv/bin/activate
           PYTEST_ARGS="${{ needs.setup.outputs.pytest-args }}"
           EXCLUDE="${{ needs.setup.outputs.exclude-paths }}"
           COVERAGE="${{ needs.setup.outputs.coverage-enabled }}"
@@ -87,7 +91,7 @@ jobs:
 
           # Add coverage flags
           if [ "$COVERAGE" = "true" ]; then
-            uv pip install --system pytest-cov
+            uv pip install pytest-cov
             CMD="$CMD --cov=$ROOT_DIR --cov-report=term-missing"
           fi
 
@@ -108,9 +112,6 @@ jobs:
           if [ -n "$PYTEST_ARGS" ]; then
             CMD="$CMD $PYTEST_ARGS"
           fi
-
-          # Add root dir
-          CMD="$CMD $ROOT_DIR"
 
           echo "Running: $CMD"
           eval $CMD
@@ -143,7 +144,9 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        run: uv python install ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+        run: |
+          uv python install ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+          uv venv
 
       - name: Install System Dependencies
         uses: i2mint/wads/actions/install-system-deps@master
@@ -152,12 +155,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          uv pip install --system -e ".[dev,test]"
+          .venv\Scripts\activate
+          uv pip install -e ".[dev]"
 
       - name: Run tests
         id: test
         continue-on-error: true
-        run: pytest
+        run: |
+          .venv\Scripts\activate
+          pytest
 
       - name: Report test results
         if: always()

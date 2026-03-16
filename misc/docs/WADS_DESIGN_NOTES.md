@@ -56,7 +56,7 @@ These actions exist primarily to wrap `pip install X && X` patterns. With uv, th
 
 | Action | uv replacement | Notes |
 |--------|---------------|-------|
-| `install-deps/` | `uv pip install -e ".[dev,test]"` | The most complex action, but uv makes it trivial |
+| `install-deps/` | `uv pip install -e ".[dev]"` (in a venv) | The most complex action, but uv makes it trivial |
 | `ruff-format/` | `uvx ruff format .` | 4 lines of YAML → 1 line |
 | `ruff-lint/` | `uvx ruff check` | Same |
 | `run-tests/` | `uv run pytest [args]` | Pytest arg building could move to a script if needed |

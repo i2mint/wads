@@ -7,7 +7,7 @@ This guide covers migrating wads-managed projects to the new uv-based CI templat
 | Before (2025 template) | After (uv template) |
 |------------------------|---------------------|
 | `actions/setup-python@v6` | `astral-sh/setup-uv@v5` + `uv python install` |
-| `install-deps` action (pip) | `uv pip install -e ".[dev,test]"` |
+| `install-deps` action (pip) | `uv pip install -e ".[dev]"` (in a venv) |
 | `ruff-format` action | `uvx ruff format .` |
 | `ruff-lint` action | `uvx ruff check --output-format=github` |
 | `run-tests` action | `python -m pytest` (inline) |
@@ -75,9 +75,9 @@ run: uv publish dist/*
 
 The `astral-sh/setup-uv@v5` action handles uv installation. If Python installation fails, check that your `python_versions` in `[tool.wads.ci.testing]` use valid version strings (e.g., `"3.10"`, `"3.12"`).
 
-### `uv pip install -e ".[dev,test]"` fails
+### `uv pip install -e ".[dev]"` fails
 
-Ensure your `pyproject.toml` has `[project.optional-dependencies]` sections for `dev` and `test`. If your project doesn't use extras, the CI template can be customized.
+Ensure your `pyproject.toml` has a `[project.optional-dependencies]` section for `dev`. The `dev` extra should include pytest, pytest-cov, and ruff. If your project doesn't use extras, the CI template can be customized.
 
 ### `uv publish` authentication error
 

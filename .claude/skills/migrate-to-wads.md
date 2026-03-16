@@ -185,7 +185,7 @@ testpaths = ["tonal/tests"]  # or just ["tests"] if at top level
 
 ### 7. Verify
 
-1. **Local test**: `pip install -e ".[dev,test]" && pytest`
+1. **Local test**: `pip install -e ".[dev]" && pytest`
 2. **Push to non-main branch** to trigger CI validation without publishing
 3. **Check CI results** - look for:
    - Missing dependencies (ImportError in test output)
