@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.66 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/package_module.html">wads.package_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/trans.html">wads.trans</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_uv_workflow_template</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_uv_workflow_template</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Test the github_ci_uv.yml workflow template.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestUvWorkflowTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the uv-based CI workflow template structure and validity.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.template_path">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.template_path">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to the uv workflow template.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;github_ci_uv.yml&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.template_content">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.template_content">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_content</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the template file content.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">template_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.template_data">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.template_data">[docs]</a>
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">template_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the template as YAML.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">template_content</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_template_file_exists">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_file_exists">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_file_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the template file exists.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">template_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">template_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_template_is_valid_yaml">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_is_valid_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_is_valid_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template is valid YAML.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">template_content</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_template_has_required_structure">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_has_required_structure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_required_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template has required top-level structure.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="k">assert</span> <span class="kc">True</span> <span class="ow">in</span> <span class="n">template_data</span> <span class="ow">or</span> <span class="s2">&quot;on&quot;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="k">assert</span> <span class="s2">&quot;jobs&quot;</span> <span class="ow">in</span> <span class="n">template_data</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_template_has_required_jobs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_has_required_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_required_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template has all required jobs.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;setup&quot;</span><span class="p">,</span> <span class="s2">&quot;validation&quot;</span><span class="p">,</span> <span class="s2">&quot;publish&quot;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing required job: </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_template_has_optional_jobs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_has_optional_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_template_has_optional_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template includes optional jobs.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;windows-validation&quot;</span><span class="p">,</span> <span class="s2">&quot;github-pages&quot;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing optional job: </span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+    <span class="c1"># --- uv-specific tests ---</span>
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_setup_uv_action">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_setup_uv_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_setup_uv_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses astral-sh/setup-uv action.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;astral-sh/setup-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_setup_python_action">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_setup_python_action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_does_not_use_setup_python_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use actions/setup-python.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;actions/setup-python&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_python_install">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_python_install">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_python_install</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv python install&#39; instead of setup-python.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv python install&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_pip_install">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_pip_install">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_pip_install</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv pip install&#39; for dependencies.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv pip install&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uvx_ruff">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uvx_ruff">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uvx_ruff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uvx ruff&#39; for formatting and linting.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;uvx ruff format&quot;</span> <span class="ow">in</span> <span class="n">template_content</span>
+        <span class="k">assert</span> <span class="s2">&quot;uvx ruff check&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_build">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv build&#39; for distribution building.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv build&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_publish">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_publish">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv publish&#39; for PyPI upload.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv publish&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_publish_token">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_publish_token">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_publish_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish uses UV_PUBLISH_TOKEN env var.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;UV_PUBLISH_TOKEN&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_twine">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_twine">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_does_not_use_twine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use twine.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;twine&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_pip_directly">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_pip_directly">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_does_not_use_pip_directly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use &#39;python -m pip&#39;.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;python -m pip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_python_m_build">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_python_m_build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_does_not_use_python_m_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use &#39;python -m build&#39;.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;python -m build&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+    <span class="c1"># --- Structural tests (same as 2025 template) ---</span>
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_setup_job_has_outputs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_has_outputs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_setup_job_has_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test setup job has correct outputs.&quot;&quot;&quot;</span>
+        <span class="n">setup_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;setup&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;outputs&quot;</span> <span class="ow">in</span> <span class="n">setup_job</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">setup_job</span><span class="p">[</span><span class="s2">&quot;outputs&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;project-name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;python-versions&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pytest-args&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;coverage-enabled&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;test-on-windows&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;build-sdist&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;build-wheel&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing output: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_setup_job_uses_read_ci_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that setup job uses read-ci-config action.&quot;&quot;&quot;</span>
+        <span class="n">setup_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;setup&quot;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">setup_job</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span>
+        <span class="n">config_step</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;config&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="s2">&quot;i2mint/wads/actions/read-ci-config@master&quot;</span> <span class="ow">in</span> <span class="n">config_step</span><span class="p">[</span><span class="s2">&quot;uses&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_validation_job_uses_matrix">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_validation_job_uses_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_uses_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that validation job uses matrix strategy.&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;validation&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;matrix&quot;</span> <span class="ow">in</span> <span class="n">validation_job</span><span class="p">[</span><span class="s2">&quot;strategy&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;python-version&quot;</span> <span class="ow">in</span> <span class="n">validation_job</span><span class="p">[</span><span class="s2">&quot;strategy&quot;</span><span class="p">][</span><span class="s2">&quot;matrix&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_conditional">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_conditional">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_conditional</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish job only runs on main/master.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;publish&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;if&quot;</span> <span class="ow">in</span> <span class="n">publish_job</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">publish_job</span><span class="p">[</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;github.ref&quot;</span> <span class="ow">in</span> <span class="n">condition</span>
+        <span class="k">assert</span> <span class="s2">&quot;master&quot;</span> <span class="ow">in</span> <span class="n">condition</span> <span class="ow">or</span> <span class="s2">&quot;main&quot;</span> <span class="ow">in</span> <span class="n">condition</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_has_key_steps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_has_key_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_has_key_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish job has version, build, and publish steps.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;publish&quot;</span><span class="p">]</span>
+        <span class="n">step_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">publish_job</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]]</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;version&quot;</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">step_names</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;build&quot;</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">step_names</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;publish&quot;</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;pypi&quot;</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">step_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_windows_validation_is_conditional">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_windows_validation_is_conditional">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_conditional</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that Windows validation checks test-on-windows.&quot;&quot;&quot;</span>
+        <span class="n">windows_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;windows-validation&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;if&quot;</span> <span class="ow">in</span> <span class="n">windows_job</span>
+        <span class="k">assert</span> <span class="s2">&quot;test-on-windows&quot;</span> <span class="ow">in</span> <span class="n">windows_job</span><span class="p">[</span><span class="s2">&quot;if&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_windows_validation_is_non_blocking">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_windows_validation_is_non_blocking">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_non_blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that Windows validation has continue-on-error.&quot;&quot;&quot;</span>
+        <span class="n">windows_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;windows-validation&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">windows_job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;continue-on-error&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_job_dependencies">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_job_dependencies">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_job_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that job dependencies form a valid DAG.&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;setup&quot;</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span>
+        <span class="n">needs</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">&quot;publish&quot;</span><span class="p">][</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">needs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="s2">&quot;validation&quot;</span> <span class="ow">in</span> <span class="n">needs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">needs</span> <span class="o">==</span> <span class="s2">&quot;validation&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;setup&quot;</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">&quot;windows-validation&quot;</span><span class="p">][</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_validation_job_still_uses_install_system_deps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_validation_job_still_uses_install_system_deps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_validation_job_still_uses_install_system_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that install-system-deps action is still used (not replaced by uv).&quot;&quot;&quot;</span>
+        <span class="n">validation_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;validation&quot;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">validation_job</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span>
+        <span class="n">action_uses</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uses&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="s2">&quot;uses&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;install-system-deps&quot;</span> <span class="ow">in</span> <span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">action_uses</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_still_uses_git_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that git-commit and git-tag actions are still used.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;publish&quot;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">publish_job</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span>
+        <span class="n">action_uses</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uses&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="s2">&quot;uses&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;git-commit&quot;</span> <span class="ow">in</span> <span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">action_uses</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;git-tag&quot;</span> <span class="ow">in</span> <span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">action_uses</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_still_uses_bump_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that bump-version-number action is still used.&quot;&quot;&quot;</span>
+        <span class="n">publish_job</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;publish&quot;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">publish_job</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span>
+        <span class="n">action_uses</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uses&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="s2">&quot;uses&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;bump-version-number&quot;</span> <span class="ow">in</span> <span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">action_uses</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestUvMigration">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvMigration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestUvMigration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the CI migration to uv function.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestUvMigration.test_migrate_ci_to_uv_returns_uv_template">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_returns_uv_template">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_to_uv_returns_uv_template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that migrate_ci_to_uv returns the uv template content.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_ci_to_uv</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s2">&quot;name: CI</span><span class="se">\n</span><span class="s2">on: push&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;astral-sh/setup-uv&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv build&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+        <span class="k">assert</span> <span class="s2">&quot;uv publish&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_to_uv_adds_setuptools_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that migration adds warning for setuptools-based projects.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_ci_to_uv</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s2">&quot;name: CI</span><span class="se">\n</span><span class="s2">run: setuptools build&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;MIGRATION NOTE&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+        <span class="k">assert</span> <span class="s2">&quot;setuptools&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_to_uv_adds_pypi_auth_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that migration warns about PyPI auth changes.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_ci_to_uv</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s2">&quot;name: CI</span><span class="se">\n</span><span class="s2">PYPI_USERNAME: __token__&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;MIGRATION NOTE&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+        <span class="k">assert</span> <span class="s2">&quot;PYPI_PASSWORD&quot;</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">or</span> <span class="s2">&quot;UV_PUBLISH_TOKEN&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="TestUvMigration.test_migrate_ci_to_uv_from_file">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_from_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_migrate_ci_to_uv_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test migration from an actual file.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_ci_to_uv</span>
+
+        <span class="n">ci_file</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;ci.yml&quot;</span>
+        <span class="n">ci_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;name: CI</span><span class="se">\n</span><span class="s2">on: push</span><span class="se">\n</span><span class="s2">jobs: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ci_file</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="s2">&quot;astral-sh/setup-uv&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestCIConfigInstaller">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigInstaller">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCIConfigInstaller</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the installer property on CIConfig.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestCIConfigInstaller.test_installer_defaults_to_uv">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigInstaller.test_installer_defaults_to_uv">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_installer_defaults_to_uv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that installer defaults to &#39;uv&#39;.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}})</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span> <span class="o">==</span> <span class="s2">&quot;uv&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigInstaller.test_installer_reads_from_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigInstaller.test_installer_reads_from_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_installer_reads_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that installer reads from tool.wads.ci.installer.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;installer&quot;</span><span class="p">:</span> <span class="s2">&quot;pip&quot;</span><span class="p">}}},</span>
+        <span class="p">}</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span> <span class="o">==</span> <span class="s2">&quot;pip&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigInstaller.test_installer_uv_from_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigInstaller.test_installer_uv_from_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_installer_uv_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test explicit uv installer config.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;installer&quot;</span><span class="p">:</span> <span class="s2">&quot;uv&quot;</span><span class="p">}}},</span>
+        <span class="p">}</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span> <span class="o">==</span> <span class="s2">&quot;uv&quot;</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

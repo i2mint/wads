@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.65 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -79,6 +79,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/trans.html">wads.trans</a></li>
@@ -170,6 +171,7 @@
     <span class="n">pyproject_toml_tpl_path</span><span class="p">,</span>
     <span class="n">github_ci_tpl_publish_path</span><span class="p">,</span>
     <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
+    <span class="n">github_ci_uv_path</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -862,6 +864,83 @@
 
 
 
+<div class="viewcode-block" id="migrate_ci_to_uv">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.migrate_ci_to_uv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">migrate_ci_to_uv</span><span class="p">(</span>
+    <span class="n">old_ci</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">defaults</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Migrate a CI workflow (old or 2025 format) to the uv-based template.</span>
+
+<span class="sd">    Since the uv template reads all configuration from pyproject.toml</span>
+<span class="sd">    (via the read-ci-config action), the migration is straightforward:</span>
+<span class="sd">    replace the workflow file with the uv template.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old_ci: Path to the existing CI workflow file, or its content as a string.</span>
+<span class="sd">        defaults: Optional dict with &#39;project_name&#39; if it cannot be extracted</span>
+<span class="sd">            from the old CI file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The uv CI template content as a string.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; result = migrate_ci_to_uv(&#39;name: CI\\non: push&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; &#39;astral-sh/setup-uv&#39; in result</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; &#39;uv build&#39; in result</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Read old CI content (for analysis/warnings only)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_ci</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="n">old_ci</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">old_ci</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">old_ci</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">old_content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">old_content</span> <span class="o">=</span> <span class="n">old_ci</span>
+
+    <span class="c1"># Load uv template</span>
+    <span class="n">new_template</span> <span class="o">=</span> <span class="n">_load_ci_template</span><span class="p">(</span><span class="n">github_ci_uv_path</span><span class="p">)</span>
+
+    <span class="c1"># Analyze old CI for migration warnings</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s2">&quot;setuptools&quot;</span> <span class="ow">in</span> <span class="n">old_content</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;Old CI uses setuptools - ensure pyproject.toml with &quot;</span>
+            <span class="s2">&quot;[tool.wads.ci] is ready&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;pylint&quot;</span> <span class="ow">in</span> <span class="n">old_content</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Old CI uses pylint - new CI uses ruff for linting&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;PYPI_USERNAME&quot;</span> <span class="ow">in</span> <span class="n">old_content</span> <span class="ow">and</span> <span class="s2">&quot;UV_PUBLISH_TOKEN&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_content</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;PyPI auth changed: set secrets.PYPI_PASSWORD to a PyPI API token &quot;</span>
+            <span class="s2">&quot;(uv publish uses UV_PUBLISH_TOKEN, mapped from PYPI_PASSWORD)&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;setup.cfg&quot;</span> <span class="ow">in</span> <span class="n">old_content</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;Old CI references setup.cfg - ensure project is migrated to &quot;</span>
+            <span class="s2">&quot;pyproject.toml first (use: wads-migrate setup-to-pyproject)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">new_template</span>
+
+    <span class="c1"># Add warnings as comments if any</span>
+    <span class="k">if</span> <span class="n">warnings</span><span class="p">:</span>
+        <span class="n">warning_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# MIGRATION NOTE: </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">warnings</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">warning_text</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
@@ -887,9 +966,9 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file path (default: pyproject.toml)&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="c1"># Old CI -&gt; New CI</span>
+    <span class="c1"># Old CI -&gt; New CI (2025)</span>
     <span class="n">ci_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
-        <span class="s2">&quot;ci-old-to-new&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Convert old GitHub CI workflow to new format&quot;</span>
+        <span class="s2">&quot;ci-old-to-new&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Convert old GitHub CI workflow to 2025 format&quot;</span>
     <span class="p">)</span>
     <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to old CI workflow file&quot;</span><span class="p">)</span>
     <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -897,6 +976,19 @@
     <span class="p">)</span>
     <span class="n">ci_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--project-name&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Project name (if not in old CI file)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Any CI -&gt; uv CI</span>
+    <span class="n">uv_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">&quot;ci-to-uv&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Convert any CI workflow (old or 2025) to uv-based format&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">uv_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to existing CI workflow file&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">uv_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--output&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file path (default: print to stdout)&quot;</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -949,6 +1041,31 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;ci-to-uv&quot;</span><span class="p">:</span>
+            <span class="c1"># Handle input path</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Perform migration</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">))</span>
+
+            <span class="c1"># Write output</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+                <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Note: Ensure your pyproject.toml has a [tool.wads.ci] section &quot;</span>
+                <span class="s2">&quot;and that secrets.PYPI_PASSWORD is a PyPI API token.&quot;</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>

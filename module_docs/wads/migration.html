@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.65 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -65,6 +65,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_ci_to_uv"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_uv()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
 </ul>
@@ -89,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
@@ -193,6 +195,35 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <dt class="sig sig-object py" id="wads.migration.main">
 <span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/migration.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.main" title="Link to this definition"></a></dt>
 <dd><p>CLI entry point for wads migration tools.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.migrate_ci_to_uv">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_uv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_uv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_uv" title="Link to this definition"></a></dt>
+<dd><p>Migrate a CI workflow (old or 2025 format) to the uv-based template.</p>
+<p>Since the uv template reads all configuration from pyproject.toml
+(via the read-ci-config action), the migration is straightforward:
+replace the workflow file with the uv template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_ci</strong> – Path to the existing CI workflow file, or its content as a string.</p></li>
+<li><p><strong>defaults</strong> – Optional dict with ‘project_name’ if it cannot be extracted
+from the old CI file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The uv CI template content as a string.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s1">&#39;name: CI</span><span class="se">\n</span><span class="s1">on: push&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;astral-sh/setup-uv&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;uv build&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

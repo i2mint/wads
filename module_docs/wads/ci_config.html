@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.65 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,6 +83,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_pre_test_steps"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_pre_test_steps()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_windows_validation_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_windows_validation_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.has_ci_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.installer"><code class="docutils literal notranslate"><span class="pre">CIConfig.installer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_black_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_black_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_mypy_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_mypy_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_ruff_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_ruff_enabled()</span></code></a></li>
@@ -138,6 +139,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trans.html">wads.trans</a></li>
@@ -381,6 +383,12 @@ This is used in the #ENV_VARS# placeholder in CI templates.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.has_ci_config">
 <span class="sig-name descname"><span class="pre">has_ci_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.has_ci_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.has_ci_config" title="Link to this definition"></a></dt>
 <dd><p>Check if any CI configuration is present.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.installer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">installer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#wads.ci_config.CIConfig.installer" title="Link to this definition"></a></dt>
+<dd><p>Get the package installer to use in CI (‘uv’ or ‘pip’).</p>
 </dd></dl>
 
 <dl class="py method">
