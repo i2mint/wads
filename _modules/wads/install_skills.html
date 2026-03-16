@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.install_skills &mdash; wads 0.1.67 documentation</title>
+  <title>wads.install_skills &mdash; wads 0.1.68 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=946d7960"></script>
+      <script src="../../_static/documentation_options.js?v=7c77daa2"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -215,8 +215,10 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
                 <span class="c1"># Show whether current install is a symlink or copy</span>
                 <span class="n">kind</span> <span class="o">=</span> <span class="s2">&quot;symlink&quot;</span> <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;copy&quot;</span>
-                <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Skipping </span><span class="si">{</span><span class="n">skill_name</span><span class="si">}</span><span class="s2"> (already exists as </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;use --force to overwrite)&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;  Skipping </span><span class="si">{</span><span class="n">skill_name</span><span class="si">}</span><span class="s2"> (already exists as </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;use --force to overwrite)&quot;</span>
+                <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="c1"># Remove existing (symlink, dir, or file)</span>
             <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()</span> <span class="ow">or</span> <span class="n">target</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -234,8 +236,10 @@
             <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Copied: /</span><span class="si">{</span><span class="n">skill_name</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">installed</span><span class="p">:</span>
-        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Installed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">installed</span><span class="p">)</span><span class="si">}</span><span class="s2"> skill(s) via &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;symlink&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">use_symlinks</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;copy&#39;</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Installed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">installed</span><span class="p">)</span><span class="si">}</span><span class="s2"> skill(s) via &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;symlink&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">use_symlinks</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;copy&#39;</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
         <span class="n">log</span><span class="p">(</span><span class="s2">&quot;Use /SKILL_NAME in Claude Code to invoke.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">log</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">No new skills to install.&quot;</span><span class="p">)</span>
@@ -254,15 +258,19 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Install wads Claude Code skills to ~/.claude/skills/&quot;</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--list&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;list_skills&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--list&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;list_skills&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List available skills without installing&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--force&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--force&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Overwrite existing skills&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--copy&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--copy&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Copy files instead of creating symlinks (not recommended)&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
