@@ -383,7 +383,8 @@ def compare_ci_workflow(
                                     )
 
             # Check for missing modern features
-            if "tool.ruff" not in str(workflow_data).lower():
+            workflow_str = str(workflow_data).lower()
+            if "ruff" not in workflow_str:
                 recommendations.append(
                     "CI doesn't use ruff for linting - consider modern CI template"
                 )
