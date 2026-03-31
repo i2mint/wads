@@ -172,6 +172,23 @@ After the main setup, offer (don't force) these extras:
 
 4. **Publish to PyPI**: "Would you like to publish to PyPI? (This runs `pack go .`)"
 
+5. **Enable GitHub Pages**: After the initial push (or after the first CI run that creates the `gh-pages` branch), enable Pages so the epythet-generated docs are served. **Do this automatically** — no need to ask, since the CI workflow already includes the `publish-github-pages` job.
+
+   ```bash
+   # Create the gh-pages branch if the CI hasn't run yet
+   gh api repos/ORG/REPONAME/git/refs -X POST \
+     -f ref="refs/heads/gh-pages" \
+     -f sha="$(gh api repos/ORG/REPONAME/git/ref/heads/main --jq '.object.sha')" \
+     2>/dev/null || true
+
+   # Enable Pages to serve from gh-pages branch
+   gh api repos/ORG/REPONAME/pages -X POST \
+     --input - <<< '{"source":{"branch":"gh-pages","path":"/"}}' \
+     2>/dev/null || true
+   ```
+
+   **Why this is needed**: The CI workflow's `github-pages` job (via `i2mint/epythet/actions/publish-github-pages`) pushes built docs to the `gh-pages` branch, but GitHub Pages must be explicitly enabled in repo settings to serve from that branch. Without this step, the docs build succeeds but nothing is published.
+
 ### 7. Save preferences
 
 If this is the user's first time, offer to save detected defaults:
