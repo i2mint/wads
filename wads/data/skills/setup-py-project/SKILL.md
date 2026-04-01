@@ -174,6 +174,12 @@ After the main setup, offer (don't force) these extras:
 
 5. **Enable GitHub Pages**: After the initial push (or after the first CI run that creates the `gh-pages` branch), enable Pages so the epythet-generated docs are served. **Do this automatically** — no need to ask, since the CI workflow already includes the `publish-github-pages` job.
 
+6. **Enable GitHub Discussions**: **Do this automatically** unless the user explicitly asked not to enable discussions.
+
+   ```bash
+   gh repo edit ORG/REPONAME --enable-discussions
+   ```
+
    ```bash
    # Create the gh-pages branch if the CI hasn't run yet
    gh api repos/ORG/REPONAME/git/refs -X POST \
