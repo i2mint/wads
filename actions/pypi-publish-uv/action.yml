@@ -1,0 +1,20 @@
+name: "Publish to PyPI (uv)"
+description: "Publish distribution packages to PyPI using uv"
+
+inputs:
+  pypi-token:
+    description: "PyPI API token"
+    required: true
+  packages-path:
+    description: "Path to packages to upload (glob pattern)"
+    required: false
+    default: "dist/*"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Publish to PyPI
+      shell: bash
+      env:
+        UV_PUBLISH_TOKEN: ${{ inputs.pypi-token }}
+      run: uv publish ${{ inputs.packages-path }}

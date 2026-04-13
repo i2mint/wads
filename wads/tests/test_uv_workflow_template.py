@@ -62,33 +62,41 @@ class TestUvWorkflowTemplate:
         assert "astral-sh/setup-uv" in template_content
 
     def test_does_not_use_setup_python_action(self, template_content):
-        """Test that template does NOT use actions/setup-python."""
-        assert "actions/setup-python" not in template_content
+        """Test that template does NOT use actions/setup-python (the standard GitHub action)."""
+        assert "actions/setup-python@" not in template_content
 
     def test_uses_uv_python_install(self, template_content):
         """Test that template uses 'uv python install' instead of setup-python."""
         assert "uv python install" in template_content
 
-    def test_uses_uv_pip_install(self, template_content):
-        """Test that template uses 'uv pip install' for dependencies."""
-        assert "uv pip install" in template_content
+    def test_uses_uv_actions_for_deps(self, template_content):
+        """Test that template uses install-deps-uv action for dependencies."""
+        assert "install-deps-uv" in template_content
 
     def test_uses_uvx_ruff(self, template_content):
         """Test that template uses 'uvx ruff' for formatting and linting."""
         assert "uvx ruff format" in template_content
         assert "uvx ruff check" in template_content
 
-    def test_uses_uv_build(self, template_content):
-        """Test that template uses 'uv build' for distribution building."""
-        assert "uv build" in template_content
+    def test_uses_uv_actions_for_build(self, template_content):
+        """Test that template uses build-dist-uv action for distribution building."""
+        assert "build-dist-uv" in template_content
 
-    def test_uses_uv_publish(self, template_content):
-        """Test that template uses 'uv publish' for PyPI upload."""
-        assert "uv publish" in template_content
+    def test_uses_uv_actions_for_publish(self, template_content):
+        """Test that template uses pypi-publish-uv action for PyPI upload."""
+        assert "pypi-publish-uv" in template_content
 
-    def test_uses_uv_publish_token(self, template_content):
-        """Test that publish uses UV_PUBLISH_TOKEN env var."""
-        assert "UV_PUBLISH_TOKEN" in template_content
+    def test_uses_uv_actions_for_tests(self, template_content):
+        """Test that template uses run-tests-uv action for testing."""
+        assert "run-tests-uv" in template_content
+
+    def test_uses_uv_actions_for_python_setup(self, template_content):
+        """Test that template uses setup-python-uv action."""
+        assert "setup-python-uv" in template_content
+
+    def test_publish_references_pypi_password(self, template_content):
+        """Test that publish step passes PYPI_PASSWORD secret to action."""
+        assert "PYPI_PASSWORD" in template_content
 
     def test_does_not_use_twine(self, template_content):
         """Test that template does NOT use twine."""
@@ -204,8 +212,8 @@ class TestUvMigration:
 
         result = migrate_ci_to_uv("name: CI\non: push")
         assert "astral-sh/setup-uv" in result
-        assert "uv build" in result
-        assert "uv publish" in result
+        assert "build-dist-uv" in result
+        assert "pypi-publish-uv" in result
 
     def test_migrate_ci_to_uv_adds_setuptools_warning(self):
         """Test that migration adds warning for setuptools-based projects."""

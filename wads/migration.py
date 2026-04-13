@@ -762,7 +762,7 @@ def migrate_ci_to_uv(
         >>> result = migrate_ci_to_uv('name: CI\\non: push')
         >>> 'astral-sh/setup-uv' in result
         True
-        >>> 'uv build' in result
+        >>> 'build-dist-uv' in result
         True
     """
     if defaults is None:

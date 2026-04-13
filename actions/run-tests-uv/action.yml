@@ -1,0 +1,78 @@
+name: "Run Tests (uv)"
+description: "Run pytest tests with doctests using uv virtual environment"
+
+inputs:
+  root-dir:
+    description: "Project root directory (used for --cov target and as default test path)"
+    required: false
+    default: "."
+  pytest-args:
+    description: "Additional arguments to pass to pytest"
+    required: false
+    default: ""
+  exclude-paths:
+    description: "Comma-separated paths to exclude (e.g., 'examples,scrap')"
+    required: false
+    default: ""
+  coverage:
+    description: "Enable coverage reporting"
+    required: false
+    default: "false"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Coverage Plugin
+      if: ${{ inputs.coverage == 'true' }}
+      shell: bash
+      run: |
+        # Activate venv (cross-platform)
+        if [ -f ".venv/bin/activate" ]; then
+          source .venv/bin/activate
+        elif [ -f ".venv/Scripts/activate" ]; then
+          source .venv/Scripts/activate
+        fi
+        uv pip install pytest-cov
+
+    - name: Run Tests
+      shell: bash
+      run: |
+        set -e
+        # Activate venv (cross-platform)
+        if [ -f ".venv/bin/activate" ]; then
+          source .venv/bin/activate
+        elif [ -f ".venv/Scripts/activate" ]; then
+          source .venv/Scripts/activate
+        fi
+
+        CMD="python -m pytest"
+
+        # Add coverage flags
+        if [ "${{ inputs.coverage }}" = "true" ]; then
+          CMD="$CMD --cov=${{ inputs.root-dir }} --cov-report=term-missing"
+        fi
+
+        # Add doctest flags
+        CMD="$CMD --doctest-modules"
+        CMD="$CMD -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL'"
+
+        # Add exclude paths
+        EXCLUDE="${{ inputs.exclude-paths }}"
+        if [ -n "$EXCLUDE" ]; then
+          IFS=',' read -ra PATHS <<< "$EXCLUDE"
+          for path in "${PATHS[@]}"; do
+            path=$(echo "$path" | xargs)
+            if [ -n "$path" ]; then
+              CMD="$CMD --ignore=$path"
+            fi
+          done
+        fi
+
+        # Add extra pytest args
+        PYTEST_ARGS="${{ inputs.pytest-args }}"
+        if [ -n "$PYTEST_ARGS" ]; then
+          CMD="$CMD $PYTEST_ARGS"
+        fi
+
+        echo "Running: $CMD"
+        eval $CMD

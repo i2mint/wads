@@ -59,9 +59,9 @@ jobs:
           enable-cache: true
 
       - name: Set up Python ${{ matrix.python-version }}
-        run: |
-          uv python install ${{ matrix.python-version }}
-          uv venv --python ${{ matrix.python-version }}
+        uses: i2mint/wads/actions/setup-python-uv@master
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install System Dependencies
         uses: i2mint/wads/actions/install-system-deps@master
@@ -69,9 +69,7 @@ jobs:
           pyproject-path: .
 
       - name: Install Dependencies
-        run: |
-          source .venv/bin/activate
-          uv pip install -e ".[dev]"
+        uses: i2mint/wads/actions/install-deps-uv@master
 
       - name: Format Source Code
         run: uvx ruff format .
@@ -80,41 +78,12 @@ jobs:
         run: uvx ruff check --output-format=github ${{ needs.setup.outputs.project-name }}
 
       - name: Run Tests
-        run: |
-          source .venv/bin/activate
-          PYTEST_ARGS="${{ needs.setup.outputs.pytest-args }}"
-          EXCLUDE="${{ needs.setup.outputs.exclude-paths }}"
-          COVERAGE="${{ needs.setup.outputs.coverage-enabled }}"
-          ROOT_DIR="${{ needs.setup.outputs.project-name }}"
-
-          CMD="python -m pytest"
-
-          # Add coverage flags
-          if [ "$COVERAGE" = "true" ]; then
-            uv pip install pytest-cov
-            CMD="$CMD --cov=$ROOT_DIR --cov-report=term-missing"
-          fi
-
-          # Add doctest flags
-          CMD="$CMD --doctest-modules"
-          CMD="$CMD -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL'"
-
-          # Add exclude paths
-          if [ -n "$EXCLUDE" ]; then
-            IFS=',' read -ra PATHS <<< "$EXCLUDE"
-            for path in "${PATHS[@]}"; do
-              path=$(echo "$path" | xargs)
-              CMD="$CMD --ignore=$path"
-            done
-          fi
-
-          # Add extra pytest args
-          if [ -n "$PYTEST_ARGS" ]; then
-            CMD="$CMD $PYTEST_ARGS"
-          fi
-
-          echo "Running: $CMD"
-          eval $CMD
+        uses: i2mint/wads/actions/run-tests-uv@master
+        with:
+          root-dir: ${{ needs.setup.outputs.project-name }}
+          pytest-args: ${{ needs.setup.outputs.pytest-args }}
+          exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
+          coverage: ${{ needs.setup.outputs.coverage-enabled }}
 
       - name: Track Code Metrics
         if: needs.setup.outputs.metrics-enabled == 'true'
@@ -144,9 +113,9 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        run: |
-          uv python install ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
-          uv venv
+        uses: i2mint/wads/actions/setup-python-uv@master
+        with:
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
 
       - name: Install System Dependencies
         uses: i2mint/wads/actions/install-system-deps@master
@@ -154,27 +123,12 @@ jobs:
           pyproject-path: .
 
       - name: Install Dependencies
-        run: |
-          .venv\Scripts\activate
-          uv pip install -e ".[dev]"
+        uses: i2mint/wads/actions/install-deps-uv@master
 
-      - name: Run tests
-        id: test
-        continue-on-error: true
-        run: |
-          .venv\Scripts\activate
-          pytest
-
-      - name: Report test results
-        if: always()
-        run: |
-          if ("${{ steps.test.outcome }}" -eq "failure") {
-            echo "::warning::Windows tests failed but workflow continues"
-            echo "## ⚠️ Windows Tests Failed" >> $env:GITHUB_STEP_SUMMARY
-            echo "Tests failed on Windows but this is informational only." >> $env:GITHUB_STEP_SUMMARY
-          } else {
-            echo "## ✅ Windows Tests Passed" >> $env:GITHUB_STEP_SUMMARY
-          }
+      - name: Run Tests
+        uses: i2mint/wads/actions/run-tests-uv@master
+        with:
+          root-dir: ${{ needs.setup.outputs.project-name }}
 
   # Publishing job
   publish:
@@ -195,7 +149,10 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Set up Python
-        run: uv python install ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+        uses: i2mint/wads/actions/setup-python-uv@master
+        with:
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+          create-venv: "false"
 
       - name: Format Source Code
         run: uvx ruff format .
@@ -205,24 +162,18 @@ jobs:
         uses: i2mint/isee/actions/bump-version-number@master
 
       - name: Build Distribution
-        run: |
-          BUILD_ARGS=""
-          if [ "${{ needs.setup.outputs.build-sdist }}" = "false" ]; then
-            BUILD_ARGS="$BUILD_ARGS --no-sdist"
-          fi
-          if [ "${{ needs.setup.outputs.build-wheel }}" = "false" ]; then
-            BUILD_ARGS="$BUILD_ARGS --no-wheel"
-          fi
-          uv build $BUILD_ARGS
+        uses: i2mint/wads/actions/build-dist-uv@master
+        with:
+          sdist: ${{ needs.setup.outputs.build-sdist }}
+          wheel: ${{ needs.setup.outputs.build-wheel }}
 
       - name: Publish to PyPI
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
-        run: uv publish dist/*
+        uses: i2mint/wads/actions/pypi-publish-uv@master
+        with:
+          pypi-token: ${{ secrets.PYPI_PASSWORD }}
 
       - name: Force SSH for git remote
-        run: |
-          git remote set-url origin git@github.com:${{ github.repository }}.git
+        run: git remote set-url origin git@github.com:${{ github.repository }}.git
 
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master

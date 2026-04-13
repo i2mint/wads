@@ -1,0 +1,30 @@
+name: "Build Distribution (uv)"
+description: "Build Python distribution packages using uv"
+
+inputs:
+  sdist:
+    description: "Build source distribution"
+    required: false
+    default: "true"
+  wheel:
+    description: "Build wheel distribution"
+    required: false
+    default: "true"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build Distribution
+      shell: bash
+      run: |
+        set -e
+        BUILD_ARGS=""
+        if [ "${{ inputs.sdist }}" = "false" ]; then
+          BUILD_ARGS="$BUILD_ARGS --no-sdist"
+        fi
+        if [ "${{ inputs.wheel }}" = "false" ]; then
+          BUILD_ARGS="$BUILD_ARGS --no-wheel"
+        fi
+        uv build $BUILD_ARGS
+        echo "Built distributions:"
+        ls -la dist/

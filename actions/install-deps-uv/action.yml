@@ -1,0 +1,27 @@
+name: "Install Dependencies (uv)"
+description: "Install Python dependencies using uv into the active virtual environment"
+
+inputs:
+  extras:
+    description: "Extras to install (e.g., 'dev' installs .[dev])"
+    required: false
+    default: "dev"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        # Activate venv (cross-platform: bin/ on Linux/macOS, Scripts/ on Windows)
+        if [ -f ".venv/bin/activate" ]; then
+          source .venv/bin/activate
+        elif [ -f ".venv/Scripts/activate" ]; then
+          source .venv/Scripts/activate
+        fi
+
+        if [ -n "${{ inputs.extras }}" ]; then
+          uv pip install -e ".[${{ inputs.extras }}]"
+        else
+          uv pip install -e .
+        fi
