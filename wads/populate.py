@@ -619,27 +619,28 @@ def populate_pkg_dir(
         else:
             _clog("... not creating docsrc by default (create_docsrc=False)")
 
+    ci_error = None  # Deferred error from CI generation
     if not skip_ci_def_gen:
-        root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
-        version_control_system = (
-            version_control_system or _url_to_version_control_system(root_url)
-        )
-        ci_def_path, ci_tpl_path = _resolve_ci_def_and_tpl_path(
-            ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
-        )
-        if should_update(ci_def_path):
-            assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(pkg_dir), (
-                f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+        try:
+            root_url = root_url or _get_root_url_from_pkg_dir(pkg_dir)
+            version_control_system = (
+                version_control_system or _url_to_version_control_system(root_url)
             )
+            ci_def_path, ci_tpl_path = _resolve_ci_def_and_tpl_path(
+                ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
+            )
+            if should_update(ci_def_path):
+                assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(pkg_dir), (
+                    f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
+                )
 
-            # Check if we should migrate old CI to new format
-            if migrate and version_control_system == "github":
-                old_ci_path = pjoin(".github/workflows/ci.yml")
-                if os.path.isfile(old_ci_path):
-                    _clog(f"... migrating old CI from {old_ci_path} to {ci_def_path}")
-                    from wads.migration import migrate_github_ci_old_to_new
+                # Check if we should migrate old CI to new format
+                if migrate and version_control_system == "github":
+                    old_ci_path = pjoin(".github/workflows/ci.yml")
+                    if os.path.isfile(old_ci_path):
+                        _clog(f"... migrating old CI from {old_ci_path} to {ci_def_path}")
+                        from wads.migration import migrate_github_ci_old_to_new
 
-                    try:
                         new_ci_content = migrate_github_ci_old_to_new(
                             old_ci_path, defaults={"project_name": name}
                         )
@@ -648,37 +649,31 @@ def populate_pkg_dir(
                             f.write(new_ci_content)
                         _clog(f"... successfully migrated CI to {ci_def_path}")
                         tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
-                    except Exception as e:
-                        tracker.error(
-                            ci_def_path.replace(pkg_dir + os.sep, ""),
-                            f"Migration failed: {e}",
+                    else:
+                        # No old CI to migrate, create new one from template
+                        user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
+                        _add_ci_def(
+                            ci_def_path,
+                            ci_tpl_path,
+                            root_url,
+                            name,
+                            _clog,
+                            user_email,
+                            pkg_dir,
                         )
-                        raise RuntimeError(
-                            f"Failed to migrate CI file {old_ci_path}: {e}\n"
-                            f"The old CI may contain configurations that cannot be automatically migrated."
-                        ) from e
+                        tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
                 else:
-                    # No old CI to migrate, create new one from template
+                    # Not migrating or not github, use template
                     user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
                     _add_ci_def(
-                        ci_def_path,
-                        ci_tpl_path,
-                        root_url,
-                        name,
-                        _clog,
-                        user_email,
-                        pkg_dir,
+                        ci_def_path, ci_tpl_path, root_url, name, _clog, user_email, pkg_dir
                     )
                     tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
             else:
-                # Not migrating or not github, use template
-                user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
-                _add_ci_def(
-                    ci_def_path, ci_tpl_path, root_url, name, _clog, user_email, pkg_dir
-                )
-                tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
-        else:
-            tracker.skip(ci_def_path.replace(pkg_dir + os.sep, ""))
+                tracker.skip(ci_def_path.replace(pkg_dir + os.sep, ""))
+        except Exception as e:
+            ci_error = e
+            tracker.error("CI definition", str(e))
 
     # -------------------------------------------------------------------------
     # Compare existing files against templates and add attention items
@@ -876,6 +871,10 @@ def populate_pkg_dir(
     else:
         tracker.print_summary(verbose=False)
 
+    # Re-raise deferred CI error after printing the summary
+    if ci_error is not None:
+        raise ci_error
+
     return name
 
 
@@ -988,6 +987,7 @@ def _get_pkg_url_from_pkg_dir(pkg_dir):
     """Look in the .git of pkg_dir and get the project url for it.
 
     Note: If the url found is an ssh url, it will be converted to an https one.
+    Note: Any trailing .git suffix is stripped from the URL.
     """
     import re
 
@@ -1000,20 +1000,55 @@ def _get_pkg_url_from_pkg_dir(pkg_dir):
         domain, repo = ssh_match.groups()
         pkg_git_url = f"https://{domain}/{repo}"
 
+    # Strip .git suffix (common in HTTPS remote URLs)
+    if pkg_git_url.endswith('.git'):
+        pkg_git_url = pkg_git_url[:-4]
+
     return pkg_git_url
 
 
 def _get_root_url_from_pkg_dir(pkg_dir):
-    """Look in the .git of pkg_dir, get the url, and make a root_url from it"""
-    pkg_git_url = _get_pkg_url_from_pkg_dir(pkg_dir)
+    """Look in the .git of pkg_dir, get the url, and make a root_url from it.
+
+    Tries the git remote URL first, then falls back to pyproject.toml Homepage.
+    """
+    pkg_dir = ensure_no_slash_suffix(pkg_dir)
     name = os.path.basename(pkg_dir)
-    assert pkg_git_url.endswith(name) or pkg_git_url[:-1].endswith(name), (
-        f"The pkg_git_url doesn't end with the pkg name ({name}), "
-        f"so I won't try to guess. pkg_git_url is {pkg_git_url}. "
-        f"For what ever you're doing, maybe there's a way to explicitly specify "
-        f"the root url you're looking for?"
+
+    # Try git remote URL first
+    try:
+        pkg_git_url = _get_pkg_url_from_pkg_dir(pkg_dir)
+    except Exception:
+        pkg_git_url = None
+
+    # Try extracting root_url from the git URL
+    if pkg_git_url:
+        if pkg_git_url.endswith(name) or pkg_git_url.rstrip('/').endswith(name):
+            return pkg_git_url[: -len(name)]
+
+    # Fallback: try pyproject.toml Homepage URL
+    pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
+    if os.path.isfile(pyproject_path):
+        try:
+            from wads.toml_util import read_pyproject_toml
+
+            data = read_pyproject_toml(pkg_dir)
+            homepage = data.get("project", {}).get("urls", {}).get("Homepage", "")
+            if homepage:
+                # Strip trailing slash and check if it ends with the package name
+                homepage = homepage.rstrip('/')
+                if homepage.endswith(name):
+                    return homepage[: -len(name)]
+        except Exception:
+            pass
+
+    # If we get here, nothing worked — raise with helpful message
+    sources_tried = f"git remote URL: {pkg_git_url or '(unavailable)'}"
+    raise ValueError(
+        f"Could not derive root_url for package '{name}'. "
+        f"The URL doesn't end with the package name. {sources_tried}. "
+        f"You can explicitly specify root_url to bypass auto-detection."
     )
-    return pkg_git_url[: -len(name)]
 
 
 def update_pack_and_setup_py(
