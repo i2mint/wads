@@ -129,6 +129,8 @@ jobs:
         uses: i2mint/wads/actions/run-tests-uv@master
         with:
           root-dir: ${{ needs.setup.outputs.project-name }}
+          pytest-args: ${{ needs.setup.outputs.pytest-args }}
+          exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
 
   # Publishing job
   publish:
