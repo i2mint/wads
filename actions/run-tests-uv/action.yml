@@ -22,8 +22,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install Coverage Plugin
-      if: ${{ inputs.coverage == 'true' }}
+    - name: Install pytest
       shell: bash
       run: |
         # Activate venv (cross-platform)
@@ -32,7 +31,14 @@ runs:
         elif [ -f ".venv/Scripts/activate" ]; then
           source .venv/Scripts/activate
         fi
-        uv pip install pytest-cov
+        # Install pytest unconditionally; install pytest-cov only when coverage
+        # is enabled. Previously pytest came in only as a transitive of
+        # pytest-cov, which left Windows jobs (coverage off) without pytest.
+        if [ "${{ inputs.coverage }}" = "true" ]; then
+          uv pip install pytest pytest-cov
+        else
+          uv pip install pytest
+        fi
 
     - name: Run Tests
       shell: bash
