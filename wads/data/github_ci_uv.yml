@@ -24,6 +24,8 @@ jobs:
       metrics-storage-branch: ${{ steps.config.outputs.metrics-storage-branch }}
       metrics-python-version: ${{ steps.config.outputs.metrics-python-version }}
       metrics-force-run: ${{ steps.config.outputs.metrics-force-run }}
+      ruff-enabled: ${{ steps.config.outputs.ruff-enabled }}
+      docs-enabled: ${{ steps.config.outputs.docs-enabled }}
 
     steps:
       - uses: actions/checkout@v4
@@ -72,9 +74,11 @@ jobs:
         uses: i2mint/wads/actions/install-deps-uv@master
 
       - name: Format Source Code
+        if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
 
       - name: Lint Validation
+        if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff check --output-format=github ${{ needs.setup.outputs.project-name }}
 
       - name: Run Tests
@@ -157,6 +161,7 @@ jobs:
           create-venv: "false"
 
       - name: Format Source Code
+        if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
 
       - name: Update Version Number
@@ -191,15 +196,15 @@ jobs:
           message: "Release version ${{ env.VERSION }}"
           push: true
 
-  # Optional GitHub Pages
+  # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false)
   github-pages:
     name: Publish GitHub Pages
     permissions:
       contents: write
       pages: write
       id-token: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
-    needs: publish
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
+    needs: [setup, publish]
     runs-on: ubuntu-latest
 
     steps:

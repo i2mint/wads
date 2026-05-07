@@ -96,6 +96,10 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("metrics-python-version", config.metrics_python_version)
         _set_output("metrics-force-run", config.metrics_force_run)
 
+        # Quality / docs gates (consumed by template `if:` conditions)
+        _set_output("ruff-enabled", config.is_ruff_enabled())
+        _set_output("docs-enabled", config.docs_enabled)
+
         # Print summary
         print("✅ CI configuration loaded successfully")
         print(f"   Project: {config.project_name}")

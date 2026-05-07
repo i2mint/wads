@@ -50,6 +50,12 @@ outputs:
   metrics-force-run:
     description: 'Run metrics even if workflow failed (true/false)'
     value: ${{ steps.config.outputs.metrics-force-run }}
+  ruff-enabled:
+    description: 'Whether Ruff lint+format steps should run in CI (true/false). Defaults to true; set [tool.wads.ci.quality.ruff].enabled = false in pyproject.toml to disable.'
+    value: ${{ steps.config.outputs.ruff-enabled }}
+  docs-enabled:
+    description: 'Whether the GitHub Pages docs publishing job should run (true/false). Defaults to true; set [tool.wads.ci.docs].enabled = false in pyproject.toml to disable.'
+    value: ${{ steps.config.outputs.docs-enabled }}
 
 runs:
   using: 'composite'

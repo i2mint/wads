@@ -125,6 +125,71 @@ version = "0.1.0"
         dist_dir = tmp_path / "dist"
         assert dist_dir.exists()
 
+    def test_read_ci_config_writes_ruff_and_docs_outputs(self, tmp_path):
+        """`ruff-enabled` and `docs-enabled` are exposed as GITHUB_OUTPUT entries.
+
+        Templates use these to gate the lint and docs jobs; if either output
+        goes missing the `if:` condition silently evaluates false, taking the
+        job out of the workflow. Lock the contract here.
+        """
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            """
+[project]
+name = "demo"
+
+[tool.wads.ci.quality.ruff]
+enabled = false
+
+[tool.wads.ci.docs]
+enabled = false
+"""
+        )
+
+        gh_output = tmp_path / "gh_output"
+        gh_output.touch()
+        env = dict(GITHUB_OUTPUT=str(gh_output))
+
+        result = subprocess.run(
+            [sys.executable, "-m", "wads.scripts.read_ci_config", str(tmp_path)],
+            capture_output=True,
+            text=True,
+            env={**__import__("os").environ, **env},
+        )
+        assert result.returncode == 0, result.stderr
+
+        outputs = dict(
+            line.split("=", 1)
+            for line in gh_output.read_text().splitlines()
+            if "=" in line
+        )
+        assert outputs.get("ruff-enabled") == "false"
+        assert outputs.get("docs-enabled") == "false"
+
+    def test_read_ci_config_ruff_and_docs_default_to_true(self, tmp_path):
+        """Both gates default to true when absent (backward compatible)."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text('[project]\nname = "demo"\n')
+
+        gh_output = tmp_path / "gh_output"
+        gh_output.touch()
+
+        result = subprocess.run(
+            [sys.executable, "-m", "wads.scripts.read_ci_config", str(tmp_path)],
+            capture_output=True,
+            text=True,
+            env={**__import__("os").environ, "GITHUB_OUTPUT": str(gh_output)},
+        )
+        assert result.returncode == 0, result.stderr
+
+        outputs = dict(
+            line.split("=", 1)
+            for line in gh_output.read_text().splitlines()
+            if "=" in line
+        )
+        assert outputs.get("ruff-enabled") == "true"
+        assert outputs.get("docs-enabled") == "true"
+
     def test_scripts_fail_gracefully_on_missing_pyproject(self, tmp_path):
         """Test that scripts fail gracefully when pyproject.toml is missing."""
         # read_ci_config
