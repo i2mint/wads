@@ -53,6 +53,12 @@ outputs:
   ruff-enabled:
     description: 'Whether Ruff lint+format steps should run in CI (true/false). Defaults to true; set [tool.wads.ci.quality.ruff].enabled = false in pyproject.toml to disable.'
     value: ${{ steps.config.outputs.ruff-enabled }}
+  black-enabled:
+    description: 'Whether the Black formatter step should run in CI (true/false). Defaults to false; set [tool.wads.ci.quality.black].enabled = true in pyproject.toml to opt in.'
+    value: ${{ steps.config.outputs.black-enabled }}
+  mypy-enabled:
+    description: 'Whether the Mypy type-check step should run in CI (true/false). Defaults to false; set [tool.wads.ci.quality.mypy].enabled = true in pyproject.toml to opt in.'
+    value: ${{ steps.config.outputs.mypy-enabled }}
   docs-enabled:
     description: 'Whether the GitHub Pages docs publishing job should run (true/false). Defaults to true; set [tool.wads.ci.docs].enabled = false in pyproject.toml to disable.'
     value: ${{ steps.config.outputs.docs-enabled }}

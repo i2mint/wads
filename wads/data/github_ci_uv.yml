@@ -25,6 +25,8 @@ jobs:
       metrics-python-version: ${{ steps.config.outputs.metrics-python-version }}
       metrics-force-run: ${{ steps.config.outputs.metrics-force-run }}
       ruff-enabled: ${{ steps.config.outputs.ruff-enabled }}
+      black-enabled: ${{ steps.config.outputs.black-enabled }}
+      mypy-enabled: ${{ steps.config.outputs.mypy-enabled }}
       docs-enabled: ${{ steps.config.outputs.docs-enabled }}
 
     steps:
@@ -77,9 +79,17 @@ jobs:
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
 
+      - name: Format Source Code (black)
+        if: needs.setup.outputs.black-enabled == 'true'
+        run: uvx black .
+
       - name: Lint Validation
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff check --output-format=github ${{ needs.setup.outputs.project-name }}
+
+      - name: Type Check (mypy)
+        if: needs.setup.outputs.mypy-enabled == 'true'
+        run: uvx mypy ${{ needs.setup.outputs.project-name }}
 
       - name: Run Tests
         uses: i2mint/wads/actions/run-tests-uv@master
@@ -163,6 +173,10 @@ jobs:
       - name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
+
+      - name: Format Source Code (black)
+        if: needs.setup.outputs.black-enabled == 'true'
+        run: uvx black .
 
       - name: Update Version Number
         id: version

@@ -98,6 +98,8 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
 
         # Quality / docs gates (consumed by template `if:` conditions)
         _set_output("ruff-enabled", config.is_ruff_enabled())
+        _set_output("black-enabled", config.is_black_enabled())
+        _set_output("mypy-enabled", config.is_mypy_enabled())
         _set_output("docs-enabled", config.docs_enabled)
 
         # Print summary
