@@ -1,9 +1,13 @@
 name: Continuous Integration (uv)
 on: [push, pull_request]
 
-# Note: Environment variables (PROJECT_NAME and vars from [tool.wads.ci.env])
-# are set by the read-ci-config action in the setup job and made available
-# to all subsequent jobs via GITHUB_ENV
+# Workflow-level env vars from [tool.wads.ci.env] in pyproject.toml.
+# Populated by wads-migrate / wads init via template substitution.
+# Includes PROJECT_NAME, literal defaults from env.defaults, and secret-
+# backed vars from required_envvars / test_envvars / extra_envvars,
+# rendered as `KEY: secrets.KEY || ''` so missing secrets don't fail parsing.
+env:
+#ENV_BLOCK#
 
 jobs:
   # First job: Read configuration from pyproject.toml

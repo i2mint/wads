@@ -781,6 +781,44 @@ def migrate_ci_to_uv(
     # Load uv template
     new_template = _load_ci_template(github_ci_uv_path)
 
+    # Apply template substitutions (#ENV_BLOCK#, etc.) using CIConfig.
+    # CIConfig reads pyproject.toml when found in/above the workflow's directory.
+    # When [tool.wads.ci] is absent, CIConfig still provides a sensible project_name
+    # from [project], so the env: block always renders something valid.
+    substitutions = None
+    if os.path.isfile(old_ci):
+        repo_dir = os.path.dirname(os.path.abspath(old_ci))
+        # Walk up to find pyproject.toml (typical layout: repo/.github/workflows/ci.yml)
+        for _ in range(4):
+            candidate = os.path.join(repo_dir, "pyproject.toml")
+            if os.path.isfile(candidate):
+                try:
+                    from wads.ci_config import CIConfig
+
+                    substitutions = CIConfig.from_file(
+                        candidate
+                    ).to_ci_template_substitutions()
+                except Exception:
+                    pass
+                break
+            parent = os.path.dirname(repo_dir)
+            if parent == repo_dir:
+                break
+            repo_dir = parent
+    if substitutions is not None:
+        for placeholder, value in substitutions.items():
+            new_template = new_template.replace(placeholder, value)
+    else:
+        # No pyproject.toml found -> minimal default so yaml stays valid
+        fallback_name = (
+            defaults.get("project_name")
+            or _extract_project_name_from_ci(old_content)
+            or "PLACEHOLDER"
+        )
+        new_template = new_template.replace(
+            "#ENV_BLOCK#", f"  PROJECT_NAME: {fallback_name}"
+        )
+
     # Analyze old CI for migration warnings
     warnings = []
     if "setuptools" in old_content.lower():
