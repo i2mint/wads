@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_script_cli &mdash; wads 0.1.72 documentation</title>
+  <title>wads.tests.test_script_cli &mdash; wads 0.1.73 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a8ab379a"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=0cd3b383"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
       <script src="../../../_static/copybutton.js?v=f281be69"></script>
@@ -264,6 +264,79 @@
         <span class="c1"># Check that dist directory was created</span>
         <span class="n">dist_dir</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;dist&quot;</span>
         <span class="k">assert</span> <span class="n">dist_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_read_ci_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="n">pyproject_text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run read_ci_config against a tmp pyproject and return parsed outputs.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+        <span class="n">pyproject</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject_text</span><span class="p">)</span>
+
+        <span class="n">gh_output</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;gh_output&quot;</span>
+        <span class="n">gh_output</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;wads.scripts.read_ci_config&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span> <span class="s2">&quot;GITHUB_OUTPUT&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">gh_output</span><span class="p">)},</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gh_output</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;=&quot;</span> <span class="ow">in</span> <span class="n">line</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_read_ci_config_writes_quality_and_docs_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;`ruff-enabled`, `black-enabled`, `mypy-enabled`, `docs-enabled` are</span>
+<span class="sd">        exposed as GITHUB_OUTPUT entries.</span>
+
+<span class="sd">        Templates gate the corresponding steps/jobs on these. Missing outputs</span>
+<span class="sd">        evaluate to empty string, which silently mis-routes `if:` conditions.</span>
+<span class="sd">        Lock the contract here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_read_ci_config</span><span class="p">(</span>
+            <span class="n">tmp_path</span><span class="p">,</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">[project]</span>
+<span class="sd">name = &quot;demo&quot;</span>
+
+<span class="sd">[tool.wads.ci.quality.ruff]</span>
+<span class="sd">enabled = false</span>
+
+<span class="sd">[tool.wads.ci.quality.black]</span>
+<span class="sd">enabled = true</span>
+
+<span class="sd">[tool.wads.ci.quality.mypy]</span>
+<span class="sd">enabled = true</span>
+
+<span class="sd">[tool.wads.ci.docs]</span>
+<span class="sd">enabled = false</span>
+<span class="sd">&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ruff-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;black-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mypy-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;docs-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestScriptCLI.test_read_ci_config_quality_and_docs_defaults">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_script_cli.html#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_quality_and_docs_defaults">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_read_ci_config_quality_and_docs_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defaults when sections are absent: ruff/docs default ON,</span>
+<span class="sd">        black/mypy default OFF.&quot;&quot;&quot;</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_read_ci_config</span><span class="p">(</span>
+            <span class="n">tmp_path</span><span class="p">,</span> <span class="s1">&#39;[project]</span><span class="se">\n</span><span class="s1">name = &quot;demo&quot;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ruff-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;black-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mypy-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;false&quot;</span>
+        <span class="k">assert</span> <span class="n">outputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;docs-enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span></div>
 
 
 <div class="viewcode-block" id="TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject">

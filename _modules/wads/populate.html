@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.72 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.73 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,9 +14,9 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a8ab379a"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=0cd3b383"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
       <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -760,27 +760,28 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_clog</span><span class="p">(</span><span class="s2">&quot;... not creating docsrc by default (create_docsrc=False)&quot;</span><span class="p">)</span>
 
+    <span class="n">ci_error</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Deferred error from CI generation</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_ci_def_gen</span><span class="p">:</span>
-        <span class="n">root_url</span> <span class="o">=</span> <span class="n">root_url</span> <span class="ow">or</span> <span class="n">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-        <span class="n">version_control_system</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">version_control_system</span> <span class="ow">or</span> <span class="n">_url_to_version_control_system</span><span class="p">(</span><span class="n">root_url</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">_resolve_ci_def_and_tpl_path</span><span class="p">(</span>
-            <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version_control_system</span><span class="p">,</span> <span class="n">project_type</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
-            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">root_url</span> <span class="o">=</span> <span class="n">root_url</span> <span class="ow">or</span> <span class="n">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+            <span class="n">version_control_system</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">version_control_system</span> <span class="ow">or</span> <span class="n">_url_to_version_control_system</span><span class="p">(</span><span class="n">root_url</span><span class="p">)</span>
             <span class="p">)</span>
+            <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">_resolve_ci_def_and_tpl_path</span><span class="p">(</span>
+                <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version_control_system</span><span class="p">,</span> <span class="n">project_type</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
+                <span class="p">)</span>
 
-            <span class="c1"># Check if we should migrate old CI to new format</span>
-            <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;github&quot;</span><span class="p">:</span>
-                <span class="n">old_ci_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">old_ci_path</span><span class="p">):</span>
-                    <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... migrating old CI from </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_github_ci_old_to_new</span>
+                <span class="c1"># Check if we should migrate old CI to new format</span>
+                <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;github&quot;</span><span class="p">:</span>
+                    <span class="n">old_ci_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">old_ci_path</span><span class="p">):</span>
+                        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... migrating old CI from </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_github_ci_old_to_new</span>
 
-                    <span class="k">try</span><span class="p">:</span>
                         <span class="n">new_ci_content</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span>
                             <span class="n">old_ci_path</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
                         <span class="p">)</span>
@@ -789,37 +790,31 @@
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_ci_content</span><span class="p">)</span>
                         <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... successfully migrated CI to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">tracker</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                            <span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-                            <span class="sa">f</span><span class="s2">&quot;Migration failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># No old CI to migrate, create new one from template</span>
+                        <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
+                        <span class="n">_add_ci_def</span><span class="p">(</span>
+                            <span class="n">ci_def_path</span><span class="p">,</span>
+                            <span class="n">ci_tpl_path</span><span class="p">,</span>
+                            <span class="n">root_url</span><span class="p">,</span>
+                            <span class="n">name</span><span class="p">,</span>
+                            <span class="n">_clog</span><span class="p">,</span>
+                            <span class="n">user_email</span><span class="p">,</span>
+                            <span class="n">pkg_dir</span><span class="p">,</span>
                         <span class="p">)</span>
-                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;Failed to migrate CI file </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;The old CI may contain configurations that cannot be automatically migrated.&quot;</span>
-                        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+                        <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># No old CI to migrate, create new one from template</span>
+                    <span class="c1"># Not migrating or not github, use template</span>
                     <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
                     <span class="n">_add_ci_def</span><span class="p">(</span>
-                        <span class="n">ci_def_path</span><span class="p">,</span>
-                        <span class="n">ci_tpl_path</span><span class="p">,</span>
-                        <span class="n">root_url</span><span class="p">,</span>
-                        <span class="n">name</span><span class="p">,</span>
-                        <span class="n">_clog</span><span class="p">,</span>
-                        <span class="n">user_email</span><span class="p">,</span>
-                        <span class="n">pkg_dir</span><span class="p">,</span>
+                        <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span>
                     <span class="p">)</span>
                     <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Not migrating or not github, use template</span>
-                <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
-                <span class="n">_add_ci_def</span><span class="p">(</span>
-                    <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span>
-                <span class="p">)</span>
-                <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">ci_error</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;CI definition&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
     <span class="c1"># -------------------------------------------------------------------------</span>
     <span class="c1"># Compare existing files against templates and add attention items</span>
@@ -1017,6 +1012,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">tracker</span><span class="o">.</span><span class="n">print_summary</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
+    <span class="c1"># Re-raise deferred CI error after printing the summary</span>
+    <span class="k">if</span> <span class="n">ci_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ci_error</span>
+
     <span class="k">return</span> <span class="n">name</span></div>
 
 
@@ -1130,6 +1129,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir and get the project url for it.</span>
 
 <span class="sd">    Note: If the url found is an ssh url, it will be converted to an https one.</span>
+<span class="sd">    Note: Any trailing .git suffix is stripped from the URL.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
@@ -1142,20 +1142,55 @@
         <span class="n">domain</span><span class="p">,</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">ssh_match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
         <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">domain</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&quot;</span>
 
+    <span class="c1"># Strip .git suffix (common in HTTPS remote URLs)</span>
+    <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.git&#39;</span><span class="p">):</span>
+        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">pkg_git_url</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+
     <span class="k">return</span> <span class="n">pkg_git_url</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_root_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir, get the url, and make a root_url from it&quot;&quot;&quot;</span>
-    <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look in the .git of pkg_dir, get the url, and make a root_url from it.</span>
+
+<span class="sd">    Tries the git remote URL first, then falls back to pyproject.toml Homepage.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_git_url</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;The pkg_git_url doesn&#39;t end with the pkg name (</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">), &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;so I won&#39;t try to guess. pkg_git_url is </span><span class="si">{</span><span class="n">pkg_git_url</span><span class="si">}</span><span class="s2">. &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;For what ever you&#39;re doing, maybe there&#39;s a way to explicitly specify &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;the root url you&#39;re looking for?&quot;</span>
+
+    <span class="c1"># Try git remote URL first</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Try extracting root_url from the git URL</span>
+    <span class="k">if</span> <span class="n">pkg_git_url</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">pkg_git_url</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+
+    <span class="c1"># Fallback: try pyproject.toml Homepage URL</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pyproject_toml</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+            <span class="n">homepage</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;urls&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Homepage&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">homepage</span><span class="p">:</span>
+                <span class="c1"># Strip trailing slash and check if it ends with the package name</span>
+                <span class="n">homepage</span> <span class="o">=</span> <span class="n">homepage</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">homepage</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">homepage</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># If we get here, nothing worked — raise with helpful message</span>
+    <span class="n">sources_tried</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;git remote URL: </span><span class="si">{</span><span class="n">pkg_git_url</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;(unavailable)&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Could not derive root_url for package &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;The URL doesn&#39;t end with the package name. </span><span class="si">{</span><span class="n">sources_tried</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;You can explicitly specify root_url to bypass auto-detection.&quot;</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">pkg_git_url</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
 
 
 <div class="viewcode-block" id="update_pack_and_setup_py">

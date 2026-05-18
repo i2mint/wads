@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.72 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.73 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,9 +14,9 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a8ab379a"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=0cd3b383"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
       <script src="../../_static/copybutton.js?v=f281be69"></script>
@@ -894,7 +894,7 @@
 <span class="sd">        &gt;&gt;&gt; result = migrate_ci_to_uv(&#39;name: CI\\non: push&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; &#39;astral-sh/setup-uv&#39; in result</span>
 <span class="sd">        True</span>
-<span class="sd">        &gt;&gt;&gt; &#39;uv build&#39; in result</span>
+<span class="sd">        &gt;&gt;&gt; &#39;build-dist-uv&#39; in result</span>
 <span class="sd">        True</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -912,6 +912,44 @@
 
     <span class="c1"># Load uv template</span>
     <span class="n">new_template</span> <span class="o">=</span> <span class="n">_load_ci_template</span><span class="p">(</span><span class="n">github_ci_uv_path</span><span class="p">)</span>
+
+    <span class="c1"># Apply template substitutions (#ENV_BLOCK#, etc.) using CIConfig.</span>
+    <span class="c1"># CIConfig reads pyproject.toml when found in/above the workflow&#39;s directory.</span>
+    <span class="c1"># When [tool.wads.ci] is absent, CIConfig still provides a sensible project_name</span>
+    <span class="c1"># from [project], so the env: block always renders something valid.</span>
+    <span class="n">substitutions</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">old_ci</span><span class="p">):</span>
+        <span class="n">repo_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))</span>
+        <span class="c1"># Walk up to find pyproject.toml (typical layout: repo/.github/workflows/ci.yml)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">,</span> <span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+                    <span class="n">substitutions</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span>
+                        <span class="n">candidate</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">to_ci_template_substitutions</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">break</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="o">==</span> <span class="n">repo_dir</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">repo_dir</span> <span class="o">=</span> <span class="n">parent</span>
+    <span class="k">if</span> <span class="n">substitutions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">placeholder</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_template</span> <span class="o">=</span> <span class="n">new_template</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">placeholder</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># No pyproject.toml found -&gt; minimal default so yaml stays valid</span>
+        <span class="n">fallback_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">_extract_project_name_from_ci</span><span class="p">(</span><span class="n">old_content</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">&quot;PLACEHOLDER&quot;</span>
+        <span class="p">)</span>
+        <span class="n">new_template</span> <span class="o">=</span> <span class="n">new_template</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="s2">&quot;#ENV_BLOCK#&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="n">fallback_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># Analyze old CI for migration warnings</span>
     <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>

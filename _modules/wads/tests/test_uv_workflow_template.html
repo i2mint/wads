@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.72 documentation</title>
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.73 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a8ab379a"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=0cd3b383"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
       <script src="../../../_static/copybutton.js?v=f281be69"></script>
@@ -211,8 +211,8 @@
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_setup_python_action">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_setup_python_action">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_does_not_use_setup_python_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use actions/setup-python.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="s2">&quot;actions/setup-python&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template does NOT use actions/setup-python (the standard GitHub action).&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;actions/setup-python@&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_python_install">
@@ -222,11 +222,11 @@
         <span class="k">assert</span> <span class="s2">&quot;uv python install&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
-<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_pip_install">
-<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_pip_install">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_pip_install</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv pip install&#39; for dependencies.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="s2">&quot;uv pip install&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_actions_for_deps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_actions_for_deps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_actions_for_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses install-deps-uv action for dependencies.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;install-deps-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uvx_ruff">
@@ -237,25 +237,39 @@
         <span class="k">assert</span> <span class="s2">&quot;uvx ruff check&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
-<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_build">
-<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_build">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv build&#39; for distribution building.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="s2">&quot;uv build&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_actions_for_build">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_actions_for_build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_actions_for_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses build-dist-uv action for distribution building.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;build-dist-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
-<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_publish">
-<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_publish">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses &#39;uv publish&#39; for PyPI upload.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="s2">&quot;uv publish&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_actions_for_publish">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_actions_for_publish">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_actions_for_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses pypi-publish-uv action for PyPI upload.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;pypi-publish-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
-<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_publish_token">
-<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_publish_token">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_publish_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish uses UV_PUBLISH_TOKEN env var.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="s2">&quot;UV_PUBLISH_TOKEN&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_actions_for_tests">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_actions_for_tests">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_actions_for_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses run-tests-uv action for testing.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;run-tests-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_uses_uv_actions_for_python_setup">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_uses_uv_actions_for_python_setup">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_uses_uv_actions_for_python_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that template uses setup-python-uv action.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;setup-python-uv&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_references_pypi_password">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_references_pypi_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish step passes PYPI_PASSWORD secret to action.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;PYPI_PASSWORD&quot;</span> <span class="ow">in</span> <span class="n">template_content</span></div>
 
 
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_does_not_use_twine">
@@ -419,8 +433,8 @@
 
         <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s2">&quot;name: CI</span><span class="se">\n</span><span class="s2">on: push&quot;</span><span class="p">)</span>
         <span class="k">assert</span> <span class="s2">&quot;astral-sh/setup-uv&quot;</span> <span class="ow">in</span> <span class="n">result</span>
-        <span class="k">assert</span> <span class="s2">&quot;uv build&quot;</span> <span class="ow">in</span> <span class="n">result</span>
-        <span class="k">assert</span> <span class="s2">&quot;uv publish&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
+        <span class="k">assert</span> <span class="s2">&quot;build-dist-uv&quot;</span> <span class="ow">in</span> <span class="n">result</span>
+        <span class="k">assert</span> <span class="s2">&quot;pypi-publish-uv&quot;</span> <span class="ow">in</span> <span class="n">result</span></div>
 
 
 <div class="viewcode-block" id="TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning">
