@@ -17,19 +17,44 @@ Arguments:
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 
+def _pip_cmd():
+    """Return command prefix for pip install in the current interpreter.
+
+    Falls back to ``uv pip`` when ``pip`` isn't installed in the running
+    interpreter (e.g. minimal uv-managed venvs). When uv is used, ``--python``
+    pins it to the current interpreter so the install lands in this venv.
+    """
+    has_pip = (
+        subprocess.run(
+            [sys.executable, "-c", "import pip"], capture_output=True
+        ).returncode
+        == 0
+    )
+    if has_pip:
+        return [sys.executable, "-m", "pip"]
+    if shutil.which("uv"):
+        return ["uv", "pip", "--python", sys.executable]
+    return [sys.executable, "-m", "pip"]
+
+
 def _install_build_tools():
     """Install modern build tools."""
     print("Installing modern build tools")
+    pip = _pip_cmd()
+    # uv pip rejects "pip" as an install target when pip isn't already present;
+    # only upgrade pip if we're actually using pip.
+    if pip[:2] == [sys.executable, "-m"]:
+        packages = ["--upgrade", "pip", "build"]
+    else:
+        packages = ["build"]
     try:
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "pip", "build"],
-            check=True,
-        )
+        subprocess.run(pip + ["install"] + packages, check=True)
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to install build tools: {e}", file=sys.stderr)
         return False
@@ -39,12 +64,13 @@ def _install_build_tools():
 def _install_dependencies():
     """Install project dependencies."""
     print("Installing project dependencies")
+    pip = _pip_cmd()
 
     # Try different dependency files
     if Path("pyproject.toml").exists():
         print("Installing from pyproject.toml")
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-e", "."],
+            pip + ["install", "-e", "."],
             capture_output=True,
         )
         if result.returncode != 0:
@@ -52,7 +78,7 @@ def _install_dependencies():
     elif Path("setup.cfg").exists():
         print("Installing from setup.cfg")
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-e", "."],
+            pip + ["install", "-e", "."],
             capture_output=True,
         )
         if result.returncode != 0:
@@ -60,7 +86,7 @@ def _install_dependencies():
     elif Path("requirements.txt").exists():
         print("Installing from requirements.txt")
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
+            pip + ["install", "-r", "requirements.txt"],
             check=False,
         )
 

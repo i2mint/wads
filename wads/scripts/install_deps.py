@@ -15,16 +15,50 @@ Arguments:
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+
+def _pip_cmd() -> list[str]:
+    """Return command prefix for pip install in the current interpreter.
+
+    Falls back to ``uv pip`` when ``pip`` isn't installed in the running
+    interpreter (e.g. minimal uv-managed venvs).
+    """
+    has_pip = (
+        subprocess.run(
+            [sys.executable, "-c", "import pip"], capture_output=True
+        ).returncode
+        == 0
+    )
+    if has_pip:
+        return [sys.executable, "-m", "pip"]
+    if shutil.which("uv"):
+        return ["uv", "pip", "--python", sys.executable]
+    return [sys.executable, "-m", "pip"]
+
+
+def _upgrade_pip() -> bool:
+    """Upgrade pip if pip is available; no-op when using uv fallback."""
+    pip = _pip_cmd()
+    if pip[:2] != [sys.executable, "-m"]:
+        # Using uv — pip itself isn't installed in this env; skip upgrade.
+        return True
+    try:
+        subprocess.run(pip + ["install", "--upgrade", "pip"], check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ pip install failed: {e}", file=sys.stderr)
+        return False
 
 
 def _run_pip_install(args: list[str]) -> bool:
     """Run pip install with the given arguments."""
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install"] + args,
+            _pip_cmd() + ["install"] + args,
             check=True,
         )
         return True
@@ -39,7 +73,7 @@ def install_pypi_packages(packages: list[str]) -> bool:
         return True
 
     print(f"Upgrading pip")
-    if not _run_pip_install(["--upgrade", "pip"]):
+    if not _upgrade_pip():
         return False
 
     print(f"Installing packages: {' '.join(packages)}")
@@ -52,7 +86,7 @@ def install_pypi_packages(packages: list[str]) -> bool:
         # Extract package name (remove version specifiers)
         pkg_name = pkg.split("[")[0].split("=")[0].split("<")[0].split(">")[0]
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "show", pkg_name],
+            _pip_cmd() + ["show", pkg_name],
             capture_output=True,
             text=True,
         )
@@ -73,7 +107,7 @@ def install_from_dependency_files(
         return True
 
     print("Upgrading pip")
-    if not _run_pip_install(["--upgrade", "pip"]):
+    if not _upgrade_pip():
         return False
 
     success = True
@@ -120,7 +154,7 @@ def install_from_dependency_files(
 
     # Show all installed packages
     print("\nInstalled Python packages:")
-    subprocess.run([sys.executable, "-m", "pip", "list"])
+    subprocess.run(_pip_cmd() + ["list"])
 
     return success
 
