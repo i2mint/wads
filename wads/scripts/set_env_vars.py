@@ -90,7 +90,9 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
             if var_name in RESERVED_VARS:
                 skipped_reserved.append(var_name)
                 missing_required.append(var_name)  # Treat as missing
-                print(f"[ERROR] Cannot set reserved env var: {var_name}", file=sys.stderr)
+                print(
+                    f"[ERROR] Cannot set reserved env var: {var_name}", file=sys.stderr
+                )
                 continue
 
             if var_name in secrets:
@@ -164,7 +166,8 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         # Fail if required vars are missing
         if missing_required:
             print(
-                f"\n[ERROR] ERROR: Missing required environment variables!", file=sys.stderr
+                f"\n[ERROR] ERROR: Missing required environment variables!",
+                file=sys.stderr,
             )
             print(
                 f"   Add these to GitHub Secrets: {', '.join(missing_required)}",
