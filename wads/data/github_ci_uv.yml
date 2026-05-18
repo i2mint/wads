@@ -121,6 +121,11 @@ jobs:
     needs: setup
     runs-on: windows-latest
     continue-on-error: true
+    env:
+      # PEP 540 UTF-8 mode: avoid cp1252 UnicodeDecode/EncodeError when test
+      # code reads source files or scripts print non-ASCII characters.
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
 
     steps:
       - uses: actions/checkout@v6
