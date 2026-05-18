@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.73 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.74 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0cd3b383"></script>
+      <script src="../../_static/documentation_options.js?v=c75a234e"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -771,7 +771,9 @@
                 <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">version_control_system</span><span class="p">,</span> <span class="n">project_type</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="n">ci_def_path</span><span class="p">):</span>
-                <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span> <span class="p">(</span>
+                <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ci_def_path</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_get_pkg_url_from_pkg_dir</span><span class="p">(</span>
+                    <span class="n">pkg_dir</span>
+                <span class="p">),</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;The name wasn&#39;t found in both the ci_def_path AND the git url, so I&#39;m going to be safe and do nothing&quot;</span>
                 <span class="p">)</span>
 
@@ -779,7 +781,9 @@
                 <span class="k">if</span> <span class="n">migrate</span> <span class="ow">and</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;github&quot;</span><span class="p">:</span>
                     <span class="n">old_ci_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">old_ci_path</span><span class="p">):</span>
-                        <span class="n">_clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;... migrating old CI from </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">_clog</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;... migrating old CI from </span><span class="si">{</span><span class="n">old_ci_path</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">ci_def_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
                         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_github_ci_old_to_new</span>
 
                         <span class="n">new_ci_content</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span>
@@ -807,7 +811,13 @@
                     <span class="c1"># Not migrating or not github, use template</span>
                     <span class="n">user_email</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_email&quot;</span><span class="p">,</span> <span class="s2">&quot;thorwhalen1@gmail.com&quot;</span><span class="p">)</span>
                     <span class="n">_add_ci_def</span><span class="p">(</span>
-                        <span class="n">ci_def_path</span><span class="p">,</span> <span class="n">ci_tpl_path</span><span class="p">,</span> <span class="n">root_url</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_clog</span><span class="p">,</span> <span class="n">user_email</span><span class="p">,</span> <span class="n">pkg_dir</span>
+                        <span class="n">ci_def_path</span><span class="p">,</span>
+                        <span class="n">ci_tpl_path</span><span class="p">,</span>
+                        <span class="n">root_url</span><span class="p">,</span>
+                        <span class="n">name</span><span class="p">,</span>
+                        <span class="n">_clog</span><span class="p">,</span>
+                        <span class="n">user_email</span><span class="p">,</span>
+                        <span class="n">pkg_dir</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ci_def_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pkg_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1143,7 +1153,7 @@
         <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://</span><span class="si">{</span><span class="n">domain</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="c1"># Strip .git suffix (common in HTTPS remote URLs)</span>
-    <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.git&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.git&quot;</span><span class="p">):</span>
         <span class="n">pkg_git_url</span> <span class="o">=</span> <span class="n">pkg_git_url</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">pkg_git_url</span>
@@ -1165,7 +1175,7 @@
 
     <span class="c1"># Try extracting root_url from the git URL</span>
     <span class="k">if</span> <span class="n">pkg_git_url</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pkg_git_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">pkg_git_url</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
 
     <span class="c1"># Fallback: try pyproject.toml Homepage URL</span>
@@ -1178,7 +1188,7 @@
             <span class="n">homepage</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;urls&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Homepage&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">homepage</span><span class="p">:</span>
                 <span class="c1"># Strip trailing slash and check if it ends with the package name</span>
-                <span class="n">homepage</span> <span class="o">=</span> <span class="n">homepage</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                <span class="n">homepage</span> <span class="o">=</span> <span class="n">homepage</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">homepage</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
                     <span class="k">return</span> <span class="n">homepage</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
