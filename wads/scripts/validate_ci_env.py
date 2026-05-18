@@ -42,24 +42,24 @@ def validate_ci_environment(pyproject_path: str | Path = ".") -> tuple[bool, lis
         return len(missing_vars) == 0, missing_vars
 
     except FileNotFoundError:
-        print("❌ pyproject.toml not found", file=sys.stderr)
+        print("[ERROR] pyproject.toml not found", file=sys.stderr)
         return False, []
     except Exception as e:
-        print(f"❌ Error reading CI config: {e}", file=sys.stderr)
+        print(f"[ERROR] Error reading CI config: {e}", file=sys.stderr)
         return False, []
 
 
 def main():
     """Main entry point for CI environment validation."""
-    print("🔍 Validating CI environment variables...")
+    print("Validating CI environment variables...")
 
     success, missing_vars = validate_ci_environment()
 
     if success:
-        print("✅ All required environment variables are set")
+        print("[OK] All required environment variables are set")
         return 0
     else:
-        print("\n❌ Missing required environment variables:", file=sys.stderr)
+        print("\n[ERROR] Missing required environment variables:", file=sys.stderr)
         for var in missing_vars:
             print(f"  - {var}", file=sys.stderr)
         print(

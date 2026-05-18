@@ -103,7 +103,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("docs-enabled", config.docs_enabled)
 
         # Print summary
-        print("✅ CI configuration loaded successfully")
+        print("[OK] CI configuration loaded successfully")
         print(f"   Project: {config.project_name}")
         print(f"   Python versions: {config.python_versions}")
         print(f"   Coverage: {config.coverage_enabled}")
@@ -113,7 +113,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary_file:
             with open(summary_file, "a") as f:
-                f.write("## 🔧 CI Configuration\n\n")
+                f.write("## CI Configuration\n\n")
                 f.write(f"- **Project:** {config.project_name}\n")
                 f.write(f"- **Python Versions:** {config.python_versions}\n")
                 f.write(f"- **Coverage Enabled:** {config.coverage_enabled}\n")
@@ -123,10 +123,10 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         return 0
 
     except FileNotFoundError:
-        print("❌ pyproject.toml not found", file=sys.stderr)
+        print("[ERROR] pyproject.toml not found", file=sys.stderr)
         return 1
     except Exception as e:
-        print(f"❌ Error reading CI config: {e}", file=sys.stderr)
+        print(f"[ERROR] Error reading CI config: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()

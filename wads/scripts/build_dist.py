@@ -58,7 +58,7 @@ def _install_build_tools():
     try:
         subprocess.run(_pip_install_cmd() + packages, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install build tools: {e}", file=sys.stderr)
+        print(f"[ERROR] Failed to install build tools: {e}", file=sys.stderr)
         return False
     return True
 
@@ -137,7 +137,7 @@ def build_distributions(
     try:
         subprocess.run(build_args, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"❌ Build failed: {e}", file=sys.stderr)
+        print(f"[ERROR] Build failed: {e}", file=sys.stderr)
         return 1
 
     # List built distributions

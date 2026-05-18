@@ -53,7 +53,7 @@ def _upgrade_pip() -> bool:
         subprocess.run(_pip_cmd("install") + ["--upgrade", "pip"], check=True)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ pip install failed: {e}", file=sys.stderr)
+        print(f"[ERROR] pip install failed: {e}", file=sys.stderr)
         return False
 
 
@@ -66,7 +66,7 @@ def _run_pip_install(args: list[str]) -> bool:
         )
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ pip install failed: {e}", file=sys.stderr)
+        print(f"[ERROR] pip install failed: {e}", file=sys.stderr)
         return False
 
 
@@ -118,7 +118,7 @@ def install_from_dependency_files(
         path = Path(path_str.strip())
 
         if not path.exists():
-            print(f"⚠️  Dependency file not found: {path}")
+            print(f"[WARN] Dependency file not found: {path}")
             continue
 
         if path.suffix == ".txt":

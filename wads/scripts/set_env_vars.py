@@ -90,16 +90,16 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
             if var_name in RESERVED_VARS:
                 skipped_reserved.append(var_name)
                 missing_required.append(var_name)  # Treat as missing
-                print(f"❌ Cannot set reserved env var: {var_name}", file=sys.stderr)
+                print(f"[ERROR] Cannot set reserved env var: {var_name}", file=sys.stderr)
                 continue
 
             if var_name in secrets:
                 _set_env_var(var_name, secrets[var_name])
                 set_vars.append(var_name)
-                print(f"✅ Set required env var: {var_name}")
+                print(f"[OK] Set required env var: {var_name}")
             else:
                 missing_required.append(var_name)
-                print(f"❌ Missing required env var: {var_name}", file=sys.stderr)
+                print(f"[ERROR] Missing required env var: {var_name}", file=sys.stderr)
 
         # Process test env vars
         for var_name in test_vars:
@@ -110,11 +110,11 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
             if var_name in secrets:
                 _set_env_var(var_name, secrets[var_name])
                 set_vars.append(var_name)
-                print(f"✅ Set test env var: {var_name}")
+                print(f"[OK] Set test env var: {var_name}")
             else:
                 missing_test.append(var_name)
                 print(
-                    f"⚠️  Missing test env var: {var_name} (tests may fail or be skipped)"
+                    f"[WARN] Missing test env var: {var_name} (tests may fail or be skipped)"
                 )
 
         # Process extra env vars (no warnings)
@@ -126,20 +126,20 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
             if var_name in secrets:
                 _set_env_var(var_name, secrets[var_name])
                 set_vars.append(var_name)
-                print(f"✅ Set extra env var: {var_name}")
+                print(f"[OK] Set extra env var: {var_name}")
 
         # Set default env vars
         for var_name, value in config.env_vars_defaults.items():
             if var_name not in os.environ:  # Don't override existing
                 _set_env_var(var_name, value)
-                print(f"✅ Set default env var: {var_name}")
+                print(f"[OK] Set default env var: {var_name}")
 
         # Print summary
         print("\n" + "=" * 70)
         print(f"Environment Variables Summary:")
         print(f"  Set: {len(set_vars)} variables")
         if missing_test:
-            print(f"  ⚠️  Missing test vars: {len(missing_test)}")
+            print(f"  [WARN] Missing test vars: {len(missing_test)}")
         if skipped_reserved:
             print(f"  Skipped reserved vars: {', '.join(skipped_reserved)}")
         print("=" * 70)
@@ -148,23 +148,23 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
         if summary_file:
             with open(summary_file, "a") as f:
-                f.write("## 🔐 Environment Variables\n\n")
+                f.write("## Environment Variables\n\n")
                 if set_vars:
-                    f.write(f"✅ **Set {len(set_vars)} variables** from secrets\n\n")
+                    f.write(f"[OK] **Set {len(set_vars)} variables** from secrets\n\n")
                 if missing_test:
                     f.write(
-                        f"⚠️  **Missing test variables:** {', '.join(missing_test)}\n\n"
+                        f"[WARN] **Missing test variables:** {', '.join(missing_test)}\n\n"
                     )
                     f.write("_Tests requiring these may fail or be skipped_\n\n")
                 if skipped_reserved:
                     f.write(
-                        f"ℹ️  Skipped reserved variables: {', '.join(skipped_reserved)}\n\n"
+                        f"[INFO] Skipped reserved variables: {', '.join(skipped_reserved)}\n\n"
                     )
 
         # Fail if required vars are missing
         if missing_required:
             print(
-                f"\n❌ ERROR: Missing required environment variables!", file=sys.stderr
+                f"\n[ERROR] ERROR: Missing required environment variables!", file=sys.stderr
             )
             print(
                 f"   Add these to GitHub Secrets: {', '.join(missing_required)}",
@@ -172,14 +172,14 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
             )
             return 1
 
-        print("\n✅ Environment variables configured successfully")
+        print("\n[OK] Environment variables configured successfully")
         return 0
 
     except FileNotFoundError:
-        print("❌ pyproject.toml not found", file=sys.stderr)
+        print("[ERROR] pyproject.toml not found", file=sys.stderr)
         return 1
     except Exception as e:
-        print(f"❌ Error setting environment variables: {e}", file=sys.stderr)
+        print(f"[ERROR] Error setting environment variables: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()
