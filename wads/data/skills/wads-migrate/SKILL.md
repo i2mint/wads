@@ -79,13 +79,45 @@ test_on_windows = true
 [tool.wads.ci.build]
 sdist = true
 wheel = true
+
+[tool.wads.ci.env]
+# Secrets that CI MUST have; workflow fails if missing
+required_envvars = []
+# Secrets CI should have; tests needing them are skipped/may fail, CI continues
+# This is where things like OPENAI_API_KEY, GITHUB_TOKEN go for packages whose
+# modules read those env vars at import time
+test_envvars = ["OPENAI_API_KEY"]
+# Optional secrets; no warnings if missing
+extra_envvars = []
+
+[tool.wads.ci.env.defaults]
+# LITERAL env values (NOT secrets) injected at workflow level
+# Example: PYTHONUNBUFFERED = "1"
 ```
+
+### Wiring third-party secrets (OPENAI_API_KEY etc.)
+
+If a package's source modules read env vars at *import* time (e.g.
+`config2py.get_config("OPENAI_API_KEY")` at module load), the uv CI's wider
+pytest collection will fail during import. The fix:
+
+1. Add the var name to `[tool.wads.ci.env.test_envvars]` in pyproject.toml.
+   `wads-migrate ci-to-uv` then renders a workflow-level `env:` block with
+   `OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}` — propagates to ALL
+   jobs (unlike `$GITHUB_ENV` which only flows between steps in one job).
+2. Add the matching secret to the repo's GitHub Settings → Secrets.
+3. Re-run `wads-migrate ci-to-uv .github/workflows/ci.yml -o .github/workflows/ci.yml`
+   so the rendered workflow includes the new env block.
+
+Do NOT hand-edit job-level `env:` blocks in ci.yml — they'll be wiped on next
+migrate. Always wire via `[tool.wads.ci.env]` so the renderer handles it.
 
 ## Checklist After Migration
 
 - [ ] `pyproject.toml` has correct metadata (name, version, dependencies)
 - [ ] `[tool.wads.ci]` section present (or defaults are acceptable)
-- [ ] `.github/workflows/ci.yml` uses `astral-sh/setup-uv`
+- [ ] `[tool.wads.ci.env.test_envvars]` lists any secrets the code needs at import time
+- [ ] `.github/workflows/ci.yml` uses `astral-sh/setup-uv` and has a top-level `env:` block
 - [ ] `PYPI_PASSWORD` secret is a PyPI API token
 - [ ] `setup.cfg` and `setup.py` removed (if migrated from old format)
 - [ ] Push to non-main branch to test CI before merging
