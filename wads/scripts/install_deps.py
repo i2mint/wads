@@ -50,9 +50,7 @@ def _upgrade_pip() -> bool:
     if _using_uv():
         return True
     try:
-        subprocess.run(
-            _pip_cmd("install") + ["--upgrade", "pip"], check=True
-        )
+        subprocess.run(_pip_cmd("install") + ["--upgrade", "pip"], check=True)
         return True
     except subprocess.CalledProcessError as e:
         print(f"❌ pip install failed: {e}", file=sys.stderr)

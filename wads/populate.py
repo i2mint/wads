@@ -630,7 +630,9 @@ def populate_pkg_dir(
                 ci_def_path, ci_tpl_path, pkg_dir, version_control_system, project_type
             )
             if should_update(ci_def_path):
-                assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(pkg_dir), (
+                assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
+                    pkg_dir
+                ), (
                     f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
                 )
 
@@ -638,7 +640,9 @@ def populate_pkg_dir(
                 if migrate and version_control_system == "github":
                     old_ci_path = pjoin(".github/workflows/ci.yml")
                     if os.path.isfile(old_ci_path):
-                        _clog(f"... migrating old CI from {old_ci_path} to {ci_def_path}")
+                        _clog(
+                            f"... migrating old CI from {old_ci_path} to {ci_def_path}"
+                        )
                         from wads.migration import migrate_github_ci_old_to_new
 
                         new_ci_content = migrate_github_ci_old_to_new(
@@ -666,7 +670,13 @@ def populate_pkg_dir(
                     # Not migrating or not github, use template
                     user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
                     _add_ci_def(
-                        ci_def_path, ci_tpl_path, root_url, name, _clog, user_email, pkg_dir
+                        ci_def_path,
+                        ci_tpl_path,
+                        root_url,
+                        name,
+                        _clog,
+                        user_email,
+                        pkg_dir,
                     )
                     tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
             else:
@@ -1001,7 +1011,7 @@ def _get_pkg_url_from_pkg_dir(pkg_dir):
         pkg_git_url = f"https://{domain}/{repo}"
 
     # Strip .git suffix (common in HTTPS remote URLs)
-    if pkg_git_url.endswith('.git'):
+    if pkg_git_url.endswith(".git"):
         pkg_git_url = pkg_git_url[:-4]
 
     return pkg_git_url
@@ -1023,7 +1033,7 @@ def _get_root_url_from_pkg_dir(pkg_dir):
 
     # Try extracting root_url from the git URL
     if pkg_git_url:
-        if pkg_git_url.endswith(name) or pkg_git_url.rstrip('/').endswith(name):
+        if pkg_git_url.endswith(name) or pkg_git_url.rstrip("/").endswith(name):
             return pkg_git_url[: -len(name)]
 
     # Fallback: try pyproject.toml Homepage URL
@@ -1036,7 +1046,7 @@ def _get_root_url_from_pkg_dir(pkg_dir):
             homepage = data.get("project", {}).get("urls", {}).get("Homepage", "")
             if homepage:
                 # Strip trailing slash and check if it ends with the package name
-                homepage = homepage.rstrip('/')
+                homepage = homepage.rstrip("/")
                 if homepage.endswith(name):
                     return homepage[: -len(name)]
         except Exception:
