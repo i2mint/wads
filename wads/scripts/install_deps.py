@@ -21,33 +21,38 @@ import sys
 from pathlib import Path
 
 
-def _pip_cmd() -> list[str]:
-    """Return command prefix for pip install in the current interpreter.
-
-    Falls back to ``uv pip`` when ``pip`` isn't installed in the running
-    interpreter (e.g. minimal uv-managed venvs).
-    """
+def _using_uv() -> bool:
+    """True when we should drive installs via ``uv pip`` (pip is missing)."""
     has_pip = (
         subprocess.run(
             [sys.executable, "-c", "import pip"], capture_output=True
         ).returncode
         == 0
     )
-    if has_pip:
-        return [sys.executable, "-m", "pip"]
-    if shutil.which("uv"):
-        return ["uv", "pip", "--python", sys.executable]
-    return [sys.executable, "-m", "pip"]
+    return not has_pip and shutil.which("uv") is not None
+
+
+def _pip_cmd(subcommand: str) -> list[str]:
+    """Build a pip-equivalent command for the current interpreter.
+
+    Returns ``[python, -m, pip, <subcommand>]`` when pip is present in the
+    running interpreter; otherwise (e.g. minimal uv-managed venvs) returns
+    ``[uv, pip, <subcommand>, --python, <interpreter>]`` so the install
+    targets *this* venv. ``--python`` must follow the subcommand for uv.
+    """
+    if _using_uv():
+        return ["uv", "pip", subcommand, "--python", sys.executable]
+    return [sys.executable, "-m", "pip", subcommand]
 
 
 def _upgrade_pip() -> bool:
-    """Upgrade pip if pip is available; no-op when using uv fallback."""
-    pip = _pip_cmd()
-    if pip[:2] != [sys.executable, "-m"]:
-        # Using uv — pip itself isn't installed in this env; skip upgrade.
+    """Upgrade pip when pip is available; no-op under the uv fallback."""
+    if _using_uv():
         return True
     try:
-        subprocess.run(pip + ["install", "--upgrade", "pip"], check=True)
+        subprocess.run(
+            _pip_cmd("install") + ["--upgrade", "pip"], check=True
+        )
         return True
     except subprocess.CalledProcessError as e:
         print(f"❌ pip install failed: {e}", file=sys.stderr)
@@ -58,7 +63,7 @@ def _run_pip_install(args: list[str]) -> bool:
     """Run pip install with the given arguments."""
     try:
         subprocess.run(
-            _pip_cmd() + ["install"] + args,
+            _pip_cmd("install") + args,
             check=True,
         )
         return True
@@ -86,7 +91,7 @@ def install_pypi_packages(packages: list[str]) -> bool:
         # Extract package name (remove version specifiers)
         pkg_name = pkg.split("[")[0].split("=")[0].split("<")[0].split(">")[0]
         result = subprocess.run(
-            _pip_cmd() + ["show", pkg_name],
+            _pip_cmd("show") + [pkg_name],
             capture_output=True,
             text=True,
         )
@@ -154,7 +159,7 @@ def install_from_dependency_files(
 
     # Show all installed packages
     print("\nInstalled Python packages:")
-    subprocess.run(_pip_cmd() + ["list"])
+    subprocess.run(_pip_cmd("list"))
 
     return success
 

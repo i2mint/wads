@@ -23,38 +23,40 @@ import sys
 from pathlib import Path
 
 
-def _pip_cmd():
-    """Return command prefix for pip install in the current interpreter.
-
-    Falls back to ``uv pip`` when ``pip`` isn't installed in the running
-    interpreter (e.g. minimal uv-managed venvs). When uv is used, ``--python``
-    pins it to the current interpreter so the install lands in this venv.
-    """
+def _using_uv() -> bool:
+    """True when we should drive installs via ``uv pip`` (pip is missing)."""
     has_pip = (
         subprocess.run(
             [sys.executable, "-c", "import pip"], capture_output=True
         ).returncode
         == 0
     )
-    if has_pip:
-        return [sys.executable, "-m", "pip"]
-    if shutil.which("uv"):
-        return ["uv", "pip", "--python", sys.executable]
-    return [sys.executable, "-m", "pip"]
+    return not has_pip and shutil.which("uv") is not None
+
+
+def _pip_install_cmd() -> list[str]:
+    """Build the command prefix for a pip install in the current interpreter.
+
+    Uses ``uv pip install --python <interpreter>`` when pip isn't present in
+    the running interpreter (e.g. minimal uv-managed venvs); ``--python`` must
+    follow the subcommand for uv.
+    """
+    if _using_uv():
+        return ["uv", "pip", "install", "--python", sys.executable]
+    return [sys.executable, "-m", "pip", "install"]
 
 
 def _install_build_tools():
     """Install modern build tools."""
     print("Installing modern build tools")
-    pip = _pip_cmd()
-    # uv pip rejects "pip" as an install target when pip isn't already present;
-    # only upgrade pip if we're actually using pip.
-    if pip[:2] == [sys.executable, "-m"]:
-        packages = ["--upgrade", "pip", "build"]
-    else:
+    # uv pip rejects "pip" as a target when pip isn't already present; only
+    # upgrade pip when we're actually using pip.
+    if _using_uv():
         packages = ["build"]
+    else:
+        packages = ["--upgrade", "pip", "build"]
     try:
-        subprocess.run(pip + ["install"] + packages, check=True)
+        subprocess.run(_pip_install_cmd() + packages, check=True)
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to install build tools: {e}", file=sys.stderr)
         return False
@@ -64,13 +66,13 @@ def _install_build_tools():
 def _install_dependencies():
     """Install project dependencies."""
     print("Installing project dependencies")
-    pip = _pip_cmd()
+    pip_install = _pip_install_cmd()
 
     # Try different dependency files
     if Path("pyproject.toml").exists():
         print("Installing from pyproject.toml")
         result = subprocess.run(
-            pip + ["install", "-e", "."],
+            pip_install + ["-e", "."],
             capture_output=True,
         )
         if result.returncode != 0:
@@ -78,7 +80,7 @@ def _install_dependencies():
     elif Path("setup.cfg").exists():
         print("Installing from setup.cfg")
         result = subprocess.run(
-            pip + ["install", "-e", "."],
+            pip_install + ["-e", "."],
             capture_output=True,
         )
         if result.returncode != 0:
@@ -86,7 +88,7 @@ def _install_dependencies():
     elif Path("requirements.txt").exists():
         print("Installing from requirements.txt")
         subprocess.run(
-            pip + ["install", "-r", "requirements.txt"],
+            pip_install + ["-r", "requirements.txt"],
             check=False,
         )
 
