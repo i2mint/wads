@@ -51,7 +51,15 @@ runs:
           source .venv/Scripts/activate
         fi
 
-        CMD="python3 -m pytest"
+        # Prefer python3 (avoids picking up a system `python` outside the venv
+        # on Linux/macOS). On Windows the activated venv only exposes
+        # `python` — fall back to it.
+        if command -v python3 >/dev/null 2>&1; then
+          PY="python3"
+        else
+          PY="python"
+        fi
+        CMD="$PY -m pytest"
 
         # Add coverage flags
         if [ "${{ inputs.coverage }}" = "true" ]; then
