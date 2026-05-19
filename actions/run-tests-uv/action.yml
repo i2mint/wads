@@ -51,13 +51,22 @@ runs:
           source .venv/Scripts/activate
         fi
 
-        # Prefer python3 (avoids picking up a system `python` outside the venv
-        # on Linux/macOS). On Windows the activated venv only exposes
-        # `python` — fall back to it.
-        if command -v python3 >/dev/null 2>&1; then
-          PY="python3"
+        # Resolve the venv's python explicitly. Relying on $PATH alone is
+        # fragile: on Windows, `python3` is provided system-wide by
+        # actions/setup-python, so `command -v python3` finds *that* even
+        # after activating a .venv whose Scripts/ exposes only `python`.
+        # Use the activate script's $VIRTUAL_ENV to pick the right binary.
+        if [ -n "${VIRTUAL_ENV:-}" ]; then
+          if [ -x "$VIRTUAL_ENV/bin/python" ]; then
+            PY="$VIRTUAL_ENV/bin/python"
+          elif [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+            PY="$VIRTUAL_ENV/Scripts/python.exe"
+          else
+            PY="python3"
+          fi
         else
-          PY="python"
+          # No venv (shouldn't happen post-activate, but be safe)
+          PY="python3"
         fi
         CMD="$PY -m pytest"
 
