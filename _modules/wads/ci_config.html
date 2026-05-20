@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.77 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -345,8 +345,33 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if publishing is enabled.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if publishing is enabled.</span>
+
+<span class="sd">        When True (the default), the publish job runs on main/master unless the</span>
+<span class="sd">        commit message contains :attr:`publish_skip_ci_marker`. When False, the</span>
+<span class="sd">        publish job is skipped unless the commit message contains</span>
+<span class="sd">        :attr:`publish_marker`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">publish_skip_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Commit-message substring that suppresses publishing.</span>
+
+<span class="sd">        Used when publishing is enabled: a commit whose message contains this</span>
+<span class="sd">        marker skips the publish job. Defaults to ``&quot;[skip ci]&quot;`` (which GitHub</span>
+<span class="sd">        also natively recognises to skip the whole workflow).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_ci_marker&quot;</span><span class="p">,</span> <span class="s2">&quot;[skip ci]&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">publish_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Commit-message substring that forces publishing.</span>
+
+<span class="sd">        Used when publishing is disabled: a commit whose message contains this</span>
+<span class="sd">        marker still runs the publish job. Defaults to ``&quot;[publish]&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publish_marker&quot;</span><span class="p">,</span> <span class="s2">&quot;[publish]&quot;</span><span class="p">)</span>
 
     <span class="c1"># 📄 DOCUMENTATION SETTINGS</span>
     <span class="nd">@property</span>

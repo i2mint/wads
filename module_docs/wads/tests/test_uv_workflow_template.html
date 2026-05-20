@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.77 documentation</title>
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -93,6 +93,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigInstaller.test_installer_uv_from_config"><code class="docutils literal notranslate"><span class="pre">TestCIConfigInstaller.test_installer_uv_from_config()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_default"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish.test_markers_default()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_read_from_config"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish.test_markers_read_from_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_defaults_to_true"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish.test_publish_enabled_defaults_to_true()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish.test_publish_enabled_reads_from_config()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration"><code class="docutils literal notranslate"><span class="pre">TestUvMigration</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning"><code class="docutils literal notranslate"><span class="pre">TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning"><code class="docutils literal notranslate"><span class="pre">TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning()</span></code></a></li>
@@ -108,12 +115,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_python_m_build"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_does_not_use_python_m_build()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_setup_python_action"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_does_not_use_setup_python_action()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_does_not_use_twine"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_does_not_use_twine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_job_dependencies"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_job_dependencies()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_conditional"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_conditional()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_has_key_steps"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_has_key_steps()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_honors_publish_gate"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_honors_publish_gate()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_references_pypi_password()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_has_outputs"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_has_outputs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_template_file_exists"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_template_file_exists()</span></code></a></li>
@@ -196,6 +206,36 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_uv_workflow_template.</span></span><span class="sig-name descname"><span class="pre">TestCIConfigPublish</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish" title="Link to this definition"></a></dt>
+<dd><p>Test the publish gate properties on CIConfig.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_default">
+<span class="sig-name descname"><span class="pre">test_markers_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish.test_markers_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_default" title="Link to this definition"></a></dt>
+<dd><p>Test that the commit-message markers have sensible defaults.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_read_from_config">
+<span class="sig-name descname"><span class="pre">test_markers_read_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish.test_markers_read_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_read_from_config" title="Link to this definition"></a></dt>
+<dd><p>Test that the markers can be overridden in pyproject.toml.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_defaults_to_true">
+<span class="sig-name descname"><span class="pre">test_publish_enabled_defaults_to_true</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish.test_publish_enabled_defaults_to_true"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_defaults_to_true" title="Link to this definition"></a></dt>
+<dd><p>Test that publishing is enabled by default.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config">
+<span class="sig-name descname"><span class="pre">test_publish_enabled_reads_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish.test_publish_enabled_reads_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config" title="Link to this definition"></a></dt>
+<dd><p>Test that publish_enabled reads tool.wads.ci.publish.enabled.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvMigration">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_uv_workflow_template.</span></span><span class="sig-name descname"><span class="pre">TestUvMigration</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvMigration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvMigration" title="Link to this definition"></a></dt>
 <dd><p>Test the CI migration to uv function.</p>
@@ -272,6 +312,12 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish">
+<span class="sig-name descname"><span class="pre">test_github_pages_does_not_depend_on_publish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish" title="Link to this definition"></a></dt>
+<dd><p>Test docs publishing survives the publish job being disabled/skipped.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_job_dependencies">
 <span class="sig-name descname"><span class="pre">test_job_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_job_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_job_dependencies" title="Link to this definition"></a></dt>
 <dd><p>Test that job dependencies form a valid DAG.</p>
@@ -290,6 +336,12 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_honors_publish_gate">
+<span class="sig-name descname"><span class="pre">test_publish_job_honors_publish_gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_publish_job_honors_publish_gate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_honors_publish_gate" title="Link to this definition"></a></dt>
+<dd><p>Test that the publish job <cite>if:</cite> is gated by the publish config.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version">
 <span class="sig-name descname"><span class="pre">test_publish_job_still_uses_bump_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version" title="Link to this definition"></a></dt>
 <dd><p>Test that bump-version-number action is still used.</p>
@@ -305,6 +357,12 @@
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password">
 <span class="sig-name descname"><span class="pre">test_publish_references_pypi_password</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_content</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_publish_references_pypi_password"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password" title="Link to this definition"></a></dt>
 <dd><p>Test that publish step passes PYPI_PASSWORD secret to action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs">
+<span class="sig-name descname"><span class="pre">test_setup_job_exposes_publish_gate_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs" title="Link to this definition"></a></dt>
+<dd><p>Test setup job exposes the publish gate outputs for the publish job.</p>
 </dd></dl>
 
 <dl class="py method">

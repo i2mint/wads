@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_scripts &mdash; wads 0.1.77 documentation</title>
+  <title>wads.tests.test_scripts &mdash; wads 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -98,7 +98,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig.test_exports_publish_gate_outputs"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig.test_exports_publish_gate_outputs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig.test_handles_missing_pyproject"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig.test_handles_missing_pyproject()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig.test_publish_gate_outputs_have_defaults"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig.test_publish_gate_outputs_have_defaults()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig.test_reads_config_successfully"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig.test_reads_config_successfully()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_scripts.TestReadCiConfig.test_works_without_github_env"><code class="docutils literal notranslate"><span class="pre">TestReadCiConfig.test_works_without_github_env()</span></code></a></li>
 </ul>
@@ -206,9 +208,21 @@
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_scripts.</span></span><span class="sig-name descname"><span class="pre">TestReadCiConfig</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_scripts.html#TestReadCiConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_scripts.TestReadCiConfig" title="Link to this definition"></a></dt>
 <dd><p>Test read_ci_config.py script.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_scripts.TestReadCiConfig.test_exports_publish_gate_outputs">
+<span class="sig-name descname"><span class="pre">test_exports_publish_gate_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_scripts.html#TestReadCiConfig.test_exports_publish_gate_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_scripts.TestReadCiConfig.test_exports_publish_gate_outputs" title="Link to this definition"></a></dt>
+<dd><p>Test that publish-enabled and the commit-message markers are exported.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="wads.tests.test_scripts.TestReadCiConfig.test_handles_missing_pyproject">
 <span class="sig-name descname"><span class="pre">test_handles_missing_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_scripts.html#TestReadCiConfig.test_handles_missing_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_scripts.TestReadCiConfig.test_handles_missing_pyproject" title="Link to this definition"></a></dt>
 <dd><p>Test error handling for missing pyproject.toml.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_scripts.TestReadCiConfig.test_publish_gate_outputs_have_defaults">
+<span class="sig-name descname"><span class="pre">test_publish_gate_outputs_have_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_scripts.html#TestReadCiConfig.test_publish_gate_outputs_have_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_scripts.TestReadCiConfig.test_publish_gate_outputs_have_defaults" title="Link to this definition"></a></dt>
+<dd><p>Test that publish gate outputs fall back to sensible defaults.</p>
 </dd></dl>
 
 <dl class="py method">

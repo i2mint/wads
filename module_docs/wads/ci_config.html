@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.77 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.project_name"><code class="docutils literal notranslate"><span class="pre">CIConfig.project_name</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_enabled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_marker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_ci_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_skip_ci_marker</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.pytest_args"><code class="docutils literal notranslate"><span class="pre">CIConfig.pytest_args</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.python_versions"><code class="docutils literal notranslate"><span class="pre">CIConfig.python_versions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.quality_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.quality_config</span></code></a></li>
@@ -477,6 +479,27 @@ This is used in the #ENV_VARS# placeholder in CI templates.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_enabled">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">publish_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.publish_enabled" title="Link to this definition"></a></dt>
 <dd><p>Check if publishing is enabled.</p>
+<p>When True (the default), the publish job runs on main/master unless the
+commit message contains <a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_ci_marker" title="wads.ci_config.CIConfig.publish_skip_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">publish_skip_ci_marker</span></code></a>. When False, the
+publish job is skipped unless the commit message contains
+<a class="reference internal" href="#wads.ci_config.CIConfig.publish_marker" title="wads.ci_config.CIConfig.publish_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">publish_marker</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">publish_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.publish_marker" title="Link to this definition"></a></dt>
+<dd><p>Commit-message substring that forces publishing.</p>
+<p>Used when publishing is disabled: a commit whose message contains this
+marker still runs the publish job. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[publish]&quot;</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_skip_ci_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">publish_skip_ci_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.publish_skip_ci_marker" title="Link to this definition"></a></dt>
+<dd><p>Commit-message substring that suppresses publishing.</p>
+<p>Used when publishing is enabled: a commit whose message contains this
+marker skips the publish job. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[skip</span> <span class="pre">ci]&quot;</span></code> (which GitHub
+also natively recognises to skip the whole workflow).</p>
 </dd></dl>
 
 <dl class="py property">

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.77 documentation</title>
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -345,6 +345,36 @@
         <span class="k">assert</span> <span class="s2">&quot;master&quot;</span> <span class="ow">in</span> <span class="n">condition</span> <span class="ow">or</span> <span class="s2">&quot;main&quot;</span> <span class="ow">in</span> <span class="n">condition</span></div>
 
 
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_setup_job_exposes_publish_gate_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test setup job exposes the publish gate outputs for the publish job.&quot;&quot;&quot;</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;setup&quot;</span><span class="p">][</span><span class="s2">&quot;outputs&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;publish-enabled&quot;</span><span class="p">,</span> <span class="s2">&quot;skip-ci-marker&quot;</span><span class="p">,</span> <span class="s2">&quot;publish-marker&quot;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Missing output: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_honors_publish_gate">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_honors_publish_gate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_honors_publish_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the publish job `if:` is gated by the publish config.&quot;&quot;&quot;</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;publish&quot;</span><span class="p">][</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
+        <span class="c1"># Skip marker (configurable) instead of a hardcoded &#39;[skip ci]&#39;.</span>
+        <span class="k">assert</span> <span class="s2">&quot;needs.setup.outputs.skip-ci-marker&quot;</span> <span class="ow">in</span> <span class="n">condition</span>
+        <span class="c1"># Fail-closed publish gate: only runs on an explicit &#39;true&#39;.</span>
+        <span class="k">assert</span> <span class="s2">&quot;needs.setup.outputs.publish-enabled == &#39;true&#39;&quot;</span> <span class="ow">in</span> <span class="n">condition</span>
+        <span class="c1"># Per-commit override to force a publish when publishing is disabled.</span>
+        <span class="k">assert</span> <span class="s2">&quot;needs.setup.outputs.publish-marker&quot;</span> <span class="ow">in</span> <span class="n">condition</span></div>
+
+
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_github_pages_does_not_depend_on_publish">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_github_pages_does_not_depend_on_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test docs publishing survives the publish job being disabled/skipped.&quot;&quot;&quot;</span>
+        <span class="n">needs</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;github-pages&quot;</span><span class="p">][</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">&quot;publish&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">needs</span></div>
+
+
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_has_key_steps">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_has_key_steps">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_has_key_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
@@ -514,6 +544,71 @@
         <span class="p">}</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span> <span class="o">==</span> <span class="s2">&quot;uv&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestCIConfigPublish">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigPublish">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCIConfigPublish</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the publish gate properties on CIConfig.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestCIConfigPublish.test_publish_enabled_defaults_to_true">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_defaults_to_true">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_enabled_defaults_to_true</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publishing is enabled by default.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}})</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_enabled</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigPublish.test_publish_enabled_reads_from_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_enabled_reads_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that publish_enabled reads tool.wads.ci.publish.enabled.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}}},</span>
+        <span class="p">}</span>
+        <span class="k">assert</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">publish_enabled</span> <span class="ow">is</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigPublish.test_markers_default">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_default">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_markers_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the commit-message markers have sensible defaults.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}})</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span> <span class="o">==</span> <span class="s2">&quot;[skip ci]&quot;</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span> <span class="o">==</span> <span class="s2">&quot;[publish]&quot;</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigPublish.test_markers_read_from_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_markers_read_from_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_markers_read_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the markers can be overridden in pyproject.toml.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;publish&quot;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">&quot;skip_ci_marker&quot;</span><span class="p">:</span> <span class="s2">&quot;[no ci]&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;publish_marker&quot;</span><span class="p">:</span> <span class="s2">&quot;[ship it]&quot;</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span> <span class="o">==</span> <span class="s2">&quot;[no ci]&quot;</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span> <span class="o">==</span> <span class="s2">&quot;[ship it]&quot;</span></div>
 </div>
 
 
