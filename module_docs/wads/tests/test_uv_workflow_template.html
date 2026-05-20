@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.78 documentation</title>
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -100,6 +100,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config"><code class="docutils literal notranslate"><span class="pre">TestCIConfigPublish.test_publish_enabled_reads_from_config()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting"><code class="docutils literal notranslate"><span class="pre">TestCIConfigTesting</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_defaults_to_true"><code class="docutils literal notranslate"><span class="pre">TestCIConfigTesting.test_tests_enabled_defaults_to_true()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_reads_from_config"><code class="docutils literal notranslate"><span class="pre">TestCIConfigTesting.test_tests_enabled_reads_from_config()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration"><code class="docutils literal notranslate"><span class="pre">TestUvMigration</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning"><code class="docutils literal notranslate"><span class="pre">TestUvMigration.test_migrate_ci_to_uv_adds_pypi_auth_warning()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning"><code class="docutils literal notranslate"><span class="pre">TestUvMigration.test_migrate_ci_to_uv_adds_setuptools_warning()</span></code></a></li>
@@ -123,6 +128,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_still_uses_bump_version()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_job_still_uses_git_actions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_publish_references_pypi_password()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_exposes_publish_gate_outputs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_has_outputs"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_has_outputs()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config"><code class="docutils literal notranslate"><span class="pre">TestUvWorkflowTemplate.test_setup_job_uses_read_ci_config()</span></code></a></li>
@@ -231,6 +237,24 @@
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config">
 <span class="sig-name descname"><span class="pre">test_publish_enabled_reads_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigPublish.test_publish_enabled_reads_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigPublish.test_publish_enabled_reads_from_config" title="Link to this definition"></a></dt>
 <dd><p>Test that publish_enabled reads tool.wads.ci.publish.enabled.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigTesting">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_uv_workflow_template.</span></span><span class="sig-name descname"><span class="pre">TestCIConfigTesting</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigTesting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting" title="Link to this definition"></a></dt>
+<dd><p>Test the tests_enabled property on CIConfig.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_defaults_to_true">
+<span class="sig-name descname"><span class="pre">test_tests_enabled_defaults_to_true</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigTesting.test_tests_enabled_defaults_to_true"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_defaults_to_true" title="Link to this definition"></a></dt>
+<dd><p>Test that the CI test step is enabled by default.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_reads_from_config">
+<span class="sig-name descname"><span class="pre">test_tests_enabled_reads_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestCIConfigTesting.test_tests_enabled_reads_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_reads_from_config" title="Link to this definition"></a></dt>
+<dd><p>Test that tests_enabled reads tool.wads.ci.testing.enabled.</p>
 </dd></dl>
 
 </dd></dl>
@@ -357,6 +381,12 @@
 <dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password">
 <span class="sig-name descname"><span class="pre">test_publish_references_pypi_password</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_content</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_publish_references_pypi_password"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_references_pypi_password" title="Link to this definition"></a></dt>
 <dd><p>Test that publish step passes PYPI_PASSWORD secret to action.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled">
+<span class="sig-name descname"><span class="pre">test_run_tests_step_honors_tests_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_uv_workflow_template.html#TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled" title="Link to this definition"></a></dt>
+<dd><p>Test that the validation test step is gated by tests-enabled.</p>
 </dd></dl>
 
 <dl class="py method">

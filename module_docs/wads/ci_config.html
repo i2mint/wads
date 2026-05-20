@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.1.78 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -105,6 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.system_dependencies"><code class="docutils literal notranslate"><span class="pre">CIConfig.system_dependencies</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.test_on_windows"><code class="docutils literal notranslate"><span class="pre">CIConfig.test_on_windows</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.testing_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.testing_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.tests_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.tests_enabled</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_env_block()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_template_substitutions"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_template_substitutions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_pre_test_step"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_pre_test_step()</span></code></a></li>
@@ -541,6 +542,15 @@ This property is maintained for backward compatibility with legacy format.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.testing_config">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">testing_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.testing_config" title="Link to this definition"></a></dt>
 <dd><p>Get testing configuration.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.tests_enabled">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tests_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.tests_enabled" title="Link to this definition"></a></dt>
+<dd><p>Check if the CI test step should run.</p>
+<p>Defaults to True. Set <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.testing].enabled</span> <span class="pre">=</span> <span class="pre">false</span></code> to skip
+the pytest/doctest step entirely — useful for apps or repos that have
+no real test suite and whose modules are not import-clean.</p>
 </dd></dl>
 
 <dl class="py method">

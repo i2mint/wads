@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.78 documentation</title>
+  <title>wads.tests.test_uv_workflow_template &mdash; wads 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -375,6 +375,17 @@
         <span class="k">assert</span> <span class="s2">&quot;publish&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">needs</span></div>
 
 
+<div class="viewcode-block" id="TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_run_tests_step_honors_tests_enabled">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_run_tests_step_honors_tests_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the validation test step is gated by tests-enabled.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="s2">&quot;tests-enabled&quot;</span> <span class="ow">in</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;setup&quot;</span><span class="p">][</span><span class="s2">&quot;outputs&quot;</span><span class="p">]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">template_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">][</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="s2">&quot;steps&quot;</span><span class="p">]</span>
+        <span class="n">run_tests</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Run Tests&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">run_tests</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="s2">&quot;tests-enabled&quot;</span> <span class="ow">in</span> <span class="n">run_tests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;if&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="TestUvWorkflowTemplate.test_publish_job_has_key_steps">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestUvWorkflowTemplate.test_publish_job_has_key_steps">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_job_has_key_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_data</span><span class="p">):</span>
@@ -609,6 +620,35 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span> <span class="o">==</span> <span class="s2">&quot;[no ci]&quot;</span>
         <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span> <span class="o">==</span> <span class="s2">&quot;[ship it]&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TestCIConfigTesting">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigTesting">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCIConfigTesting</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the tests_enabled property on CIConfig.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestCIConfigTesting.test_tests_enabled_defaults_to_true">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_defaults_to_true">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_tests_enabled_defaults_to_true</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that the CI test step is enabled by default.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="k">assert</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}})</span><span class="o">.</span><span class="n">tests_enabled</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestCIConfigTesting.test_tests_enabled_reads_from_config">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_uv_workflow_template.html#wads.tests.test_uv_workflow_template.TestCIConfigTesting.test_tests_enabled_reads_from_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_tests_enabled_reads_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test that tests_enabled reads tool.wads.ci.testing.enabled.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}}},</span>
+        <span class="p">}</span>
+        <span class="k">assert</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">tests_enabled</span> <span class="ow">is</span> <span class="kc">False</span></div>
 </div>
 
 
