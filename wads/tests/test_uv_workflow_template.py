@@ -171,6 +171,14 @@ class TestUvWorkflowTemplate:
         needs = template_data["jobs"]["github-pages"]["needs"]
         assert "publish" not in needs
 
+    def test_run_tests_step_honors_tests_enabled(self, template_data):
+        """Test that the validation test step is gated by tests-enabled."""
+        assert "tests-enabled" in template_data["jobs"]["setup"]["outputs"]
+        steps = template_data["jobs"]["validation"]["steps"]
+        run_tests = next((s for s in steps if s.get("name") == "Run Tests"), None)
+        assert run_tests is not None
+        assert "tests-enabled" in run_tests.get("if", "")
+
     def test_publish_job_has_key_steps(self, template_data):
         """Test that publish job has version, build, and publish steps."""
         publish_job = template_data["jobs"]["publish"]
@@ -343,6 +351,26 @@ class TestCIConfigPublish:
         config = CIConfig(data)
         assert config.publish_skip_ci_marker == "[no ci]"
         assert config.publish_marker == "[ship it]"
+
+
+class TestCIConfigTesting:
+    """Test the tests_enabled property on CIConfig."""
+
+    def test_tests_enabled_defaults_to_true(self):
+        """Test that the CI test step is enabled by default."""
+        from wads.ci_config import CIConfig
+
+        assert CIConfig({"project": {"name": "test"}}).tests_enabled is True
+
+    def test_tests_enabled_reads_from_config(self):
+        """Test that tests_enabled reads tool.wads.ci.testing.enabled."""
+        from wads.ci_config import CIConfig
+
+        data = {
+            "project": {"name": "test"},
+            "tool": {"wads": {"ci": {"testing": {"enabled": False}}}},
+        }
+        assert CIConfig(data).tests_enabled is False
 
 
 if __name__ == "__main__":

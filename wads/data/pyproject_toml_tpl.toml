@@ -213,6 +213,10 @@ enabled = false
 # Test-specific settings for CI
 
 [tool.wads.ci.testing]
+# Whether the CI test step (pytest/doctest) runs at all. Defaults to true.
+# Set to false for apps or repos with no real test suite / not import-clean.
+enabled = true
+
 # Python versions to test against
 python_versions = ["3.10", "3.12"]
 

@@ -81,6 +81,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("coverage-enabled", config.coverage_enabled)
         _set_output("exclude-paths", ",".join(config.exclude_paths))
         _set_output("test-on-windows", config.test_on_windows)
+        _set_output("tests-enabled", config.tests_enabled)
 
         # Build configuration
         _set_output("build-sdist", config.build_sdist)

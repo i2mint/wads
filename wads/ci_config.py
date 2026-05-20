@@ -148,6 +148,16 @@ class CIConfig:
         return self.ci_config.get("testing", {})
 
     @property
+    def tests_enabled(self) -> bool:
+        """Check if the CI test step should run.
+
+        Defaults to True. Set ``[tool.wads.ci.testing].enabled = false`` to skip
+        the pytest/doctest step entirely — useful for apps or repos that have
+        no real test suite and whose modules are not import-clean.
+        """
+        return self.testing_config.get("enabled", True)
+
+    @property
     def python_versions(self) -> list[str]:
         """Get Python versions to test against."""
         return self.testing_config.get("python_versions", ["3.10", "3.12"])

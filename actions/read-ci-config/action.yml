@@ -29,6 +29,9 @@ outputs:
   test-on-windows:
     description: 'Whether to test on Windows (true/false)'
     value: ${{ steps.config.outputs.test-on-windows }}
+  tests-enabled:
+    description: 'Whether the CI test step should run (true/false). Defaults to true; set [tool.wads.ci.testing].enabled = false in pyproject.toml to skip the pytest/doctest step.'
+    value: ${{ steps.config.outputs.tests-enabled }}
   build-sdist:
     description: 'Whether to build source distribution (true/false)'
     value: ${{ steps.config.outputs.build-sdist }}

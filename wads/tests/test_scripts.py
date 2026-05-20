@@ -54,6 +54,25 @@ coverage_enabled = true
             env_content = env_file.read_text()
             assert 'PROJECT_NAME=test-project' in env_content
 
+    def test_exports_tests_enabled_output(self, tmp_path):
+        """Test that tests-enabled is exported, defaulting true and overridable."""
+        from wads.scripts.read_ci_config import read_and_export_ci_config
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            """
+[project]
+name = "test-project"
+
+[tool.wads.ci.testing]
+enabled = false
+"""
+        )
+        output_file = tmp_path / 'output.txt'
+        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+            assert read_and_export_ci_config(tmp_path) == 0
+        assert 'tests-enabled=false' in output_file.read_text()
+
     def test_exports_publish_gate_outputs(self, tmp_path):
         """Test that publish-enabled and the commit-message markers are exported."""
         from wads.scripts.read_ci_config import read_and_export_ci_config
