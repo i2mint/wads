@@ -102,6 +102,11 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("mypy-enabled", config.is_mypy_enabled())
         _set_output("docs-enabled", config.docs_enabled)
 
+        # Publish gate + commit-message markers (consumed by the publish job)
+        _set_output("publish-enabled", config.publish_enabled)
+        _set_output("skip-ci-marker", config.publish_skip_ci_marker)
+        _set_output("publish-marker", config.publish_marker)
+
         # Print summary
         print("[OK] CI configuration loaded successfully")
         print(f"   Project: {config.project_name}")

@@ -32,6 +32,9 @@ jobs:
       black-enabled: ${{ steps.config.outputs.black-enabled }}
       mypy-enabled: ${{ steps.config.outputs.mypy-enabled }}
       docs-enabled: ${{ steps.config.outputs.docs-enabled }}
+      publish-enabled: ${{ steps.config.outputs.publish-enabled }}
+      skip-ci-marker: ${{ steps.config.outputs.skip-ci-marker }}
+      publish-marker: ${{ steps.config.outputs.publish-marker }}
 
     steps:
       - uses: actions/checkout@v6
@@ -156,11 +159,21 @@ jobs:
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
 
   # Publishing job
+  #
+  # Gated by [tool.wads.ci.publish] in pyproject.toml (read via the setup job):
+  #   - skip-ci-marker  : when publishing is enabled, a commit message containing
+  #                       this substring skips the publish job (default "[skip ci]").
+  #   - publish-enabled : whether publishing runs at all (default true).
+  #   - publish-marker  : when publishing is disabled, a commit message containing
+  #                       this substring forces the publish job (default "[publish]").
+  # The publish-enabled check uses `== 'true'` (fail-closed): if an older wads
+  # without these outputs is installed by read-ci-config, publishing is skipped
+  # rather than run unintentionally.
   publish:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
+    if: "!contains(github.event.head_commit.message, needs.setup.outputs.skip-ci-marker) && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (needs.setup.outputs.publish-enabled == 'true' || contains(github.event.head_commit.message, needs.setup.outputs.publish-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -220,6 +233,8 @@ jobs:
           push: true
 
   # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false)
+  # Depends on validation (not publish) so docs still publish when the publish
+  # job is disabled via [tool.wads.ci.publish].enabled = false.
   github-pages:
     name: Publish GitHub Pages
     permissions:
@@ -227,7 +242,7 @@ jobs:
       pages: write
       id-token: write
     if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
-    needs: [setup, publish]
+    needs: [setup, validation]
     runs-on: ubuntu-latest
 
     steps:

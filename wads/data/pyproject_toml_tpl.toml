@@ -259,8 +259,16 @@ wheel = true
 
 # Publication settings
 [tool.wads.ci.publish]
-# Publish to PyPI on main/master branch
+# Publish to PyPI when changes land on main/master.
+#   enabled = true  -> publish job runs, unless the commit message contains
+#                      skip_ci_marker.
+#   enabled = false -> publish job is skipped, unless the commit message
+#                      contains publish_marker.
 enabled = true
+# Commit-message substring that suppresses the publish job (when enabled = true).
+skip_ci_marker = "[skip ci]"
+# Commit-message substring that forces the publish job (when enabled = false).
+publish_marker = "[publish]"
 # skip_existing = false  # Skip upload if version already exists
 
 

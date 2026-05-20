@@ -150,6 +150,27 @@ class TestUvWorkflowTemplate:
         assert "github.ref" in condition
         assert "master" in condition or "main" in condition
 
+    def test_setup_job_exposes_publish_gate_outputs(self, template_data):
+        """Test setup job exposes the publish gate outputs for the publish job."""
+        outputs = template_data["jobs"]["setup"]["outputs"]
+        for output in ["publish-enabled", "skip-ci-marker", "publish-marker"]:
+            assert output in outputs, f"Missing output: {output}"
+
+    def test_publish_job_honors_publish_gate(self, template_data):
+        """Test that the publish job `if:` is gated by the publish config."""
+        condition = template_data["jobs"]["publish"]["if"]
+        # Skip marker (configurable) instead of a hardcoded '[skip ci]'.
+        assert "needs.setup.outputs.skip-ci-marker" in condition
+        # Fail-closed publish gate: only runs on an explicit 'true'.
+        assert "needs.setup.outputs.publish-enabled == 'true'" in condition
+        # Per-commit override to force a publish when publishing is disabled.
+        assert "needs.setup.outputs.publish-marker" in condition
+
+    def test_github_pages_does_not_depend_on_publish(self, template_data):
+        """Test docs publishing survives the publish job being disabled/skipped."""
+        needs = template_data["jobs"]["github-pages"]["needs"]
+        assert "publish" not in needs
+
     def test_publish_job_has_key_steps(self, template_data):
         """Test that publish job has version, build, and publish steps."""
         publish_job = template_data["jobs"]["publish"]
@@ -272,6 +293,56 @@ class TestCIConfigInstaller:
         }
         config = CIConfig(data)
         assert config.installer == "uv"
+
+
+class TestCIConfigPublish:
+    """Test the publish gate properties on CIConfig."""
+
+    def test_publish_enabled_defaults_to_true(self):
+        """Test that publishing is enabled by default."""
+        from wads.ci_config import CIConfig
+
+        config = CIConfig({"project": {"name": "test"}})
+        assert config.publish_enabled is True
+
+    def test_publish_enabled_reads_from_config(self):
+        """Test that publish_enabled reads tool.wads.ci.publish.enabled."""
+        from wads.ci_config import CIConfig
+
+        data = {
+            "project": {"name": "test"},
+            "tool": {"wads": {"ci": {"publish": {"enabled": False}}}},
+        }
+        assert CIConfig(data).publish_enabled is False
+
+    def test_markers_default(self):
+        """Test that the commit-message markers have sensible defaults."""
+        from wads.ci_config import CIConfig
+
+        config = CIConfig({"project": {"name": "test"}})
+        assert config.publish_skip_ci_marker == "[skip ci]"
+        assert config.publish_marker == "[publish]"
+
+    def test_markers_read_from_config(self):
+        """Test that the markers can be overridden in pyproject.toml."""
+        from wads.ci_config import CIConfig
+
+        data = {
+            "project": {"name": "test"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "publish": {
+                            "skip_ci_marker": "[no ci]",
+                            "publish_marker": "[ship it]",
+                        }
+                    }
+                }
+            },
+        }
+        config = CIConfig(data)
+        assert config.publish_skip_ci_marker == "[no ci]"
+        assert config.publish_marker == "[ship it]"
 
 
 if __name__ == "__main__":

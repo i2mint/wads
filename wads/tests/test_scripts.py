@@ -54,6 +54,57 @@ coverage_enabled = true
             env_content = env_file.read_text()
             assert 'PROJECT_NAME=test-project' in env_content
 
+    def test_exports_publish_gate_outputs(self, tmp_path):
+        """Test that publish-enabled and the commit-message markers are exported."""
+        from wads.scripts.read_ci_config import read_and_export_ci_config
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            """
+[project]
+name = "test-project"
+version = "0.1.0"
+
+[tool.wads.ci.publish]
+enabled = false
+skip_ci_marker = "[no ci]"
+publish_marker = "[ship it]"
+"""
+        )
+
+        output_file = tmp_path / 'output.txt'
+        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+            result = read_and_export_ci_config(tmp_path)
+
+        assert result == 0
+        output_content = output_file.read_text()
+        assert 'publish-enabled=false' in output_content
+        assert 'skip-ci-marker=[no ci]' in output_content
+        assert 'publish-marker=[ship it]' in output_content
+
+    def test_publish_gate_outputs_have_defaults(self, tmp_path):
+        """Test that publish gate outputs fall back to sensible defaults."""
+        from wads.scripts.read_ci_config import read_and_export_ci_config
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            """
+[project]
+name = "test-project"
+version = "0.1.0"
+"""
+        )
+
+        output_file = tmp_path / 'output.txt'
+        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+            result = read_and_export_ci_config(tmp_path)
+
+        assert result == 0
+        output_content = output_file.read_text()
+        assert 'publish-enabled=true' in output_content
+        assert 'skip-ci-marker=[skip ci]' in output_content
+        assert 'publish-marker=[publish]' in output_content
+
     def test_handles_missing_pyproject(self, tmp_path):
         """Test error handling for missing pyproject.toml."""
         from wads.scripts.read_ci_config import read_and_export_ci_config

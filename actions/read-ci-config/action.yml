@@ -62,6 +62,15 @@ outputs:
   docs-enabled:
     description: 'Whether the GitHub Pages docs publishing job should run (true/false). Defaults to true; set [tool.wads.ci.docs].enabled = false in pyproject.toml to disable.'
     value: ${{ steps.config.outputs.docs-enabled }}
+  publish-enabled:
+    description: 'Whether the publish job should run (true/false). Defaults to true; set [tool.wads.ci.publish].enabled = false in pyproject.toml to disable. Can be overridden per-commit via publish-marker.'
+    value: ${{ steps.config.outputs.publish-enabled }}
+  skip-ci-marker:
+    description: 'Commit-message substring that suppresses the publish job when publishing is enabled. Defaults to "[skip ci]". Set via [tool.wads.ci.publish].skip_ci_marker.'
+    value: ${{ steps.config.outputs.skip-ci-marker }}
+  publish-marker:
+    description: 'Commit-message substring that forces the publish job even when publishing is disabled. Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
+    value: ${{ steps.config.outputs.publish-marker }}
 
 runs:
   using: 'composite'
