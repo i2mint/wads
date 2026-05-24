@@ -28,6 +28,7 @@ from wads import (
     # New stuff:
     github_ci_publish_2025_path,
     github_ci_uv_path,
+    github_ci_uv_stub_path,
     editorconfig_tpl_path,
     bug_report_tpl_path,
     feature_request_tpl_path,
@@ -927,8 +928,12 @@ def _resolve_ci_def_and_tpl_path(
             if project_type == "app":
                 ci_tpl_path = github_ci_tpl_deploy_path
             else:  # project_type == 'lib', etc.
+                # SSOT default: ship the 5-line stub that calls the reusable
+                # workflow in i2mint/wads. The inline ~250-line template
+                # (github_ci_uv_path) remains the escape valve for repos that
+                # need to customize CI beyond [tool.wads.ci.*].
                 print(f"project_type is {project_type}")
-                ci_tpl_path = github_ci_uv_path
+                ci_tpl_path = github_ci_uv_stub_path
         elif version_control_system == "gitlab":
             ci_tpl_path = gitlab_ci_tpl_path
         else:

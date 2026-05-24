@@ -54,7 +54,11 @@ wads/
 │   ├── util.py           # Git, logging, path utilities
 │   ├── data/             # Templates
 │   │   ├── pyproject_toml_tpl.toml       # Default pyproject.toml template
-│   │   ├── github_ci_publish_2025.yml    # Modern CI workflow template
+│   │   ├── github_ci_uv_stub.yml         # ★ SSOT stub (default for new projects) —
+│   │   │                                 #   5 lines, calls the reusable workflow
+│   │   ├── github_ci_uv.yml              # Inline uv workflow (escape valve / source
+│   │   │                                 #   of truth that the reusable workflow mirrors)
+│   │   ├── github_ci_publish_2025.yml    # Legacy 2025 CI workflow template
 │   │   └── (other templates)
 │   ├── agents/           # AI diagnostic agents
 │   ├── scripts/          # CI helper scripts
@@ -70,8 +74,33 @@ wads/
 1. **`populate my-project`** reads the template at `wads/data/pyproject_toml_tpl.toml`
 2. Loads it as TOML, merges user-provided values (name, description, author, license, etc.)
 3. Writes the resulting `pyproject.toml` with Hatchling build system
-4. Copies `wads/data/github_ci_publish_2025.yml` → `.github/workflows/ci.yml`
+4. Copies `wads/data/github_ci_uv_stub.yml` → `.github/workflows/ci.yml` (5-line stub
+   that calls the reusable workflow in `i2mint/wads/.github/workflows/uv-ci.yml@master`).
+   For repos that need to customize CI beyond `[tool.wads.ci.*]`, drop the stub and
+   copy `wads/data/github_ci_uv.yml` inline instead.
 5. Creates README.md, LICENSE, .gitignore, .gitattributes, .editorconfig, package dir
+
+### Reusable workflow (SSOT)
+
+Since wads 0.1.82, new projects ship a 5-line `ci.yml` stub that calls the
+**reusable workflow** hosted at `i2mint/wads/.github/workflows/uv-ci.yml`. Bug
+fixes and improvements to the workflow land in one place and propagate to every
+consumer on their next CI run — no per-repo edit, no `wads-migrate` sweep.
+
+| Tradeoff | Pin strategy |
+|---|---|
+| Float with wads (default) | `@master` — convenient; bad wads merge breaks CI everywhere on next run, but never reaches PyPI (publish is gated on workflow success) |
+| Freeze | `@v0.1.81` (or any tag) — set via `wads-migrate ci-to-stub --pin @v0.1.81`; the repo only picks up wads updates when re-pinned |
+
+The "CI failure ≠ broken release" property is what makes `@master` safe by
+default: a botched wads update blocks publication of all downstream packages
+until the wads fix lands, but never causes a broken artifact to ship. Repos that
+require absolutely-no-CI-downtime can pin.
+
+**Escape valve.** If a repo needs to customize the workflow itself (rare —
+most customization belongs in `[tool.wads.ci.*]`), it can replace the stub with
+a copy of `wads/data/github_ci_uv.yml` inline. The repo then owns CI updates
+manually. Convert back to stub later with `wads-migrate ci-to-stub`.
 
 ### CI Workflow Flow (github_ci_publish_2025.yml)
 

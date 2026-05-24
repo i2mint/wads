@@ -29,8 +29,13 @@ github_ci_tpl_deploy_path = rjoin(data_dir, "github_ci_tpl_deploy.yml")
 github_ci_tpl_publish_path = rjoin(data_dir, "github_ci_tpl_publish.yml")
 # New CI workflow for 2025:
 github_ci_publish_2025_path = rjoin(data_dir, "github_ci_publish_2025.yml")
-# UV-based CI workflow (modern default):
+# UV-based CI workflow — inline template (full ~250 lines, self-contained):
 github_ci_uv_path = rjoin(data_dir, "github_ci_uv.yml")
+# UV-based CI workflow — stub that calls the reusable workflow in i2mint/wads:
+# this is the SSOT default for new projects since wads 0.1.82. The inline
+# template is kept as an escape valve for repos that need to customize CI
+# beyond what `[tool.wads.ci.*]` exposes.
+github_ci_uv_stub_path = rjoin(data_dir, "github_ci_uv_stub.yml")
 bug_report_tpl_path = rjoin(data_dir, "bug_report_tpl.md")
 feature_request_tpl_path = rjoin(data_dir, "feature_request_tpl.md")
 pull_request_template_tpl_path = rjoin(data_dir, "pull_request_template_tpl.md")
