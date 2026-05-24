@@ -12,5 +12,8 @@ name: Continuous Integration
 on: [push, pull_request]
 jobs:
   ci:
-    uses: i2mint/wads/.github/workflows/uv-ci.yml@master
+    # TEMP for PR #28: point at this branch so the PR can validate the
+    # reusable workflow end-to-end before it's on master. Will flip back to
+    # @master in the final commit before merge.
+    uses: i2mint/wads/.github/workflows/uv-ci.yml@feat/ci-reusable-workflow
     secrets: inherit
