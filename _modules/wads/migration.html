@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.80 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.81 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=4ea980d6"></script>
+      <script src="../../_static/documentation_options.js?v=ead104cf"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -177,6 +177,7 @@
     <span class="n">github_ci_tpl_publish_path</span><span class="p">,</span>
     <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
     <span class="n">github_ci_uv_path</span><span class="p">,</span>
+    <span class="n">github_ci_uv_stub_path</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -984,6 +985,54 @@
 
 
 
+<div class="viewcode-block" id="migrate_ci_to_stub">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.migrate_ci_to_stub">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">migrate_ci_to_stub</span><span class="p">(</span>
+    <span class="n">old_ci</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">pin</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;@master&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the SSOT stub CI workflow that calls i2mint/wads&#39;s reusable uv-ci.</span>
+
+<span class="sd">    The stub is ~5 lines and replaces a repo&#39;s full inline CI with a single</span>
+<span class="sd">    `uses:` of `i2mint/wads/.github/workflows/uv-ci.yml`. All per-repo</span>
+<span class="sd">    configuration continues to come from `[tool.wads.ci.*]` in</span>
+<span class="sd">    `pyproject.toml` — the reusable workflow reads it via the</span>
+<span class="sd">    `i2mint/wads/actions/read-ci-config` action.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old_ci: Optional path or content of the existing CI workflow. Unused</span>
+<span class="sd">            for the actual conversion (the stub is the same regardless of</span>
+<span class="sd">            what was there), but accepted for symmetry with `migrate_ci_to_uv`</span>
+<span class="sd">            and to allow future heuristics (e.g. warn if the existing CI is a</span>
+<span class="sd">            customized fork that the stub would silently drop changes from).</span>
+<span class="sd">        pin: The wads ref the stub points at. Defaults to ``&quot;@master&quot;``</span>
+<span class="sd">            (floats with wads). For release-sensitive repos, pin to a tag,</span>
+<span class="sd">            e.g. ``pin=&quot;@v0.1.81&quot;``. Must start with ``&quot;@&quot;``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The stub workflow content as a string.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; stub = migrate_ci_to_stub()</span>
+<span class="sd">        &gt;&gt;&gt; &#39;i2mint/wads/.github/workflows/uv-ci.yml@master&#39; in stub</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; &#39;secrets: inherit&#39; in stub</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; pinned = migrate_ci_to_stub(pin=&#39;@v0.1.81&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; &#39;uv-ci.yml@v0.1.81&#39; in pinned</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pin</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pin must start with &#39;@&#39;, got </span><span class="si">{</span><span class="n">pin</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">github_ci_uv_stub_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">stub</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pin</span> <span class="o">!=</span> <span class="s2">&quot;@master&quot;</span><span class="p">:</span>
+        <span class="n">stub</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;uv-ci.yml@master&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;uv-ci.yml</span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stub</span></div>
+
+
+
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
@@ -1032,6 +1081,35 @@
     <span class="p">)</span>
     <span class="n">uv_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--output&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file path (default: print to stdout)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># uv CI (inline) -&gt; stub that calls the reusable workflow in i2mint/wads</span>
+    <span class="n">stub_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">&quot;ci-to-stub&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Convert an inline uv CI workflow to the 5-line stub that calls &quot;</span>
+            <span class="s2">&quot;the reusable workflow in i2mint/wads (the SSOT default since wads 0.1.82).&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">stub_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to existing CI workflow file (default: .github/workflows/ci.yml)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">stub_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file path (default: overwrite the input file)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">stub_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--pin&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;@master&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;wads ref to pin in the stub. Defaults to &#39;@master&#39; (floats with &quot;</span>
+            <span class="s2">&quot;wads — convenient, occasional CI breakage on bad wads merges). &quot;</span>
+            <span class="s2">&quot;Use e.g. &#39;@v0.1.81&#39; to freeze. Must start with &#39;@&#39;.&quot;</span>
+        <span class="p">),</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -1109,6 +1187,45 @@
                 <span class="s2">&quot;and that secrets.PYPI_PASSWORD is a PyPI API token.&quot;</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
             <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;ci-to-stub&quot;</span><span class="p">:</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">input_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Sanity: refuse to convert workflows that aren&#39;t already on uv-CI.</span>
+            <span class="c1"># The stub assumes the reusable uv workflow, so converting from</span>
+            <span class="c1"># an old/2025 CI directly to the stub would skip the per-repo</span>
+            <span class="c1"># `[tool.wads.ci]` audit that ci-to-uv performs.</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="n">input_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+            <span class="n">is_uv</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Continuous Integration (uv)&quot;</span> <span class="ow">in</span> <span class="n">existing</span>
+                <span class="ow">or</span> <span class="s2">&quot;i2mint/wads/actions/run-tests-uv&quot;</span> <span class="ow">in</span> <span class="n">existing</span>
+                <span class="ow">or</span> <span class="s2">&quot;i2mint/wads/.github/workflows/uv-ci.yml&quot;</span> <span class="ow">in</span> <span class="n">existing</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_uv</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Refusing to convert </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">: it doesn&#39;t look like a uv CI &quot;</span>
+                    <span class="s2">&quot;workflow. Run `wads-migrate ci-to-uv` first to land on uv, &quot;</span>
+                    <span class="s2">&quot;verify CI is green, then re-run `ci-to-stub`.&quot;</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pin</span><span class="p">)</span>
+
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="n">input_path</span>
+            <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">output_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Stub-ified </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">pin</span> <span class="o">==</span> <span class="s2">&quot;@master&quot;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Pinned to @master (floats with wads). If you need version &quot;</span>
+                    <span class="s2">&quot;stability for this repo, re-run with `--pin @vX.Y.Z` &quot;</span>
+                    <span class="s2">&quot;(latest wads tag visible via `gh release list -R i2mint/wads`).&quot;</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>

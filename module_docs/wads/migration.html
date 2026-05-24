@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.1.80 documentation</title>
+  <title>wads.migration &mdash; wads 0.1.81 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=4ea980d6"></script>
+      <script src="../../_static/documentation_options.js?v=ead104cf"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -66,6 +66,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_ci_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_stub()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_ci_to_uv"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_uv()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
@@ -200,6 +201,45 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <dt class="sig sig-object py" id="wads.migration.main">
 <span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/migration.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.main" title="Link to this definition"></a></dt>
 <dd><p>CLI entry point for wads migration tools.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.migrate_ci_to_stub">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_stub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'&#64;master'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_stub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_stub" title="Link to this definition"></a></dt>
+<dd><p>Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.</p>
+<p>The stub is ~5 lines and replaces a repo’s full inline CI with a single
+<cite>uses:</cite> of <cite>i2mint/wads/.github/workflows/uv-ci.yml</cite>. All per-repo
+configuration continues to come from <cite>[tool.wads.ci.*]</cite> in
+<cite>pyproject.toml</cite> — the reusable workflow reads it via the
+<cite>i2mint/wads/actions/read-ci-config</cite> action.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_ci</strong> – Optional path or content of the existing CI workflow. Unused
+for the actual conversion (the stub is the same regardless of
+what was there), but accepted for symmetry with <cite>migrate_ci_to_uv</cite>
+and to allow future heuristics (e.g. warn if the existing CI is a
+customized fork that the stub would silently drop changes from).</p></li>
+<li><p><strong>pin</strong> – The wads ref the stub points at. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&#64;master&quot;</span></code>
+(floats with wads). For release-sensitive repos, pin to a tag,
+e.g. <code class="docutils literal notranslate"><span class="pre">pin=&quot;&#64;v0.1.81&quot;</span></code>. Must start with <code class="docutils literal notranslate"><span class="pre">&quot;&#64;&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The stub workflow content as a string.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;i2mint/wads/.github/workflows/uv-ci.yml@master&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;secrets: inherit&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pinned</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="s1">&#39;@v0.1.81&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;uv-ci.yml@v0.1.81&#39;</span> <span class="ow">in</span> <span class="n">pinned</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

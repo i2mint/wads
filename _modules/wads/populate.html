@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.1.80 documentation</title>
+  <title>wads.populate &mdash; wads 0.1.81 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=4ea980d6"></script>
+      <script src="../../_static/documentation_options.js?v=ead104cf"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -146,6 +146,7 @@
     <span class="c1"># New stuff:</span>
     <span class="n">github_ci_publish_2025_path</span><span class="p">,</span>
     <span class="n">github_ci_uv_path</span><span class="p">,</span>
+    <span class="n">github_ci_uv_stub_path</span><span class="p">,</span>
     <span class="n">editorconfig_tpl_path</span><span class="p">,</span>
     <span class="n">bug_report_tpl_path</span><span class="p">,</span>
     <span class="n">feature_request_tpl_path</span><span class="p">,</span>
@@ -1069,8 +1070,12 @@
             <span class="k">if</span> <span class="n">project_type</span> <span class="o">==</span> <span class="s2">&quot;app&quot;</span><span class="p">:</span>
                 <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">github_ci_tpl_deploy_path</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># project_type == &#39;lib&#39;, etc.</span>
+                <span class="c1"># SSOT default: ship the 5-line stub that calls the reusable</span>
+                <span class="c1"># workflow in i2mint/wads. The inline ~250-line template</span>
+                <span class="c1"># (github_ci_uv_path) remains the escape valve for repos that</span>
+                <span class="c1"># need to customize CI beyond [tool.wads.ci.*].</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;project_type is </span><span class="si">{</span><span class="n">project_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">github_ci_uv_path</span>
+                <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">github_ci_uv_stub_path</span>
         <span class="k">elif</span> <span class="n">version_control_system</span> <span class="o">==</span> <span class="s2">&quot;gitlab&quot;</span><span class="p">:</span>
             <span class="n">ci_tpl_path</span> <span class="o">=</span> <span class="n">gitlab_ci_tpl_path</span>
         <span class="k">else</span><span class="p">:</span>
