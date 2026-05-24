@@ -59,6 +59,7 @@ from wads import (
     github_ci_tpl_publish_path,
     github_ci_publish_2025_path,
     github_ci_uv_path,
+    github_ci_uv_stub_path,
 )
 
 
@@ -851,6 +852,51 @@ def migrate_ci_to_uv(
     return result
 
 
+def migrate_ci_to_stub(
+    old_ci: Union[str, Path] = None,
+    *,
+    pin: str = "@master",
+) -> str:
+    """Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.
+
+    The stub is ~5 lines and replaces a repo's full inline CI with a single
+    `uses:` of `i2mint/wads/.github/workflows/uv-ci.yml`. All per-repo
+    configuration continues to come from `[tool.wads.ci.*]` in
+    `pyproject.toml` — the reusable workflow reads it via the
+    `i2mint/wads/actions/read-ci-config` action.
+
+    Args:
+        old_ci: Optional path or content of the existing CI workflow. Unused
+            for the actual conversion (the stub is the same regardless of
+            what was there), but accepted for symmetry with `migrate_ci_to_uv`
+            and to allow future heuristics (e.g. warn if the existing CI is a
+            customized fork that the stub would silently drop changes from).
+        pin: The wads ref the stub points at. Defaults to ``"@master"``
+            (floats with wads). For release-sensitive repos, pin to a tag,
+            e.g. ``pin="@v0.1.81"``. Must start with ``"@"``.
+
+    Returns:
+        The stub workflow content as a string.
+
+    Example:
+        >>> stub = migrate_ci_to_stub()
+        >>> 'i2mint/wads/.github/workflows/uv-ci.yml@master' in stub
+        True
+        >>> 'secrets: inherit' in stub
+        True
+        >>> pinned = migrate_ci_to_stub(pin='@v0.1.81')
+        >>> 'uv-ci.yml@v0.1.81' in pinned
+        True
+    """
+    if not pin.startswith("@"):
+        raise ValueError(f"pin must start with '@', got {pin!r}")
+    with open(github_ci_uv_stub_path) as f:
+        stub = f.read()
+    if pin != "@master":
+        stub = stub.replace("uv-ci.yml@master", f"uv-ci.yml{pin}")
+    return stub
+
+
 def main():
     """CLI entry point for wads migration tools."""
     import argparse
@@ -897,6 +943,35 @@ def main():
     )
     uv_parser.add_argument(
         "-o", "--output", help="Output file path (default: print to stdout)"
+    )
+
+    # uv CI (inline) -> stub that calls the reusable workflow in i2mint/wads
+    stub_parser = subparsers.add_parser(
+        "ci-to-stub",
+        help=(
+            "Convert an inline uv CI workflow to the 5-line stub that calls "
+            "the reusable workflow in i2mint/wads (the SSOT default since wads 0.1.82)."
+        ),
+    )
+    stub_parser.add_argument(
+        "input",
+        nargs="?",
+        default=".github/workflows/ci.yml",
+        help="Path to existing CI workflow file (default: .github/workflows/ci.yml)",
+    )
+    stub_parser.add_argument(
+        "-o",
+        "--output",
+        help="Output file path (default: overwrite the input file)",
+    )
+    stub_parser.add_argument(
+        "--pin",
+        default="@master",
+        help=(
+            "wads ref to pin in the stub. Defaults to '@master' (floats with "
+            "wads — convenient, occasional CI breakage on bad wads merges). "
+            "Use e.g. '@v0.1.81' to freeze. Must start with '@'."
+        ),
     )
 
     args = parser.parse_args()
@@ -974,6 +1049,45 @@ def main():
                 "and that secrets.PYPI_PASSWORD is a PyPI API token.",
                 file=sys.stderr,
             )
+
+        elif args.command == "ci-to-stub":
+            input_path = Path(args.input)
+            if not input_path.exists():
+                print(f"Error: {input_path} not found", file=sys.stderr)
+                sys.exit(1)
+
+            # Sanity: refuse to convert workflows that aren't already on uv-CI.
+            # The stub assumes the reusable uv workflow, so converting from
+            # an old/2025 CI directly to the stub would skip the per-repo
+            # `[tool.wads.ci]` audit that ci-to-uv performs.
+            existing = input_path.read_text()
+            is_uv = (
+                "Continuous Integration (uv)" in existing
+                or "i2mint/wads/actions/run-tests-uv" in existing
+                or "i2mint/wads/.github/workflows/uv-ci.yml" in existing
+            )
+            if not is_uv:
+                print(
+                    f"Refusing to convert {input_path}: it doesn't look like a uv CI "
+                    "workflow. Run `wads-migrate ci-to-uv` first to land on uv, "
+                    "verify CI is green, then re-run `ci-to-stub`.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+
+            result = migrate_ci_to_stub(str(input_path), pin=args.pin)
+
+            output_path = Path(args.output) if args.output else input_path
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(result)
+            print(f"✓ Stub-ified {input_path} -> {output_path}")
+            if args.pin == "@master":
+                print(
+                    "\nPinned to @master (floats with wads). If you need version "
+                    "stability for this repo, re-run with `--pin @vX.Y.Z` "
+                    "(latest wads tag visible via `gh release list -R i2mint/wads`).",
+                    file=sys.stderr,
+                )
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

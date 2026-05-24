@@ -1,0 +1,16 @@
+# wads CI — calls the reusable workflow hosted in i2mint/wads.
+#
+# All configuration comes from this repo's pyproject.toml [tool.wads.ci.*].
+# To customize the workflow itself (rare), replace this file with the
+# full inline template `wads/data/github_ci_uv.yml` from i2mint/wads.
+#
+# Pinning: `@master` floats with wads. If you need version stability for
+# a release-sensitive repo, change `@master` to a wads tag (e.g. `@v0.1.81`).
+# CI failure does not block a published release — it blocks the publish
+# step itself — so floating master is generally safe.
+name: Continuous Integration
+on: [push, pull_request]
+jobs:
+  ci:
+    uses: i2mint/wads/.github/workflows/uv-ci.yml@master
+    secrets: inherit
