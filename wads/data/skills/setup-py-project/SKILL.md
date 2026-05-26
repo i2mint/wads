@@ -138,6 +138,7 @@ result = setup_project(
     org='username',
     author='Thor Whalen',
     license='mit',
+    proj_rootdir='/abs/path/to/parent/mypackage',  # see pitfall note below
     create_repo=True,
     populate=True,
     create_devdocs=False,
@@ -148,6 +149,34 @@ print(result)
 ```
 
 Or call individual functions for partial flows (populate only, repo only, etc.).
+
+**⚠️ Pitfall: `proj_rootdir` is the full package path, NOT its parent.**
+The name is misleading. Source (`wads/project_setup.py`):
+```python
+pkg_dir = proj_rootdir or os.path.join(os.getcwd(), name)
+```
+So `proj_rootdir` is passed straight to `populate_pkg_dir` as the package dir.
+
+- ✅ Correct: `proj_rootdir='/abs/path/to/parent/mypackage'`
+- ❌ Wrong:   `proj_rootdir='/abs/path/to/parent'` → populates files directly into that parent and creates a stray `parent/__init__.py` (a nested package named after the folder), polluting a directory that likely holds many other projects.
+
+If you omit `proj_rootdir`, it defaults to `os.path.join(os.getcwd(), name)` — so either `cd` to the intended parent dir first, or always pass the full target path explicitly (recommended).
+
+**⚠️ Pitfall: `tomli_w` is a hard dep for `populate_pkg_dir`.**
+Install it in the active venv before calling any populate flow, otherwise `write_pyproject_configs` raises `ImportError` mid-run (leaving a half-populated directory):
+```bash
+pip install tomli_w
+```
+
+**⚠️ Pitfall: populate needs a `.git/` to generate CI config.**
+`populate_pkg_dir` calls `git remote get-url origin` on the package dir when generating the CI workflow; if `.git/` is missing it raises `AssertionError: Didn't find the git_dir: .../.git` and — because the exception propagates out of `populate` — later `setup_project` steps like `create_devdocs` never run. The directory is left half-populated (pyproject/README/LICENSE present, CI + misc/docs missing).
+
+Fix: either let `create_repo=True` do a `gh repo clone` first (which sets up `.git/` with an `origin`), or when you've set `create_repo=False`, pre-initialize git yourself before calling `setup_project`:
+```bash
+mkdir -p /abs/path/to/parent/mypackage
+cd /abs/path/to/parent/mypackage && git init -q && git remote add origin https://github.com/ORG/mypackage.git
+```
+If it already half-ran, you can finish off the missing steps by calling the individual functions directly (e.g. `create_misc_docs(pkg_dir)`).
 
 ### 6. Post-creation options
 
