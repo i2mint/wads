@@ -945,6 +945,62 @@ def main():
         "-o", "--output", help="Output file path (default: print to stdout)"
     )
 
+    # Batch stub-migrate the next N uv_current repos in the user's ecosystem.
+    fleet_parser = subparsers.add_parser(
+        "fleet-stub",
+        help=(
+            "Batch-migrate N repos to the SSOT stub CI workflow. Reads "
+            "candidates from the wads-ci-sweep state file "
+            "(~/Downloads/wads_ci_diagnosis.json by default), picks the most-"
+            "recently-committed ones, and runs ci-to-stub on each."
+        ),
+    )
+    fleet_parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Max repos to migrate this run (default 20).",
+    )
+    fleet_parser.add_argument(
+        "--select",
+        default="uv_current",
+        dest="select_category",
+        help=(
+            "Sweep-state category to draw candidates from (default "
+            "'uv_current'). Use 'uv_stub' to refresh existing stubs after a "
+            "stub-template change."
+        ),
+    )
+    fleet_parser.add_argument(
+        "--state-file",
+        default=None,
+        help="Path to the sweep state JSON (default ~/Downloads/wads_ci_diagnosis.json).",
+    )
+    fleet_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="List candidates and exit; touch nothing.",
+    )
+    fleet_parser.add_argument(
+        "--pin",
+        default="@master",
+        help=(
+            "wads ref to pin in the stub (default '@master'). "
+            "Use e.g. '@v0.1.81' to freeze."
+        ),
+    )
+    fleet_parser.add_argument(
+        "--commit-message",
+        default=None,
+        help="Per-repo commit message (sensible default if omitted).",
+    )
+    fleet_parser.add_argument(
+        "--order-by",
+        default="git_recency",
+        choices=("git_recency", "name"),
+        help="Candidate ordering (default git_recency).",
+    )
+
     # uv CI (inline) -> stub that calls the reusable workflow in i2mint/wads
     stub_parser = subparsers.add_parser(
         "ci-to-stub",
@@ -1049,6 +1105,21 @@ def main():
                 "and that secrets.PYPI_PASSWORD is a PyPI API token.",
                 file=sys.stderr,
             )
+
+        elif args.command == "fleet-stub":
+            from wads.fleet_migrate import fleet_stub, DEFAULT_STATE_FILE
+
+            kwargs = dict(
+                limit=args.limit,
+                select_category=args.select_category,
+                state_file=args.state_file or DEFAULT_STATE_FILE,
+                dry_run=args.dry_run,
+                pin=args.pin,
+                order_by=args.order_by,
+            )
+            if args.commit_message is not None:
+                kwargs["commit_message"] = args.commit_message
+            fleet_stub(**kwargs)
 
         elif args.command == "ci-to-stub":
             input_path = Path(args.input)
