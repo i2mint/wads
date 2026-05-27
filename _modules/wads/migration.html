@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -1083,6 +1084,62 @@
         <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--output&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file path (default: print to stdout)&quot;</span>
     <span class="p">)</span>
 
+    <span class="c1"># Batch stub-migrate the next N uv_current repos in the user&#39;s ecosystem.</span>
+    <span class="n">fleet_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">&quot;fleet-stub&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Batch-migrate N repos to the SSOT stub CI workflow. Reads &quot;</span>
+            <span class="s2">&quot;candidates from the wads-ci-sweep state file &quot;</span>
+            <span class="s2">&quot;(~/Downloads/wads_ci_diagnosis.json by default), picks the most-&quot;</span>
+            <span class="s2">&quot;recently-committed ones, and runs ci-to-stub on each.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--limit&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Max repos to migrate this run (default 20).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--select&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;uv_current&quot;</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;select_category&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Sweep-state category to draw candidates from (default &quot;</span>
+            <span class="s2">&quot;&#39;uv_current&#39;). Use &#39;uv_stub&#39; to refresh existing stubs after a &quot;</span>
+            <span class="s2">&quot;stub-template change.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--state-file&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the sweep state JSON (default ~/Downloads/wads_ci_diagnosis.json).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--dry-run&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;List candidates and exit; touch nothing.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--pin&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;@master&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;wads ref to pin in the stub (default &#39;@master&#39;). &quot;</span>
+            <span class="s2">&quot;Use e.g. &#39;@v0.1.81&#39; to freeze.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--commit-message&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Per-repo commit message (sensible default if omitted).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--order-by&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;git_recency&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;git_recency&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">),</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Candidate ordering (default git_recency).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
     <span class="c1"># uv CI (inline) -&gt; stub that calls the reusable workflow in i2mint/wads</span>
     <span class="n">stub_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
         <span class="s2">&quot;ci-to-stub&quot;</span><span class="p">,</span>
@@ -1187,6 +1244,21 @@
                 <span class="s2">&quot;and that secrets.PYPI_PASSWORD is a PyPI API token.&quot;</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
             <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;fleet-stub&quot;</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.fleet_migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">fleet_stub</span><span class="p">,</span> <span class="n">DEFAULT_STATE_FILE</span>
+
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">limit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">limit</span><span class="p">,</span>
+                <span class="n">select_category</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">select_category</span><span class="p">,</span>
+                <span class="n">state_file</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">state_file</span> <span class="ow">or</span> <span class="n">DEFAULT_STATE_FILE</span><span class="p">,</span>
+                <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">,</span>
+                <span class="n">pin</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span>
+                <span class="n">order_by</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">order_by</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">commit_message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;commit_message&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">commit_message</span>
+            <span class="n">fleet_stub</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;ci-to-stub&quot;</span><span class="p">:</span>
             <span class="n">input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>

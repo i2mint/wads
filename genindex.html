@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -365,11 +366,13 @@
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.find_obj">find_obj() (in module wads.util)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.find_pyproject">find_pyproject() (in module wads.install_system_deps)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.find_step_by_name">find_step_by_name() (in module wads.github_ci_ops)</a>
+</li>
+      <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.fleet_stub">fleet_stub() (in module wads.fleet_migrate)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">folders_that_have_init_py_files() (in module wads.pack)</a>
 </li>
@@ -575,6 +578,8 @@
 </li>
       <li><a href="module_docs/wads/migration.html#wads.migration.migrate_github_ci_old_to_new">migrate_github_ci_old_to_new() (in module wads.migration)</a>
 </li>
+      <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.migrate_one_to_stub">migrate_one_to_stub() (in module wads.fleet_migrate)</a>
+</li>
       <li><a href="module_docs/wads/migration.html#wads.migration.migrate_setuptools_to_hatching">migrate_setuptools_to_hatching() (in module wads.migration)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.MigrationDiagnosis">MigrationDiagnosis (class in wads.ci_migration)</a>
@@ -606,6 +611,8 @@
         <li><a href="module_docs/wads/ci_migration.html#module-wads.ci_migration">wads.ci_migration</a>
 </li>
         <li><a href="module_docs/wads/config_comparison.html#module-wads.config_comparison">wads.config_comparison</a>
+</li>
+        <li><a href="module_docs/wads/fleet_migrate.html#module-wads.fleet_migrate">wads.fleet_migrate</a>
 </li>
         <li><a href="module_docs/wads/generate_project_wheels.html#module-wads.generate_project_wheels">wads.generate_project_wheels</a>
 </li>
@@ -796,6 +803,8 @@
 </li>
       <li><a href="module_docs/wads/toml_util.html#wads.toml_util.read_pyproject_toml">read_pyproject_toml() (in module wads.toml_util)</a>
 </li>
+      <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.read_sweep_state">read_sweep_state() (in module wads.fleet_migrate)</a>
+</li>
       <li><a href="module_docs/wads/install_system_deps.html#wads.install_system_deps.read_system_deps">read_system_deps() (in module wads.install_system_deps)</a>
 </li>
       <li><a href="module_docs/wads/user_dirs.html#wads.user_dirs.read_user_preferences">read_user_preferences() (in module wads.user_dirs)</a>
@@ -804,10 +813,12 @@
 </li>
       <li><a href="module_docs/wads/project_setup.html#wads.project_setup.repo_exists">repo_exists() (in module wads.project_setup)</a>
 </li>
-      <li><a href="module_docs/wads/licensing.html#wads.licensing.resolve_author">resolve_author() (in module wads.licensing)</a>
+      <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.RepoResult">RepoResult (class in wads.fleet_migrate)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/licensing.html#wads.licensing.resolve_author">resolve_author() (in module wads.licensing)</a>
+</li>
       <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.resolve_package_name">resolve_package_name() (in module wads.agents.dependency_resolver)</a>
 </li>
       <li><a href="module_docs/wads/ci_migration.html#wads.ci_migration.rule_check_custom_steps">rule_check_custom_steps() (in module wads.ci_migration)</a>
@@ -847,6 +858,8 @@
       <li><a href="module_docs/wads/github_ci_ops.html#wads.github_ci_ops.GitHubWorkflow.save">save() (wads.github_ci_ops.GitHubWorkflow method)</a>
 </li>
       <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.scan_project_imports">scan_project_imports() (in module wads.agents.dependency_resolver)</a>
+</li>
+      <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.select_candidates">select_candidates() (in module wads.fleet_migrate)</a>
 </li>
       <li><a href="module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables">set_environment_variables() (in module wads.scripts.set_env_vars)</a>
 </li>
@@ -1421,6 +1434,13 @@
 </li>
       </ul></li>
       <li>
+    wads.fleet_migrate
+
+      <ul>
+        <li><a href="module_docs/wads/fleet_migrate.html#module-wads.fleet_migrate">module</a>
+</li>
+      </ul></li>
+      <li>
     wads.generate_project_wheels
 
       <ul>
@@ -1518,6 +1538,8 @@
         <li><a href="module_docs/wads/scripts/build_dist.html#module-wads.scripts.build_dist">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scripts.install_deps
 
@@ -1525,8 +1547,6 @@
         <li><a href="module_docs/wads/scripts/install_deps.html#module-wads.scripts.install_deps">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scripts.read_ci_config
 
