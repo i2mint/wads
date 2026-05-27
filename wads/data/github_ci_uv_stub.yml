@@ -14,10 +14,13 @@
 # time, not at run-time, even if the job would be skipped via `if:`.
 # The reusable workflow needs:
 #   contents: write   for the publish job's version-bump push-back
-#   pages: write      for the github-pages publish (if enabled)
-#   id-token: write   for the github-pages OIDC handshake (if enabled)
-# Granting these in the stub keeps it working on any caller, including
-# personal-account repos where id-token is not write-by-default.
+#                     and for the github-pages job's gh-pages branch push
+#   pages: write      for the github-pages job's REST API Pages config
+# Both default to `write` on org-account GITHUB_TOKEN and need to be
+# granted explicitly on personal-account callers (where the default is
+# read-only). No `id-token: write` needed — the publish-github-pages
+# action uses peaceiris/actions-gh-pages (branch-based) + REST API,
+# not the OIDC `actions/deploy-pages` flow.
 name: Continuous Integration
 on: [push, pull_request]
 jobs:
@@ -26,7 +29,6 @@ jobs:
     permissions:
       contents: write
       pages: write
-      id-token: write
     # Explicit pass-through (not `secrets: inherit`) because `inherit` does
     # not reliably propagate caller-repo secrets to a reusable workflow
     # owned by a different account (verified empirically: caller in a
