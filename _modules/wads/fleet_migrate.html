@@ -326,12 +326,15 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;.git&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;not a git repo&quot;</span><span class="p">)</span>
 
+    <span class="c1"># Check tracked-changes BEFORE attempting sync — `git pull --rebase`</span>
+    <span class="c1"># refuses to run with a dirty working tree, and previously surfaced as</span>
+    <span class="c1"># the less-informative &quot;could not sync default branch&quot;.</span>
+    <span class="k">if</span> <span class="n">_has_tracked_changes</span><span class="p">(</span><span class="n">repo_path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;uncommitted tracked changes&quot;</span><span class="p">)</span>
+
     <span class="n">default_branch</span> <span class="o">=</span> <span class="n">_sync_default_branch</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">default_branch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="s2">&quot;could not sync default branch&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">_has_tracked_changes</span><span class="p">(</span><span class="n">repo_path</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="s2">&quot;uncommitted tracked changes&quot;</span><span class="p">)</span>
 
     <span class="n">ci_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">workflow_path</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
