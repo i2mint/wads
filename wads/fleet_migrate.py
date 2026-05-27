@@ -146,9 +146,12 @@ def _sync_default_branch(repo_path: str) -> Optional[str]:
             return None
 
     # Fetch + ff-only; fall back to rebase if divergent.
-    if subprocess.run(
-        ["git", "-C", repo_path, "fetch", "--quiet"], timeout=30
-    ).returncode != 0:
+    if (
+        subprocess.run(
+            ["git", "-C", repo_path, "fetch", "--quiet"], timeout=30
+        ).returncode
+        != 0
+    ):
         return None
     ffm = subprocess.run(
         ["git", "-C", repo_path, "merge", "--ff-only", "@{u}"],
@@ -274,7 +277,9 @@ def fleet_stub(
         print(f"No candidates in category={select_category!r}.")
         return []
 
-    print(f"=== {len(candidates)} candidates (category={select_category}, order={order_by}) ===")
+    print(
+        f"=== {len(candidates)} candidates (category={select_category}, order={order_by}) ==="
+    )
     for p in candidates:
         print(f"  {p['name']:18s}  {p['path']}")
     print()
@@ -284,9 +289,7 @@ def fleet_stub(
 
     results: list[RepoResult] = []
     for p in candidates:
-        result = migrate_one_to_stub(
-            p["path"], pin=pin, commit_message=commit_message
-        )
+        result = migrate_one_to_stub(p["path"], pin=pin, commit_message=commit_message)
         results.append(result)
         print(result)
 
