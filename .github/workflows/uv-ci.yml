@@ -25,6 +25,37 @@ on:
         required: false
         default: ""
 
+    # Explicitly declare the secrets the reusable workflow consumes.
+    # `secrets: inherit` on the caller stub satisfies every entry below
+    # whenever the caller's repo (or org) has that secret defined; missing
+    # secrets resolve to empty strings inside this workflow (the env block
+    # below uses `|| ''` to be safe).
+    #
+    # WHY we declare instead of relying on implicit inheritance: GitHub's
+    # `secrets: inherit` semantics are documented to pass all caller secrets
+    # to the called workflow, but in practice that propagation is unreliable
+    # when the caller and called workflows live under different owners
+    # (e.g. caller in a personal account, called in an org). Personal-account
+    # callers got `${{ secrets.PYPI_PASSWORD }}` resolving to empty in the
+    # publish step, while same-org callers worked. Explicit declaration
+    # removes that ambiguity for every caller type.
+    secrets:
+      PYPI_PASSWORD:
+        description: "PyPI API token. Required for the publish job."
+        required: false
+      OPENAI_API_KEY:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      HF_TOKEN:
+        required: false
+      HUGGINGFACE_TOKEN:
+        required: false
+      KAGGLE_USERNAME:
+        required: false
+      KAGGLE_KEY:
+        required: false
+
 env:
   # Project identification. Most repos: package name == repo name; this just
   # resolves to github.event.repository.name. Override with `with.project-name`
