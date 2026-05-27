@@ -196,12 +196,15 @@ def migrate_one_to_stub(
     if not Path(repo_path, ".git").is_dir():
         return RepoResult(name, repo_path, "skip", "not a git repo")
 
+    # Check tracked-changes BEFORE attempting sync — `git pull --rebase`
+    # refuses to run with a dirty working tree, and previously surfaced as
+    # the less-informative "could not sync default branch".
+    if _has_tracked_changes(repo_path):
+        return RepoResult(name, repo_path, "skip", "uncommitted tracked changes")
+
     default_branch = _sync_default_branch(repo_path)
     if default_branch is None:
         return RepoResult(name, repo_path, "fail", "could not sync default branch")
-
-    if _has_tracked_changes(repo_path):
-        return RepoResult(name, repo_path, "skip", "uncommitted tracked changes")
 
     ci_path = Path(repo_path) / workflow_path
     if not ci_path.exists():
