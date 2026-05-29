@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.tests.test_system_deps &mdash; wads 0.1.93 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1d9edaf8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/templating.html">wads.templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.tests.test_system_deps</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.tests.test_system_deps</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Quick test to verify system dependencies functionality.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+
+<div class="viewcode-block" id="test_system_deps_list">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_list</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system dependencies as a simple list (Ubuntu only).&quot;&quot;&quot;</span>
+    <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">]}}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+
+    <span class="c1"># Check property</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">system_dependencies</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Check normalization</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">normalized</span> <span class="o">==</span> <span class="p">{</span>
+        <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Check pre-test steps generation</span>
+    <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;Install System Dependencies&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get update&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg libsndfile1&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_list passed&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_system_deps_dict">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_dict</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system dependencies as a platform-specific dict.&quot;&quot;&quot;</span>
+    <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+
+    <span class="c1"># Check normalization</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">normalized</span> <span class="o">==</span> <span class="p">{</span>
+        <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Check Ubuntu pre-test steps</span>
+    <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg libsndfile1&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+
+    <span class="c1"># Check Windows validation job</span>
+    <span class="n">windows_job</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_windows_validation_job</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;choco install -y ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">windows_job</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_dict passed&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_no_system_deps">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_no_system_deps">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_no_system_deps</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that no system deps results in empty steps.&quot;&quot;&quot;</span>
+    <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{}}}},</span>
+    <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+
+    <span class="c1"># Should return empty list by default</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">system_dependencies</span> <span class="o">==</span> <span class="p">[]</span>
+
+    <span class="c1"># Should generate no steps</span>
+    <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">pre_test_steps</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_no_system_deps passed&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_system_deps_with_pre_test_commands">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_with_pre_test_commands">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_with_pre_test_commands</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system deps combined with custom pre-test commands.&quot;&quot;&quot;</span>
+    <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;commands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;pre_test&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;python setup_data.py&quot;</span><span class="p">,</span> <span class="s2">&quot;echo &#39;Ready&#39;&quot;</span><span class="p">]},</span>
+                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">]},</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+
+    <span class="c1"># Should have both system deps and pre-test commands</span>
+    <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;Install System Dependencies&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;Pre-test Setup&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;python setup_data.py&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">&quot;echo &#39;Ready&#39;&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_with_pre_test_commands passed&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="test_ci_template_substitutions">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_ci_template_substitutions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_ci_template_substitutions</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that system deps are included in template substitutions.&quot;&quot;&quot;</span>
+    <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;python_versions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;3.10&quot;</span><span class="p">,</span> <span class="s2">&quot;3.12&quot;</span><span class="p">],</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+    <span class="n">substitutions</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">to_ci_template_substitutions</span><span class="p">()</span>
+
+    <span class="c1"># Check that PRE_TEST_STEPS includes system deps</span>
+    <span class="k">assert</span> <span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span> <span class="ow">in</span> <span class="n">substitutions</span>
+    <span class="k">assert</span> <span class="s2">&quot;ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_ci_template_substitutions passed&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test_system_deps_list</span><span class="p">()</span>
+    <span class="n">test_system_deps_dict</span><span class="p">()</span>
+    <span class="n">test_no_system_deps</span><span class="p">()</span>
+    <span class="n">test_system_deps_with_pre_test_commands</span><span class="p">()</span>
+    <span class="n">test_ci_template_substitutions</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ All tests passed!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

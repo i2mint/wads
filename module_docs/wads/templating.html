@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.templating &mdash; wads 0.1.93 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1d9edaf8"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.tests.conftest" href="tests/conftest.html" />
+    <link rel="prev" title="wads.setup_utils" href="setup_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.templating</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.templating.Artifact.from_copy"><code class="docutils literal notranslate"><span class="pre">Artifact.from_copy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.templating.Artifact.from_jinja"><code class="docutils literal notranslate"><span class="pre">Artifact.from_jinja()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.templating.Artifact.from_placeholder"><code class="docutils literal notranslate"><span class="pre">Artifact.from_placeholder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.FilesystemTemplateSource"><code class="docutils literal notranslate"><span class="pre">FilesystemTemplateSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.GenerationResult"><code class="docutils literal notranslate"><span class="pre">GenerationResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.GithubTemplateSource"><code class="docutils literal notranslate"><span class="pre">GithubTemplateSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.JINJA_DELIMITERS"><code class="docutils literal notranslate"><span class="pre">JINJA_DELIMITERS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.apply_placeholders"><code class="docutils literal notranslate"><span class="pre">apply_placeholders()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.generate"><code class="docutils literal notranslate"><span class="pre">generate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.make_jinja_env"><code class="docutils literal notranslate"><span class="pre">make_jinja_env()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.templating.render"><code class="docutils literal notranslate"><span class="pre">render()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.templating</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/templating.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.templating">
+<span id="wads-templating"></span><h1>wads.templating<a class="headerlink" href="#module-wads.templating" title="Link to this heading"></a></h1>
+<p>Declarative, template-source-driven generation engine.</p>
+<p>The core idea (issue #32, originally #3): a <em>template source</em> is any
+<code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">str]</span></code> mapping a relative path to template <em>content</em>. Three
+concrete kinds are supported, exactly matching the original spec:</p>
+<ul class="simple">
+<li><p>an <strong>in-memory mapping</strong> – a plain <code class="docutils literal notranslate"><span class="pre">dict</span></code> (or one loaded from JSON/YAML),</p></li>
+<li><p>a <strong>local filesystem folder</strong> – <a class="reference internal" href="#wads.templating.FilesystemTemplateSource" title="wads.templating.FilesystemTemplateSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilesystemTemplateSource</span></code></a>,</p></li>
+<li><p>a <strong>remote folder</strong> hosted on GitHub – <a class="reference internal" href="#wads.templating.GithubTemplateSource" title="wads.templating.GithubTemplateSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">GithubTemplateSource</span></code></a>.</p></li>
+</ul>
+<p>Because a template source is just a <code class="docutils literal notranslate"><span class="pre">Mapping</span></code>, any key-value store (including
+<code class="docutils literal notranslate"><span class="pre">dol</span></code>-style stores) can be used as one without wads depending on it.</p>
+<p>Rendering is a thin layer over Jinja2 using <strong>custom delimiters</strong> so template
+markup never collides with GitHub Actions <code class="docutils literal notranslate"><span class="pre">${{</span> <span class="pre">...</span> <span class="pre">}}</span></code> expressions or shell
+<code class="docutils literal notranslate"><span class="pre">${...}</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Jinja2 default</p></th>
+<th class="head"><p>wads delimiter</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">var</span> <span class="pre">}}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span> <span class="pre">var</span> <span class="pre">&gt;&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">block</span> <span class="pre">%}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;%</span> <span class="pre">block</span> <span class="pre">%&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">{#</span> <span class="pre">comment</span> <span class="pre">#}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;#</span> <span class="pre">comment</span> <span class="pre">#&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>A small set of <em>render strategies</em> lets the engine reproduce historical wads
+output exactly: <code class="docutils literal notranslate"><span class="pre">copy</span></code> (verbatim), <code class="docutils literal notranslate"><span class="pre">jinja</span></code> (Jinja2 with the delimiters
+above), and <code class="docutils literal notranslate"><span class="pre">placeholder</span></code> (legacy <code class="docutils literal notranslate"><span class="pre">#TOKEN#</span></code> substitution kept for old CI
+templates).</p>
+<p>An <a class="reference internal" href="#wads.templating.Artifact" title="wads.templating.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> declaratively describes one generated file: its target
+path, how its content is produced, and an optional condition. A <em>profile</em> is
+just a list of artifacts; <a class="reference internal" href="#wads.templating.generate" title="wads.templating.generate"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate()</span></code></a> walks one and writes the files,
+honoring an <code class="docutils literal notranslate"><span class="pre">overwrite</span></code> set and recording actions on an optional tracker.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">source</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;greeting.txt&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello &lt;&lt; name &gt;&gt;!&quot;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;greeting.txt&quot;</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;world&quot;</span><span class="p">})</span>
+<span class="go">&#39;Hello world!&#39;</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.templating.Artifact">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">Artifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">when</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#Artifact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.Artifact" title="Link to this definition"></a></dt>
+<dd><p>One file to generate within a project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – relative path of the file in the generated project.</p></li>
+<li><p><strong>content</strong> – a callable <code class="docutils literal notranslate"><span class="pre">context</span> <span class="pre">-&gt;</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code> producing the file
+text (<code class="docutils literal notranslate"><span class="pre">None</span></code> to skip). Use the <code class="docutils literal notranslate"><span class="pre">from_*</span></code> constructors for the common
+<code class="docutils literal notranslate"><span class="pre">copy</span></code> / <code class="docutils literal notranslate"><span class="pre">jinja</span></code> / <code class="docutils literal notranslate"><span class="pre">placeholder</span></code> strategies.</p></li>
+<li><p><strong>when</strong> – optional predicate <code class="docutils literal notranslate"><span class="pre">context</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> gating generation.</p></li>
+<li><p><strong>binary</strong> – if True, <code class="docutils literal notranslate"><span class="pre">content</span></code> returns <code class="docutils literal notranslate"><span class="pre">bytes</span></code> and is written binary.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.templating.Artifact.from_copy">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#Artifact.from_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.Artifact.from_copy" title="Link to this definition"></a></dt>
+<dd><p>Artifact that copies <code class="docutils literal notranslate"><span class="pre">source[source_key]</span></code> verbatim.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.templating.Artifact.from_jinja">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_jinja</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#Artifact.from_jinja"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.Artifact.from_jinja" title="Link to this definition"></a></dt>
+<dd><p>Artifact that renders <code class="docutils literal notranslate"><span class="pre">source[source_key]</span></code> with Jinja2.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.templating.Artifact.from_placeholder">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_placeholder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">placeholders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#Artifact.from_placeholder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.Artifact.from_placeholder" title="Link to this definition"></a></dt>
+<dd><p>Artifact that applies <code class="docutils literal notranslate"><span class="pre">#TOKEN#</span></code> substitution to a template.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.templating.FilesystemTemplateSource">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">FilesystemTemplateSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#FilesystemTemplateSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.FilesystemTemplateSource" title="Link to this definition"></a></dt>
+<dd><p>A template source backed by a local folder.</p>
+<p>Keys are POSIX-style relative paths of the files under <code class="docutils literal notranslate"><span class="pre">root</span></code>; values are
+the (text) file contents, read lazily on access.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">&quot;a.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="p">[</span><span class="s2">&quot;a.txt&quot;</span><span class="p">]</span>
+<span class="go">&#39;A&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[&#39;a.txt&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.templating.GenerationResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">GenerationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">added</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errored</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#GenerationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.GenerationResult" title="Link to this definition"></a></dt>
+<dd><p>Outcome of <a class="reference internal" href="#wads.templating.generate" title="wads.templating.generate"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.templating.GithubTemplateSource">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">GithubTemplateSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'master'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#GithubTemplateSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.GithubTemplateSource" title="Link to this definition"></a></dt>
+<dd><p>A template source backed by a folder in a GitHub repository.</p>
+<p>Files are fetched lazily from <code class="docutils literal notranslate"><span class="pre">raw.githubusercontent.com</span></code>. Uses the
+standard library only (no <code class="docutils literal notranslate"><span class="pre">requests</span></code> dependency) so it stays usable in a
+light install.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repo</strong> – <code class="docutils literal notranslate"><span class="pre">&quot;owner/name&quot;</span></code> slug.</p></li>
+<li><p><strong>ref</strong> – branch, tag, or commit (default <code class="docutils literal notranslate"><span class="pre">&quot;master&quot;</span></code>).</p></li>
+<li><p><strong>subdir</strong> – folder within the repo to treat as the template root.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Listing (<code class="docutils literal notranslate"><span class="pre">__iter__</span></code> / <code class="docutils literal notranslate"><span class="pre">__len__</span></code>) uses the GitHub trees API and is only
+needed when enumerating; direct <code class="docutils literal notranslate"><span class="pre">source[key]</span></code> access does not list.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.templating.JINJA_DELIMITERS">
+<span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">JINJA_DELIMITERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'block_end_string':</span> <span class="pre">'%&gt;',</span> <span class="pre">'block_start_string':</span> <span class="pre">'&lt;%',</span> <span class="pre">'comment_end_string':</span> <span class="pre">'#&gt;',</span> <span class="pre">'comment_start_string':</span> <span class="pre">'&lt;#',</span> <span class="pre">'variable_end_string':</span> <span class="pre">'&gt;&gt;',</span> <span class="pre">'variable_start_string':</span> <span class="pre">'&lt;&lt;'}</span></span><a class="headerlink" href="#wads.templating.JINJA_DELIMITERS" title="Link to this definition"></a></dt>
+<dd><p>Jinja2 delimiters chosen to avoid colliding with <code class="docutils literal notranslate"><span class="pre">${{</span> <span class="pre">...</span> <span class="pre">}}</span></code> (GitHub
+Actions) and <code class="docutils literal notranslate"><span class="pre">${...}</span></code> (shell).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.templating.apply_placeholders">
+<span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">apply_placeholders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/templating.html#apply_placeholders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.apply_placeholders" title="Link to this definition"></a></dt>
+<dd><p>Legacy <code class="docutils literal notranslate"><span class="pre">#TOKEN#</span></code> substitution used by the older CI templates.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apply_placeholders</span><span class="p">(</span><span class="s2">&quot;name=#NAME#&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;#NAME#&quot;</span><span class="p">:</span> <span class="s2">&quot;wads&quot;</span><span class="p">})</span>
+<span class="go">&#39;name=wads&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.templating.generate">
+<span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#wads.templating.Artifact" title="wads.templating.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">set</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_add</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_skip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Exception</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><span class="pre">GenerationResult</span></a></span></span><a class="reference internal" href="../../_modules/wads/templating.html#generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.generate" title="Link to this definition"></a></dt>
+<dd><p>Apply a list of <a class="reference internal" href="#wads.templating.Artifact" title="wads.templating.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> to <code class="docutils literal notranslate"><span class="pre">target_dir</span></code>.</p>
+<p>An artifact is written when its target does not exist <em>or</em> its target is in
+<code class="docutils literal notranslate"><span class="pre">overwrite</span></code>. Parent directories are created as needed. Each action is
+reported through the optional <code class="docutils literal notranslate"><span class="pre">on_*</span></code> callbacks and accumulated in the
+returned <a class="reference internal" href="#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenerationResult</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.templating.make_jinja_env">
+<span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">make_jinja_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">overrides</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/templating.html#make_jinja_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.make_jinja_env" title="Link to this definition"></a></dt>
+<dd><p>Build a Jinja2 environment with wads’s custom delimiters.</p>
+<p>Extra keyword arguments override the defaults (e.g. <code class="docutils literal notranslate"><span class="pre">undefined</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.templating.render">
+<span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/templating.html#render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.render" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">content</span></code> as a Jinja2 template with wads delimiters.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;major&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;minor&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">&#39;v1.2&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup_utils.html" class="btn btn-neutral float-left" title="wads.setup_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tests/conftest.html" class="btn btn-neutral float-right" title="wads.tests.conftest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

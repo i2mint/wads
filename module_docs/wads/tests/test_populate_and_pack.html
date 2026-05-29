@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_populate_and_pack &mdash; wads 0.1.89 documentation</title>
+  <title>wads.tests.test_populate_and_pack &mdash; wads 0.1.93 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c94237c0"></script>
+      <script src="../../../_static/documentation_options.js?v=1d9edaf8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -24,8 +24,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="wads.tests.test_project_setup" href="test_project_setup.html" />
-    <link rel="prev" title="wads.tests.test_migration" href="test_migration.html" /> 
+    <link rel="next" title="wads.tests.test_populate_characterization" href="test_populate_characterization.html" />
+    <link rel="prev" title="wads.tests.test_npm_setup" href="test_npm_setup.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,16 +58,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fleet_migrate.html">wads.fleet_migrate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install_skills.html">wads.install_skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../migration.html">wads.migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../npm_config.html">wads.npm_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pack.html">wads.pack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiles.html">wads.profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../project_setup.html">wads.project_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scripts.html">wads.scripts</a></li>
@@ -77,45 +76,28 @@
 <li class="toctree-l1"><a class="reference internal" href="../scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../templating.html">wads.templating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_populate_and_pack</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestBuild"><code class="docutils literal notranslate"><span class="pre">TestBuild</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check"><code class="docutils literal notranslate"><span class="pre">TestBuild.test_built_package_passes_twine_check()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestBuild.test_generated_package_can_be_built"><code class="docutils literal notranslate"><span class="pre">TestBuild.test_generated_package_can_be_built()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestCompatibility"><code class="docutils literal notranslate"><span class="pre">TestCompatibility</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg"><code class="docutils literal notranslate"><span class="pre">TestCompatibility.test_can_read_legacy_setup_cfg()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml"><code class="docutils literal notranslate"><span class="pre">TestPackWithPyprojectToml</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version"><code class="docutils literal notranslate"><span class="pre">TestPackWithPyprojectToml.test_current_configs_version()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs"><code class="docutils literal notranslate"><span class="pre">TestPackWithPyprojectToml.test_get_name_from_configs()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version"><code class="docutils literal notranslate"><span class="pre">TestPackWithPyprojectToml.test_increment_configs_version()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version"><code class="docutils literal notranslate"><span class="pre">TestPackWithPyprojectToml.test_set_version()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPopulate"><code class="docutils literal notranslate"><span class="pre">TestPopulate</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata"><code class="docutils literal notranslate"><span class="pre">TestPopulate.test_populate_creates_correct_metadata()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">TestPopulate.test_populate_creates_pyproject_toml()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs"><code class="docutils literal notranslate"><span class="pre">TestPopulate.test_write_pyproject_configs()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_populate_and_pack.setup_git_repo"><code class="docutils literal notranslate"><span class="pre">setup_git_repo()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_project_setup.html">wads.tests.test_project_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_script_cli.html">wads.tests.test_script_cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_user_dirs.html">wads.tests.test_user_dirs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.html">wads.util</a></li>
 </ul>
@@ -144,107 +126,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-wads.tests.test_populate_and_pack">
-<span id="wads-tests-test-populate-and-pack"></span><h1>wads.tests.test_populate_and_pack<a class="headerlink" href="#module-wads.tests.test_populate_and_pack" title="Link to this heading"></a></h1>
-<p>Comprehensive tests for populate and pack functionality with pyproject.toml.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestBuild">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_populate_and_pack.</span></span><span class="sig-name descname"><span class="pre">TestBuild</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestBuild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestBuild" title="Link to this definition"></a></dt>
-<dd><p>Test building packages</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check">
-<span class="sig-name descname"><span class="pre">test_built_package_passes_twine_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestBuild.test_built_package_passes_twine_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestBuild.test_built_package_passes_twine_check" title="Link to this definition"></a></dt>
-<dd><p>Test that built packages pass twine check</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestBuild.test_generated_package_can_be_built">
-<span class="sig-name descname"><span class="pre">test_generated_package_can_be_built</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestBuild.test_generated_package_can_be_built"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestBuild.test_generated_package_can_be_built" title="Link to this definition"></a></dt>
-<dd><p>Test that a package generated by populate can be built</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestCompatibility">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_populate_and_pack.</span></span><span class="sig-name descname"><span class="pre">TestCompatibility</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestCompatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestCompatibility" title="Link to this definition"></a></dt>
-<dd><p>Test backward compatibility with setup.cfg</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg">
-<span class="sig-name descname"><span class="pre">test_can_read_legacy_setup_cfg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestCompatibility.test_can_read_legacy_setup_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestCompatibility.test_can_read_legacy_setup_cfg" title="Link to this definition"></a></dt>
-<dd><p>Test that pack can still read legacy setup.cfg files</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPackWithPyprojectToml">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_populate_and_pack.</span></span><span class="sig-name descname"><span class="pre">TestPackWithPyprojectToml</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPackWithPyprojectToml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml" title="Link to this definition"></a></dt>
-<dd><p>Test pack.py functions with pyproject.toml</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version">
-<span class="sig-name descname"><span class="pre">test_current_configs_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPackWithPyprojectToml.test_current_configs_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_current_configs_version" title="Link to this definition"></a></dt>
-<dd><p>Test getting current version from pyproject.toml</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs">
-<span class="sig-name descname"><span class="pre">test_get_name_from_configs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPackWithPyprojectToml.test_get_name_from_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_get_name_from_configs" title="Link to this definition"></a></dt>
-<dd><p>Test getting package name from pyproject.toml</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version">
-<span class="sig-name descname"><span class="pre">test_increment_configs_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPackWithPyprojectToml.test_increment_configs_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_increment_configs_version" title="Link to this definition"></a></dt>
-<dd><p>Test incrementing version in pyproject.toml</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version">
-<span class="sig-name descname"><span class="pre">test_set_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPackWithPyprojectToml.test_set_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPackWithPyprojectToml.test_set_version" title="Link to this definition"></a></dt>
-<dd><p>Test setting version in pyproject.toml</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPopulate">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_populate_and_pack.</span></span><span class="sig-name descname"><span class="pre">TestPopulate</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPopulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPopulate" title="Link to this definition"></a></dt>
-<dd><p>Test the populate functionality</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata">
-<span class="sig-name descname"><span class="pre">test_populate_creates_correct_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPopulate.test_populate_creates_correct_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_correct_metadata" title="Link to this definition"></a></dt>
-<dd><p>Test that populate creates correct metadata in pyproject.toml</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml">
-<span class="sig-name descname"><span class="pre">test_populate_creates_pyproject_toml</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPopulate.test_populate_creates_pyproject_toml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPopulate.test_populate_creates_pyproject_toml" title="Link to this definition"></a></dt>
-<dd><p>Test that populate creates pyproject.toml</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs">
-<span class="sig-name descname"><span class="pre">test_write_pyproject_configs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#TestPopulate.test_write_pyproject_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.TestPopulate.test_write_pyproject_configs" title="Link to this definition"></a></dt>
-<dd><p>Test writing pyproject.toml from configs</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="wads.tests.test_populate_and_pack.setup_git_repo">
-<span class="sig-prename descclassname"><span class="pre">wads.tests.test_populate_and_pack.</span></span><span class="sig-name descname"><span class="pre">setup_git_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_populate_and_pack.html#setup_git_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_populate_and_pack.setup_git_repo" title="Link to this definition"></a></dt>
-<dd><p>Helper function to initialize a git repo for testing</p>
-</dd></dl>
-
+  <section id="wads-tests-test-populate-and-pack">
+<h1>wads.tests.test_populate_and_pack<a class="headerlink" href="#wads-tests-test-populate-and-pack" title="Link to this heading"></a></h1>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="test_migration.html" class="btn btn-neutral float-left" title="wads.tests.test_migration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="test_project_setup.html" class="btn btn-neutral float-right" title="wads.tests.test_project_setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="test_npm_setup.html" class="btn btn-neutral float-left" title="wads.tests.test_npm_setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="test_populate_characterization.html" class="btn btn-neutral float-right" title="wads.tests.test_populate_characterization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,0 +1,222 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.npm_config &mdash; wads 0.1.93 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1d9edaf8"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.pack" href="pack.html" />
+    <link rel="prev" title="wads.migration" href="migration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_migration.html">wads.ci_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_ci_ops.html">wads.github_ci_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.npm_config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NPM_CI_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_CI_DEFAULTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NPM_PUBLISH_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_PUBLISH_DEFAULTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NpmCIConfig"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.from_file"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.from_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.has_ci_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templating.html">wads.templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.npm_config</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/npm_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.npm_config">
+<span id="wads-npm-config"></span><h1>wads.npm_config<a class="headerlink" href="#module-wads.npm_config" title="Link to this heading"></a></h1>
+<p>Read NPM CI configuration from a <code class="docutils literal notranslate"><span class="pre">package.json</span></code> <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> block.</p>
+<p>This is the NPM-side analog of <a class="reference internal" href="ci_config.html#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">wads.ci_config.CIConfig</span></code></a> (which reads
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code> from <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>). npm ignores unknown top-level keys,
+so wads namespaces its config under a top-level <code class="docutils literal notranslate"><span class="pre">&quot;wads&quot;</span></code> key:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;@scope/my-widget&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;wads&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;ci&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;subdir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;js&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;nodeVersions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;20&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;22&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;24&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;publish&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;marker&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;[publish-npm]&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The reusable workflow (<code class="docutils literal notranslate"><span class="pre">i2mint/wads/.github/workflows/npm-ci.yml</span></code>) parses the
+same block in CI via <code class="docutils literal notranslate"><span class="pre">node</span></code>; this class is the parsing/validation surface used
+from Python (tests, <code class="docutils literal notranslate"><span class="pre">populate</span></code> validation, inspection tooling).</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.npm_config.NPM_CI_DEFAULTS">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NPM_CI_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'buildCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">build</span> <span class="pre">--if-present',</span> <span class="pre">'lintCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">lint</span> <span class="pre">--if-present',</span> <span class="pre">'nodeVersions':</span> <span class="pre">['20',</span> <span class="pre">'22',</span> <span class="pre">'24'],</span> <span class="pre">'publishNode':</span> <span class="pre">'24',</span> <span class="pre">'subdir':</span> <span class="pre">'js',</span> <span class="pre">'testCommand':</span> <span class="pre">'npm</span> <span class="pre">test</span> <span class="pre">--if-present'}</span></span><a class="headerlink" href="#wads.npm_config.NPM_CI_DEFAULTS" title="Link to this definition"></a></dt>
+<dd><p>Defaults applied when a field is absent from <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.npm_config.NPM_PUBLISH_DEFAULTS">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NPM_PUBLISH_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'access':</span> <span class="pre">'public',</span> <span class="pre">'enabled':</span> <span class="pre">False,</span> <span class="pre">'marker':</span> <span class="pre">'[publish-npm]',</span> <span class="pre">'provenance':</span> <span class="pre">True,</span> <span class="pre">'registry':</span> <span class="pre">'https://registry.npmjs.org',</span> <span class="pre">'trustedPublishing':</span> <span class="pre">True}</span></span><a class="headerlink" href="#wads.npm_config.NPM_PUBLISH_DEFAULTS" title="Link to this definition"></a></dt>
+<dd><p>Defaults for the nested <code class="docutils literal notranslate"><span class="pre">wads.ci.publish</span></code> block.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NpmCIConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_json_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/npm_config.html#NpmCIConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_config.NpmCIConfig" title="Link to this definition"></a></dt>
+<dd><p>Typed accessors over a <code class="docutils literal notranslate"><span class="pre">package.json</span></code> <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> configuration block.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.from_file">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_json_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.npm_config.NpmCIConfig" title="wads.npm_config.NpmCIConfig"><span class="pre">NpmCIConfig</span></a></span></span><a class="reference internal" href="../../_modules/wads/npm_config.html#NpmCIConfig.from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_config.NpmCIConfig.from_file" title="Link to this definition"></a></dt>
+<dd><p>Build from a <code class="docutils literal notranslate"><span class="pre">package.json</span></code> file path (file or its directory).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.has_ci_config">
+<span class="sig-name descname"><span class="pre">has_ci_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/npm_config.html#NpmCIConfig.has_ci_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_config.NpmCIConfig.has_ci_config" title="Link to this definition"></a></dt>
+<dd><p>True if the package.json declares a <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> block.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="migration.html" class="btn btn-neutral float-left" title="wads.migration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pack.html" class="btn btn-neutral float-right" title="wads.pack" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

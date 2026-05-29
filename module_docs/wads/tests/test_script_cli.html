@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_script_cli &mdash; wads 0.1.89 documentation</title>
+  <title>wads.tests.test_script_cli &mdash; wads 0.1.93 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c94237c0"></script>
+      <script src="../../../_static/documentation_options.js?v=1d9edaf8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,16 +58,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fleet_migrate.html">wads.fleet_migrate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generate_project_wheels.html">wads.generate_project_wheels</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install_skills.html">wads.install_skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../migration.html">wads.migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../migration_quick_ref.html">wads.migration_quick_ref</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../npm_config.html">wads.npm_config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pack.html">wads.pack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../package_module.html">wads.package_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiles.html">wads.profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../project_setup.html">wads.project_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scripts.html">wads.scripts</a></li>
@@ -77,41 +76,28 @@
 <li class="toctree-l1"><a class="reference internal" href="../scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../templating.html">wads.templating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_npm_setup.html">wads.tests.test_npm_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_project_setup.html">wads.tests.test_project_setup</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_script_cli</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_module_exists"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_build_dist_module_exists()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_with_real_package"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_build_dist_with_real_package()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_install_deps_module_exists"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_install_deps_module_exists()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_module_exists"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_read_ci_config_module_exists()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_quality_and_docs_defaults"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_read_ci_config_quality_and_docs_defaults()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_scripts_can_be_imported"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_scripts_can_be_imported()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_set_env_vars_module_exists"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_set_env_vars_module_exists()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_module_exists"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_validate_ci_env_module_exists()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_on_real_project"><code class="docutils literal notranslate"><span class="pre">TestScriptCLI.test_validate_ci_env_on_real_project()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptDocumentation"><code class="docutils literal notranslate"><span class="pre">TestScriptDocumentation</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_docstrings"><code class="docutils literal notranslate"><span class="pre">TestScriptDocumentation.test_scripts_have_docstrings()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings"><code class="docutils literal notranslate"><span class="pre">TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_script_cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_user_dirs.html">wads.tests.test_user_dirs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../trans.html">wads.trans</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.html">wads.util</a></li>
 </ul>
@@ -140,104 +126,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-wads.tests.test_script_cli">
-<span id="wads-tests-test-script-cli"></span><h1>wads.tests.test_script_cli<a class="headerlink" href="#module-wads.tests.test_script_cli" title="Link to this heading"></a></h1>
-<p>Test CLI interfaces of scripts.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_script_cli.</span></span><span class="sig-name descname"><span class="pre">TestScriptCLI</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI" title="Link to this definition"></a></dt>
-<dd><p>Test command-line interfaces of scripts.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_build_dist_module_exists">
-<span class="sig-name descname"><span class="pre">test_build_dist_module_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_build_dist_module_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_module_exists" title="Link to this definition"></a></dt>
-<dd><p>Test that build_dist module can be imported.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_build_dist_with_real_package">
-<span class="sig-name descname"><span class="pre">test_build_dist_with_real_package</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_build_dist_with_real_package"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_build_dist_with_real_package" title="Link to this definition"></a></dt>
-<dd><p>Test build_dist with a real package.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_install_deps_module_exists">
-<span class="sig-name descname"><span class="pre">test_install_deps_module_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_install_deps_module_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_install_deps_module_exists" title="Link to this definition"></a></dt>
-<dd><p>Test that install_deps module can be imported.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_module_exists">
-<span class="sig-name descname"><span class="pre">test_read_ci_config_module_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_read_ci_config_module_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_module_exists" title="Link to this definition"></a></dt>
-<dd><p>Test that read_ci_config module can be imported.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_quality_and_docs_defaults">
-<span class="sig-name descname"><span class="pre">test_read_ci_config_quality_and_docs_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_read_ci_config_quality_and_docs_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_quality_and_docs_defaults" title="Link to this definition"></a></dt>
-<dd><p>Defaults when sections are absent: ruff/docs default ON,
-black/mypy default OFF.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs">
-<span class="sig-name descname"><span class="pre">test_read_ci_config_writes_quality_and_docs_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_read_ci_config_writes_quality_and_docs_outputs" title="Link to this definition"></a></dt>
-<dd><p><cite>ruff-enabled</cite>, <cite>black-enabled</cite>, <cite>mypy-enabled</cite>, <cite>docs-enabled</cite> are
-exposed as GITHUB_OUTPUT entries.</p>
-<p>Templates gate the corresponding steps/jobs on these. Missing outputs
-evaluate to empty string, which silently mis-routes <cite>if:</cite> conditions.
-Lock the contract here.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_scripts_can_be_imported">
-<span class="sig-name descname"><span class="pre">test_scripts_can_be_imported</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_scripts_can_be_imported"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_scripts_can_be_imported" title="Link to this definition"></a></dt>
-<dd><p>Test that all scripts can be imported as modules.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject">
-<span class="sig-name descname"><span class="pre">test_scripts_fail_gracefully_on_missing_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_scripts_fail_gracefully_on_missing_pyproject" title="Link to this definition"></a></dt>
-<dd><p>Test that scripts fail gracefully when pyproject.toml is missing.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_set_env_vars_module_exists">
-<span class="sig-name descname"><span class="pre">test_set_env_vars_module_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_set_env_vars_module_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_set_env_vars_module_exists" title="Link to this definition"></a></dt>
-<dd><p>Test that set_env_vars module can be imported.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_module_exists">
-<span class="sig-name descname"><span class="pre">test_validate_ci_env_module_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_validate_ci_env_module_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_module_exists" title="Link to this definition"></a></dt>
-<dd><p>Test that validate_ci_env module can be imported.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_on_real_project">
-<span class="sig-name descname"><span class="pre">test_validate_ci_env_on_real_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptCLI.test_validate_ci_env_on_real_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptCLI.test_validate_ci_env_on_real_project" title="Link to this definition"></a></dt>
-<dd><p>Test validate_ci_env on a real project structure.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptDocumentation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.tests.test_script_cli.</span></span><span class="sig-name descname"><span class="pre">TestScriptDocumentation</span></span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptDocumentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptDocumentation" title="Link to this definition"></a></dt>
-<dd><p>Test that scripts have proper documentation.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_docstrings">
-<span class="sig-name descname"><span class="pre">test_scripts_have_docstrings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptDocumentation.test_scripts_have_docstrings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_docstrings" title="Link to this definition"></a></dt>
-<dd><p>Test that scripts have module-level docstrings.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings">
-<span class="sig-name descname"><span class="pre">test_scripts_have_usage_examples_in_docstrings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_script_cli.html#TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_script_cli.TestScriptDocumentation.test_scripts_have_usage_examples_in_docstrings" title="Link to this definition"></a></dt>
-<dd><p>Test that script docstrings include usage examples.</p>
-</dd></dl>
-
-</dd></dl>
-
+  <section id="wads-tests-test-script-cli">
+<h1>wads.tests.test_script_cli<a class="headerlink" href="#wads-tests-test-script-cli" title="Link to this heading"></a></h1>
 </section>
 
 
