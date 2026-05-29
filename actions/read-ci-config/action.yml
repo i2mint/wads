@@ -38,6 +38,9 @@ outputs:
   build-wheel:
     description: 'Whether to build wheel (true/false)'
     value: ${{ steps.config.outputs.build-wheel }}
+  install-extras:
+    description: 'Comma-separated extras for CI to install via pip''s .[extras] syntax (from [tool.wads.ci.install].extras). Empty installs only core deps.'
+    value: ${{ steps.config.outputs.install-extras }}
   metrics-enabled:
     description: 'Whether code metrics tracking is enabled (true/false)'
     value: ${{ steps.config.outputs.metrics-enabled }}

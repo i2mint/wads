@@ -19,6 +19,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 | Section | Purpose |
 |---------|---------|
 | `[project]` | Standard Python project metadata |
+| `[tool.wads.ci.install]` | `extras` — package extras CI installs (`.[extras]`); empty = core deps only |
 | `[tool.wads.ci.testing]` | Python versions, pytest args, coverage, Windows testing |
 | `[tool.wads.ci.commands]` | Pre-test, test, post-test, lint, format commands |
 | `[tool.wads.ci.env]` | Environment variables (required, test, extra, defaults) |

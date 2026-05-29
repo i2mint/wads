@@ -78,3 +78,10 @@ select = ["D100"]
 minversion = "6.0"
 testpaths = ["wads/tests"]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
+
+[tool.wads.ci.install]
+# wads's own test suite exercises the full creation/publish flow (e.g. building
+# a generated package), so CI must install the heavier `create` extra in
+# addition to the light core. Consumed by the reusable workflow via
+# read-ci-config -> install-deps-uv (.[create]).
+extras = "create"

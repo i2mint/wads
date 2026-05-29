@@ -88,6 +88,7 @@ jobs:
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
+      install-extras: ${{ steps.config.outputs.install-extras }}
       metrics-enabled: ${{ steps.config.outputs.metrics-enabled }}
       metrics-config-path: ${{ steps.config.outputs.metrics-config-path }}
       metrics-storage-branch: ${{ steps.config.outputs.metrics-storage-branch }}
@@ -146,6 +147,8 @@ jobs:
 
       - name: Install Dependencies
         uses: i2mint/wads/actions/install-deps-uv@master
+        with:
+          extras: ${{ needs.setup.outputs.install-extras }}
 
       - name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
@@ -216,6 +219,8 @@ jobs:
 
       - name: Install Dependencies
         uses: i2mint/wads/actions/install-deps-uv@master
+        with:
+          extras: ${{ needs.setup.outputs.install-extras }}
 
       - name: Run Tests
         uses: i2mint/wads/actions/run-tests-uv@master

@@ -89,6 +89,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
 
         # Installer configuration
         _set_output("installer", config.installer)
+        _set_output("install-extras", config.install_extras)
 
         # Metrics configuration
         _set_output("metrics-enabled", config.metrics_enabled)
