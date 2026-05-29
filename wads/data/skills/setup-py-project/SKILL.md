@@ -224,7 +224,15 @@ After the main setup, offer (don't force) these extras:
 
    **Why this is needed**: The CI workflow's `github-pages` job (via `i2mint/epythet/actions/publish-github-pages`) pushes built docs to the `gh-pages` branch, but GitHub Pages must be explicitly enabled in repo settings to serve from that branch. Without this step, the docs build succeeds but nothing is published.
 
-### 7. Save preferences
+7. **Ensure the `manual-task` label exists**: **Do this automatically.** GitHub has no default-labels feature for personal accounts, so each new repo needs the label created explicitly.
+
+   ```bash
+   echo "ORG/REPONAME" | ~/bin/ensure-manual-task-label.sh
+   ```
+
+   The script is idempotent (POST + fall back to PATCH on 422), so re-running on an existing repo is a no-op. Backfilling existing repos is done — this step only matters for new repos.
+
+### 8. Save preferences
 
 If this is the user's first time, offer to save detected defaults:
 ```python
