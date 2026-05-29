@@ -10,16 +10,15 @@ readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["documentation", "packaging", "publishing"]
 authors = [{ name = "Thor Whalen" }]
+# Core (light) dependencies: enough to read config ([tool.wads.ci] /
+# package.json wads.ci), run the templating engine, and `import wads`. Kept
+# deliberately small so CI-side use stays cheap. Heavier project-creation /
+# publishing tools live in the `create` extra (see below).
 dependencies = [
-    "argh",
-    "ruamel.yaml",
-    "pyyaml",
-    "pytest",
-    "pylint",
-    "wheel",
-    "build",
-    "packaging",
-    "requests",
+    "jinja2",                                    # templating engine
+    "pyyaml",                                    # light YAML reads
+    "packaging",                                 # version parsing
+    "argh",                                      # CLI dispatch (tiny, pure-python)
     "tomli>=1.0.0; python_version<'3.11'",
     "tomli-w>=0.4.0",
 ]
@@ -28,8 +27,17 @@ dependencies = [
 text = "Apache Software License"
 
 [project.optional-dependencies]
+# Full project-creation / publishing toolchain (heavier). Install with
+# `pip install wads[create]` when scaffolding or publishing projects.
+create = [
+    "requests",      # GitHub repo metadata, PyPI version checks
+    "build",         # PEP 517 build (publish)
+    "wheel",         # wheel building (publish)
+    "ruamel.yaml",   # round-tripping GitHub Actions YAML (CI migration tools)
+]
 docs = ["epythet"]
-setuptools = ["setuptools>=65.0.0"]
+test = ["pytest>=7.0", "pytest-cov"]
+all = ["wads[create,docs]"]
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"
@@ -47,8 +55,6 @@ wads-install-skills = "wads.install_skills:main"
 packages = ["wads"]
 include = [
     "*/docs_gen/_static/**/*",
-    "requirements.txt",
-    "setup.cfg",
     "README.md",
     "wads/data/*",
 ]
@@ -56,7 +62,9 @@ include = [
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-exclude = ["tests", "examples", "scrap"]
+# wads/data holds *templates* (some are not valid standalone Python until
+# rendered, e.g. `import << name >>`), so they must not be linted/formatted.
+exclude = ["tests", "examples", "scrap", "wads/data"]
 
 [tool.ruff.lint]
 select = ["D100"]

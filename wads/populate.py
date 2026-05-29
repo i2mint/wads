@@ -288,6 +288,11 @@ def populate_pkg_dir(
     ci_def_path=None,
     ci_tpl_path=None,
     project_type=populate_dflts["project_type"],
+    with_npm: bool = False,
+    npm_subdir: str = "js",
+    npm_package_name: str | None = None,
+    npm_version: str = "0.0.1",
+    create_tests: bool = False,
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -295,7 +300,7 @@ def populate_pkg_dir(
     >>> from wads.populate import populate_pkg_dir
     >>> import os  # doctest: +SKIP
     >>> name = 'wads'  # doctest: +SKIP
-    >>> pkg_dir = f'/D/Dropbox/dev/p3/proj/i/{name}'  # doctest: +SKIP
+    >>> pkg_dir = f'/path/to/projects/{name}'  # doctest: +SKIP
     >>> populate_pkg_dir(pkg_dir,  # doctest: +SKIP
     ...                  description='Tools for packaging',
     ...                  root_url=f'https://github.com/i2mint',
@@ -328,6 +333,16 @@ def populate_pkg_dir(
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
+    :param with_npm: If True, also add NPM setup for the project's JS/TS parts:
+        a ``<npm_subdir>/package.json`` (with a ``wads.ci`` config block) and a
+        ``.github/workflows/npm-ci.yml`` stub calling wads's reusable NPM
+        workflow. Validation runs on push/PR; publishing is opt-in. Off by default.
+    :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
+    :param npm_package_name: npm package name (defaults to the project name).
+    :param npm_version: initial npm package version (default ``0.0.1``).
+    :param create_tests: If True, scaffold a ``tests/`` folder (``__init__.py``,
+        a ``test_<name>.py`` smoke test, and a ``tests/util.py`` data accessor).
+        Off by default so default output is unchanged.
     :param configs: Extra configurations
     :return:
 
@@ -427,65 +442,19 @@ def populate_pkg_dir(
         with open(pjoin(resource_name), "w") as fp:
             fp.write(content)
 
-    if should_update(".gitignore"):
-        shutil.copy(gitignore_tpl_path, pjoin(".gitignore"))
-        tracker.add(".gitignore")
-    else:
-        tracker.skip(".gitignore")
+    # Verbatim static files (.gitignore, .gitattributes, and optionally the
+    # community files) are described declaratively and applied by the templating
+    # engine. The engine's overwrite/skip semantics match `should_update`.
+    from wads.templating import generate as _generate_artifacts
 
-    if create_gitattributes and should_update(".gitattributes"):
-        _clog("... making a .gitattributes")
-        shutil.copy(gitattributes_tpl_path, pjoin(".gitattributes"))
-        tracker.add(".gitattributes")
-    elif create_gitattributes:
-        tracker.skip(".gitattributes")
-
-    # Create community files only if requested
-    if create_community_files:
-        # Create .editorconfig for consistent formatting
-        if should_update(".editorconfig"):
-            shutil.copy(editorconfig_tpl_path, pjoin(".editorconfig"))
-            tracker.add(".editorconfig")
-        else:
-            tracker.skip(".editorconfig")
-
-        # Create GitHub issue templates
-        github_issue_template_dir = pjoin(".github", "ISSUE_TEMPLATE")
-        os.makedirs(github_issue_template_dir, exist_ok=True)
-
-        if should_update(pjoin(github_issue_template_dir, "bug_report.md")):
-            shutil.copy(
-                bug_report_tpl_path, pjoin(github_issue_template_dir, "bug_report.md")
-            )
-            tracker.add(".github/ISSUE_TEMPLATE/bug_report.md")
-        else:
-            tracker.skip(".github/ISSUE_TEMPLATE/bug_report.md")
-
-        if should_update(pjoin(github_issue_template_dir, "feature_request.md")):
-            shutil.copy(
-                feature_request_tpl_path,
-                pjoin(github_issue_template_dir, "feature_request.md"),
-            )
-            tracker.add(".github/ISSUE_TEMPLATE/feature_request.md")
-        else:
-            tracker.skip(".github/ISSUE_TEMPLATE/feature_request.md")
-
-        # Create PR template
-        if should_update(pjoin(".github", "PULL_REQUEST_TEMPLATE.md")):
-            shutil.copy(
-                pull_request_template_tpl_path,
-                pjoin(".github", "PULL_REQUEST_TEMPLATE.md"),
-            )
-            tracker.add(".github/PULL_REQUEST_TEMPLATE.md")
-        else:
-            tracker.skip(".github/PULL_REQUEST_TEMPLATE.md")
-
-        # Create Dependabot config
-        if should_update(pjoin(".github", "dependabot.yml")):
-            shutil.copy(dependabot_tpl_path, pjoin(".github", "dependabot.yml"))
-            tracker.add(".github/dependabot.yml")
-        else:
-            tracker.skip(".github/dependabot.yml")
+    _generate_artifacts(
+        pkg_dir,
+        _static_file_artifacts(create_gitattributes, create_community_files),
+        configs,
+        overwrite=overwrite,
+        on_add=tracker.add,
+        on_skip=tracker.skip,
+    )
 
     if project_type == "app":
         if should_update("requirements.txt"):
@@ -656,7 +625,7 @@ def populate_pkg_dir(
                         tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
                     else:
                         # No old CI to migrate, create new one from template
-                        user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
+                        user_email = _resolve_user_email(kwargs, pkg_dir)
                         _add_ci_def(
                             ci_def_path,
                             ci_tpl_path,
@@ -669,7 +638,7 @@ def populate_pkg_dir(
                         tracker.add(ci_def_path.replace(pkg_dir + os.sep, ""))
                 else:
                     # Not migrating or not github, use template
-                    user_email = kwargs.get("user_email", "thorwhalen1@gmail.com")
+                    user_email = _resolve_user_email(kwargs, pkg_dir)
                     _add_ci_def(
                         ci_def_path,
                         ci_tpl_path,
@@ -876,6 +845,37 @@ def populate_pkg_dir(
                 for rec in ci_comparison.get("recommendations", []):
                     _clog(f"    • {rec}")
 
+    # Tests-folder overlay (opt-in, #4): scaffold tests/ with a smoke test.
+    if create_tests:
+        from wads.profiles import apply_tests_overlay
+
+        _clog("\n... scaffolding tests/ folder")
+        apply_tests_overlay(
+            pkg_dir,
+            project_name=name,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+        )
+
+    # NPM overlay (opt-in): add package.json + npm-ci workflow for JS/TS parts.
+    if with_npm:
+        from wads.profiles import apply_npm_overlay
+
+        _clog("\n... adding NPM setup (package.json + npm-ci workflow)")
+        apply_npm_overlay(
+            pkg_dir,
+            project_name=name,
+            description=configs.get("description", ""),
+            license=configs.get("license"),
+            npm_subdir=npm_subdir,
+            npm_package_name=npm_package_name,
+            npm_version=npm_version,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+        )
+
     # Print summary
     if verbose:
         tracker.print_summary(verbose=True)
@@ -902,6 +902,63 @@ def _ensure_url_from_url_root_and_name(configs: dict):
             root_url += "/"
         configs["url"] = root_url + configs["name"]
     return configs
+
+
+def _static_file_artifacts(create_gitattributes: bool, create_community_files: bool):
+    """Declarative manifest of verbatim static files for the python-lib profile.
+
+    Returns a list of :class:`wads.templating.Artifact` that copy templates from
+    ``wads/data`` to their target paths. Conditions gate the optional files.
+    """
+    from wads.templating import Artifact, FilesystemTemplateSource
+
+    data_src = FilesystemTemplateSource(os.path.dirname(gitignore_tpl_path))
+    bn = os.path.basename
+
+    artifacts = [Artifact.from_copy(".gitignore", bn(gitignore_tpl_path), data_src)]
+    if create_gitattributes:
+        artifacts.append(
+            Artifact.from_copy(".gitattributes", bn(gitattributes_tpl_path), data_src)
+        )
+    if create_community_files:
+        artifacts += [
+            Artifact.from_copy(".editorconfig", bn(editorconfig_tpl_path), data_src),
+            Artifact.from_copy(
+                ".github/ISSUE_TEMPLATE/bug_report.md",
+                bn(bug_report_tpl_path),
+                data_src,
+            ),
+            Artifact.from_copy(
+                ".github/ISSUE_TEMPLATE/feature_request.md",
+                bn(feature_request_tpl_path),
+                data_src,
+            ),
+            Artifact.from_copy(
+                ".github/PULL_REQUEST_TEMPLATE.md",
+                bn(pull_request_template_tpl_path),
+                data_src,
+            ),
+            Artifact.from_copy(
+                ".github/dependabot.yml", bn(dependabot_tpl_path), data_src
+            ),
+        ]
+    return artifacts
+
+
+def _resolve_user_email(configs: dict, pkg_dir: str) -> str:
+    """Resolve the email used for ``#USER_EMAIL#`` substitution in legacy CI.
+
+    Resolution order: explicit ``user_email`` config -> the repo's
+    ``git config user.email`` -> empty string. No personal address is hardcoded.
+    """
+    email = configs.get("user_email")
+    if email:
+        return email
+    try:
+        email = git(command="config user.email", work_tree=pkg_dir).strip()
+    except Exception:
+        email = ""
+    return email or ""
 
 
 def _url_to_version_control_system(url):
@@ -1114,17 +1171,25 @@ def cd(newdir, verbose=True):
         os.chdir(prevdir)
 
 
-# TODO: Use config2py to specify these, so user can configure them
-name_for_url_root = {
-    "https://github.com/i2mint": "i2mint",
-    "https://github.com/thorwhalen": "thor",
-}
+# Org-routing maps for `populate_proj_from_url`. These are overridable via the
+# wads_configs file (keys "name_for_url_root" / "proj_root_dir_for_name") so a
+# user can configure their own org -> shorthand -> subfolder layout without
+# editing code. The values below are only fallback defaults.
+name_for_url_root = wads_configs.get(
+    "name_for_url_root",
+    {
+        "https://github.com/i2mint": "i2mint",
+        "https://github.com/thorwhalen": "thor",
+    },
+)
 
-# TODO: Use config2py to specify these, so user can configure them
-proj_root_dir_for_name = {
-    "i2mint": "i",
-    "thor": "t",
-}
+proj_root_dir_for_name = wads_configs.get(
+    "proj_root_dir_for_name",
+    {
+        "i2mint": "i",
+        "thor": "t",
+    },
+)
 
 
 def _mk_default_project_description(org_slash_proj: str) -> str:
