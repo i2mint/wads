@@ -36,6 +36,9 @@ github_ci_uv_path = rjoin(data_dir, "github_ci_uv.yml")
 # template is kept as an escape valve for repos that need to customize CI
 # beyond what `[tool.wads.ci.*]` exposes.
 github_ci_uv_stub_path = rjoin(data_dir, "github_ci_uv_stub.yml")
+# NPM overlay templates (opt-in `populate --with-npm`):
+package_json_tpl_path = rjoin(data_dir, "package_json_tpl.json")
+github_ci_npm_stub_path = rjoin(data_dir, "github_ci_npm_stub.yml")
 bug_report_tpl_path = rjoin(data_dir, "bug_report_tpl.md")
 feature_request_tpl_path = rjoin(data_dir, "feature_request_tpl.md")
 pull_request_template_tpl_path = rjoin(data_dir, "pull_request_template_tpl.md")

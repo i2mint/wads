@@ -288,6 +288,10 @@ def populate_pkg_dir(
     ci_def_path=None,
     ci_tpl_path=None,
     project_type=populate_dflts["project_type"],
+    with_npm: bool = False,
+    npm_subdir: str = "js",
+    npm_package_name: str | None = None,
+    npm_version: str = "0.0.1",
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -328,6 +332,13 @@ def populate_pkg_dir(
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
+    :param with_npm: If True, also add NPM setup for the project's JS/TS parts:
+        a ``<npm_subdir>/package.json`` (with a ``wads.ci`` config block) and a
+        ``.github/workflows/npm-ci.yml`` stub calling wads's reusable NPM
+        workflow. Validation runs on push/PR; publishing is opt-in. Off by default.
+    :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
+    :param npm_package_name: npm package name (defaults to the project name).
+    :param npm_version: initial npm package version (default ``0.0.1``).
     :param configs: Extra configurations
     :return:
 
@@ -875,6 +886,24 @@ def populate_pkg_dir(
                 _clog("  Issues found:")
                 for rec in ci_comparison.get("recommendations", []):
                     _clog(f"    • {rec}")
+
+    # NPM overlay (opt-in): add package.json + npm-ci workflow for JS/TS parts.
+    if with_npm:
+        from wads.profiles import apply_npm_overlay
+
+        _clog("\n... adding NPM setup (package.json + npm-ci workflow)")
+        apply_npm_overlay(
+            pkg_dir,
+            project_name=name,
+            description=configs.get("description", ""),
+            license=configs.get("license"),
+            npm_subdir=npm_subdir,
+            npm_package_name=npm_package_name,
+            npm_version=npm_version,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+        )
 
     # Print summary
     if verbose:

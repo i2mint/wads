@@ -1,0 +1,34 @@
+{
+  "name": "<< npm_package_name >>",
+  "version": "<< npm_version >>",
+  "description": "<< description >>",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "echo \"(no lint configured)\" && exit 0",
+    "test": "echo \"(no tests configured)\" && exit 0",
+    "build": "echo \"(no build configured)\" && exit 0"
+  },
+  "license": "<< npm_license >>",
+  "wads": {
+    "ci": {
+      "subdir": "<< npm_subdir >>",
+      "nodeVersions": ["20", "22", "24"],
+      "publishNode": "24",
+      "lintCommand": "npm run lint --if-present",
+      "testCommand": "npm test --if-present",
+      "buildCommand": "npm run build --if-present",
+      "publish": {
+        "enabled": false,
+        "marker": "[publish-npm]",
+        "registry": "https://registry.npmjs.org",
+        "provenance": true,
+        "trustedPublishing": true,
+        "access": "public"
+      }
+    }
+  }
+}
