@@ -67,6 +67,14 @@ long-lived token). Customize the subdirectory and package name with
 `--npm-subdir` / `--npm-package-name`; bring your own templates by pointing the
 generator at a different template source.
 
+**Package manager: npm or pnpm.** The reusable workflow drives **npm** by
+default and **pnpm** when selected — either explicitly via
+`wads.ci.packageManager` (or `populate --npm-package-manager pnpm`) or
+auto-detected from a `pnpm-lock.yaml` in the package directory. pnpm consumers
+should declare a `"packageManager": "pnpm@x.y.z"` field in their `package.json`
+(pnpm's own convention); the CI reads the pnpm version from there. Existing npm
+consumers are unaffected (no `pnpm-lock.yaml` → npm).
+
 ### Configure CI in pyproject.toml
 
 Edit your `pyproject.toml` to configure CI behavior:

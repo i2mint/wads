@@ -30,14 +30,23 @@ from pathlib import Path
 from typing import Union
 
 #: Defaults applied when a field is absent from ``wads.ci``.
+#:
+#: ``packageManager`` is ``"npm"`` here for the typed Python accessor, but in CI
+#: an *absent* field triggers auto-detection (a ``pnpm-lock.yaml`` in the
+#: package dir selects pnpm); an explicit value always wins. So existing npm
+#: consumers — no field, no ``pnpm-lock.yaml`` — keep byte-identical behavior.
 NPM_CI_DEFAULTS = {
     "subdir": "js",
+    "packageManager": "npm",
     "nodeVersions": ["20", "22", "24"],
     "publishNode": "24",
     "lintCommand": "npm run lint --if-present",
     "testCommand": "npm test --if-present",
     "buildCommand": "npm run build --if-present",
 }
+
+#: Package managers the reusable npm CI workflow knows how to drive.
+SUPPORTED_PACKAGE_MANAGERS = ("npm", "pnpm")
 
 #: Defaults for the nested ``wads.ci.publish`` block.
 NPM_PUBLISH_DEFAULTS = {
@@ -86,6 +95,17 @@ class NpmCIConfig:
     @property
     def subdir(self) -> str:
         return self._ci.get("subdir", NPM_CI_DEFAULTS["subdir"])
+
+    @property
+    def package_manager(self) -> str:
+        """The package manager driving install/build (``"npm"`` or ``"pnpm"``).
+
+        Returns the explicit ``wads.ci.packageManager`` if set, else the default
+        (``"npm"``). Note the CI workflow additionally *auto-detects* pnpm from a
+        ``pnpm-lock.yaml`` when the field is absent — this accessor reports only
+        the declared value.
+        """
+        return self._ci.get("packageManager", NPM_CI_DEFAULTS["packageManager"])
 
     @property
     def node_versions(self) -> list:

@@ -50,6 +50,7 @@ def npm_overlay_context(
     npm_subdir: str = "js",
     npm_package_name: Optional[str] = None,
     npm_version: str = "0.0.1",
+    npm_package_manager: str = "npm",
 ) -> dict:
     """Build the render context for the NPM overlay artifacts."""
     return {
@@ -58,6 +59,7 @@ def npm_overlay_context(
         "description": description,
         "npm_license": _to_spdx(license),
         "npm_subdir": npm_subdir,
+        "npm_package_manager": npm_package_manager,
     }
 
 
@@ -94,6 +96,7 @@ def apply_npm_overlay(
     npm_subdir: str = "js",
     npm_package_name: Optional[str] = None,
     npm_version: str = "0.0.1",
+    npm_package_manager: str = "npm",
     overwrite=(),
     on_add=None,
     on_skip=None,
@@ -109,6 +112,7 @@ def apply_npm_overlay(
         npm_subdir=npm_subdir,
         npm_package_name=npm_package_name,
         npm_version=npm_version,
+        npm_package_manager=npm_package_manager,
     )
     return generate(
         pkg_dir,
