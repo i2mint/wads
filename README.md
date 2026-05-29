@@ -17,8 +17,16 @@ Wads helps you:
 ## Installation
 
 ```bash
-pip install wads
+pip install wads          # light core: config reading + templating engine
+pip install wads[create]  # full project-creation / publishing toolchain
+pip install wads[all]     # create + docs
 ```
+
+`wads` ships a **light core** (just enough to read `[tool.wads.ci]` /
+`package.json` config and run the templating engine — handy in CI) plus a
+heavier `create` extra (`requests`, `build`, `wheel`, `ruamel.yaml`) for
+scaffolding and publishing. Use `wads[create]` (or `wads[all]`) when running
+`populate`/`pack` to create or publish projects.
 
 ## Quick Start
 
@@ -34,6 +42,30 @@ This creates a complete project structure with:
 - `README.md`, `LICENSE`, `.gitignore`
 - Package directory with `__init__.py`
 - GitHub Actions CI/CD workflow (optional)
+
+### Add NPM publishing for JS/TS components (optional)
+
+Python projects often ship a small JS/TS component (a widget, a browser UI).
+`populate --with-npm` adds a parametrized **NPM CI** alongside the Python one,
+following the same "config-file-driven, fixed-workflow" model:
+
+```bash
+populate my-project --root-url https://github.com/user/my-project --with-npm
+```
+
+This adds:
+- `js/package.json` — standard npm manifest with a namespaced `"wads"` config
+  block (`wads.ci.*`) controlling node versions, lint/test/build commands, and
+  publishing — analogous to `[tool.wads.ci]` in `pyproject.toml`.
+- `.github/workflows/npm-ci.yml` — a stub calling wads's reusable NPM workflow.
+
+**Validation runs on every push/PR; publishing is opt-in.** It publishes only
+when `wads.ci.publish.enabled` is `true` **and** the commit message contains
+the marker **`[publish-npm]`** (deliberately distinct from the Python side).
+Publishing uses npm OIDC trusted publishing + provenance by default (no
+long-lived token). Customize the subdirectory and package name with
+`--npm-subdir` / `--npm-package-name`; bring your own templates by pointing the
+generator at a different template source.
 
 ### Configure CI in pyproject.toml
 

@@ -45,10 +45,14 @@ wads/
 │   ├── git-commit/       # Auto-commit (SSH)
 │   └── git-tag/          # Create git tags
 ├── wads/                 # Main Python package
-│   ├── populate.py       # Project creation (`populate` CLI)
+│   ├── populate.py       # Project creation (`populate` CLI; `--with-npm` overlay)
 │   ├── pack.py           # Package publishing (`pack` CLI)
 │   ├── migration.py      # Migration tools (`wads-migrate` CLI)
+│   ├── templating.py     # ★ Declarative engine: TemplateSource (dict/fs/github)
+│   │                     #   + Jinja2 (<< >> delimiters) + Artifact/generate()
+│   ├── profiles.py       # Generation profiles/overlays (e.g. apply_npm_overlay)
 │   ├── ci_config.py      # CIConfig class - reads pyproject.toml CI config
+│   ├── npm_config.py     # NpmCIConfig - reads package.json wads.ci block
 │   ├── install_system_deps.py  # System dependency installer
 │   ├── toml_util.py      # TOML read/write helpers
 │   ├── util.py           # Git, logging, path utilities
@@ -58,6 +62,8 @@ wads/
 │   │   │                                 #   5 lines, calls the reusable workflow
 │   │   ├── github_ci_uv.yml              # Inline uv workflow (escape valve / source
 │   │   │                                 #   of truth that the reusable workflow mirrors)
+│   │   ├── github_ci_npm_stub.yml        # NPM CI stub (populate --with-npm)
+│   │   ├── package_json_tpl.json         # package.json template w/ wads.ci block
 │   │   ├── github_ci_publish_2025.yml    # Legacy 2025 CI workflow template
 │   │   └── (other templates)
 │   ├── agents/           # AI diagnostic agents
@@ -134,11 +140,44 @@ To migrate a legacy project:
 - **Docs**: epythet (GitHub Pages)
 - **Metrics**: umpyre
 
+### Declarative templating (since the #32 refactor)
+
+- **Engine**: `wads/templating.py`. A *template source* is any `Mapping[str,str]`
+  of relative-path → content (a `dict`, `FilesystemTemplateSource`, or
+  `GithubTemplateSource`). Rendering is Jinja2 with **`<< >>` delimiters** (so
+  templates don't collide with GitHub Actions `${{ }}` or shell `${}`).
+  `Artifact` + `generate()` apply a declarative manifest with overwrite/skip
+  semantics. `populate`'s static-file generation is driven by this engine.
+- **Profiles/overlays**: `wads/profiles.py`. The default `populate` produces the
+  python-lib profile (output unchanged — pinned by characterization tests in
+  `wads/tests/test_populate_characterization.py`). `apply_npm_overlay` adds the
+  opt-in NPM setup.
+- **Dependency extras**: light core (`jinja2`, `pyyaml`, `packaging`, `argh`,
+  `tomli`/`-w`) for config-reading + templating; `wads[create]` adds the heavy
+  creation/publish toolchain (`requests`, `build`, `wheel`, `ruamel.yaml`).
+  `wads[all]` = create + docs. The light/`create` boundary is locked by
+  `wads/tests/test_light_install.py`.
+
+### NPM CI (opt-in, `populate --with-npm`)
+
+- Mirrors the Python model on the JS/TS side: config lives in
+  `<subdir>/package.json` under a namespaced `"wads"` key (`wads.ci.*`); a stub
+  (`wads/data/github_ci_npm_stub.yml`) calls the **reusable workflow**
+  `i2mint/wads/.github/workflows/npm-ci.yml`.
+- **Validate always; publish opt-in**: publishes only when
+  `wads.ci.publish.enabled` is true AND the commit message contains
+  `[publish-npm]` (distinct from the Python publish trigger). OIDC trusted
+  publishing + provenance by default; version-exists guard; no auto-bump.
+- `NpmCIConfig` (`wads/npm_config.py`) is the Python-side reader of that block.
+
 ## CLI Reference
 
 ```bash
 # Create a new project
 populate my-project --root-url https://github.com/user/my-project
+
+# Create a project that also has a JS/TS component with opt-in NPM publishing
+populate my-project --root-url https://github.com/user/my-project --with-npm
 
 # Build and publish
 pack go .
