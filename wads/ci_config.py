@@ -71,6 +71,24 @@ class CIConfig:
         """Get the package installer to use in CI ('uv' or 'pip')."""
         return self.ci_config.get("installer", "uv")
 
+    @property
+    def install_extras(self) -> str:
+        """Extras to install in CI, as a comma-separated string for pip's
+        ``.[extras]`` syntax.
+
+        Read from ``[tool.wads.ci.install].extras`` (accepts a list or a
+        comma-separated string). Returns ``""`` when unset, in which case CI
+        installs only the package's core dependencies. Example: a project whose
+        tests need its heavier extra can set ``extras = "create"`` so the CI job
+        installs ``.[create]``.
+        """
+        extras = self.ci_config.get("install", {}).get("extras", "")
+        if isinstance(extras, str):
+            items = [e.strip() for e in extras.split(",") if e.strip()]
+        else:
+            items = [str(e).strip() for e in extras if str(e).strip()]
+        return ",".join(items)
+
     # ⚙️ EXECUTION FLOW AND COMMANDS
     @property
     def commands_pre_test(self) -> list[str]:

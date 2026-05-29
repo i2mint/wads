@@ -205,6 +205,17 @@ The tool will:
 
 Wads uses `pyproject.toml` as a single source of truth for CI configuration. Here's what you can configure:
 
+### Install Extras
+
+By default CI installs only your package's core dependencies. If your test suite
+needs an extra (e.g. a heavier `create`/`dev` group), declare it so CI installs
+`.[extras]`:
+
+```toml
+[tool.wads.ci.install]
+extras = "dev"          # or a list, e.g. ["dev", "test"]
+```
+
 ### Python Versions and Testing
 
 ```toml
