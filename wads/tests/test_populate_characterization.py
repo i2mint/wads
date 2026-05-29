@@ -110,5 +110,52 @@ def test_default_populate_init_is_empty(populated_pkg):
     assert (populated_pkg / "mypkg" / "__init__.py").read_text() == ""
 
 
+# --- community files (create_community_files=True) -----------------------------
+
+import wads  # noqa: E402
+
+# (target relative path, template path) — community files are verbatim copies.
+COMMUNITY_FILES = [
+    (".editorconfig", wads.editorconfig_tpl_path),
+    (".github/ISSUE_TEMPLATE/bug_report.md", wads.bug_report_tpl_path),
+    (".github/ISSUE_TEMPLATE/feature_request.md", wads.feature_request_tpl_path),
+    (".github/PULL_REQUEST_TEMPLATE.md", wads.pull_request_template_tpl_path),
+    (".github/dependabot.yml", wads.dependabot_tpl_path),
+]
+
+
+@pytest.fixture
+def populated_pkg_with_community(tmp_path):
+    pkg_dir = tmp_path / "cpkg"
+    pkg_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=pkg_dir, check=True)
+    subprocess.run(["git", "config", "user.email", "t@e.com"], cwd=pkg_dir, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=pkg_dir, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://github.com/myorg/cpkg"],
+        cwd=pkg_dir,
+        check=True,
+    )
+    populate_pkg_dir(
+        str(pkg_dir),
+        description="d",
+        root_url="https://github.com/myorg",
+        author="A",
+        version="0.1.0",
+        verbose=False,
+        create_community_files=True,
+    )
+    return pkg_dir
+
+
+@pytest.mark.parametrize("rel_path,tpl_path", COMMUNITY_FILES)
+def test_community_files_are_verbatim_template_copies(
+    populated_pkg_with_community, rel_path, tpl_path
+):
+    produced = (populated_pkg_with_community / rel_path).read_text()
+    with open(tpl_path) as f:
+        assert produced == f.read(), f"{rel_path} drifted from its template"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
