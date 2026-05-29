@@ -9,6 +9,7 @@ modules at import time and asserting the light surface still imports.
 """
 
 import importlib
+import importlib.abc
 import sys
 
 import pytest
@@ -28,15 +29,24 @@ LIGHT_MODULES = [
 ]
 
 
-class _Blocker:
-    def find_module(self, name, path=None):
-        top = name.split(".")[0]
-        if top in CREATE_ONLY or name in CREATE_ONLY:
-            return self
-        return None
+class _Blocker(importlib.abc.MetaPathFinder):
+    """Meta-path finder that makes create-only modules look genuinely absent.
 
-    def load_module(self, name):  # pragma: no cover - only on accidental import
-        raise ImportError(f"[light-install-test] '{name}' is a create-only dependency")
+    Uses the modern ``find_spec`` API (the legacy ``find_module`` was removed in
+    Python 3.12) and raises ``ModuleNotFoundError`` — exactly what importing a
+    truly-uninstalled module raises — so guarded imports
+    (``try: import requests / except ModuleNotFoundError``) behave as they would
+    in a real light install.
+    """
+
+    def find_spec(self, fullname, path=None, target=None):
+        top = fullname.split(".")[0]
+        if top in CREATE_ONLY or fullname in CREATE_ONLY:
+            raise ModuleNotFoundError(
+                f"[light-install-test] '{fullname}' is a create-only dependency",
+                name=fullname,
+            )
+        return None
 
 
 @pytest.fixture
@@ -44,8 +54,14 @@ def light_environment():
     """Block create-only modules and purge wads from sys.modules for a clean import."""
     blocker = _Blocker()
     sys.meta_path.insert(0, blocker)
-    purged = {m: sys.modules.pop(m) for m in list(sys.modules) if m.split(".")[0] in CREATE_ONLY}
-    purged.update({m: sys.modules.pop(m) for m in list(sys.modules) if m.startswith("wads")})
+    purged = {
+        m: sys.modules.pop(m)
+        for m in list(sys.modules)
+        if m.split(".")[0] in CREATE_ONLY
+    }
+    purged.update(
+        {m: sys.modules.pop(m) for m in list(sys.modules) if m.startswith("wads")}
+    )
     try:
         yield
     finally:

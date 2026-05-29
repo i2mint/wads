@@ -80,12 +80,11 @@ def populated_pkg(tmp_path):
 def test_default_populate_creates_exact_fileset(populated_pkg):
     """A bare populate creates exactly the expected set of files (no more, no less)."""
     created = {
-        os.path.relpath(os.path.join(root, f), populated_pkg)
+        os.path.relpath(os.path.join(root, f), populated_pkg).replace(os.sep, "/")
         for root, _, files in os.walk(populated_pkg)
         for f in files
-        if ".git/" not in os.path.join(root, f) and not root.endswith("/.git")
     }
-    # Drop anything under the .git dir
+    # Drop anything under the .git dir (separators normalized to "/" above)
     created = {p for p in created if not p.startswith(".git/")}
     assert created == EXPECTED_FILESET
 
