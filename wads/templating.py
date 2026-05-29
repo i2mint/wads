@@ -131,8 +131,7 @@ class GithubTemplateSource(Mapping):
         from urllib.request import urlopen
 
         api = (
-            f"https://api.github.com/repos/{self.repo}/git/trees/"
-            f"{self.ref}?recursive=1"
+            f"https://api.github.com/repos/{self.repo}/git/trees/{self.ref}?recursive=1"
         )
         with urlopen(api) as resp:
             tree = json.loads(resp.read().decode("utf-8")).get("tree", [])
@@ -144,7 +143,7 @@ class GithubTemplateSource(Mapping):
             if prefix:
                 if not path.startswith(prefix):
                     continue
-                yield path[len(prefix):]
+                yield path[len(prefix) :]
             else:
                 yield path
 

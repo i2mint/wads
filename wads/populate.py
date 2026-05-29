@@ -292,6 +292,7 @@ def populate_pkg_dir(
     npm_subdir: str = "js",
     npm_package_name: str | None = None,
     npm_version: str = "0.0.1",
+    create_tests: bool = False,
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -339,6 +340,9 @@ def populate_pkg_dir(
     :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
     :param npm_package_name: npm package name (defaults to the project name).
     :param npm_version: initial npm package version (default ``0.0.1``).
+    :param create_tests: If True, scaffold a ``tests/`` folder (``__init__.py``,
+        a ``test_<name>.py`` smoke test, and a ``tests/util.py`` data accessor).
+        Off by default so default output is unchanged.
     :param configs: Extra configurations
     :return:
 
@@ -840,6 +844,19 @@ def populate_pkg_dir(
                 _clog("  Issues found:")
                 for rec in ci_comparison.get("recommendations", []):
                     _clog(f"    • {rec}")
+
+    # Tests-folder overlay (opt-in, #4): scaffold tests/ with a smoke test.
+    if create_tests:
+        from wads.profiles import apply_tests_overlay
+
+        _clog("\n... scaffolding tests/ folder")
+        apply_tests_overlay(
+            pkg_dir,
+            project_name=name,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+        )
 
     # NPM overlay (opt-in): add package.json + npm-ci workflow for JS/TS parts.
     if with_npm:

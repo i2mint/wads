@@ -62,7 +62,9 @@ include = [
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-exclude = ["tests", "examples", "scrap"]
+# wads/data holds *templates* (some are not valid standalone Python until
+# rendered, e.g. `import << name >>`), so they must not be linted/formatted.
+exclude = ["tests", "examples", "scrap", "wads/data"]
 
 [tool.ruff.lint]
 select = ["D100"]
