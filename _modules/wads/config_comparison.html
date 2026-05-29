@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.config_comparison &mdash; wads 0.1.95 documentation</title>
+  <title>wads.config_comparison &mdash; wads 0.1.96 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=726fce2c"></script>
+      <script src="../../_static/documentation_options.js?v=45974446"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -52,10 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_migration.html">wads.ci_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/github_ci_ops.html">wads.github_ci_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
@@ -149,7 +147,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">suppress</span>
 
 <span class="c1"># Import TOML handling</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
@@ -494,59 +491,43 @@
 <span class="sd">        &gt;&gt;&gt; if diff[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
 <span class="sd">        ...     print(&quot;CI might be outdated&quot;)  # doctest: +SKIP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">ImportError</span><span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.github_ci_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_workflows</span><span class="p">,</span> <span class="n">GitHubWorkflow</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">actual</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
-            <span class="n">template</span> <span class="o">=</span> <span class="n">GitHubWorkflow</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">workflow_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
 
-            <span class="n">comparison</span> <span class="o">=</span> <span class="n">compare_workflows</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">)</span>
+        <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Flag outdated action versions referenced by `uses:` steps.</span>
+        <span class="k">for</span> <span class="n">job_data</span> <span class="ow">in</span> <span class="p">(</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jobs&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;steps&quot;</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]:</span>
+                <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uses&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">if</span> <span class="s2">&quot;@v3&quot;</span> <span class="ow">in</span> <span class="n">uses</span> <span class="ow">or</span> <span class="s2">&quot;@v2&quot;</span> <span class="ow">in</span> <span class="n">uses</span><span class="p">:</span>
+                    <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">&#39; might be outdated (consider @v4 or @v5)&quot;</span>
+                    <span class="p">)</span>
 
-            <span class="c1"># Check for outdated action versions</span>
-            <span class="c1"># Use _data attribute to access the workflow data</span>
-            <span class="n">workflow_data</span> <span class="o">=</span> <span class="n">actual</span><span class="o">.</span><span class="n">_data</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="s2">&quot;_data&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">actual</span>
-            <span class="k">if</span> <span class="s2">&quot;jobs&quot;</span> <span class="ow">in</span> <span class="n">workflow_data</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">job_data</span> <span class="ow">in</span> <span class="n">workflow_data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="s2">&quot;steps&quot;</span> <span class="ow">in</span> <span class="n">job_data</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job_data</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]:</span>
-                            <span class="k">if</span> <span class="s2">&quot;uses&quot;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
-                                <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s2">&quot;uses&quot;</span><span class="p">]</span>
-                                <span class="c1"># Check for old action versions</span>
-                                <span class="k">if</span> <span class="s2">&quot;@v3&quot;</span> <span class="ow">in</span> <span class="n">uses</span> <span class="ow">or</span> <span class="s2">&quot;@v2&quot;</span> <span class="ow">in</span> <span class="n">uses</span><span class="p">:</span>
-                                    <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                                        <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">&#39; might be outdated (consider @v4 or @v5)&quot;</span>
-                                    <span class="p">)</span>
+        <span class="c1"># Flag missing modern features.</span>
+        <span class="k">if</span> <span class="s2">&quot;ruff&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;CI doesn&#39;t use ruff for linting - consider modern CI template&quot;</span>
+            <span class="p">)</span>
 
-            <span class="c1"># Check for missing modern features</span>
-            <span class="n">workflow_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">if</span> <span class="s2">&quot;ruff&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">workflow_str</span><span class="p">:</span>
-                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="s2">&quot;CI doesn&#39;t use ruff for linting - consider modern CI template&quot;</span>
-                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">recommendations</span><span class="p">:</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;To update CI, run: populate . --migrate&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">recommendations</span><span class="p">:</span>
-                <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;To update CI, run: populate . --migrate&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">recommendations</span><span class="p">),</span>
+        <span class="p">}</span>
 
-            <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;differences&quot;</span><span class="p">:</span> <span class="n">comparison</span><span class="p">,</span>
-                <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
-                <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">recommendations</span><span class="p">),</span>
-            <span class="p">}</span>
-
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-                <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not compare CI workflows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
-            <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;github_ci_ops not available&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">}</span></div>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not compare CI workflows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">}</span></div>
 
 
 
