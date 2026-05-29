@@ -24,6 +24,7 @@ def test_npm_config_defaults_when_empty():
     cfg = NpmCIConfig({"name": "x"})
     assert cfg.has_ci_config() is False
     assert cfg.subdir == "js"
+    assert cfg.package_manager == "npm"
     assert cfg.node_versions == ["20", "22", "24"]
     assert cfg.publish_enabled is False
     assert cfg.publish_marker == "[publish-npm]"
@@ -37,6 +38,7 @@ def test_npm_config_reads_values():
         "wads": {
             "ci": {
                 "subdir": "frontend",
+                "packageManager": "pnpm",
                 "nodeVersions": ["22"],
                 "publish": {"enabled": True, "marker": "[ship-it]", "access": "restricted"},
             }
@@ -47,6 +49,7 @@ def test_npm_config_reads_values():
     assert cfg.package_name == "@scope/widget"
     assert cfg.version == "1.0.0"
     assert cfg.subdir == "frontend"
+    assert cfg.package_manager == "pnpm"
     assert cfg.node_versions == ["22"]
     assert cfg.publish_enabled is True
     assert cfg.publish_marker == "[ship-it]"
@@ -82,6 +85,7 @@ def test_apply_npm_overlay_writes_files(tmp_path):
     cfg = NpmCIConfig(pkg_json)
     assert cfg.has_ci_config()
     assert cfg.subdir == "js"
+    assert cfg.package_manager == "npm"  # default
     assert cfg.publish_enabled is False  # default OFF
 
     workflow = (tmp_path / ".github" / "workflows" / "npm-ci.yml").read_text()
@@ -104,6 +108,20 @@ def test_overlay_custom_subdir_and_name(tmp_path):
     workflow = (tmp_path / ".github" / "workflows" / "npm-ci.yml").read_text()
     assert "frontend/**" in workflow
     assert "package-dir: frontend" in workflow
+
+
+def test_overlay_pnpm_package_manager(tmp_path):
+    apply_npm_overlay(
+        str(tmp_path),
+        project_name="proj",
+        npm_subdir="ts",
+        npm_package_manager="pnpm",
+    )
+    pkg_json = json.loads((tmp_path / "ts" / "package.json").read_text())
+    assert NpmCIConfig(pkg_json).package_manager == "pnpm"
+    # No leftover Jinja marker for the new placeholder.
+    raw = (tmp_path / "ts" / "package.json").read_text()
+    assert "<<" not in raw and ">>" not in raw
 
 
 # --- populate --with-npm integration ------------------------------------------

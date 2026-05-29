@@ -22,6 +22,12 @@
 #     token); NPM_TOKEN is a documented fallback for first-publish / private deps.
 #   - A pre-publish "version already on registry?" guard makes the job
 #     idempotent (no 403 on re-run); there is NO auto-bump on the JS side.
+#   - Package manager: npm by default. pnpm is supported and is selected either
+#     explicitly (wads.ci.packageManager = "pnpm") or auto-detected from a
+#     pnpm-lock.yaml in the package dir. pnpm consumers should declare a
+#     "packageManager": "pnpm@x.y.z" field in their package.json (pnpm's own
+#     convention) — the pnpm setup reads the version from there. npm consumers
+#     are unaffected (no pnpm-lock.yaml → npm).
 
 name: NPM CI
 
@@ -46,6 +52,7 @@ jobs:
     name: Read wads.ci config from package.json
     runs-on: ubuntu-latest
     outputs:
+      package_manager: ${{ steps.cfg.outputs.package_manager }}
       node_versions: ${{ steps.cfg.outputs.node_versions }}
       publish_node: ${{ steps.cfg.outputs.publish_node }}
       lint_command: ${{ steps.cfg.outputs.lint_command }}
@@ -64,10 +71,17 @@ jobs:
         run: |
           read_cfg() {
             node -e "
+              const fs = require('fs');
               const p = require('./package.json');
               const ci = (p.wads && p.wads.ci) || {};
               const pub = ci.publish || {};
+              // Explicit packageManager wins; else auto-detect pnpm via its
+              // lockfile; else npm. Existing npm repos (no field, no
+              // pnpm-lock.yaml) resolve to npm — unchanged behavior.
+              let pm = ci.packageManager || '';
+              if (!pm) pm = fs.existsSync('pnpm-lock.yaml') ? 'pnpm' : 'npm';
               const out = {
+                package_manager: pm,
                 node_versions: JSON.stringify(ci.nodeVersions || ['20','22','24']),
                 publish_node: String(ci.publishNode || '24'),
                 lint_command: ci.lintCommand || 'npm run lint --if-present',
@@ -94,14 +108,25 @@ jobs:
         node: ${{ fromJson(needs.setup.outputs.node_versions) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        if: needs.setup.outputs.package_manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          # Read the pnpm version from the package's own packageManager field.
+          package_json_file: ${{ inputs.package-dir }}/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
-          cache-dependency-path: ${{ inputs.package-dir }}/package-lock.json
+          cache: ${{ needs.setup.outputs.package_manager }}
+          cache-dependency-path: ${{ inputs.package-dir }}/${{ needs.setup.outputs.package_manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
       - name: Install
         working-directory: ${{ inputs.package-dir }}
-        run: npm ci || npm install
+        run: |
+          if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
+            pnpm install --frozen-lockfile
+          else
+            npm ci || npm install
+          fi
       - name: Lint
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.lint_command }}
@@ -124,13 +149,23 @@ jobs:
       contains(github.event.head_commit.message, needs.setup.outputs.publish_marker)
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        if: needs.setup.outputs.package_manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.package-dir }}/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.publish_node }}
           registry-url: ${{ needs.setup.outputs.registry }}
       - name: Install
         working-directory: ${{ inputs.package-dir }}
-        run: npm ci || npm install
+        run: |
+          if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
+            pnpm install --frozen-lockfile
+          else
+            npm ci || npm install
+          fi
       - name: Build
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.build_command }}

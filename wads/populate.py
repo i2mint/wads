@@ -292,6 +292,7 @@ def populate_pkg_dir(
     npm_subdir: str = "js",
     npm_package_name: str | None = None,
     npm_version: str = "0.0.1",
+    npm_package_manager: str = "npm",
     create_tests: bool = False,
     **configs,
 ):
@@ -340,6 +341,9 @@ def populate_pkg_dir(
     :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
     :param npm_package_name: npm package name (defaults to the project name).
     :param npm_version: initial npm package version (default ``0.0.1``).
+    :param npm_package_manager: package manager for the JS/TS package —
+        ``"npm"`` (default) or ``"pnpm"``. pnpm consumers should also declare a
+        ``"packageManager": "pnpm@x.y.z"`` field in package.json.
     :param create_tests: If True, scaffold a ``tests/`` folder (``__init__.py``,
         a ``test_<name>.py`` smoke test, and a ``tests/util.py`` data accessor).
         Off by default so default output is unchanged.
@@ -871,6 +875,7 @@ def populate_pkg_dir(
             npm_subdir=npm_subdir,
             npm_package_name=npm_package_name,
             npm_version=npm_version,
+            npm_package_manager=npm_package_manager,
             overwrite=overwrite,
             on_add=tracker.add,
             on_skip=tracker.skip,

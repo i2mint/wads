@@ -169,7 +169,16 @@ To migrate a legacy project:
   `wads.ci.publish.enabled` is true AND the commit message contains
   `[publish-npm]` (distinct from the Python publish trigger). OIDC trusted
   publishing + provenance by default; version-exists guard; no auto-bump.
-- `NpmCIConfig` (`wads/npm_config.py`) is the Python-side reader of that block.
+- **Package manager: npm (default) or pnpm.** The reusable workflow picks pnpm
+  when `wads.ci.packageManager == "pnpm"` OR a `pnpm-lock.yaml` is present in
+  the package dir (auto-detect in the `setup` job); else npm. The pnpm path adds
+  a conditional `pnpm/action-setup` (version read from the package's
+  `packageManager` field via `package_json_file`), switches the setup-node cache
+  + lockfile, and installs with `pnpm install --frozen-lockfile`. lint/test/build
+  and `npm publish` are unchanged. Additive: npm consumers (no field, no
+  `pnpm-lock.yaml`) see byte-identical behavior on `@master`.
+- `NpmCIConfig` (`wads/npm_config.py`) is the Python-side reader of that block
+  (`package_manager` property; `SUPPORTED_PACKAGE_MANAGERS`).
 
 ## CLI Reference
 
