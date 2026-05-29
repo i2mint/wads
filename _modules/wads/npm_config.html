@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.npm_config &mdash; wads 0.1.94 documentation</title>
+  <title>wads.npm_config &mdash; wads 0.1.95 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d6174a35"></script>
+      <script src="../../_static/documentation_options.js?v=726fce2c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -157,14 +157,23 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
 
 <span class="c1">#: Defaults applied when a field is absent from ``wads.ci``.</span>
+<span class="c1">#:</span>
+<span class="c1">#: ``packageManager`` is ``&quot;npm&quot;`` here for the typed Python accessor, but in CI</span>
+<span class="c1">#: an *absent* field triggers auto-detection (a ``pnpm-lock.yaml`` in the</span>
+<span class="c1">#: package dir selects pnpm); an explicit value always wins. So existing npm</span>
+<span class="c1">#: consumers — no field, no ``pnpm-lock.yaml`` — keep byte-identical behavior.</span>
 <span class="n">NPM_CI_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;subdir&quot;</span><span class="p">:</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;packageManager&quot;</span><span class="p">:</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
     <span class="s2">&quot;nodeVersions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;20&quot;</span><span class="p">,</span> <span class="s2">&quot;22&quot;</span><span class="p">,</span> <span class="s2">&quot;24&quot;</span><span class="p">],</span>
     <span class="s2">&quot;publishNode&quot;</span><span class="p">:</span> <span class="s2">&quot;24&quot;</span><span class="p">,</span>
     <span class="s2">&quot;lintCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm run lint --if-present&quot;</span><span class="p">,</span>
     <span class="s2">&quot;testCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm test --if-present&quot;</span><span class="p">,</span>
     <span class="s2">&quot;buildCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm run build --if-present&quot;</span><span class="p">,</span>
 <span class="p">}</span>
+
+<span class="c1">#: Package managers the reusable npm CI workflow knows how to drive.</span>
+<span class="n">SUPPORTED_PACKAGE_MANAGERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;npm&quot;</span><span class="p">,</span> <span class="s2">&quot;pnpm&quot;</span><span class="p">)</span>
 
 <span class="c1">#: Defaults for the nested ``wads.ci.publish`` block.</span>
 <span class="n">NPM_PUBLISH_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
@@ -221,6 +230,17 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">subdir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subdir&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;subdir&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">package_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The package manager driving install/build (``&quot;npm&quot;`` or ``&quot;pnpm&quot;``).</span>
+
+<span class="sd">        Returns the explicit ``wads.ci.packageManager`` if set, else the default</span>
+<span class="sd">        (``&quot;npm&quot;``). Note the CI workflow additionally *auto-detects* pnpm from a</span>
+<span class="sd">        ``pnpm-lock.yaml`` when the field is absent — this accessor reports only</span>
+<span class="sd">        the declared value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;packageManager&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;packageManager&quot;</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>

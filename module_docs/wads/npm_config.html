@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.npm_config &mdash; wads 0.1.94 documentation</title>
+  <title>wads.npm_config &mdash; wads 0.1.95 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d6174a35"></script>
+      <script src="../../_static/documentation_options.js?v=726fce2c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -69,8 +69,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NpmCIConfig"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.from_file"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.from_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.has_ci_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.package_manager"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.package_manager</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_PACKAGE_MANAGERS</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
@@ -159,8 +161,12 @@ same block in CI via <code class="docutils literal notranslate"><span class="pre
 from Python (tests, <code class="docutils literal notranslate"><span class="pre">populate</span></code> validation, inspection tooling).</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="wads.npm_config.NPM_CI_DEFAULTS">
-<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NPM_CI_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'buildCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">build</span> <span class="pre">--if-present',</span> <span class="pre">'lintCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">lint</span> <span class="pre">--if-present',</span> <span class="pre">'nodeVersions':</span> <span class="pre">['20',</span> <span class="pre">'22',</span> <span class="pre">'24'],</span> <span class="pre">'publishNode':</span> <span class="pre">'24',</span> <span class="pre">'subdir':</span> <span class="pre">'js',</span> <span class="pre">'testCommand':</span> <span class="pre">'npm</span> <span class="pre">test</span> <span class="pre">--if-present'}</span></span><a class="headerlink" href="#wads.npm_config.NPM_CI_DEFAULTS" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NPM_CI_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'buildCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">build</span> <span class="pre">--if-present',</span> <span class="pre">'lintCommand':</span> <span class="pre">'npm</span> <span class="pre">run</span> <span class="pre">lint</span> <span class="pre">--if-present',</span> <span class="pre">'nodeVersions':</span> <span class="pre">['20',</span> <span class="pre">'22',</span> <span class="pre">'24'],</span> <span class="pre">'packageManager':</span> <span class="pre">'npm',</span> <span class="pre">'publishNode':</span> <span class="pre">'24',</span> <span class="pre">'subdir':</span> <span class="pre">'js',</span> <span class="pre">'testCommand':</span> <span class="pre">'npm</span> <span class="pre">test</span> <span class="pre">--if-present'}</span></span><a class="headerlink" href="#wads.npm_config.NPM_CI_DEFAULTS" title="Link to this definition"></a></dt>
 <dd><p>Defaults applied when a field is absent from <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">packageManager</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;npm&quot;</span></code> here for the typed Python accessor, but in CI
+an <em>absent</em> field triggers auto-detection (a <code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> in the
+package dir selects pnpm); an explicit value always wins. So existing npm
+consumers — no field, no <code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> — keep byte-identical behavior.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -185,6 +191,22 @@ from Python (tests, <code class="docutils literal notranslate"><span class="pre"
 <dd><p>True if the package.json declares a <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> block.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.package_manager">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">package_manager</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.package_manager" title="Link to this definition"></a></dt>
+<dd><p>The package manager driving install/build (<code class="docutils literal notranslate"><span class="pre">&quot;npm&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;pnpm&quot;</span></code>).</p>
+<p>Returns the explicit <code class="docutils literal notranslate"><span class="pre">wads.ci.packageManager</span></code> if set, else the default
+(<code class="docutils literal notranslate"><span class="pre">&quot;npm&quot;</span></code>). Note the CI workflow additionally <em>auto-detects</em> pnpm from a
+<code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> when the field is absent — this accessor reports only
+the declared value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.npm_config.SUPPORTED_PACKAGE_MANAGERS">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_PACKAGE_MANAGERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('npm',</span> <span class="pre">'pnpm')</span></span><a class="headerlink" href="#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS" title="Link to this definition"></a></dt>
+<dd><p>Package managers the reusable npm CI workflow knows how to drive.</p>
 </dd></dl>
 
 </section>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.profiles &mdash; wads 0.1.94 documentation</title>
+  <title>wads.profiles &mdash; wads 0.1.95 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d6174a35"></script>
+      <script src="../../_static/documentation_options.js?v=726fce2c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -179,6 +179,7 @@
     <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
     <span class="n">npm_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the render context for the NPM overlay artifacts.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
@@ -187,6 +188,7 @@
         <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
         <span class="s2">&quot;npm_license&quot;</span><span class="p">:</span> <span class="n">_to_spdx</span><span class="p">(</span><span class="n">license</span><span class="p">),</span>
         <span class="s2">&quot;npm_subdir&quot;</span><span class="p">:</span> <span class="n">npm_subdir</span><span class="p">,</span>
+        <span class="s2">&quot;npm_package_manager&quot;</span><span class="p">:</span> <span class="n">npm_package_manager</span><span class="p">,</span>
     <span class="p">}</span></div>
 
 
@@ -229,6 +231,7 @@
     <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
     <span class="n">npm_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -244,6 +247,7 @@
         <span class="n">npm_subdir</span><span class="o">=</span><span class="n">npm_subdir</span><span class="p">,</span>
         <span class="n">npm_package_name</span><span class="o">=</span><span class="n">npm_package_name</span><span class="p">,</span>
         <span class="n">npm_version</span><span class="o">=</span><span class="n">npm_version</span><span class="p">,</span>
+        <span class="n">npm_package_manager</span><span class="o">=</span><span class="n">npm_package_manager</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">generate</span><span class="p">(</span>
         <span class="n">pkg_dir</span><span class="p">,</span>
