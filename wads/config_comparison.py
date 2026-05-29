@@ -22,7 +22,6 @@ Example:
 import sys
 from typing import Dict, Any, List, Tuple, Optional, Set
 from pathlib import Path
-from contextlib import suppress
 
 # Import TOML handling
 if sys.version_info >= (3, 11):
@@ -356,59 +355,43 @@ def compare_ci_workflow(
         >>> if diff['needs_attention']:  # doctest: +SKIP
         ...     print("CI might be outdated")  # doctest: +SKIP
     """
-    with suppress(ImportError):
-        from wads.github_ci_ops import compare_workflows, GitHubWorkflow
+    try:
+        import yaml
 
-        try:
-            actual = GitHubWorkflow(actual_path)
-            template = GitHubWorkflow(template_path)
+        with open(actual_path) as f:
+            workflow_data = yaml.safe_load(f) or {}
 
-            comparison = compare_workflows(actual, template)
+        recommendations = []
 
-            recommendations = []
+        # Flag outdated action versions referenced by `uses:` steps.
+        for job_data in (workflow_data.get("jobs") or {}).values():
+            for step in job_data.get("steps", []) if isinstance(job_data, dict) else []:
+                uses = step.get("uses", "") if isinstance(step, dict) else ""
+                if "@v3" in uses or "@v2" in uses:
+                    recommendations.append(
+                        f"Action '{uses}' might be outdated (consider @v4 or @v5)"
+                    )
 
-            # Check for outdated action versions
-            # Use _data attribute to access the workflow data
-            workflow_data = actual._data if hasattr(actual, "_data") else actual
-            if "jobs" in workflow_data:
-                for job_name, job_data in workflow_data["jobs"].items():
-                    if "steps" in job_data:
-                        for step in job_data["steps"]:
-                            if "uses" in step:
-                                uses = step["uses"]
-                                # Check for old action versions
-                                if "@v3" in uses or "@v2" in uses:
-                                    recommendations.append(
-                                        f"Action '{uses}' might be outdated (consider @v4 or @v5)"
-                                    )
+        # Flag missing modern features.
+        if "ruff" not in str(workflow_data).lower():
+            recommendations.append(
+                "CI doesn't use ruff for linting - consider modern CI template"
+            )
 
-            # Check for missing modern features
-            workflow_str = str(workflow_data).lower()
-            if "ruff" not in workflow_str:
-                recommendations.append(
-                    "CI doesn't use ruff for linting - consider modern CI template"
-                )
+        if recommendations:
+            recommendations.append("To update CI, run: populate . --migrate")
 
-            if recommendations:
-                recommendations.append(f"To update CI, run: populate . --migrate")
+        return {
+            "recommendations": recommendations,
+            "needs_attention": bool(recommendations),
+        }
 
-            return {
-                "differences": comparison,
-                "recommendations": recommendations,
-                "needs_attention": bool(recommendations),
-            }
-
-        except Exception as e:
-            return {
-                "error": str(e),
-                "needs_attention": True,
-                "recommendations": [f"Could not compare CI workflows: {e}"],
-            }
-
-    return {
-        "error": "github_ci_ops not available",
-        "needs_attention": False,
-    }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "needs_attention": True,
+            "recommendations": [f"Could not compare CI workflows: {e}"],
+        }
 
 
 # --------------------------------------------------------------------------------------

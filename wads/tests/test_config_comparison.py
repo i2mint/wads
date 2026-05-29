@@ -215,5 +215,57 @@ def test_compare_manifest_in():
         assert result['needs_attention'] == True
 
 
+def test_compare_ci_workflow_flags_outdated_actions():
+    """A workflow with old action versions and no ruff needs attention."""
+    from wads.config_comparison import compare_ci_workflow
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        wf = Path(tmpdir) / 'ci.yml'
+        wf.write_text(
+            "name: CI\n"
+            "on: [push]\n"
+            "jobs:\n"
+            "  build:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - uses: actions/checkout@v2\n"
+        )
+        result = compare_ci_workflow(wf)
+        assert result['needs_attention'] is True
+        recs = ' '.join(result['recommendations'])
+        assert 'outdated' in recs
+        assert 'ruff' in recs  # no ruff present -> flagged
+
+
+def test_compare_ci_workflow_modern_is_clean():
+    """A modern workflow (current actions + ruff) needs no attention."""
+    from wads.config_comparison import compare_ci_workflow
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        wf = Path(tmpdir) / 'ci.yml'
+        wf.write_text(
+            "name: CI\n"
+            "on: [push]\n"
+            "jobs:\n"
+            "  build:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - uses: actions/checkout@v4\n"
+            "      - run: ruff check .\n"
+        )
+        result = compare_ci_workflow(wf)
+        assert result['needs_attention'] is False
+        assert result['recommendations'] == []
+
+
+def test_compare_ci_workflow_missing_file():
+    """A missing workflow file is reported as an error, not a crash."""
+    from wads.config_comparison import compare_ci_workflow
+
+    result = compare_ci_workflow('/nonexistent/ci.yml')
+    assert result['needs_attention'] is True
+    assert 'error' in result
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
