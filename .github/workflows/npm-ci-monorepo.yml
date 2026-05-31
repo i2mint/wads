@@ -17,15 +17,15 @@
 #     wads.ci block.
 #   - `validate` installs the whole workspace once (pnpm) then runs turbo
 #     lint/test/build across every workspace package, matrixed over node. turbo
-#     provides the per-package fan-out + caching; the `setup` job additionally
-#     exposes a `packages` output (JSON array of package dirs) used by `publish`.
-#     (A future refinement may matrix `validate` over `node x package` for
-#     per-package status checks; turbo already parallelizes today.)
+#     provides the per-package fan-out + caching. (A future refinement may matrix
+#     `validate` over `node x package` for per-package status checks; turbo
+#     already parallelizes today.)
 #   - `publish` is OPT-IN: it runs only when wads.ci.publish.enabled is true AND
 #     the push is to the default branch AND the head commit message contains the
-#     publish marker (default "[publish-npm]"). It iterates the discovered
-#     packages, skipping any whose name@version is already on the registry
-#     (idempotent; no auto-bump), and publishes the rest with provenance.
+#     publish marker (default "[publish-npm]"). It uses `pnpm -r publish`, which
+#     publishes every public workspace package, rewrites `workspace:` protocol
+#     deps to real versions, and SKIPS any package whose version is already on
+#     the registry (idempotent; no auto-bump). Publishes with provenance.
 #   - pnpm only (monorepos are pnpm-workspace based); the pnpm version is read
 #     from the root package.json "packageManager" field by pnpm/action-setup.
 
@@ -49,7 +49,7 @@ permissions:
 
 jobs:
   setup:
-    name: Read wads.ci config + discover workspace packages
+    name: Read wads.ci config from root package.json
     runs-on: ubuntu-latest
     outputs:
       node_versions: ${{ steps.cfg.outputs.node_versions }}
@@ -62,12 +62,8 @@ jobs:
       registry: ${{ steps.cfg.outputs.registry }}
       provenance: ${{ steps.cfg.outputs.provenance }}
       access: ${{ steps.cfg.outputs.access }}
-      packages: ${{ steps.pkgs.outputs.packages }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: ${{ inputs.package-dir }}/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -93,29 +89,6 @@ jobs:
             };
             for (const [k,v] of Object.entries(out)) console.log(k+'='+v);
           " >> "$GITHUB_OUTPUT"
-      - name: Install workspace
-        working-directory: ${{ inputs.package-dir }}
-        run: pnpm install --frozen-lockfile
-      - name: Discover workspace packages
-        id: pkgs
-        working-directory: ${{ inputs.package-dir }}
-        run: |
-          # Emit a JSON array of package dirs (relative to the workspace root)
-          # for every publishable (non-private) workspace package.
-          PKGS=$(pnpm -r list --depth -1 --json | node -e "
-            const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync(0, 'utf8'));
-            const root = process.cwd();
-            const path = require('path');
-            const dirs = [];
-            for (const pkg of data) {
-              if (!pkg.path || pkg.path === root) continue;       // skip the root
-              const rel = path.relative(root, pkg.path);
-              dirs.push(rel);
-            }
-            console.log(JSON.stringify(dirs));
-          ")
-          echo "packages=$PKGS" >> "$GITHUB_OUTPUT"
 
   validate:
     name: Validate (node ${{ matrix.node }})
@@ -173,29 +146,17 @@ jobs:
       - name: Build
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.build_command }}
-      - name: Publish changed packages
+      - name: Publish workspace packages
         working-directory: ${{ inputs.package-dir }}
         env:
           # Omitted/empty under OIDC trusted publishing; used only as a fallback.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PROVENANCE: ${{ needs.setup.outputs.provenance }}
           ACCESS: ${{ needs.setup.outputs.access }}
-          PACKAGES: ${{ needs.setup.outputs.packages }}
         run: |
+          # `pnpm -r publish` publishes every public workspace package, rewriting
+          # `workspace:` protocol deps to real versions and SKIPPING any package
+          # whose version is already on the registry (idempotent; no auto-bump).
           PROV=""
           if [ "$PROVENANCE" = "true" ]; then PROV="--provenance"; fi
-          echo "$PACKAGES" | node -e "
-            const fs = require('fs');
-            const dirs = JSON.parse(fs.readFileSync(0, 'utf8'));
-            for (const d of dirs) console.log(d);
-          " | while read -r dir; do
-            [ -z "$dir" ] && continue
-            NAME=$(node -p "require('./$dir/package.json').name")
-            VER=$(node -p "require('./$dir/package.json').version")
-            if npm view "$NAME@$VER" version >/dev/null 2>&1; then
-              echo "Skip: $NAME@$VER already published."
-            else
-              echo "Publish: $NAME@$VER"
-              ( cd "$dir" && npm publish $PROV --access "$ACCESS" )
-            fi
-          done
+          pnpm -r publish --access "$ACCESS" --no-git-checks $PROV
