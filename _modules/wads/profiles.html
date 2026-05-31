@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.profiles &mdash; wads 0.1.97 documentation</title>
+  <title>wads.profiles &mdash; wads 0.1.98 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e1efc05f"></script>
+      <script src="../../_static/documentation_options.js?v=09f5639d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -159,6 +159,7 @@
     <span class="n">package_json_ts_tpl_path</span><span class="p">,</span>
     <span class="n">tsconfig_tpl_path</span><span class="p">,</span>
     <span class="n">ts_index_tpl_path</span><span class="p">,</span>
+    <span class="n">ts_index_test_tpl_path</span><span class="p">,</span>
     <span class="n">pnpm_workspace_tpl_path</span><span class="p">,</span>
     <span class="n">turbo_tpl_path</span><span class="p">,</span>
     <span class="n">package_json_monorepo_root_tpl_path</span><span class="p">,</span>
@@ -325,6 +326,9 @@
         <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_ts_tpl_path</span><span class="p">),</span>
         <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/tsconfig.json&quot;</span><span class="p">,</span> <span class="n">tsconfig_tpl_path</span><span class="p">),</span>
         <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
+        <span class="c1"># Ship a passing starter test so the `test` step is green out of the</span>
+        <span class="c1"># box: `vitest run` exits 1 when it finds *no* test files (issue #41).</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.test.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
         <span class="n">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
     <span class="p">]</span>
 
@@ -346,6 +350,8 @@
         <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_monorepo_pkg_tpl_path</span><span class="p">),</span>
         <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/tsconfig.json&quot;</span><span class="p">,</span> <span class="n">tsconfig_monorepo_pkg_tpl_path</span><span class="p">),</span>
         <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
+        <span class="c1"># Passing starter test so `turbo run test` is green out of the box (#41).</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.test.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
         <span class="n">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
     <span class="p">]</span>
 
@@ -455,8 +461,8 @@
 <span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
 <span class="sd">    &gt;&gt;&gt; res = apply_frontend(d, profile=&quot;ts&quot;, project_name=&quot;widget&quot;)</span>
 <span class="sd">    &gt;&gt;&gt; sorted(res.added)  # doctest: +NORMALIZE_WHITESPACE</span>
-<span class="sd">    [&#39;.github/workflows/npm-ci-ts.yml&#39;, &#39;ts/package.json&#39;, &#39;ts/src/index.ts&#39;,</span>
-<span class="sd">     &#39;ts/tsconfig.json&#39;]</span>
+<span class="sd">    [&#39;.github/workflows/npm-ci-ts.yml&#39;, &#39;ts/package.json&#39;, &#39;ts/src/index.test.ts&#39;,</span>
+<span class="sd">     &#39;ts/src/index.ts&#39;, &#39;ts/tsconfig.json&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">prof</span> <span class="o">=</span> <span class="n">get_frontend_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
     <span class="n">subdir</span> <span class="o">=</span> <span class="n">subdir</span> <span class="ow">or</span> <span class="n">prof</span><span class="o">.</span><span class="n">default_subdir</span>
