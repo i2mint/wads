@@ -108,6 +108,21 @@ jobs:
         node: ${{ fromJson(needs.setup.outputs.node_versions) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Detect lockfile
+        id: lock
+        working-directory: ${{ inputs.package-dir }}
+        run: |
+          if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
+            LOCKFILE=pnpm-lock.yaml
+          else
+            LOCKFILE=package-lock.json
+          fi
+          if [ -f "$LOCKFILE" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No $LOCKFILE committed in '${{ inputs.package-dir }}'; installing without a frozen lockfile and skipping the dependency cache. Commit a lockfile for reproducible, cached installs."
+          fi
       - name: Setup pnpm
         if: needs.setup.outputs.package_manager == 'pnpm'
         uses: pnpm/action-setup@v4
@@ -117,13 +132,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: ${{ needs.setup.outputs.package_manager }}
+          # The dependency cache keys off the lockfile; only enable it when one
+          # is committed (setup-node errors if cache is on but the lockfile is
+          # absent -- e.g. a freshly generated project, issue #41).
+          cache: ${{ steps.lock.outputs.present == 'true' && needs.setup.outputs.package_manager || '' }}
           cache-dependency-path: ${{ inputs.package-dir }}/${{ needs.setup.outputs.package_manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
       - name: Install
         working-directory: ${{ inputs.package-dir }}
         run: |
           if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
-            pnpm install --frozen-lockfile
+            if [ "${{ steps.lock.outputs.present }}" = "true" ]; then
+              pnpm install --frozen-lockfile
+            else
+              pnpm install --no-frozen-lockfile
+            fi
           else
             npm ci || npm install
           fi
@@ -162,7 +184,7 @@ jobs:
         working-directory: ${{ inputs.package-dir }}
         run: |
           if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
           else
             npm ci || npm install
           fi

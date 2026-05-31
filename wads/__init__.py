@@ -44,6 +44,7 @@ github_ci_npm_stub_path = rjoin(data_dir, "github_ci_npm_stub.yml")
 package_json_ts_tpl_path = rjoin(data_dir, "package_json_ts_tpl.json")
 tsconfig_tpl_path = rjoin(data_dir, "tsconfig_tpl.json")
 ts_index_tpl_path = rjoin(data_dir, "ts_index_tpl.ts")
+ts_index_test_tpl_path = rjoin(data_dir, "ts_index_test_tpl.ts")
 # `ts-monorepo` (pnpm workspaces + turbo):
 pnpm_workspace_tpl_path = rjoin(data_dir, "pnpm_workspace_tpl.yaml")
 turbo_tpl_path = rjoin(data_dir, "turbo_tpl.json")
