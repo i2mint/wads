@@ -1,0 +1,35 @@
+{
+  "name": "mypkg",
+  "version": "0.0.1",
+  "description": "A widget",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "echo \"(no lint configured)\" && exit 0",
+    "test": "echo \"(no tests configured)\" && exit 0",
+    "build": "echo \"(no build configured)\" && exit 0"
+  },
+  "license": "Apache-2.0",
+  "wads": {
+    "ci": {
+      "subdir": "js",
+      "packageManager": "npm",
+      "nodeVersions": ["20", "22", "24"],
+      "publishNode": "24",
+      "lintCommand": "npm run lint --if-present",
+      "testCommand": "npm test --if-present",
+      "buildCommand": "npm run build --if-present",
+      "publish": {
+        "enabled": false,
+        "marker": "[publish-npm]",
+        "registry": "https://registry.npmjs.org",
+        "provenance": true,
+        "trustedPublishing": true,
+        "access": "public"
+      }
+    }
+  }
+}

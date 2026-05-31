@@ -1,6 +1,6 @@
 # wads NPM CI — calls the reusable workflow hosted in i2mint/wads.
 #
-# All configuration lives in << npm_subdir >>/package.json under the "wads"
+# All configuration lives in js/package.json under the "wads"
 # key (wads.ci.*). This workflow only runs when the JS subdirectory changes,
 # so it never collides with the Python ci.yml.
 #
@@ -9,22 +9,22 @@
 # Publishing uses OIDC trusted publishing by default (configure the trusted
 # publisher for this repo + workflow filename on npmjs.com). NPM_TOKEN is only
 # needed as a fallback (e.g. the very first publish of a new package name).
-name: << npm_workflow_name >>
+name: NPM CI
 on:
   push:
     paths:
-      - "<< npm_subdir >>/**"
-      - ".github/workflows/<< npm_workflow_file >>"
+      - "js/**"
+      - ".github/workflows/npm-ci.yml"
   pull_request:
     paths:
-      - "<< npm_subdir >>/**"
+      - "js/**"
 jobs:
   npm-ci:
-    uses: i2mint/wads/.github/workflows/<< reusable_workflow >>@master
+    uses: i2mint/wads/.github/workflows/npm-ci.yml@master
     permissions:
       contents: read
       id-token: write # npm provenance / OIDC trusted publishing
     with:
-      package-dir: << npm_subdir >>
+      package-dir: js
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

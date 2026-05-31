@@ -1,0 +1,162 @@
+# Reusable NPM CI workflow for pnpm + turbo MONOREPOS (wads).
+#
+# Consumers call this from their own .github/workflows/npm-ci-<subdir>.yml stub:
+#
+#   jobs:
+#     npm-ci:
+#       uses: i2mint/wads/.github/workflows/npm-ci-monorepo.yml@master
+#       with:
+#         package-dir: ts          # the workspace root (contains pnpm-workspace.yaml)
+#       secrets:
+#         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}   # only needed as an OIDC fallback
+#
+# Design (mirrors the single-package npm-ci.yml SSOT model):
+#   - ALL configuration lives in the workspace ROOT package.json under the
+#     namespaced top-level "wads" key (wads.ci.*). The root is a private package
+#     that drives the workspace via turbo; individual workspace packages need no
+#     wads.ci block.
+#   - `validate` installs the whole workspace once (pnpm) then runs turbo
+#     lint/test/build across every workspace package, matrixed over node. turbo
+#     provides the per-package fan-out + caching. (A future refinement may matrix
+#     `validate` over `node x package` for per-package status checks; turbo
+#     already parallelizes today.)
+#   - `publish` is OPT-IN: it runs only when wads.ci.publish.enabled is true AND
+#     the push is to the default branch AND the head commit message contains the
+#     publish marker (default "[publish-npm]"). It uses `pnpm -r publish`, which
+#     publishes every public workspace package, rewrites `workspace:` protocol
+#     deps to real versions, and SKIPS any package whose version is already on
+#     the registry (idempotent; no auto-bump). Publishes with provenance.
+#   - pnpm only (monorepos are pnpm-workspace based); the pnpm version is read
+#     from the root package.json "packageManager" field by pnpm/action-setup.
+
+name: NPM CI (monorepo)
+
+on:
+  workflow_call:
+    inputs:
+      package-dir:
+        description: "Workspace root (contains pnpm-workspace.yaml), relative to repo root."
+        type: string
+        default: "."
+    secrets:
+      NPM_TOKEN:
+        description: "npm auth token. Optional; only used as an OIDC fallback."
+        required: false
+
+permissions:
+  contents: read
+  id-token: write # for npm provenance / OIDC trusted publishing
+
+jobs:
+  setup:
+    name: Read wads.ci config from root package.json
+    runs-on: ubuntu-latest
+    outputs:
+      node_versions: ${{ steps.cfg.outputs.node_versions }}
+      publish_node: ${{ steps.cfg.outputs.publish_node }}
+      lint_command: ${{ steps.cfg.outputs.lint_command }}
+      test_command: ${{ steps.cfg.outputs.test_command }}
+      build_command: ${{ steps.cfg.outputs.build_command }}
+      publish_enabled: ${{ steps.cfg.outputs.publish_enabled }}
+      publish_marker: ${{ steps.cfg.outputs.publish_marker }}
+      registry: ${{ steps.cfg.outputs.registry }}
+      provenance: ${{ steps.cfg.outputs.provenance }}
+      access: ${{ steps.cfg.outputs.access }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Parse root package.json wads.ci
+        id: cfg
+        working-directory: ${{ inputs.package-dir }}
+        run: |
+          node -e "
+            const p = require('./package.json');
+            const ci = (p.wads && p.wads.ci) || {};
+            const pub = ci.publish || {};
+            const out = {
+              node_versions: JSON.stringify(ci.nodeVersions || ['20','22','24']),
+              publish_node: String(ci.publishNode || '24'),
+              lint_command: ci.lintCommand || 'pnpm turbo run lint',
+              test_command: ci.testCommand || 'pnpm turbo run test',
+              build_command: ci.buildCommand || 'pnpm turbo run build',
+              publish_enabled: String(pub.enabled === true),
+              publish_marker: pub.marker || '[publish-npm]',
+              registry: pub.registry || 'https://registry.npmjs.org',
+              provenance: String(pub.provenance !== false),
+              access: pub.access || 'public',
+            };
+            for (const [k,v] of Object.entries(out)) console.log(k+'='+v);
+          " >> "$GITHUB_OUTPUT"
+
+  validate:
+    name: Validate (node ${{ matrix.node }})
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJson(needs.setup.outputs.node_versions) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.package-dir }}/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.package-dir }}/pnpm-lock.yaml
+      - name: Install
+        working-directory: ${{ inputs.package-dir }}
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        working-directory: ${{ inputs.package-dir }}
+        run: ${{ needs.setup.outputs.lint_command }}
+      - name: Test
+        working-directory: ${{ inputs.package-dir }}
+        run: ${{ needs.setup.outputs.test_command }}
+      - name: Build
+        working-directory: ${{ inputs.package-dir }}
+        run: ${{ needs.setup.outputs.build_command }}
+
+  publish:
+    name: Publish workspace packages to npm
+    needs: [setup, validate]
+    runs-on: ubuntu-latest
+    # Opt-in: enabled in root package.json AND push to default branch AND marker present.
+    if: >-
+      needs.setup.outputs.publish_enabled == 'true' &&
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      contains(github.event.head_commit.message, needs.setup.outputs.publish_marker)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.package-dir }}/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.publish_node }}
+          registry-url: ${{ needs.setup.outputs.registry }}
+      - name: Install
+        working-directory: ${{ inputs.package-dir }}
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        working-directory: ${{ inputs.package-dir }}
+        run: ${{ needs.setup.outputs.build_command }}
+      - name: Publish workspace packages
+        working-directory: ${{ inputs.package-dir }}
+        env:
+          # Omitted/empty under OIDC trusted publishing; used only as a fallback.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PROVENANCE: ${{ needs.setup.outputs.provenance }}
+          ACCESS: ${{ needs.setup.outputs.access }}
+        run: |
+          # `pnpm -r publish` publishes every public workspace package, rewriting
+          # `workspace:` protocol deps to real versions and SKIPPING any package
+          # whose version is already on the registry (idempotent; no auto-bump).
+          PROV=""
+          if [ "$PROVENANCE" = "true" ]; then PROV="--provenance"; fi
+          pnpm -r publish --access "$ACCESS" --no-git-checks $PROV
