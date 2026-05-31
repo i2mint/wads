@@ -100,17 +100,34 @@ jobs:
         node: ${{ fromJson(needs.setup.outputs.node_versions) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Detect lockfile
+        id: lock
+        working-directory: ${{ inputs.package-dir }}
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No pnpm-lock.yaml committed in '${{ inputs.package-dir }}'; installing without a frozen lockfile and skipping the dependency cache. Commit a lockfile for reproducible, cached installs."
+          fi
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: ${{ inputs.package-dir }}/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: pnpm
+          # Only enable the cache when a lockfile is committed (setup-node errors
+          # if cache is on but pnpm-lock.yaml is absent -- issue #41).
+          cache: ${{ steps.lock.outputs.present == 'true' && 'pnpm' || '' }}
           cache-dependency-path: ${{ inputs.package-dir }}/pnpm-lock.yaml
       - name: Install
         working-directory: ${{ inputs.package-dir }}
-        run: pnpm install --frozen-lockfile
+        run: |
+          if [ "${{ steps.lock.outputs.present }}" = "true" ]; then
+            pnpm install --frozen-lockfile
+          else
+            pnpm install --no-frozen-lockfile
+          fi
       - name: Lint
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.lint_command }}
@@ -142,7 +159,7 @@ jobs:
           registry-url: ${{ needs.setup.outputs.registry }}
       - name: Install
         working-directory: ${{ inputs.package-dir }}
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
       - name: Build
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.build_command }}

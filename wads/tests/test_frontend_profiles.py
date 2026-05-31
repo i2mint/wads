@@ -110,6 +110,7 @@ def test_ts_profile_writes_expected_files(tmp_path):
         "ts/package.json",
         "ts/tsconfig.json",
         "ts/src/index.ts",
+        "ts/src/index.test.ts",
         ".github/workflows/npm-ci-ts.yml",
     }
 
@@ -117,6 +118,14 @@ def test_ts_profile_writes_expected_files(tmp_path):
     assert pkg_json["type"] == "module"
     assert pkg_json["scripts"]["test"] == "vitest run"
     assert "tsup" in pkg_json["scripts"]["build"]
+    # esbuild build-script allowlist so pnpm >=10 can build tsup's esbuild (#41).
+    assert pkg_json["pnpm"]["onlyBuiltDependencies"] == ["esbuild"]
+
+    # A passing starter test ships so the `test` step is green out of the box
+    # (vitest exits 1 with no test files, issue #41).
+    test_src = (tmp_path / "ts" / "src" / "index.test.ts").read_text()
+    assert "vitest" in test_src and "hello" in test_src
+
     # Same wads.ci SSOT + publish model as js: validate-always, publish-opt-in.
     cfg = NpmCIConfig(pkg_json)
     assert cfg.subdir == "ts"
@@ -155,6 +164,7 @@ def test_ts_monorepo_profile_structure(tmp_path):
         "ts/packages/core/package.json",
         "ts/packages/core/tsconfig.json",
         "ts/packages/core/src/index.ts",
+        "ts/packages/core/src/index.test.ts",
         ".github/workflows/npm-ci-ts.yml",
     }
 
@@ -162,6 +172,8 @@ def test_ts_monorepo_profile_structure(tmp_path):
     assert root["private"] is True
     assert root["packageManager"].startswith("pnpm@")
     assert NpmCIConfig(root).package_manager == "pnpm"
+    # esbuild build-script allowlist for pnpm >=10 (#41).
+    assert root["pnpm"]["onlyBuiltDependencies"] == ["esbuild"]
     assert NpmCIConfig(root).publish_enabled is False  # opt-in, same model
 
     workspace = (tmp_path / "ts" / "pnpm-workspace.yaml").read_text()

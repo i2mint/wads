@@ -33,6 +33,7 @@ from wads import (
     package_json_ts_tpl_path,
     tsconfig_tpl_path,
     ts_index_tpl_path,
+    ts_index_test_tpl_path,
     pnpm_workspace_tpl_path,
     turbo_tpl_path,
     package_json_monorepo_root_tpl_path,
@@ -196,6 +197,9 @@ def _ts_artifacts(ctx: Mapping) -> list:
         _jinja(f"{subdir}/package.json", package_json_ts_tpl_path),
         _copy(f"{subdir}/tsconfig.json", tsconfig_tpl_path),
         _copy(f"{subdir}/src/index.ts", ts_index_tpl_path),
+        # Ship a passing starter test so the `test` step is green out of the
+        # box: `vitest run` exits 1 when it finds *no* test files (issue #41).
+        _copy(f"{subdir}/src/index.test.ts", ts_index_test_tpl_path),
         _stub_artifact(subdir),
     ]
 
@@ -217,6 +221,8 @@ def _ts_monorepo_artifacts(ctx: Mapping) -> list:
         _jinja(f"{pkg_dir}/package.json", package_json_monorepo_pkg_tpl_path),
         _copy(f"{pkg_dir}/tsconfig.json", tsconfig_monorepo_pkg_tpl_path),
         _copy(f"{pkg_dir}/src/index.ts", ts_index_tpl_path),
+        # Passing starter test so `turbo run test` is green out of the box (#41).
+        _copy(f"{pkg_dir}/src/index.test.ts", ts_index_test_tpl_path),
         _stub_artifact(subdir),
     ]
 
@@ -315,8 +321,8 @@ def apply_frontend(
     >>> d = tempfile.mkdtemp()
     >>> res = apply_frontend(d, profile="ts", project_name="widget")
     >>> sorted(res.added)  # doctest: +NORMALIZE_WHITESPACE
-    ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.ts',
-     'ts/tsconfig.json']
+    ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
+     'ts/src/index.ts', 'ts/tsconfig.json']
     """
     prof = get_frontend_profile(profile)
     subdir = subdir or prof.default_subdir
