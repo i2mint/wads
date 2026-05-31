@@ -288,6 +288,7 @@ def populate_pkg_dir(
     ci_def_path=None,
     ci_tpl_path=None,
     project_type=populate_dflts["project_type"],
+    frontend: str = "",
     with_npm: bool = False,
     npm_subdir: str = "js",
     npm_package_name: str | None = None,
@@ -334,10 +335,19 @@ def populate_pkg_dir(
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
-    :param with_npm: If True, also add NPM setup for the project's JS/TS parts:
-        a ``<npm_subdir>/package.json`` (with a ``wads.ci`` config block) and a
-        ``.github/workflows/npm-ci.yml`` stub calling wads's reusable NPM
-        workflow. Validation runs on push/PR; publishing is opt-in. Off by default.
+    :param frontend: Comma-separated list of frontend profiles to add (issue
+        #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the
+        original npm overlay), ``ts`` (single-package TypeScript), and
+        ``ts-monorepo`` (pnpm workspaces + turbo). Each component lands in its
+        own subdir with its own path-filtered workflow, so multiple profiles
+        never collide. Empty by default. The single-component overrides below
+        (``npm_subdir`` / ``npm_package_name`` / ``npm_package_manager``) apply
+        only when exactly one profile is selected; with several, each profile
+        uses its own defaults.
+    :param with_npm: Back-compat alias for ``frontend="js"`` (issue #32). If
+        True, adds the ``js`` profile: a ``<npm_subdir>/package.json`` (with a
+        ``wads.ci`` config block) and a ``.github/workflows/npm-ci.yml`` stub
+        calling wads's reusable NPM workflow. Off by default.
     :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
     :param npm_package_name: npm package name (defaults to the project name).
     :param npm_version: initial npm package version (default ``0.0.1``).
@@ -606,9 +616,7 @@ def populate_pkg_dir(
             if should_update(ci_def_path):
                 assert name in ci_def_path and name in _get_pkg_url_from_pkg_dir(
                     pkg_dir
-                ), (
-                    f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
-                )
+                ), f"The name wasn't found in both the ci_def_path AND the git url, so I'm going to be safe and do nothing"
 
                 # Check if we should migrate old CI to new format
                 if migrate and version_control_system == "github":
@@ -862,24 +870,44 @@ def populate_pkg_dir(
             on_skip=tracker.skip,
         )
 
-    # NPM overlay (opt-in): add package.json + npm-ci workflow for JS/TS parts.
-    if with_npm:
-        from wads.profiles import apply_npm_overlay
+    # Frontend profiles (opt-in, issue #39): add a JS/TS component per selected
+    # profile. ``--with-npm`` is the back-compat alias for ``--frontend js``.
+    selected_frontends = [p.strip() for p in frontend.split(",") if p.strip()]
+    if with_npm and "js" not in selected_frontends:
+        selected_frontends = ["js"] + selected_frontends
+    # De-duplicate while preserving selection order.
+    _seen: set = set()
+    selected_frontends = [
+        p for p in selected_frontends if not (p in _seen or _seen.add(p))
+    ]
+    if selected_frontends:
+        from wads.profiles import apply_frontend
 
-        _clog("\n... adding NPM setup (package.json + npm-ci workflow)")
-        apply_npm_overlay(
-            pkg_dir,
-            project_name=name,
-            description=configs.get("description", ""),
-            license=configs.get("license"),
-            npm_subdir=npm_subdir,
-            npm_package_name=npm_package_name,
-            npm_version=npm_version,
-            npm_package_manager=npm_package_manager,
-            overwrite=overwrite,
-            on_add=tracker.add,
-            on_skip=tracker.skip,
+        # The single-component overrides (npm_subdir/name/package_manager) apply
+        # only when exactly one profile is selected; with several, each profile
+        # uses its own defaults so subdirs/workflows never collide.
+        single = len(selected_frontends) == 1
+        subdir_override = npm_subdir if (single and npm_subdir != "js") else None
+        pm_override = (
+            npm_package_manager if (single and npm_package_manager != "npm") else None
         )
+        name_override = npm_package_name if single else None
+        for profile_name in selected_frontends:
+            _clog(f"\n... adding frontend profile '{profile_name}'")
+            apply_frontend(
+                pkg_dir,
+                profile=profile_name,
+                project_name=name,
+                description=configs.get("description", ""),
+                license=configs.get("license"),
+                subdir=subdir_override,
+                package_name=name_override,
+                version=npm_version,
+                package_manager=pm_override,
+                overwrite=overwrite,
+                on_add=tracker.add,
+                on_skip=tracker.skip,
+            )
 
     # Print summary
     if verbose:
@@ -1136,9 +1164,9 @@ def update_pack_and_setup_py(
     target_pkg_dir = ensure_no_slash_suffix(target_pkg_dir)
     name = os.path.basename(target_pkg_dir)
     contents = os.listdir(target_pkg_dir)
-    assert {"setup.py", name}.issubset(contents), (
-        f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
-    )
+    assert {"setup.py", name}.issubset(
+        contents
+    ), f"{target_pkg_dir} needs to have all three: {', '.join({'setup.py', name})}"
 
     pjoin = lambda *p: os.path.join(target_pkg_dir, *p)
 

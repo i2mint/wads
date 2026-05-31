@@ -36,9 +36,25 @@ github_ci_uv_path = rjoin(data_dir, "github_ci_uv.yml")
 # template is kept as an escape valve for repos that need to customize CI
 # beyond what `[tool.wads.ci.*]` exposes.
 github_ci_uv_stub_path = rjoin(data_dir, "github_ci_uv_stub.yml")
-# NPM overlay templates (opt-in `populate --with-npm`):
+# Frontend profile templates (opt-in `populate --frontend <profile>`, #39).
+# `js` (back-compat anchor):
 package_json_tpl_path = rjoin(data_dir, "package_json_tpl.json")
 github_ci_npm_stub_path = rjoin(data_dir, "github_ci_npm_stub.yml")
+# `ts` (single-package TypeScript):
+package_json_ts_tpl_path = rjoin(data_dir, "package_json_ts_tpl.json")
+tsconfig_tpl_path = rjoin(data_dir, "tsconfig_tpl.json")
+ts_index_tpl_path = rjoin(data_dir, "ts_index_tpl.ts")
+# `ts-monorepo` (pnpm workspaces + turbo):
+pnpm_workspace_tpl_path = rjoin(data_dir, "pnpm_workspace_tpl.yaml")
+turbo_tpl_path = rjoin(data_dir, "turbo_tpl.json")
+package_json_monorepo_root_tpl_path = rjoin(
+    data_dir, "package_json_monorepo_root_tpl.json"
+)
+tsconfig_base_tpl_path = rjoin(data_dir, "tsconfig_base_tpl.json")
+package_json_monorepo_pkg_tpl_path = rjoin(
+    data_dir, "package_json_monorepo_pkg_tpl.json"
+)
+tsconfig_monorepo_pkg_tpl_path = rjoin(data_dir, "tsconfig_monorepo_pkg_tpl.json")
 # Tests-folder templates (opt-in `populate --create-tests`, addresses #4):
 tests_init_tpl_path = rjoin(data_dir, "tests_init_tpl.py")
 test_smoke_tpl_path = rjoin(data_dir, "test_smoke_tpl.py")

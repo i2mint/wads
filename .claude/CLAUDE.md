@@ -46,12 +46,12 @@ wads/
 │   ├── git-commit/       # Auto-commit (SSH)
 │   └── git-tag/          # Create git tags
 ├── wads/                 # Main Python package
-│   ├── populate.py       # Project creation (`populate` CLI; `--with-npm` overlay)
+│   ├── populate.py       # Project creation (`populate` CLI; `--frontend` profiles)
 │   ├── pack.py           # Package publishing (`pack` CLI)
 │   ├── migration.py      # Migration tools (`wads-migrate` CLI)
 │   ├── templating.py     # ★ Declarative engine: TemplateSource (dict/fs/github)
 │   │                     #   + Jinja2 (<< >> delimiters) + Artifact/generate()
-│   ├── profiles.py       # Generation profiles/overlays (e.g. apply_npm_overlay)
+│   ├── profiles.py       # Frontend profile registry (js/ts/ts-monorepo) + apply_frontend
 │   ├── ci_config.py      # CIConfig class - reads pyproject.toml CI config
 │   ├── npm_config.py     # NpmCIConfig - reads package.json wads.ci block
 │   ├── install_system_deps.py  # System dependency installer
@@ -63,8 +63,11 @@ wads/
 │   │   │                                 #   5 lines, calls the reusable workflow
 │   │   ├── github_ci_uv.yml              # Inline uv workflow (escape valve / source
 │   │   │                                 #   of truth that the reusable workflow mirrors)
-│   │   ├── github_ci_npm_stub.yml        # NPM CI stub (populate --with-npm)
-│   │   ├── package_json_tpl.json         # package.json template w/ wads.ci block
+│   │   ├── github_ci_npm_stub.yml        # Frontend CI stub (populate --frontend)
+│   │   ├── package_json_tpl.json         # js package.json template w/ wads.ci block
+│   │   ├── package_json_ts_tpl.json      # ts package.json (tsup build, vitest)
+│   │   ├── tsconfig_tpl.json / ts_index_tpl.ts  # ts single-package scaffold
+│   │   ├── *_monorepo_*_tpl / pnpm_workspace_tpl.yaml / turbo_tpl.json  # ts-monorepo
 │   │   ├── github_ci_publish_2025.yml    # Legacy 2025 CI workflow template
 │   │   └── (other templates)
 │   ├── agents/           # AI diagnostic agents
@@ -151,34 +154,61 @@ To migrate a legacy project:
   semantics. `populate`'s static-file generation is driven by this engine.
 - **Profiles/overlays**: `wads/profiles.py`. The default `populate` produces the
   python-lib profile (output unchanged — pinned by characterization tests in
-  `wads/tests/test_populate_characterization.py`). `apply_npm_overlay` adds the
-  opt-in NPM setup.
+  `wads/tests/test_populate_characterization.py`). The **frontend profile
+  registry** (`FRONTEND_PROFILES` + `apply_frontend`) adds an opt-in JS/TS
+  component per selected profile; see the section below.
 - **Dependency extras**: light core (`jinja2`, `pyyaml`, `packaging`, `argh`,
   `tomli`/`-w`) for config-reading + templating; `wads[create]` adds the heavy
   creation/publish toolchain (`requests`, `build`, `wheel`, `ruamel.yaml`).
   `wads[all]` = create + docs. The light/`create` boundary is locked by
   `wads/tests/test_light_install.py`.
 
-### NPM CI (opt-in, `populate --with-npm`)
+### Frontend profiles (opt-in, `populate --frontend <profile>[,<profile>]`)
 
-- Mirrors the Python model on the JS/TS side: config lives in
-  `<subdir>/package.json` under a namespaced `"wads"` key (`wads.ci.*`); a stub
-  (`wads/data/github_ci_npm_stub.yml`) calls the **reusable workflow**
-  `i2mint/wads/.github/workflows/npm-ci.yml`.
-- **Validate always; publish opt-in**: publishes only when
-  `wads.ci.publish.enabled` is true AND the commit message contains
-  `[publish-npm]` (distinct from the Python publish trigger). OIDC trusted
-  publishing + provenance by default; version-exists guard; no auto-bump.
-- **Package manager: npm (default) or pnpm.** The reusable workflow picks pnpm
-  when `wads.ci.packageManager == "pnpm"` OR a `pnpm-lock.yaml` is present in
-  the package dir (auto-detect in the `setup` job); else npm. The pnpm path adds
-  a conditional `pnpm/action-setup` (version read from the package's
-  `packageManager` field via `package_json_file`), switches the setup-node cache
-  + lockfile, and installs with `pnpm install --frozen-lockfile`. lint/test/build
-  and `npm publish` are unchanged. Additive: npm consumers (no field, no
-  `pnpm-lock.yaml`) see byte-identical behavior on `@master`.
-- `NpmCIConfig` (`wads/npm_config.py`) is the Python-side reader of that block
-  (`package_manager` property; `SUPPORTED_PACKAGE_MANAGERS`).
+A small **registry of language/toolchain profiles** (issue #39) over the
+templating engine. Each profile = a `default_subdir`, a
+`default_package_manager`, and an `artifacts(context) -> [Artifact]` builder,
+registered in `FRONTEND_PROFILES` (extend via `register_frontend_profile`).
+`apply_frontend(profile=..., ...)` applies one component; `populate --frontend`
+applies a comma-separated list. `--with-npm` is a back-compat alias for
+`--frontend js`.
+
+Built-in profiles:
+
+- **`js`** — the original #32 overlay. Back-compat anchor: `js`-alone output is
+  **byte-identical** to pre-#39 (golden-pinned in
+  `wads/tests/data/golden/frontend_js/`). Subdir `js/`, single-package
+  `npm-ci.yml`.
+- **`ts`** — single-package TypeScript: `tsconfig.json` + `src/index.ts`, tsup
+  build + vitest, same `wads.ci` block + publish model. Subdir `ts/`.
+- **`ts-monorepo`** — pnpm workspaces + turbo: workspace-root `package.json`
+  (private), `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`, and an
+  example `packages/core` package. Calls the **monorepo** reusable workflow.
+
+Shared model (mirrors the Python side): config lives in `<subdir>/package.json`
+under a namespaced `"wads"` key (`wads.ci.*`); a path-filtered stub
+(`wads/data/github_ci_npm_stub.yml`) calls a **reusable workflow**:
+
+- single-package → `i2mint/wads/.github/workflows/npm-ci.yml` (npm by default;
+  **pnpm** when `wads.ci.packageManager == "pnpm"` OR a `pnpm-lock.yaml` is
+  present — conditional `pnpm/action-setup`, version from the package's
+  `packageManager` field; lint/test/build + `npm publish` unchanged);
+- monorepo → `i2mint/wads/.github/workflows/npm-ci-monorepo.yml` (pnpm + turbo;
+  `setup` discovers workspace packages, `validate` runs turbo across them
+  matrixed over node, `publish` iterates packages with a per-package
+  version-exists guard).
+
+**Validate always; publish opt-in**: publishes only when
+`wads.ci.publish.enabled` is true AND the commit message contains `[publish-npm]`
+(distinct from the Python publish trigger). OIDC trusted publishing + provenance
+by default; version-exists guard; no auto-bump.
+
+**No collision**: the `js` component keeps the bare `npm-ci.yml`; every other
+component gets `npm-ci-<subdir>.yml`, each path-filtered to its own subdir, so a
+project can declare several components (e.g. `js` + `ts`) safely.
+
+`NpmCIConfig` (`wads/npm_config.py`) is the Python-side reader of the `wads.ci`
+block (`package_manager` property; `SUPPORTED_PACKAGE_MANAGERS`).
 
 ## CLI Reference
 
@@ -186,8 +216,10 @@ To migrate a legacy project:
 # Create a new project
 populate my-project --root-url https://github.com/user/my-project
 
-# Create a project that also has a JS/TS component with opt-in NPM publishing
-populate my-project --root-url https://github.com/user/my-project --with-npm
+# Create a project that also has frontend components with opt-in NPM publishing
+populate my-project --root-url https://github.com/user/my-project --frontend ts
+populate my-project --root-url https://github.com/user/my-project --frontend js,ts
+# (--with-npm is a back-compat alias for --frontend js)
 
 # Build and publish
 pack go .

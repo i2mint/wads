@@ -43,37 +43,56 @@ This creates a complete project structure with:
 - Package directory with `__init__.py`
 - GitHub Actions CI/CD workflow (optional)
 
-### Add NPM publishing for JS/TS components (optional)
+### Add a frontend component for JS/TS parts (optional)
 
-Python projects often ship a small JS/TS component (a widget, a browser UI).
-`populate --with-npm` adds a parametrized **NPM CI** alongside the Python one,
-following the same "config-file-driven, fixed-workflow" model:
+Python projects often ship a frontend component (a widget, a browser UI, a
+TypeScript library). `populate --frontend <profile>` adds a parametrized
+**NPM CI** alongside the Python one, following the same
+"config-file-driven, fixed-workflow" model. Pick one or more **profiles**:
+
+| Profile | Adds | Subdir | CI |
+|---|---|---|---|
+| `js` | `package.json` (npm) | `js/` | single-package `npm-ci.yml` |
+| `ts` | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest) | `ts/` | single-package `npm-ci.yml` |
+| `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core` | `ts/` | matrixed `npm-ci-monorepo.yml` |
 
 ```bash
-populate my-project --root-url https://github.com/user/my-project --with-npm
+# A single TypeScript component:
+populate my-project --root-url https://github.com/user/my-project --frontend ts
+
+# Several components at once — each in its own subdir, no workflow collision:
+populate my-project --root-url https://github.com/user/my-project --frontend js,ts
 ```
 
-This adds:
-- `js/package.json` — standard npm manifest with a namespaced `"wads"` config
-  block (`wads.ci.*`) controlling node versions, lint/test/build commands, and
-  publishing — analogous to `[tool.wads.ci]` in `pyproject.toml`.
-- `.github/workflows/npm-ci.yml` — a stub calling wads's reusable NPM workflow.
+`--with-npm` is kept as a back-compat alias for `--frontend js`.
+
+Each component gets:
+- a `package.json` with a namespaced `"wads"` config block (`wads.ci.*`)
+  controlling node versions, lint/test/build commands, and publishing —
+  analogous to `[tool.wads.ci]` in `pyproject.toml`;
+- a path-filtered `.github/workflows/npm-ci[-<subdir>].yml` stub calling wads's
+  reusable NPM workflow (the `js` component keeps the bare `npm-ci.yml`; every
+  other component gets `npm-ci-<subdir>.yml`, so multiple components never
+  collide).
 
 **Validation runs on every push/PR; publishing is opt-in.** It publishes only
 when `wads.ci.publish.enabled` is `true` **and** the commit message contains
 the marker **`[publish-npm]`** (deliberately distinct from the Python side).
 Publishing uses npm OIDC trusted publishing + provenance by default (no
-long-lived token). Customize the subdirectory and package name with
-`--npm-subdir` / `--npm-package-name`; bring your own templates by pointing the
-generator at a different template source.
+long-lived token). For a single component, customize the subdirectory and
+package name with `--npm-subdir` / `--npm-package-name`.
 
-**Package manager: npm or pnpm.** The reusable workflow drives **npm** by
-default and **pnpm** when selected — either explicitly via
+**Package manager: npm or pnpm.** The single-package reusable workflow drives
+**npm** by default and **pnpm** when selected — either explicitly via
 `wads.ci.packageManager` (or `populate --npm-package-manager pnpm`) or
 auto-detected from a `pnpm-lock.yaml` in the package directory. pnpm consumers
 should declare a `"packageManager": "pnpm@x.y.z"` field in their `package.json`
 (pnpm's own convention); the CI reads the pnpm version from there. Existing npm
-consumers are unaffected (no `pnpm-lock.yaml` → npm).
+consumers are unaffected (no `pnpm-lock.yaml` → npm). The `ts-monorepo` profile
+is pnpm-based by design.
+
+The profile set is extensible: register your own with
+`wads.profiles.register_frontend_profile(...)`.
 
 ### Configure CI in pyproject.toml
 

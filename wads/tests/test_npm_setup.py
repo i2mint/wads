@@ -40,7 +40,11 @@ def test_npm_config_reads_values():
                 "subdir": "frontend",
                 "packageManager": "pnpm",
                 "nodeVersions": ["22"],
-                "publish": {"enabled": True, "marker": "[ship-it]", "access": "restricted"},
+                "publish": {
+                    "enabled": True,
+                    "marker": "[ship-it]",
+                    "access": "restricted",
+                },
             }
         },
     }
@@ -105,7 +109,10 @@ def test_overlay_custom_subdir_and_name(tmp_path):
     pkg_json = json.loads((tmp_path / "frontend" / "package.json").read_text())
     assert pkg_json["name"] == "@acme/proj-ui"
     assert NpmCIConfig(pkg_json).subdir == "frontend"
-    workflow = (tmp_path / ".github" / "workflows" / "npm-ci.yml").read_text()
+    # Per-subdir workflow filename (issue #39): non-"js" subdirs get
+    # ``npm-ci-<subdir>.yml`` so multiple frontend components never collide.
+    # (The "js" subdir keeps the bare ``npm-ci.yml`` — see the byte-compat test.)
+    workflow = (tmp_path / ".github" / "workflows" / "npm-ci-frontend.yml").read_text()
     assert "frontend/**" in workflow
     assert "package-dir: frontend" in workflow
 

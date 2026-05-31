@@ -1,0 +1,37 @@
+{
+  "name": "<< npm_package_name >>-monorepo",
+  "version": "<< npm_version >>",
+  "description": "<< description >>",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "license": "<< npm_license >>",
+  "devDependencies": {
+    "turbo": "^2",
+    "typescript": "^5"
+  },
+  "wads": {
+    "ci": {
+      "subdir": "<< npm_subdir >>",
+      "packageManager": "pnpm",
+      "workspaceGlob": "<< npm_workspace_glob >>",
+      "nodeVersions": ["20", "22", "24"],
+      "publishNode": "24",
+      "lintCommand": "pnpm turbo run lint",
+      "testCommand": "pnpm turbo run test",
+      "buildCommand": "pnpm turbo run build",
+      "publish": {
+        "enabled": false,
+        "marker": "[publish-npm]",
+        "registry": "https://registry.npmjs.org",
+        "provenance": true,
+        "trustedPublishing": true,
+        "access": "public"
+      }
+    }
+  }
+}

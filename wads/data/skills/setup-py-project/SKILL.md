@@ -199,11 +199,22 @@ After the main setup, offer (don't force) these extras:
    cd /path/to/project && git add -A && git commit -m "Initial project setup via wads" && git push -u origin main
    ```
 
-4. **Publish to PyPI**: "Would you like to publish to PyPI? (This runs `pack go .`)"
+4. **Frontend component(s)**: If the project ships a JS/TS part (widget, browser UI, TS library), offer to add one or more **frontend profiles**. Each lands in its own subdir with a path-filtered NPM CI workflow (validate-always, publish-opt-in via `[publish-npm]`); multiple components never collide.
+   ```bash
+   # one TypeScript component (tsconfig + src + tsup/vitest):
+   populate my-project --root-url https://github.com/ORG/my-project --frontend ts
+   # several at once (each its own subdir):
+   populate my-project --root-url https://github.com/ORG/my-project --frontend js,ts
+   # a pnpm + turbo monorepo:
+   populate my-project --root-url https://github.com/ORG/my-project --frontend ts-monorepo
+   ```
+   Profiles: `js` (npm single-package), `ts` (TypeScript single-package), `ts-monorepo` (pnpm workspaces + turbo). `--with-npm` is a back-compat alias for `--frontend js`.
 
-5. **Enable GitHub Pages**: After the initial push (or after the first CI run that creates the `gh-pages` branch), enable Pages so the epythet-generated docs are served. **Do this automatically** — no need to ask, since the CI workflow already includes the `publish-github-pages` job.
+5. **Publish to PyPI**: "Would you like to publish to PyPI? (This runs `pack go .`)"
 
-6. **Enable GitHub Discussions**: **Do this automatically** unless the user explicitly asked not to enable discussions.
+6. **Enable GitHub Pages**: After the initial push (or after the first CI run that creates the `gh-pages` branch), enable Pages so the epythet-generated docs are served. **Do this automatically** — no need to ask, since the CI workflow already includes the `publish-github-pages` job.
+
+7. **Enable GitHub Discussions**: **Do this automatically** unless the user explicitly asked not to enable discussions.
 
    ```bash
    gh repo edit ORG/REPONAME --enable-discussions
