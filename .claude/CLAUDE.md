@@ -112,6 +112,33 @@ most customization belongs in `[tool.wads.ci.*]`), it can replace the stub with
 a copy of `wads/data/github_ci_uv.yml` inline. The repo then owns CI updates
 manually. Convert back to stub later with `wads-migrate ci-to-stub`.
 
+### Secrets / CI env vars — two layers (issue #45)
+
+A reusable workflow's secret *interface* (`on.workflow_call.secrets`) must be
+static YAML and `secrets: inherit` is unreliable cross-owner, so secrets are
+handled in two decoupled layers:
+
+1. **Transport** — the caller stub *explicitly passes* named secrets. The
+   universe of passable names is the **superset** declared in `uv-ci.yml`'s
+   `on.workflow_call.secrets`, generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`
+   (the SSOT; a test in `test_ci_secrets.py` pins the YAML to it). Each repo's
+   stub passes only a *small subset* — `PYPI_PASSWORD` plus whatever its
+   `[tool.wads.ci.env]` declares (rendered via `CIConfig.generate_stub_secrets_block`
+   into the stub's `#SECRETS_BLOCK#` placeholder at populate/migrate time).
+2. **Env-assignment** — *which* passed secrets become job env vars (and which
+   are required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
+   `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
+   ENV_VAR≠SECRET_NAME). The `export-ci-env` action (`wads/scripts/export_ci_env.py`)
+   reads these via `read-ci-config` outputs and `toJSON(secrets)`, writes exactly
+   the declared vars to `$GITHUB_ENV`, and **fails fast** on a missing required
+   secret. A passed-but-undeclared secret is never written to the environment —
+   so no over-assignment, and no silent under-coverage.
+
+To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates both layers
+(pyproject + stub) and can `gh secret set` the value. A name outside the superset
+needs a one-line PR to `wads.ci_secrets` (or the inline escape valve); the CLI
+warns when that's the case.
+
 ### CI Workflow Flow (github_ci_publish_2025.yml)
 
 The CI workflow has 4-5 jobs:
@@ -229,6 +256,14 @@ wads-migrate setup-to-pyproject setup.cfg
 
 # Migrate old CI → new CI
 wads-migrate ci-old-to-new .github/workflows/ci.yml
+
+# Configure a CI secret (declare in pyproject + pass in ci.yml + gh secret set)
+wads-secrets add OPENAI_API_KEY                  # var == secret name
+wads-secrets add HF_TOKEN HF_WRITE_TOKEN          # env var <- aliased secret
+wads-secrets add DB_URL --kind required           # fail CI if unset
+wads-secrets add OPENAI_API_KEY --no-github       # edit files only
+wads-secrets list                                 # show configured env vars
+wads-secrets superset                             # names the stub may pass
 
 # Debug CI failures
 wads-ci-debug myorg/myrepo --fix

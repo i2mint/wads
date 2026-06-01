@@ -77,6 +77,21 @@ outputs:
   publish-marker:
     description: 'Commit-message substring that forces the publish job even when publishing is disabled. Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
     value: ${{ steps.config.outputs.publish-marker }}
+  env-required:
+    description: 'JSON array of required env-var names from [tool.wads.ci.env].required_envvars. CI fails if any is not set in secrets.'
+    value: ${{ steps.config.outputs.env-required }}
+  env-test:
+    description: 'JSON array of test env-var names from [tool.wads.ci.env].test_envvars. CI warns (does not fail) if missing.'
+    value: ${{ steps.config.outputs.env-test }}
+  env-extra:
+    description: 'JSON array of optional env-var names from [tool.wads.ci.env].extra_envvars. Exported if set; silent if missing.'
+    value: ${{ steps.config.outputs.env-extra }}
+  env-defaults:
+    description: 'JSON object of literal default env vars from [tool.wads.ci.env].defaults. Always exported.'
+    value: ${{ steps.config.outputs.env-defaults }}
+  env-aliases:
+    description: 'JSON object mapping env-var name -> backing secret name from [tool.wads.ci.env].secret_aliases. Env vars not listed are backed by an identically-named secret.'
+    value: ${{ steps.config.outputs.env-aliases }}
 
 runs:
   using: 'composite'

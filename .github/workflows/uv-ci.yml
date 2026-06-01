@@ -1,53 +1,102 @@
 name: Continuous Integration (uv, reusable)
-# Reusable wads CI workflow. Consuming repos call this via a 5-line stub at
+# Reusable wads CI workflow. Consuming repos call this via a small stub at
 # .github/workflows/ci.yml — see wads/data/github_ci_uv_stub.yml.
 #
 # All configuration comes from the caller's pyproject.toml [tool.wads.ci.*]
-# section, read by the setup job below. Caller passes `secrets: inherit` so
-# this workflow can use PYPI_PASSWORD, GITHUB_TOKEN, and the curated set of
-# secret-backed env vars in the workflow-level env block.
+# section, read by the setup job below.
 #
-# If a repo needs a workflow-level env var that isn't in the curated set,
-# the right answer is to add it here via a PR to wads (so every consumer
-# benefits) — OR, for a one-off, to inline the full workflow (escape valve)
-# by replacing the stub with a copy of wads/data/github_ci_uv.yml.
+# SECRETS — two layers (see wads/ci_secrets.py for the full rationale):
+#   1. Transport: the caller stub explicitly passes named secrets (cross-owner
+#      `secrets: inherit` is unreliable, so we never rely on it). The
+#      `on.workflow_call.secrets` block below is the *superset* of names a
+#      stub may pass — the universe of allowed secret names. It is generated
+#      from wads.ci_secrets.DEFAULT_CI_SECRETS and pinned by a wads test.
+#   2. Env-assignment: which of those secrets actually become job environment
+#      variables (and which are required) is driven entirely by the caller's
+#      [tool.wads.ci.env], applied by the `export-ci-env` action below. A
+#      passed-but-unconfigured secret is never written to the environment.
+#
+# To use a secret whose name is NOT in the superset below: either add it here
+# via a PR to wads (one line, benefits everyone) or inline the full workflow
+# (escape valve) by replacing the stub with a copy of wads/data/github_ci_uv.yml.
 
 on:
   workflow_call:
     inputs:
       # Most consumers don't need to override anything — pyproject.toml drives
       # the workflow. These inputs exist for the rare cases where the project
-      # name differs from the repo name, or where the consumer wants to pass
-      # additional env vars without forking the workflow.
+      # name differs from the repo name.
       project-name:
         description: "Project / package name. Defaults to the repo name."
         type: string
         required: false
         default: ""
 
-    # Explicitly declare the secrets the reusable workflow consumes.
-    # `secrets: inherit` on the caller stub satisfies every entry below
-    # whenever the caller's repo (or org) has that secret defined; missing
-    # secrets resolve to empty strings inside this workflow (the env block
-    # below uses `|| ''` to be safe).
-    #
-    # WHY we declare instead of relying on implicit inheritance: GitHub's
-    # `secrets: inherit` semantics are documented to pass all caller secrets
-    # to the called workflow, but in practice that propagation is unreliable
-    # when the caller and called workflows live under different owners
-    # (e.g. caller in a personal account, called in an org). Personal-account
-    # callers got `${{ secrets.PYPI_PASSWORD }}` resolving to empty in the
-    # publish step, while same-org callers worked. Explicit declaration
-    # removes that ambiguity for every caller type.
+    # ─── SECRET SUPERSET (generated from wads.ci_secrets.DEFAULT_CI_SECRETS) ───
+    # Every entry is `required: false`; the caller stub passes only the subset
+    # its pyproject declares. Run-time enforcement of required secrets happens
+    # in the export-ci-env step (and PYPI_PASSWORD in the publish job).
+    # Edit wads/ci_secrets.py, not this block by hand — a test pins them equal.
     secrets:
       PYPI_PASSWORD:
-        description: "PyPI API token. Required for the publish job."
+        required: false
+      TEST_PYPI_PASSWORD:
+        required: false
+      NPM_TOKEN:
+        required: false
+      SSH_PRIVATE_KEY:
+        required: false
+      CODECOV_TOKEN:
+        required: false
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
         required: false
       OPENAI_API_KEY:
         required: false
       ANTHROPIC_API_KEY:
         required: false
+      GEMINI_API_KEY:
+        required: false
+      GOOGLE_API_KEY:
+        required: false
+      DEEPSEEK_API_KEY:
+        required: false
+      OPENROUTER_API_KEY:
+        required: false
+      GROQ_API_KEY:
+        required: false
+      MISTRAL_API_KEY:
+        required: false
+      COHERE_API_KEY:
+        required: false
+      PERPLEXITY_API_KEY:
+        required: false
+      REPLICATE_API_TOKEN:
+        required: false
+      TOGETHER_API_KEY:
+        required: false
+      XAI_API_KEY:
+        required: false
+      FAL_KEY:
+        required: false
+      AZURE_OPENAI_API_KEY:
+        required: false
+      AZURE_OPENAI_ENDPOINT:
+        required: false
+      TAVILY_API_KEY:
+        required: false
+      COMPOSIO_API_KEY:
+        required: false
+      SKILLSDIRECTORY_API_KEY:
+        required: false
+      NEWSDATA_API_KEY:
+        required: false
+      LANGSMITH_API_KEY:
+        required: false
       HF_TOKEN:
+        required: false
+      HF_WRITE_TOKEN:
         required: false
       HUGGINGFACE_TOKEN:
         required: false
@@ -55,23 +104,74 @@ on:
         required: false
       KAGGLE_KEY:
         required: false
+      WANDB_API_KEY:
+        required: false
+      PINECONE_API_KEY:
+        required: false
+      ELEVEN_API_KEY:
+        required: false
+      ELEVENLABS_API_KEY:
+        required: false
+      SUNO_API_KEY:
+        required: false
+      SPOTIFY_API_CLIENT_ID:
+        required: false
+      SPOTIFY_API_CLIENT_SECRET:
+        required: false
+      SPOTIPY_CLIENT_ID:
+        required: false
+      SPOTIPY_CLIENT_SECRET:
+        required: false
+      ALPACA_API_KEY:
+        required: false
+      ALPACA_SECRET_KEY:
+        required: false
+      APCA_API_KEY_ID:
+        required: false
+      APCA_API_SECRET_KEY:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+      AWS_SESSION_TOKEN:
+        required: false
+      GCP_SA_KEY:
+        required: false
+      GOOGLE_APPLICATION_CREDENTIALS_JSON:
+        required: false
+      SLACK_BOT_TOKEN:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: false
+      DISCORD_WEBHOOK_URL:
+        required: false
+      TELEGRAM_BOT_TOKEN:
+        required: false
+      TWILIO_ACCOUNT_SID:
+        required: false
+      TWILIO_AUTH_TOKEN:
+        required: false
+      SENDGRID_API_KEY:
+        required: false
+      STRIPE_SECRET_KEY:
+        required: false
+      DATABASE_URL:
+        required: false
+      MONGODB_URI:
+        required: false
+      REDIS_URL:
+        required: false
 
 env:
   # Project identification. Most repos: package name == repo name; this just
   # resolves to github.event.repository.name. Override with `with.project-name`
   # in the caller stub when they differ.
+  #
+  # NOTE: secret-backed env vars are intentionally NOT set here. They are
+  # written to $GITHUB_ENV per-job by the export-ci-env step, driven by the
+  # caller's [tool.wads.ci.env] — so each repo gets exactly the env it declares.
   PROJECT_NAME: ${{ inputs.project-name != '' && inputs.project-name || github.event.repository.name }}
-
-  # Curated set of secret-backed env vars used across the wads-managed
-  # ecosystem. Falls back to '' when the caller's repo doesn't have the
-  # secret set, so missing secrets don't fail YAML parsing. Add new common
-  # ones via PR to wads (see wads/data/github_ci_uv_stub.yml for the rationale).
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || '' }}
-  HF_TOKEN: ${{ secrets.HF_TOKEN || '' }}
-  HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN || '' }}
-  KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME || '' }}
-  KAGGLE_KEY: ${{ secrets.KAGGLE_KEY || '' }}
 
 jobs:
   # First job: Read configuration from pyproject.toml
@@ -101,6 +201,11 @@ jobs:
       publish-enabled: ${{ steps.config.outputs.publish-enabled }}
       skip-ci-marker: ${{ steps.config.outputs.skip-ci-marker }}
       publish-marker: ${{ steps.config.outputs.publish-marker }}
+      env-required: ${{ steps.config.outputs.env-required }}
+      env-test: ${{ steps.config.outputs.env-test }}
+      env-extra: ${{ steps.config.outputs.env-extra }}
+      env-defaults: ${{ steps.config.outputs.env-defaults }}
+      env-aliases: ${{ steps.config.outputs.env-aliases }}
 
     steps:
       - uses: actions/checkout@v6
@@ -149,6 +254,18 @@ jobs:
         uses: i2mint/wads/actions/install-deps-uv@master
         with:
           extras: ${{ needs.setup.outputs.install-extras }}
+
+      # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast
+      # if a required secret is missing). Driven by [tool.wads.ci.env].
+      - name: Export CI Environment
+        uses: i2mint/wads/actions/export-ci-env@master
+        with:
+          required: ${{ needs.setup.outputs.env-required }}
+          test: ${{ needs.setup.outputs.env-test }}
+          extra: ${{ needs.setup.outputs.env-extra }}
+          defaults: ${{ needs.setup.outputs.env-defaults }}
+          aliases: ${{ needs.setup.outputs.env-aliases }}
+          secrets-json: ${{ toJSON(secrets) }}
 
       - name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
@@ -221,6 +338,16 @@ jobs:
         uses: i2mint/wads/actions/install-deps-uv@master
         with:
           extras: ${{ needs.setup.outputs.install-extras }}
+
+      - name: Export CI Environment
+        uses: i2mint/wads/actions/export-ci-env@master
+        with:
+          required: ${{ needs.setup.outputs.env-required }}
+          test: ${{ needs.setup.outputs.env-test }}
+          extra: ${{ needs.setup.outputs.env-extra }}
+          defaults: ${{ needs.setup.outputs.env-defaults }}
+          aliases: ${{ needs.setup.outputs.env-aliases }}
+          secrets-json: ${{ toJSON(secrets) }}
 
       - name: Run Tests
         uses: i2mint/wads/actions/run-tests-uv@master
