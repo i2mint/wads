@@ -1,0 +1,59 @@
+name: 'Export CI Environment from pyproject.toml'
+description: >-
+  Write the pyproject-declared environment variables into $GITHUB_ENV. Exports
+  only the secrets a repo's [tool.wads.ci.env] declares (plus literal defaults),
+  and fails with a clear message if a required secret is missing. The full
+  secrets context is passed via toJSON(secrets) so no per-secret enumeration is
+  needed here — the transport superset is enumerated in the workflow's
+  on.workflow_call.secrets block instead.
+branding:
+  icon: 'lock'
+  color: 'blue'
+
+inputs:
+  required:
+    description: 'JSON array of required env-var names (read-ci-config env-required).'
+    required: false
+    default: '[]'
+  test:
+    description: 'JSON array of test env-var names (read-ci-config env-test).'
+    required: false
+    default: '[]'
+  extra:
+    description: 'JSON array of optional env-var names (read-ci-config env-extra).'
+    required: false
+    default: '[]'
+  defaults:
+    description: 'JSON object of literal default env vars (read-ci-config env-defaults).'
+    required: false
+    default: '{}'
+  aliases:
+    description: 'JSON object mapping env-var name -> secret name (read-ci-config env-aliases).'
+    required: false
+    default: '{}'
+  secrets-json:
+    description: 'The secrets context as JSON. Pass `${{ toJSON(secrets) }}`.'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python for env export
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+
+    - name: Install wads (for CI env utilities)
+      shell: bash
+      run: python -m pip install --quiet 'wads>=0.2.0'
+
+    - name: Export configured environment
+      shell: bash
+      env:
+        WADS_ENV_REQUIRED: ${{ inputs.required }}
+        WADS_ENV_TEST: ${{ inputs.test }}
+        WADS_ENV_EXTRA: ${{ inputs.extra }}
+        WADS_ENV_DEFAULTS: ${{ inputs.defaults }}
+        WADS_ENV_ALIASES: ${{ inputs.aliases }}
+        WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
+      run: python -m wads.scripts.export_ci_env

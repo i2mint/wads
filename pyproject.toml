@@ -34,6 +34,7 @@ create = [
     "build",         # PEP 517 build (publish)
     "wheel",         # wheel building (publish)
     "ruamel.yaml",   # round-tripping GitHub Actions YAML (CI migration tools)
+    "tomlkit",       # comment-preserving pyproject edits (wads-secrets)
 ]
 docs = ["epythet"]
 test = ["pytest>=7.0", "pytest-cov"]
@@ -50,6 +51,7 @@ wads-deps = "wads.agents.dependency_resolver:main"
 wads-test-analyze = "wads.agents.test_analyzer:main"
 wads-migrate = "wads.migration:main"
 wads-install-skills = "wads.install_skills:main"
+wads-secrets = "wads.secrets_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["wads"]

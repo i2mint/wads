@@ -109,6 +109,15 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("skip-ci-marker", config.publish_skip_ci_marker)
         _set_output("publish-marker", config.publish_marker)
 
+        # Environment-variable policy (consumed by the export-ci-env action).
+        # These decide which secrets are written into the job environment and
+        # which are mandatory; the transport superset lives in the workflow YAML.
+        _set_output("env-required", config.env_vars_required)
+        _set_output("env-test", config.env_vars_test)
+        _set_output("env-extra", config.env_vars_extra)
+        _set_output("env-defaults", config.env_vars_defaults)
+        _set_output("env-aliases", config.env_secret_aliases)
+
         # Print summary
         print("[OK] CI configuration loaded successfully")
         print(f"   Project: {config.project_name}")

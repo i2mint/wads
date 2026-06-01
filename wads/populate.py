@@ -1080,6 +1080,16 @@ def _add_ci_def(
             # Basic substitutions for static template
             ci_def = ci_def.replace("#PROJECT_NAME#", name)
 
+        # The SSOT stub carries a #SECRETS_BLOCK# placeholder (the per-repo
+        # transport list). The dynamic path fills it from [tool.wads.ci.env];
+        # otherwise fall back to the publish-only default so the stub is valid.
+        if "#SECRETS_BLOCK#" in ci_def:
+            from wads.ci_secrets import render_stub_secrets_passthrough
+
+            ci_def = ci_def.replace(
+                "#SECRETS_BLOCK#", render_stub_secrets_passthrough(["PYPI_PASSWORD"])
+            )
+
         # Common substitutions for all templates
         hostname = urlparse(root_url).netloc
         ci_def = ci_def.replace("#GITLAB_HOSTNAME#", hostname)

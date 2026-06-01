@@ -141,6 +141,42 @@ class CIConfig:
         """Get default environment variables."""
         return self.ci_config.get("env", {}).get("defaults", {})
 
+    def stub_secret_names(self, *, always=("PYPI_PASSWORD",)) -> list[str]:
+        """GitHub *secret* names the caller stub should pass to the reusable workflow.
+
+        This is the per-repo transport list (kept small): ``PYPI_PASSWORD`` (for
+        the publish job) plus the backing secret of every env var the repo
+        declares in ``[tool.wads.ci.env]`` (required/test/extra), resolved
+        through ``secret_aliases``. Order-preserving, de-duplicated.
+        """
+        from wads.ci_secrets import _dedupe_preserving_order
+
+        aliases = self.env_secret_aliases
+        names = list(always)
+        for var in self.env_vars_all:
+            names.append(aliases.get(var, var))
+        return list(_dedupe_preserving_order(names))
+
+    def generate_stub_secrets_block(self) -> str:
+        """Render the caller-stub ``secrets:`` pass-through for this repo."""
+        from wads.ci_secrets import render_stub_secrets_passthrough
+
+        return render_stub_secrets_passthrough(self.stub_secret_names())
+
+    @property
+    def env_secret_aliases(self) -> dict[str, str]:
+        """Map of env-var name -> backing GitHub *secret* name.
+
+        Lets a repo expose a secret under a different env-var name in CI, e.g.
+        read ``secrets.HF_WRITE_TOKEN`` but expose it to tests as ``HF_TOKEN``::
+
+            [tool.wads.ci.env.secret_aliases]
+            HF_TOKEN = "HF_WRITE_TOKEN"
+
+        Env-var names not listed here are backed by an identically-named secret.
+        """
+        return self.ci_config.get("env", {}).get("secret_aliases", {})
+
     # ✅ CODE QUALITY AND FORMATTING
     @property
     def quality_config(self) -> dict:
@@ -601,6 +637,7 @@ class CIConfig:
         return {
             "#ENV_BLOCK#": self.generate_env_block(),
             "#ENV_VARS#": self.generate_env_vars_yaml(),
+            "#SECRETS_BLOCK#": self.generate_stub_secrets_block(),
             "#PYTHON_VERSIONS#": json.dumps(self.python_versions),
             "#PRE_TEST_STEPS#": self.generate_pre_test_steps(),
             "#EXCLUDE_PATHS#": ",".join(self.exclude_paths),

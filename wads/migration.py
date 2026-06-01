@@ -882,8 +882,10 @@ def migrate_ci_to_stub(
         >>> stub = migrate_ci_to_stub()
         >>> 'i2mint/wads/.github/workflows/uv-ci.yml@master' in stub
         True
-        >>> 'secrets: inherit' in stub
+        >>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in stub
         True
+        >>> '#SECRETS_BLOCK#' in stub  # placeholder is always filled
+        False
         >>> pinned = migrate_ci_to_stub(pin='@v0.1.81')
         >>> 'uv-ci.yml@v0.1.81' in pinned
         True
@@ -894,7 +896,44 @@ def migrate_ci_to_stub(
         stub = f.read()
     if pin != "@master":
         stub = stub.replace("uv-ci.yml@master", f"uv-ci.yml{pin}")
+    # Fill the per-repo transport list from the repo's [tool.wads.ci.env] when a
+    # pyproject.toml is alongside the old CI; otherwise default to publish-only.
+    secrets_block = _stub_secrets_block_for(old_ci)
+    stub = stub.replace("#SECRETS_BLOCK#", secrets_block)
     return stub
+
+
+def _stub_secrets_block_for(old_ci) -> str:
+    """Render the stub ``secrets:`` block, driven by a nearby pyproject.toml.
+
+    Looks for a ``pyproject.toml`` next to ``old_ci`` (or in its repo root) and
+    uses its ``[tool.wads.ci.env]`` to decide which secrets to transport. Falls
+    back to publish-only (``PYPI_PASSWORD``) when no config is available.
+    """
+    from wads.ci_secrets import render_stub_secrets_passthrough
+
+    pyproject = _find_pyproject_near(old_ci)
+    if pyproject is not None:
+        try:
+            from wads.ci_config import CIConfig
+
+            return CIConfig.from_file(str(pyproject)).generate_stub_secrets_block()
+        except Exception:
+            pass
+    return render_stub_secrets_passthrough(["PYPI_PASSWORD"])
+
+
+def _find_pyproject_near(old_ci) -> Path | None:
+    """Best-effort locate a pyproject.toml given a CI path like .../.github/workflows/ci.yml."""
+    if not old_ci:
+        return None
+    p = Path(old_ci)
+    # Walk up from the CI file looking for a sibling pyproject.toml.
+    for parent in [p] + list(p.parents):
+        candidate = (parent if parent.is_dir() else parent.parent) / "pyproject.toml"
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def main():
