@@ -45,7 +45,12 @@ runs:
 
     - name: Install wads (for CI env utilities)
       shell: bash
-      run: python -m pip install --quiet 'wads>=0.2.0'
+      # Install the latest published wads (floor is a version that exists, NOT
+      # the one that first shipped this module — pinning a not-yet-published
+      # version would make `pip install` fail during the publish-lag window
+      # after a wads merge). The run step below no-ops if the installed wads is
+      # too old to contain export_ci_env, so it is safe across that window.
+      run: python -m pip install --quiet --upgrade 'wads>=0.1.48'
 
     - name: Export configured environment
       shell: bash
@@ -56,4 +61,9 @@ runs:
         WADS_ENV_DEFAULTS: ${{ inputs.defaults }}
         WADS_ENV_ALIASES: ${{ inputs.aliases }}
         WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
-      run: python -m wads.scripts.export_ci_env
+      run: |
+        if python -c "import wads.scripts.export_ci_env" 2>/dev/null; then
+          python -m wads.scripts.export_ci_env
+        else
+          echo "::notice::installed wads lacks export_ci_env (pre-0.1.100); skipping env export until wads publishes."
+        fi
