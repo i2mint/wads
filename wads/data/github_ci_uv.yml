@@ -180,6 +180,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # `actions/checkout@v6` defaults to persist-credentials: true, configuring
+      # HTTPS auth in .git/config using `secrets.GITHUB_TOKEN`. Together with the
+      # job-level `permissions: contents: write`, this is exactly what the
+      # post-publish push-back needs — no per-repo SSH deploy key required. Do
+      # NOT re-add a "Force SSH for git remote" step: rewriting origin to an
+      # SSH URL overrides these credentials and reintroduces the push-back
+      # failure on every repo lacking an SSH_PRIVATE_KEY deploy key.
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -217,14 +224,10 @@ jobs:
         with:
           pypi-token: ${{ secrets.PYPI_PASSWORD }}
 
-      - name: Force SSH for git remote
-        run: git remote set-url origin git@github.com:${{ github.repository }}.git
-
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
         with:
           commit-message: "**CI** Formatted code + Updated version to ${{ env.VERSION }} [skip ci]"
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           push: true
 
       - name: Tag Repository
