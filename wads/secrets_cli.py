@@ -214,15 +214,24 @@ def add(
     changed, existing = add_env_var_to_pyproject(
         pyproject, var_name, secret_name, kind=kind
     )
-    if not changed and existing:
+    # `add` configures three independent layers (pyproject declaration, ci.yml
+    # transport, GitHub secret value). An already-present declaration must NOT
+    # short-circuit the other two — the secret may still be unpassed in ci.yml
+    # or unset on GitHub. So we report the pyproject state and keep going.
+    if changed:
+        print(f"✓ pyproject: added {var_name!r} to [tool.wads.ci.env].{_KINDS[kind]}")
+        if secret_name != var_name:
+            print(f"  ↳ aliased to secret {secret_name!r}")
+    else:
         print(
-            f"'{var_name}' is already configured in [tool.wads.ci.env].{existing}; "
-            "nothing to add."
+            f"· pyproject: {var_name!r} already declared in "
+            f"[tool.wads.ci.env].{existing}"
         )
-        return 0
-    print(f"✓ pyproject: added {var_name!r} to [tool.wads.ci.env].{_KINDS[kind]}")
-    if secret_name != var_name:
-        print(f"  ↳ aliased to secret {secret_name!r}")
+        if existing != _KINDS[kind]:
+            print(
+                f"  (left in {existing}; requested --kind {kind} would put it in "
+                f"{_KINDS[kind]} — move it by hand if that's intended)"
+            )
 
     stub_changed, reason = add_secret_to_stub(ci_file, secret_name)
     print(f"{'✓' if stub_changed else '·'} transport: {reason}")
