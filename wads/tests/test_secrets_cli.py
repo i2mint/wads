@@ -4,6 +4,7 @@ import pytest
 
 from wads.migration import migrate_ci_to_stub
 from wads.secrets_cli import (
+    add,
     add_env_var_to_pyproject,
     add_secret_to_stub,
     list_,
@@ -78,6 +79,41 @@ def test_list_reports_configured(repo, capsys):
     list_(pyproject=str(pp))
     out = capsys.readouterr().out
     assert "HF_TOKEN" in out and "HF_WRITE_TOKEN" in out
+
+
+def test_add_does_not_short_circuit_when_already_declared(repo):
+    """Regression: a var already in pyproject must still get the ci.yml transport.
+
+    Previously ``add`` returned early on an existing declaration, skipping both
+    the transport edit and the GitHub secret set — so a half-configured secret
+    (declared but not passed in ci.yml) could never be completed by re-running.
+    """
+    pp = repo / "pyproject.toml"
+    ci = repo / ".github" / "workflows" / "ci.yml"
+    # Pre-declare in pyproject only; ci.yml does NOT yet pass it.
+    add_env_var_to_pyproject(pp, "OPENAI_API_KEY", "OPENAI_API_KEY", kind="test")
+    assert "secrets.OPENAI_API_KEY" not in ci.read_text()
+
+    rc = add(
+        "OPENAI_API_KEY",
+        kind="test",
+        github=False,
+        pyproject=str(pp),
+        ci_file=str(ci),
+    )
+    assert rc == 0
+    # The transport must now be present despite the pre-existing declaration.
+    assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}" in ci.read_text()
+
+
+def test_add_is_idempotent_when_fully_configured(repo):
+    """Running ``add`` twice is a clean no-op (exit 0, single transport line)."""
+    pp = repo / "pyproject.toml"
+    ci = repo / ".github" / "workflows" / "ci.yml"
+    common = dict(kind="test", github=False, pyproject=str(pp), ci_file=str(ci))
+    assert add("OPENAI_API_KEY", **common) == 0
+    assert add("OPENAI_API_KEY", **common) == 0
+    assert ci.read_text().count("secrets.OPENAI_API_KEY") == 1
 
 
 def test_repo_from_git_parses_urls(tmp_path, monkeypatch):
