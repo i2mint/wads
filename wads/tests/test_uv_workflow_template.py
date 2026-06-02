@@ -143,12 +143,14 @@ class TestUvWorkflowTemplate:
         assert "python-version" in validation_job["strategy"]["matrix"]
 
     def test_publish_job_conditional(self, template_data):
-        """Test that publish job only runs on main/master."""
+        """Test that publish job only runs on the repo's default branch."""
         publish_job = template_data["jobs"]["publish"]
         assert "if" in publish_job
         condition = publish_job["if"]
         assert "github.ref" in condition
-        assert "master" in condition or "main" in condition
+        # Gates on the actual default branch (not a literal master/main), so it
+        # stays correct for repos whose default branch is named differently.
+        assert "github.event.repository.default_branch" in condition
 
     def test_setup_job_exposes_publish_gate_outputs(self, template_data):
         """Test setup job exposes the publish gate outputs for the publish job."""

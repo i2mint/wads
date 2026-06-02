@@ -12,7 +12,7 @@ Wads automates Python project setup, packaging, CI/CD, and migration. It provide
 
 ## Architecture: pyproject.toml as Single Source of Truth
 
-The core design principle: **all project configuration lives in `pyproject.toml`**. The CI workflow template (`github_ci_publish_2025.yml`) reads configuration from `pyproject.toml` via the `read-ci-config` action, so projects don't hardcode settings in workflow files.
+The core design principle: **all project configuration lives in `pyproject.toml`**. The default CI is a small stub (`.github/workflows/ci.yml`) that calls the reusable workflow `i2mint/wads/.github/workflows/uv-ci.yml@master`, which reads configuration from `pyproject.toml` via the `read-ci-config` action — so projects don't hardcode settings in workflow files. (`github_ci_publish_2025.yml` is the legacy template; `github_ci_uv.yml` is the inline escape valve.)
 
 ### Key Configuration Sections
 
@@ -139,16 +139,16 @@ To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates both layers
 needs a one-line PR to `wads.ci_secrets` (or the inline escape valve); the CLI
 warns when that's the case.
 
-### CI Workflow Flow (github_ci_publish_2025.yml)
+### CI Workflow Flow (uv-ci.yml — the reusable workflow)
 
 The CI workflow has 4-5 jobs:
 
-1. **setup** - Reads `[tool.wads.ci]` config, exports as outputs
+1. **setup** - Reads `[tool.wads.ci]` config (incl. `[tool.wads.ci.env]`), exports as outputs
 2. **validation** - Matrix testing across python_versions:
-   - Install system deps → Install Python deps → Ruff format → Ruff lint → Pytest → Metrics
-3. **windows-validation** (optional) - Same tests on Windows, `continue-on-error: true`
-4. **publish** (main/master only) - Format → Bump version → Build → PyPI upload → Commit → Tag
-5. **github-pages** (optional) - Publish docs via epythet
+   - Install system deps → Install Python deps → **export-ci-env** (write declared secrets to `$GITHUB_ENV`, fail on missing required) → Ruff format → Ruff lint → Pytest → Metrics
+3. **windows-validation** (optional) - Same tests on Windows, `continue-on-error: true` (never blocks publish)
+4. **publish** - Runs **only on the repo's default branch**, **only if `validation` succeeded** (the Linux matrix; the `if:` has no `!cancelled()`/`always()` escape hatch), not `[skip ci]`, and publishing enabled. Format → Bump version → Build → PyPI upload → Commit → Tag (push-back via `GITHUB_TOKEN`)
+5. **github-pages** (optional) - Publish docs via epythet (also default-branch-gated)
 
 ### Migration Flow
 
