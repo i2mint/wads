@@ -32,7 +32,10 @@ inputs:
     required: false
     default: '{}'
   secrets-json:
-    description: 'The secrets context as JSON. Pass `${{ toJSON(secrets) }}`.'
+    # NOTE: do not write a GitHub expression literally here — the manifest
+    # loader evaluates expressions even inside description strings, and the
+    # `secrets` context is not available in a composite action manifest.
+    description: 'The secrets context serialized as JSON by the caller (toJSON of the secrets context).'
     required: true
 
 runs:
