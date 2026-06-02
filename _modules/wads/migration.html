@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.2.0 documentation</title>
+  <title>wads.migration &mdash; wads 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -78,6 +78,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -163,6 +164,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -1087,6 +1089,108 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<span class="c1"># Reference to a GitHub secret inside a workflow expression, e.g.</span>
+<span class="c1"># ``${{ secrets.OPENAI_API_KEY }}`` or ``${{ secrets.HF_WRITE_TOKEN || &#39;&#39; }}``.</span>
+<span class="n">_SECRET_REF_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)&quot;</span><span class="p">)</span>
+
+<span class="c1"># Secrets the workflow handles structurally (publish auth, GitHub token); never</span>
+<span class="c1"># carried as repo env vars.</span>
+<span class="n">_INFRA_SECRETS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;GITHUB_TOKEN&quot;</span><span class="p">,</span> <span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">,</span> <span class="s2">&quot;TEST_PYPI_PASSWORD&quot;</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_env_blocks</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield every ``env:`` mapping found anywhere in a parsed workflow tree.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="n">_iter_env_blocks</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="k">yield from</span> <span class="n">_iter_env_blocks</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="extract_ci_env_vars">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.extract_ci_env_vars">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract secret-backed env vars from a CI workflow&#39;s ``env:`` blocks.</span>
+
+<span class="sd">    Returns a mapping ``{ENV_VAR: SECRET_NAME}`` for every workflow/job/step</span>
+<span class="sd">    ``env:`` entry whose value references ``${{ secrets.X }}``. This is the</span>
+<span class="sd">    per-repo signal of which secrets the tests actually consume.</span>
+
+<span class="sd">    Deliberately excluded:</span>
+
+<span class="sd">    * Literal env vars (``PROJECT_NAME``, ``LOG_LEVEL: DEBUG`` …) — no secret ref.</span>
+<span class="sd">    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``).</span>
+<span class="sd">    * Reusable-workflow ``secrets:`` pass-through blocks — that&#39;s *transport*,</span>
+<span class="sd">      not a signal of usage, and scanning it would re-introduce the very</span>
+<span class="sd">      over-assignment the new model removes.</span>
+
+<span class="sd">    &gt;&gt;&gt; ci = &#39;&#39;&#39;</span>
+<span class="sd">    ... env:</span>
+<span class="sd">    ...   PROJECT_NAME: myproj</span>
+<span class="sd">    ...   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || &#39;&#39; }}</span>
+<span class="sd">    ...   HF_TOKEN: ${{ secrets.HF_WRITE_TOKEN }}</span>
+<span class="sd">    ... jobs:</span>
+<span class="sd">    ...   publish:</span>
+<span class="sd">    ...     steps:</span>
+<span class="sd">    ...       - uses: x</span>
+<span class="sd">    ...         with:</span>
+<span class="sd">    ...           pypi-token: ${{ secrets.PYPI_PASSWORD }}</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; extract_ci_env_vars(ci) == {</span>
+<span class="sd">    ...     &quot;OPENAI_API_KEY&quot;: &quot;OPENAI_API_KEY&quot;, &quot;HF_TOKEN&quot;: &quot;HF_WRITE_TOKEN&quot;}</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">env_map</span> <span class="ow">in</span> <span class="n">_iter_env_blocks</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">env_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">_SECRET_REF_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_INFRA_SECRETS</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="carry_ci_env_into_pyproject">
+<a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.carry_ci_env_into_pyproject">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">carry_ci_env_into_pyproject</span><span class="p">(</span>
+    <span class="n">ci_text</span><span class="p">,</span> <span class="n">pyproject_path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;extra&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge secret-backed env vars from ``ci_text`` into ``[tool.wads.ci.env]``.</span>
+
+<span class="sd">    Adds only env vars not already declared (in any bucket), into the ``kind``</span>
+<span class="sd">    bucket (default ``extra`` — available-if-set, never fails the build), and</span>
+<span class="sd">    records a ``secret_aliases`` entry when the env var name differs from the</span>
+<span class="sd">    backing secret. Returns the list of newly-added var names (``[]`` if there</span>
+<span class="sd">    was nothing to carry). This is what makes ``ci-to-stub`` / ``ci-to-uv``</span>
+<span class="sd">    *lossless*: secrets wired only in the old workflow YAML are preserved in</span>
+<span class="sd">    ``pyproject.toml`` instead of silently dropped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">env_vars</span> <span class="o">=</span> <span class="n">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env_vars</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.secrets_cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_env_var_to_pyproject</span>
+
+    <span class="n">added</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">secret</span> <span class="ow">in</span> <span class="n">env_vars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">changed</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_env_var_to_pyproject</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">secret</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+            <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">added</span></div>
+
+
+
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../module_docs/wads/migration.html#wads.migration.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
@@ -1280,6 +1384,14 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
+            <span class="c1"># Carry secret-backed env vars from the OLD workflow into</span>
+            <span class="c1"># [tool.wads.ci.env] before re-rendering, so the new uv workflow&#39;s</span>
+            <span class="c1"># env block (generated from pyproject) preserves them.</span>
+            <span class="n">pyproject</span> <span class="o">=</span> <span class="n">_find_pyproject_near</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">))</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">input_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(),</span> <span class="n">pyproject</span><span class="p">)</span>
+
             <span class="c1"># Perform migration</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">))</span>
 
@@ -1292,6 +1404,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;✓ Carried </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2"> env var(s) into &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;[tool.wads.ci.env].extra_envvars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Note: Ensure your pyproject.toml has a [tool.wads.ci] section &quot;</span>
                 <span class="s2">&quot;and that secrets.PYPI_PASSWORD is a PyPI API token.&quot;</span><span class="p">,</span>
@@ -1338,12 +1456,28 @@
                 <span class="p">)</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
+            <span class="c1"># Carry secret-backed env vars from the existing workflow into</span>
+            <span class="c1"># [tool.wads.ci.env] so the stub transports + exports them (lossless</span>
+            <span class="c1"># migration). Runs before stub generation, which reads pyproject.</span>
+            <span class="n">pyproject</span> <span class="o">=</span> <span class="n">_find_pyproject_near</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">))</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">pyproject</span><span class="p">)</span>
+
             <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pin</span><span class="p">)</span>
 
             <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="n">input_path</span>
             <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">output_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Stub-ified </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;✓ Carried </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2"> env var(s) into &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;[tool.wads.ci.env].extra_envvars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;  Review them (promote to required/test if appropriate) and &quot;</span>
+                    <span class="s2">&quot;ensure the matching GitHub secrets are set.&quot;</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">pin</span> <span class="o">==</span> <span class="s2">&quot;@master&quot;</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Pinned to @master (floats with wads). If you need version &quot;</span>

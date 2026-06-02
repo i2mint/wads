@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_workflow_gates &mdash; wads 0.2.1 documentation</title>
+  <title>wads.tests.test_ci_env_extraction &mdash; wads 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -24,8 +24,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="wads.tests.test_workflow_template" href="test_workflow_template.html" />
-    <link rel="prev" title="wads.tests.test_uv_workflow_template" href="test_uv_workflow_template.html" /> 
+    <link rel="next" title="wads.tests.test_ci_secrets" href="test_ci_secrets.html" />
+    <link rel="prev" title="wads.tests.test_action_definitions" href="test_action_definitions.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -81,7 +81,7 @@
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_action_definitions.html">wads.tests.test_action_definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_ci_env_extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -103,11 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_user_dirs.html">wads.tests.test_user_dirs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.tests.test_workflow_gates</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_workflow_gates.test_no_action_input_embeds_github_expression"><code class="docutils literal notranslate"><span class="pre">test_no_action_input_embeds_github_expression()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#wads.tests.test_workflow_gates.test_publish_gates_on_actual_default_branch"><code class="docutils literal notranslate"><span class="pre">test_publish_gates_on_actual_default_branch()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="test_workflow_template.html">wads.tests.test_workflow_template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_dirs.html">wads.user_dirs</a></li>
@@ -128,9 +124,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">wads.tests.test_workflow_gates</li>
+      <li class="breadcrumb-item active">wads.tests.test_ci_env_extraction</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/module_docs/wads/tests/test_workflow_gates.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/module_docs/wads/tests/test_ci_env_extraction.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -138,41 +134,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-wads.tests.test_workflow_gates">
-<span id="wads-tests-test-workflow-gates"></span><h1>wads.tests.test_workflow_gates<a class="headerlink" href="#module-wads.tests.test_workflow_gates" title="Link to this heading"></a></h1>
-<p>Regression guards for two CI wiring bugs (see issue #45 follow-up).</p>
-<ol class="arabic simple">
-<li><p>A GitHub <em>expression</em> (<code class="docutils literal notranslate"><span class="pre">${{</span> <span class="pre">...</span> <span class="pre">}}</span></code>) written literally inside an action
-manifest’s input <code class="docutils literal notranslate"><span class="pre">description</span></code>/<code class="docutils literal notranslate"><span class="pre">default</span></code> is evaluated at manifest-load
-time. Referencing the <code class="docutils literal notranslate"><span class="pre">secrets</span></code> context there crashes the whole action
-(“Unrecognized named-value: ‘secrets’”), which took down the validation job.</p></li>
-<li><p>The reusable workflow’s <code class="docutils literal notranslate"><span class="pre">publish</span></code> job must be gated on the Linux
-<code class="docutils literal notranslate"><span class="pre">validation</span></code> matrix — a failing test must block publication. This pins
-that the gate has no status-function escape hatch (<code class="docutils literal notranslate"><span class="pre">!cancelled()</span></code> /
-<code class="docutils literal notranslate"><span class="pre">always()</span></code>) and that <code class="docutils literal notranslate"><span class="pre">validation</span></code> is a dependency.</p></li>
-</ol>
-<dl class="py function">
-<dt class="sig sig-object py" id="wads.tests.test_workflow_gates.test_no_action_input_embeds_github_expression">
-<span class="sig-prename descclassname"><span class="pre">wads.tests.test_workflow_gates.</span></span><span class="sig-name descname"><span class="pre">test_no_action_input_embeds_github_expression</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_workflow_gates.html#test_no_action_input_embeds_github_expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_workflow_gates.test_no_action_input_embeds_github_expression" title="Link to this definition"></a></dt>
-<dd><p>No action.yml input description/default may contain a <cite>${{ }}</cite> expression.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="wads.tests.test_workflow_gates.test_publish_gates_on_actual_default_branch">
-<span class="sig-prename descclassname"><span class="pre">wads.tests.test_workflow_gates.</span></span><span class="sig-name descname"><span class="pre">test_publish_gates_on_actual_default_branch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/wads/tests/test_workflow_gates.html#test_publish_gates_on_actual_default_branch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.tests.test_workflow_gates.test_publish_gates_on_actual_default_branch" title="Link to this definition"></a></dt>
-<dd><p>Publish must key off the repo’s real default branch, not a literal master/main.</p>
-<p>Keeps publish and github-pages consistent and correct for repos whose
-default branch is neither ‘master’ nor ‘main’.</p>
-</dd></dl>
-
+  <section id="wads-tests-test-ci-env-extraction">
+<h1>wads.tests.test_ci_env_extraction<a class="headerlink" href="#wads-tests-test-ci-env-extraction" title="Link to this heading"></a></h1>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="test_uv_workflow_template.html" class="btn btn-neutral float-left" title="wads.tests.test_uv_workflow_template" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="test_workflow_template.html" class="btn btn-neutral float-right" title="wads.tests.test_workflow_template" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="test_action_definitions.html" class="btn btn-neutral float-left" title="wads.tests.test_action_definitions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="test_ci_secrets.html" class="btn btn-neutral float-right" title="wads.tests.test_ci_secrets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

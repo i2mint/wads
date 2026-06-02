@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.fleet_migrate &mdash; wads 0.2.0 documentation</title>
+  <title>wads.fleet_migrate &mdash; wads 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -78,6 +78,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -154,7 +155,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_ci_to_stub</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">,</span> <span class="n">migrate_ci_to_stub</span>
 
 
 <span class="n">DEFAULT_STATE_FILE</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;Downloads&quot;</span> <span class="o">/</span> <span class="s2">&quot;wads_ci_diagnosis.json&quot;</span>
@@ -357,19 +358,44 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;no </span><span class="si">{</span><span class="n">workflow_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="n">old_content</span> <span class="o">=</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+
+    <span class="c1"># Carry secret-backed env vars from the existing workflow into</span>
+    <span class="c1"># [tool.wads.ci.env] so the migration is lossless (and so the stub&#39;s</span>
+    <span class="c1"># transport list is generated to include them). Must run before</span>
+    <span class="c1"># migrate_ci_to_stub, which reads pyproject to render the secrets block.</span>
+    <span class="n">carried</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+    <span class="k">if</span> <span class="n">pyproject</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">old_content</span><span class="p">,</span> <span class="n">pyproject</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># never let env carry abort the batch</span>
+            <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;env-carry: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">new_content</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ci_path</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">pin</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ci-to-stub: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="o">==</span> <span class="n">new_content</span><span class="p">:</span>
+    <span class="n">ci_changed</span> <span class="o">=</span> <span class="n">old_content</span> <span class="o">!=</span> <span class="n">new_content</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ci_changed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">carried</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;noop&quot;</span><span class="p">,</span> <span class="s2">&quot;already on this stub&quot;</span><span class="p">)</span>
-    <span class="n">ci_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new_content</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ci_changed</span><span class="p">:</span>
+        <span class="n">ci_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new_content</span><span class="p">)</span>
+
+    <span class="n">add_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">workflow_path</span><span class="p">]</span> <span class="k">if</span> <span class="n">ci_changed</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+        <span class="n">add_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
+
+    <span class="n">commit_detail</span> <span class="o">=</span> <span class="s2">&quot;switch to wads reusable workflow stub&quot;</span>
+    <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+        <span class="n">commit_detail</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;; carry </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2"> env var(s) into [tool.wads.ci.env]&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">commit_message</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">carried</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;ci: </span><span class="si">{</span><span class="n">commit_detail</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">for</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;-C&quot;</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="n">workflow_path</span><span class="p">],</span> <span class="s2">&quot;git add&quot;</span><span class="p">),</span>
+        <span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;-C&quot;</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">add_paths</span><span class="p">],</span> <span class="s2">&quot;git add&quot;</span><span class="p">),</span>
         <span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;-C&quot;</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;-C&quot;</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">],</span>
             <span class="s2">&quot;git commit&quot;</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="p">(</span>
@@ -383,7 +409,10 @@
                 <span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()[:</span><span class="mi">80</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;pushed to </span><span class="si">{</span><span class="n">default_branch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="n">detail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pushed to </span><span class="si">{</span><span class="n">default_branch</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+        <span class="n">detail</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (carried env: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span></div>
 
 
 
