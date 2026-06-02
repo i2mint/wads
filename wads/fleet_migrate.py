@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
 
-from wads.migration import migrate_ci_to_stub
+from wads.migration import carry_ci_env_into_pyproject, migrate_ci_to_stub
 
 
 DEFAULT_STATE_FILE = Path.home() / "Downloads" / "wads_ci_diagnosis.json"
@@ -213,19 +213,44 @@ def migrate_one_to_stub(
     if not ci_path.exists():
         return RepoResult(name, repo_path, "skip", f"no {workflow_path}")
 
+    old_content = ci_path.read_text()
+
+    # Carry secret-backed env vars from the existing workflow into
+    # [tool.wads.ci.env] so the migration is lossless (and so the stub's
+    # transport list is generated to include them). Must run before
+    # migrate_ci_to_stub, which reads pyproject to render the secrets block.
+    carried: list = []
+    pyproject = Path(repo_path) / "pyproject.toml"
+    if pyproject.is_file():
+        try:
+            carried = carry_ci_env_into_pyproject(old_content, pyproject)
+        except Exception as e:  # never let env carry abort the batch
+            return RepoResult(name, repo_path, "fail", f"env-carry: {e}")
+
     try:
         new_content = migrate_ci_to_stub(str(ci_path), pin=pin)
     except Exception as e:
         return RepoResult(name, repo_path, "fail", f"ci-to-stub: {e}")
 
-    if ci_path.read_text() == new_content:
+    ci_changed = old_content != new_content
+    if not ci_changed and not carried:
         return RepoResult(name, repo_path, "noop", "already on this stub")
-    ci_path.write_text(new_content)
+    if ci_changed:
+        ci_path.write_text(new_content)
+
+    add_paths = [workflow_path] if ci_changed else []
+    if carried:
+        add_paths.append("pyproject.toml")
+
+    commit_detail = "switch to wads reusable workflow stub"
+    if carried:
+        commit_detail += f"; carry {len(carried)} env var(s) into [tool.wads.ci.env]"
+    msg = commit_message if not carried else f"ci: {commit_detail}"
 
     for cmd, label in (
-        (["git", "-C", repo_path, "add", workflow_path], "git add"),
+        (["git", "-C", repo_path, "add", *add_paths], "git add"),
         (
-            ["git", "-C", repo_path, "commit", "-m", commit_message, "--quiet"],
+            ["git", "-C", repo_path, "commit", "-m", msg, "--quiet"],
             "git commit",
         ),
         (
@@ -239,7 +264,10 @@ def migrate_one_to_stub(
                 name, repo_path, "fail", f"{label}: {r.stderr.strip()[:80]}"
             )
 
-    return RepoResult(name, repo_path, "ok", f"pushed to {default_branch}")
+    detail = f"pushed to {default_branch}"
+    if carried:
+        detail += f" (carried env: {', '.join(carried)})"
+    return RepoResult(name, repo_path, "ok", detail)
 
 
 def fleet_stub(

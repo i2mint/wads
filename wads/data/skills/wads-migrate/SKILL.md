@@ -84,6 +84,16 @@ wads-migrate ci-to-stub --pin @v0.1.81
 `ci-to-uv` first so the per-repo `[tool.wads.ci]` audit happens before the
 inline workflow disappears.
 
+**Secrets are carried over automatically.** Both `ci-to-uv` and `ci-to-stub`
+(and `fleet-stub`) scan the *existing* workflow's `env:` blocks for
+`${{ secrets.X }}` references and inject any not-yet-declared ones into
+`[tool.wads.ci.env].extra_envvars` (recording a `secret_aliases` entry when the
+env-var name differs from the secret name). So a migration is **lossless** — you
+don't lose secrets that were wired only in the old YAML. The command prints what
+it carried; review them afterward and promote to `required`/`test` if a test
+truly depends on one. Use `wads-secrets add` only for secrets the old workflow
+did **not** already reference (e.g. a brand-new dependency).
+
 ## New Project
 
 ```bash

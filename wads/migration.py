@@ -30,6 +30,7 @@ Example:
 """
 
 import os
+import re
 import sys
 from typing import Union, Mapping, Callable, Optional
 from pathlib import Path
@@ -936,6 +937,102 @@ def _find_pyproject_near(old_ci) -> Path | None:
     return None
 
 
+# Reference to a GitHub secret inside a workflow expression, e.g.
+# ``${{ secrets.OPENAI_API_KEY }}`` or ``${{ secrets.HF_WRITE_TOKEN || '' }}``.
+_SECRET_REF_RE = re.compile(r"\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)")
+
+# Secrets the workflow handles structurally (publish auth, GitHub token); never
+# carried as repo env vars.
+_INFRA_SECRETS = frozenset({"GITHUB_TOKEN", "PYPI_PASSWORD", "TEST_PYPI_PASSWORD"})
+
+
+def _iter_env_blocks(node):
+    """Yield every ``env:`` mapping found anywhere in a parsed workflow tree."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "env" and isinstance(value, dict):
+                yield value
+            else:
+                yield from _iter_env_blocks(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _iter_env_blocks(item)
+
+
+def extract_ci_env_vars(ci_text: str) -> dict:
+    """Extract secret-backed env vars from a CI workflow's ``env:`` blocks.
+
+    Returns a mapping ``{ENV_VAR: SECRET_NAME}`` for every workflow/job/step
+    ``env:`` entry whose value references ``${{ secrets.X }}``. This is the
+    per-repo signal of which secrets the tests actually consume.
+
+    Deliberately excluded:
+
+    * Literal env vars (``PROJECT_NAME``, ``LOG_LEVEL: DEBUG`` …) — no secret ref.
+    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``).
+    * Reusable-workflow ``secrets:`` pass-through blocks — that's *transport*,
+      not a signal of usage, and scanning it would re-introduce the very
+      over-assignment the new model removes.
+
+    >>> ci = '''
+    ... env:
+    ...   PROJECT_NAME: myproj
+    ...   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
+    ...   HF_TOKEN: ${{ secrets.HF_WRITE_TOKEN }}
+    ... jobs:
+    ...   publish:
+    ...     steps:
+    ...       - uses: x
+    ...         with:
+    ...           pypi-token: ${{ secrets.PYPI_PASSWORD }}
+    ... '''
+    >>> extract_ci_env_vars(ci) == {
+    ...     "OPENAI_API_KEY": "OPENAI_API_KEY", "HF_TOKEN": "HF_WRITE_TOKEN"}
+    True
+    """
+    import yaml
+
+    try:
+        data = yaml.safe_load(ci_text)
+    except yaml.YAMLError:
+        return {}
+    out: dict = {}
+    for env_map in _iter_env_blocks(data):
+        for var, value in env_map.items():
+            if not isinstance(value, str):
+                continue
+            match = _SECRET_REF_RE.search(value)
+            if match and str(var) not in _INFRA_SECRETS:
+                out[str(var)] = match.group(1)
+    return out
+
+
+def carry_ci_env_into_pyproject(
+    ci_text, pyproject_path, *, kind: str = "extra"
+) -> list:
+    """Merge secret-backed env vars from ``ci_text`` into ``[tool.wads.ci.env]``.
+
+    Adds only env vars not already declared (in any bucket), into the ``kind``
+    bucket (default ``extra`` — available-if-set, never fails the build), and
+    records a ``secret_aliases`` entry when the env var name differs from the
+    backing secret. Returns the list of newly-added var names (``[]`` if there
+    was nothing to carry). This is what makes ``ci-to-stub`` / ``ci-to-uv``
+    *lossless*: secrets wired only in the old workflow YAML are preserved in
+    ``pyproject.toml`` instead of silently dropped.
+    """
+    env_vars = extract_ci_env_vars(ci_text)
+    if not env_vars:
+        return []
+    from wads.secrets_cli import add_env_var_to_pyproject
+
+    added = []
+    for var, secret in env_vars.items():
+        changed, _ = add_env_var_to_pyproject(pyproject_path, var, secret, kind=kind)
+        if changed:
+            added.append(var)
+    return added
+
+
 def main():
     """CLI entry point for wads migration tools."""
     import argparse
@@ -1127,6 +1224,14 @@ def main():
                 print(f"Error: {input_path} not found", file=sys.stderr)
                 sys.exit(1)
 
+            # Carry secret-backed env vars from the OLD workflow into
+            # [tool.wads.ci.env] before re-rendering, so the new uv workflow's
+            # env block (generated from pyproject) preserves them.
+            pyproject = _find_pyproject_near(str(input_path))
+            carried = []
+            if pyproject is not None:
+                carried = carry_ci_env_into_pyproject(input_path.read_text(), pyproject)
+
             # Perform migration
             result = migrate_ci_to_uv(str(input_path))
 
@@ -1139,6 +1244,12 @@ def main():
             else:
                 print(result)
 
+            if carried:
+                print(
+                    f"✓ Carried {len(carried)} env var(s) into "
+                    f"[tool.wads.ci.env].extra_envvars: {', '.join(carried)}",
+                    file=sys.stderr,
+                )
             print(
                 "\nNote: Ensure your pyproject.toml has a [tool.wads.ci] section "
                 "and that secrets.PYPI_PASSWORD is a PyPI API token.",
@@ -1185,12 +1296,28 @@ def main():
                 )
                 sys.exit(2)
 
+            # Carry secret-backed env vars from the existing workflow into
+            # [tool.wads.ci.env] so the stub transports + exports them (lossless
+            # migration). Runs before stub generation, which reads pyproject.
+            pyproject = _find_pyproject_near(str(input_path))
+            carried = []
+            if pyproject is not None:
+                carried = carry_ci_env_into_pyproject(existing, pyproject)
+
             result = migrate_ci_to_stub(str(input_path), pin=args.pin)
 
             output_path = Path(args.output) if args.output else input_path
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(result)
             print(f"✓ Stub-ified {input_path} -> {output_path}")
+            if carried:
+                print(
+                    f"✓ Carried {len(carried)} env var(s) into "
+                    f"[tool.wads.ci.env].extra_envvars: {', '.join(carried)}\n"
+                    "  Review them (promote to required/test if appropriate) and "
+                    "ensure the matching GitHub secrets are set.",
+                    file=sys.stderr,
+                )
             if args.pin == "@master":
                 print(
                     "\nPinned to @master (floats with wads). If you need version "
