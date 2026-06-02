@@ -48,8 +48,21 @@ def test_publish_is_gated_on_validation():
     cond = publish["if"]
     # No status function -> implicit success() requires all `needs` to pass,
     # so a failing validation blocks publish. Reject the escape hatches.
-    assert "cancelled(" not in cond, "publish must not bypass validation via !cancelled()"
+    assert "cancelled(" not in cond, (
+        "publish must not bypass validation via !cancelled()"
+    )
     assert "always(" not in cond, "publish must not run via always()"
+
+
+def test_publish_gates_on_actual_default_branch():
+    """Publish must key off the repo's real default branch, not a literal master/main.
+
+    Keeps publish and github-pages consistent and correct for repos whose
+    default branch is neither 'master' nor 'main'.
+    """
+    cond = _jobs(UV_CI)["publish"]["if"]
+    assert "github.event.repository.default_branch" in cond
+    assert "refs/heads/master" not in cond and "refs/heads/main" not in cond
 
 
 def test_windows_validation_is_optional_and_separate():

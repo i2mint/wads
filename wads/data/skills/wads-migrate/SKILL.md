@@ -31,8 +31,8 @@ as an escape valve for repos that need to customize CI beyond `[tool.wads.ci.*]`
 |---|---|
 | Bad wads merge breaks CI everywhere on next run | Wads's own CI runs the reusable workflow first — canary catches obvious breaks. **Crucially: broken CI ≠ broken release.** Publish is gated on workflow success, so a bad wads change blocks publication for downstream consumers until wads is fixed, but never ships a broken artifact. This is what makes floating `@master` safe by default. |
 | Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @v0.1.81` writes the stub with a tag pin instead of `@master`. The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
-| Reusable workflow has a curated env-var list (PROJECT_NAME, OPENAI_API_KEY, ANTHROPIC_API_KEY, HF_TOKEN, HUGGINGFACE_TOKEN, KAGGLE_USERNAME, KAGGLE_KEY). Other workflow-level secret env vars need to land in wads. | For one-off needs, use the escape valve (drop the stub, copy `github_ci_uv.yml` inline). For ecosystem-wide needs, PR to wads adding the var to the reusable workflow's top-level `env:` block. |
-| Reusable workflow can't access caller-only secrets without `secrets: inherit` | The stub always sets `secrets: inherit`. Don't remove it. |
+| A secret your tests need isn't reaching CI | Run `wads-secrets add VAR_NAME` (see "Secrets" below). It declares the var in `[tool.wads.ci.env]` AND adds the pass-through line to the stub. No workflow edit needed unless the name is outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), in which case the CLI warns and you either PR wads to widen the superset or use the inline escape valve. |
+| Secrets must reach a reusable workflow owned by a different account | The stub passes secrets **explicitly** (NOT `secrets: inherit`, which is unreliable cross-owner). The stub's `secrets:` block lists each name; it's generated from `[tool.wads.ci.env]` at migrate time and extended by `wads-secrets add`. |
 
 ## Detecting Current Format
 
@@ -151,22 +151,60 @@ pytest collection will fail during import.
 in pyproject.toml, then `wads-migrate ci-to-uv` to re-render the workflow with
 a top-level `env:` block wiring `${{ secrets.X || '' }}`. Set the GitHub secret.
 
-**For stub repos**: the reusable workflow has a curated set of common env vars
-already (OPENAI_API_KEY, ANTHROPIC_API_KEY, HF_TOKEN, HUGGINGFACE_TOKEN,
-KAGGLE_USERNAME, KAGGLE_KEY). Just set the GitHub secret in the consuming
-repo — no workflow edit needed. If the var isn't in the curated set, either:
-- PR to wads adding it to the reusable workflow's `env:` block (ecosystem-wide), or
-- Drop the stub and use inline `github_ci_uv.yml` (one-off).
+**For stub repos** (the default since wads 0.1.82): the simplest path is
 
-Do NOT hand-edit job-level `env:` blocks in ci.yml — they'll be wiped on next
-migrate. Always wire via `[tool.wads.ci.env]` (inline) or PR to wads (stub).
+```bash
+wads-secrets add OPENAI_API_KEY          # VAR == secret name
+wads-secrets add HF_TOKEN HF_WRITE_TOKEN  # env var <- aliased secret
+wads-secrets add DB_URL --kind required   # fail CI if unset
+```
+
+This (a) declares the var in `[tool.wads.ci.env]` so the `export-ci-env` step
+writes it into the job environment, (b) adds the pass-through line to the stub's
+`secrets:` block so the secret is transported to the reusable workflow, and (c)
+`gh secret set`s the value if `gh` is installed (value from `$VAR_NAME` or
+`--value`). See the **Secrets** section below for the full model. If the secret
+name is outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), the CLI
+warns; either PR wads to widen the superset (one line, ecosystem-wide) or use the
+inline `github_ci_uv.yml` escape valve.
+
+Do NOT hand-edit job-level `env:` blocks in ci.yml. Declare via
+`[tool.wads.ci.env]` (or `wads-secrets add`, which is the safe way to do both).
+
+## Secrets (two-layer model)
+
+Secrets reach a stub repo's CI through two coordinated layers:
+
+1. **Transport** — the stub's `secrets:` block *passes* named secrets to the
+   reusable workflow. Explicit pass-through is used (NOT `secrets: inherit`,
+   which is unreliable across GitHub accounts). The *universe* of passable
+   names is the superset declared in the wads-side `uv-ci.yml`
+   (`on.workflow_call.secrets`), generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`.
+   Each repo's stub passes only `PYPI_PASSWORD` + the names it actually uses.
+2. **Env-assignment** — `[tool.wads.ci.env]` (`required_envvars`,
+   `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
+   ENV_VAR≠SECRET_NAME) decides which passed secrets become job env vars. The
+   `export-ci-env` action writes exactly those to `$GITHUB_ENV` and **fails the
+   build** if a `required` secret is unset. A passed-but-undeclared secret is
+   never written to the env (no over-assignment).
+
+**`wads-secrets add VAR_NAME [SECRET_NAME]`** does both layers (+ `gh secret set`)
+in one step — the recommended way. `wads-secrets list` shows what's configured;
+`wads-secrets superset` prints the allowed names. For a name outside the
+superset: PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits all repos) or use the
+inline `github_ci_uv.yml` escape valve.
+
+Publishing runs only on the repo's **default branch**, when validation passes,
+when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.
 
 ## Checklist After Migration
 
 - [ ] `pyproject.toml` has correct metadata (name, version, dependencies)
 - [ ] `[tool.wads.ci]` section present (or defaults are acceptable)
-- [ ] `[tool.wads.ci.env.test_envvars]` lists any secrets the code needs at import time
-- [ ] `.github/workflows/ci.yml` is either the 5-line stub OR uses `astral-sh/setup-uv` with a top-level `env:` block
+- [ ] Secrets the code needs are configured via `wads-secrets add` (declares in
+      `[tool.wads.ci.env]` AND passes them in the stub's `secrets:` block)
+- [ ] `.github/workflows/ci.yml` is the stub (calls `uv-ci.yml@master`) OR the
+      inline `github_ci_uv.yml` escape valve
 - [ ] `PYPI_PASSWORD` secret is a PyPI API token
 - [ ] `setup.cfg` and `setup.py` removed (if migrated from old format)
 - [ ] Push to non-main branch to test CI before merging
