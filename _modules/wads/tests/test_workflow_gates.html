@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_workflow_gates &mdash; wads 0.1.101 documentation</title>
+  <title>wads.tests.test_workflow_gates &mdash; wads 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f9250636"></script>
+      <script src="../../../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -184,8 +184,24 @@
     <span class="n">cond</span> <span class="o">=</span> <span class="n">publish</span><span class="p">[</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
     <span class="c1"># No status function -&gt; implicit success() requires all `needs` to pass,</span>
     <span class="c1"># so a failing validation blocks publish. Reject the escape hatches.</span>
-    <span class="k">assert</span> <span class="s2">&quot;cancelled(&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="s2">&quot;publish must not bypass validation via !cancelled()&quot;</span>
+    <span class="k">assert</span> <span class="s2">&quot;cancelled(&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="p">(</span>
+        <span class="s2">&quot;publish must not bypass validation via !cancelled()&quot;</span>
+    <span class="p">)</span>
     <span class="k">assert</span> <span class="s2">&quot;always(&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="s2">&quot;publish must not run via always()&quot;</span>
+
+
+<div class="viewcode-block" id="test_publish_gates_on_actual_default_branch">
+<a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_gates.html#wads.tests.test_workflow_gates.test_publish_gates_on_actual_default_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_publish_gates_on_actual_default_branch</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Publish must key off the repo&#39;s real default branch, not a literal master/main.</span>
+
+<span class="sd">    Keeps publish and github-pages consistent and correct for repos whose</span>
+<span class="sd">    default branch is neither &#39;master&#39; nor &#39;main&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)[</span><span class="s2">&quot;publish&quot;</span><span class="p">][</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">&quot;github.event.repository.default_branch&quot;</span> <span class="ow">in</span> <span class="n">cond</span>
+    <span class="k">assert</span> <span class="s2">&quot;refs/heads/master&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span> <span class="ow">and</span> <span class="s2">&quot;refs/heads/main&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_optional_and_separate</span><span class="p">():</span>
