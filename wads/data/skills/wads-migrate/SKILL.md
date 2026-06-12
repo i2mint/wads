@@ -30,7 +30,7 @@ as an escape valve for repos that need to customize CI beyond `[tool.wads.ci.*]`
 | Con | Mitigation |
 |---|---|
 | Bad wads merge breaks CI everywhere on next run | Wads's own CI runs the reusable workflow first — canary catches obvious breaks. **Crucially: broken CI ≠ broken release.** Publish is gated on workflow success, so a bad wads change blocks publication for downstream consumers until wads is fixed, but never ships a broken artifact. This is what makes floating `@master` safe by default. |
-| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @v0.1.81` writes the stub with a tag pin instead of `@master`. The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
+| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @0.1.81` writes the stub with a tag pin instead of `@master` (i2mint tags are bare versions — **no `v` prefix**; `@v0.1.81` would reference a nonexistent ref). The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
 | A secret your tests need isn't reaching CI | Run `wads-secrets add VAR_NAME` (see "Secrets" below). It declares the var in `[tool.wads.ci.env]` AND adds the pass-through line to the stub. No workflow edit needed unless the name is outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), in which case the CLI warns and you either PR wads to widen the superset or use the inline escape valve. |
 | Secrets must reach a reusable workflow owned by a different account | The stub passes secrets **explicitly** (NOT `secrets: inherit`, which is unreliable cross-owner). The stub's `secrets:` block lists each name; it's generated from `[tool.wads.ci.env]` at migrate time and extended by `wads-secrets add`. |
 
@@ -56,6 +56,19 @@ wads-migrate ci-to-uv .github/workflows/ci.yml -o .github/workflows/ci.yml
 git rm setup.cfg setup.py  # after verifying pyproject.toml is correct
 ```
 
+⚠️ **Review the generated pyproject before committing** — `setup-to-pyproject`
+currently has three rough edges you must fix by hand (verified on a real
+migration):
+
+- it emits the **deprecated `[project.license] text = ...` table** — replace
+  with the SPDX string form: `license = "Apache-2.0"` under `[project]`;
+- it leaves **`project_name = ""`** in `[tool.wads.ci]` — set it to the
+  package name (an empty string can break the CI's `--cov` target);
+- it writes **`testpaths = ["tests"]` unconditionally** — if the repo has no
+  `tests/` dir (doctest-only suites are common here), point it at the package
+  dir instead (e.g. `["titbit"]`) so CI collects the doctests rather than
+  falling back to rootdir-wide collection.
+
 Then push, watch CI, and once it's green, **also run `ci-to-stub`** to land
 on the SSOT default.
 
@@ -77,7 +90,7 @@ After the repo is on the inline uv CI **and CI is green**, convert to the stub:
 wads-migrate ci-to-stub
 
 # Or freeze to a specific wads tag (for release-sensitive repos):
-wads-migrate ci-to-stub --pin @v0.1.81
+wads-migrate ci-to-stub --pin @0.1.81   # bare tag — i2mint tags have no v prefix
 ```
 
 `ci-to-stub` refuses to convert workflows that aren't already on uv-CI — run

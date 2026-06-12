@@ -191,6 +191,11 @@ Re-run the audit afterwards to confirm the drift findings cleared.
   ask before recommending conversion.
 - ⚠️ **`wads-deps` takes a bare path** (`wads-deps .`). There is no `scan`
   subcommand — older docs showing `wads-deps scan .` are wrong.
+- ⚠️ **`wads-deps` over-reports: it counts function-local (lazy) imports as
+  missing dependencies** — guarded optional imports are deliberate, not drift
+  (verified: it told a repo to declare its own name, `setuptools`, and three
+  lazily-imported optionals). Before declaring anything, check each flagged
+  import is module-level: `rg -n '^(import|from) X' PKG/`.
 - ⚠️ **No `tests/` dir does not mean untested.** The wads CI always runs
   `--doctest-modules`; doctest-only coverage is a legitimate category in this
   ecosystem. Let wads-test-coverage attribute it before calling it a gap.

@@ -218,6 +218,13 @@ The **untested** bucket is the real gap list. Prioritize it.
 - ⚠️ **Pitfall: a package utility named `test_*` gets collected as a test**
   under this measurement (and in CI). If you write or meet a non-test helper
   named `test_*` in package code, set `__test__ = False` on it (or rename).
+- ⚠️ **Pitfall: doctests on `functools.partial` objects are NEVER collected.**
+  Doctest's finder only inspects functions/classes/lambdas, so an example in a
+  `some_partial.__doc__ = "...>>> ..."` assignment is a *dormant* test — it
+  never runs, and may be silently wrong (verified in the wild: one documented
+  behavior the function didn't have). When you meet the pattern, check the
+  example by hand and prefer converting the partial to a small `def` so the
+  doctest goes live. Grep for the pattern: `rg -n '__doc__\s*=' PKG`.
 - ⚠️ **Pitfall: import-unclean modules break `--doctest-modules`.** It imports
   every module; one that reads env vars or hits the network at import time
   fails collection. Mitigation: declare the var in
