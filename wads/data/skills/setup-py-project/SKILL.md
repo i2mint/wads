@@ -212,28 +212,66 @@ After the main setup, offer (don't force) these extras:
 
 5. **Publish to PyPI**: "Would you like to publish to PyPI? (This runs `pack go .`)"
 
-6. **Enable GitHub Pages**: After the initial push (or after the first CI run that creates the `gh-pages` branch), enable Pages so the epythet-generated docs are served. **Do this automatically** — no need to ask, since the CI workflow already includes the `publish-github-pages` job.
+6. **Enable GitHub Pages (source: `gh-pages` branch, `/ (root)` folder)**: The
+   CI workflow's `github-pages` job (via `i2mint/epythet/actions/publish-github-pages`)
+   pushes built docs to the `gh-pages` branch, but GitHub Pages must be
+   explicitly enabled in repo settings to serve from that branch — otherwise the
+   docs build succeeds but nothing is published. **Do this automatically** when
+   the situation is unambiguous (see decision tree); only *ask* in the ambiguous
+   case. See the **GitHub Pages + Discussions (gh)** procedure below.
 
-7. **Enable GitHub Discussions**: **Do this automatically** unless the user explicitly asked not to enable discussions.
+7. **Enable GitHub Discussions**: **Do this automatically** unless the user
+   explicitly asked not to. See the procedure below.
 
-   ```bash
-   gh repo edit ORG/REPONAME --enable-discussions
-   ```
+### GitHub Pages + Discussions (gh)
 
-   ```bash
-   # Create the gh-pages branch if the CI hasn't run yet
-   gh api repos/ORG/REPONAME/git/refs -X POST \
-     -f ref="refs/heads/gh-pages" \
-     -f sha="$(gh api repos/ORG/REPONAME/git/ref/heads/main --jq '.object.sha')" \
-     2>/dev/null || true
+Run this after the repo exists on GitHub (after the initial push, ideally after
+the first CI run that creates `gh-pages`). **Requires the `gh` CLI** — if `gh` is
+not installed, skip Pages/Discussions here, tell the user to install it
+(https://cli.github.com/), and note they can run `epythet configure-pages ORG/REPO`
+(or set Pages manually) later. Throughout, `ORG/REPO` is the repo's `owner/name`.
 
-   # Enable Pages to serve from gh-pages branch
-   gh api repos/ORG/REPONAME/pages -X POST \
-     --input - <<< '{"source":{"branch":"gh-pages","path":"/"}}' \
-     2>/dev/null || true
-   ```
+**GitHub Pages — target is source branch `gh-pages`, folder `/ (root)`.**
+Read the current config first, then act on a decision tree:
 
-   **Why this is needed**: The CI workflow's `github-pages` job (via `i2mint/epythet/actions/publish-github-pages`) pushes built docs to the `gh-pages` branch, but GitHub Pages must be explicitly enabled in repo settings to serve from that branch. Without this step, the docs build succeeds but nothing is published.
+```bash
+gh api repos/ORG/REPO/pages --jq '{branch:.source.branch, path:.source.path, build_type:.build_type}' 2>/dev/null
+```
+
+- **Empty / 404 → Pages not enabled (GitHub's default).** Enable it
+  automatically (no need to ask):
+  ```bash
+  gh api repos/ORG/REPO/pages -X POST -f 'source[branch]=gh-pages' -f 'source[path]=/'
+  ```
+  If that fails because the `gh-pages` branch doesn't exist yet (CI hasn't run),
+  create the branch from the default branch first, then retry the POST:
+  ```bash
+  DEF=$(gh api repos/ORG/REPO --jq '.default_branch')
+  gh api repos/ORG/REPO/git/refs -X POST \
+    -f ref="refs/heads/gh-pages" \
+    -f sha="$(gh api repos/ORG/REPO/git/ref/heads/$DEF --jq '.object.sha')"
+  ```
+- **Already `branch=gh-pages, path=/` → nothing to do.**
+- **Anything else** (a different branch, a non-root path, or `build_type=workflow`
+  — i.e. the "GitHub Actions" source) → this is a *particular situation*; do NOT
+  silently change it. Check whether the `gh-pages` branch even exists:
+  ```bash
+  gh api repos/ORG/REPO/branches/gh-pages --jq '.name' 2>/dev/null
+  ```
+  Then show the user the current setting (and whether `gh-pages` exists) and
+  **ask for confirmation** before switching. If they confirm, update with `PUT`
+  (Pages already exists, so `POST` would 409):
+  ```bash
+  gh api repos/ORG/REPO/pages -X PUT -f 'source[branch]=gh-pages' -f 'source[path]=/'
+  ```
+
+**GitHub Discussions — enable by default** unless the user explicitly opted out.
+Check, then enable if off:
+
+```bash
+gh api repos/ORG/REPO --jq '.has_discussions'   # true / false
+gh repo edit ORG/REPO --enable-discussions       # enable when false
+```
 
 ### 7. Save preferences
 

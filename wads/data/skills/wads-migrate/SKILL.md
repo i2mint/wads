@@ -207,6 +207,55 @@ inline `github_ci_uv.yml` escape valve.
 Publishing runs only on the repo's **default branch**, when validation passes,
 when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.
 
+## Post-Migration: GitHub Pages + Discussions
+
+A migrated repo's CI publishes docs to the `gh-pages` branch via epythet, so —
+just like on a fresh `populate` — make sure GitHub Pages is serving from
+`gh-pages` and that Discussions is on. **Requires the `gh` CLI**; if `gh` isn't
+installed, skip this and note the user can run `epythet configure-pages ORG/REPO`
+(or set Pages manually) later. `ORG/REPO` is the repo's `owner/name`.
+
+**GitHub Pages — target is source branch `gh-pages`, folder `/ (root)`.** Read
+the current config, then follow the decision tree:
+
+```bash
+gh api repos/ORG/REPO/pages --jq '{branch:.source.branch, path:.source.path, build_type:.build_type}' 2>/dev/null
+```
+
+- **Empty / 404 → Pages not enabled (GitHub's default).** Enable it
+  automatically (no need to ask):
+  ```bash
+  gh api repos/ORG/REPO/pages -X POST -f 'source[branch]=gh-pages' -f 'source[path]=/'
+  ```
+  If the POST fails because the `gh-pages` branch doesn't exist yet (CI hasn't
+  run since the migration), create it from the default branch first, then retry:
+  ```bash
+  DEF=$(gh api repos/ORG/REPO --jq '.default_branch')
+  gh api repos/ORG/REPO/git/refs -X POST \
+    -f ref="refs/heads/gh-pages" \
+    -f sha="$(gh api repos/ORG/REPO/git/ref/heads/$DEF --jq '.object.sha')"
+  ```
+- **Already `branch=gh-pages, path=/` → nothing to do.**
+- **Anything else** (a different branch, a non-root path, or `build_type=workflow`
+  — the "GitHub Actions" source) → a *particular situation*; do NOT silently
+  change it. Check whether `gh-pages` even exists:
+  ```bash
+  gh api repos/ORG/REPO/branches/gh-pages --jq '.name' 2>/dev/null
+  ```
+  Then show the user the current setting (and whether `gh-pages` exists) and
+  **ask for confirmation** before switching. If confirmed, update with `PUT`
+  (Pages already exists, so `POST` would 409):
+  ```bash
+  gh api repos/ORG/REPO/pages -X PUT -f 'source[branch]=gh-pages' -f 'source[path]=/'
+  ```
+
+**GitHub Discussions — enable by default** unless the user explicitly opted out:
+
+```bash
+gh api repos/ORG/REPO --jq '.has_discussions'   # true / false
+gh repo edit ORG/REPO --enable-discussions       # enable when false
+```
+
 ## Checklist After Migration
 
 - [ ] `pyproject.toml` has correct metadata (name, version, dependencies)
@@ -218,3 +267,5 @@ when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.
 - [ ] `PYPI_PASSWORD` secret is a PyPI API token
 - [ ] `setup.cfg` and `setup.py` removed (if migrated from old format)
 - [ ] Push to non-main branch to test CI before merging
+- [ ] GitHub Pages serves from `gh-pages` / `/ (root)` (see Post-Migration above)
+- [ ] GitHub Discussions enabled (default, unless the user opted out)
