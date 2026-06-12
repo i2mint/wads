@@ -185,13 +185,33 @@ The **untested** bucket is the real gap list. Prioritize it.
 ### Style rules
 
 - **Doctests for example-shaped behavior** — the happy path a reader should
-  see. They double as documentation, which is the point here. Keep outputs
-  deterministic: sort dict/set output (or print sorted items), never show
-  memory addresses, ids, timestamps, or float noise; use `# doctest: +SKIP`
-  only as a last resort (skipped examples don't count as coverage).
+  see. They double as documentation, which is the point here. Two admission
+  criteria for a doctest:
+  - **(a) Low setup.** A line or two of setup is fine; if the docstring fills
+    up with hard-to-read scaffolding that exists only to create test
+    conditions, it stops being documentation — write a pytest test instead.
+  - **(b) Robust assertions.** These run on different platforms and Python
+    versions. Anything whose repr is unordered or environment-dependent
+    (sets, dict views, object reprs, float noise, paths) must not be
+    asserted by displayed output — use an explicit comparison instead:
+
+    ```python
+    >>> result = f('x')              # BAD followup:  >>> result
+    >>> assert result == {'a', 'b'}  # GOOD: order-independent
+    >>> sorted(other_result)         # also GOOD: deterministic display
+    ['a', 'b']
+    ```
+
+    Never show memory addresses, ids, or timestamps; use ELLIPSIS (`...`)
+    where partial output is unavoidable, and `# doctest: +SKIP` only as a
+    last resort (skipped examples don't count as coverage).
 - **Pytest tests** (in the repo's existing test dir) for edge cases, error
   paths (`pytest.raises`), parametrized matrices, and anything needing
   fixtures/tmp dirs — things that would clutter a docstring.
+- **A broken doctest is a broken test** — when the measurement run (or the
+  rollout gate) fails on an existing doctest, fix it like any failing test:
+  decide whether the code or the documented example is wrong, never delete
+  the example just to go green.
 - **Match the existing test style** — read a neighboring test file first;
   mirror its naming, imports, and assertion idioms.
 - **No new dependencies.** Stdlib + pytest + what the repo already declares.

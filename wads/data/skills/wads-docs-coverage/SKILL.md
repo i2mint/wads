@@ -220,7 +220,12 @@ Work through the ruff JSON gap list, highest-visibility first (package
 - Include a doctest example wherever the function is example-shaped (pure-ish,
   cheap to call, illustrative output). This ecosystem is doctest-first:
   doctests are simultaneously docs and tests, and CI runs
-  `--doctest-modules`, so every example you write must pass.
+  `--doctest-modules`, so every example you write must pass. Two admission
+  criteria: **low setup** (heavy scaffolding belongs in a pytest test, not a
+  docstring) and **robust assertions** (unordered/platform-varying reprs —
+  sets, dicts, object reprs — get `assert expr == expected` or `sorted(...)`,
+  never raw displayed output). Full style rules: **wads-test-coverage**'s
+  "Style rules" section.
 - Follow the rendering rules in **wads-docstring-render** (blank lines before
   doctests, double-backtick inline code, section formatting) — apply them
   while writing; don't restate them here.
