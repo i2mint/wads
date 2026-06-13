@@ -179,7 +179,7 @@ isn't strictly semver-ordered; if it looks off, list a few and judge.)
 | Observation (on the default branch) | Verdict |
 |---|---|
 | all three equal | In sync — healthy |
-| **PyPI ahead of pyproject** | The auto-bump **push-back failure**: publish succeeded but the version-bump commit/tag couldn't be pushed back. Next merge will try to republish a taken version. **Delegate to the wads-ci-fix skill** |
+| **PyPI ahead of pyproject** | The auto-bump **push-back failure**: publish succeeded but the version-bump commit couldn't be pushed back to the branch. The repo's pyproject lags PyPI until a later push-back lands. **Not republish-unsafe** — `isee gen-semver` bumps from `max(git tag, PyPI, pyproject)`, so the next run still computes an unused version (it never retries a taken one). So this is a *housekeeping* drift (the repo's stated version is stale), not a publish-blocker. Persistent recurrence → **wads-ci-fix** (SSH deploy key). One-off → it self-heals on the next successful push-back. ⚠️ First re-fetch: `gh`/PyPI reads lag by tens of seconds after a publish, so a momentary "PyPI ahead" can just be a stale read. |
 | PyPI version exists but no matching tag | Tag push failed — same push-back family → **wads-ci-fix** |
 | pyproject ahead of PyPI | Not necessarily wrong: publish disabled, `[skip ci]` commits, failing validation, or simply no default-branch merge since the bump. Cross-check with checks A and F |
 | PyPI says `Not Found` | Never published — confirm `[tool.wads.ci.publish].enabled` and whether that's intentional |

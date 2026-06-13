@@ -65,9 +65,23 @@ migration):
 - it leaves **`project_name = ""`** in `[tool.wads.ci]` — set it to the
   package name (an empty string can break the CI's `--cov` target);
 - it writes **`testpaths = ["tests"]` unconditionally** — if the repo has no
-  `tests/` dir (doctest-only suites are common here), point it at the package
-  dir instead (e.g. `["titbit"]`) so CI collects the doctests rather than
-  falling back to rootdir-wide collection.
+  top-level `tests/` dir (doctest-only suites are common, as are in-package
+  `pkg/tests/`), point it at the package dir instead (e.g. `["titbit"]`) so CI
+  collects the doctests (and any in-package tests) rather than falling back to
+  rootdir-wide collection;
+- it **carries an `[options.extras_require]` test extra into
+  `[project.optional-dependencies]` but does NOT wire it into CI** — if the old
+  `testing`/`tests` extra holds test-time deps (e.g. `pytest-asyncio`), CI won't
+  install them and the affected tests error on a missing import/marker. Add
+  `[tool.wads.ci.install]` with `extras = "testing"` (the extra's name) so the
+  reusable workflow installs `.[testing]`.
+
+⚠️ **A test-time-dependency gap like the extras one above will NOT be caught by
+the local `priv test-dependents` gate** — your local env already has the dep
+installed, so it passes locally and fails only in CI's clean env. For any
+migration that touches test dependencies, **push to a throwaway branch and
+watch CI before merging to the default branch** (a green local gate is
+necessary but not sufficient here).
 
 Then push, watch CI, and once it's green, **also run `ci-to-stub`** to land
 on the SSOT default.
