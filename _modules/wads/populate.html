@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.2.7 documentation</title>
+  <title>wads.populate &mdash; wads 0.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=58050c01"></script>
+      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -1500,27 +1500,106 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_github_token</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a GitHub token from the environment, if any.</span>
+
+<span class="sd">    Honors ``GITHUB_TOKEN`` then ``GH_TOKEN`` (the names the GitHub CLI and</span>
+<span class="sd">    Actions use). Returns ``None`` when neither is set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_TOKEN&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GH_TOKEN&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_description_via_api</span><span class="p">(</span>
+    <span class="n">org_slash_proj</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch a repo&#39;s description via the GitHub REST API.</span>
+
+<span class="sd">    When a ``token`` is supplied it&#39;s sent as a bearer token, so **private</span>
+<span class="sd">    repositories the token can access** are reachable (an *unauthenticated*</span>
+<span class="sd">    request gets a 404 for private repos, since GitHub hides their existence).</span>
+<span class="sd">    Returns ``None`` on any failure or non-200 response, leaving fallback</span>
+<span class="sd">    choices to the caller.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/vnd.github+json&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">token</span><span class="p">:</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Authorization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{</span><span class="n">org_slash_proj</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_description_via_gh_cli</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch a repo&#39;s description via the ``gh`` CLI, if available.</span>
+
+<span class="sd">    This is the zero-config path for repos you own: ``gh`` is already</span>
+<span class="sd">    authenticated, so it reaches private repos without managing a token.</span>
+<span class="sd">    Returns ``None`` if ``gh`` is absent or the call fails (e.g. not logged in).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;gh&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;repo&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;view&quot;</span><span class="p">,</span>
+                <span class="n">org_slash_proj</span><span class="p">,</span>
+                <span class="s2">&quot;--json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-q&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;.description&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">out</span> <span class="ow">or</span> <span class="kc">None</span>
+
+
 <div class="viewcode-block" id="get_github_project_description">
 <a class="viewcode-back" href="../../module_docs/wads/populate.html#wads.populate.get_github_project_description">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_github_project_description</span><span class="p">(</span>
-    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_factory</span><span class="o">=</span><span class="n">_mk_default_project_description</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">default_factory</span><span class="o">=</span><span class="n">_mk_default_project_description</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_gh_cli</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get project description from github repository, or default if not found&quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a project&#39;s description from GitHub, falling back to a default.</span>
 
+<span class="sd">    Resolution order (each step is skipped when it yields nothing):</span>
+
+<span class="sd">    1. **GitHub REST API.** A token (the ``token`` argument, else the</span>
+<span class="sd">       ``GITHUB_TOKEN`` / ``GH_TOKEN`` env var) is sent as a bearer token so</span>
+<span class="sd">       private repositories you can access are reachable. Without a token the</span>
+<span class="sd">       API only sees public repos -- private repos return 404.</span>
+<span class="sd">    2. **The ``gh`` CLI** (``gh repo view``), if installed and authenticated --</span>
+<span class="sd">       the easiest way to reach private repos without managing a token.</span>
+<span class="sd">    3. ``default_factory(org/proj)`` -- a placeholder description.</span>
+
+<span class="sd">    Never raises on a fetch failure: a missing or unreachable description should</span>
+<span class="sd">    not block project creation (a genuinely missing repo surfaces clearly at the</span>
+<span class="sd">    subsequent ``git clone``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">org_slash_proj</span> <span class="o">=</span> <span class="n">_get_org_slash_proj</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-    <span class="n">api_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{</span><span class="n">org_slash_proj</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-        <span class="n">description</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">description</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">default_factory</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Request response status for </span><span class="si">{</span><span class="n">api_url</span><span class="si">}</span><span class="s2"> wasn&#39;t 200. Was </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span></div>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">token</span> <span class="ow">or</span> <span class="n">_github_token</span><span class="p">()</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="n">_description_via_api</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">use_gh_cli</span><span class="p">:</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">_description_via_gh_cli</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">default_factory</span><span class="p">(</span><span class="n">org_slash_proj</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">description</span></div>
 
 
 

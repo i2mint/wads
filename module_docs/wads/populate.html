@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.2.7 documentation</title>
+  <title>wads.populate &mdash; wads 0.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=58050c01"></script>
+      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -199,8 +199,21 @@ README.md, pyproject.toml, and .gitignore.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.populate.get_github_project_description">
-<span class="sig-prename descclassname"><span class="pre">wads.populate.</span></span><span class="sig-name descname"><span class="pre">get_github_project_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_factory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_mk_default_project_description&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#get_github_project_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.populate.get_github_project_description" title="Link to this definition"></a></dt>
-<dd><p>Get project description from github repository, or default if not found</p>
+<span class="sig-prename descclassname"><span class="pre">wads.populate.</span></span><span class="sig-name descname"><span class="pre">get_github_project_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_factory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_mk_default_project_description&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gh_cli</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#get_github_project_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.populate.get_github_project_description" title="Link to this definition"></a></dt>
+<dd><p>Get a project’s description from GitHub, falling back to a default.</p>
+<p>Resolution order (each step is skipped when it yields nothing):</p>
+<ol class="arabic simple">
+<li><p><strong>GitHub REST API.</strong> A token (the <code class="docutils literal notranslate"><span class="pre">token</span></code> argument, else the
+<code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> / <code class="docutils literal notranslate"><span class="pre">GH_TOKEN</span></code> env var) is sent as a bearer token so
+private repositories you can access are reachable. Without a token the
+API only sees public repos – private repos return 404.</p></li>
+<li><p><strong>The ``gh`` CLI</strong> (<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">repo</span> <span class="pre">view</span></code>), if installed and authenticated –
+the easiest way to reach private repos without managing a token.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_factory(org/proj)</span></code> – a placeholder description.</p></li>
+</ol>
+<p>Never raises on a fetch failure: a missing or unreachable description should
+not block project creation (a genuinely missing repo surfaces clearly at the
+subsequent <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>).</p>
 </dd></dl>
 
 <dl class="py function">
