@@ -1333,25 +1333,104 @@ def populate_proj_from_url(
         )
 
 
-def get_github_project_description(
-    repo: str, default_factory=_mk_default_project_description
-):
-    """Get project description from github repository, or default if not found"""
+def _github_token() -> Optional[str]:
+    """Return a GitHub token from the environment, if any.
+
+    Honors ``GITHUB_TOKEN`` then ``GH_TOKEN`` (the names the GitHub CLI and
+    Actions use). Returns ``None`` when neither is set.
+    """
+    return os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+
+
+def _description_via_api(
+    org_slash_proj: str, *, token: Optional[str] = None
+) -> Optional[str]:
+    """Fetch a repo's description via the GitHub REST API.
+
+    When a ``token`` is supplied it's sent as a bearer token, so **private
+    repositories the token can access** are reachable (an *unauthenticated*
+    request gets a 404 for private repos, since GitHub hides their existence).
+    Returns ``None`` on any failure or non-200 response, leaving fallback
+    choices to the caller.
+    """
     import requests
 
-    org_slash_proj = _get_org_slash_proj(repo)
-    api_url = f"https://api.github.com/repos/{org_slash_proj}"
-    r = requests.get(api_url)
-    if r.status_code == 200:
-        description = r.json().get("description", None)
-        if description:
-            return description
-        else:
-            return default_factory(org_slash_proj)
-    else:
-        raise RuntimeError(
-            f"Request response status for {api_url} wasn't 200. Was {r.status_code}"
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        r = requests.get(
+            f"https://api.github.com/repos/{org_slash_proj}", headers=headers
         )
+    except requests.RequestException:
+        return None
+    if r.status_code == 200:
+        return r.json().get("description") or None
+    return None
+
+
+def _description_via_gh_cli(org_slash_proj: str) -> Optional[str]:
+    """Fetch a repo's description via the ``gh`` CLI, if available.
+
+    This is the zero-config path for repos you own: ``gh`` is already
+    authenticated, so it reaches private repos without managing a token.
+    Returns ``None`` if ``gh`` is absent or the call fails (e.g. not logged in).
+    """
+    if shutil.which("gh") is None:
+        return None
+    try:
+        out = subprocess.run(
+            [
+                "gh",
+                "repo",
+                "view",
+                org_slash_proj,
+                "--json",
+                "description",
+                "-q",
+                ".description",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+    return out or None
+
+
+def get_github_project_description(
+    repo: str,
+    default_factory=_mk_default_project_description,
+    *,
+    token: Optional[str] = None,
+    use_gh_cli: bool = True,
+):
+    """Get a project's description from GitHub, falling back to a default.
+
+    Resolution order (each step is skipped when it yields nothing):
+
+    1. **GitHub REST API.** A token (the ``token`` argument, else the
+       ``GITHUB_TOKEN`` / ``GH_TOKEN`` env var) is sent as a bearer token so
+       private repositories you can access are reachable. Without a token the
+       API only sees public repos -- private repos return 404.
+    2. **The ``gh`` CLI** (``gh repo view``), if installed and authenticated --
+       the easiest way to reach private repos without managing a token.
+    3. ``default_factory(org/proj)`` -- a placeholder description.
+
+    Never raises on a fetch failure: a missing or unreachable description should
+    not block project creation (a genuinely missing repo surfaces clearly at the
+    subsequent ``git clone``).
+    """
+    org_slash_proj = _get_org_slash_proj(repo)
+    token = token or _github_token()
+
+    description = _description_via_api(org_slash_proj, token=token)
+    if description is None and use_gh_cli:
+        description = _description_via_gh_cli(org_slash_proj)
+    if description is None:
+        description = default_factory(org_slash_proj)
+    return description
 
 
 def main():
