@@ -37,6 +37,10 @@ create = [
     "tomlkit",       # comment-preserving pyproject edits (wads-secrets)
 ]
 docs = ["epythet"]
+# AI agent skills tooling. The `skill` package is the layout authority that
+# wads-skillify defers to (its skill-package-setup skill + the `skill` CLI for
+# validate/link). Install with `pip install wads[skills]`.
+skills = ["skill"]
 test = ["pytest>=7.0", "pytest-cov"]
 all = ["wads[create,docs]"]
 
