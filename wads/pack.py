@@ -1136,23 +1136,31 @@ def highest_pypi_version(
 
 def current_pypi_version(
     pkg_dir: PathStr,
+    *,
+    name: None | str = None,
+    use_requests=requests_is_installed,
 ) -> str | None:
     """
     Return version of package on pypi.python.org using json.
+
+    Routes through :func:`http_get_json`, so it works whether or not the optional
+    ``requests`` dependency is installed (urllib fallback), and returns ``None``
+    when the package isn't on PyPI instead of raising.
 
     >>> current_pypi_version('wads')  # doctest: +SKIP
     '0.1.19'
 
     """
-    name = get_pkg_name(pkg_dir)
+    name = name or get_pkg_name(pkg_dir)
     url = PYPI_PACKAGE_JSON_URL.format(package=name)
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return data["info"]["version"]
-    else:
-        # raise Exception(f"Failed to get information for package {name=}, {pkg_dir=}")
+    try:
+        data = http_get_json(url, use_requests=use_requests)
+    except Exception:
+        # network error or non-200 (e.g. package not yet on PyPI)
         return None
+    if data is not None:
+        return data["info"]["version"]
+    return None
 
 
 def next_version_for_package(
@@ -1162,7 +1170,7 @@ def next_version_for_package(
     use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
-    current_version = current_pypi_version(name, use_requests=use_requests)
+    current_version = current_pypi_version(pkg_dir, name=name, use_requests=use_requests)
     if current_version is not None:
         return increment_version(current_version)
     else:
@@ -1185,7 +1193,7 @@ def _get_version(
                 )  # when you want to make a new package
             else:
                 version = current_pypi_version(
-                    pkg_dir, name
+                    pkg_dir, name=name
                 )  # when you want to make a new package
         except Exception as e:
             print(
