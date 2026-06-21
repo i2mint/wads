@@ -1170,7 +1170,9 @@ def next_version_for_package(
     use_requests=requests_is_installed,
 ) -> str:
     name = name or get_name_from_configs(pkg_dir=pkg_dir)
-    current_version = current_pypi_version(pkg_dir, name=name, use_requests=use_requests)
+    current_version = current_pypi_version(
+        pkg_dir, name=name, use_requests=use_requests
+    )
     if current_version is not None:
         return increment_version(current_version)
     else:
