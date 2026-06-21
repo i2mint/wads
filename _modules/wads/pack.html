@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.2.8 documentation</title>
+  <title>wads.pack &mdash; wads 0.2.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../_static/documentation_options.js?v=14672bda"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -1332,23 +1332,31 @@
 <a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.current_pypi_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">current_pypi_version</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return version of package on pypi.python.org using json.</span>
+
+<span class="sd">    Routes through :func:`http_get_json`, so it works whether or not the optional</span>
+<span class="sd">    ``requests`` dependency is installed (urllib fallback), and returns ``None``</span>
+<span class="sd">    when the package isn&#39;t on PyPI instead of raising.</span>
 
 <span class="sd">    &gt;&gt;&gt; current_pypi_version(&#39;wads&#39;)  # doctest: +SKIP</span>
 <span class="sd">    &#39;0.1.19&#39;</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">get_pkg_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">get_pkg_name</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">url</span> <span class="o">=</span> <span class="n">PYPI_PACKAGE_JSON_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">http_get_json</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">use_requests</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># network error or non-200 (e.g. package not yet on PyPI)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">][</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># raise Exception(f&quot;Failed to get information for package {name=}, {pkg_dir=}&quot;)</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
+    <span class="k">return</span> <span class="kc">None</span></div>
 
 
 
@@ -1359,7 +1367,7 @@
     <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">current_version</span> <span class="o">=</span> <span class="n">current_pypi_version</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">use_requests</span><span class="p">)</span>
+    <span class="n">current_version</span> <span class="o">=</span> <span class="n">current_pypi_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">use_requests</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">current_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">current_version</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1382,7 +1390,7 @@
                 <span class="p">)</span>  <span class="c1"># when you want to make a new package</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">version</span> <span class="o">=</span> <span class="n">current_pypi_version</span><span class="p">(</span>
-                    <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">name</span>
+                    <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span>
                 <span class="p">)</span>  <span class="c1"># when you want to make a new package</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
