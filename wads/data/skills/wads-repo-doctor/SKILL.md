@@ -49,12 +49,15 @@ ls -d .git pyproject.toml setup.cfg setup.py 2>/dev/null
 ## Step 1 — run the audit
 
 ```bash
-python scripts/repo_audit.py /path/to/repo            # human report
-python scripts/repo_audit.py /path/to/repo --json     # machine-readable
-python scripts/repo_audit.py /path/to/repo --no-network  # offline: skips gh + PyPI
+python -m wads.repo_audit /path/to/repo               # human report (canonical)
+python -m wads.repo_audit /path/to/repo --json        # machine-readable
+python -m wads.repo_audit /path/to/repo --no-network  # offline: skips gh + PyPI
+# (`python scripts/repo_audit.py …` still works — it's a thin shim to the module.)
 ```
 
-The script is stdlib-only, read-only, and degrades gracefully: without `gh` or
+The audit logic is the importable SSOT `wads.repo_audit` (`from wads.repo_audit
+import audit_repo`); the `scripts/repo_audit.py` script is a shim that forwards
+to it. It is stdlib-only, read-only, and degrades gracefully: without `gh` or
 network it silently skips the GitHub-side and PyPI checks and still reports
 everything file-based. It checks: legacy packaging files, pyproject shape
 (backend, metadata fields, license form, stale `testpaths`), CI workflow
