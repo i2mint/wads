@@ -86,9 +86,7 @@ _RE_WORKFLOW_NAME = re.compile(r"^name:\s*(.+?)\s*$", re.MULTILINE)
 def _run(cmd, *, timeout=20):
     """Run a command; return (returncode, stdout). Never raises."""
     try:
-        out = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout
-        )
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return out.returncode, out.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return 1, ""
@@ -230,7 +228,13 @@ def audit_pyproject(repo, rep):
 
     missing_meta = [
         field
-        for field in ("description", "urls", "classifiers", "keywords", "requires-python")
+        for field in (
+            "description",
+            "urls",
+            "classifiers",
+            "keywords",
+            "requires-python",
+        )
         if not project.get(field)
     ]
     if license_val is None:
@@ -542,8 +546,7 @@ def audit_skills(repo, rep, project_name):
         rep.add(
             "LOW",
             "skills",
-            "no agent skills found (skills/, .claude/skills/, or "
-            "<pkg>/data/skills/)",
+            "no agent skills found (skills/, .claude/skills/, or <pkg>/data/skills/)",
             "wads-skillify",
         )
         return
@@ -662,9 +665,7 @@ def audit_github(repo_slug, rep, project, docs_enabled):
     gh_desc = (meta.get("description") or "").strip()
     gh_home = (meta.get("homepageUrl") or "").strip()
     raw_topics = meta.get("repositoryTopics") or []
-    gh_topics = sorted(
-        t["name"] if isinstance(t, dict) else str(t) for t in raw_topics
-    )
+    gh_topics = sorted(t["name"] if isinstance(t, dict) else str(t) for t in raw_topics)
     rep.facts["github_metadata"] = {
         "description": gh_desc,
         "homepage": gh_home,
@@ -677,8 +678,7 @@ def audit_github(repo_slug, rep, project, docs_enabled):
         rep.add(
             "LOW",
             "github-metadata",
-            f"GitHub description ({gh_desc!r}) != pyproject description "
-            f"({py_desc!r})",
+            f"GitHub description ({gh_desc!r}) != pyproject description ({py_desc!r})",
             "wads-repo-doctor (inline)",
         )
 
@@ -693,8 +693,7 @@ def audit_github(repo_slug, rep, project, docs_enabled):
         rep.add(
             "LOW",
             "github-metadata",
-            f"GitHub homepage ({gh_home or 'empty'}) != expected "
-            f"({expected_home})",
+            f"GitHub homepage ({gh_home or 'empty'}) != expected ({expected_home})",
             "wads-repo-doctor (inline)",
         )
 
@@ -773,8 +772,7 @@ def audit_pypi(rep, project):
             rep.add(
                 "LOW",
                 "publishing",
-                f"{name!r} not on PyPI — never published (fine for private "
-                "packages)",
+                f"{name!r} not on PyPI — never published (fine for private packages)",
                 "wads-ci-health",
             )
         return
