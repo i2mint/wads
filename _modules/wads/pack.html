@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.2.9 documentation</title>
+  <title>wads.pack &mdash; wads 0.2.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=14672bda"></script>
+      <script src="../../_static/documentation_options.js?v=8db09a1e"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/profiles.html">wads.profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/repo_audit.html">wads.repo_audit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
@@ -1367,7 +1368,9 @@
     <span class="n">use_requests</span><span class="o">=</span><span class="n">requests_is_installed</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">get_name_from_configs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">current_version</span> <span class="o">=</span> <span class="n">current_pypi_version</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">use_requests</span><span class="p">)</span>
+    <span class="n">current_version</span> <span class="o">=</span> <span class="n">current_pypi_version</span><span class="p">(</span>
+        <span class="n">pkg_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">use_requests</span><span class="o">=</span><span class="n">use_requests</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">current_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">increment_version</span><span class="p">(</span><span class="n">current_version</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts &mdash; wads 0.2.10 documentation</title>
+  <title>wads.repo_audit &mdash; wads 0.2.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -24,8 +24,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="wads.scripts.build_dist" href="scripts/build_dist.html" />
-    <link rel="prev" title="wads.scrap.handle_non_python_installs" href="scrap/handle_non_python_installs.html" /> 
+    <link rel="next" title="wads.scrap.handle_non_python_installs" href="scrap/handle_non_python_installs.html" />
+    <link rel="prev" title="wads.project_setup" href="project_setup.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -67,9 +67,15 @@
 <li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="profiles.html">wads.profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project_setup.html">wads.project_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.repo_audit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.repo_audit.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.repo_audit.audit_github"><code class="docutils literal notranslate"><span class="pre">audit_github()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.repo_audit.audit_repo"><code class="docutils literal notranslate"><span class="pre">audit_repo()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.repo_audit.classify_workflow"><code class="docutils literal notranslate"><span class="pre">classify_workflow()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
@@ -125,9 +131,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">wads.scripts</li>
+      <li class="breadcrumb-item active">wads.repo_audit</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/module_docs/wads/scripts.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/module_docs/wads/repo_audit.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -135,29 +141,73 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-wads.scripts">
-<span id="wads-scripts"></span><h1>wads.scripts<a class="headerlink" href="#module-wads.scripts" title="Link to this heading"></a></h1>
-<p>CI and automation scripts for wads.</p>
-<p>These scripts extract complex logic from GitHub Actions workflow files,
-making them easier to test, maintain, and reuse.</p>
-<dl class="simple">
-<dt>Available scripts:</dt><dd><ul class="simple">
-<li><p>build_dist: Build Python distribution packages</p></li>
-<li><p>install_deps: Install Python dependencies</p></li>
-<li><p>read_ci_config: Read CI configuration from pyproject.toml</p></li>
-<li><p>set_env_vars: Set environment variables from GitHub Secrets</p></li>
-<li><p>validate_ci_env: Validate CI environment variables</p></li>
-</ul>
-</dd>
-</dl>
+  <section id="module-wads.repo_audit">
+<span id="wads-repo-audit"></span><h1>wads.repo_audit<a class="headerlink" href="#module-wads.repo_audit" title="Link to this heading"></a></h1>
+<p>Read-only health audit of a (wads-managed) Python repo.</p>
+<p>Checks every health dimension a repo doctor cares about — legacy packaging
+leftovers, pyproject metadata shape, CI workflow generation (uv stub / inline
+uv / 2025 / legacy / none), stale test paths, module docstring presence,
+GitHub metadata drift (description / homepage / topics vs pyproject), Pages
+status, latest CI run conclusion, and PyPI-vs-pyproject version sync — and
+prints a prioritized report grouped HIGH / MEDIUM / LOW, each finding tagged
+with the specialist skill (or CLI) that owns the fix.</p>
+<p>This module is the <strong>single source of truth</strong> for the ecosystem’s “what is a
+modern wads repo” classification. Import it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.repo_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">audit_repo</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">audit_repo</span><span class="p">(</span><span class="s2">&quot;/path/to/repo&quot;</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>   <span class="c1"># dict: facts + findings</span>
+</pre></div>
+</div>
+<p>or run it as a script / module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">wads</span><span class="o">.</span><span class="n">repo_audit</span> <span class="p">[</span><span class="n">REPO_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">json</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">network</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>REPO_DIR defaults to the current directory. <code class="docutils literal notranslate"><span class="pre">--json</span></code> emits the full
+machine-readable report. <code class="docutils literal notranslate"><span class="pre">--no-network</span></code> skips everything that leaves the
+machine (gh calls and the PyPI lookup); it also degrades gracefully when
+<code class="docutils literal notranslate"><span class="pre">gh</span></code> is absent or offline.</p>
+<p>Stdlib only. Strictly read-only: never modifies the target repo or anything
+else. The <code class="docutils literal notranslate"><span class="pre">wads-repo-doctor</span></code> skill ships a thin shim (<code class="docutils literal notranslate"><span class="pre">scripts/repo_audit.py</span></code>)
+that defers to this module.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.repo_audit.Report">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">Report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/repo_audit.html#Report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.Report" title="Link to this definition"></a></dt>
+<dd><p>Accumulates facts and findings; renders text or JSON.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.audit_github">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_github</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docs_enabled</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/repo_audit.html#audit_github"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_github" title="Link to this definition"></a></dt>
+<dd><p>gh-based checks; every step degrades silently when gh/network fail.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.audit_repo">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_repo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/repo_audit.html#audit_repo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_repo" title="Link to this definition"></a></dt>
+<dd><p>Audit a repo and return the machine-readable report dict.</p>
+<p>This is the importable entry point (the SSOT classifier). It returns the
+same structure as <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">wads.repo_audit</span> <span class="pre">&lt;repo&gt;</span> <span class="pre">--json</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">HIGH</span><span class="o">/</span><span class="n">MEDIUM</span><span class="o">/</span><span class="n">LOW</span> <span class="n">counts</span><span class="p">},</span>
+ <span class="s2">&quot;findings&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="s2">&quot;facts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">network=False</span></code> skips everything that leaves the machine (<code class="docutils literal notranslate"><span class="pre">gh</span></code> + PyPI),
+matching the <code class="docutils literal notranslate"><span class="pre">--no-network</span></code> CLI flag.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.classify_workflow">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">classify_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/repo_audit.html#classify_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.classify_workflow" title="Link to this definition"></a></dt>
+<dd><p>Classify one workflow file’s text into a wads CI generation.</p>
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="scrap/handle_non_python_installs.html" class="btn btn-neutral float-left" title="wads.scrap.handle_non_python_installs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="scripts/build_dist.html" class="btn btn-neutral float-right" title="wads.scripts.build_dist" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="project_setup.html" class="btn btn-neutral float-left" title="wads.project_setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scrap/handle_non_python_installs.html" class="btn btn-neutral float-right" title="wads.scrap.handle_non_python_installs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

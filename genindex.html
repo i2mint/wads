@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; wads 0.2.9 documentation</title>
+  <title>Index &mdash; wads 0.2.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=14672bda"></script>
+      <script src="_static/documentation_options.js?v=8db09a1e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/profiles.html">wads.profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/repo_audit.html">wads.repo_audit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
@@ -177,10 +178,10 @@
         <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.analyze_dependencies">(in module wads.agents.dependency_resolver)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/migration.html#wads.migration.analyze_manifest_in">analyze_manifest_in() (in module wads.migration)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/profiles.html#wads.profiles.apply_frontend">apply_frontend() (in module wads.profiles)</a>
 </li>
       <li><a href="module_docs/wads/profiles.html#wads.profiles.apply_npm_overlay">apply_npm_overlay() (in module wads.profiles)</a>
@@ -192,6 +193,10 @@
       <li><a href="module_docs/wads/templating.html#wads.templating.Artifact">Artifact (class in wads.templating)</a>
 </li>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.attention">attention() (wads.populate.PopulateTracker method)</a>
+</li>
+      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.audit_github">audit_github() (in module wads.repo_audit)</a>
+</li>
+      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.audit_repo">audit_repo() (in module wads.repo_audit)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -243,10 +248,12 @@
         <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis">(class in wads.agents.ci_debug_agent)</a>
 </li>
       </ul></li>
-      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_format">commands_format (wads.ci_config.CIConfig property)</a>
+      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.classify_workflow">classify_workflow() (in module wads.repo_audit)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_format">commands_format (wads.ci_config.CIConfig property)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_lint">commands_lint (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_post_test">commands_post_test (wads.ci_config.CIConfig property)</a>
@@ -665,6 +672,8 @@
 </li>
         <li><a href="module_docs/wads/project_setup.html#module-wads.project_setup">wads.project_setup</a>
 </li>
+        <li><a href="module_docs/wads/repo_audit.html#module-wads.repo_audit">wads.repo_audit</a>
+</li>
         <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#module-wads.scrap.handle_non_python_installs">wads.scrap.handle_non_python_installs</a>
 </li>
         <li><a href="module_docs/wads/scripts.html#module-wads.scripts">wads.scripts</a>
@@ -832,10 +841,10 @@
 </li>
       <li><a href="module_docs/wads/profiles.html#wads.profiles.register_frontend_profile">register_frontend_profile() (in module wads.profiles)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/templating.html#wads.templating.render">render() (in module wads.templating)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_secrets_passthrough">render_stub_secrets_passthrough() (in module wads.ci_secrets)</a>
 </li>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets">render_workflow_call_secrets() (in module wads.ci_secrets)</a>
@@ -845,6 +854,8 @@
       <li><a href="module_docs/wads/project_setup.html#wads.project_setup.repo_exists">repo_exists() (in module wads.project_setup)</a>
 </li>
       <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.RepoResult">RepoResult (class in wads.fleet_migrate)</a>
+</li>
+      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.Report">Report (class in wads.repo_audit)</a>
 </li>
       <li><a href="module_docs/wads/licensing.html#wads.licensing.resolve_author">resolve_author() (in module wads.licensing)</a>
 </li>
@@ -1127,12 +1138,21 @@
 </li>
       </ul></li>
       <li>
+    wads.repo_audit
+
+      <ul>
+        <li><a href="module_docs/wads/repo_audit.html#module-wads.repo_audit">module</a>
+</li>
+      </ul></li>
+      <li>
     wads.scrap.handle_non_python_installs
 
       <ul>
         <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#module-wads.scrap.handle_non_python_installs">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scripts
 
@@ -1140,8 +1160,6 @@
         <li><a href="module_docs/wads/scripts.html#module-wads.scripts">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scripts.build_dist
 
