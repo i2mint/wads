@@ -26,6 +26,14 @@ inputs:
   extra-args:
     description: "Additional arguments to pass to ruff check"
     required: false
+  ruff-version:
+    description: >-
+      Exact ruff version to install (pinned for reproducibility — ruff is
+      pre-1.0 and adds/changes lint rules across minor releases, so an unpinned
+      install silently fails previously-green repos on their next CI run). Keep
+      in sync with the ruff-format action. Bump deliberately, fleet-wide.
+    required: false
+    default: "0.16.0"
 
 runs:
   using: 'composite'
@@ -34,8 +42,8 @@ runs:
       shell: bash
       run: |
         set -e
-        echo "Installing ruff"
-        python -m pip install --upgrade ruff
+        echo "Installing ruff==${{ inputs.ruff-version }}"
+        python -m pip install "ruff==${{ inputs.ruff-version }}"
 
     - name: Lint Source Code
       shell: bash
