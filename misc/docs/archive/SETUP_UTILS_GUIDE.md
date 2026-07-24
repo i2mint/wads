@@ -95,14 +95,14 @@ python -m wads.setup_utils install-python /path/to/project --dry-run
 from wads.setup_utils import install_python_dependencies
 
 results = install_python_dependencies(
-    '/path/to/project',
-    exclude=['numpy'],
+    "/path/to/project",
+    exclude=["numpy"],
     check_importable=True,
     upgrade=False,
     allow_downgrade=False,
-    extras=['dev', 'test'],
+    extras=["dev", "test"],
     dry_run=False,
-    verbose=True
+    verbose=True,
 )
 
 for result in results:
@@ -185,12 +185,12 @@ Executing: sudo apt-get install -y git
 from wads.setup_utils import install_system_dependencies
 
 results = install_system_dependencies(
-    '/path/to/project',
-    platform='linux',  # or None for auto-detect
+    "/path/to/project",
+    platform="linux",  # or None for auto-detect
     check_first=True,
     dry_run=False,
     verbose=True,
-    interactive=True
+    interactive=True,
 )
 
 for result in results:
@@ -226,7 +226,7 @@ Checking required environment variables:
 ```python
 from wads.setup_utils import check_environment_variables
 
-results = check_environment_variables('/path/to/project', verbose=True)
+results = check_environment_variables("/path/to/project", verbose=True)
 
 # Returns dict: {var_name: value_or_none}
 for var_name, value in results.items():
@@ -234,6 +234,7 @@ for var_name, value in results.items():
         print(f"Missing: {var_name}")
         # Set it
         import os
+
         os.environ[var_name] = input(f"Enter value for {var_name}: ")
 ```
 
@@ -303,11 +304,11 @@ DEPENDENCY DIAGNOSTIC REPORT
 from wads.setup_utils import diagnose_setup, print_diagnostic_report
 
 result = diagnose_setup(
-    '/path/to/project',
+    "/path/to/project",
     check_python=True,
     check_system=True,
     check_env=True,
-    platform=None  # auto-detect
+    platform=None,  # auto-detect
 )
 
 print_diagnostic_report(result)
@@ -419,22 +420,18 @@ python -m wads.external_deps_migration apply /path/to/project --no-backup
 from wads.external_deps_migration import (
     analyze_migration_needed,
     generate_migration_instructions,
-    apply_migration
+    apply_migration,
 )
 
 # Analyze
-analysis = analyze_migration_needed('/path/to/project')
+analysis = analyze_migration_needed("/path/to/project")
 
 if analysis.can_auto_migrate:
     print("Can auto-migrate!")
     print(f"Will migrate: {', '.join(analysis.legacy_packages)}")
 
     # Apply migration
-    success = apply_migration(
-        '/path/to/project',
-        backup=True,
-        dry_run=False
-    )
+    success = apply_migration("/path/to/project", backup=True, dry_run=False)
 else:
     # Get manual instructions
     instructions = generate_migration_instructions(analysis)
@@ -458,7 +455,7 @@ def install_python_dependencies(
     allow_downgrade: bool = False,
     extras: Optional[List[str]] = None,
     dry_run: bool = False,
-    verbose: bool = True
+    verbose: bool = True,
 ) -> List[InstallResult]:
     """
     Install Python dependencies from pyproject.toml.
@@ -477,7 +474,7 @@ def install_system_dependencies(
     check_first: bool = True,
     dry_run: bool = False,
     verbose: bool = True,
-    interactive: bool = True
+    interactive: bool = True,
 ) -> List[InstallResult]:
     """
     Install system dependencies based on pyproject.toml configuration.
@@ -491,8 +488,7 @@ def install_system_dependencies(
 
 ```python
 def check_environment_variables(
-    pyproject_path: str | Path,
-    verbose: bool = True
+    pyproject_path: str | Path, verbose: bool = True
 ) -> Dict[str, Optional[str]]:
     """
     Check required environment variables from pyproject.toml.
@@ -510,7 +506,7 @@ def diagnose_setup(
     check_python: bool = True,
     check_system: bool = True,
     check_env: bool = True,
-    platform: Optional[str] = None
+    platform: Optional[str] = None,
 ) -> DiagnosticResult:
     """
     Diagnose missing dependencies and configuration issues.
@@ -547,10 +543,7 @@ def get_current_platform() -> str:
 
 ```python
 def check_system_dependency(
-    dep_name: str,
-    dep_ops: Dict,
-    platform: str,
-    verbose: bool = True
+    dep_name: str, dep_ops: Dict, platform: str, verbose: bool = True
 ) -> bool:
     """
     Check if a system dependency is installed using check commands.
@@ -579,25 +572,28 @@ from wads.setup_utils import (
     install_system_dependencies,
     check_environment_variables,
     diagnose_setup,
-    print_diagnostic_report
+    print_diagnostic_report,
 )
+
 
 def main():
     project_dir = Path(__file__).parent
 
-    print("="*70)
+    print("=" * 70)
     print("PROJECT SETUP")
-    print("="*70)
+    print("=" * 70)
 
     # 1. Diagnose
     print("\n1. Running diagnostics...")
     result = diagnose_setup(project_dir)
 
-    if not any([
-        result.missing_python_deps,
-        result.missing_system_deps,
-        result.missing_env_vars
-    ]):
+    if not any(
+        [
+            result.missing_python_deps,
+            result.missing_system_deps,
+            result.missing_env_vars,
+        ]
+    ):
         print("\n✓ All dependencies satisfied!")
         return 0
 
@@ -606,20 +602,14 @@ def main():
     # 2. Install system dependencies
     if result.missing_system_deps:
         response = input("\nInstall system dependencies? [y/N] ")
-        if response.lower() == 'y':
+        if response.lower() == "y":
             print("\n2. Installing system dependencies...")
-            sys_results = install_system_dependencies(
-                project_dir,
-                interactive=True
-            )
+            sys_results = install_system_dependencies(project_dir, interactive=True)
 
     # 3. Install Python dependencies
     if result.missing_python_deps:
         print("\n3. Installing Python dependencies...")
-        py_results = install_python_dependencies(
-            project_dir,
-            check_importable=True
-        )
+        py_results = install_python_dependencies(project_dir, check_importable=True)
 
     # 4. Check environment variables
     if result.missing_env_vars:
@@ -628,13 +618,14 @@ def main():
         for var in result.missing_env_vars:
             value = input(f"Enter value for {var}: ")
             # Save to .env file or export
-            with open(project_dir / '.env', 'a') as f:
+            with open(project_dir / ".env", "a") as f:
                 f.write(f"{var}={value}\n")
 
     print("\n✓ Setup complete!")
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())
 ```
 

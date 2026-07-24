@@ -212,11 +212,11 @@ from pathlib import Path
 from wads_ci_migration_agent import analyze_project, run_migration_agent
 
 # Just analyze (no API call)
-analysis = analyze_project(Path('./myproject'), analyze_code=True)
+analysis = analyze_project(Path("./myproject"), analyze_code=True)
 print(f"Found: {analysis['system_packages']}")
 
 # Full migration
-run_migration_agent(Path('./myproject'))
+run_migration_agent(Path("./myproject"))
 ```
 
 ## 🧪 Testing

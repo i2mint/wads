@@ -25,7 +25,7 @@ As Python packaging evolves, many projects still use the older `setup.cfg` forma
 from wads.migration import migrate_setuptools_to_hatching
 
 # From a file
-pyproject_content = migrate_setuptools_to_hatching('path/to/setup.cfg')
+pyproject_content = migrate_setuptools_to_hatching("path/to/setup.cfg")
 
 # From a string
 setup_cfg_content = """
@@ -38,10 +38,10 @@ pyproject_content = migrate_setuptools_to_hatching(setup_cfg_content)
 
 # From a dictionary
 setup_cfg_dict = {
-    'metadata': {
-        'name': 'myproject',
-        'version': '1.0.0',
-        'description': 'My awesome project'
+    "metadata": {
+        "name": "myproject",
+        "version": "1.0.0",
+        "description": "My awesome project",
     }
 }
 pyproject_content = migrate_setuptools_to_hatching(setup_cfg_dict)
@@ -53,12 +53,12 @@ If your `setup.cfg` is missing some required fields, provide defaults:
 
 ```python
 pyproject_content = migrate_setuptools_to_hatching(
-    'setup.cfg',
+    "setup.cfg",
     defaults={
-        'description': 'My project description',
-        'url': 'https://github.com/myuser/myproject',
-        'license': 'MIT'
-    }
+        "description": "My project description",
+        "url": "https://github.com/myuser/myproject",
+        "license": "MIT",
+    },
 )
 ```
 
@@ -67,20 +67,20 @@ pyproject_content = migrate_setuptools_to_hatching(
 The migration uses a rule-based system. Each rule is a function that extracts a value from the setup.cfg dict:
 
 ```python
-from wads.migration import migrate_setuptools_to_hatching, setup_cfg_to_pyproject_toml_rules
+from wads.migration import (
+    migrate_setuptools_to_hatching,
+    setup_cfg_to_pyproject_toml_rules,
+)
 
 # Define custom rules
 custom_rules = {
-    'project.name': lambda cfg: cfg['metadata']['name'].upper(),
-    'project.version': lambda cfg: cfg['metadata']['version'],
+    "project.name": lambda cfg: cfg["metadata"]["name"].upper(),
+    "project.version": lambda cfg: cfg["metadata"]["version"],
     # ... more rules
 }
 
 # Use custom rules
-pyproject_content = migrate_setuptools_to_hatching(
-    'setup.cfg',
-    rules=custom_rules
-)
+pyproject_content = migrate_setuptools_to_hatching("setup.cfg", rules=custom_rules)
 ```
 
 ### Default Rules
@@ -120,7 +120,7 @@ except MigrationError as e:
 from wads.migration import migrate_github_ci_old_to_new
 
 # From a file
-new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
+new_ci = migrate_github_ci_old_to_new(".github/workflows/ci.yml")
 
 # From content
 old_ci_content = """
@@ -137,10 +137,7 @@ new_ci = migrate_github_ci_old_to_new(old_ci_content)
 If the project name can't be extracted, provide it:
 
 ```python
-new_ci = migrate_github_ci_old_to_new(
-    'ci.yml',
-    defaults={'project_name': 'myproject'}
-)
+new_ci = migrate_github_ci_old_to_new("ci.yml", defaults={"project_name": "myproject"})
 ```
 
 ### What Changes
@@ -172,26 +169,26 @@ from wads.migration import migrate_setuptools_to_hatching, migrate_github_ci_old
 from pathlib import Path
 
 # 1. Migrate setup.cfg
-project_root = Path('/path/to/project')
-setup_cfg = project_root / 'setup.cfg'
+project_root = Path("/path/to/project")
+setup_cfg = project_root / "setup.cfg"
 
 pyproject_content = migrate_setuptools_to_hatching(
     str(setup_cfg),
     defaults={
-        'description': 'My project',
-        'url': 'https://github.com/myuser/myproject'
-    }
+        "description": "My project",
+        "url": "https://github.com/myuser/myproject",
+    },
 )
 
 # Write the new pyproject.toml
-(project_root / 'pyproject.toml').write_text(pyproject_content)
+(project_root / "pyproject.toml").write_text(pyproject_content)
 
 # 2. Migrate CI
-old_ci = project_root / '.github' / 'workflows' / 'ci.yml'
+old_ci = project_root / ".github" / "workflows" / "ci.yml"
 new_ci_content = migrate_github_ci_old_to_new(str(old_ci))
 
 # Write the new CI
-(project_root / '.github' / 'workflows' / 'ci_new.yml').write_text(new_ci_content)
+(project_root / ".github" / "workflows" / "ci_new.yml").write_text(new_ci_content)
 
 print("Migration complete! Review the files and test before committing.")
 ```
@@ -256,7 +253,8 @@ Example:
 ```python
 def _rule_project_custom_field(cfg: dict) -> str:
     """Extract custom field."""
-    return cfg.get('metadata', {}).get('custom_field', 'default')
+    return cfg.get("metadata", {}).get("custom_field", "default")
 
-setup_cfg_to_pyproject_toml_rules['project.custom-field'] = _rule_project_custom_field
+
+setup_cfg_to_pyproject_toml_rules["project.custom-field"] = _rule_project_custom_field
 ```

@@ -94,10 +94,10 @@ POPULATE SUMMARY
 ```python
 from wads.migration import analyze_manifest_in
 
-result = analyze_manifest_in('MANIFEST.in')
+result = analyze_manifest_in("MANIFEST.in")
 
-if result['needs_migration']:
-    print(result['hatchling_config'])
+if result["needs_migration"]:
+    print(result["hatchling_config"])
     # Copy to pyproject.toml
 ```
 
@@ -106,11 +106,11 @@ if result['needs_migration']:
 ```python
 from wads.config_comparison import summarize_config_status
 
-status = summarize_config_status('/path/to/project')
+status = summarize_config_status("/path/to/project")
 
-if status['has_manifest_in']:
+if status["has_manifest_in"]:
     print("MANIFEST.in needs migration")
-    print(status['manifest_status']['recommendations'])
+    print(status["manifest_status"]["recommendations"])
 ```
 
 ## Key Benefits

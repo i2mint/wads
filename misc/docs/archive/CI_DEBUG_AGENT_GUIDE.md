@@ -305,12 +305,12 @@ You can also use the agent programmatically:
 from wads.ci_debug_agent import (
     diagnose_ci_failure,
     print_diagnosis,
-    generate_fix_instructions
+    generate_fix_instructions,
 )
 from pathlib import Path
 
 # Diagnose the latest failed run
-diagnosis = diagnose_ci_failure('owner/repo')
+diagnosis = diagnose_ci_failure("owner/repo")
 
 # Print the diagnosis
 print_diagnosis(diagnosis)
@@ -321,13 +321,13 @@ if diagnosis.missing_system_deps:
 
 for fix in diagnosis.proposed_fixes:
     print(f"Fix: {fix['description']}")
-    if fix['type'] == 'config':
+    if fix["type"] == "config":
         print("  → Update pyproject.toml")
-    elif fix['type'] == 'workflow':
+    elif fix["type"] == "workflow":
         print("  → Update .github/workflows/ci.yml")
 
 # Generate fix instructions
-repo_path = Path('/path/to/repo')
+repo_path = Path("/path/to/repo")
 instructions = generate_fix_instructions(diagnosis, repo_path)
 print(instructions)
 ```

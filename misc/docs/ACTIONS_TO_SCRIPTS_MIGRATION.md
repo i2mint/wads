@@ -147,6 +147,7 @@ The extracted scripts can be tested independently:
 # test_read_ci_config.py
 from wads.scripts.read_ci_config import read_and_export_ci_config
 
+
 def test_read_ci_config(tmp_path, monkeypatch):
     # Create test pyproject.toml
     pyproject = tmp_path / "pyproject.toml"
@@ -154,15 +155,15 @@ def test_read_ci_config(tmp_path, monkeypatch):
     [project]
     name = "test-project"
     """)
-    
+
     # Mock GitHub Actions environment
     output_file = tmp_path / "output"
     output_file.touch()
     monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
-    
+
     # Run script
     exit_code = read_and_export_ci_config(tmp_path)
-    
+
     assert exit_code == 0
     assert "project-name=test-project" in output_file.read_text()
 ```

@@ -98,6 +98,7 @@ Scripts can be tested independently using pytest:
 ```python
 from wads.scripts.validate_ci_env import validate_ci_environment
 
+
 def test_validation(tmp_path):
     # Create test configuration
     pyproject = tmp_path / "pyproject.toml"
@@ -105,7 +106,7 @@ def test_validation(tmp_path):
     [tool.wads.ci.env]
     required = ["API_KEY"]
     """)
-    
+
     # Test validation
     success, missing = validate_ci_environment(tmp_path)
     assert not success
@@ -139,11 +140,11 @@ Example:
 import os
 
 # Set an output
-with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+with open(os.environ["GITHUB_OUTPUT"], "a") as f:
     f.write(f"version={version}\n")
 
 # Set an environment variable
-with open(os.environ['GITHUB_ENV'], 'a') as f:
+with open(os.environ["GITHUB_ENV"], "a") as f:
     f.write(f"VERSION={version}\n")
 ```
 

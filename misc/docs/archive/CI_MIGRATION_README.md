@@ -42,7 +42,7 @@ pip install ruamel.yaml
 from wads.github_ci_ops import GitHubWorkflow
 
 # From file
-wf = GitHubWorkflow('path/to/ci.yml')
+wf = GitHubWorkflow("path/to/ci.yml")
 
 # From YAML string
 yaml_str = """
@@ -55,8 +55,8 @@ jobs:
 wf = GitHubWorkflow(yaml_str)
 
 # Access as a dict
-print(wf['name'])  # CI
-print(wf['jobs'].keys())  # dict_keys(['test'])
+print(wf["name"])  # CI
+print(wf["jobs"].keys())  # dict_keys(['test'])
 
 # Convert back to YAML (preserves comments!)
 print(wf.to_yaml())
@@ -67,14 +67,14 @@ print(wf.to_yaml())
 ```python
 from wads.github_ci_ops import compare_workflows
 
-old = GitHubWorkflow('old_ci.yml')
-new = GitHubWorkflow('new_ci.yml')
+old = GitHubWorkflow("old_ci.yml")
+new = GitHubWorkflow("new_ci.yml")
 
 diff = compare_workflows(old, new)
 
-print(diff['added'])     # Keys present in new but not old
-print(diff['removed'])   # Keys present in old but not new
-print(diff['modified'])  # Keys present in both but different
+print(diff["added"])  # Keys present in new but not old
+print(diff["removed"])  # Keys present in old but not new
+print(diff["modified"])  # Keys present in both but different
 ```
 
 ### 3. Diagnose Migration
@@ -85,9 +85,7 @@ from wads import github_ci_publish_2025_path
 
 # Diagnose what needs to change
 diagnosis = diagnose_migration(
-    'old_ci.yml',
-    github_ci_publish_2025_path,
-    project_name='myproject'
+    "old_ci.yml", github_ci_publish_2025_path, project_name="myproject"
 )
 
 # Generate a human-readable report
@@ -96,6 +94,7 @@ print(report)
 
 # Get an actionable checklist
 from wads.ci_migration import get_migration_checklist
+
 checklist = get_migration_checklist(diagnosis)
 for item in checklist:
     print(item)
@@ -192,26 +191,24 @@ python examples/analyze_real_ci_files.py
 ```python
 from wads.ci_migration import MigrationRule, diagnose_migration
 
+
 def check_custom_feature(old, new):
     """Check for custom feature usage."""
-    has_feature = 'my-custom-action' in str(old)
+    has_feature = "my-custom-action" in str(old)
     return {
-        'status': 'warning' if has_feature else 'ok',
-        'message': 'Custom action found' if has_feature else 'OK'
+        "status": "warning" if has_feature else "ok",
+        "message": "Custom action found" if has_feature else "OK",
     }
 
+
 custom_rule = MigrationRule(
-    name='custom_feature',
-    description='Check for custom feature',
+    name="custom_feature",
+    description="Check for custom feature",
     check_func=check_custom_feature,
-    severity='warning'
+    severity="warning",
 )
 
-diagnosis = diagnose_migration(
-    'old.yml',
-    'new.yml',
-    rules=[custom_rule]
-)
+diagnosis = diagnose_migration("old.yml", "new.yml", rules=[custom_rule])
 ```
 
 ### Custom Equivalence Functions
@@ -219,19 +216,17 @@ diagnosis = diagnose_migration(
 ```python
 from wads.github_ci_ops import compare_workflows
 
+
 def ignore_version_changes(a, b):
     """Consider versions equivalent if they're both valid."""
     if isinstance(a, str) and isinstance(b, str):
         # Treat all version strings as equivalent
-        if a.startswith('v') and b.startswith('v'):
+        if a.startswith("v") and b.startswith("v"):
             return True
     return a == b
 
-diff = compare_workflows(
-    old,
-    new,
-    equivalence_func=ignore_version_changes
-)
+
+diff = compare_workflows(old, new, equivalence_func=ignore_version_changes)
 ```
 
 ### Working with Comments
@@ -251,7 +246,7 @@ env:
 wf = GitHubWorkflow(yaml_with_comments)
 
 # Modify
-wf['env']['PROJECT_NAME'] = 'newproject'
+wf["env"]["PROJECT_NAME"] = "newproject"
 
 # Comments are preserved!
 print(wf.to_yaml())
@@ -268,15 +263,15 @@ Analyze all your projects' CIs against a new template:
 from wads.ci_migration import diagnose_migration, create_migration_report
 from wads import github_ci_publish_2025_path
 
-repos = ['repo1', 'repo2', 'repo3']
+repos = ["repo1", "repo2", "repo3"]
 
 for repo in repos:
-    ci_path = f'../{repo}/.github/workflows/ci.yml'
+    ci_path = f"../{repo}/.github/workflows/ci.yml"
     diagnosis = diagnose_migration(ci_path, github_ci_publish_2025_path)
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"REPO: {repo}")
-    print('='*80)
+    print("=" * 80)
     print(create_migration_report(diagnosis))
 ```
 
@@ -310,13 +305,9 @@ Incrementally migrate by focusing on specific sections:
 from wads.github_ci_ops import compare_workflows
 
 # First, just migrate the validation job
-diff = compare_workflows(
-    old,
-    new,
-    focus_keys=['jobs']
-)
+diff = compare_workflows(old, new, focus_keys=["jobs"])
 
-validation_diff = diff['modified']['jobs']['modified']['validation']
+validation_diff = diff["modified"]["jobs"]["modified"]["validation"]
 print("Changes needed in validation job:", validation_diff)
 ```
 

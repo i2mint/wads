@@ -12,11 +12,11 @@ Check if your project's `pyproject.toml` aligns with the modern template:
 from wads.config_comparison import compare_pyproject_toml
 
 # Compare your project's config
-result = compare_pyproject_toml('path/to/pyproject.toml')
+result = compare_pyproject_toml("path/to/pyproject.toml")
 
-if result['needs_attention']:
-    print("Missing sections:", result['missing_sections'])
-    for rec in result['recommendations']:
+if result["needs_attention"]:
+    print("Missing sections:", result["missing_sections"])
+    for rec in result["recommendations"]:
         print(f"  • {rec}")
 ```
 
@@ -32,11 +32,11 @@ Analyze `setup.cfg` and get migration recommendations:
 ```python
 from wads.config_comparison import compare_setup_cfg
 
-result = compare_setup_cfg('path/to/setup.cfg')
+result = compare_setup_cfg("path/to/setup.cfg")
 
-if result['should_migrate']:
+if result["should_migrate"]:
     print("setup.cfg is deprecated!")
-    for rec in result['recommendations']:
+    for rec in result["recommendations"]:
         print(f"  • {rec}")
 ```
 
@@ -54,17 +54,17 @@ Analyze `MANIFEST.in` and get Hatchling configuration recommendations:
 ```python
 from wads.config_comparison import compare_manifest_in
 
-result = compare_manifest_in('path/to/MANIFEST.in')
+result = compare_manifest_in("path/to/MANIFEST.in")
 
-if result['needs_migration']:
+if result["needs_migration"]:
     print("MANIFEST.in needs migration to Hatchling!")
-    for rec in result['recommendations']:
+    for rec in result["recommendations"]:
         print(f"  • {rec}")
-    
+
     # Get suggested pyproject.toml configuration
-    if result['hatchling_config']:
+    if result["hatchling_config"]:
         print("\nSuggested configuration:")
-        print(result['hatchling_config'])
+        print(result["hatchling_config"])
 ```
 
 **What it does:**
@@ -92,10 +92,10 @@ Check if your GitHub Actions workflow is up-to-date:
 ```python
 from wads.config_comparison import compare_ci_workflow
 
-result = compare_ci_workflow('.github/workflows/ci.yml')
+result = compare_ci_workflow(".github/workflows/ci.yml")
 
-if result['needs_attention']:
-    for rec in result['recommendations']:
+if result["needs_attention"]:
+    for rec in result["recommendations"]:
         print(f"  • {rec}")
 ```
 
@@ -111,15 +111,15 @@ Get a comprehensive status of all config files:
 ```python
 from wads.config_comparison import summarize_config_status
 
-status = summarize_config_status('/path/to/project')
+status = summarize_config_status("/path/to/project")
 
 print(f"Has pyproject.toml: {status['has_pyproject']}")
 print(f"Has setup.cfg: {status['has_setup_cfg']}")
 print(f"Has MANIFEST.in: {status['has_manifest_in']}")
 
-if status['needs_attention']:
+if status["needs_attention"]:
     print("Files needing attention:")
-    for file in status['needs_attention']:
+    for file in status["needs_attention"]:
         print(f"  - {file}")
 ```
 
@@ -208,20 +208,20 @@ from wads.config_comparison import (
 )
 
 # Individual file checks
-pyproject_status = compare_pyproject_toml('pyproject.toml')
-setup_cfg_status = compare_setup_cfg('setup.cfg')
-ci_status = compare_ci_workflow('.github/workflows/ci.yml')
+pyproject_status = compare_pyproject_toml("pyproject.toml")
+setup_cfg_status = compare_setup_cfg("setup.cfg")
+ci_status = compare_ci_workflow(".github/workflows/ci.yml")
 
 # Or get everything at once
-overall_status = summarize_config_status('.', check_ci=True)
+overall_status = summarize_config_status(".", check_ci=True)
 
 # Access detailed information
-if overall_status['needs_attention']:
+if overall_status["needs_attention"]:
     # Get project-specific status
-    if 'pyproject_status' in overall_status:
-        pyproject = overall_status['pyproject_status']
-        print("Missing:", pyproject['missing_sections'])
-        print("Outdated:", pyproject['outdated_sections'])
+    if "pyproject_status" in overall_status:
+        pyproject = overall_status["pyproject_status"]
+        print("Missing:", pyproject["missing_sections"])
+        print("Outdated:", pyproject["outdated_sections"])
 ```
 
 ### Custom ignore patterns
@@ -229,8 +229,7 @@ if overall_status['needs_attention']:
 ```python
 # Ignore specific keys during comparison
 comparison = compare_pyproject_toml(
-    'pyproject.toml',
-    ignore_keys={'project.custom-field', 'tool.myapp'}
+    "pyproject.toml", ignore_keys={"project.custom-field", "tool.myapp"}
 )
 ```
 

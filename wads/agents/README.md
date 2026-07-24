@@ -171,19 +171,17 @@ from wads.agents import (
 )
 
 # CI Debug Agent
-diagnosis = diagnose_ci_failure('owner/repo', run_id=12345)
+diagnosis = diagnose_ci_failure("owner/repo", run_id=12345)
 print(f"Found {len(diagnosis.failures)} failures")
 
 # Dependency Resolver
 report = analyze_dependencies(
-    project_path='.',
-    error_logs=error_text,
-    check_unused=True
+    project_path=".", error_logs=error_text, check_unused=True
 )
 print(f"Missing: {len(report.missing_packages)} packages")
 
 # Test Analyzer
-with open('pytest_output.txt') as f:
+with open("pytest_output.txt") as f:
     report = parse_pytest_output(f.read())
 print(f"Total failures: {report.total_failures}")
 ```
@@ -251,29 +249,35 @@ import sys
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class MyReport:
     """Result of my agent's analysis."""
+
     issues: List[str]
     recommendations: List[str]
+
 
 def analyze_something(input_data: str) -> MyReport:
     """Main analysis function."""
     # ... implementation
     return MyReport(issues=[], recommendations=[])
 
+
 def main():
     """CLI entry point."""
     import argparse
-    parser = argparse.ArgumentParser(description='My Agent')
-    parser.add_argument('input', help='Input to analyze')
+
+    parser = argparse.ArgumentParser(description="My Agent")
+    parser.add_argument("input", help="Input to analyze")
     args = parser.parse_args()
 
     report = analyze_something(args.input)
     print(f"Found {len(report.issues)} issues")
     sys.exit(1 if report.issues else 0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 ```
 

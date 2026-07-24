@@ -65,10 +65,10 @@ wads-migrate setup-to-pyproject setup.cfg -o pyproject.toml
 from wads.migration import migrate_setuptools_to_hatching
 
 # From file
-pyproject_content = migrate_setuptools_to_hatching('setup.cfg')
+pyproject_content = migrate_setuptools_to_hatching("setup.cfg")
 
 # Write to file
-with open('pyproject.toml', 'w') as f:
+with open("pyproject.toml", "w") as f:
     f.write(pyproject_content)
 ```
 

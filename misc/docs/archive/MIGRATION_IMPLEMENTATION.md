@@ -100,7 +100,7 @@ Two example files demonstrating usage:
 The rule-based system allows adding new transformation rules without modifying existing code:
 
 ```python
-setup_cfg_to_pyproject_toml_rules['new.field'] = lambda cfg: extract_value(cfg)
+setup_cfg_to_pyproject_toml_rules["new.field"] = lambda cfg: extract_value(cfg)
 ```
 
 ### Single Source of Truth (SSOT)
@@ -126,11 +126,11 @@ setup_cfg_to_pyproject_toml_rules['new.field'] = lambda cfg: extract_value(cfg)
 from wads.migration import migrate_setuptools_to_hatching
 
 # From file
-pyproject = migrate_setuptools_to_hatching('setup.cfg')
+pyproject = migrate_setuptools_to_hatching("setup.cfg")
 
 # From dict
-cfg = {'metadata': {'name': 'myproject', 'version': '1.0.0'}}
-pyproject = migrate_setuptools_to_hatching(cfg, defaults={'url': 'https://...'})
+cfg = {"metadata": {"name": "myproject", "version": "1.0.0"}}
+pyproject = migrate_setuptools_to_hatching(cfg, defaults={"url": "https://..."})
 ```
 
 ### CI Migration
@@ -139,10 +139,10 @@ pyproject = migrate_setuptools_to_hatching(cfg, defaults={'url': 'https://...'})
 from wads.migration import migrate_github_ci_old_to_new
 
 # Migrate old CI to new format
-new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
+new_ci = migrate_github_ci_old_to_new(".github/workflows/ci.yml")
 
 # Save to new file
-with open('.github/workflows/ci_new.yml', 'w') as f:
+with open(".github/workflows/ci_new.yml", "w") as f:
     f.write(new_ci)
 ```
 
@@ -150,11 +150,11 @@ with open('.github/workflows/ci_new.yml', 'w') as f:
 
 ```python
 custom_rules = {
-    'project.name': lambda cfg: cfg['metadata']['name'].upper(),
-    'project.custom-field': lambda cfg: extract_custom(cfg),
+    "project.name": lambda cfg: cfg["metadata"]["name"].upper(),
+    "project.custom-field": lambda cfg: extract_custom(cfg),
 }
 
-pyproject = migrate_setuptools_to_hatching('setup.cfg', rules=custom_rules)
+pyproject = migrate_setuptools_to_hatching("setup.cfg", rules=custom_rules)
 ```
 
 ## What Gets Migrated

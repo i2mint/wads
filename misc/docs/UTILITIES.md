@@ -264,30 +264,23 @@ You can also use the migration tools programmatically:
 from wads.migration import migrate_setuptools_to_hatching, migrate_github_ci_old_to_new
 
 # Migrate setup.cfg
-pyproject_content = migrate_setuptools_to_hatching('setup.cfg')
-with open('pyproject.toml', 'w') as f:
+pyproject_content = migrate_setuptools_to_hatching("setup.cfg")
+with open("pyproject.toml", "w") as f:
     f.write(pyproject_content)
 
 # Migrate from dict
 config = {
-    'metadata': {
-        'name': 'myproject',
-        'version': '1.0.0',
-        'description': 'My project'
-    }
+    "metadata": {"name": "myproject", "version": "1.0.0", "description": "My project"}
 }
 pyproject_content = migrate_setuptools_to_hatching(config)
 
 # Migrate CI workflow
-new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
-with open('.github/workflows/ci-new.yml', 'w') as f:
+new_ci = migrate_github_ci_old_to_new(".github/workflows/ci.yml")
+with open(".github/workflows/ci-new.yml", "w") as f:
     f.write(new_ci)
 
 # With defaults
-new_ci = migrate_github_ci_old_to_new(
-    'ci.yml',
-    defaults={'project_name': 'myproject'}
-)
+new_ci = migrate_github_ci_old_to_new("ci.yml", defaults={"project_name": "myproject"})
 ```
 
 ---

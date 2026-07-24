@@ -44,7 +44,7 @@ The default on line 922 already uses `github_ci_uv_path`. No change needed.
 ### `wads/migration.py` (lines 60, 704)
 
 ```python
-github_ci_publish_2025_path,                      # line 60 (import)
+(github_ci_publish_2025_path,)  # line 60 (import)
 new_template = _load_ci_template(github_ci_publish_2025_path)  # line 704
 ```
 
@@ -65,7 +65,8 @@ for the uv template in the future.
 
 ```python
 from wads import pyproject_toml_tpl_path, github_ci_publish_2025_path  # line 36
-template_path: str | Path = github_ci_publish_2025_path,               # line 339
+
+template_path: str | Path = (github_ci_publish_2025_path,)  # line 339
 ```
 
 **Verdict: UPDATE.** The default `template_path` should point to `github_ci_uv_path`
@@ -80,6 +81,7 @@ as a supported option but should not be the default.
 
 ```python
 """Test the github_ci_publish_2025.yml workflow template."""
+
 return Path(data_dir) / "github_ci_publish_2025.yml"
 ```
 
@@ -91,8 +93,9 @@ added) as well.
 
 ```python
 from wads import github_ci_publish_2025_path
+
 print(f"\n... Using CI template: {Path(github_ci_publish_2025_path).name}")
-ci_tpl_path=github_ci_publish_2025_path,
+ci_tpl_path = (github_ci_publish_2025_path,)
 ```
 
 **Verdict: KEEP.** This integration test validates the 2025 template's system-deps
@@ -106,7 +109,8 @@ support. It should remain. Consider adding a parallel test for the uv template.
 
 ```python
 from wads import github_ci_publish_2025_path
-wf, github_ci_publish_2025_path, project_name=project_name
+
+wf, github_ci_publish_2025_path, project_name = project_name
 ```
 
 **Verdict: UPDATE.** Example scripts guide users; they should demonstrate the current
@@ -117,8 +121,9 @@ uv example.
 
 ```python
 from wads import github_ci_publish_2025_path
+
 new_template = GitHubWorkflow(github_ci_publish_2025_path)
-old_ci_yaml, github_ci_publish_2025_path, project_name="myproject"
+old_ci_yaml, github_ci_publish_2025_path, project_name = "myproject"
 ```
 
 **Verdict: KEEP.** This demo shows migration *to* the 2025 template, which is a valid

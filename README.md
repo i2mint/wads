@@ -225,14 +225,14 @@ wads-migrate ci-old-to-new .github/workflows/old-ci.yml -o .github/workflows/ci.
 from wads.migration import migrate_setuptools_to_hatching, migrate_github_ci_old_to_new
 
 # From setup.cfg file
-pyproject_content = migrate_setuptools_to_hatching('setup.cfg')
+pyproject_content = migrate_setuptools_to_hatching("setup.cfg")
 
 # From setup.cfg dict
-config = {'metadata': {'name': 'myproject', 'version': '1.0.0'}}
+config = {"metadata": {"name": "myproject", "version": "1.0.0"}}
 pyproject_content = migrate_setuptools_to_hatching(config)
 
 # Migrate CI workflow
-new_ci = migrate_github_ci_old_to_new('.github/workflows/ci.yml')
+new_ci = migrate_github_ci_old_to_new(".github/workflows/ci.yml")
 ```
 
 ### 4. CI Debugging (`wads-ci-debug`)
