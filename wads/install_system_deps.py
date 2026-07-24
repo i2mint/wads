@@ -274,6 +274,15 @@ def install_system_dependencies(
 
 def main():
     """CLI entry point."""
+    # The progress output uses non-ASCII markers (✓, ✗, ⊘). On Windows CI
+    # runners the console defaults to cp1252, which can't encode them and raises
+    # UnicodeEncodeError mid-run. Force UTF-8 so the output is portable.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass  # non-reconfigurable stream (e.g. already-wrapped) — leave as-is
+
     parser = argparse.ArgumentParser(
         description="Install system dependencies from [tool.wads.ops.*] in pyproject.toml"
     )
