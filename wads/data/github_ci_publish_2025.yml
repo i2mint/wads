@@ -226,6 +226,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Check out first so install-system-deps can read [tool.wads.ops.*] from
+      # pyproject.toml. The epythet action self-checks-out again internally;
+      # apt-installed system deps persist across that re-checkout.
+      - uses: actions/checkout@v4
+
+      # Install [tool.wads.ops.*] system deps (e.g. portaudio for pyaudio) so
+      # the epythet docs build, which pip-installs this package to extract
+      # docstrings, doesn't fail on a missing native library at import time.
+      # No-op when the package declares no system deps.
+      - name: Install System Dependencies
+        uses: i2mint/wads/actions/install-system-deps@master
+        with:
+          pyproject-path: .
+
       - uses: i2mint/epythet/actions/publish-github-pages@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
