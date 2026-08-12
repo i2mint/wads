@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.export_ci_env &mdash; wads 0.2.13 documentation</title>
+  <title>wads.scripts.export_ci_env &mdash; wads 0.2.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ba481074"></script>
+      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -137,32 +137,49 @@
 <span class="sd">&quot;&quot;&quot;Export the pyproject-declared CI environment to ``$GITHUB_ENV``.</span>
 
 <span class="sd">This is the run-time half of wads&#39; two-layer secret model (see</span>
-<span class="sd">:mod:`wads.ci_secrets`). The reusable workflow declares a static *superset* of</span>
-<span class="sd">secrets (transport); this script decides which of them actually become job</span>
-<span class="sd">environment variables, driven entirely by ``[tool.wads.ci.env]`` in the</span>
-<span class="sd">consumer&#39;s ``pyproject.toml`` (read via the ``read-ci-config`` action):</span>
+<span class="sd">:mod:`wads.ci_secrets`). The reusable workflow receives the caller&#39;s secrets</span>
+<span class="sd">either as named pass-throughs (legacy stubs) or as one double-encoded JSON</span>
+<span class="sd">blob under ``WADS_CI_SECRETS_JSON`` (modern stubs); this script decides which</span>
+<span class="sd">values actually become job environment variables, driven entirely by</span>
+<span class="sd">``[tool.wads.ci.env]`` in the consumer&#39;s ``pyproject.toml`` (read via the</span>
+<span class="sd">``read-ci-config`` action):</span>
 
 <span class="sd">* ``defaults``  — literal ``KEY=value`` pairs, always written.</span>
-<span class="sd">* ``required_envvars`` — must resolve to a non-empty secret, else CI **fails**</span>
-<span class="sd">  with a precise message.</span>
+<span class="sd">* ``required_envvars`` — must resolve non-empty, else CI **fails** with a</span>
+<span class="sd">  precise message.</span>
 <span class="sd">* ``test_envvars`` — exported if set; a **warning** is emitted if missing.</span>
 <span class="sd">* ``extra_envvars`` — exported if set; silent if missing.</span>
 <span class="sd">* ``secret_aliases`` — map ``ENV_VAR -&gt; SECRET_NAME`` for the (rare) case where</span>
 <span class="sd">  the env var the code reads differs from the GitHub secret name.</span>
 
-<span class="sd">The full ``secrets`` context is handed in as JSON via ``toJSON(secrets)`` so this</span>
-<span class="sd">logic needs **no per-secret enumeration** — only the workflow&#39;s static</span>
-<span class="sd">``on.workflow_call.secrets`` block enumerates (and that is generated from</span>
-<span class="sd">:data:`wads.ci_secrets.DEFAULT_CI_SECRETS`).</span>
+<span class="sd">Each declared name resolves against **secrets first** (named ones merged with</span>
+<span class="sd">the transport blob) and the caller&#39;s **repository variables second** (the</span>
+<span class="sd">``vars`` context resolves to the caller&#39;s repo in a reusable workflow) — so a</span>
+<span class="sd">non-sensitive value like a test verbosity level can live in a repo variable</span>
+<span class="sd">instead of being mis-classified as a secret.</span>
 
-<span class="sd">Secret *values* are never printed; only names appear in the summary. Values are</span>
-<span class="sd">GitHub-registered secrets and are masked in logs regardless.</span>
+<span class="sd">Secret *values* are never printed. Values extracted from the transport blob</span>
+<span class="sd">are not auto-masked by GitHub (only the blob as a whole is), so every</span>
+<span class="sd">secret-sourced value is re-registered with ``::add-mask::`` (per line, the</span>
+<span class="sd">documented form for multiline values) before being written to the job env.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="c1"># The blob key is a wads-wide constant; keep this script importable standalone</span>
+<span class="c1"># (it is executed via `python -m` from a pip-installed wads) but don&#39;t crash if</span>
+<span class="c1"># the import graph ever changes — the name is stable.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSON_TRANSPORT_SECRET</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - belt and braces for exotic installs</span>
+    <span class="n">JSON_TRANSPORT_SECRET</span> <span class="o">=</span> <span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span>
+
+<span class="c1"># Secrets-context keys that must never be exported as repo env vars: GitHub&#39;s</span>
+<span class="c1"># auto-token (the context spells it `github_token`) and the transport blob.</span>
+<span class="n">_NON_EXPORTABLE</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;github_token&quot;</span><span class="p">,</span> <span class="n">JSON_TRANSPORT_SECRET</span><span class="o">.</span><span class="n">lower</span><span class="p">()})</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_gh_env_assignment</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -189,6 +206,70 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;&lt;</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
+<div class="viewcode-block" id="merge_transported_secrets">
+<a class="viewcode-back" href="../../../module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.merge_transported_secrets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_transported_secrets</span><span class="p">(</span><span class="n">secrets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flatten the secrets mapping, expanding the ``WADS_CI_SECRETS_JSON`` blob.</span>
+
+<span class="sd">    The blob is the caller&#39;s whole secrets context, serialized by the stub with</span>
+<span class="sd">    ``toJSON(toJSON(secrets))`` (double-encoded =&gt; single-line). A</span>
+<span class="sd">    single-encoded blob is also accepted. Named entries win over blob entries</span>
+<span class="sd">    (they are the same caller values anyway), and non-exportable keys (the</span>
+<span class="sd">    blob itself, ``github_token``) are dropped.</span>
+
+<span class="sd">    &gt;&gt;&gt; merged = merge_transported_secrets({</span>
+<span class="sd">    ...     &quot;WADS_CI_SECRETS_JSON&quot;: &#39;&quot;{\\\\n  \\\\&quot;MY_KEY\\\\&quot;: \\\\&quot;v1\\\\&quot;,\\\\n  \\\\&quot;github_token\\\\&quot;: \\\\&quot;t\\\\&quot;\\\\n}&quot;&#39;,</span>
+<span class="sd">    ...     &quot;OPENAI_API_KEY&quot;: &quot;sk-named&quot;,</span>
+<span class="sd">    ... })</span>
+<span class="sd">    &gt;&gt;&gt; sorted(merged)</span>
+<span class="sd">    [&#39;MY_KEY&#39;, &#39;OPENAI_API_KEY&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; merged[&quot;MY_KEY&quot;]</span>
+<span class="sd">    &#39;v1&#39;</span>
+
+<span class="sd">    Malformed blobs are ignored rather than fatal (the named layer still</span>
+<span class="sd">    works, and required-validation reports any name that failed to resolve):</span>
+
+<span class="sd">    &gt;&gt;&gt; merge_transported_secrets({&quot;WADS_CI_SECRETS_JSON&quot;: &quot;not json&quot;, &quot;A&quot;: &quot;x&quot;})</span>
+<span class="sd">    {&#39;A&#39;: &#39;x&#39;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">secrets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">secrets</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">JSON_TRANSPORT_SECRET</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">from_blob</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">blob</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">decoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">blob</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decoded</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># double-encoded (the stub default)</span>
+                <span class="n">decoded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decoded</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">from_blob</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">decoded</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;::warning::</span><span class="si">{</span><span class="n">JSON_TRANSPORT_SECRET</span><span class="si">}</span><span class="s2"> is not valid JSON; &quot;</span>
+                <span class="s2">&quot;ignoring the transport blob.&quot;</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">from_blob</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">secrets</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">}}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NON_EXPORTABLE</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="ExportPlan">
+<a class="viewcode-back" href="../../../module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.ExportPlan">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExportPlan</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;What :func:`export_ci_env` decided, ready for :func:`main` to apply.&quot;&quot;&quot;</span>
+
+    <span class="n">assignments</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># ordered $GITHUB_ENV lines</span>
+    <span class="n">exported</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># env-var names written, in order</span>
+    <span class="n">missing_required</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># (var_name, source_name) pairs that failed to resolve</span>
+    <span class="n">missing_test</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># test var names that failed to resolve</span>
+    <span class="n">mask_values</span><span class="p">:</span> <span class="nb">list</span>  <span class="c1"># secret-sourced values to ::add-mask:: before export</span></div>
+
+
+
 <div class="viewcode-block" id="export_ci_env">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.export_ci_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_ci_env</span><span class="p">(</span>
@@ -199,112 +280,154 @@
     <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">aliases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">vars_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">),</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the env assignments to write, plus any missing-required errors.</span>
 
-<span class="sd">    Pure function (no I/O) so it can be unit-tested without GitHub. Returns</span>
-<span class="sd">    ``(assignments, exported, missing_required, missing_test)`` where</span>
-<span class="sd">    ``assignments`` is an ordered list of ``$GITHUB_ENV`` lines.</span>
+<span class="sd">    Pure function (no I/O) so it can be unit-tested without GitHub. Each</span>
+<span class="sd">    declared name resolves secrets-first, then falls back to the caller&#39;s</span>
+<span class="sd">    repository variables (``vars_``). Secret-sourced values are collected in</span>
+<span class="sd">    ``mask_values`` for re-masking; variable- and default-sourced values are</span>
+<span class="sd">    not masked (they are not sensitive by definition).</span>
 
-<span class="sd">    &gt;&gt;&gt; a, exported, missing_req, missing_test = export_ci_env(</span>
+<span class="sd">    &gt;&gt;&gt; plan = export_ci_env(</span>
 <span class="sd">    ...     required=[&quot;OPENAI_API_KEY&quot;],</span>
 <span class="sd">    ...     test=[&quot;TAVILY_API_KEY&quot;],</span>
-<span class="sd">    ...     extra=[&quot;UNSET_THING&quot;],</span>
+<span class="sd">    ...     extra=[&quot;UNSET_THING&quot;, &quot;COSMO_TEST_LEVEL&quot;],</span>
 <span class="sd">    ...     defaults={&quot;LOG_LEVEL&quot;: &quot;DEBUG&quot;},</span>
 <span class="sd">    ...     secrets={&quot;OPENAI_API_KEY&quot;: &quot;sk-xxx&quot;, &quot;TAVILY_API_KEY&quot;: &quot;&quot;},</span>
+<span class="sd">    ...     vars_={&quot;COSMO_TEST_LEVEL&quot;: &quot;3&quot;},</span>
 <span class="sd">    ... )</span>
-<span class="sd">    &gt;&gt;&gt; exported</span>
-<span class="sd">    [&#39;LOG_LEVEL&#39;, &#39;OPENAI_API_KEY&#39;]</span>
-<span class="sd">    &gt;&gt;&gt; missing_req</span>
+<span class="sd">    &gt;&gt;&gt; plan.exported</span>
+<span class="sd">    [&#39;LOG_LEVEL&#39;, &#39;OPENAI_API_KEY&#39;, &#39;COSMO_TEST_LEVEL&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; plan.missing_required</span>
 <span class="sd">    []</span>
-<span class="sd">    &gt;&gt;&gt; missing_test</span>
+<span class="sd">    &gt;&gt;&gt; plan.missing_test</span>
 <span class="sd">    [&#39;TAVILY_API_KEY&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; plan.mask_values  # only the secret-sourced value</span>
+<span class="sd">    [&#39;sk-xxx&#39;]</span>
 
-<span class="sd">    A required var with no backing secret is reported (caller should fail CI):</span>
+<span class="sd">    A required var with no backing secret *or* variable is reported (caller</span>
+<span class="sd">    should fail CI):</span>
 
-<span class="sd">    &gt;&gt;&gt; _, _, missing_req, _ = export_ci_env(</span>
-<span class="sd">    ...     required=[&quot;PYPI_PASSWORD&quot;], secrets={})</span>
-<span class="sd">    &gt;&gt;&gt; missing_req</span>
+<span class="sd">    &gt;&gt;&gt; export_ci_env(required=[&quot;PYPI_PASSWORD&quot;], secrets={}).missing_required</span>
 <span class="sd">    [(&#39;PYPI_PASSWORD&#39;, &#39;PYPI_PASSWORD&#39;)]</span>
 
 <span class="sd">    Aliases let an env var read a differently-named secret:</span>
 
-<span class="sd">    &gt;&gt;&gt; a, exported, _, _ = export_ci_env(</span>
+<span class="sd">    &gt;&gt;&gt; plan = export_ci_env(</span>
 <span class="sd">    ...     test=[&quot;HF_TOKEN&quot;],</span>
 <span class="sd">    ...     aliases={&quot;HF_TOKEN&quot;: &quot;HF_WRITE_TOKEN&quot;},</span>
 <span class="sd">    ...     secrets={&quot;HF_WRITE_TOKEN&quot;: &quot;hf_xxx&quot;})</span>
-<span class="sd">    &gt;&gt;&gt; exported</span>
+<span class="sd">    &gt;&gt;&gt; plan.exported</span>
 <span class="sd">    [&#39;HF_TOKEN&#39;]</span>
-<span class="sd">    &gt;&gt;&gt; a</span>
+<span class="sd">    &gt;&gt;&gt; plan.assignments</span>
 <span class="sd">    [&#39;HF_TOKEN=hf_xxx&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">aliases</span> <span class="o">=</span> <span class="n">aliases</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="n">secrets</span> <span class="o">=</span> <span class="n">secrets</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">secrets</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">(</span><span class="n">secrets</span><span class="p">)</span>
+    <span class="n">vars_</span> <span class="o">=</span> <span class="n">vars_</span> <span class="ow">or</span> <span class="p">{}</span>
 
     <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">exported</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">missing_required</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">missing_test</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mask_values</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="c1"># Literal defaults first, so a secret-backed var of the same name wins.</span>
+    <span class="c1"># Literal defaults first; a later secret-backed var of the same name is</span>
+    <span class="c1"># skipped as already-seen, so the committed default is authoritative.</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_gh_env_assignment</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
         <span class="n">exported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">):</span>
-        <span class="n">secret_name</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">secret_name</span><span class="p">,</span> <span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(source_name, value, is_secret)`` for ``var_name``.&quot;&quot;&quot;</span>
+        <span class="n">source_name</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">source_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">source_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">vars_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="kc">False</span>
 
     <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exported</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">is_secret</span><span class="p">:</span>
+            <span class="n">mask_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_gh_env_assignment</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="n">exported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+
     <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
-        <span class="n">secret_name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">source_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
-            <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secret_name</span><span class="p">))</span>
+            <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var_name</span><span class="p">,</span> <span class="n">source_name</span><span class="p">))</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-            <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_gh_env_assignment</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-            <span class="n">exported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">_export</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">test</span><span class="p">:</span>
-        <span class="n">secret_name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
             <span class="n">missing_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-            <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_gh_env_assignment</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-            <span class="n">exported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">_export</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-            <span class="n">assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_gh_env_assignment</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-            <span class="n">exported</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">_export</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">is_secret</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">missing_test</span><span class="p">:</span>
         <span class="n">warn</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;::warning::[tool.wads.ci.env].test_envvars lists </span><span class="si">{</span><span class="n">var_name</span><span class="si">!r}</span><span class="s2"> but &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;its backing secret is not set on this repo; tests needing it may be &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;skipped or fail.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;no backing secret or repo variable is set; tests needing it may &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;be skipped or fail.&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">assignments</span><span class="p">,</span> <span class="n">exported</span><span class="p">,</span> <span class="n">missing_required</span><span class="p">,</span> <span class="n">missing_test</span></div>
+    <span class="k">return</span> <span class="n">ExportPlan</span><span class="p">(</span><span class="n">assignments</span><span class="p">,</span> <span class="n">exported</span><span class="p">,</span> <span class="n">missing_required</span><span class="p">,</span> <span class="n">missing_test</span><span class="p">,</span> <span class="n">mask_values</span><span class="p">)</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_load_json_env</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_json_env</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">redact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">default</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not valid JSON: </span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">redact</span><span class="p">:</span>
+            <span class="c1"># Never echo the raw value: the secrets/vars contexts arrive</span>
+            <span class="c1"># JSON-re-escaped, a form no registered mask matches.</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[ERROR] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not valid JSON (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">; length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="si">}</span><span class="s2">); &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;value withheld — it may contain secrets&quot;</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not valid JSON: </span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_emit_masks</span><span class="p">(</span><span class="n">mask_values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register each secret-sourced value with the runner&#39;s log masker.</span>
+
+<span class="sd">    Values pulled out of the transport blob are NOT auto-masked (GitHub only</span>
+<span class="sd">    masks the blob itself), so every line of every value is registered</span>
+<span class="sd">    explicitly. Harmlessly re-masks named-transport values.</span>
+
+<span class="sd">    The runner percent-decodes workflow-command data (``%25``→``%``,</span>
+<span class="sd">    ``%0A``→newline, ``%0D``→CR), so ``%`` must be escaped or a value</span>
+<span class="sd">    containing a literal ``%25``/``%0A`` would register the wrong mask string</span>
+<span class="sd">    and leave the real value unmasked (CR/LF are already handled by the</span>
+<span class="sd">    per-line split).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mask_values</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;::add-mask::</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%25&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="main">
@@ -312,45 +435,52 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read inputs from env, write assignments to ``$GITHUB_ENV``, fail if required missing.&quot;&quot;&quot;</span>
     <span class="n">required</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_REQUIRED&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">always_required</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_ALWAYS_REQUIRED&quot;</span><span class="p">,</span> <span class="p">[])</span>
     <span class="n">test</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_TEST&quot;</span><span class="p">,</span> <span class="p">[])</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_EXTRA&quot;</span><span class="p">,</span> <span class="p">[])</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_DEFAULTS&quot;</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">aliases</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_ALIASES&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">secrets</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">secrets</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">redact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">vars_</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">&quot;WADS_VARS_JSON&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="n">redact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">assignments</span><span class="p">,</span> <span class="n">exported</span><span class="p">,</span> <span class="n">missing_required</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">required</span><span class="o">=</span><span class="n">required</span><span class="p">,</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">required</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">always_required</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">required</span><span class="p">],</span>
         <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
         <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>
         <span class="n">defaults</span><span class="o">=</span><span class="n">defaults</span><span class="p">,</span>
         <span class="n">aliases</span><span class="o">=</span><span class="n">aliases</span><span class="p">,</span>
         <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">,</span>
+        <span class="n">vars_</span><span class="o">=</span><span class="n">vars_</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="c1"># Masks must be registered before any later step could echo the values.</span>
+    <span class="n">_emit_masks</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span><span class="p">)</span>
 
     <span class="n">github_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">github_env</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">github_env</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: GITHUB_ENV not set; not writing assignments&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">exported</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Exported CI env vars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exported</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Exported CI env vars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">exported</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[OK] No CI env vars configured to export&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">missing_required</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span><span class="p">:</span>
         <span class="n">details</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;  - env var </span><span class="si">{</span><span class="n">var</span><span class="si">!r}</span><span class="s2"> (backed by secret </span><span class="si">{</span><span class="n">sec</span><span class="si">!r}</span><span class="s2">) is required by &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;[tool.wads.ci.env].required_envvars but the secret is not set&quot;</span>
-            <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">sec</span> <span class="ow">in</span> <span class="n">missing_required</span>
+            <span class="sa">f</span><span class="s2">&quot;  - env var </span><span class="si">{</span><span class="n">var</span><span class="si">!r}</span><span class="s2"> (backed by </span><span class="si">{</span><span class="n">src</span><span class="si">!r}</span><span class="s2">) is required but neither a &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;secret nor a repo variable of that name is set&quot;</span>
+            <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span>
         <span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;[ERROR] Required CI secrets are missing:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;[ERROR] Required CI values are missing:</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">details</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Set them on the repo (e.g. `wads-secrets add NAME` or &quot;</span>
-            <span class="s2">&quot;`gh secret set NAME`), or move them out of required_envvars.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Set a secret (`wads-secrets add NAME` or `gh secret set NAME`), or &quot;</span>
+            <span class="s2">&quot;for non-sensitive values a repo variable (`gh variable set NAME`), &quot;</span>
+            <span class="s2">&quot;or move the name out of required_envvars.&quot;</span><span class="p">,</span>
             <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="mi">1</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.2.13 documentation</title>
+  <title>wads.migration &mdash; wads 0.2.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba481074"></script>
+      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -271,7 +271,7 @@ over-assignment the new model removes.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.migration.migrate_ci_to_stub">
-<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_stub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'&#64;master'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_stub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_stub" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_stub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'&#64;master'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transport</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'json'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_stub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_stub" title="Link to this definition"></a></dt>
 <dd><p>Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.</p>
 <p>The stub is ~5 lines and replaces a repo’s full inline CI with a single
 <cite>uses:</cite> of <cite>i2mint/wads/.github/workflows/uv-ci.yml</cite>. All per-repo
@@ -281,14 +281,25 @@ configuration continues to come from <cite>[tool.wads.ci.*]</cite> in
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>old_ci</strong> – Optional path or content of the existing CI workflow. Unused
-for the actual conversion (the stub is the same regardless of
-what was there), but accepted for symmetry with <cite>migrate_ci_to_uv</cite>
-and to allow future heuristics (e.g. warn if the existing CI is a
-customized fork that the stub would silently drop changes from).</p></li>
+<li><p><strong>old_ci</strong> – Optional path or content of the existing CI workflow. Used only
+to locate a nearby pyproject.toml when <code class="docutils literal notranslate"><span class="pre">transport=&quot;named&quot;</span></code>;
+with the default JSON transport the stub is the same regardless of
+what was there.</p></li>
 <li><p><strong>pin</strong> – The wads ref the stub points at. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&#64;master&quot;</span></code>
 (floats with wads). For release-sensitive repos, pin to a tag,
-e.g. <code class="docutils literal notranslate"><span class="pre">pin=&quot;&#64;v0.1.81&quot;</span></code>. Must start with <code class="docutils literal notranslate"><span class="pre">&quot;&#64;&quot;</span></code>.</p></li>
+e.g. <code class="docutils literal notranslate"><span class="pre">pin=&quot;&#64;0.2.15&quot;</span></code> (wads tags have no <code class="docutils literal notranslate"><span class="pre">v</span></code> prefix). With the
+default JSON transport the pinned ref’s <code class="docutils literal notranslate"><span class="pre">uv-ci.yml</span></code> must declare
+<code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> (releases after 0.2.14) — pinning an
+older tag produces a workflow GitHub rejects at parse time, so a
+warning is emitted for any non-master pin. Must start with <code class="docutils literal notranslate"><span class="pre">&quot;&#64;&quot;</span></code>.</p></li>
+<li><p><strong>transport</strong> – <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code> (default) passes the repo’s whole secrets
+context as one <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> secret — any secret name
+works, nothing to enumerate. <code class="docutils literal notranslate"><span class="pre">&quot;named&quot;</span></code> passes an explicit subset
+(PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets) for
+repos that want a minimal secret surface; every name must then be
+in the frozen wads superset or GitHub rejects the workflow at
+parse time (issue #63) — out-of-superset names trigger a loud
+warning.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -299,13 +310,16 @@ e.g. <code class="docutils literal notranslate"><span class="pre">pin=&quot;&#64
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;i2mint/wads/.github/workflows/uv-ci.yml@master&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;#SECRETS_BLOCK#&#39;</span> <span class="ow">in</span> <span class="n">stub</span>  <span class="c1"># placeholder is always filled</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pinned</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="s1">&#39;@0.2.15&#39;</span><span class="p">)</span>  <span class="c1"># warns on stderr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;uv-ci.yml@0.2.15&#39;</span> <span class="ow">in</span> <span class="n">pinned</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">named</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="s1">&#39;named&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}&#39;</span> <span class="ow">in</span> <span class="n">named</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;WADS_CI_SECRETS_JSON&#39;</span> <span class="ow">in</span> <span class="n">named</span>
 <span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pinned</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="s1">&#39;@v0.1.81&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;uv-ci.yml@v0.1.81&#39;</span> <span class="ow">in</span> <span class="n">pinned</span>
-<span class="go">True</span>
 </pre></div>
 </div>
 </dd></dl>
