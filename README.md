@@ -127,19 +127,25 @@ wire up both the GitHub Actions transport and the job environment:
 wads-secrets add OPENAI_API_KEY            # env var == GitHub secret name
 wads-secrets add HF_TOKEN HF_WRITE_TOKEN    # env var <- differently-named secret
 wads-secrets add DATABASE_URL --kind required   # fail CI if the secret is unset
+wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variable
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds
-the pass-through line to your `ci.yml`, and (c) runs `gh secret set` if `gh` is
-installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are
-two layers: a **transport superset** (the secret names the reusable workflow can
-receive, in `wads.ci_secrets.DEFAULT_CI_SECRETS`) and an **env policy**
-(`[tool.wads.ci.env]` — `required_envvars` / `test_envvars` / `extra_envvars` /
-`defaults` / `secret_aliases`) that decides which become job env vars. A
-`required` secret that's missing fails the build; an undeclared secret is never
-written to the environment. To use a name outside the superset, open a one-line
-PR to wads or use the inline-workflow escape valve.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]` and (b)
+runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is
+installed (value taken from `$VAR_NAME` or `--value`). Under the hood there
+are two layers: a **transport** — the stub passes your repo's whole secrets
+context to the reusable workflow as one `WADS_CI_SECRETS_JSON` secret, so any
+secret name works — and an **env policy** (`[tool.wads.ci.env]` —
+`required_envvars` / `test_envvars` / `extra_envvars` / `defaults` /
+`secret_aliases`) that decides which values become job env vars. Each declared
+name resolves against secrets first, then repository *variables* (the right
+home for non-sensitive values); committed constants can go straight into
+`[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing
+fails the build; an undeclared secret is never written to the environment.
+(Older stubs pass secrets by name instead and are limited to the frozen
+superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`; regenerate with
+`wads-migrate ci-to-stub` to switch to the JSON transport.)
 
 ### Declare System Dependencies
 

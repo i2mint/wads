@@ -112,32 +112,45 @@ most customization belongs in `[tool.wads.ci.*]`), it can replace the stub with
 a copy of `wads/data/github_ci_uv.yml` inline. The repo then owns CI updates
 manually. Convert back to stub later with `wads-migrate ci-to-stub`.
 
-### Secrets / CI env vars — two layers (issue #45)
+### Secrets / CI env vars — two layers (issues #45, #63)
 
 A reusable workflow's secret *interface* (`on.workflow_call.secrets`) must be
 static YAML and `secrets: inherit` is unreliable cross-owner, so secrets are
 handled in two decoupled layers:
 
-1. **Transport** — the caller stub *explicitly passes* named secrets. The
-   universe of passable names is the **superset** declared in `uv-ci.yml`'s
-   `on.workflow_call.secrets`, generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`
-   (the SSOT; a test in `test_ci_secrets.py` pins the YAML to it). Each repo's
-   stub passes only a *small subset* — `PYPI_PASSWORD` plus whatever its
-   `[tool.wads.ci.env]` declares (rendered via `CIConfig.generate_stub_secrets_block`
-   into the stub's `#SECRETS_BLOCK#` placeholder at populate/migrate time).
-2. **Env-assignment** — *which* passed secrets become job env vars (and which
-   are required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
+1. **Transport** — the modern stub passes ONE statically-declared secret,
+   `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the caller's whole
+   secrets context, double-encoded so the value is single-line (a multiline
+   secret is masked per line, and the pretty-printed `{`/`}` lines would
+   become global masks mangling every brace in the log). Any secret name a
+   repo has reaches the workflow — nothing to enumerate, nothing to fall
+   outside of. The 62-name superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`) is
+   still declared in `uv-ci.yml` but **frozen**: it exists only so old
+   named-transport stubs keep working (a test in `test_ci_secrets.py` pins the
+   YAML to `WORKFLOW_CALL_SECRETS` = JSON secret + superset). Named transport
+   remains available for minimal-secret-surface repos via
+   `wads-migrate ci-to-stub --transport named`, which warns loudly on
+   out-of-superset names (they make the workflow unstartable — issue #63).
+2. **Env-assignment** — *which* values become job env vars (and which are
+   required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
    ENV_VAR≠SECRET_NAME). The `export-ci-env` action (`wads/scripts/export_ci_env.py`)
-   reads these via `read-ci-config` outputs and `toJSON(secrets)`, writes exactly
-   the declared vars to `$GITHUB_ENV`, and **fails fast** on a missing required
-   secret. A passed-but-undeclared secret is never written to the environment —
-   so no over-assignment, and no silent under-coverage.
+   reads these via `read-ci-config` outputs plus `toJSON(secrets)` /
+   `toJSON(vars)`, resolves each declared name **secrets-first then repo
+   variables** (the `vars` context resolves to the caller's repo in a reusable
+   workflow — the right home for non-sensitive values like a test level),
+   re-masks blob-sourced values with `::add-mask::`, writes exactly the
+   declared vars to `$GITHUB_ENV`, and **fails fast** on a missing required
+   value. An undeclared secret is never written to the environment — so no
+   over-assignment, and no silent under-coverage. The publish job resolves
+   `PYPI_PASSWORD` through the same step (`always-required` input) so either
+   transport feeds it.
 
-To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates both layers
-(pyproject + stub) and can `gh secret set` the value. A name outside the superset
-needs a one-line PR to `wads.ci_secrets` (or the inline escape valve); the CLI
-warns when that's the case.
+To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates pyproject
+(and, on legacy named stubs, the stub's pass-through) and can `gh secret set`
+the value. For non-sensitive values use `wads-secrets add NAME --variable`
+(repo variable; no transport, no masking) or put a literal in
+`[tool.wads.ci.env].defaults`.
 
 ### CI Workflow Flow (uv-ci.yml — the reusable workflow)
 
