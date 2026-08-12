@@ -268,7 +268,7 @@ jobs:
       # `vars` resolves to the CALLER repo's configuration variables, so a
       # declared name with no backing secret falls back to a repo variable.
       - name: Export CI Environment
-        uses: i2mint/wads/actions/export-ci-env@issue-63-json-secret-transport
+        uses: i2mint/wads/actions/export-ci-env@master
         with:
           required: ${{ needs.setup.outputs.env-required }}
           test: ${{ needs.setup.outputs.env-test }}
@@ -351,7 +351,7 @@ jobs:
           extras: ${{ needs.setup.outputs.install-extras }}
 
       - name: Export CI Environment
-        uses: i2mint/wads/actions/export-ci-env@issue-63-json-secret-transport
+        uses: i2mint/wads/actions/export-ci-env@master
         with:
           required: ${{ needs.setup.outputs.env-required }}
           test: ${{ needs.setup.outputs.env-test }}
@@ -418,7 +418,7 @@ jobs:
       # uses (named pass-through or the WADS_CI_SECRETS_JSON blob), and fail
       # fast — before the version bump — when it is missing entirely.
       - name: Export CI Environment
-        uses: i2mint/wads/actions/export-ci-env@issue-63-json-secret-transport
+        uses: i2mint/wads/actions/export-ci-env@master
         with:
           required: ${{ needs.setup.outputs.env-required }}
           test: ${{ needs.setup.outputs.env-test }}
