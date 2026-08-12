@@ -1080,9 +1080,10 @@ def _add_ci_def(
             # Basic substitutions for static template
             ci_def = ci_def.replace("#PROJECT_NAME#", name)
 
-        # The SSOT stub carries a #SECRETS_BLOCK# placeholder (the per-repo
-        # transport list). The dynamic path fills it from [tool.wads.ci.env];
-        # otherwise fall back to the publish-only default so the stub is valid.
+        # Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo
+        # named transport). The current stub template passes the whole secrets
+        # context as one WADS_CI_SECRETS_JSON secret and has no placeholder,
+        # so this branch only fires for old templates.
         if "#SECRETS_BLOCK#" in ci_def:
             from wads.ci_secrets import render_stub_secrets_passthrough
 

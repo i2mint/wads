@@ -13,9 +13,12 @@ import yaml
 
 from wads.ci_secrets import (
     DEFAULT_CI_SECRETS,
+    JSON_TRANSPORT_SECRET,
+    WORKFLOW_CALL_SECRETS,
     InvalidSecretName,
     is_valid_secret_name,
     normalize_secret_name,
+    render_stub_json_transport,
     render_stub_secrets_passthrough,
     render_workflow_call_secrets,
 )
@@ -59,13 +62,19 @@ def _secrets_from_workflow(path: Path):
 
 
 def test_uv_ci_secrets_match_ssot_exactly():
-    """The reusable workflow's secret superset must equal DEFAULT_CI_SECRETS.
+    """The reusable workflow's declared secrets must equal WORKFLOW_CALL_SECRETS.
 
+    That is the JSON transport secret first, then the frozen legacy superset.
     If this fails, you edited one side only. Regenerate the YAML block from
-    wads.ci_secrets.render_workflow_call_secrets() (or update DEFAULT_CI_SECRETS).
+    wads.ci_secrets.render_workflow_call_secrets().
     """
     declared = _secrets_from_workflow(UV_CI)
-    assert declared == list(DEFAULT_CI_SECRETS)
+    assert declared == list(WORKFLOW_CALL_SECRETS)
+
+
+def test_workflow_call_secrets_is_json_transport_plus_superset():
+    assert WORKFLOW_CALL_SECRETS[0] == JSON_TRANSPORT_SECRET
+    assert WORKFLOW_CALL_SECRETS[1:] == DEFAULT_CI_SECRETS
 
 
 def test_rendered_workflow_block_roundtrips():
@@ -74,7 +83,7 @@ def test_rendered_workflow_block_roundtrips():
     fake = "on:\n  workflow_call:\n    secrets:\n" + block + "\n"
     parsed = yaml.safe_load(fake)
     on = parsed.get("on", parsed.get(True))
-    assert list(on["workflow_call"]["secrets"].keys()) == list(DEFAULT_CI_SECRETS)
+    assert list(on["workflow_call"]["secrets"].keys()) == list(WORKFLOW_CALL_SECRETS)
 
 
 def test_stub_passthrough_render():
@@ -83,3 +92,15 @@ def test_stub_passthrough_render():
         "      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n"
         "      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}"
     )
+
+
+def test_stub_json_transport_render_matches_stub_template():
+    """The stub template must carry exactly the rendered JSON-transport line.
+
+    migrate_ci_to_stub's named mode locates this line in the template to
+    replace it, so renderer and template may not drift.
+    """
+    line = render_stub_json_transport()
+    assert line == "      WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}"
+    stub_tpl = REPO_ROOT / "wads" / "data" / "github_ci_uv_stub.yml"
+    assert line in stub_tpl.read_text()

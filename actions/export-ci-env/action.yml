@@ -1,11 +1,12 @@
 name: 'Export CI Environment from pyproject.toml'
 description: >-
   Write the pyproject-declared environment variables into $GITHUB_ENV. Exports
-  only the secrets a repo's [tool.wads.ci.env] declares (plus literal defaults),
-  and fails with a clear message if a required secret is missing. The full
-  secrets context is passed via toJSON(secrets) so no per-secret enumeration is
-  needed here — the transport superset is enumerated in the workflow's
-  on.workflow_call.secrets block instead.
+  only the values a repo's [tool.wads.ci.env] declares (plus literal defaults),
+  resolving each name against secrets first (including the WADS_CI_SECRETS_JSON
+  transport blob, whose extracted values are re-masked) and repository
+  variables second, and fails with a clear message if a required value is
+  missing. The full secrets/vars contexts are passed via toJSON so no
+  per-secret enumeration is needed here.
 branding:
   icon: 'lock'
   color: 'blue'
@@ -37,6 +38,19 @@ inputs:
     # `secrets` context is not available in a composite action manifest.
     description: 'The secrets context serialized as JSON by the caller (toJSON of the secrets context).'
     required: true
+  vars-json:
+    description: >-
+      The caller's configuration-variables context serialized as JSON (toJSON
+      of the vars context). Declared env vars with no backing secret fall back
+      to a same-named repository variable.
+    required: false
+    default: '{}'
+  always-required:
+    description: >-
+      JSON array of env-var names the WORKFLOW itself requires (merged with the
+      repo-declared required_envvars), e.g. PYPI_PASSWORD in the publish job.
+    required: false
+    default: '[]'
 
 runs:
   using: 'composite'
@@ -64,6 +78,8 @@ runs:
         WADS_ENV_DEFAULTS: ${{ inputs.defaults }}
         WADS_ENV_ALIASES: ${{ inputs.aliases }}
         WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
+        WADS_VARS_JSON: ${{ inputs.vars-json }}
+        WADS_ENV_ALWAYS_REQUIRED: ${{ inputs.always-required }}
       run: |
         if python -c "import wads.scripts.export_ci_env" 2>/dev/null; then
           python -m wads.scripts.export_ci_env
