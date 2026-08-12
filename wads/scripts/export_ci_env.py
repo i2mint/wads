@@ -244,7 +244,9 @@ def export_ci_env(
             f"be skipped or fail."
         )
 
-    return ExportPlan(assignments, exported, missing_required, missing_test, mask_values)
+    return ExportPlan(
+        assignments, exported, missing_required, missing_test, mask_values
+    )
 
 
 def _load_json_env(name: str, default, *, redact: bool = False):

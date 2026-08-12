@@ -53,9 +53,7 @@ _KINDS = {
 
 # The JSON transport *line* in a stub's `secrets:` block (an actual YAML key,
 # not a mention of the name in a comment).
-_JSON_TRANSPORT_LINE_RE = re.compile(
-    rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:"
-)
+_JSON_TRANSPORT_LINE_RE = re.compile(rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:")
 
 
 def _err(msg: str):
@@ -314,7 +312,9 @@ def add(
     return 0
 
 
-def _maybe_set_github_value(repo, secret_name, var_name, value, ci_file, *, variable=False):
+def _maybe_set_github_value(
+    repo, secret_name, var_name, value, ci_file, *, variable=False
+):
     kind = "variable" if variable else "secret"
     if not _gh_available():
         print(

@@ -299,7 +299,9 @@ def is_valid_secret_name(name: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def render_workflow_call_secrets(names=WORKFLOW_CALL_SECRETS, *, indent: int = 4) -> str:
+def render_workflow_call_secrets(
+    names=WORKFLOW_CALL_SECRETS, *, indent: int = 4
+) -> str:
     """Render the ``on.workflow_call.secrets:`` body for the reusable workflow.
 
     Every secret is declared ``required: false`` — the publish job enforces
