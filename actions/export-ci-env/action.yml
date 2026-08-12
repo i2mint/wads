@@ -1,11 +1,12 @@
 name: 'Export CI Environment from pyproject.toml'
 description: >-
   Write the pyproject-declared environment variables into $GITHUB_ENV. Exports
-  only the secrets a repo's [tool.wads.ci.env] declares (plus literal defaults),
-  and fails with a clear message if a required secret is missing. The full
-  secrets context is passed via toJSON(secrets) so no per-secret enumeration is
-  needed here — the transport superset is enumerated in the workflow's
-  on.workflow_call.secrets block instead.
+  only the values a repo's [tool.wads.ci.env] declares (plus literal defaults),
+  resolving each name against secrets first (including the WADS_CI_SECRETS_JSON
+  transport blob, whose extracted values are re-masked) and repository
+  variables second, and fails with a clear message if a required value is
+  missing. The full secrets/vars contexts are passed via toJSON so no
+  per-secret enumeration is needed here.
 branding:
   icon: 'lock'
   color: 'blue'
@@ -37,6 +38,19 @@ inputs:
     # `secrets` context is not available in a composite action manifest.
     description: 'The secrets context serialized as JSON by the caller (toJSON of the secrets context).'
     required: true
+  vars-json:
+    description: >-
+      The caller's configuration-variables context serialized as JSON (toJSON
+      of the vars context). Declared env vars with no backing secret fall back
+      to a same-named repository variable.
+    required: false
+    default: '{}'
+  always-required:
+    description: >-
+      JSON array of env-var names the WORKFLOW itself requires (merged with the
+      repo-declared required_envvars), e.g. PYPI_PASSWORD in the publish job.
+    required: false
+    default: '[]'
 
 runs:
   using: 'composite'
@@ -48,12 +62,26 @@ runs:
 
     - name: Install wads (for CI env utilities)
       shell: bash
-      # Install the latest published wads (floor is a version that exists, NOT
-      # the one that first shipped this module — pinning a not-yet-published
-      # version would make `pip install` fail during the publish-lag window
-      # after a wads merge). The run step below no-ops if the installed wads is
-      # too old to contain export_ci_env, so it is safe across that window.
-      run: python -m pip install --quiet --upgrade 'wads>=0.1.48'
+      # On master (the production path): install the latest published wads
+      # (floor is a version that exists, NOT the one that first shipped this
+      # module — pinning a not-yet-published version would make `pip install`
+      # fail during the publish-lag window after a wads merge). The run step
+      # below no-ops if the installed wads is too old, so it is safe across
+      # that window.
+      #
+      # On any other ref (github.action_ref = the ref this action was
+      # `uses:`-referenced at): install wads from git at that same ref, so a
+      # wads feature branch can be end-to-end tested — workflow, action, and
+      # Python code in lockstep — before anything is published.
+      env:
+        WADS_ACTION_REF: ${{ github.action_ref }}
+        WADS_ACTION_REPO: ${{ github.action_repository || 'i2mint/wads' }}
+      run: |
+        if [ -n "$WADS_ACTION_REF" ] && [ "$WADS_ACTION_REF" != "master" ]; then
+          python -m pip install --quiet "git+https://github.com/${WADS_ACTION_REPO}@${WADS_ACTION_REF}"
+        else
+          python -m pip install --quiet --upgrade 'wads>=0.1.48'
+        fi
 
     - name: Export configured environment
       shell: bash
@@ -64,6 +92,8 @@ runs:
         WADS_ENV_DEFAULTS: ${{ inputs.defaults }}
         WADS_ENV_ALIASES: ${{ inputs.aliases }}
         WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
+        WADS_VARS_JSON: ${{ inputs.vars-json }}
+        WADS_ENV_ALWAYS_REQUIRED: ${{ inputs.always-required }}
       run: |
         if python -c "import wads.scripts.export_ci_env" 2>/dev/null; then
           python -m wads.scripts.export_ci_env

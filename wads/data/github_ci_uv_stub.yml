@@ -5,7 +5,11 @@
 # full inline template `wads/data/github_ci_uv.yml` from i2mint/wads.
 #
 # Pinning: `@master` floats with wads. If you need version stability for
-# a release-sensitive repo, change `@master` to a wads tag (e.g. `@v0.1.81`).
+# a release-sensitive repo, change `@master` to a wads tag (e.g. `@0.2.15`;
+# tags have no `v` prefix). A stub whose `secrets:` block passes the JSON
+# transport (the default below) needs a tag from a release after 0.2.14 —
+# older tags don't declare that secret and GitHub then rejects the
+# workflow at parse time.
 # CI failure does not block a published release — it blocks the publish
 # step itself — so floating master is generally safe.
 #
@@ -29,20 +33,24 @@ jobs:
     permissions:
       contents: write
       pages: write
-    # Explicit pass-through (not `secrets: inherit`) because `inherit` does
-    # not reliably propagate caller-repo secrets to a reusable workflow owned
-    # by a different account (verified empirically: personal-account caller +
-    # i2mint-org workflow → `${{ secrets.PYPI_PASSWORD }}` resolved to empty).
+    # Transport: this repo's whole `secrets` context, serialized into the one
+    # secret the reusable workflow declares. Double-encoded (toJSON twice) so
+    # the value is a single line — a multiline secret would register its `{`
+    # and `}` lines as global log masks. Any secret name works; there is no
+    # fixed list to fall outside of. (Cross-owner `secrets: inherit` does not
+    # propagate secrets, so it cannot replace this.)
     #
-    # This list is the per-repo *transport*: it should contain PYPI_PASSWORD
-    # (for publishing) plus every secret your tests/CI need. It is generated
-    # from [tool.wads.ci.env] in pyproject.toml. To add one, run
-    #   wads-secrets add VAR_NAME            # updates pyproject + this block
-    # or just append a line below. *Which* of these become job env vars (and
-    # which are required) is controlled by [tool.wads.ci.env] — passing a
-    # secret here does not by itself put it in the environment.
+    # Note this hands EVERY secret this repo can read — including org-level
+    # ones — to the called workflow. For a minimal secret surface (only the
+    # names you list), regenerate with
+    #   wads-migrate ci-to-stub --transport named
     #
-    # A secret name must also be declared in the reusable workflow's superset
-    # (wads/ci_secrets.py). `wads-secrets add` warns if it is not.
+    # *Which* of these become job env vars — and which are required — is
+    # driven entirely by [tool.wads.ci.env] in pyproject.toml; nothing is
+    # exported unless declared there (`wads-secrets add VAR_NAME` declares
+    # one and can set its value). Non-sensitive values don't need a secret:
+    # use [tool.wads.ci.env].defaults (committed literals) or a repository
+    # *variable* (`gh variable set NAME`) — declared names fall back to
+    # repo variables automatically.
     secrets:
-#SECRETS_BLOCK#
+      WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}

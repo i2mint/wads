@@ -1,45 +1,89 @@
 """Canonical registry of CI secret names for wads-managed projects.
 
-This module is the **single source of truth** for the *transport superset*: the
-set of secret names that the reusable wads CI workflow (``uv-ci.yml``) declares
-in ``on.workflow_call.secrets`` and that the caller stub
-(``github_ci_uv_stub.yml``) passes through.
+This module is the single source of truth for the *transport* layer of wads
+CI secrets: what the reusable workflow (``uv-ci.yml``) declares in
+``on.workflow_call.secrets`` and what the caller stub passes.
 
-Why a superset, and why it lives here
---------------------------------------
+Transport: one JSON secret (the modern default)
+-----------------------------------------------
 A GitHub *reusable* workflow's secret interface (``on.workflow_call.secrets``)
 must be **static YAML** — it is parsed before any job runs and cannot be
-parametrized from ``pyproject.toml``. ``secrets: inherit`` is documented to work
-only when caller and callee share an owner (org/enterprise), so it is unusable
-for personal-account repos calling an ``i2mint``-owned workflow. The robust,
-universal choice is therefore to *explicitly pass a generous static superset*.
+parametrized from ``pyproject.toml``. ``secrets: inherit`` is documented to
+work only when caller and callee share an org/enterprise, so it is unusable
+for personal-account repos calling an ``i2mint``-owned workflow.
 
-Passing a superset is harmless: a secret the caller has not set resolves to an
-empty string and — crucially — is **not** written into the job environment.
-*Which* secrets actually land in the job env (and which are required) is a
-separate, dynamic decision driven by ``[tool.wads.ci.env]`` in the consumer's
-``pyproject.toml`` (see :mod:`wads.ci_config` and the ``export-ci-env`` action).
+The static-interface constraint is satisfied with a single statically-declared
+secret, :data:`JSON_TRANSPORT_SECRET` (``WADS_CI_SECRETS_JSON``), whose value
+is the caller's whole ``secrets`` context serialized by the stub::
+
+    secrets:
+      WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
+
+(The documented context-availability table allows the ``secrets`` context in
+``jobs.<job_id>.secrets.<id>``, so this expression is legal in the caller.)
+With this, *any* secret name a repo has reaches the reusable workflow — there
+is no fixed name list to be "outside of", which eliminates the parse-time
+``startup_failure`` class of issue #63 entirely.
+
+Two details, both verified empirically (see issue #63):
+
+* **Double encoding** (``toJSON(toJSON(...))``) makes the transported value a
+  *single-line* JSON string. A multiline secret is masked per line, and the
+  pretty-printed form's ``{`` / ``}`` lines would become global masks that
+  mangle every brace in the job log. Single-line ⇒ only the whole blob is
+  masked.
+* **Re-masking**: individual values extracted from the blob are *not*
+  automatically masked in the callee, so the ``export-ci-env`` action emits
+  ``::add-mask::`` for each secret-sourced value before exporting it.
+
+*Which* secrets actually land in the job env (and which are required) remains
+a separate, dynamic decision driven by ``[tool.wads.ci.env]`` in the
+consumer's ``pyproject.toml`` (see :mod:`wads.ci_config` and the
+``export-ci-env`` action). Nothing is exported unless declared there.
+
+The named superset (legacy transport, kept for back-compat)
+-----------------------------------------------------------
+Before the JSON transport, the workflow declared a generous *superset* of
+optional secret names (:data:`DEFAULT_CI_SECRETS`) and each repo's stub passed
+a named subset. That design failed whenever a repo needed a name outside the
+superset — GitHub rejects an undeclared secret at parse time with an opaque
+``startup_failure`` (issue #63).
+
+The superset is still declared by ``uv-ci.yml`` so that already-deployed
+named-transport stubs keep working, but it is **frozen**: new names should not
+be added — a repo that needs a new name should switch to the JSON transport
+stub (``wads-migrate ci-to-stub``), which transports everything.
 
 So there are two layers:
 
-* **Transport** — the superset below, rendered into static YAML. Plumbing.
+* **Transport** — the JSON secret (modern) or the frozen superset (legacy),
+  rendered into static YAML. Plumbing.
 * **Env-assignment** — pyproject-driven, exact, per-repo. The thing users tune.
 
-Keeping the list here (Python) and *rendering* it into the YAML (with a test
-pinning the YAML to this list) gives a single SSOT while respecting GitHub's
-parse-time-literal constraint.
+Keeping the names here (Python) and *rendering* them into the YAML (with a
+test pinning the YAML to this module) gives a single SSOT while respecting
+GitHub's parse-time-literal constraint.
 """
 
 import re
 
+# The single statically-declared secret through which a stub transports the
+# caller's whole `secrets` context (double-encoded JSON; see module docstring).
+JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
+
+# The caller-side expression for the JSON transport. Double toJSON keeps the
+# value single-line so per-line masking cannot register `{` / `}` as masks.
+JSON_TRANSPORT_EXPRESSION = "${{ toJSON(toJSON(secrets)) }}"
+
 # ---------------------------------------------------------------------------
-# The canonical superset.
+# The legacy named superset — FROZEN.
 #
 # Grouped only for human readability; the public value is the flat, de-duped,
-# order-preserving tuple ``DEFAULT_CI_SECRETS`` built below. Widening this list
-# is a one-line PR that benefits every wads-managed repo — over-listing is
-# harmless (unset secrets are empty and never exported), so err toward
-# inclusion of widely-used names.
+# order-preserving tuple ``DEFAULT_CI_SECRETS`` built below. It exists so that
+# named-transport stubs deployed before the JSON transport keep working; do
+# not widen it — a repo needing a name outside it should regenerate its stub
+# (`wads-migrate ci-to-stub`), which transports every secret via
+# JSON_TRANSPORT_SECRET.
 # ---------------------------------------------------------------------------
 
 _PUBLISHING = (
@@ -156,7 +200,10 @@ def _dedupe_preserving_order(names):
 DEFAULT_CI_SECRETS = tuple(
     _dedupe_preserving_order(name for group in _GROUPS for name in group)
 )
-"""Ordered, de-duplicated superset of CI secret names (the SSOT)."""
+"""Ordered, de-duplicated legacy superset of named CI secrets (frozen)."""
+
+WORKFLOW_CALL_SECRETS = (JSON_TRANSPORT_SECRET, *DEFAULT_CI_SECRETS)
+"""Every secret ``uv-ci.yml`` declares: the JSON transport + the legacy superset."""
 
 
 # ---------------------------------------------------------------------------
@@ -252,7 +299,7 @@ def is_valid_secret_name(name: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def render_workflow_call_secrets(names=DEFAULT_CI_SECRETS, *, indent: int = 4) -> str:
+def render_workflow_call_secrets(names=WORKFLOW_CALL_SECRETS, *, indent: int = 4) -> str:
     """Render the ``on.workflow_call.secrets:`` body for the reusable workflow.
 
     Every secret is declared ``required: false`` — the publish job enforces
@@ -276,7 +323,7 @@ def render_workflow_call_secrets(names=DEFAULT_CI_SECRETS, *, indent: int = 4) -
 def render_stub_secrets_passthrough(
     names=DEFAULT_CI_SECRETS, *, indent: int = 6
 ) -> str:
-    """Render the caller stub's ``secrets:`` pass-through block.
+    """Render a caller stub's *named* ``secrets:`` pass-through block (legacy).
 
     >>> print(render_stub_secrets_passthrough(["PYPI_PASSWORD", "NPM_TOKEN"]))
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -284,3 +331,13 @@ def render_stub_secrets_passthrough(
     """
     pad = " " * indent
     return "\n".join(f"{pad}{name}: ${{{{ secrets.{name} }}}}" for name in names)
+
+
+def render_stub_json_transport(*, indent: int = 6) -> str:
+    """Render the caller stub's JSON-transport ``secrets:`` line (the default).
+
+    >>> print(render_stub_json_transport())
+          WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
+    """
+    pad = " " * indent
+    return f"{pad}{JSON_TRANSPORT_SECRET}: {JSON_TRANSPORT_EXPRESSION}"

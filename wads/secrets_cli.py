@@ -1,22 +1,30 @@
 """``wads-secrets`` — manage the CI secrets/env vars of a wads-managed repo.
 
-A secret becomes usable in CI through two coordinated edits (see
-:mod:`wads.ci_secrets` for the model):
+A secret becomes usable in CI through two layers (see :mod:`wads.ci_secrets`
+for the model):
 
 1. **pyproject** ``[tool.wads.ci.env]`` — declares the env var (and whether it
    is required), so the reusable workflow exports it into the job environment.
-2. **stub transport** — the repo's ``ci.yml`` must *pass* the backing secret to
-   the reusable workflow (cross-owner ``secrets: inherit`` is unreliable).
+2. **transport** — the repo's ``ci.yml`` stub passes secrets to the reusable
+   workflow. Modern stubs pass the whole secrets context as one
+   ``WADS_CI_SECRETS_JSON`` secret, so *no per-secret stub edit is needed*;
+   legacy named-transport stubs list each secret explicitly (and every listed
+   name must be in the frozen wads superset).
 
-``wads-secrets add`` performs both edits in one step, and can also set the
-secret's value on GitHub via ``gh`` — so a single command takes a secret from
-"not configured" to "available in CI".
+``wads-secrets add`` performs the needed edits in one step, and can also set
+the secret's value on GitHub via ``gh`` — so a single command takes a secret
+from "not configured" to "available in CI". For values that are **not
+sensitive** (a test verbosity level, a feature flag), use ``--variable`` to
+store them as a GitHub repository *variable* instead of a secret — declared
+env vars fall back to repo variables automatically, and committed constants
+can simply live in ``[tool.wads.ci.env].defaults``.
 
 Examples::
 
     wads-secrets add OPENAI_API_KEY                 # var == secret name
     wads-secrets add HF_TOKEN HF_WRITE_TOKEN         # env var <- aliased secret
     wads-secrets add DB_URL --kind required          # fail CI if unset
+    wads-secrets add COSMO_TEST_LEVEL --variable     # non-sensitive: repo var
     wads-secrets add OPENAI_API_KEY --no-github      # edit files only
     wads-secrets list                                # show configured env vars
 
@@ -32,6 +40,7 @@ from pathlib import Path
 
 from wads.ci_secrets import (
     DEFAULT_CI_SECRETS,
+    JSON_TRANSPORT_SECRET,
     InvalidSecretName,
     normalize_secret_name,
 )
@@ -41,6 +50,12 @@ _KINDS = {
     "test": "test_envvars",
     "extra": "extra_envvars",
 }
+
+# The JSON transport *line* in a stub's `secrets:` block (an actual YAML key,
+# not a mention of the name in a comment).
+_JSON_TRANSPORT_LINE_RE = re.compile(
+    rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:"
+)
 
 
 def _err(msg: str):
@@ -126,11 +141,27 @@ def add_env_var_to_pyproject(pyproject_path, var_name, secret_name, *, kind="ext
     return True, None
 
 
+def stub_transport_mode(ci_file) -> "str | None":
+    """Classify the repo's ``ci.yml``: ``'json'``, ``'named'``, ``'inline'``, or ``None``.
+
+    ``'inline'`` means a workflow that does not call the reusable uv-ci (it
+    reads repo secrets directly and has no transport layer — and no
+    repo-variable fallback either). ``None`` means no ci.yml at all.
+    """
+    ci_file = Path(ci_file)
+    if not ci_file.is_file():
+        return None
+    text = ci_file.read_text()
+    if "uv-ci.yml" not in text:
+        return "inline"
+    return "json" if _JSON_TRANSPORT_LINE_RE.search(text) else "named"
+
+
 def add_secret_to_stub(ci_file, secret_name):
     """Ensure the stub ``ci.yml`` passes ``secret_name`` to the reusable workflow.
 
-    Returns ``(changed, reason)``. ``reason`` explains no-ops (already present,
-    not a stub, file missing).
+    Returns ``(changed, reason)``. ``reason`` explains no-ops (JSON transport
+    passes everything already, already present, not a stub, file missing).
     """
     ci_file = Path(ci_file)
     if not ci_file.is_file():
@@ -140,6 +171,11 @@ def add_secret_to_stub(ci_file, secret_name):
         return False, (
             "ci.yml is not the wads reusable-workflow stub (inline workflow?); "
             "transport not edited — env is driven by [tool.wads.ci.env]"
+        )
+    if _JSON_TRANSPORT_LINE_RE.search(text):
+        return False, (
+            "stub uses the JSON transport — every repo secret is passed "
+            "automatically; nothing to edit"
         )
     if re.search(rf"secrets\.{re.escape(secret_name)}\b", text):
         return False, "already passed in ci.yml"
@@ -168,16 +204,17 @@ def _gh_available() -> bool:
         return False
 
 
-def set_github_secret(repo, secret_name, value) -> bool:
-    """Set ``secret_name`` on ``repo`` via ``gh secret set``. Returns success."""
+def set_github_secret(repo, secret_name, value, *, variable=False) -> bool:
+    """Set a secret (or, with ``variable=True``, a repo variable) via ``gh``."""
+    kind = "variable" if variable else "secret"
     try:
         subprocess.run(
-            ["gh", "secret", "set", secret_name, "--repo", repo, "--body", value],
+            ["gh", kind, "set", secret_name, "--repo", repo, "--body", value],
             check=True,
         )
         return True
     except subprocess.CalledProcessError as e:
-        _err(f"gh secret set failed: {e}")
+        _err(f"gh {kind} set failed: {e}")
         return False
 
 
@@ -189,10 +226,11 @@ def add(
     kind="extra",
     value=None,
     github=True,
+    variable=False,
     pyproject="pyproject.toml",
     ci_file=".github/workflows/ci.yml",
 ):
-    """Configure a CI secret: declare it in pyproject, pass it in ci.yml, set its value.
+    """Configure a CI value: declare it in pyproject, transport it, set its value.
 
     :param var_name: env-var name your code reads (forced to UPPER_SNAKE).
     :param secret_name: GitHub secret backing it (default: same as var_name).
@@ -200,6 +238,10 @@ def add(
     :param kind: ``extra`` (default), ``test``, or ``required``.
     :param value: secret value to push to GitHub (default: ``$VAR_NAME`` in env).
     :param github: also set the value on GitHub via ``gh`` (default True).
+    :param variable: store as a repository *variable* instead of a secret —
+        for non-sensitive values (a test verbosity level, a flag). Variables
+        need no transport at all: the reusable workflow reads the caller's
+        ``vars`` context directly and declared env vars fall back to it.
     """
     try:
         var_name = normalize_secret_name(var_name)
@@ -233,27 +275,51 @@ def add(
                 f"{_KINDS[kind]} — move it by hand if that's intended)"
             )
 
-    stub_changed, reason = add_secret_to_stub(ci_file, secret_name)
-    print(f"{'✓' if stub_changed else '·'} transport: {reason}")
-
-    if secret_name not in DEFAULT_CI_SECRETS:
+    mode = stub_transport_mode(ci_file)
+    if variable:
+        # Repo variables reach the reusable workflow via the caller-resolved
+        # `vars` context — no transport edit, no superset concern.
+        if mode == "inline":
+            print(
+                "⚠ transport: this repo uses an inline workflow, which reads "
+                "secrets directly and has NO repo-variable fallback — a repo "
+                "variable will not reach its CI env. Use a committed literal "
+                "in [tool.wads.ci.env].defaults, or migrate to the stub "
+                "(`wads-migrate ci-to-stub`)."
+            )
+        else:
+            print("· transport: repo variables need none (vars context)")
+    elif mode == "named" and secret_name not in DEFAULT_CI_SECRETS:
+        # A named-transport stub may only pass names in the frozen superset —
+        # anything else makes the workflow FAIL TO START (parse-time
+        # startup_failure, issue #63). Refuse the edit that would cause it.
         print(
-            f"⚠ {secret_name!r} is not in the wads secret superset "
-            f"(wads/ci_secrets.py). The reusable workflow will reject an "
-            f"undeclared secret. Add it to DEFAULT_CI_SECRETS via a wads PR, or "
-            f"use the inline-workflow escape valve."
+            f"⚠ transport: {secret_name!r} is not in the wads secret superset "
+            f"(wads/ci_secrets.py), and this repo's stub passes secrets by "
+            f"name — passing this one would make the workflow FAIL TO START, "
+            f"so ci.yml was NOT edited (declared in pyproject only). Either "
+            f"regenerate the stub with the JSON transport "
+            f"(`wads-migrate ci-to-stub`), which passes every secret; or, if "
+            f"the value is not sensitive, use "
+            f"`wads-secrets add {var_name} --variable` instead."
         )
+    else:
+        stub_changed, reason = add_secret_to_stub(ci_file, secret_name)
+        print(f"{'✓' if stub_changed else '·'} transport: {reason}")
 
     if github:
-        _maybe_set_github_secret(repo, secret_name, var_name, value, ci_file)
+        _maybe_set_github_value(
+            repo, secret_name, var_name, value, ci_file, variable=variable
+        )
     return 0
 
 
-def _maybe_set_github_secret(repo, secret_name, var_name, value, ci_file):
+def _maybe_set_github_value(repo, secret_name, var_name, value, ci_file, *, variable=False):
+    kind = "variable" if variable else "secret"
     if not _gh_available():
         print(
             f"· github: `gh` not found; set it manually:\n"
-            f"    gh secret set {secret_name} --repo <org/repo>"
+            f"    gh {kind} set {secret_name} --repo <org/repo>"
         )
         return
     repo = repo or _repo_from_git(
@@ -262,7 +328,7 @@ def _maybe_set_github_secret(repo, secret_name, var_name, value, ci_file):
     if not repo:
         print(
             f"· github: could not detect repo (no git origin); set it manually:\n"
-            f"    gh secret set {secret_name} --repo <org/repo>"
+            f"    gh {kind} set {secret_name} --repo <org/repo>"
         )
         return
     if value is None:
@@ -271,11 +337,11 @@ def _maybe_set_github_secret(repo, secret_name, var_name, value, ci_file):
         print(
             f"· github: no value for {secret_name!r} (pass --value or export "
             f"${var_name}); set it later with:\n"
-            f"    gh secret set {secret_name} --repo {repo}"
+            f"    gh {kind} set {secret_name} --repo {repo}"
         )
         return
-    if set_github_secret(repo, secret_name, value):
-        print(f"✓ github: set secret {secret_name!r} on {repo}")
+    if set_github_secret(repo, secret_name, value, variable=variable):
+        print(f"✓ github: set {kind} {secret_name!r} on {repo}")
 
 
 def list_(pyproject="pyproject.toml"):
@@ -355,6 +421,14 @@ def main(argv=None):
         action="store_false",
         help="edit files only; don't call gh",
     )
+    p_add.add_argument(
+        "--variable",
+        action="store_true",
+        help=(
+            "store as a repository VARIABLE instead of a secret — for "
+            "non-sensitive values; needs no transport and no masking"
+        ),
+    )
     p_add.add_argument("--pyproject", default="pyproject.toml")
     p_add.add_argument("--ci-file", dest="ci_file", default=".github/workflows/ci.yml")
 
@@ -372,6 +446,7 @@ def main(argv=None):
             kind=args.kind,
             value=args.value,
             github=args.github,
+            variable=args.variable,
             pyproject=args.pyproject,
             ci_file=args.ci_file,
         )

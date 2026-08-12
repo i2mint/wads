@@ -6,19 +6,22 @@ name: Continuous Integration (uv, reusable)
 # section, read by the setup job below.
 #
 # SECRETS — two layers (see wads/ci_secrets.py for the full rationale):
-#   1. Transport: the caller stub explicitly passes named secrets (cross-owner
-#      `secrets: inherit` is unreliable, so we never rely on it). The
-#      `on.workflow_call.secrets` block below is the *superset* of names a
-#      stub may pass — the universe of allowed secret names. It is generated
-#      from wads.ci_secrets.DEFAULT_CI_SECRETS and pinned by a wads test.
-#   2. Env-assignment: which of those secrets actually become job environment
-#      variables (and which are required) is driven entirely by the caller's
+#   1. Transport: the modern stub passes ONE secret, WADS_CI_SECRETS_JSON —
+#      the caller's whole `secrets` context, double-JSON-encoded
+#      (`toJSON(toJSON(secrets))`, single-line so per-line masking can't
+#      register `{`/`}` as global masks). Any secret name a repo has is
+#      transported; there is no fixed list to fall outside of (issue #63).
+#      The remaining named declarations below are the FROZEN legacy superset,
+#      kept only so older stubs that pass named subsets keep working.
+#      (Cross-owner `secrets: inherit` is unreliable, so we never rely on it.)
+#   2. Env-assignment: which secrets actually become job environment variables
+#      (and which are required) is driven entirely by the caller's
 #      [tool.wads.ci.env], applied by the `export-ci-env` action below. A
-#      passed-but-unconfigured secret is never written to the environment.
-#
-# To use a secret whose name is NOT in the superset below: either add it here
-# via a PR to wads (one line, benefits everyone) or inline the full workflow
-# (escape valve) by replacing the stub with a copy of wads/data/github_ci_uv.yml.
+#      transported-but-unconfigured secret is never written to the
+#      environment. Non-sensitive values need no secret at all: use
+#      [tool.wads.ci.env].defaults (committed literals) or repository
+#      *variables* — the caller's `vars` context resolves inside this
+#      workflow and export-ci-env falls back to it per declared name.
 
 on:
   workflow_call:
@@ -32,12 +35,17 @@ on:
         required: false
         default: ""
 
-    # ─── SECRET SUPERSET (generated from wads.ci_secrets.DEFAULT_CI_SECRETS) ───
-    # Every entry is `required: false`; the caller stub passes only the subset
-    # its pyproject declares. Run-time enforcement of required secrets happens
-    # in the export-ci-env step (and PYPI_PASSWORD in the publish job).
-    # Edit wads/ci_secrets.py, not this block by hand — a test pins them equal.
+    # ─── SECRETS (generated from wads.ci_secrets.WORKFLOW_CALL_SECRETS) ───
+    # WADS_CI_SECRETS_JSON is the modern transport: the caller's whole secrets
+    # context as one double-encoded JSON secret. The named entries after it
+    # are the FROZEN legacy superset (back-compat for named-transport stubs).
+    # Every entry is `required: false`; run-time enforcement of required
+    # secrets happens in the export-ci-env step (and PYPI_PASSWORD in the
+    # publish job). Edit wads/ci_secrets.py, not this block by hand — a test
+    # pins them equal.
     secrets:
+      WADS_CI_SECRETS_JSON:
+        required: false
       PYPI_PASSWORD:
         required: false
       TEST_PYPI_PASSWORD:
@@ -257,6 +265,8 @@ jobs:
 
       # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast
       # if a required secret is missing). Driven by [tool.wads.ci.env].
+      # `vars` resolves to the CALLER repo's configuration variables, so a
+      # declared name with no backing secret falls back to a repo variable.
       - name: Export CI Environment
         uses: i2mint/wads/actions/export-ci-env@master
         with:
@@ -266,6 +276,7 @@ jobs:
           defaults: ${{ needs.setup.outputs.env-defaults }}
           aliases: ${{ needs.setup.outputs.env-aliases }}
           secrets-json: ${{ toJSON(secrets) }}
+          vars-json: ${{ toJSON(vars) }}
 
       - name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
@@ -348,6 +359,7 @@ jobs:
           defaults: ${{ needs.setup.outputs.env-defaults }}
           aliases: ${{ needs.setup.outputs.env-aliases }}
           secrets-json: ${{ toJSON(secrets) }}
+          vars-json: ${{ toJSON(vars) }}
 
       - name: Run Tests
         uses: i2mint/wads/actions/run-tests-uv@master
@@ -420,10 +432,33 @@ jobs:
           sdist: ${{ needs.setup.outputs.build-sdist }}
           wheel: ${{ needs.setup.outputs.build-wheel }}
 
+      # Resolve PYPI_PASSWORD into the job env whichever transport the stub
+      # uses (named pass-through or the WADS_CI_SECRETS_JSON blob), failing
+      # with a clear message when it is missing entirely. Deliberately does
+      # NOT export the repo's declared test env vars (empty required/test/
+      # extra): no tests run in this job, and repo code that runs here —
+      # build hooks, version-bump scripts — must not see test secrets. Also
+      # deliberately placed AFTER the version bump and build, so those steps
+      # run with no secrets in the environment at all.
+      - name: Resolve PyPI token
+        uses: i2mint/wads/actions/export-ci-env@master
+        with:
+          required: '[]'
+          test: '[]'
+          extra: '[]'
+          defaults: ${{ needs.setup.outputs.env-defaults }}
+          aliases: ${{ needs.setup.outputs.env-aliases }}
+          secrets-json: ${{ toJSON(secrets) }}
+          always-required: '["PYPI_PASSWORD"]'
+
+      # env.PYPI_PASSWORD is written by the resolve step above (it resolves
+      # the token from either transport); the direct secrets reference keeps
+      # old named-transport stubs working even while an older published wads
+      # (one without always-required support) is what the step installed.
       - name: Publish to PyPI
         uses: i2mint/wads/actions/pypi-publish-uv@master
         with:
-          pypi-token: ${{ secrets.PYPI_PASSWORD }}
+          pypi-token: ${{ secrets.PYPI_PASSWORD || env.PYPI_PASSWORD }}
 
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
