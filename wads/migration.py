@@ -874,7 +874,11 @@ def migrate_ci_to_stub(
             what was there.
         pin: The wads ref the stub points at. Defaults to ``"@master"``
             (floats with wads). For release-sensitive repos, pin to a tag,
-            e.g. ``pin="@v0.1.81"``. Must start with ``"@"``.
+            e.g. ``pin="@0.2.15"`` (wads tags have no ``v`` prefix). With the
+            default JSON transport the pinned ref's ``uv-ci.yml`` must declare
+            ``WADS_CI_SECRETS_JSON`` (releases after 0.2.14) — pinning an
+            older tag produces a workflow GitHub rejects at parse time, so a
+            warning is emitted for any non-master pin. Must start with ``"@"``.
         transport: ``"json"`` (default) passes the repo's whole secrets
             context as one ``WADS_CI_SECRETS_JSON`` secret — any secret name
             works, nothing to enumerate. ``"named"`` passes an explicit subset
@@ -893,8 +897,8 @@ def migrate_ci_to_stub(
         True
         >>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in stub
         True
-        >>> pinned = migrate_ci_to_stub(pin='@v0.1.81')
-        >>> 'uv-ci.yml@v0.1.81' in pinned
+        >>> pinned = migrate_ci_to_stub(pin='@0.2.15')  # warns on stderr
+        >>> 'uv-ci.yml@0.2.15' in pinned
         True
         >>> named = migrate_ci_to_stub(transport='named')
         >>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in named
@@ -906,6 +910,16 @@ def migrate_ci_to_stub(
         raise ValueError(f"pin must start with '@', got {pin!r}")
     if transport not in ("json", "named"):
         raise ValueError(f"transport must be 'json' or 'named', got {transport!r}")
+    if transport == "json" and pin != "@master":
+        print(
+            f"warning: the JSON-transport stub passes WADS_CI_SECRETS_JSON, "
+            f"which the pinned ref's uv-ci.yml must declare "
+            f"(on.workflow_call.secrets). Tags up to and including 0.2.14 do "
+            f"NOT declare it — a stub pinned to one CANNOT START (parse-time "
+            f"startup_failure). Verify {pin!r} is a release after 0.2.14, or "
+            f"use --transport named for older pins.",
+            file=sys.stderr,
+        )
     with open(github_ci_uv_stub_path) as f:
         stub = f.read()
     if pin != "@master":
@@ -1237,7 +1251,10 @@ def main():
         help=(
             "wads ref to pin in the stub. Defaults to '@master' (floats with "
             "wads — convenient, occasional CI breakage on bad wads merges). "
-            "Use e.g. '@v0.1.81' to freeze. Must start with '@'."
+            "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "
+            "default JSON transport needs a ref whose uv-ci.yml declares "
+            "WADS_CI_SECRETS_JSON (releases after 0.2.14); for older pins "
+            "use --transport named. Must start with '@'."
         ),
     )
     stub_parser.add_argument(

@@ -207,6 +207,42 @@ def test_main_always_required_and_masks(tmp_path, monkeypatch, capsys):
     assert "PYPI_PASSWORD=pypi-tok" in gh_env.read_text()
 
 
+def test_masks_percent_escape(tmp_path, monkeypatch, capsys):
+    """A value containing literal %25/%0A must register the percent-ESCAPED
+    mask, or the runner's percent-decoding registers the wrong string and the
+    real value stays unmasked (reviewer finding F3)."""
+    from wads.scripts import export_ci_env as mod
+
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "github_env"))
+    monkeypatch.setenv("WADS_ENV_EXTRA", '["DATABASE_URL"]')
+    monkeypatch.setenv(
+        "WADS_SECRETS_JSON",
+        json.dumps({"DATABASE_URL": "postgres://u:p%25w@host/db"}),
+    )
+    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_ALWAYS_REQUIRED", "WADS_ENV_TEST",
+                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+        monkeypatch.delenv(unset, raising=False)
+
+    assert mod.main() == 0
+    out = capsys.readouterr().out
+    assert "::add-mask::postgres://u:p%2525w@host/db" in out
+
+
+def test_malformed_secrets_json_is_redacted(tmp_path, monkeypatch, capsys):
+    """A parse failure of the secrets context must never echo the raw value."""
+    import pytest
+
+    from wads.scripts import export_ci_env as mod
+
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "github_env"))
+    monkeypatch.setenv("WADS_SECRETS_JSON", '{"SECRET_VALUE": "sk-leakme"')  # truncated
+    with pytest.raises(SystemExit):
+        mod.main()
+    err = capsys.readouterr().err
+    assert "sk-leakme" not in err
+    assert "withheld" in err
+
+
 def test_main_fails_on_missing_always_required(tmp_path, monkeypatch, capsys):
     from wads.scripts import export_ci_env as mod
 

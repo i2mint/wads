@@ -5,7 +5,11 @@
 # full inline template `wads/data/github_ci_uv.yml` from i2mint/wads.
 #
 # Pinning: `@master` floats with wads. If you need version stability for
-# a release-sensitive repo, change `@master` to a wads tag (e.g. `@v0.1.81`).
+# a release-sensitive repo, change `@master` to a wads tag (e.g. `@0.2.15`;
+# tags have no `v` prefix). A stub whose `secrets:` block passes the JSON
+# transport (the default below) needs a tag from a release after 0.2.14 —
+# older tags don't declare that secret and GitHub then rejects the
+# workflow at parse time.
 # CI failure does not block a published release — it blocks the publish
 # step itself — so floating master is generally safe.
 #
@@ -35,6 +39,11 @@ jobs:
     # and `}` lines as global log masks. Any secret name works; there is no
     # fixed list to fall outside of. (Cross-owner `secrets: inherit` does not
     # propagate secrets, so it cannot replace this.)
+    #
+    # Note this hands EVERY secret this repo can read — including org-level
+    # ones — to the called workflow. For a minimal secret surface (only the
+    # names you list), regenerate with
+    #   wads-migrate ci-to-stub --transport named
     #
     # *Which* of these become job env vars — and which are required — is
     # driven entirely by [tool.wads.ci.env] in pyproject.toml; nothing is

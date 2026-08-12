@@ -100,7 +100,7 @@ consumer on their next CI run — no per-repo edit, no `wads-migrate` sweep.
 | Tradeoff | Pin strategy |
 |---|---|
 | Float with wads (default) | `@master` — convenient; bad wads merge breaks CI everywhere on next run, but never reaches PyPI (publish is gated on workflow success) |
-| Freeze | `@v0.1.81` (or any tag) — set via `wads-migrate ci-to-stub --pin @v0.1.81`; the repo only picks up wads updates when re-pinned |
+| Freeze | `@0.2.15` (or any later tag; no `v` prefix) — set via `wads-migrate ci-to-stub --pin @0.2.15`; the repo only picks up wads updates when re-pinned. A JSON-transport stub needs a tag whose uv-ci.yml declares `WADS_CI_SECRETS_JSON` (releases after 0.2.14); older pins need `--transport named` |
 
 The "CI failure ≠ broken release" property is what makes `@master` safe by
 default: a botched wads update blocks publication of all downstream packages

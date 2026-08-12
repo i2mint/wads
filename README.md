@@ -143,9 +143,14 @@ name resolves against secrets first, then repository *variables* (the right
 home for non-sensitive values); committed constants can go straight into
 `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing
 fails the build; an undeclared secret is never written to the environment.
-(Older stubs pass secrets by name instead and are limited to the frozen
-superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`; regenerate with
-`wads-migrate ci-to-stub` to switch to the JSON transport.)
+Note the JSON transport hands **every** secret the repo can read — including
+org-level ones — to the reusable workflow (which only exports the declared
+ones). If you want the workflow to receive *only* the names you list, use
+`wads-migrate ci-to-stub --transport named` — that mode is limited to the
+frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, and is also the
+right choice for orgs with very large shared secrets (the serialized context
+must fit in one secret value). Older stubs pass secrets by name the same way;
+regenerate with `wads-migrate ci-to-stub` to switch to the JSON transport.
 
 ### Declare System Dependencies
 

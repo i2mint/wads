@@ -414,21 +414,6 @@ jobs:
           python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
           create-venv: "false"
 
-      # Resolve PYPI_PASSWORD into the job env whichever transport the stub
-      # uses (named pass-through or the WADS_CI_SECRETS_JSON blob), and fail
-      # fast — before the version bump — when it is missing entirely.
-      - name: Export CI Environment
-        uses: i2mint/wads/actions/export-ci-env@master
-        with:
-          required: ${{ needs.setup.outputs.env-required }}
-          test: ${{ needs.setup.outputs.env-test }}
-          extra: ${{ needs.setup.outputs.env-extra }}
-          defaults: ${{ needs.setup.outputs.env-defaults }}
-          aliases: ${{ needs.setup.outputs.env-aliases }}
-          secrets-json: ${{ toJSON(secrets) }}
-          vars-json: ${{ toJSON(vars) }}
-          always-required: '["PYPI_PASSWORD"]'
-
       - name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
@@ -447,10 +432,29 @@ jobs:
           sdist: ${{ needs.setup.outputs.build-sdist }}
           wheel: ${{ needs.setup.outputs.build-wheel }}
 
-      # env.PYPI_PASSWORD is written by the export step above (it resolves the
-      # token from either transport); the direct secrets reference keeps old
-      # named-transport stubs working even while an older published wads (one
-      # without always-required support) is what the export step installed.
+      # Resolve PYPI_PASSWORD into the job env whichever transport the stub
+      # uses (named pass-through or the WADS_CI_SECRETS_JSON blob), failing
+      # with a clear message when it is missing entirely. Deliberately does
+      # NOT export the repo's declared test env vars (empty required/test/
+      # extra): no tests run in this job, and repo code that runs here —
+      # build hooks, version-bump scripts — must not see test secrets. Also
+      # deliberately placed AFTER the version bump and build, so those steps
+      # run with no secrets in the environment at all.
+      - name: Resolve PyPI token
+        uses: i2mint/wads/actions/export-ci-env@master
+        with:
+          required: '[]'
+          test: '[]'
+          extra: '[]'
+          defaults: ${{ needs.setup.outputs.env-defaults }}
+          aliases: ${{ needs.setup.outputs.env-aliases }}
+          secrets-json: ${{ toJSON(secrets) }}
+          always-required: '["PYPI_PASSWORD"]'
+
+      # env.PYPI_PASSWORD is written by the resolve step above (it resolves
+      # the token from either transport); the direct secrets reference keeps
+      # old named-transport stubs working even while an older published wads
+      # (one without always-required support) is what the step installed.
       - name: Publish to PyPI
         uses: i2mint/wads/actions/pypi-publish-uv@master
         with:

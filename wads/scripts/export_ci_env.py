@@ -193,7 +193,8 @@ def export_ci_env(
     missing_test = []
     mask_values = []
 
-    # Literal defaults first, so a secret-backed var of the same name wins.
+    # Literal defaults first; a later secret-backed var of the same name is
+    # skipped as already-seen, so the committed default is authoritative.
     for key, value in defaults.items():
         assignments.append(_gh_env_assignment(str(key), str(value)))
         exported.append(str(key))
@@ -246,14 +247,23 @@ def export_ci_env(
     return ExportPlan(assignments, exported, missing_required, missing_test, mask_values)
 
 
-def _load_json_env(name: str, default):
+def _load_json_env(name: str, default, *, redact: bool = False):
     raw = os.environ.get(name, "").strip()
     if not raw:
         return default
     try:
         return json.loads(raw)
-    except json.JSONDecodeError:
-        print(f"[ERROR] {name} is not valid JSON: {raw!r}", file=sys.stderr)
+    except json.JSONDecodeError as e:
+        if redact:
+            # Never echo the raw value: the secrets/vars contexts arrive
+            # JSON-re-escaped, a form no registered mask matches.
+            print(
+                f"[ERROR] {name} is not valid JSON ({e}; length {len(raw)}); "
+                f"value withheld — it may contain secrets",
+                file=sys.stderr,
+            )
+        else:
+            print(f"[ERROR] {name} is not valid JSON: {raw!r}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -263,11 +273,17 @@ def _emit_masks(mask_values):
     Values pulled out of the transport blob are NOT auto-masked (GitHub only
     masks the blob itself), so every line of every value is registered
     explicitly. Harmlessly re-masks named-transport values.
+
+    The runner percent-decodes workflow-command data (``%25``→``%``,
+    ``%0A``→newline, ``%0D``→CR), so ``%`` must be escaped or a value
+    containing a literal ``%25``/``%0A`` would register the wrong mask string
+    and leave the real value unmasked (CR/LF are already handled by the
+    per-line split).
     """
     for value in mask_values:
         for line in value.splitlines():
             if line.strip():
-                print(f"::add-mask::{line}")
+                print(f"::add-mask::{line.replace('%', '%25')}")
 
 
 def main() -> int:
@@ -278,8 +294,8 @@ def main() -> int:
     extra = _load_json_env("WADS_ENV_EXTRA", [])
     defaults = _load_json_env("WADS_ENV_DEFAULTS", {})
     aliases = _load_json_env("WADS_ENV_ALIASES", {})
-    secrets = _load_json_env("WADS_SECRETS_JSON", {})
-    vars_ = _load_json_env("WADS_VARS_JSON", {})
+    secrets = _load_json_env("WADS_SECRETS_JSON", {}, redact=True)
+    vars_ = _load_json_env("WADS_VARS_JSON", {}, redact=True)
 
     plan = export_ci_env(
         required=list(required) + [n for n in always_required if n not in required],

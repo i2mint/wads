@@ -160,11 +160,13 @@ def test_add_on_json_stub_declares_without_stub_edit(repo, capsys):
     assert "superset" not in out  # no scary warning on the JSON transport
 
 
-def test_add_on_named_stub_warns_outside_superset(named_repo, capsys):
+def test_add_on_named_stub_refuses_outside_superset_edit(named_repo, capsys):
     """Issue #63: a named-transport stub passing an out-of-superset secret
-    cannot start; `add` must say so loudly."""
+    cannot start — `add` must REFUSE the stub edit, not create the broken
+    state and then warn about it."""
     pp = named_repo / "pyproject.toml"
     ci = named_repo / ".github" / "workflows" / "ci.yml"
+    before = ci.read_text()
     rc = add(
         "COSMO_TEST_LEVEL",
         kind="extra",
@@ -173,9 +175,28 @@ def test_add_on_named_stub_warns_outside_superset(named_repo, capsys):
         ci_file=str(ci),
     )
     assert rc == 0
+    assert ci.read_text() == before  # the breaking edit must NOT happen
+    assert "COSMO_TEST_LEVEL" in pp.read_text()  # declaration still recorded
     out = capsys.readouterr().out
-    assert "superset" in out and "FAIL TO START" in out
+    assert "superset" in out and "FAIL TO START" in out and "NOT edited" in out
     assert "--variable" in out  # points at the non-sensitive-value remedy
+
+
+def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
+    """--variable on an inline workflow must warn: inline env blocks read
+    secrets only, so a repo variable would silently never arrive."""
+    tmp = _make_repo(tmp_path, "name: CI\non: [push]\njobs: {}\n")
+    rc = add(
+        "COSMO_TEST_LEVEL",
+        kind="extra",
+        github=False,
+        variable=True,
+        pyproject=str(tmp / "pyproject.toml"),
+        ci_file=str(tmp / ".github" / "workflows" / "ci.yml"),
+    )
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "inline workflow" in out and "defaults" in out
 
 
 def test_add_variable_skips_transport_and_superset(repo, capsys):
@@ -196,6 +217,33 @@ def test_add_variable_skips_transport_and_superset(repo, capsys):
     assert "COSMO_TEST_LEVEL" in pp.read_text()
     out = capsys.readouterr().out
     assert "vars context" in out
+
+
+def test_json_stub_pinned_to_old_tag_warns(capsys):
+    """Reviewer finding F2: a JSON stub pinned to a pre-JSON tag cannot start;
+    migrate_ci_to_stub must warn on any non-master pin with json transport."""
+    stub = migrate_ci_to_stub(pin="@0.2.14")
+    assert "uv-ci.yml@0.2.14" in stub
+    err = capsys.readouterr().err
+    assert "CANNOT START" in err and "--transport named" in err
+    # named transport with a pin is fine — no warning
+    migrate_ci_to_stub(pin="@0.2.14", transport="named")
+    assert "CANNOT START" not in capsys.readouterr().err
+
+
+def test_named_stub_warns_outside_superset_names(tmp_path, capsys):
+    """Named-mode generation warns per out-of-superset name (issue #63)."""
+    (tmp_path / "pyproject.toml").write_text(
+        PYPROJECT.replace("extra_envvars = []", 'extra_envvars = ["COSMO_TEST_LEVEL"]')
+    )
+    wf = tmp_path / ".github" / "workflows"
+    wf.mkdir(parents=True)
+    ci = wf / "ci.yml"
+    ci.write_text("name: x\n")
+    stub = migrate_ci_to_stub(str(ci), transport="named")
+    err = capsys.readouterr().err
+    assert "COSMO_TEST_LEVEL" in err and "startup_failure" in err
+    assert "COSMO_TEST_LEVEL: ${{ secrets.COSMO_TEST_LEVEL }}" in stub
 
 
 def test_repo_from_git_parses_urls(tmp_path, monkeypatch):

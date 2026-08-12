@@ -51,6 +51,12 @@ _KINDS = {
     "extra": "extra_envvars",
 }
 
+# The JSON transport *line* in a stub's `secrets:` block (an actual YAML key,
+# not a mention of the name in a comment).
+_JSON_TRANSPORT_LINE_RE = re.compile(
+    rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:"
+)
+
 
 def _err(msg: str):
     print(f"error: {msg}", file=sys.stderr)
@@ -136,18 +142,19 @@ def add_env_var_to_pyproject(pyproject_path, var_name, secret_name, *, kind="ext
 
 
 def stub_transport_mode(ci_file) -> "str | None":
-    """Classify the repo's ``ci.yml``: ``'json'``, ``'named'``, or ``None``.
+    """Classify the repo's ``ci.yml``: ``'json'``, ``'named'``, ``'inline'``, or ``None``.
 
-    ``None`` means there is no stub to speak of (missing file, or an inline
-    workflow — which reads repo secrets directly and has no transport layer).
+    ``'inline'`` means a workflow that does not call the reusable uv-ci (it
+    reads repo secrets directly and has no transport layer — and no
+    repo-variable fallback either). ``None`` means no ci.yml at all.
     """
     ci_file = Path(ci_file)
     if not ci_file.is_file():
         return None
     text = ci_file.read_text()
     if "uv-ci.yml" not in text:
-        return None
-    return "json" if JSON_TRANSPORT_SECRET in text else "named"
+        return "inline"
+    return "json" if _JSON_TRANSPORT_LINE_RE.search(text) else "named"
 
 
 def add_secret_to_stub(ci_file, secret_name):
@@ -165,7 +172,7 @@ def add_secret_to_stub(ci_file, secret_name):
             "ci.yml is not the wads reusable-workflow stub (inline workflow?); "
             "transport not edited — env is driven by [tool.wads.ci.env]"
         )
-    if JSON_TRANSPORT_SECRET in text:
+    if _JSON_TRANSPORT_LINE_RE.search(text):
         return False, (
             "stub uses the JSON transport — every repo secret is passed "
             "automatically; nothing to edit"
@@ -268,30 +275,37 @@ def add(
                 f"{_KINDS[kind]} — move it by hand if that's intended)"
             )
 
+    mode = stub_transport_mode(ci_file)
     if variable:
         # Repo variables reach the reusable workflow via the caller-resolved
         # `vars` context — no transport edit, no superset concern.
-        print("· transport: repo variables need none (vars context)")
+        if mode == "inline":
+            print(
+                "⚠ transport: this repo uses an inline workflow, which reads "
+                "secrets directly and has NO repo-variable fallback — a repo "
+                "variable will not reach its CI env. Use a committed literal "
+                "in [tool.wads.ci.env].defaults, or migrate to the stub "
+                "(`wads-migrate ci-to-stub`)."
+            )
+        else:
+            print("· transport: repo variables need none (vars context)")
+    elif mode == "named" and secret_name not in DEFAULT_CI_SECRETS:
+        # A named-transport stub may only pass names in the frozen superset —
+        # anything else makes the workflow FAIL TO START (parse-time
+        # startup_failure, issue #63). Refuse the edit that would cause it.
+        print(
+            f"⚠ transport: {secret_name!r} is not in the wads secret superset "
+            f"(wads/ci_secrets.py), and this repo's stub passes secrets by "
+            f"name — passing this one would make the workflow FAIL TO START, "
+            f"so ci.yml was NOT edited (declared in pyproject only). Either "
+            f"regenerate the stub with the JSON transport "
+            f"(`wads-migrate ci-to-stub`), which passes every secret; or, if "
+            f"the value is not sensitive, use "
+            f"`wads-secrets add {var_name} --variable` instead."
+        )
     else:
         stub_changed, reason = add_secret_to_stub(ci_file, secret_name)
         print(f"{'✓' if stub_changed else '·'} transport: {reason}")
-
-        # Only a legacy NAMED-transport stub is limited to the frozen
-        # superset; the JSON transport passes any name, and inline workflows
-        # read repo secrets directly.
-        if (
-            stub_transport_mode(ci_file) == "named"
-            and secret_name not in DEFAULT_CI_SECRETS
-        ):
-            print(
-                f"⚠ {secret_name!r} is not in the wads secret superset "
-                f"(wads/ci_secrets.py), and this repo's stub passes secrets "
-                f"by name — the workflow will FAIL TO START if it passes "
-                f"this one. Regenerate the stub with the JSON transport "
-                f"(`wads-migrate ci-to-stub`), which passes every secret; "
-                f"or, if the value is not sensitive, use "
-                f"`wads-secrets add {var_name} --variable` instead."
-            )
 
     if github:
         _maybe_set_github_value(

@@ -75,9 +75,10 @@ runs:
       # Python code in lockstep — before anything is published.
       env:
         WADS_ACTION_REF: ${{ github.action_ref }}
+        WADS_ACTION_REPO: ${{ github.action_repository || 'i2mint/wads' }}
       run: |
         if [ -n "$WADS_ACTION_REF" ] && [ "$WADS_ACTION_REF" != "master" ]; then
-          python -m pip install --quiet "git+https://github.com/i2mint/wads@${WADS_ACTION_REF}"
+          python -m pip install --quiet "git+https://github.com/${WADS_ACTION_REPO}@${WADS_ACTION_REF}"
         else
           python -m pip install --quiet --upgrade 'wads>=0.1.48'
         fi
