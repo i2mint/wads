@@ -1079,6 +1079,13 @@ def _add_ci_def(
         else:
             # Basic substitutions for static template
             ci_def = ci_def.replace("#PROJECT_NAME#", name)
+            # If the inline uv template is being used without [tool.wads.ci],
+            # its env placeholders must still render (empty test-job blocks,
+            # PROJECT_NAME at workflow level) — a shipped workflow must not
+            # carry literal placeholder lines. No-op for other templates.
+            from wads.ci_config import render_minimal_env_placeholders
+
+            ci_def = render_minimal_env_placeholders(ci_def, name)
 
         # Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo
         # named transport). The current stub template passes the whole secrets

@@ -788,6 +788,7 @@ def migrate_ci_to_uv(
     # When [tool.wads.ci] is absent, CIConfig still provides a sensible project_name
     # from [project], so the env: block always renders something valid.
     substitutions = None
+    ci_config = None
     if os.path.isfile(old_ci):
         repo_dir = os.path.dirname(os.path.abspath(old_ci))
         # Walk up to find pyproject.toml (typical layout: repo/.github/workflows/ci.yml)
@@ -797,9 +798,8 @@ def migrate_ci_to_uv(
                 try:
                     from wads.ci_config import CIConfig
 
-                    substitutions = CIConfig.from_file(
-                        candidate
-                    ).to_ci_template_substitutions()
+                    ci_config = CIConfig.from_file(candidate)
+                    substitutions = ci_config.to_ci_template_substitutions()
                 except Exception:
                     pass
                 break
@@ -812,20 +812,14 @@ def migrate_ci_to_uv(
             new_template = new_template.replace(placeholder, value)
     else:
         # No pyproject.toml found -> minimal default so yaml stays valid
+        from wads.ci_config import render_minimal_env_placeholders
+
         fallback_name = (
             defaults.get("project_name")
             or _extract_project_name_from_ci(old_content)
             or "PLACEHOLDER"
         )
-        new_template = new_template.replace(
-            "#ENV_BLOCK#", f"  PROJECT_NAME: {fallback_name}"
-        )
-        # Without a pyproject there are no declared secret-backed vars, so the
-        # test-job env placeholders render empty. (They are YAML comments in
-        # the raw template, but a shipped workflow shouldn't carry them.)
-        new_template = new_template.replace("#TEST_ENV_BLOCK#\n", "").replace(
-            "#TEST_ENV_VARS#\n", ""
-        )
+        new_template = render_minimal_env_placeholders(new_template, fallback_name)
 
     # Analyze old CI for migration warnings
     warnings = []
@@ -845,6 +839,14 @@ def migrate_ci_to_uv(
         warnings.append(
             "Old CI references setup.cfg - ensure project is migrated to "
             "pyproject.toml first (use: wads-migrate setup-to-pyproject)"
+        )
+    if ci_config is not None and ci_config.env_vars_all:
+        warnings.append(
+            "Secret-backed env vars are now scoped to the test jobs "
+            "(issue #61) - the publish and github-pages jobs no longer see "
+            "them (parity with the reusable workflow). If your docs build "
+            "imports modules that read these vars at import time, make the "
+            "reads tolerate absence or use [tool.wads.ci.env].defaults"
         )
 
     result = new_template

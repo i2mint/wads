@@ -20,6 +20,26 @@ else:
     except ImportError:
         raise ImportError("tomli package required for Python < 3.11")
 
+# Env keys the inline template's windows-validation job sets literally
+# (data/github_ci_uv.yml). The #TEST_ENV_VARS# substitution must not re-emit
+# them: a duplicate key in one YAML mapping fails the workflow at parse time.
+WINDOWS_JOB_LITERAL_ENV = ("PYTHONUTF8", "PYTHONIOENCODING")
+
+
+def render_minimal_env_placeholders(template_text: str, project_name: str) -> str:
+    """Render the inline template's env placeholders without a [tool.wads.ci]
+    config: workflow-level env gets PROJECT_NAME only, and the test-job
+    placeholders render empty (there are no declared secret-backed vars).
+
+    Used by the no-pyproject fallbacks in migration and populate so a shipped
+    workflow never carries literal placeholder lines.
+    """
+    return (
+        template_text.replace("#ENV_BLOCK#", f"  PROJECT_NAME: {project_name}")
+        .replace("#TEST_ENV_BLOCK#\n", "")
+        .replace("#TEST_ENV_VARS#\n", "")
+    )
+
 
 class CIConfig:
     """Represents CI configuration extracted from pyproject.toml."""
@@ -449,33 +469,44 @@ class CIConfig:
 
         return "\n".join(lines)
 
-    def generate_test_env_vars(self, *, indent: int = 6) -> str:
+    def generate_test_env_vars(self, *, indent: int = 6, exclude: tuple = ()) -> str:
         """
-        Generate job-level env entry lines for all secret-backed vars.
+        Generate job-level env entry lines for secret-backed vars.
 
         One `VAR: ${{ secrets.NAME || '' }}` line per name declared in
         required_envvars / test_envvars / extra_envvars, honoring
         [tool.wads.ci.env.secret_aliases] (env-var name -> backing secret
-        name). The `|| ''` keeps the workflow parseable when a secret is
-        unset. Returns '' when no secret-backed vars are declared.
+        name). An unset secret renders as an empty string. Returns '' when
+        nothing is left to emit.
+
+        Names also present in [tool.wads.ci.env].defaults are skipped: the
+        committed default is authoritative (matching the reusable workflow's
+        export-ci-env), and it already reaches every job from workflow level
+        — re-emitting `${{ secrets.X || '' }}` at job level would override
+        the default with '' in exactly the jobs that run tests.
 
         Args:
             indent: leading spaces per line (6 = entries of a job-level
                 `env:` block)
+            exclude: additional names to skip (e.g. keys the target job
+                already sets literally)
         """
         aliases = self.env_secret_aliases
+        skip = set(exclude) | set(self.env_vars_defaults)
         pad = " " * indent
         return "\n".join(
             f"{pad}{var_name}: ${{{{ secrets.{aliases.get(var_name, var_name)} || '' }}}}"
             for var_name in self.env_vars_all
+            if var_name not in skip
         )
 
     def generate_test_env_block(self) -> str:
         """
         Generate a whole job-level `env:` block for the validation job.
 
-        Returns '' when no secret-backed vars are declared, so the rendered
-        job simply has no `env:` key (an empty `env:` mapping is invalid).
+        Returns '' when no secret-backed vars are left to emit, so the
+        rendered job simply has no `env:` key (an empty `env:` mapping is
+        invalid).
         """
         entries = self.generate_test_env_vars()
         if not entries:
@@ -668,7 +699,12 @@ class CIConfig:
         return {
             "#ENV_BLOCK#": self.generate_env_block(),
             "#TEST_ENV_BLOCK#": self.generate_test_env_block(),
-            "#TEST_ENV_VARS#": self.generate_test_env_vars(),
+            # The windows-validation job sets these literally in the template;
+            # re-emitting a declared var of the same name would be a duplicate
+            # key in one mapping, which fails the whole workflow at parse time.
+            "#TEST_ENV_VARS#": self.generate_test_env_vars(
+                exclude=WINDOWS_JOB_LITERAL_ENV
+            ),
             "#ENV_VARS#": self.generate_env_vars_yaml(),
             "#SECRETS_BLOCK#": self.generate_stub_secrets_block(),
             "#PYTHON_VERSIONS#": json.dumps(self.python_versions),

@@ -65,8 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     # Secret-backed env vars from [tool.wads.ci.env] land here (test jobs
     # only, never workflow level — see the note on the top-level env block),
-    # rendered as `KEY: ${{ secrets.NAME || '' }}` so missing secrets don't
-    # fail parsing. The block is omitted entirely when none are declared.
+    # rendered as `KEY: ${{ secrets.NAME || '' }}` (an unset secret renders
+    # as an empty string). The block is omitted entirely when none are
+    # declared. Names also present in env.defaults are not re-emitted here:
+    # the committed default at workflow level stays authoritative (matching
+    # the reusable workflow's export-ci-env). The publish and github-pages
+    # jobs deliberately do not receive these vars either — parity with
+    # uv-ci.yml, where only the test jobs export them.
 #TEST_ENV_BLOCK#
     strategy:
       matrix:
@@ -142,7 +147,9 @@ jobs:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
       # Secret-backed env vars from [tool.wads.ci.env] (see the note on the
-      # validation job). Empty when none are declared.
+      # validation job). Empty when none are declared. Names colliding with
+      # the literals above are skipped — a duplicate key in one mapping
+      # would fail the whole workflow at parse time.
 #TEST_ENV_VARS#
 
     steps:
