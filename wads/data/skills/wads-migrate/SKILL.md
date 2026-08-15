@@ -185,8 +185,12 @@ If a package's source modules read env vars at *import* time (e.g.
 pytest collection will fail during import.
 
 **For inline-CI repos**: add the var name to `[tool.wads.ci.env.test_envvars]`
-in pyproject.toml, then `wads-migrate ci-to-uv` to re-render the workflow with
-a top-level `env:` block wiring `${{ secrets.X || '' }}`. Set the GitHub secret.
+in pyproject.toml, then `wads-migrate ci-to-uv` to re-render the workflow —
+secret-backed vars are wired as `${{ secrets.X || '' }}` into the `env:` of the
+jobs that run tests, never at workflow level (a workflow-level secret is in
+scope for the config job, and GitHub then refuses to emit any job output
+containing its value — a short value silently blanks `python-versions` and
+empties the test matrix, issue #61). Set the GitHub secret.
 
 **For stub repos** (the default since wads 0.1.82): the simplest path is
 
@@ -200,24 +204,42 @@ This (a) declares the var in `[tool.wads.ci.env]` so the `export-ci-env` step
 writes it into the job environment, (b) adds the pass-through line to the stub's
 `secrets:` block so the secret is transported to the reusable workflow, and (c)
 `gh secret set`s the value if `gh` is installed (value from `$VAR_NAME` or
-`--value`). See the **Secrets** section below for the full model. If the secret
-name is outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), the CLI
-warns; either PR wads to widen the superset (one line, ecosystem-wide) or use the
-inline `github_ci_uv.yml` escape valve.
+`--value`). See the **Secrets** section below for the full model. Superset
+limits only apply to stubs on the opt-in *named* transport (the CLI refuses an
+edit that would make such a stub fail to start); the default JSON transport
+accepts any secret name.
 
 Do NOT hand-edit job-level `env:` blocks in ci.yml. Declare via
 `[tool.wads.ci.env]` (or `wads-secrets add`, which is the safe way to do both).
+
+**Not actually sensitive?** A value that is just configuration — a test level,
+a flag, a region — belongs in a repository **variable**, not a secret:
+`wads-secrets add VAR_NAME --variable`. Declared env names fall back to the
+`vars` context automatically on stub repos (inline workflows have no vars
+fallback — use a committed literal in `[tool.wads.ci.env].defaults` there).
+Storing such values as secrets has real costs: GitHub masks every occurrence
+of a secret's value in the logs of each job that receives it, so a short value
+garbles logs — and on inline workflows rendered before the issue-#61 fix, it
+can blank the config job's outputs and silently empty the test matrix.
+`wads-secrets add` warns when a secret value is short enough to be a mask
+hazard.
 
 ## Secrets (two-layer model)
 
 Secrets reach a stub repo's CI through two coordinated layers:
 
-1. **Transport** — the stub's `secrets:` block *passes* named secrets to the
-   reusable workflow. Explicit pass-through is used (NOT `secrets: inherit`,
-   which is unreliable across GitHub accounts). The *universe* of passable
-   names is the superset declared in the wads-side `uv-ci.yml`
-   (`on.workflow_call.secrets`), generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`.
-   Each repo's stub passes only `PYPI_PASSWORD` + the names it actually uses.
+1. **Transport** — the stub's `secrets:` block *passes* secrets to the
+   reusable workflow. The default (since the wads#64 fix) is the **JSON
+   transport**: the whole `secrets` context serialized into the one declared
+   secret `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — any secret
+   name works, there is no fixed list to fall outside of. The opt-in
+   alternative (`wads-migrate ci-to-stub --transport named`) passes each
+   secret by name for a minimal surface; named transport is limited to the
+   superset declared in the wads-side `uv-ci.yml` (`on.workflow_call.secrets`,
+   generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`) — a stub naming
+   anything outside it fails at parse time (issue #63). Either way, explicit
+   pass-through is used, NOT `secrets: inherit` (unreliable across GitHub
+   accounts).
 2. **Env-assignment** — `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
    ENV_VAR≠SECRET_NAME) decides which passed secrets become job env vars. The
@@ -227,9 +249,11 @@ Secrets reach a stub repo's CI through two coordinated layers:
 
 **`wads-secrets add VAR_NAME [SECRET_NAME]`** does both layers (+ `gh secret set`)
 in one step — the recommended way. `wads-secrets list` shows what's configured;
-`wads-secrets superset` prints the allowed names. For a name outside the
-superset: PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits all repos) or use the
-inline `github_ci_uv.yml` escape valve.
+`wads-secrets superset` prints the names a *named*-transport stub may pass
+(irrelevant on the default JSON transport). For a named-transport repo needing
+a name outside the superset: regenerate with the JSON transport
+(`wads-migrate ci-to-stub`), PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits
+all repos), or use `--variable` if the value isn't sensitive.
 
 Publishing runs only on the repo's **default branch**, when validation passes,
 when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.

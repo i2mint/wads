@@ -375,5 +375,102 @@ class TestCIConfigTesting:
         assert CIConfig(data).tests_enabled is False
 
 
+class TestSecretEnvScoping:
+    """Issue #61: secret-backed env vars must never be in scope for the setup
+    job. A workflow-level secret gets registered as a log mask for every job,
+    and GitHub then refuses to emit any job OUTPUT containing its value — a
+    short value (e.g. a test level of "3") silently blanks python-versions
+    and the test matrix expands to nothing."""
+
+    SECRET_CI = {
+        "project": {"name": "demo"},
+        "tool": {
+            "wads": {
+                "ci": {
+                    "env": {
+                        "required_envvars": [],
+                        "test_envvars": ["OPENAI_API_KEY", "HF_TOKEN"],
+                        "extra_envvars": ["COSMO_TEST_LEVEL"],
+                        "defaults": {"PYTHONUNBUFFERED": "1"},
+                        "secret_aliases": {"HF_TOKEN": "HF_WRITE_TOKEN"},
+                    },
+                }
+            }
+        },
+    }
+
+    @pytest.fixture
+    def template_content(self):
+        """Load the inline uv template's raw content."""
+        from wads import data_dir
+
+        return (Path(data_dir) / "github_ci_uv.yml").read_text()
+
+    def _render(self, template_content, pyproject_data):
+        from wads.ci_config import CIConfig
+
+        rendered = template_content
+        substitutions = CIConfig(pyproject_data).to_ci_template_substitutions()
+        for placeholder, value in substitutions.items():
+            rendered = rendered.replace(placeholder, value)
+        return rendered
+
+    def test_workflow_level_env_has_no_secrets(self, template_content):
+        """Workflow-level env carries only PROJECT_NAME + literal defaults."""
+        data = yaml.safe_load(self._render(template_content, self.SECRET_CI))
+        workflow_env = data["env"]
+        assert workflow_env["PROJECT_NAME"] == "demo"
+        assert str(workflow_env["PYTHONUNBUFFERED"]) == "1"
+        assert "secrets." not in str(workflow_env)
+
+    def test_setup_job_sees_no_secrets(self, template_content):
+        """The job that emits python-versions must reference no secret."""
+        import json
+
+        data = yaml.safe_load(self._render(template_content, self.SECRET_CI))
+        setup_job = data["jobs"]["setup"]
+        assert "env" not in setup_job
+        assert "secrets." not in json.dumps(setup_job)
+
+    def test_validation_job_gets_secret_env(self, template_content):
+        """Secret-backed vars land in the validation job's env, aliased
+        names reading their backing secret."""
+        data = yaml.safe_load(self._render(template_content, self.SECRET_CI))
+        env = data["jobs"]["validation"]["env"]
+        assert env["OPENAI_API_KEY"] == "${{ secrets.OPENAI_API_KEY || '' }}"
+        assert env["COSMO_TEST_LEVEL"] == "${{ secrets.COSMO_TEST_LEVEL || '' }}"
+        assert env["HF_TOKEN"] == "${{ secrets.HF_WRITE_TOKEN || '' }}"
+
+    def test_windows_job_gets_secret_env_and_keeps_utf8(self, template_content):
+        """The windows job's existing UTF-8 env entries survive the merge."""
+        data = yaml.safe_load(self._render(template_content, self.SECRET_CI))
+        env = data["jobs"]["windows-validation"]["env"]
+        assert str(env["PYTHONUTF8"]) == "1"
+        assert env["COSMO_TEST_LEVEL"] == "${{ secrets.COSMO_TEST_LEVEL || '' }}"
+
+    def test_no_secret_vars_renders_valid_yaml_without_env(self, template_content):
+        """With nothing declared, the validation job has no env key at all
+        (an empty env: mapping would be invalid), and no placeholder leaks."""
+        rendered = self._render(template_content, {"project": {"name": "demo"}})
+        for placeholder in ("#ENV_BLOCK#", "#TEST_ENV_BLOCK#", "#TEST_ENV_VARS#"):
+            assert placeholder not in rendered
+        data = yaml.safe_load(rendered)
+        assert "env" not in data["jobs"]["validation"]
+        # windows keeps its literal UTF-8 entries even with no secret vars
+        assert str(data["jobs"]["windows-validation"]["env"]["PYTHONUTF8"]) == "1"
+
+    def test_fallback_render_strips_placeholders(self):
+        """migrate_ci_to_uv without a pyproject.toml (string input) must not
+        leak placeholders and must stay valid YAML."""
+        from wads.migration import migrate_ci_to_uv
+
+        result = migrate_ci_to_uv("name: CI\non: push")
+        assert "#ENV_BLOCK#" not in result
+        assert "#TEST_ENV" not in result
+        data = yaml.safe_load(result)
+        assert "env" not in data["jobs"]["validation"]
+        assert "secrets." not in str(data.get("env", {}))
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

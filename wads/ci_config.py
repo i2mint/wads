@@ -423,33 +423,64 @@ class CIConfig:
 
     def generate_env_block(self) -> str:
         """
-        Generate YAML env block for GitHub Actions.
+        Generate the workflow-level YAML env block for GitHub Actions.
 
-        Creates env vars for:
+        Contains ONLY non-secret values:
         - PROJECT_NAME (from config)
-        - Default env vars (from config.env.defaults)
-        - Placeholders for secret-based env vars (set via set-env-vars action)
+        - Literal defaults from [tool.wads.ci.env.defaults]
+
+        Secret-backed vars are deliberately NOT emitted at workflow level: a
+        workflow-level secret is in scope for the setup job too, and GitHub
+        refuses to emit any job OUTPUT containing a secret's value — a short
+        value (e.g. a test level of "3") silently blanks `python-versions`
+        and empties the test matrix (issue #61). Secret-backed vars are
+        scoped to the jobs that run tests via generate_test_env_block /
+        generate_test_env_vars.
 
         Returns:
-            YAML string for env section
+            YAML string for the workflow-level env section
         """
-        lines = []
+        lines = [f"  PROJECT_NAME: {self.project_name}"]
 
-        # Always include PROJECT_NAME
-        lines.append(f"  PROJECT_NAME: {self.project_name}")
-
-        # Add default environment variables (literal values, not secrets)
+        # Add default environment variables (literal values, not secrets —
+        # literals never become log masks, so workflow level is safe)
         for key, value in self.env_vars_defaults.items():
             lines.append(f"  {key}: {value}")
 
-        # Add env vars that come from secrets (using conditional syntax)
-        # These are set conditionally only if the secret exists
-        all_secret_vars = self.env_vars_all
-        for var_name in all_secret_vars:
-            # Use GitHub's conditional syntax to only set if secret exists
-            lines.append(f"  {var_name}: ${{{{ secrets.{var_name} || '' }}}}")
+        return "\n".join(lines)
 
-        return "\n".join(lines) if lines else ""
+    def generate_test_env_vars(self, *, indent: int = 6) -> str:
+        """
+        Generate job-level env entry lines for all secret-backed vars.
+
+        One `VAR: ${{ secrets.NAME || '' }}` line per name declared in
+        required_envvars / test_envvars / extra_envvars, honoring
+        [tool.wads.ci.env.secret_aliases] (env-var name -> backing secret
+        name). The `|| ''` keeps the workflow parseable when a secret is
+        unset. Returns '' when no secret-backed vars are declared.
+
+        Args:
+            indent: leading spaces per line (6 = entries of a job-level
+                `env:` block)
+        """
+        aliases = self.env_secret_aliases
+        pad = " " * indent
+        return "\n".join(
+            f"{pad}{var_name}: ${{{{ secrets.{aliases.get(var_name, var_name)} || '' }}}}"
+            for var_name in self.env_vars_all
+        )
+
+    def generate_test_env_block(self) -> str:
+        """
+        Generate a whole job-level `env:` block for the validation job.
+
+        Returns '' when no secret-backed vars are declared, so the rendered
+        job simply has no `env:` key (an empty `env:` mapping is invalid).
+        """
+        entries = self.generate_test_env_vars()
+        if not entries:
+            return ""
+        return "    env:\n" + entries
 
     def generate_env_vars_yaml(self) -> str:
         """
@@ -636,6 +667,8 @@ class CIConfig:
 
         return {
             "#ENV_BLOCK#": self.generate_env_block(),
+            "#TEST_ENV_BLOCK#": self.generate_test_env_block(),
+            "#TEST_ENV_VARS#": self.generate_test_env_vars(),
             "#ENV_VARS#": self.generate_env_vars_yaml(),
             "#SECRETS_BLOCK#": self.generate_stub_secrets_block(),
             "#PYTHON_VERSIONS#": json.dumps(self.python_versions),

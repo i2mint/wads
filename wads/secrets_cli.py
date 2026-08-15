@@ -55,6 +55,12 @@ _KINDS = {
 # not a mention of the name in a comment).
 _JSON_TRANSPORT_LINE_RE = re.compile(rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:")
 
+# Secret values shorter than this trigger a log-mask-hazard warning on
+# `wads-secrets add`: GitHub masks every occurrence of a secret's value in the
+# logs of any job that receives it, and a short value (a digit, a level) is
+# near-certain to collide with ordinary log text (issue #61).
+_MASK_HAZARD_VALUE_LEN = 8
+
 
 def _err(msg: str):
     print(f"error: {msg}", file=sys.stderr)
@@ -340,6 +346,17 @@ def _maybe_set_github_value(
             f"    gh {kind} set {secret_name} --repo {repo}"
         )
         return
+    if not variable and len(value) < _MASK_HAZARD_VALUE_LEN:
+        print(
+            f"⚠ value: {secret_name!r} is short ({len(value)} chars). GitHub "
+            f"registers every secret value as a log mask in any job that "
+            f"receives it, so a short value garbles logs (each occurrence "
+            f"becomes ***) — and on inline workflows rendered before the "
+            f"issue-#61 fix, it can blank the setup job's outputs and "
+            f"silently empty the test matrix. If this value is not sensitive "
+            f"(a level, a flag, a region), prefer a repository variable:\n"
+            f"    wads-secrets add {var_name} --variable"
+        )
     if set_github_secret(repo, secret_name, value, variable=variable):
         print(f"✓ github: set {kind} {secret_name!r} on {repo}")
 

@@ -820,6 +820,12 @@ def migrate_ci_to_uv(
         new_template = new_template.replace(
             "#ENV_BLOCK#", f"  PROJECT_NAME: {fallback_name}"
         )
+        # Without a pyproject there are no declared secret-backed vars, so the
+        # test-job env placeholders render empty. (They are YAML comments in
+        # the raw template, but a shipped workflow shouldn't carry them.)
+        new_template = new_template.replace("#TEST_ENV_BLOCK#\n", "").replace(
+            "#TEST_ENV_VARS#\n", ""
+        )
 
     # Analyze old CI for migration warnings
     warnings = []

@@ -261,3 +261,42 @@ def test_repo_from_git_parses_urls(tmp_path, monkeypatch):
         lambda *a, **k: "https://github.com/org/repo\n",
     )
     assert m._repo_from_git(".") == "org/repo"
+
+
+def test_short_secret_value_warns_mask_hazard(monkeypatch, capsys):
+    """Issue #61 suggested fix (2): a short secret value is a log-mask
+    hazard — warn and point at --variable, but still set the value (it's a
+    warning, not a refusal)."""
+    import wads.secrets_cli as m
+
+    monkeypatch.setattr(m, "_gh_available", lambda: True)
+    set_calls = []
+    monkeypatch.setattr(
+        m,
+        "set_github_secret",
+        lambda *a, **k: set_calls.append((a, k)) or True,
+    )
+
+    m._maybe_set_github_value(
+        "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", "ci.yml"
+    )
+    out = capsys.readouterr().out
+    assert "mask" in out and "--variable" in out
+    assert len(set_calls) == 1
+
+    # A value of typical credential length does not warn
+    m._maybe_set_github_value(
+        "org/demo", "API_KEY", "API_KEY", "sk-0123456789abcdef", "ci.yml"
+    )
+    assert "mask" not in capsys.readouterr().out
+
+    # Repository variables are never masked, so no warning there
+    m._maybe_set_github_value(
+        "org/demo",
+        "COSMO_TEST_LEVEL",
+        "COSMO_TEST_LEVEL",
+        "3",
+        "ci.yml",
+        variable=True,
+    )
+    assert "mask" not in capsys.readouterr().out
