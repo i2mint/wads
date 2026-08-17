@@ -338,8 +338,7 @@ def _warn_if_mask_hazard(value, var_name, ci_file, *, variable=False):
         )
     else:
         remedy = (
-            f"prefer a repository variable:\n"
-            f"    wads-secrets add {var_name} --variable"
+            f"prefer a repository variable:\n    wads-secrets add {var_name} --variable"
         )
     print(
         f"⚠ value: this is a short secret value ({len(value)} chars). GitHub "
