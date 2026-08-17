@@ -55,6 +55,12 @@ _KINDS = {
 # not a mention of the name in a comment).
 _JSON_TRANSPORT_LINE_RE = re.compile(rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET)}\s*:")
 
+# Secret values shorter than this trigger a log-mask-hazard warning on
+# `wads-secrets add`: GitHub masks every occurrence of a secret's value in the
+# logs of any job that receives it, and a short value (a digit, a level) is
+# near-certain to collide with ordinary log text (issue #61).
+_MASK_HAZARD_VALUE_LEN = 8
+
 
 def _err(msg: str):
     print(f"error: {msg}", file=sys.stderr)
@@ -312,10 +318,49 @@ def add(
     return 0
 
 
+def _warn_if_mask_hazard(value, var_name, ci_file, *, variable=False):
+    """Warn when a short SECRET value is about to be configured (issue #61).
+
+    GitHub registers every secret value as a log mask in each job that
+    receives it, so a short value garbles logs — and on inline workflows
+    rendered before the issue-#61 template fix, it can blank the setup job's
+    outputs and silently empty the test matrix. The remedy differs by CI
+    shape: repo variables never reach an inline workflow's env, so there the
+    advice is a committed literal in [tool.wads.ci.env].defaults.
+    """
+    if variable or not value or len(value) >= _MASK_HAZARD_VALUE_LEN:
+        return
+    if stub_transport_mode(ci_file) == "inline":
+        remedy = (
+            f"put it in [tool.wads.ci.env].defaults as a committed literal "
+            f"(repo variables don't reach inline CI) and re-render with "
+            f"`wads-migrate ci-to-uv`"
+        )
+    else:
+        remedy = (
+            f"prefer a repository variable:\n"
+            f"    wads-secrets add {var_name} --variable"
+        )
+    print(
+        f"⚠ value: this is a short secret value ({len(value)} chars). GitHub "
+        f"registers every secret value as a log mask in any job that "
+        f"receives it, so a short value garbles logs (each occurrence "
+        f"becomes ***) — and on inline workflows rendered before the "
+        f"issue-#61 fix, it can blank the setup job's outputs and silently "
+        f"empty the test matrix. If this value is not sensitive (a level, a "
+        f"flag, a region), {remedy}"
+    )
+
+
 def _maybe_set_github_value(
     repo, secret_name, var_name, value, ci_file, *, variable=False
 ):
     kind = "variable" if variable else "secret"
+    if value is None:
+        value = os.environ.get(var_name) or os.environ.get(secret_name)
+    # Warn as soon as we hold a hazardous value — even when `gh` is absent
+    # and the user will run the `gh secret set` line by hand.
+    _warn_if_mask_hazard(value, var_name, ci_file, variable=variable)
     if not _gh_available():
         print(
             f"· github: `gh` not found; set it manually:\n"
@@ -331,8 +376,6 @@ def _maybe_set_github_value(
             f"    gh {kind} set {secret_name} --repo <org/repo>"
         )
         return
-    if value is None:
-        value = os.environ.get(var_name) or os.environ.get(secret_name)
     if not value:
         print(
             f"· github: no value for {secret_name!r} (pass --value or export "

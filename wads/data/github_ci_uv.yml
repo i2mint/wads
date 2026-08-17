@@ -3,9 +3,14 @@ on: [push, pull_request]
 
 # Workflow-level env vars from [tool.wads.ci.env] in pyproject.toml.
 # Populated by wads-migrate / wads init via template substitution.
-# Includes PROJECT_NAME, literal defaults from env.defaults, and secret-
-# backed vars from required_envvars / test_envvars / extra_envvars,
-# rendered as `KEY: secrets.KEY || ''` so missing secrets don't fail parsing.
+# Contains ONLY non-secret values: PROJECT_NAME and literal defaults from
+# env.defaults. Secret-backed vars (required/test/extra_envvars) are
+# deliberately scoped to the jobs that run tests — see the validation and
+# windows-validation jobs below. A workflow-level secret would be in scope
+# for the setup job too, and GitHub then refuses to emit any job OUTPUT
+# containing its value: a short value (e.g. a test level of "3") silently
+# blanks python-versions, the matrix expands to nothing, and the run fails
+# with no failing step (i2mint/wads#61).
 env:
 #ENV_BLOCK#
 
@@ -58,6 +63,16 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     needs: setup
     runs-on: ubuntu-latest
+    # Secret-backed env vars from [tool.wads.ci.env] land here (test jobs
+    # only, never workflow level — see the note on the top-level env block),
+    # rendered as `KEY: ${{ secrets.NAME || '' }}` (an unset secret renders
+    # as an empty string). The block is omitted entirely when none are
+    # declared. Names also present in env.defaults are not re-emitted here:
+    # the committed default at workflow level stays authoritative (matching
+    # the reusable workflow's export-ci-env). The publish and github-pages
+    # jobs deliberately do not receive these vars either — parity with
+    # uv-ci.yml, where only the test jobs export them.
+#TEST_ENV_BLOCK#
     strategy:
       matrix:
         python-version: ${{ fromJson(needs.setup.outputs.python-versions) }}
@@ -131,6 +146,11 @@ jobs:
       # code reads source files or scripts print non-ASCII characters.
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
+      # Secret-backed env vars from [tool.wads.ci.env] (see the note on the
+      # validation job). Empty when none are declared. Names colliding with
+      # the literals above are skipped — a duplicate key in one mapping
+      # would fail the whole workflow at parse time.
+#TEST_ENV_VARS#
 
     steps:
       - uses: actions/checkout@v6
