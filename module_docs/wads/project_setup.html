@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.project_setup &mdash; wads 0.2.14 documentation</title>
+  <title>wads.project_setup &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -171,8 +171,8 @@ a Claude skill.</p>
 github_available, github_url</p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;valid_pep508&quot;</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">"valid_pep508"</span><span class="p">]</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -256,9 +256,9 @@ Returns True if no repo exists at org/name.</p>
 <span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">is_available_on_pypi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/project_setup.html#is_available_on_pypi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.is_available_on_pypi" title="Link to this definition"></a></dt>
 <dd><p>Check if a package name is unclaimed on PyPI.</p>
 <p>Returns True if the name is available (no package exists with that name).</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span>
 <span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">&quot;zzz_nonexistent_pkg_12345&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_available_on_pypi</span><span class="p">(</span><span class="s2">"zzz_nonexistent_pkg_12345"</span><span class="p">)</span>
 <span class="go">True</span>
 </pre></div>
 </div>

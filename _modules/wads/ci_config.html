@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.14 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,13 +133,13 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.ci_config</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Utilities for reading and applying CI configuration from pyproject.toml.</span>
 
 <span class="sd">This module provides the infrastructure for using pyproject.toml as the single</span>
 <span class="sd">source of truth for CI configuration, eliminating hardcoded project-specific</span>
 <span class="sd">settings in CI workflow files.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -153,35 +153,58 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;tomli package required for Python &lt; 3.11&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"tomli package required for Python &lt; 3.11"</span><span class="p">)</span>
+
+<span class="c1"># Env keys the inline template's windows-validation job sets literally</span>
+<span class="c1"># (data/github_ci_uv.yml). The #TEST_ENV_VARS# substitution must not re-emit</span>
+<span class="c1"># them: a duplicate key in one YAML mapping fails the workflow at parse time.</span>
+<span class="n">WINDOWS_JOB_LITERAL_ENV</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"PYTHONUTF8"</span><span class="p">,</span> <span class="s2">"PYTHONIOENCODING"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="render_minimal_env_placeholders">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.render_minimal_env_placeholders">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_minimal_env_placeholders</span><span class="p">(</span><span class="n">template_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the inline template's env placeholders without a [tool.wads.ci]</span>
+<span class="sd">    config: workflow-level env gets PROJECT_NAME only, and the test-job</span>
+<span class="sd">    placeholders render empty (there are no declared secret-backed vars).</span>
+
+<span class="sd">    Used by the no-pyproject fallbacks in migration and populate so a shipped</span>
+<span class="sd">    workflow never carries literal placeholder lines.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">template_text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#ENV_BLOCK#"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"  PROJECT_NAME: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#TEST_ENV_BLOCK#</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#TEST_ENV_VARS#</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="CIConfig">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CIConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents CI configuration extracted from pyproject.toml.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Represents CI configuration extracted from pyproject.toml."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyproject_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Initialize CI configuration from pyproject.toml data.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            pyproject_data: Parsed TOML data from pyproject.toml</span>
 <span class="sd">            project_name: Project name (defaults to project.name from pyproject)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pyproject_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ci&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">,</span> <span class="p">{})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_project_name</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">project_name</span>
-            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_name"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="CIConfig.from_file">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.from_file">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CIConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"CIConfig"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Load CI configuration from a pyproject.toml file.</span>
 
 <span class="sd">        Args:</span>
@@ -189,12 +212,12 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CIConfig instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+            <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
@@ -202,95 +225,95 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">project_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the project name for CI.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the project name for CI."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_name</span>
 
     <span class="c1"># 🔧 INSTALLER CONFIGURATION</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">installer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the package installer to use in CI (&#39;uv&#39; or &#39;pip&#39;).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;installer&quot;</span><span class="p">,</span> <span class="s2">&quot;uv&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get the package installer to use in CI ('uv' or 'pip')."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"installer"</span><span class="p">,</span> <span class="s2">"uv"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">install_extras</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extras to install in CI, as a comma-separated string for pip&#39;s</span>
+<span class="w">        </span><span class="sd">"""Extras to install in CI, as a comma-separated string for pip's</span>
 <span class="sd">        ``.[extras]`` syntax.</span>
 
 <span class="sd">        Read from ``[tool.wads.ci.install].extras`` (accepts a list or a</span>
-<span class="sd">        comma-separated string). Returns ``&quot;&quot;`` when unset, in which case CI</span>
-<span class="sd">        installs only the package&#39;s core dependencies. Example: a project whose</span>
-<span class="sd">        tests need its heavier extra can set ``extras = &quot;create&quot;`` so the CI job</span>
+<span class="sd">        comma-separated string). Returns ``""`` when unset, in which case CI</span>
+<span class="sd">        installs only the package's core dependencies. Example: a project whose</span>
+<span class="sd">        tests need its heavier extra can set ``extras = "create"`` so the CI job</span>
 <span class="sd">        installs ``.[create]``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">extras</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extras&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">extras</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extras"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extras</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extras</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extras</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extras</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-        <span class="k">return</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
     <span class="c1"># ⚙️ EXECUTION FLOW AND COMMANDS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_pre_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pre-test setup commands.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pre_test&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get pre-test setup commands."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pre_test"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test commands (defaults to [&#39;pytest&#39;]).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;pytest&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Get test commands (defaults to ['pytest'])."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"pytest"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_post_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get post-test commands.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;post_test&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get post-test commands."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"post_test"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_lint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get lint commands.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lint&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get lint commands."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get format commands.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;commands&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get format commands."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"format"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="c1"># 🌍 ENVIRONMENT VARIABLES</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_required</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get required environment variable names (CI fails if not in secrets).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get required environment variable names (CI fails if not in secrets)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"required_envvars"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test environment variable names (CI warns if not in secrets).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get test environment variable names (CI warns if not in secrets)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"test_envvars"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_extra</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get extra/optional environment variable names (no warning if missing).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_envvars&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="w">        </span><span class="sd">"""Get extra/optional environment variable names (no warning if missing)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra_envvars"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all environment variable names (required + test + extra).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get all environment variable names (required + test + extra)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_required</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_test</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_extra</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get default environment variables.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;defaults&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get default environment variables."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"defaults"</span><span class="p">,</span> <span class="p">{})</span>
 
 <div class="viewcode-block" id="CIConfig.stub_secret_names">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.stub_secret_names">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">stub_secret_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">,))</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;GitHub *secret* names the caller stub should pass to the reusable workflow.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stub_secret_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="p">(</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,))</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""GitHub *secret* names the caller stub should pass to the reusable workflow.</span>
 
 <span class="sd">        This is the per-repo transport list (kept small): ``PYPI_PASSWORD`` (for</span>
 <span class="sd">        the publish job) plus the backing secret of every env var the repo</span>
 <span class="sd">        declares in ``[tool.wads.ci.env]`` (required/test/extra), resolved</span>
 <span class="sd">        through ``secret_aliases``. Order-preserving, de-duplicated.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">_dedupe_preserving_order</span>
 
         <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_secret_aliases</span>
@@ -303,7 +326,7 @@
 <div class="viewcode-block" id="CIConfig.generate_stub_secrets_block">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_stub_secrets_block">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_stub_secrets_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the caller-stub ``secrets:`` pass-through for this repo.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Render the caller-stub ``secrets:`` pass-through for this repo."""</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_stub_secrets_passthrough</span>
 
         <span class="k">return</span> <span class="n">render_stub_secrets_passthrough</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">())</span></div>
@@ -311,94 +334,94 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">env_secret_aliases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Map of env-var name -&gt; backing GitHub *secret* name.</span>
+<span class="w">        </span><span class="sd">"""Map of env-var name -&gt; backing GitHub *secret* name.</span>
 
 <span class="sd">        Lets a repo expose a secret under a different env-var name in CI, e.g.</span>
 <span class="sd">        read ``secrets.HF_WRITE_TOKEN`` but expose it to tests as ``HF_TOKEN``::</span>
 
 <span class="sd">            [tool.wads.ci.env.secret_aliases]</span>
-<span class="sd">            HF_TOKEN = &quot;HF_WRITE_TOKEN&quot;</span>
+<span class="sd">            HF_TOKEN = "HF_WRITE_TOKEN"</span>
 
 <span class="sd">        Env-var names not listed here are backed by an identically-named secret.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;env&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;secret_aliases&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"secret_aliases"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="c1"># ✅ CODE QUALITY AND FORMATTING</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">quality_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get code quality tool configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;quality&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get code quality tool configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"quality"</span><span class="p">,</span> <span class="p">{})</span>
 
 <div class="viewcode-block" id="CIConfig.is_ruff_enabled">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_ruff_enabled">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_ruff_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Ruff linter is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ruff&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""Check if Ruff linter is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ruff"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.is_black_enabled">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_black_enabled">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_black_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Black formatter is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""Check if Black formatter is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"black"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.is_mypy_enabled">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.is_mypy_enabled">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_mypy_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Mypy type checker is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mypy&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""Check if Mypy type checker is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quality_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mypy"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
 
     <span class="c1"># 🧪 TEST CONFIGURATION</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">testing_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get testing configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;testing&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get testing configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"testing"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tests_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the CI test step should run.</span>
+<span class="w">        </span><span class="sd">"""Check if the CI test step should run.</span>
 
 <span class="sd">        Defaults to True. Set ``[tool.wads.ci.testing].enabled = false`` to skip</span>
 <span class="sd">        the pytest/doctest step entirely — useful for apps or repos that have</span>
 <span class="sd">        no real test suite and whose modules are not import-clean.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">python_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Python versions to test against.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;python_versions&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;3.10&quot;</span><span class="p">,</span> <span class="s2">&quot;3.12&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Get Python versions to test against."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python_versions"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"3.10"</span><span class="p">,</span> <span class="s2">"3.12"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">pytest_args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get pytest arguments.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pytest_args&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;--tb=short&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Get pytest arguments."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pytest_args"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"--tb=short"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">coverage_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if coverage is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coverage_enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if coverage is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"coverage_enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">coverage_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get minimum coverage threshold (0 = no enforcement).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coverage_threshold&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get minimum coverage threshold (0 = no enforcement)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"coverage_threshold"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">exclude_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test paths to exclude.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exclude_paths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;examples&quot;</span><span class="p">,</span> <span class="s2">&quot;scrap&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Get test paths to exclude."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exclude_paths"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"examples"</span><span class="p">,</span> <span class="s2">"scrap"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_on_windows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if Windows testing is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_on_windows&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if Windows testing is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"test_on_windows"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">system_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies for CI environments (DEPRECATED).</span>
+<span class="w">        </span><span class="sd">"""Get system dependencies for CI environments (DEPRECATED).</span>
 
 <span class="sd">        DEPRECATED: Use [tool.wads.ops.*] format with install-system-deps action instead.</span>
 <span class="sd">        This property is maintained for backward compatibility with legacy format.</span>
@@ -406,340 +429,388 @@
 <span class="sd">        Returns either:</span>
 <span class="sd">        - A list of package names (Ubuntu only)</span>
 <span class="sd">        - A dict with platform keys: ubuntu, macos, windows</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"system_dependencies"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="c1"># 📦 BUILD AND PUBLISH SETTINGS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get build configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get build configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_sdist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if source distribution should be built.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sdist&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if source distribution should be built."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sdist"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_wheel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if wheel should be built.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wheel&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if wheel should be built."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wheel"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get publish configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publish&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get publish configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if publishing is enabled.</span>
+<span class="w">        </span><span class="sd">"""Check if publishing is enabled.</span>
 
 <span class="sd">        When True (the default), the publish job runs on main/master unless the</span>
 <span class="sd">        commit message contains :attr:`publish_skip_ci_marker`. When False, the</span>
 <span class="sd">        publish job is skipped unless the commit message contains</span>
 <span class="sd">        :attr:`publish_marker`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_skip_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Commit-message substring that suppresses publishing.</span>
+<span class="w">        </span><span class="sd">"""Commit-message substring that suppresses publishing.</span>
 
 <span class="sd">        Used when publishing is enabled: a commit whose message contains this</span>
-<span class="sd">        marker skips the publish job. Defaults to ``&quot;[skip ci]&quot;`` (which GitHub</span>
+<span class="sd">        marker skips the publish job. Defaults to ``"[skip ci]"`` (which GitHub</span>
 <span class="sd">        also natively recognises to skip the whole workflow).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_ci_marker&quot;</span><span class="p">,</span> <span class="s2">&quot;[skip ci]&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skip_ci_marker"</span><span class="p">,</span> <span class="s2">"[skip ci]"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Commit-message substring that forces publishing.</span>
+<span class="w">        </span><span class="sd">"""Commit-message substring that forces publishing.</span>
 
 <span class="sd">        Used when publishing is disabled: a commit whose message contains this</span>
-<span class="sd">        marker still runs the publish job. Defaults to ``&quot;[publish]&quot;``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publish_marker&quot;</span><span class="p">,</span> <span class="s2">&quot;[publish]&quot;</span><span class="p">)</span>
+<span class="sd">        marker still runs the publish job. Defaults to ``"[publish]"``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_marker"</span><span class="p">,</span> <span class="s2">"[publish]"</span><span class="p">)</span>
 
     <span class="c1"># 📄 DOCUMENTATION SETTINGS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get documentation configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;docs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get documentation configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"docs"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if documentation generation is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if documentation generation is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get documentation builder name.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;builder&quot;</span><span class="p">,</span> <span class="s2">&quot;epythet&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get documentation builder name."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"builder"</span><span class="p">,</span> <span class="s2">"epythet"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_ignore_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get paths to ignore during documentation generation.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_paths&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;tests/&quot;</span><span class="p">,</span> <span class="s2">&quot;scrap/&quot;</span><span class="p">,</span> <span class="s2">&quot;examples/&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Get paths to ignore during documentation generation."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ignore_paths"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"tests/"</span><span class="p">,</span> <span class="s2">"scrap/"</span><span class="p">,</span> <span class="s2">"examples/"</span><span class="p">])</span>
 
     <span class="c1"># 📊 CODE METRICS SETTINGS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get code metrics configuration.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metrics&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="w">        </span><span class="sd">"""Get code metrics configuration."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metrics"</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if code metrics tracking is enabled.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if code metrics tracking is enabled."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_config_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to umpyre config file.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.github/umpyre-config.yml&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get path to umpyre config file."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"config_path"</span><span class="p">,</span> <span class="s2">".github/umpyre-config.yml"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_storage_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get git branch to store metrics data.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;storage_branch&quot;</span><span class="p">,</span> <span class="s2">&quot;code-metrics&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get git branch to store metrics data."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"storage_branch"</span><span class="p">,</span> <span class="s2">"code-metrics"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_python_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Python version for metrics collection.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;python_version&quot;</span><span class="p">,</span> <span class="s2">&quot;3.10&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get Python version for metrics collection."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python_version"</span><span class="p">,</span> <span class="s2">"3.10"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">metrics_force_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if metrics should run even on workflow failure.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;force_run&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check if metrics should run even on workflow failure."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"force_run"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get system dependencies configuration from [tool.wads.ops.*] sections.</span>
+<span class="w">        </span><span class="sd">"""Get system dependencies configuration from [tool.wads.ops.*] sections.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Dictionary mapping dependency names to their configuration</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ops&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ops"</span><span class="p">,</span> <span class="p">{})</span>
 
 <div class="viewcode-block" id="CIConfig.to_ci_env_block">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_env_block">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_ci_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML env block for GitHub Actions.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for env section</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;env:&quot;</span><span class="p">]</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"env:"</span><span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Add default environment variables</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.to_pre_test_step">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_pre_test_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_pre_test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML step for pre-test commands.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for pre-test step, or None if no commands</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">]</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"      - name: Pre-test Setup"</span><span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"        run: |"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.has_ci_config">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.has_ci_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_ci_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any CI configuration is present.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Check if any CI configuration is present."""</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_system_deps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize system_dependencies to platform dict.</span>
+<span class="w">        </span><span class="sd">"""Normalize system_dependencies to platform dict.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Dict with keys: ubuntu, macos, windows</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_dependencies</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="c1"># Simple list means ubuntu-only</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="p">,</span> <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"ubuntu"</span><span class="p">:</span> <span class="n">deps</span><span class="p">,</span> <span class="s2">"macos"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"windows"</span><span class="p">:</span> <span class="p">[]}</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">,</span> <span class="p">[]),</span>
-                <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;macos&quot;</span><span class="p">,</span> <span class="p">[]),</span>
-                <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">"ubuntu"</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ubuntu"</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">"macos"</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"macos"</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="s2">"windows"</span><span class="p">:</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"windows"</span><span class="p">,</span> <span class="p">[]),</span>
             <span class="p">}</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"ubuntu"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"macos"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"windows"</span><span class="p">:</span> <span class="p">[]}</span>
 
 <div class="viewcode-block" id="CIConfig.generate_env_block">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_block">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate YAML env block for GitHub Actions.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Generate the workflow-level YAML env block for GitHub Actions.</span>
 
-<span class="sd">        Creates env vars for:</span>
+<span class="sd">        Contains ONLY non-secret values:</span>
 <span class="sd">        - PROJECT_NAME (from config)</span>
-<span class="sd">        - Default env vars (from config.env.defaults)</span>
-<span class="sd">        - Placeholders for secret-based env vars (set via set-env-vars action)</span>
+<span class="sd">        - Literal defaults from [tool.wads.ci.env.defaults]</span>
+
+<span class="sd">        Secret-backed vars are deliberately NOT emitted at workflow level: a</span>
+<span class="sd">        workflow-level secret is in scope for the setup job too, and GitHub</span>
+<span class="sd">        refuses to emit any job OUTPUT containing a secret's value — a short</span>
+<span class="sd">        value (e.g. a test level of "3") silently blanks `python-versions`</span>
+<span class="sd">        and empties the test matrix (issue #61). Secret-backed vars are</span>
+<span class="sd">        scoped to the jobs that run tests via generate_test_env_block /</span>
+<span class="sd">        generate_test_env_vars.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            YAML string for env section</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">            YAML string for the workflow-level env section</span>
+<span class="sd">        """</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
 
-        <span class="c1"># Always include PROJECT_NAME</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Add default environment variables (literal values, not secrets)</span>
+        <span class="c1"># Add default environment variables (literal values, not secrets —</span>
+        <span class="c1"># literals never become log masks, so workflow level is safe)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="c1"># Add env vars that come from secrets (using conditional syntax)</span>
-        <span class="c1"># These are set conditionally only if the secret exists</span>
-        <span class="n">all_secret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
-        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">all_secret_vars</span><span class="p">:</span>
-            <span class="c1"># Use GitHub&#39;s conditional syntax to only set if secret exists</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || &#39;&#39; </span><span class="se">}}}}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="CIConfig.generate_test_env_vars">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_test_env_vars">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_test_env_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">exclude</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Generate job-level env entry lines for secret-backed vars.</span>
+
+<span class="sd">        One `VAR: ${{ secrets.NAME || '' }}` line per name declared in</span>
+<span class="sd">        required_envvars / test_envvars / extra_envvars, honoring</span>
+<span class="sd">        [tool.wads.ci.env.secret_aliases] (env-var name -&gt; backing secret</span>
+<span class="sd">        name). An unset secret renders as an empty string. Returns '' when</span>
+<span class="sd">        nothing is left to emit.</span>
+
+<span class="sd">        Names also present in [tool.wads.ci.env].defaults are skipped: the</span>
+<span class="sd">        committed default is authoritative (matching the reusable workflow's</span>
+<span class="sd">        export-ci-env), and it already reaches every job from workflow level</span>
+<span class="sd">        — re-emitting `${{ secrets.X || '' }}` at job level would override</span>
+<span class="sd">        the default with '' in exactly the jobs that run tests.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            indent: leading spaces per line (6 = entries of a job-level</span>
+<span class="sd">                `env:` block)</span>
+<span class="sd">            exclude: additional names to skip (e.g. keys the target job</span>
+<span class="sd">                already sets literally)</span>
+<span class="sd">        """</span>
+        <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_secret_aliases</span>
+        <span class="n">skip</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">)</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="s2">" "</span> <span class="o">*</span> <span class="n">indent</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pad</span><span class="si">}{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span><span class="w"> </span><span class="n">var_name</span><span class="p">)</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CIConfig.generate_test_env_block">
+<a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_test_env_block">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_test_env_block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Generate a whole job-level `env:` block for the validation job.</span>
+
+<span class="sd">        Returns '' when no secret-backed vars are left to emit, so the</span>
+<span class="sd">        rendered job simply has no `env:` key (an empty `env:` mapping is</span>
+<span class="sd">        invalid).</span>
+<span class="sd">        """</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_test_env_vars</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="s2">"    env:</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">entries</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_env_vars_yaml">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_env_vars_yaml">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_env_vars_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML lines for all environment variables to be set from secrets.</span>
 <span class="sd">        This is used in the #ENV_VARS# placeholder in CI templates.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string with conditional env var assignments</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Add env vars that come from secrets (using conditional syntax)</span>
         <span class="c1"># These are set conditionally only if the secret exists</span>
         <span class="n">all_secret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
         <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">all_secret_vars</span><span class="p">:</span>
-            <span class="c1"># Use GitHub&#39;s conditional syntax to only set if secret exists</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || &#39;&#39; </span><span class="se">}}}}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Use GitHub's conditional syntax to only set if secret exists</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">&quot;  # No additional env vars configured&quot;</span></div>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">"  # No additional env vars configured"</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_pre_test_steps">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_pre_test_steps">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linux&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_pre_test_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"linux"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML steps for pre-test commands and system dependencies.</span>
 
 <span class="sd">        Supports legacy [tool.wads.ci.testing.system_dependencies] format.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            platform: Platform identifier (&#39;linux&#39;, &#39;macos&#39;, &#39;windows&#39;)</span>
+<span class="sd">            platform: Platform identifier ('linux', 'macos', 'windows')</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for pre-test steps, or empty string if no commands/deps</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">install_commands</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># ---- LEGACY: Parse system_dependencies (DEPRECATED) ----</span>
         <span class="n">legacy_deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
-        <span class="n">platform_key</span> <span class="o">=</span> <span class="s2">&quot;ubuntu&quot;</span> <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span> <span class="k">else</span> <span class="n">platform</span>
+        <span class="n">platform_key</span> <span class="o">=</span> <span class="s2">"ubuntu"</span> <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">"linux"</span> <span class="k">else</span> <span class="n">platform</span>
         <span class="n">legacy_packages</span> <span class="o">=</span> <span class="n">legacy_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform_key</span><span class="p">,</span> <span class="p">[])</span>
 
         <span class="k">if</span> <span class="n">legacy_packages</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Using deprecated [tool.wads.ci.testing.system_dependencies]. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Please migrate to [tool.wads.ops.*] format with install-system-deps action&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Using deprecated [tool.wads.ci.testing.system_dependencies]. "</span>
+                <span class="sa">f</span><span class="s2">"Please migrate to [tool.wads.ops.*] format with install-system-deps action"</span><span class="p">,</span>
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># For Ubuntu/Linux, use apt-get</span>
-            <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
-                <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;sudo apt-get update&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">"linux"</span><span class="p">:</span>
+                <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"sudo apt-get update"</span><span class="p">)</span>
                 <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;sudo apt-get install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">legacy_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"sudo apt-get install -y </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">legacy_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span>
 
         <span class="c1"># ---- Build YAML steps ----</span>
         <span class="k">if</span> <span class="n">install_commands</span><span class="p">:</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Install System Dependencies&quot;</span><span class="p">)</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"      - name: Install System Dependencies"</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"        run: |"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_commands</span><span class="p">:</span>
-                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Add custom pre-test commands</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">steps</span><span class="p">:</span>
-                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># Empty line between steps</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;      - name: Pre-test Setup&quot;</span><span class="p">)</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;        run: |&quot;</span><span class="p">)</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>  <span class="c1"># Empty line between steps</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"      - name: Pre-test Setup"</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"        run: |"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">commands_pre_test</span><span class="p">:</span>
-                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span> <span class="k">if</span> <span class="n">steps</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span> <span class="k">if</span> <span class="n">steps</span> <span class="k">else</span> <span class="s2">""</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.generate_windows_validation_job">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_windows_validation_job">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_windows_validation_job</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML for Windows validation job.</span>
 
 <span class="sd">        Supports legacy system_dependencies format.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for Windows job, or empty string if disabled</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">""</span>
 
         <span class="n">install_commands</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># ---- LEGACY: Parse system_dependencies (DEPRECATED) ----</span>
         <span class="n">legacy_deps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
-        <span class="n">windows_packages</span> <span class="o">=</span> <span class="n">legacy_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">windows_packages</span> <span class="o">=</span> <span class="n">legacy_deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"windows"</span><span class="p">,</span> <span class="p">[])</span>
 
         <span class="k">if</span> <span class="n">windows_packages</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Using deprecated [tool.wads.ci.testing.system_dependencies]. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Please migrate to [tool.wads.ops.*] format with install-system-deps action&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Using deprecated [tool.wads.ci.testing.system_dependencies]. "</span>
+                <span class="sa">f</span><span class="s2">"Please migrate to [tool.wads.ops.*] format with install-system-deps action"</span><span class="p">,</span>
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># For Windows, use chocolatey</span>
-            <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;choco install -y </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">windows_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">install_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"choco install -y </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">windows_packages</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Build system dependencies step if needed</span>
-        <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="k">if</span> <span class="n">install_commands</span><span class="p">:</span>
-            <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">&quot;      - name: Install System Dependencies</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">&quot;        run: |</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">system_deps_step</span> <span class="o">=</span> <span class="s2">"      - name: Install System Dependencies</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">"        run: |</span><span class="se">\n</span><span class="s2">"</span>
             <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_commands</span><span class="p">:</span>
-                <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"          </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="n">system_deps_step</span> <span class="o">+=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
 
-        <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">  windows-validation:</span>
 <span class="s2">    name: Windows Tests (Informational)</span>
-<span class="s2">    if: &quot;!contains(github.event.head_commit.message, &#39;[skip ci]&#39;)&quot;</span>
+<span class="s2">    if: "!contains(github.event.head_commit.message, '[skip ci]')"</span>
 <span class="s2">    runs-on: windows-latest</span>
-<span class="s2">    continue-on-error: true  # Don&#39;t fail the entire workflow if Windows tests fail</span>
+<span class="s2">    continue-on-error: true  # Don't fail the entire workflow if Windows tests fail</span>
 
 <span class="s2">    steps:</span>
 <span class="s2">      - uses: actions/checkout@v4</span>
@@ -747,7 +818,7 @@
 <span class="s2">      - name: Set up Python 3.10</span>
 <span class="s2">        uses: actions/setup-python@v6</span>
 <span class="s2">        with:</span>
-<span class="s2">          python-version: &quot;3.10&quot;</span>
+<span class="s2">          python-version: "3.10"</span>
 <span class="si">{system_deps_step}</span>
 <span class="s2">      - name: Install Dependencies</span>
 <span class="s2">        uses: i2mint/wads/actions/install-deps@master</span>
@@ -761,9 +832,9 @@
 <span class="s2">          root-dir: ${{{{ env.PROJECT_NAME }}}}</span>
 <span class="s2">          exclude: </span><span class="si">{exclude}</span>
 <span class="s2">          pytest-args: </span><span class="si">{pytest_args}</span>
-<span class="s2">&quot;&quot;&quot;</span>
-        <span class="n">exclude</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">)</span>
-        <span class="n">pytest_args</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">)</span>
+<span class="s2">"""</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">)</span>
+        <span class="n">pytest_args</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">exclude</span><span class="o">=</span><span class="n">exclude</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">,</span> <span class="n">system_deps_step</span><span class="o">=</span><span class="n">system_deps_step</span>
         <span class="p">)</span></div>
@@ -772,17 +843,17 @@
 <div class="viewcode-block" id="CIConfig.generate_github_pages_job">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.generate_github_pages_job">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_github_pages_job</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate YAML for GitHub Pages job.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            YAML string for GitHub Pages job, or empty string if disabled</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_enabled</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">""</span>
 
-        <span class="n">ignore_paths</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">docs_ignore_paths</span><span class="p">)</span>
-        <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">ignore_paths</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">docs_ignore_paths</span><span class="p">)</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"""</span>
 <span class="s2">  github-pages:</span>
 <span class="s2">    name: Publish GitHub Pages</span>
 
@@ -791,7 +862,7 @@
 <span class="s2">      pages: write</span>
 <span class="s2">      id-token: write</span>
 
-<span class="s2">    if: &quot;!contains(github.event.head_commit.message, &#39;[skip ci]&#39;) &amp;&amp; github.ref == format(&#39;refs/heads/</span><span class="se">{{</span><span class="s2">0</span><span class="se">}}</span><span class="s2">&#39;, github.event.repository.default_branch)&quot;</span>
+<span class="s2">    if: "!contains(github.event.head_commit.message, '[skip ci]') &amp;&amp; github.ref == format('refs/heads/</span><span class="se">{{</span><span class="s2">0</span><span class="se">}}</span><span class="s2">', github.event.repository.default_branch)"</span>
 <span class="s2">    needs: publish</span>
 <span class="s2">    runs-on: ubuntu-latest</span>
 
@@ -799,48 +870,55 @@
 <span class="s2">      - uses: i2mint/epythet/actions/publish-github-pages@master</span>
 <span class="s2">        with:</span>
 <span class="s2">          github-token: $</span><span class="se">{{{{</span><span class="s2"> secrets.GITHUB_TOKEN </span><span class="se">}}}}</span>
-<span class="s2">          ignore: &quot;</span><span class="si">{</span><span class="n">ignore_paths</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">          ignore: "</span><span class="si">{</span><span class="n">ignore_paths</span><span class="si">}</span><span class="s2">"</span>
+<span class="s2">"""</span>
         <span class="k">return</span> <span class="n">template</span></div>
 
 
 <div class="viewcode-block" id="CIConfig.to_ci_template_substitutions">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_ci_template_substitutions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_ci_template_substitutions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate all template substitutions for CI workflow generation.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Dictionary mapping placeholder names to their values</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;#ENV_BLOCK#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_block</span><span class="p">(),</span>
-            <span class="s2">&quot;#ENV_VARS#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_vars_yaml</span><span class="p">(),</span>
-            <span class="s2">&quot;#SECRETS_BLOCK#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_stub_secrets_block</span><span class="p">(),</span>
-            <span class="s2">&quot;#PYTHON_VERSIONS#&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_versions</span><span class="p">),</span>
-            <span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">(),</span>
-            <span class="s2">&quot;#EXCLUDE_PATHS#&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">),</span>
-            <span class="s2">&quot;#COVERAGE_ENABLED#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
-            <span class="s2">&quot;#PYTEST_ARGS#&quot;</span><span class="p">:</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">),</span>
-            <span class="s2">&quot;#WINDOWS_VALIDATION_JOB#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_windows_validation_job</span><span class="p">(),</span>
-            <span class="s2">&quot;#GITHUB_PAGES_JOB#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_github_pages_job</span><span class="p">(),</span>
-            <span class="s2">&quot;#BUILD_SDIST#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
-            <span class="s2">&quot;#BUILD_WHEEL#&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
-            <span class="s2">&quot;#PROJECT_NAME#&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
+            <span class="s2">"#ENV_BLOCK#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_block</span><span class="p">(),</span>
+            <span class="s2">"#TEST_ENV_BLOCK#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_test_env_block</span><span class="p">(),</span>
+            <span class="c1"># The windows-validation job sets these literally in the template;</span>
+            <span class="c1"># re-emitting a declared var of the same name would be a duplicate</span>
+            <span class="c1"># key in one mapping, which fails the whole workflow at parse time.</span>
+            <span class="s2">"#TEST_ENV_VARS#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_test_env_vars</span><span class="p">(</span>
+                <span class="n">exclude</span><span class="o">=</span><span class="n">WINDOWS_JOB_LITERAL_ENV</span>
+            <span class="p">),</span>
+            <span class="s2">"#ENV_VARS#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_env_vars_yaml</span><span class="p">(),</span>
+            <span class="s2">"#SECRETS_BLOCK#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_stub_secrets_block</span><span class="p">(),</span>
+            <span class="s2">"#PYTHON_VERSIONS#"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_versions</span><span class="p">),</span>
+            <span class="s2">"#PRE_TEST_STEPS#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">(),</span>
+            <span class="s2">"#EXCLUDE_PATHS#"</span><span class="p">:</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">),</span>
+            <span class="s2">"#COVERAGE_ENABLED#"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">"#PYTEST_ARGS#"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">),</span>
+            <span class="s2">"#WINDOWS_VALIDATION_JOB#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_windows_validation_job</span><span class="p">(),</span>
+            <span class="s2">"#GITHUB_PAGES_JOB#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_github_pages_job</span><span class="p">(),</span>
+            <span class="s2">"#BUILD_SDIST#"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">"#BUILD_WHEEL#"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="s2">"#PROJECT_NAME#"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;CIConfig(project_name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">!r}</span><span class="s2">, has_config=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">has_ci_config</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"CIConfig(project_name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">!r}</span><span class="s2">, has_config=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">has_ci_config</span><span class="p">()</span><span class="si">}</span><span class="s2">)"</span></div>
 
 
 
 <div class="viewcode-block" id="read_ci_config">
 <a class="viewcode-back" href="../../module_docs/wads/ci_config.html#wads.ci_config.read_ci_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Read CI configuration from pyproject.toml.</span>
 
 <span class="sd">    Args:</span>
@@ -851,10 +929,10 @@
 
 <span class="sd">    Usage::</span>
 
-<span class="sd">        config = read_ci_config(&quot;path/to/project&quot;)</span>
+<span class="sd">        config = read_ci_config("path/to/project")</span>
 <span class="sd">        print(config.project_name)        # Project name from pyproject.toml</span>
 <span class="sd">        print(config.python_versions)     # Python versions to test</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span></div>
 
 
@@ -864,23 +942,23 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">get_ci_config_or_defaults</span><span class="p">(</span>
     <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read CI configuration from pyproject.toml, using defaults if file doesn&#39;t exist.</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Read CI configuration from pyproject.toml, using defaults if file doesn't exist.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        pyproject_path: Path to pyproject.toml file or directory containing it</span>
 <span class="sd">        project_name: Default project name if not found in config</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        CIConfig instance with defaults if file doesn&#39;t exist</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        CIConfig instance with defaults if file doesn't exist</span>
+<span class="sd">    """</span>
     <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pyproject_path</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="c1"># Return empty config with defaults</span>
-        <span class="k">return</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">}},</span> <span class="n">project_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">project_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">}},</span> <span class="n">project_name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span></div>
 

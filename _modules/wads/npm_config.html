@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.npm_config &mdash; wads 0.2.14 documentation</title>
+  <title>wads.npm_config &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,21 +133,21 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.npm_config</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Read NPM CI configuration from a ``package.json`` ``wads.ci`` block.</span>
+<span></span><span class="sd">"""Read NPM CI configuration from a ``package.json`` ``wads.ci`` block.</span>
 
 <span class="sd">This is the NPM-side analog of :class:`wads.ci_config.CIConfig` (which reads</span>
 <span class="sd">``[tool.wads.ci]`` from ``pyproject.toml``). npm ignores unknown top-level keys,</span>
-<span class="sd">so wads namespaces its config under a top-level ``&quot;wads&quot;`` key:</span>
+<span class="sd">so wads namespaces its config under a top-level ``"wads"`` key:</span>
 
 <span class="sd">.. code-block:: json</span>
 
 <span class="sd">    {</span>
-<span class="sd">      &quot;name&quot;: &quot;@scope/my-widget&quot;,</span>
-<span class="sd">      &quot;wads&quot;: {</span>
-<span class="sd">        &quot;ci&quot;: {</span>
-<span class="sd">          &quot;subdir&quot;: &quot;js&quot;,</span>
-<span class="sd">          &quot;nodeVersions&quot;: [&quot;20&quot;, &quot;22&quot;, &quot;24&quot;],</span>
-<span class="sd">          &quot;publish&quot;: {&quot;enabled&quot;: false, &quot;marker&quot;: &quot;[publish-npm]&quot;}</span>
+<span class="sd">      "name": "@scope/my-widget",</span>
+<span class="sd">      "wads": {</span>
+<span class="sd">        "ci": {</span>
+<span class="sd">          "subdir": "js",</span>
+<span class="sd">          "nodeVersions": ["20", "22", "24"],</span>
+<span class="sd">          "publish": {"enabled": false, "marker": "[publish-npm]"}</span>
 <span class="sd">        }</span>
 <span class="sd">      }</span>
 <span class="sd">    }</span>
@@ -155,7 +155,7 @@
 <span class="sd">The reusable workflow (``i2mint/wads/.github/workflows/npm-ci.yml``) parses the</span>
 <span class="sd">same block in CI via ``node``; this class is the parsing/validation surface used</span>
 <span class="sd">from Python (tests, ``populate`` validation, inspection tooling).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -166,52 +166,52 @@
 
 <span class="c1">#: Defaults applied when a field is absent from ``wads.ci``.</span>
 <span class="c1">#:</span>
-<span class="c1">#: ``packageManager`` is ``&quot;npm&quot;`` here for the typed Python accessor, but in CI</span>
+<span class="c1">#: ``packageManager`` is ``"npm"`` here for the typed Python accessor, but in CI</span>
 <span class="c1">#: an *absent* field triggers auto-detection (a ``pnpm-lock.yaml`` in the</span>
 <span class="c1">#: package dir selects pnpm); an explicit value always wins. So existing npm</span>
 <span class="c1">#: consumers — no field, no ``pnpm-lock.yaml`` — keep byte-identical behavior.</span>
 <span class="n">NPM_CI_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;subdir&quot;</span><span class="p">:</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;packageManager&quot;</span><span class="p">:</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;nodeVersions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;20&quot;</span><span class="p">,</span> <span class="s2">&quot;22&quot;</span><span class="p">,</span> <span class="s2">&quot;24&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;publishNode&quot;</span><span class="p">:</span> <span class="s2">&quot;24&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;lintCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm run lint --if-present&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;testCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm test --if-present&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;buildCommand&quot;</span><span class="p">:</span> <span class="s2">&quot;npm run build --if-present&quot;</span><span class="p">,</span>
+    <span class="s2">"subdir"</span><span class="p">:</span> <span class="s2">"js"</span><span class="p">,</span>
+    <span class="s2">"packageManager"</span><span class="p">:</span> <span class="s2">"npm"</span><span class="p">,</span>
+    <span class="s2">"nodeVersions"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"20"</span><span class="p">,</span> <span class="s2">"22"</span><span class="p">,</span> <span class="s2">"24"</span><span class="p">],</span>
+    <span class="s2">"publishNode"</span><span class="p">:</span> <span class="s2">"24"</span><span class="p">,</span>
+    <span class="s2">"lintCommand"</span><span class="p">:</span> <span class="s2">"npm run lint --if-present"</span><span class="p">,</span>
+    <span class="s2">"testCommand"</span><span class="p">:</span> <span class="s2">"npm test --if-present"</span><span class="p">,</span>
+    <span class="s2">"buildCommand"</span><span class="p">:</span> <span class="s2">"npm run build --if-present"</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="c1">#: Package managers the reusable npm CI workflow knows how to drive.</span>
-<span class="n">SUPPORTED_PACKAGE_MANAGERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;npm&quot;</span><span class="p">,</span> <span class="s2">&quot;pnpm&quot;</span><span class="p">)</span>
+<span class="n">SUPPORTED_PACKAGE_MANAGERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"npm"</span><span class="p">,</span> <span class="s2">"pnpm"</span><span class="p">)</span>
 
 <span class="c1">#: Defaults for the nested ``wads.ci.publish`` block.</span>
 <span class="n">NPM_PUBLISH_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;[publish-npm]&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;registry&quot;</span><span class="p">:</span> <span class="s2">&quot;https://registry.npmjs.org&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;provenance&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s2">&quot;trustedPublishing&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s2">&quot;access&quot;</span><span class="p">:</span> <span class="s2">&quot;public&quot;</span><span class="p">,</span>
+    <span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">"marker"</span><span class="p">:</span> <span class="s2">"[publish-npm]"</span><span class="p">,</span>
+    <span class="s2">"registry"</span><span class="p">:</span> <span class="s2">"https://registry.npmjs.org"</span><span class="p">,</span>
+    <span class="s2">"provenance"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">"trustedPublishing"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">"access"</span><span class="p">:</span> <span class="s2">"public"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <div class="viewcode-block" id="NpmCIConfig">
 <a class="viewcode-back" href="../../module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NpmCIConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Typed accessors over a ``package.json`` ``wads.ci`` configuration block.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Typed accessors over a ``package.json`` ``wads.ci`` configuration block."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package_json_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">package_json_data</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ci&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publish&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="NpmCIConfig.from_file">
 <a class="viewcode-back" href="../../module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig.from_file">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">package_json_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;NpmCIConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build from a ``package.json`` file path (file or its directory).&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">package_json_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"NpmCIConfig"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build from a ``package.json`` file path (file or its directory)."""</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">package_json_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;package.json&quot;</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">"package.json"</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span></div>
 
@@ -219,7 +219,7 @@
 <div class="viewcode-block" id="NpmCIConfig.has_ci_config">
 <a class="viewcode-back" href="../../module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig.has_ci_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_ci_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;True if the package.json declares a ``wads.ci`` block.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""True if the package.json declares a ``wads.ci`` block."""</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="p">)</span></div>
 
 
@@ -227,78 +227,78 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">package_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
 
     <span class="c1"># --- ci.* ---</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">subdir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subdir&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;subdir&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"subdir"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"subdir"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">package_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The package manager driving install/build (``&quot;npm&quot;`` or ``&quot;pnpm&quot;``).</span>
+<span class="w">        </span><span class="sd">"""The package manager driving install/build (``"npm"`` or ``"pnpm"``).</span>
 
 <span class="sd">        Returns the explicit ``wads.ci.packageManager`` if set, else the default</span>
-<span class="sd">        (``&quot;npm&quot;``). Note the CI workflow additionally *auto-detects* pnpm from a</span>
+<span class="sd">        (``"npm"``). Note the CI workflow additionally *auto-detects* pnpm from a</span>
 <span class="sd">        ``pnpm-lock.yaml`` when the field is absent — this accessor reports only</span>
 <span class="sd">        the declared value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;packageManager&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;packageManager&quot;</span><span class="p">])</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"packageManager"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"packageManager"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodeVersions&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;nodeVersions&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodeVersions"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"nodeVersions"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_node</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;publishNode&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;publishNode&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publishNode"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"publishNode"</span><span class="p">]))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">lint_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lintCommand&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;lintCommand&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lintCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"lintCommand"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;testCommand&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;testCommand&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"testCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"testCommand"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;buildCommand&quot;</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;buildCommand&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"buildCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"buildCommand"</span><span class="p">])</span>
 
     <span class="c1"># --- ci.publish.* ---</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;enabled&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"enabled"</span><span class="p">]))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;marker&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;marker&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"marker"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"marker"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">registry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;registry&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;registry&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"registry"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"registry"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">provenance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;provenance&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;provenance&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"provenance"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"provenance"</span><span class="p">]))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">trusted_publishing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="s2">&quot;trustedPublishing&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;trustedPublishing&quot;</span><span class="p">]</span>
+                <span class="s2">"trustedPublishing"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"trustedPublishing"</span><span class="p">]</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">access</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;access&quot;</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;access&quot;</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"access"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"access"</span><span class="p">])</span></div>
 
 </pre></div>
 

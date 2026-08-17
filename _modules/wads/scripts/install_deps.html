@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.install_deps &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scripts.install_deps &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,7 +134,7 @@
              
   <h1>Source code for wads.scripts.install_deps</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="sd">Install Dependencies</span>
 
 <span class="sd">This script installs Python dependencies from various sources including</span>
@@ -147,7 +147,7 @@
 <span class="sd">    --pypi-packages PKG1 PKG2...  Python packages to install</span>
 <span class="sd">    --dependency-files FILE1,FILE2,...  Dependency files to install from</span>
 <span class="sd">    --extras EXTRA1,EXTRA2,...  Extras to install from pyproject.toml</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -157,83 +157,83 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_using_uv</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True when we should drive installs via ``uv pip`` (pip is missing).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""True when we should drive installs via ``uv pip`` (pip is missing)."""</span>
     <span class="n">has_pip</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;import pip&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"import pip"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span><span class="o">.</span><span class="n">returncode</span>
         <span class="o">==</span> <span class="mi">0</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="ow">not</span> <span class="n">has_pip</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;uv&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">has_pip</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"uv"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_pip_cmd</span><span class="p">(</span><span class="n">subcommand</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a pip-equivalent command for the current interpreter.</span>
+<span class="w">    </span><span class="sd">"""Build a pip-equivalent command for the current interpreter.</span>
 
 <span class="sd">    Returns ``[python, -m, pip, &lt;subcommand&gt;]`` when pip is present in the</span>
 <span class="sd">    running interpreter; otherwise (e.g. minimal uv-managed venvs) returns</span>
 <span class="sd">    ``[uv, pip, &lt;subcommand&gt;, --python, &lt;interpreter&gt;]`` so the install</span>
 <span class="sd">    targets *this* venv. ``--python`` must follow the subcommand for uv.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">_using_uv</span><span class="p">():</span>
-        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">,</span> <span class="s2">&quot;--python&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_upgrade_pip</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Upgrade pip when pip is available; no-op under the uv fallback.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Upgrade pip when pip is available; no-op under the uv fallback."""</span>
     <span class="k">if</span> <span class="n">_using_uv</span><span class="p">():</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">&quot;install&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;--upgrade&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">"install"</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"--upgrade"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] pip install failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] pip install failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_pip_install</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run pip install with the given arguments.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run pip install with the given arguments."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">&quot;install&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
+            <span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">"install"</span><span class="p">)</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span>
             <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] pip install failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] pip install failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="install_pypi_packages">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.install_pypi_packages">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">install_pypi_packages</span><span class="p">(</span><span class="n">packages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Install packages from PyPI.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Install packages from PyPI."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">packages</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Upgrading pip&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Upgrading pip"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_upgrade_pip</span><span class="p">():</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing packages: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">packages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Installing packages: </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">packages</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">(</span><span class="n">packages</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># Show installed versions</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Installed package versions:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installed package versions:"</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">packages</span><span class="p">:</span>
         <span class="c1"># Extract package name (remove version specifiers)</span>
-        <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">pkg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">pkg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"["</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"&gt;"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">&quot;show&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">pkg_name</span><span class="p">],</span>
+            <span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">"show"</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">pkg_name</span><span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Name:&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Version:&quot;</span><span class="p">):</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Name:"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Version:"</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -245,11 +245,11 @@
     <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">extras</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Install from dependency files.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Install from dependency files."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Upgrading pip&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Upgrading pip"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_upgrade_pip</span><span class="p">():</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -258,46 +258,46 @@
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path_str</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[WARN] Dependency file not found: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[WARN] Dependency file not found: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">continue</span>
 
-        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing from requirements file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)]):</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".txt"</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Installing from requirements file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">"-r"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)]):</span>
                 <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.toml&quot;</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing from pyproject.toml: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".toml"</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Installing from pyproject.toml: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">extras</span><span class="p">:</span>
-                <span class="n">extras_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extras</span><span class="p">)</span>
-                <span class="n">install_spec</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;.[</span><span class="si">{</span><span class="n">extras_str</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">extras_str</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extras</span><span class="p">)</span>
+                <span class="n">install_spec</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">".[</span><span class="si">{</span><span class="n">extras_str</span><span class="si">}</span><span class="s2">]"</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">install_spec</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
+                <span class="n">install_spec</span> <span class="o">=</span> <span class="s2">"."</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="n">install_spec</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">"-e"</span><span class="p">,</span> <span class="n">install_spec</span><span class="p">]):</span>
                 <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.cfg&quot;</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing from setup.cfg: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".cfg"</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Installing from setup.cfg: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="c1"># For backward compatibility, use isee if available</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">import</span><span class="w"> </span><span class="nn">isee</span>
 
                 <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;isee&quot;</span><span class="p">,</span> <span class="s2">&quot;install-requires&quot;</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"isee"</span><span class="p">,</span> <span class="s2">"install-requires"</span><span class="p">],</span>
                     <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;isee&quot;</span><span class="p">,</span> <span class="s2">&quot;tests-require&quot;</span><span class="p">],</span>
+                    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"isee"</span><span class="p">,</span> <span class="s2">"tests-require"</span><span class="p">],</span>
                     <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_run_pip_install</span><span class="p">([</span><span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">]):</span>
                     <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="c1"># Show all installed packages</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Installed Python packages:&quot;</span><span class="p">)</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">&quot;list&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installed Python packages:"</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_cmd</span><span class="p">(</span><span class="s2">"list"</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">success</span></div>
 
@@ -306,22 +306,22 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Main entry point."""</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Install Python dependencies&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Install Python dependencies"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--pypi-packages&quot;</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Python packages to install (space-separated)&quot;</span><span class="p">,</span>
+        <span class="s2">"--pypi-packages"</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Python packages to install (space-separated)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--dependency-files&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Comma-separated paths to dependency files&quot;</span><span class="p">,</span>
+        <span class="s2">"--dependency-files"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Comma-separated paths to dependency files"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--extras&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Comma-separated extras to install from pyproject.toml&quot;</span><span class="p">,</span>
+        <span class="s2">"--extras"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Comma-separated extras to install from pyproject.toml"</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -335,8 +335,8 @@
 
     <span class="c1"># Install from dependency files</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dependency_files</span><span class="p">:</span>
-        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">dependency_files</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
-        <span class="n">extras</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">extras</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">extras</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">dependency_files</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)]</span>
+        <span class="n">extras</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">extras</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)]</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">extras</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">install_from_dependency_files</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">extras</span><span class="p">):</span>
             <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -344,7 +344,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

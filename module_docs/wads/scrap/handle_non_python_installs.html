@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scrap.handle_non_python_installs &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scrap.handle_non_python_installs &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -156,8 +156,8 @@ commands, in the form of a list of strings that can be passed to <code class="do
 executed.
 :return: A string that can included in a github actions ci.yml file,
 which will contain the os specific commands to install the package.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_install_instructions_for_ci</span><span class="p">({</span><span class="s1">&#39;Linux&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;pip install .&#39;</span><span class="p">]})</span>
-<span class="go">&#39;- name: Install on Linux\n  run: |\n    pip install .\n&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_install_instructions_for_ci</span><span class="p">({</span><span class="s1">'Linux'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'pip install .'</span><span class="p">]})</span>
+<span class="go">'- name: Install on Linux\n  run: |\n    pip install .\n'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -176,8 +176,8 @@ executed.
 :return: A string that can included in the “How to install” section of a README.md,
 which will contain the instructions for the user to install the package,
 listing the commands for each OS.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_install_instructions_for_readme</span><span class="p">({</span><span class="s1">&#39;Linux&#39;</span><span class="p">:</span> <span class="s1">&#39;pip install .&#39;</span><span class="p">})</span>
-<span class="go">&#39;### Linux\n\n```\npip install .\n```\n&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_install_instructions_for_readme</span><span class="p">({</span><span class="s1">'Linux'</span><span class="p">:</span> <span class="s1">'pip install .'</span><span class="p">})</span>
+<span class="go">'### Linux\n\n```\npip install .\n```\n'</span>
 </pre></div>
 </div>
 </dd></dl>

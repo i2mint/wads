@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.repo_audit &mdash; wads 0.2.14 documentation</title>
+  <title>wads.repo_audit &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -154,7 +154,7 @@ with the specialist skill (or CLI) that owns the fix.</p>
 <p>This module is the <strong>single source of truth</strong> for the ecosystem’s “what is a
 modern wads repo” classification. Import it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.repo_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">audit_repo</span>
-<span class="n">report</span> <span class="o">=</span> <span class="n">audit_repo</span><span class="p">(</span><span class="s2">&quot;/path/to/repo&quot;</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>   <span class="c1"># dict: facts + findings</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">audit_repo</span><span class="p">(</span><span class="s2">"/path/to/repo"</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>   <span class="c1"># dict: facts + findings</span>
 </pre></div>
 </div>
 <p>or run it as a script / module:</p>
@@ -186,8 +186,8 @@ that defers to this module.</p>
 <dd><p>Audit a repo and return the machine-readable report dict.</p>
 <p>This is the importable entry point (the SSOT classifier). It returns the
 same structure as <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">wads.repo_audit</span> <span class="pre">&lt;repo&gt;</span> <span class="pre">--json</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;repo&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">HIGH</span><span class="o">/</span><span class="n">MEDIUM</span><span class="o">/</span><span class="n">LOW</span> <span class="n">counts</span><span class="p">},</span>
- <span class="s2">&quot;findings&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="s2">&quot;facts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"repo"</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="p">{</span><span class="n">HIGH</span><span class="o">/</span><span class="n">MEDIUM</span><span class="o">/</span><span class="n">LOW</span> <span class="n">counts</span><span class="p">},</span>
+ <span class="s2">"findings"</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="s2">"facts"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">network=False</span></code> skips everything that leaves the machine (<code class="docutils literal notranslate"><span class="pre">gh</span></code> + PyPI),

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.util &mdash; wads 0.2.14 documentation</title>
+  <title>wads.util &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -172,11 +172,11 @@ object name.</p>
 <dd class="field-odd"><p><strong>ImportError</strong> – If the object cannot be found in any of the specified modules.</p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="n">find_obj</span><span class="p">(</span><span class="s1">&#39;importlib.resources files&#39;</span><span class="p">,</span> <span class="s1">&#39;importlib_resources files&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="n">find_obj</span><span class="p">(</span><span class="s1">'importlib.resources files'</span><span class="p">,</span> <span class="s1">'importlib_resources files'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">callable</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">find_obj</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="s1">&#39;importlib no_such_obj&#39;</span><span class="p">,</span> <span class="s1">&#39;no_such_pkg x&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;wave.no_such_module&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="s1">'importlib no_such_obj'</span><span class="p">,</span> <span class="s1">'no_such_pkg x'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'wave.no_such_module'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">]</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="c">...</span>
@@ -214,15 +214,15 @@ object name.</p>
 <p>This is meant for very simple situations. A more powerful and fast function could be made by
 using regular expressions and a map to map “codes” to “effects”.</p>
 <p>Try this:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="s2">&quot;This is [[the section]] that is [[highlighted]].&quot;</span><span class="p">))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="s2">"This is [[the section]] that is [[highlighted]]."</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Above, “reverse” is used as the default effect.
 But You can change that to bold blue ink on yellow background. That’s three effects:
 1 (for bold), 34, for the blue foreground (ink), and 43 for the “yellow” (more like brown)
 background (paper).</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_string</span> <span class="o">=</span> <span class="s2">&quot;This is [[the section]] that is [[highlighted]].&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="n">my_string</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1;34;43m&quot;</span><span class="p">))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_string</span> <span class="o">=</span> <span class="s2">"This is [[the section]] that is [[highlighted]]."</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">highlight</span><span class="p">(</span><span class="n">my_string</span><span class="p">,</span> <span class="s2">"</span><span class="se">\033</span><span class="s2">[1;34;43m"</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>033[whaaaa?!? Yeah… well, either you do it that has-no-life-outside-unicode way.
@@ -234,7 +234,7 @@ or [this tutorial](<a class="reference external" href="https://www.lihaoyi.com/p
 that dict and allowing you access through attributes too).</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">fc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">fc</span><span class="p">)[</span><span class="mi">20</span><span class="p">:</span><span class="mi">25</span><span class="p">]</span>
-<span class="go">[&#39;magenta&#39;, &#39;cyan&#39;, &#39;gray&#39;, &#39;dark_gray&#39;, &#39;dark_red&#39;]</span>
+<span class="go">['magenta', 'cyan', 'gray', 'dark_gray', 'dark_red']</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -274,11 +274,11 @@ that dict and allowing you access through attributes too).</p>
 </ul>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec_finder</span> <span class="o">=</span> <span class="n">import_obj</span><span class="p">(</span><span class="s1">&#39;importlib.util&#39;</span><span class="p">,</span> <span class="s1">&#39;find_spec&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec_finder</span> <span class="o">=</span> <span class="n">import_obj</span><span class="p">(</span><span class="s1">'importlib.util'</span><span class="p">,</span> <span class="s1">'find_spec'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">callable</span><span class="p">(</span><span class="n">spec_finder</span><span class="p">)</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec_finder</span><span class="o">.</span><span class="vm">__module__</span>
-<span class="go">&#39;importlib.util&#39;</span>
+<span class="go">'importlib.util'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -288,22 +288,22 @@ that dict and allowing you access through attributes too).</p>
 <span class="sig-prename descclassname"><span class="pre">wads.util.</span></span><span class="sig-name descname"><span class="pre">mk_import_root_replacer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_to_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#mk_import_root_replacer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.util.mk_import_root_replacer" title="Link to this definition"></a></dt>
 <dd><p>Make a function that does multiple import name replacements.</p>
 <p>For a use case, see replace_import_names. This is just a helper function.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">&#39;foo&#39;</span><span class="p">:</span> <span class="s1">&#39;FOO&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">:</span> <span class="s1">&#39;BAR&#39;</span><span class="p">})</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">'foo'</span><span class="p">:</span> <span class="s1">'FOO'</span><span class="p">,</span> <span class="s1">'bar'</span><span class="p">:</span> <span class="s1">'BAR'</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foo import BLAH&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from FOO import BLAH&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foo.bar import BLAH&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from FOO.bar import BLAH&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import bar&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;import BAR&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">'from foo import BLAH'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'from FOO import BLAH'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">'from foo.bar import BLAH'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'from FOO.bar import BLAH'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">'import bar'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'import BAR'</span>
 </pre></div>
 </div>
 <p>Partial matches are not replaced (that’s a good thing!):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import barmitzvah as oy&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;import barmitzvah as oy&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from foobar import hello&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;from foobar import hello&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">'import barmitzvah as oy'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'import barmitzvah as oy'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">replace</span><span class="p">(</span><span class="s1">'from foobar import hello'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'from foobar import hello'</span>
 </pre></div>
 </div>
 <p>Yes, and it works with dotpaths:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">&#39;where.it.was&#39;</span><span class="p">:</span> <span class="s1">&#39;where.it.is.now&#39;</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;import where.it.was as here&#39;</span><span class="p">)</span>
-<span class="go">&#39;import where.it.is.now as here&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">mk_import_root_replacer</span><span class="p">({</span><span class="s1">'where.it.was'</span><span class="p">:</span> <span class="s1">'where.it.is.now'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span><span class="p">(</span><span class="s1">'import where.it.was as here'</span><span class="p">)</span>
+<span class="go">'import where.it.is.now as here'</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -320,9 +320,9 @@ that dict and allowing you access through attributes too).</p>
 <dt class="sig sig-object py" id="wads.util.mk_replacer_from_dict">
 <span class="sig-prename descclassname"><span class="pre">wads.util.</span></span><span class="sig-name descname"><span class="pre">mk_replacer_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_to_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/util.html#mk_replacer_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.util.mk_replacer_from_dict" title="Link to this definition"></a></dt>
 <dd><p>Make a function that does multiple replacements (in a single pass).</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">mk_replacer_from_dict</span><span class="p">({</span><span class="s1">&#39;is&#39;</span><span class="p">:</span> <span class="s1">&#39;are&#39;</span><span class="p">,</span> <span class="s1">&#39;life&#39;</span><span class="p">:</span> <span class="s1">&#39;butterflies&#39;</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">(</span><span class="s2">&quot;There is no life in the void.&quot;</span><span class="p">)</span>
-<span class="go">&#39;There are no butterflies in the void.&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">mk_replacer_from_dict</span><span class="p">({</span><span class="s1">'is'</span><span class="p">:</span> <span class="s1">'are'</span><span class="p">,</span> <span class="s1">'life'</span><span class="p">:</span> <span class="s1">'butterflies'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">(</span><span class="s2">"There is no life in the void."</span><span class="p">)</span>
+<span class="go">'There are no butterflies in the void.'</span>
 </pre></div>
 </div>
 <dl class="field-list simple">

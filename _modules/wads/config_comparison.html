@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.config_comparison &mdash; wads 0.2.14 documentation</title>
+  <title>wads.config_comparison &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.config_comparison</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Compare project configuration files (pyproject.toml, setup.cfg, MANIFEST.in) against templates.</span>
 
 <span class="sd">This module provides tools to analyze project configurations and identify</span>
@@ -149,10 +149,10 @@
 
 <span class="sd">Example:</span>
 <span class="sd">    &gt;&gt;&gt; from wads.config_comparison import summarize_config_status  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; status = summarize_config_status(&#39;/path/to/project&#39;)  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; if status[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
-<span class="sd">    ...     print(status[&#39;recommendations&#39;])  # doctest: +SKIP</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; status = summarize_config_status('/path/to/project')  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; if status['needs_attention']:  # doctest: +SKIP</span>
+<span class="sd">    ...     print(status['recommendations'])  # doctest: +SKIP</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
@@ -177,16 +177,16 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_nested_get</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Get value from nested dict using dot-separated path.</span>
 
-<span class="sd">    &gt;&gt;&gt; d = {&#39;a&#39;: {&#39;b&#39;: {&#39;c&#39;: 1}}}</span>
-<span class="sd">    &gt;&gt;&gt; _nested_get(d, &#39;a.b.c&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = {'a': {'b': {'c': 1}}}</span>
+<span class="sd">    &gt;&gt;&gt; _nested_get(d, 'a.b.c')</span>
 <span class="sd">    1</span>
-<span class="sd">    &gt;&gt;&gt; _nested_get(d, &#39;a.b.x&#39;, &#39;missing&#39;)</span>
-<span class="sd">    &#39;missing&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="sd">    &gt;&gt;&gt; _nested_get(d, 'a.b.x', 'missing')</span>
+<span class="sd">    'missing'</span>
+<span class="sd">    """</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
     <span class="n">current</span> <span class="o">=</span> <span class="n">d</span>
     <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -198,17 +198,17 @@
     <span class="k">return</span> <span class="n">current</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_flatten_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_flatten_dict</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">parent_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Flatten nested dict into dot-separated keys.</span>
 
-<span class="sd">    &gt;&gt;&gt; d = {&#39;a&#39;: {&#39;b&#39;: 1, &#39;c&#39;: 2}, &#39;d&#39;: 3}</span>
+<span class="sd">    &gt;&gt;&gt; d = {'a': {'b': 1, 'c': 2}, 'd': 3}</span>
 <span class="sd">    &gt;&gt;&gt; sorted(_flatten_dict(d).items())</span>
-<span class="sd">    [(&#39;a.b&#39;, 1), (&#39;a.c&#39;, 2), (&#39;d&#39;, 3)]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    [('a.b', 1), ('a.c', 2), ('d', 3)]</span>
+<span class="sd">    """</span>
     <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">new_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent_key</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">parent_key</span> <span class="k">else</span> <span class="n">k</span>
+        <span class="n">new_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parent_key</span><span class="si">}{</span><span class="n">sep</span><span class="si">}{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">parent_key</span> <span class="k">else</span> <span class="n">k</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="p">:</span>
             <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_dict</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">new_key</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
@@ -219,7 +219,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_missing_sections</span><span class="p">(</span>
     <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find top-level and nested sections in template missing from actual.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Find top-level and nested sections in template missing from actual."""</span>
     <span class="n">flat_template</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
     <span class="n">flat_actual</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span>
 
@@ -230,9 +230,9 @@
             <span class="k">continue</span>
 
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flat_actual</span><span class="p">:</span>
-            <span class="c1"># Only report if it&#39;s a meaningful section (not empty placeholders)</span>
+            <span class="c1"># Only report if it's a meaningful section (not empty placeholders)</span>
             <span class="n">template_val</span> <span class="o">=</span> <span class="n">flat_template</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">template_val</span> <span class="ow">and</span> <span class="n">template_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">{}):</span>
+            <span class="k">if</span> <span class="n">template_val</span> <span class="ow">and</span> <span class="n">template_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="p">[],</span> <span class="p">{}):</span>
                 <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">missing</span>
@@ -241,7 +241,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_outdated_sections</span><span class="p">(</span>
     <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find sections in actual that might be outdated or unnecessary.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Find sections in actual that might be outdated or unnecessary."""</span>
     <span class="n">flat_template</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
     <span class="n">flat_actual</span> <span class="o">=</span> <span class="n">_flatten_dict</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span>
 
@@ -253,10 +253,10 @@
 
         <span class="c1"># Check for common outdated patterns</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flat_template</span><span class="p">:</span>
-            <span class="c1"># Check if it&#39;s a known legacy field</span>
+            <span class="c1"># Check if it's a known legacy field</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
                 <span class="n">legacy</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">legacy</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;setup.py&quot;</span><span class="p">,</span> <span class="s2">&quot;setup.cfg&quot;</span><span class="p">,</span> <span class="s2">&quot;manifest&quot;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">legacy</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"setup.py"</span><span class="p">,</span> <span class="s2">"setup.cfg"</span><span class="p">,</span> <span class="s2">"manifest"</span><span class="p">]</span>
             <span class="p">):</span>
                 <span class="n">outdated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
@@ -266,34 +266,34 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_generate_recommendations</span><span class="p">(</span>
     <span class="n">actual</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">missing</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate actionable recommendations.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Generate actionable recommendations."""</span>
     <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;Some template sections are missing from your pyproject.toml.&quot;</span>
+            <span class="s2">"Some template sections are missing from your pyproject.toml."</span>
         <span class="p">)</span>
 
         <span class="c1"># Check for specific important missing sections</span>
         <span class="n">critical_missing</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">m</span>
             <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">missing</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">crit</span> <span class="ow">in</span> <span class="n">m</span> <span class="k">for</span> <span class="n">crit</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;tool.ruff&quot;</span><span class="p">,</span> <span class="s2">&quot;tool.pytest&quot;</span><span class="p">,</span> <span class="s2">&quot;build-system&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">crit</span> <span class="ow">in</span> <span class="n">m</span> <span class="k">for</span> <span class="n">crit</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"tool.ruff"</span><span class="p">,</span> <span class="s2">"tool.pytest"</span><span class="p">,</span> <span class="s2">"build-system"</span><span class="p">])</span>
         <span class="p">]</span>
 
         <span class="k">if</span> <span class="n">critical_missing</span><span class="p">:</span>
             <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Critical sections missing: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">critical_missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"Critical sections missing: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">critical_missing</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
-            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Consider running: wads migrate pyproject.toml&quot;</span><span class="p">)</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Consider running: wads migrate pyproject.toml"</span><span class="p">)</span>
 
     <span class="c1"># Check if using outdated build backend</span>
-    <span class="n">build_backend</span> <span class="o">=</span> <span class="n">actual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-system&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-backend&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="n">template_backend</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-system&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;build-backend&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">build_backend</span> <span class="o">=</span> <span class="n">actual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"build-system"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"build-backend"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">template_backend</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"build-system"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"build-backend"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">build_backend</span> <span class="o">!=</span> <span class="n">template_backend</span> <span class="ow">and</span> <span class="s2">&quot;setuptools&quot;</span> <span class="ow">in</span> <span class="n">build_backend</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">build_backend</span> <span class="o">!=</span> <span class="n">template_backend</span> <span class="ow">and</span> <span class="s2">"setuptools"</span> <span class="ow">in</span> <span class="n">build_backend</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Consider upgrading build backend from &#39;</span><span class="si">{</span><span class="n">build_backend</span><span class="si">}</span><span class="s2">&#39; to &#39;</span><span class="si">{</span><span class="n">template_backend</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="sa">f</span><span class="s2">"Consider upgrading build backend from '</span><span class="si">{</span><span class="n">build_backend</span><span class="si">}</span><span class="s2">' to '</span><span class="si">{</span><span class="n">template_backend</span><span class="si">}</span><span class="s2">'"</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">recommendations</span>
@@ -308,38 +308,38 @@
     <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compare actual pyproject.toml against template.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        actual_path: Path to the project&#39;s pyproject.toml</span>
+<span class="sd">        actual_path: Path to the project's pyproject.toml</span>
 <span class="sd">        template_path: Path to template pyproject.toml</span>
 <span class="sd">        ignore_keys: Keys to ignore in comparison (project-specific values)</span>
 <span class="sd">        project_name: Optional project name for contextual recommendations</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dictionary with:</span>
-<span class="sd">        - &#39;missing_sections&#39;: sections in template but not in actual</span>
-<span class="sd">        - &#39;outdated_sections&#39;: sections in actual that might be outdated</span>
-<span class="sd">        - &#39;recommendations&#39;: suggested updates</span>
-<span class="sd">        - &#39;needs_attention&#39;: boolean flag</span>
+<span class="sd">        - 'missing_sections': sections in template but not in actual</span>
+<span class="sd">        - 'outdated_sections': sections in actual that might be outdated</span>
+<span class="sd">        - 'recommendations': suggested updates</span>
+<span class="sd">        - 'needs_attention': boolean flag</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; diff = compare_pyproject_toml(&#39;my_project/pyproject.toml&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt; if diff[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...     for rec in diff[&#39;recommendations&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...         print(f&quot;  - {rec}&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; diff = compare_pyproject_toml('my_project/pyproject.toml')  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if diff['needs_attention']:  # doctest: +SKIP</span>
+<span class="sd">        ...     for rec in diff['recommendations']:  # doctest: +SKIP</span>
+<span class="sd">        ...         print(f"  - {rec}")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="n">ignore_keys</span> <span class="o">=</span> <span class="n">ignore_keys</span> <span class="ow">or</span> <span class="p">{</span>
-        <span class="s2">&quot;project.name&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.version&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.description&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.authors&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.urls&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.keywords&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.dependencies&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.optional-dependencies&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;project.scripts&quot;</span><span class="p">,</span>
+        <span class="s2">"project.name"</span><span class="p">,</span>
+        <span class="s2">"project.version"</span><span class="p">,</span>
+        <span class="s2">"project.description"</span><span class="p">,</span>
+        <span class="s2">"project.authors"</span><span class="p">,</span>
+        <span class="s2">"project.urls"</span><span class="p">,</span>
+        <span class="s2">"project.keywords"</span><span class="p">,</span>
+        <span class="s2">"project.dependencies"</span><span class="p">,</span>
+        <span class="s2">"project.optional-dependencies"</span><span class="p">,</span>
+        <span class="s2">"project.scripts"</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -347,9 +347,9 @@
         <span class="n">template</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not read pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"recommendations"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"Could not read pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
         <span class="p">}</span>
 
     <span class="n">missing</span> <span class="o">=</span> <span class="n">_find_missing_sections</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">)</span>
@@ -357,10 +357,10 @@
     <span class="n">recommendations</span> <span class="o">=</span> <span class="n">_generate_recommendations</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">missing</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;missing_sections&quot;</span><span class="p">:</span> <span class="n">missing</span><span class="p">,</span>
-        <span class="s2">&quot;outdated_sections&quot;</span><span class="p">:</span> <span class="n">outdated</span><span class="p">,</span>
-        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
-        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">missing</span> <span class="ow">or</span> <span class="n">outdated</span> <span class="ow">or</span> <span class="n">recommendations</span><span class="p">),</span>
+        <span class="s2">"missing_sections"</span><span class="p">:</span> <span class="n">missing</span><span class="p">,</span>
+        <span class="s2">"outdated_sections"</span><span class="p">:</span> <span class="n">outdated</span><span class="p">,</span>
+        <span class="s2">"recommendations"</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+        <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">missing</span> <span class="ow">or</span> <span class="n">outdated</span> <span class="ow">or</span> <span class="n">recommendations</span><span class="p">),</span>
     <span class="p">}</span></div>
 
 
@@ -377,7 +377,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">warn_about_deprecation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Analyze setup.cfg and recommend migration to pyproject.toml.</span>
 
 <span class="sd">    Args:</span>
@@ -388,16 +388,16 @@
 <span class="sd">        Dictionary with migration recommendations</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; analysis = compare_setup_cfg(&#39;old_project/setup.cfg&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt; if analysis[&#39;should_migrate&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...     print(analysis[&#39;recommendations&#39;])  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; analysis = compare_setup_cfg('old_project/setup.cfg')  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if analysis['should_migrate']:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(analysis['recommendations'])  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParser</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;should_migrate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"exists"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"should_migrate"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
@@ -405,9 +405,9 @@
         <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"exists"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="n">sections</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">())</span>
@@ -415,19 +415,19 @@
     <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">warn_about_deprecation</span><span class="p">:</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;setup.cfg is deprecated in favor of pyproject.toml (PEP 621)&quot;</span>
+            <span class="s2">"setup.cfg is deprecated in favor of pyproject.toml (PEP 621)"</span>
         <span class="p">)</span>
-        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;To migrate, run: populate . --migrate&quot;</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"To migrate, run: populate . --migrate"</span><span class="p">)</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;Or use: from wads.migration import migrate_setuptools_to_hatching&quot;</span>
+            <span class="s2">"Or use: from wads.migration import migrate_setuptools_to_hatching"</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;sections&quot;</span><span class="p">:</span> <span class="n">sections</span><span class="p">,</span>
-        <span class="s2">&quot;should_migrate&quot;</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
-        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
-        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
+        <span class="s2">"exists"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"sections"</span><span class="p">:</span> <span class="n">sections</span><span class="p">,</span>
+        <span class="s2">"should_migrate"</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
+        <span class="s2">"recommendations"</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+        <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="n">warn_about_deprecation</span><span class="p">,</span>
     <span class="p">}</span></div>
 
 
@@ -437,7 +437,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_manifest_in</span><span class="p">(</span>
     <span class="n">actual_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Analyze MANIFEST.in and recommend migration to Hatchling configuration.</span>
 
 <span class="sd">    Args:</span>
@@ -447,27 +447,27 @@
 <span class="sd">        Dictionary with migration recommendations</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; analysis = compare_manifest_in(&#39;MANIFEST.in&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt; if analysis[&#39;needs_migration&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...     print(analysis[&#39;hatchling_config&#39;])  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; analysis = compare_manifest_in('MANIFEST.in')  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if analysis['needs_migration']:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(analysis['hatchling_config'])  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_manifest_in</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="n">analyze_manifest_in</span><span class="p">(</span><span class="n">actual_path</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;exists&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"exists"</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"exists"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"needs_migration"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;needs_migration&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;directives&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;directives&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;hatchling_config&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;hatchling_config&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_migration&quot;</span><span class="p">],</span>
+        <span class="s2">"exists"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"needs_migration"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"needs_migration"</span><span class="p">],</span>
+        <span class="s2">"directives"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"directives"</span><span class="p">],</span>
+        <span class="s2">"recommendations"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"recommendations"</span><span class="p">],</span>
+        <span class="s2">"hatchling_config"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"hatchling_config"</span><span class="p">],</span>
+        <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"needs_migration"</span><span class="p">],</span>
     <span class="p">}</span></div>
 
 
@@ -485,7 +485,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compare CI workflow against modern template.</span>
 
 <span class="sd">    Args:</span>
@@ -497,10 +497,10 @@
 <span class="sd">        Dictionary with comparison results and recommendations</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; diff = compare_ci_workflow(&#39;.github/workflows/ci.yml&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt; if diff[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...     print(&quot;CI might be outdated&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; diff = compare_ci_workflow('.github/workflows/ci.yml')  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; if diff['needs_attention']:  # doctest: +SKIP</span>
+<span class="sd">        ...     print("CI might be outdated")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
@@ -510,33 +510,33 @@
         <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Flag outdated action versions referenced by `uses:` steps.</span>
-        <span class="k">for</span> <span class="n">job_data</span> <span class="ow">in</span> <span class="p">(</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jobs&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;steps&quot;</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]:</span>
-                <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uses&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-                <span class="k">if</span> <span class="s2">&quot;@v3&quot;</span> <span class="ow">in</span> <span class="n">uses</span> <span class="ow">or</span> <span class="s2">&quot;@v2&quot;</span> <span class="ow">in</span> <span class="n">uses</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">job_data</span> <span class="ow">in</span> <span class="p">(</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"steps"</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]:</span>
+                <span class="n">uses</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+                <span class="k">if</span> <span class="s2">"@v3"</span> <span class="ow">in</span> <span class="n">uses</span> <span class="ow">or</span> <span class="s2">"@v2"</span> <span class="ow">in</span> <span class="n">uses</span><span class="p">:</span>
                     <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Action &#39;</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">&#39; might be outdated (consider @v4 or @v5)&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Action '</span><span class="si">{</span><span class="n">uses</span><span class="si">}</span><span class="s2">' might be outdated (consider @v4 or @v5)"</span>
                     <span class="p">)</span>
 
         <span class="c1"># Flag missing modern features.</span>
-        <span class="k">if</span> <span class="s2">&quot;ruff&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">if</span> <span class="s2">"ruff"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_data</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;CI doesn&#39;t use ruff for linting - consider modern CI template&quot;</span>
+                <span class="s2">"CI doesn't use ruff for linting - consider modern CI template"</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">recommendations</span><span class="p">:</span>
-            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;To update CI, run: populate . --migrate&quot;</span><span class="p">)</span>
+            <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"To update CI, run: populate . --migrate"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
-            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">recommendations</span><span class="p">),</span>
+            <span class="s2">"recommendations"</span><span class="p">:</span> <span class="n">recommendations</span><span class="p">,</span>
+            <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">recommendations</span><span class="p">),</span>
         <span class="p">}</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Could not compare CI workflows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"recommendations"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"Could not compare CI workflows: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
         <span class="p">}</span></div>
 
 
@@ -554,7 +554,7 @@
     <span class="n">check_ci</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Check overall config status of a project.</span>
 
 <span class="sd">    Analyzes pyproject.toml, setup.cfg, CI workflows and returns a comprehensive</span>
@@ -567,72 +567,72 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dictionary with:</span>
-<span class="sd">        - &#39;has_pyproject&#39;: bool</span>
-<span class="sd">        - &#39;has_setup_cfg&#39;: bool</span>
-<span class="sd">        - &#39;has_ci&#39;: bool</span>
-<span class="sd">        - &#39;needs_attention&#39;: list of issues</span>
-<span class="sd">        - &#39;recommendations&#39;: list of recommendations</span>
+<span class="sd">        - 'has_pyproject': bool</span>
+<span class="sd">        - 'has_setup_cfg': bool</span>
+<span class="sd">        - 'has_ci': bool</span>
+<span class="sd">        - 'needs_attention': list of issues</span>
+<span class="sd">        - 'recommendations': list of recommendations</span>
 <span class="sd">        - Details for each file type</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; status = summarize_config_status(&#39;/path/to/project&#39;)  # doctest: +SKIP</span>
-<span class="sd">        &gt;&gt;&gt; for issue in status[&#39;needs_attention&#39;]:  # doctest: +SKIP</span>
-<span class="sd">        ...     print(f&quot;⚠️  {issue}&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; status = summarize_config_status('/path/to/project')  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; for issue in status['needs_attention']:  # doctest: +SKIP</span>
+<span class="sd">        ...     print(f"⚠️  {issue}")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
-    <span class="n">setup_cfg_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;setup.cfg&quot;</span>
-    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;MANIFEST.in&quot;</span>
-    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">&quot;.github&quot;</span> <span class="o">/</span> <span class="s2">&quot;workflows&quot;</span> <span class="o">/</span> <span class="s2">&quot;ci.yml&quot;</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+    <span class="n">setup_cfg_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">"setup.cfg"</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">"MANIFEST.in"</span>
+    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">pkg_dir</span> <span class="o">/</span> <span class="s2">".github"</span> <span class="o">/</span> <span class="s2">"workflows"</span> <span class="o">/</span> <span class="s2">"ci.yml"</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;has_pyproject&quot;</span><span class="p">:</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
-        <span class="s2">&quot;has_setup_cfg&quot;</span><span class="p">:</span> <span class="n">setup_cfg_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
-        <span class="s2">&quot;has_manifest_in&quot;</span><span class="p">:</span> <span class="n">manifest_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
-        <span class="s2">&quot;has_ci&quot;</span><span class="p">:</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
-        <span class="s2">&quot;needs_attention&quot;</span><span class="p">:</span> <span class="p">[],</span>
-        <span class="s2">&quot;recommendations&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"has_pyproject"</span><span class="p">:</span> <span class="n">pyproject_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">"has_setup_cfg"</span><span class="p">:</span> <span class="n">setup_cfg_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">"has_manifest_in"</span><span class="p">:</span> <span class="n">manifest_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">"has_ci"</span><span class="p">:</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">"needs_attention"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"recommendations"</span><span class="p">:</span> <span class="p">[],</span>
     <span class="p">}</span>
 
     <span class="c1"># Check pyproject.toml</span>
-    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_pyproject&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"has_pyproject"</span><span class="p">]:</span>
         <span class="n">pyproject_diff</span> <span class="o">=</span> <span class="n">compare_pyproject_toml</span><span class="p">(</span>
             <span class="n">pyproject_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span>
         <span class="p">)</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pyproject_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyproject_diff</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"pyproject_status"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyproject_diff</span>
 
-        <span class="k">if</span> <span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="k">if</span> <span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"needs_attention"</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"needs_attention"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"pyproject.toml"</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"recommendations"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pyproject_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recommendations"</span><span class="p">,</span> <span class="p">[]))</span>
 
     <span class="c1"># Check setup.cfg</span>
-    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_setup_cfg&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"has_setup_cfg"</span><span class="p">]:</span>
         <span class="n">setup_cfg_status</span> <span class="o">=</span> <span class="n">compare_setup_cfg</span><span class="p">(</span><span class="n">setup_cfg_path</span><span class="p">)</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;setup_cfg_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup_cfg_status</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"setup_cfg_status"</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup_cfg_status</span>
 
-        <span class="k">if</span> <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"needs_attention"</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"needs_attention"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"setup.cfg"</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"recommendations"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">setup_cfg_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recommendations"</span><span class="p">,</span> <span class="p">[])</span>
             <span class="p">)</span>
 
     <span class="c1"># Check MANIFEST.in</span>
-    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_manifest_in&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"has_manifest_in"</span><span class="p">]:</span>
         <span class="n">manifest_status</span> <span class="o">=</span> <span class="n">compare_manifest_in</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;manifest_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest_status</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"manifest_status"</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest_status</span>
 
-        <span class="k">if</span> <span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;MANIFEST.in&quot;</span><span class="p">)</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="k">if</span> <span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"needs_attention"</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"needs_attention"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"MANIFEST.in"</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"recommendations"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">manifest_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recommendations"</span><span class="p">,</span> <span class="p">[]))</span>
 
     <span class="c1"># Check CI</span>
-    <span class="k">if</span> <span class="n">check_ci</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;has_ci&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">check_ci</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="s2">"has_ci"</span><span class="p">]:</span>
         <span class="n">ci_diff</span> <span class="o">=</span> <span class="n">compare_ci_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;ci_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ci_diff</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"ci_status"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ci_diff</span>
 
-        <span class="k">if</span> <span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">):</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;needs_attention&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;.github/workflows/ci.yml&quot;</span><span class="p">)</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;recommendations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recommendations&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="k">if</span> <span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"needs_attention"</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"needs_attention"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">".github/workflows/ci.yml"</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"recommendations"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ci_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recommendations"</span><span class="p">,</span> <span class="p">[]))</span>
 
     <span class="k">return</span> <span class="n">result</span></div>
 

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_env_vars &mdash; wads 0.2.14 documentation</title>
+  <title>wads.tests.test_env_vars &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.tests.test_env_vars</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Test environment variables configuration in CI.&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Test environment variables configuration in CI."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -143,74 +143,74 @@
 <div class="viewcode-block" id="test_env_vars_parsing">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_parsing">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_env_vars_parsing</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that environment variables are correctly parsed from pyproject.toml.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test that environment variables are correctly parsed from pyproject.toml."""</span>
 
     <span class="c1"># Create a test pyproject.toml with env vars</span>
-    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">[project]</span>
-<span class="s2">name = &quot;test-project&quot;</span>
-<span class="s2">version = &quot;0.1.0&quot;</span>
+<span class="s2">name = "test-project"</span>
+<span class="s2">version = "0.1.0"</span>
 
 <span class="s2">[tool.wads.ci]</span>
-<span class="s2">project_name = &quot;test-project&quot;</span>
+<span class="s2">project_name = "test-project"</span>
 
 <span class="s2">[tool.wads.ci.env]</span>
-<span class="s2">required_envvars = [&quot;DATABASE_URL&quot;, &quot;API_KEY&quot;]</span>
-<span class="s2">test_envvars = [&quot;OPENAI_API_KEY&quot;, &quot;TEST_SECRET&quot;]</span>
-<span class="s2">extra_envvars = [&quot;FEATURE_FLAG_X&quot;]</span>
-<span class="s2">defaults = {LOG_LEVEL = &quot;DEBUG&quot;, TESTING = &quot;true&quot;}</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">required_envvars = ["DATABASE_URL", "API_KEY"]</span>
+<span class="s2">test_envvars = ["OPENAI_API_KEY", "TEST_SECRET"]</span>
+<span class="s2">extra_envvars = ["FEATURE_FLAG_X"]</span>
+<span class="s2">defaults = {LOG_LEVEL = "DEBUG", TESTING = "true"}</span>
+<span class="s2">"""</span>
 
     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
         <span class="n">tmpdir_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
-        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
         <span class="n">pyproject_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject_content</span><span class="p">)</span>
 
         <span class="c1"># Load config</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
 
         <span class="c1"># Test required env vars</span>
-        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">,</span> <span class="s2">&quot;API_KEY&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"DATABASE_URL"</span><span class="p">,</span> <span class="s2">"API_KEY"</span><span class="p">]</span>
 
         <span class="c1"># Test test env vars</span>
-        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_test</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;TEST_SECRET&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_test</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">,</span> <span class="s2">"TEST_SECRET"</span><span class="p">]</span>
 
         <span class="c1"># Test extra env vars</span>
-        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_extra</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;FEATURE_FLAG_X&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_extra</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"FEATURE_FLAG_X"</span><span class="p">]</span>
 
         <span class="c1"># Test all env vars</span>
         <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_all</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span>
-            <span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;API_KEY&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;TEST_SECRET&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;FEATURE_FLAG_X&quot;</span><span class="p">,</span>
+            <span class="s2">"DATABASE_URL"</span><span class="p">,</span>
+            <span class="s2">"API_KEY"</span><span class="p">,</span>
+            <span class="s2">"OPENAI_API_KEY"</span><span class="p">,</span>
+            <span class="s2">"TEST_SECRET"</span><span class="p">,</span>
+            <span class="s2">"FEATURE_FLAG_X"</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="c1"># Test defaults</span>
-        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;LOG_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;TESTING&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">}</span>
+        <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"LOG_LEVEL"</span><span class="p">:</span> <span class="s2">"DEBUG"</span><span class="p">,</span> <span class="s2">"TESTING"</span><span class="p">:</span> <span class="s2">"true"</span><span class="p">}</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ All env vars tests passed!&quot;</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ All env vars tests passed!"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_env_vars_yaml_generation">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_yaml_generation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_env_vars_yaml_generation</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that env vars YAML is correctly generated.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test that env vars YAML is correctly generated."""</span>
 
-    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">[project]</span>
-<span class="s2">name = &quot;test-project&quot;</span>
+<span class="s2">name = "test-project"</span>
 
 <span class="s2">[tool.wads.ci.env]</span>
-<span class="s2">required_envvars = [&quot;API_KEY&quot;]</span>
-<span class="s2">test_envvars = [&quot;TEST_KEY&quot;]</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">required_envvars = ["API_KEY"]</span>
+<span class="s2">test_envvars = ["TEST_KEY"]</span>
+<span class="s2">"""</span>
 
     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
         <span class="n">tmpdir_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
-        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
         <span class="n">pyproject_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject_content</span><span class="p">)</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
@@ -219,31 +219,31 @@
         <span class="n">env_yaml</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_env_vars_yaml</span><span class="p">()</span>
 
         <span class="c1"># Check that it contains the expected vars</span>
-        <span class="k">assert</span> <span class="s2">&quot;API_KEY: ${{ secrets.API_KEY || &#39;&#39; }}&quot;</span> <span class="ow">in</span> <span class="n">env_yaml</span>
-        <span class="k">assert</span> <span class="s2">&quot;TEST_KEY: ${{ secrets.TEST_KEY || &#39;&#39; }}&quot;</span> <span class="ow">in</span> <span class="n">env_yaml</span>
+        <span class="k">assert</span> <span class="s2">"API_KEY: ${{ secrets.API_KEY || '' }}"</span> <span class="ow">in</span> <span class="n">env_yaml</span>
+        <span class="k">assert</span> <span class="s2">"TEST_KEY: ${{ secrets.TEST_KEY || '' }}"</span> <span class="ow">in</span> <span class="n">env_yaml</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Env vars YAML generation test passed!&quot;</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ Env vars YAML generation test passed!"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_env_vars_in_template_substitutions">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_in_template_substitutions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_env_vars_in_template_substitutions</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that env vars are included in template substitutions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test that env vars are included in template substitutions."""</span>
 
-    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">pyproject_content</span> <span class="o">=</span> <span class="s2">"""</span>
 <span class="s2">[project]</span>
-<span class="s2">name = &quot;my-project&quot;</span>
+<span class="s2">name = "my-project"</span>
 
 <span class="s2">[tool.wads.ci.env]</span>
-<span class="s2">required_envvars = [&quot;REQUIRED_VAR&quot;]</span>
-<span class="s2">test_envvars = [&quot;TEST_VAR&quot;]</span>
-<span class="s2">defaults = {DEFAULT_VAR = &quot;default_value&quot;}</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">required_envvars = ["REQUIRED_VAR"]</span>
+<span class="s2">test_envvars = ["TEST_VAR"]</span>
+<span class="s2">defaults = {DEFAULT_VAR = "default_value"}</span>
+<span class="s2">"""</span>
 
     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
         <span class="n">tmpdir_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
-        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">tmpdir_path</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
         <span class="n">pyproject_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproject_content</span><span class="p">)</span>
 
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
@@ -252,25 +252,25 @@
         <span class="n">substitutions</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">to_ci_template_substitutions</span><span class="p">()</span>
 
         <span class="c1"># Check that PROJECT_NAME is there</span>
-        <span class="k">assert</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">&quot;#PROJECT_NAME#&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;my-project&quot;</span>
+        <span class="k">assert</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">"#PROJECT_NAME#"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"my-project"</span>
 
         <span class="c1"># Check that ENV_VARS includes the expected content</span>
-        <span class="n">env_vars</span> <span class="o">=</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">&quot;#ENV_VARS#&quot;</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="s2">&quot;REQUIRED_VAR&quot;</span> <span class="ow">in</span> <span class="n">env_vars</span>
-        <span class="k">assert</span> <span class="s2">&quot;TEST_VAR&quot;</span> <span class="ow">in</span> <span class="n">env_vars</span>
-        <span class="k">assert</span> <span class="s2">&quot;secrets.REQUIRED_VAR&quot;</span> <span class="ow">in</span> <span class="n">env_vars</span>
+        <span class="n">env_vars</span> <span class="o">=</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">"#ENV_VARS#"</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="s2">"REQUIRED_VAR"</span> <span class="ow">in</span> <span class="n">env_vars</span>
+        <span class="k">assert</span> <span class="s2">"TEST_VAR"</span> <span class="ow">in</span> <span class="n">env_vars</span>
+        <span class="k">assert</span> <span class="s2">"secrets.REQUIRED_VAR"</span> <span class="ow">in</span> <span class="n">env_vars</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Template substitutions test passed!&quot;</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ Template substitutions test passed!"</span><span class="p">)</span></div>
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">test_env_vars_parsing</span><span class="p">()</span>
     <span class="n">test_env_vars_yaml_generation</span><span class="p">()</span>
     <span class="n">test_env_vars_in_template_substitutions</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ ALL TESTS PASSED!&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ ALL TESTS PASSED!"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
 </pre></div>
 
            </div>

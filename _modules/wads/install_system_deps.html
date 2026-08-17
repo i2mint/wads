@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.install_system_deps &mdash; wads 0.2.14 documentation</title>
+  <title>wads.install_system_deps &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,12 +133,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.install_system_deps</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Install system dependencies from [tool.wads.ops.*] sections in pyproject.toml.</span>
 
 <span class="sd">This script reads system dependency configurations and installs them on the appropriate platform.</span>
 <span class="sd">It can be used as a standalone CLI tool or imported as a module.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -154,18 +154,18 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: tomli package required for Python &lt; 3.11&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Install with: pip install tomli&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"ERROR: tomli package required for Python &lt; 3.11"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Install with: pip install tomli"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="find_pyproject">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.find_pyproject">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_pyproject</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find pyproject.toml file from path (file or directory).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Find pyproject.toml file from path (file or directory)."""</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;pyproject.toml&quot;</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
     <span class="k">return</span> <span class="n">p</span></div>
 
 
@@ -173,34 +173,34 @@
 <div class="viewcode-block" id="detect_platform">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.detect_platform">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">detect_platform</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect the current platform.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Detect the current platform."""</span>
     <span class="n">system</span> <span class="o">=</span> <span class="n">platform_module</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;linux&quot;</span>
-    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;macos&quot;</span>
-    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;windows&quot;</span>
+    <span class="k">if</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">"linux"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"linux"</span>
+    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">"darwin"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"macos"</span>
+    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">"windows"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"windows"</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown platform: </span><span class="si">{</span><span class="n">system</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown platform: </span><span class="si">{</span><span class="n">system</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="read_system_deps">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.read_system_deps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_system_deps</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read [tool.wads.ops.*] sections from pyproject.toml.&quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Read [tool.wads.ops.*] sections from pyproject.toml."""</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;wads&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ops&quot;</span><span class="p">,</span> <span class="p">{})</span></div>
+    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ops"</span><span class="p">,</span> <span class="p">{})</span></div>
 
 
 
 <div class="viewcode-block" id="check_if_installed">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.check_if_installed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_if_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Check if dependency is already installed using check commands.</span>
 
 <span class="sd">    Args:</span>
@@ -210,7 +210,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if installed, False otherwise</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Normalize to list of commands</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">check_cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_cmds</span><span class="p">]</span> <span class="k">if</span> <span class="n">check_cmds</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
@@ -240,7 +240,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">install_dependency</span><span class="p">(</span>
     <span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">install_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install a dependency using install commands.</span>
 
 <span class="sd">    Args:</span>
@@ -250,25 +250,25 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (success: bool, error_message: Optional[str])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Normalize to list of commands</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Empty install command&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Empty install command"</span>
         <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">install_cmds</span><span class="p">]</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd</span> <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_cmds</span> <span class="k">if</span> <span class="n">cmd</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">commands</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Empty install command list&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Empty install command list"</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Invalid install command format&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Invalid install command format"</span>
 
     <span class="c1"># Execute install commands (AND logic - all must succeed)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">commands</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Command: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Command: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -279,10 +279,10 @@
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span>
 
         <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Timeout after </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Timeout after </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s"</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
@@ -293,12 +293,12 @@
 <div class="viewcode-block" id="install_system_dependencies">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.install_system_dependencies">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">install_system_dependencies</span><span class="p">(</span>
-    <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
     <span class="n">platform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_check</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install system dependencies from pyproject.toml.</span>
 
 <span class="sd">    Args:</span>
@@ -309,18 +309,18 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (installed_count, skipped_count, failed_count)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Find pyproject.toml</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">pyproject</span> <span class="o">=</span> <span class="n">find_pyproject</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error finding pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error finding pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pyproject</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: pyproject.toml not found at </span><span class="si">{</span><span class="n">pyproject</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: pyproject.toml not found at </span><span class="si">{</span><span class="n">pyproject</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 
     <span class="c1"># Detect platform</span>
@@ -329,28 +329,28 @@
             <span class="n">platform</span> <span class="o">=</span> <span class="n">detect_platform</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
             <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Installing system dependencies for </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading from: </span><span class="si">{</span><span class="n">pyproject</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Installing system dependencies for </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reading from: </span><span class="si">{</span><span class="n">pyproject</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Read dependencies</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ops</span> <span class="o">=</span> <span class="n">read_system_deps</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error reading pyproject.toml: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ops</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No [tool.wads.ops.*] sections found in pyproject.toml&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"No [tool.wads.ops.*] sections found in pyproject.toml"</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2"> system dependencies</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2"> system dependencies</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Process each dependency</span>
     <span class="n">installed_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -359,67 +359,67 @@
 
     <span class="k">for</span> <span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dependency: </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'='</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Dependency: </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-            <span class="n">description</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"description"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Description: </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Description: </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-            <span class="n">url</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;URL: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"URL: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Check if already installed</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_check</span><span class="p">:</span>
-            <span class="n">check_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;check&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
+            <span class="n">check_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"check"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">check_cmds</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">check_if_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed"</span><span class="p">)</span>
                     <span class="n">skipped_count</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">continue</span>
 
         <span class="c1"># Get install commands</span>
-        <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
+        <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: No install command for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: No install command for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="c1"># Install</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
 
         <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install_dependency</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">install_cmds</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> installed successfully&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> installed successfully"</span><span class="p">)</span>
             <span class="n">installed_count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ Installation failed for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ Installation failed for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
             <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1"># Show note if present</span>
-        <span class="n">note</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;note&quot;</span><span class="p">)</span>
+        <span class="n">note</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"note"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">note</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">()</span>  <span class="c1"># Blank line between deps</span>
 
     <span class="c1"># Summary</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SUMMARY&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✓ Installed: </span><span class="si">{</span><span class="n">installed_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⊘ Already present: </span><span class="si">{</span><span class="n">skipped_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'='</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"SUMMARY"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'='</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">70</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ Installed: </span><span class="si">{</span><span class="n">installed_count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"⊘ Already present: </span><span class="si">{</span><span class="n">skipped_count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">failed_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✗ Failed: </span><span class="si">{</span><span class="n">failed_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ Failed: </span><span class="si">{</span><span class="n">failed_count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">installed_count</span><span class="p">,</span> <span class="n">skipped_count</span><span class="p">,</span> <span class="n">failed_count</span></div>
 
@@ -428,37 +428,37 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../module_docs/wads/install_system_deps.html#wads.install_system_deps.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI entry point.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""CLI entry point."""</span>
     <span class="c1"># The progress output uses non-ASCII markers (✓, ✗, ⊘). On Windows CI</span>
-    <span class="c1"># runners the console defaults to cp1252, which can&#39;t encode them and raises</span>
+    <span class="c1"># runners the console defaults to cp1252, which can't encode them and raises</span>
     <span class="c1"># UnicodeEncodeError mid-run. Force UTF-8 so the output is portable.</span>
     <span class="k">for</span> <span class="n">_stream</span> <span class="ow">in</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">_stream</span><span class="o">.</span><span class="n">reconfigure</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+            <span class="n">_stream</span><span class="o">.</span><span class="n">reconfigure</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
             <span class="k">pass</span>  <span class="c1"># non-reconfigurable stream (e.g. already-wrapped) — leave as-is</span>
 
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Install system dependencies from [tool.wads.ops.*] in pyproject.toml&quot;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Install system dependencies from [tool.wads.ops.*] in pyproject.toml"</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;pyproject_path&quot;</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to pyproject.toml file or directory containing it (default: current directory)&quot;</span><span class="p">,</span>
+        <span class="s2">"pyproject_path"</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">"?"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Path to pyproject.toml file or directory containing it (default: current directory)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--platform&quot;</span><span class="p">,</span>
-        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;linux&quot;</span><span class="p">,</span> <span class="s2">&quot;macos&quot;</span><span class="p">,</span> <span class="s2">&quot;windows&quot;</span><span class="p">],</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Platform to install for (default: auto-detect)&quot;</span><span class="p">,</span>
+        <span class="s2">"--platform"</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">"linux"</span><span class="p">,</span> <span class="s2">"macos"</span><span class="p">,</span> <span class="s2">"windows"</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Platform to install for (default: auto-detect)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--skip-check&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip checking if dependencies are already installed&quot;</span><span class="p">,</span>
+        <span class="s2">"--skip-check"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Skip checking if dependencies are already installed"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--quiet&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Suppress output except errors&quot;</span>
+        <span class="s2">"--quiet"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Suppress output except errors"</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -475,7 +475,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.14 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,6 +83,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_github_pages_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_github_pages_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_pre_test_steps"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_pre_test_steps()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_stub_secrets_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_stub_secrets_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_test_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_test_env_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_test_env_vars"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_test_env_vars()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.generate_windows_validation_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_windows_validation_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.has_ci_config()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.install_extras"><code class="docutils literal notranslate"><span class="pre">CIConfig.install_extras</span></code></a></li>
@@ -117,6 +119,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ci_secrets.html">wads.ci_secrets</a></li>
@@ -300,7 +303,7 @@ settings in CI workflow files.</p>
 <p>Lets a repo expose a secret under a different env-var name in CI, e.g.
 read <code class="docutils literal notranslate"><span class="pre">secrets.HF_WRITE_TOKEN</span></code> but expose it to tests as <code class="docutils literal notranslate"><span class="pre">HF_TOKEN</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">wads</span><span class="o">.</span><span class="n">ci</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">secret_aliases</span><span class="p">]</span>
-<span class="n">HF_TOKEN</span> <span class="o">=</span> <span class="s2">&quot;HF_WRITE_TOKEN&quot;</span>
+<span class="n">HF_TOKEN</span> <span class="o">=</span> <span class="s2">"HF_WRITE_TOKEN"</span>
 </pre></div>
 </div>
 <p>Env-var names not listed here are backed by an identically-named secret.</p>
@@ -359,14 +362,20 @@ read <code class="docutils literal notranslate"><span class="pre">secrets.HF_WRI
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_env_block">
 <span class="sig-name descname"><span class="pre">generate_env_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_env_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_env_block" title="Link to this definition"></a></dt>
-<dd><p>Generate YAML env block for GitHub Actions.</p>
-<p>Creates env vars for:
+<dd><p>Generate the workflow-level YAML env block for GitHub Actions.</p>
+<p>Contains ONLY non-secret values:
 - PROJECT_NAME (from config)
-- Default env vars (from config.env.defaults)
-- Placeholders for secret-based env vars (set via set-env-vars action)</p>
+- Literal defaults from [tool.wads.ci.env.defaults]</p>
+<p>Secret-backed vars are deliberately NOT emitted at workflow level: a
+workflow-level secret is in scope for the setup job too, and GitHub
+refuses to emit any job OUTPUT containing a secret’s value — a short
+value (e.g. a test level of “3”) silently blanks <cite>python-versions</cite>
+and empties the test matrix (issue #61). Secret-backed vars are
+scoped to the jobs that run tests via generate_test_env_block /
+generate_test_env_vars.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>YAML string for env section</p>
+<dd class="field-odd"><p>YAML string for the workflow-level env section</p>
 </dd>
 </dl>
 </dd></dl>
@@ -413,6 +422,41 @@ This is used in the #ENV_VARS# placeholder in CI templates.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_stub_secrets_block">
 <span class="sig-name descname"><span class="pre">generate_stub_secrets_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_stub_secrets_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_stub_secrets_block" title="Link to this definition"></a></dt>
 <dd><p>Render the caller-stub <code class="docutils literal notranslate"><span class="pre">secrets:</span></code> pass-through for this repo.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_test_env_block">
+<span class="sig-name descname"><span class="pre">generate_test_env_block</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_test_env_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_test_env_block" title="Link to this definition"></a></dt>
+<dd><p>Generate a whole job-level <cite>env:</cite> block for the validation job.</p>
+<p>Returns ‘’ when no secret-backed vars are left to emit, so the
+rendered job simply has no <cite>env:</cite> key (an empty <cite>env:</cite> mapping is
+invalid).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.generate_test_env_vars">
+<span class="sig-name descname"><span class="pre">generate_test_env_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.generate_test_env_vars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.generate_test_env_vars" title="Link to this definition"></a></dt>
+<dd><p>Generate job-level env entry lines for secret-backed vars.</p>
+<p>One <cite>VAR: ${{ secrets.NAME || ‘’ }}</cite> line per name declared in
+required_envvars / test_envvars / extra_envvars, honoring
+[tool.wads.ci.env.secret_aliases] (env-var name -&gt; backing secret
+name). An unset secret renders as an empty string. Returns ‘’ when
+nothing is left to emit.</p>
+<p>Names also present in [tool.wads.ci.env].defaults are skipped: the
+committed default is authoritative (matching the reusable workflow’s
+export-ci-env), and it already reaches every job from workflow level
+— re-emitting <cite>${{ secrets.X || ‘’ }}</cite> at job level would override
+the default with ‘’ in exactly the jobs that run tests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indent</strong> – leading spaces per line (6 = entries of a job-level
+<cite>env:</cite> block)</p></li>
+<li><p><strong>exclude</strong> – additional names to skip (e.g. keys the target job
+already sets literally)</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -680,11 +724,21 @@ no real test suite and whose modules are not import-clean.</p>
 </dd>
 </dl>
 <p>Usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="s2">&quot;path/to/project&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="s2">"path/to/project"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>        <span class="c1"># Project name from pyproject.toml</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>     <span class="c1"># Python versions to test</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_config.render_minimal_env_placeholders">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">render_minimal_env_placeholders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">template_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#render_minimal_env_placeholders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.render_minimal_env_placeholders" title="Link to this definition"></a></dt>
+<dd><p>Render the inline template’s env placeholders without a [tool.wads.ci]
+config: workflow-level env gets PROJECT_NAME only, and the test-job
+placeholders render empty (there are no declared secret-backed vars).</p>
+<p>Used by the no-pyproject fallbacks in migration and populate so a shipped
+workflow never carries literal placeholder lines.</p>
 </dd></dl>
 
 </section>

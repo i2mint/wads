@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.agents.test_analyzer &mdash; wads 0.2.14 documentation</title>
+  <title>wads.agents.test_analyzer &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,12 +133,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.agents.test_analyzer</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Test Failure Analyzer Agent</span>
 
 <span class="sd">Analyzes pytest test failures, categorizes them, and suggests fixes.</span>
 <span class="sd">Identifies patterns in failures and provides actionable recommendations.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -152,13 +152,13 @@
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.TestFailurePattern">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TestFailurePattern</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a pattern of test failures.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Represents a pattern of test failures."""</span>
 
-    <span class="n">pattern_type</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &#39;assertion&#39;, &#39;exception&#39;, &#39;timeout&#39;, &#39;setup&#39;, &#39;teardown&#39;</span>
+    <span class="n">pattern_type</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># 'assertion', 'exception', 'timeout', 'setup', 'teardown'</span>
     <span class="n">count</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">examples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">suggested_fix</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &#39;high&#39;, &#39;medium&#39;, &#39;low&#39;</span></div>
+    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># 'high', 'medium', 'low'</span></div>
 
 
 
@@ -166,7 +166,7 @@
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.TestAnalysisReport">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TestAnalysisReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of test failure analysis.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Result of test failure analysis."""</span>
 
     <span class="n">total_failures</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">total_errors</span><span class="p">:</span> <span class="nb">int</span>
@@ -180,7 +180,7 @@
 <div class="viewcode-block" id="categorize_failure">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.categorize_failure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">categorize_failure</span><span class="p">(</span><span class="n">error_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">error_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Categorize test failure type.</span>
 
 <span class="sd">    Args:</span>
@@ -189,41 +189,41 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Category string</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">error_type</span> <span class="o">==</span> <span class="s2">&quot;AssertionError&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;assert&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-            <span class="k">return</span> <span class="s2">&quot;assertion&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;assertion&quot;</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">error_type</span> <span class="o">==</span> <span class="s2">"AssertionError"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"assert"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">"assertion"</span>
+        <span class="k">return</span> <span class="s2">"assertion"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;timeout&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;timed out&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="k">return</span> <span class="s2">&quot;timeout&quot;</span>
+    <span class="k">if</span> <span class="s2">"timeout"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"timed out"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">"timeout"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;fixture&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;setup&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="k">return</span> <span class="s2">&quot;setup&quot;</span>
+    <span class="k">if</span> <span class="s2">"fixture"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"setup"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">"setup"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;teardown&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="k">return</span> <span class="s2">&quot;teardown&quot;</span>
+    <span class="k">if</span> <span class="s2">"teardown"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">"teardown"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;AttributeError&quot;</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;attribute_error&quot;</span>
+    <span class="k">if</span> <span class="s2">"AttributeError"</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"attribute_error"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;TypeError&quot;</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;type_error&quot;</span>
+    <span class="k">if</span> <span class="s2">"TypeError"</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"type_error"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;ValueError&quot;</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;value_error&quot;</span>
+    <span class="k">if</span> <span class="s2">"ValueError"</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"value_error"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;KeyError&quot;</span> <span class="ow">in</span> <span class="n">error_type</span> <span class="ow">or</span> <span class="s2">&quot;IndexError&quot;</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;data_access_error&quot;</span>
+    <span class="k">if</span> <span class="s2">"KeyError"</span> <span class="ow">in</span> <span class="n">error_type</span> <span class="ow">or</span> <span class="s2">"IndexError"</span> <span class="ow">in</span> <span class="n">error_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"data_access_error"</span>
 
-    <span class="k">return</span> <span class="s2">&quot;exception&quot;</span></div>
+    <span class="k">return</span> <span class="s2">"exception"</span></div>
 
 
 
 <div class="viewcode-block" id="suggest_fix">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.suggest_fix">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">suggest_fix</span><span class="p">(</span><span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">error_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Suggest fix based on failure category.</span>
 
 <span class="sd">    Args:</span>
@@ -232,29 +232,29 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Suggested fix description</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">suggestions</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;assertion&quot;</span><span class="p">:</span> <span class="s2">&quot;Review test expectations and actual values. Check if the test logic is correct.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="s2">&quot;Increase timeout value or optimize the code being tested. Check for infinite loops.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;setup&quot;</span><span class="p">:</span> <span class="s2">&quot;Fix test setup/fixture. Ensure required data/mocks are properly initialized.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;teardown&quot;</span><span class="p">:</span> <span class="s2">&quot;Fix test cleanup. Ensure resources are properly released.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;attribute_error&quot;</span><span class="p">:</span> <span class="s2">&quot;Check object attributes. Ensure objects are properly initialized.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;type_error&quot;</span><span class="p">:</span> <span class="s2">&quot;Verify argument types. Add type checking or conversion.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;value_error&quot;</span><span class="p">:</span> <span class="s2">&quot;Validate input values. Add input validation or use correct values.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;data_access_error&quot;</span><span class="p">:</span> <span class="s2">&quot;Check data structure access. Ensure keys/indices exist.&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="s2">&quot;Review the exception and add proper error handling.&quot;</span><span class="p">,</span>
+        <span class="s2">"assertion"</span><span class="p">:</span> <span class="s2">"Review test expectations and actual values. Check if the test logic is correct."</span><span class="p">,</span>
+        <span class="s2">"timeout"</span><span class="p">:</span> <span class="s2">"Increase timeout value or optimize the code being tested. Check for infinite loops."</span><span class="p">,</span>
+        <span class="s2">"setup"</span><span class="p">:</span> <span class="s2">"Fix test setup/fixture. Ensure required data/mocks are properly initialized."</span><span class="p">,</span>
+        <span class="s2">"teardown"</span><span class="p">:</span> <span class="s2">"Fix test cleanup. Ensure resources are properly released."</span><span class="p">,</span>
+        <span class="s2">"attribute_error"</span><span class="p">:</span> <span class="s2">"Check object attributes. Ensure objects are properly initialized."</span><span class="p">,</span>
+        <span class="s2">"type_error"</span><span class="p">:</span> <span class="s2">"Verify argument types. Add type checking or conversion."</span><span class="p">,</span>
+        <span class="s2">"value_error"</span><span class="p">:</span> <span class="s2">"Validate input values. Add input validation or use correct values."</span><span class="p">,</span>
+        <span class="s2">"data_access_error"</span><span class="p">:</span> <span class="s2">"Check data structure access. Ensure keys/indices exist."</span><span class="p">,</span>
+        <span class="s2">"exception"</span><span class="p">:</span> <span class="s2">"Review the exception and add proper error handling."</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">base_suggestion</span> <span class="o">=</span> <span class="n">suggestions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="n">category</span><span class="p">,</span> <span class="s2">&quot;Review the error and fix the underlying issue.&quot;</span>
+        <span class="n">category</span><span class="p">,</span> <span class="s2">"Review the error and fix the underlying issue."</span>
     <span class="p">)</span>
 
     <span class="c1"># Add specific suggestions based on error message</span>
-    <span class="k">if</span> <span class="s2">&quot;None&quot;</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="ow">and</span> <span class="n">category</span> <span class="o">==</span> <span class="s2">&quot;attribute_error&quot;</span><span class="p">:</span>
-        <span class="n">base_suggestion</span> <span class="o">+=</span> <span class="s2">&quot; (Possible None value - add null check)&quot;</span>
+    <span class="k">if</span> <span class="s2">"None"</span> <span class="ow">in</span> <span class="n">error_message</span> <span class="ow">and</span> <span class="n">category</span> <span class="o">==</span> <span class="s2">"attribute_error"</span><span class="p">:</span>
+        <span class="n">base_suggestion</span> <span class="o">+=</span> <span class="s2">" (Possible None value - add null check)"</span>
 
-    <span class="k">if</span> <span class="s2">&quot;expected&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;got&quot;</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="n">base_suggestion</span> <span class="o">+=</span> <span class="s2">&quot; (Values mismatch - verify test expectations)&quot;</span>
+    <span class="k">if</span> <span class="s2">"expected"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">"got"</span> <span class="ow">in</span> <span class="n">error_message</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="n">base_suggestion</span> <span class="o">+=</span> <span class="s2">" (Values mismatch - verify test expectations)"</span>
 
     <span class="k">return</span> <span class="n">base_suggestion</span></div>
 
@@ -263,7 +263,7 @@
 <div class="viewcode-block" id="parse_pytest_output">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.parse_pytest_output">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_pytest_output</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestAnalysisReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Parse pytest output and analyze failures.</span>
 
 <span class="sd">    Args:</span>
@@ -271,7 +271,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        TestAnalysisReport with analysis</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">total_failures</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">total_errors</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">failures_by_category</span> <span class="o">=</span> <span class="p">{}</span>
@@ -279,7 +279,7 @@
 
     <span class="c1"># Parse failures and errors</span>
     <span class="n">failure_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-        <span class="sa">r</span><span class="s2">&quot;(FAILED|ERROR)\s+(.+?)\s+-\s+(.+?):\s*(.+?)$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
+        <span class="sa">r</span><span class="s2">"(FAILED|ERROR)\s+(.+?)\s+-\s+(.+?):\s*(.+?)$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
     <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">failure_pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
@@ -288,7 +288,7 @@
         <span class="n">error_type</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">error_message</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;FAILED&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"FAILED"</span><span class="p">:</span>
             <span class="n">total_failures</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">total_errors</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -300,9 +300,9 @@
 
         <span class="n">failures_by_category</span><span class="p">[</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">test_name</span><span class="p">,</span>
-                <span class="s2">&quot;error_type&quot;</span><span class="p">:</span> <span class="n">error_type</span><span class="p">,</span>
-                <span class="s2">&quot;error_message&quot;</span><span class="p">:</span> <span class="n">error_message</span><span class="p">,</span>
+                <span class="s2">"test"</span><span class="p">:</span> <span class="n">test_name</span><span class="p">,</span>
+                <span class="s2">"error_type"</span><span class="p">:</span> <span class="n">error_type</span><span class="p">,</span>
+                <span class="s2">"error_message"</span><span class="p">:</span> <span class="n">error_message</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
 
@@ -312,21 +312,21 @@
     <span class="n">patterns</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">failures</span> <span class="ow">in</span> <span class="n">failures_by_category</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span>
-        <span class="n">examples</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;error_message&#39;</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">[:</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">examples</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'test'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'error_message'</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">failures</span><span class="p">[:</span><span class="mi">3</span><span class="p">]]</span>
 
         <span class="c1"># Determine severity</span>
-        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">category</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;setup&quot;</span><span class="p">,</span> <span class="s2">&quot;teardown&quot;</span><span class="p">]:</span>
-            <span class="n">severity</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">category</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"setup"</span><span class="p">,</span> <span class="s2">"teardown"</span><span class="p">]:</span>
+            <span class="n">severity</span> <span class="o">=</span> <span class="s2">"high"</span>
         <span class="k">elif</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
-            <span class="n">severity</span> <span class="o">=</span> <span class="s2">&quot;medium&quot;</span>
+            <span class="n">severity</span> <span class="o">=</span> <span class="s2">"medium"</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">severity</span> <span class="o">=</span> <span class="s2">&quot;low&quot;</span>
+            <span class="n">severity</span> <span class="o">=</span> <span class="s2">"low"</span>
 
         <span class="n">pattern</span> <span class="o">=</span> <span class="n">TestFailurePattern</span><span class="p">(</span>
             <span class="n">pattern_type</span><span class="o">=</span><span class="n">category</span><span class="p">,</span>
             <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
             <span class="n">examples</span><span class="o">=</span><span class="n">examples</span><span class="p">,</span>
-            <span class="n">suggested_fix</span><span class="o">=</span><span class="n">suggest_fix</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">failures</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;error_message&quot;</span><span class="p">]),</span>
+            <span class="n">suggested_fix</span><span class="o">=</span><span class="n">suggest_fix</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="n">failures</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"error_message"</span><span class="p">]),</span>
             <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
@@ -339,7 +339,7 @@
     <span class="n">flaky_tests</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Parse slow tests</span>
-    <span class="n">slow_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d+\.\d+)s\s+call\s+(.+?)$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+    <span class="n">slow_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(\d+\.\d+)s\s+call\s+(.+?)$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
     <span class="n">slow_tests</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">slow_pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
@@ -347,7 +347,7 @@
         <span class="n">test_name</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mf">5.0</span><span class="p">:</span>  <span class="c1"># Tests taking more than 5 seconds</span>
-            <span class="n">slow_tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">test_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s)&quot;</span><span class="p">)</span>
+            <span class="n">slow_tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">test_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s)"</span><span class="p">)</span>
 
     <span class="c1"># Generate recommendations</span>
     <span class="n">recommendations</span> <span class="o">=</span> <span class="p">[]</span>
@@ -355,25 +355,25 @@
     <span class="k">if</span> <span class="n">patterns</span><span class="p">:</span>
         <span class="n">top_pattern</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Most common failure: </span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">pattern_type</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> occurrences)&quot;</span>
+            <span class="sa">f</span><span class="s2">"Most common failure: </span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">pattern_type</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> occurrences)"</span>
         <span class="p">)</span>
-        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Fix: </span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">suggested_fix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Fix: </span><span class="si">{</span><span class="n">top_pattern</span><span class="o">.</span><span class="n">suggested_fix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">total_failures</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
-        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;High number of failures (</span><span class="si">{</span><span class="n">total_failures</span><span class="si">}</span><span class="s2">). Consider:&quot;</span><span class="p">)</span>
-        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  - Running tests in isolation to identify root cause&quot;</span><span class="p">)</span>
-        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  - Checking for shared state between tests&quot;</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"High number of failures (</span><span class="si">{</span><span class="n">total_failures</span><span class="si">}</span><span class="s2">). Consider:"</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  - Running tests in isolation to identify root cause"</span><span class="p">)</span>
+        <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  - Checking for shared state between tests"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">slow_tests</span><span class="p">:</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">slow_tests</span><span class="p">)</span><span class="si">}</span><span class="s2"> slow tests (&gt;5s). Consider optimization or mocking.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">slow_tests</span><span class="p">)</span><span class="si">}</span><span class="s2"> slow tests (&gt;5s). Consider optimization or mocking."</span>
         <span class="p">)</span>
 
     <span class="c1"># Check for setup/teardown issues</span>
-    <span class="n">setup_issues</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pattern_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;setup&quot;</span><span class="p">,</span> <span class="s2">&quot;teardown&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">)</span>
+    <span class="n">setup_issues</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pattern_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"setup"</span><span class="p">,</span> <span class="s2">"teardown"</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">setup_issues</span><span class="p">:</span>
         <span class="n">recommendations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;Setup/teardown failures detected. Fix fixtures before addressing test logic.&quot;</span>
+            <span class="s2">"Setup/teardown failures detected. Fix fixtures before addressing test logic."</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">TestAnalysisReport</span><span class="p">(</span>
@@ -390,69 +390,69 @@
 <div class="viewcode-block" id="print_report">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.print_report">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">print_report</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="n">TestAnalysisReport</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Print formatted test analysis report.&quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TEST FAILURE ANALYSIS&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Print formatted test analysis report."""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"TEST FAILURE ANALYSIS"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">📊 Summary:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Failures: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_failures</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Errors: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_failures</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">report</span><span class="o">.</span><span class="n">total_errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">📊 Summary:"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Failures: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_failures</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Errors: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_errors</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Total: </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">total_failures</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">report</span><span class="o">.</span><span class="n">total_errors</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">failure_patterns</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🔍 Failure Patterns:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">🔍 Failure Patterns:"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">failure_patterns</span><span class="p">:</span>
-            <span class="n">severity_icon</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="s2">&quot;🔴&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">:</span> <span class="s2">&quot;🟡&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="s2">&quot;🟢&quot;</span><span class="p">}[</span>
+            <span class="n">severity_icon</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"high"</span><span class="p">:</span> <span class="s2">"🔴"</span><span class="p">,</span> <span class="s2">"medium"</span><span class="p">:</span> <span class="s2">"🟡"</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">:</span> <span class="s2">"🟢"</span><span class="p">}[</span>
                 <span class="n">pattern</span><span class="o">.</span><span class="n">severity</span>
             <span class="p">]</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">severity_icon</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">pattern_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> occurrences)&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">severity_icon</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">pattern_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> occurrences)"</span>
             <span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Severity: </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">severity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Fix: </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">suggested_fix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    Severity: </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">severity</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    Fix: </span><span class="si">{</span><span class="n">pattern</span><span class="o">.</span><span class="n">suggested_fix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">examples</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Examples:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    Examples:"</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">examples</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      - </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"      - </span><span class="si">{</span><span class="n">ex</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">slow_tests</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">🐌 Slow Tests (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">slow_tests</span><span class="p">)</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">🐌 Slow Tests (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">slow_tests</span><span class="p">)</span><span class="si">}</span><span class="s2">):"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">slow_tests</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">test</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">test</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">recommendations</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">💡 Recommendations:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">💡 Recommendations:"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">recommendations</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">rec</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../module_docs/wads/agents/test_analyzer.html#wads.agents.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CLI entry point for test analyzer.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""CLI entry point for test analyzer."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Analyze pytest test failures and suggest fixes&quot;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Analyze pytest test failures and suggest fixes"</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;pytest_output&quot;</span><span class="p">,</span>
-        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to pytest output file (or stdin if not provided)&quot;</span><span class="p">,</span>
+        <span class="s2">"pytest_output"</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">"?"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Path to pytest output file (or stdin if not provided)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show detailed analysis&quot;</span>
+        <span class="s2">"--verbose"</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Show detailed analysis"</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="c1"># Read pytest output</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">pytest_output</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">pytest_output</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">pytest_output</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">output</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Read from stdin</span>
@@ -469,7 +469,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

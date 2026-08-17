@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.templating &mdash; wads 0.2.14 documentation</title>
+  <title>wads.templating &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -193,9 +193,9 @@ templates).</p>
 path, how its content is produced, and an optional condition. A <em>profile</em> is
 just a list of artifacts; <a class="reference internal" href="#wads.templating.generate" title="wads.templating.generate"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate()</span></code></a> walks one and writes the files,
 honoring an <code class="docutils literal notranslate"><span class="pre">overwrite</span></code> set and recording actions on an optional tracker.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">source</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;greeting.txt&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello &lt;&lt; name &gt;&gt;!&quot;</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;greeting.txt&quot;</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;world&quot;</span><span class="p">})</span>
-<span class="go">&#39;Hello world!&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">source</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"greeting.txt"</span><span class="p">:</span> <span class="s2">"Hello &lt;&lt; name &gt;&gt;!"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">"greeting.txt"</span><span class="p">],</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"world"</span><span class="p">})</span>
+<span class="go">'Hello world!'</span>
 </pre></div>
 </div>
 <dl class="py class">
@@ -242,12 +242,12 @@ text (<code class="docutils literal notranslate"><span class="pre">None</span></
 the (text) file contents, read lazily on access.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">&quot;a.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"a.txt"</span><span class="p">),</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="p">[</span><span class="s2">&quot;a.txt&quot;</span><span class="p">]</span>
-<span class="go">&#39;A&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="p">[</span><span class="s2">"a.txt"</span><span class="p">]</span>
+<span class="go">'A'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
-<span class="go">[&#39;a.txt&#39;]</span>
+<span class="go">['a.txt']</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -289,8 +289,8 @@ Actions) and <code class="docutils literal notranslate"><span class="pre">${...}
 <dt class="sig sig-object py" id="wads.templating.apply_placeholders">
 <span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">apply_placeholders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/templating.html#apply_placeholders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.apply_placeholders" title="Link to this definition"></a></dt>
 <dd><p>Legacy <code class="docutils literal notranslate"><span class="pre">#TOKEN#</span></code> substitution used by the older CI templates.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apply_placeholders</span><span class="p">(</span><span class="s2">&quot;name=#NAME#&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;#NAME#&quot;</span><span class="p">:</span> <span class="s2">&quot;wads&quot;</span><span class="p">})</span>
-<span class="go">&#39;name=wads&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apply_placeholders</span><span class="p">(</span><span class="s2">"name=#NAME#"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"#NAME#"</span><span class="p">:</span> <span class="s2">"wads"</span><span class="p">})</span>
+<span class="go">'name=wads'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -316,8 +316,8 @@ returned <a class="reference internal" href="#wads.templating.GenerationResult" 
 <dt class="sig sig-object py" id="wads.templating.render">
 <span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/templating.html#render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.render" title="Link to this definition"></a></dt>
 <dd><p>Render <code class="docutils literal notranslate"><span class="pre">content</span></code> as a Jinja2 template with wads delimiters.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;major&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;minor&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
-<span class="go">&#39;v1.2&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"major"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"minor"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">'v1.2'</span>
 </pre></div>
 </div>
 </dd></dl>

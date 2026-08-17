@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.build_dist &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scripts.build_dist &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,7 +134,7 @@
              
   <h1>Source code for wads.scripts.build_dist</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="sd">Build Python Distribution Packages</span>
 
 <span class="sd">This script builds Python distribution packages (sdist and/or wheel) using</span>
@@ -149,7 +149,7 @@
 <span class="sd">    --wheel             Build wheel distribution (default: true)</span>
 <span class="sd">    --no-sdist          Skip building source distribution</span>
 <span class="sd">    --no-wheel          Skip building wheel distribution</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -159,71 +159,71 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_using_uv</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True when we should drive installs via ``uv pip`` (pip is missing).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""True when we should drive installs via ``uv pip`` (pip is missing)."""</span>
     <span class="n">has_pip</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;import pip&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"import pip"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span><span class="o">.</span><span class="n">returncode</span>
         <span class="o">==</span> <span class="mi">0</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="ow">not</span> <span class="n">has_pip</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;uv&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">has_pip</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"uv"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_pip_install_cmd</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the command prefix for a pip install in the current interpreter.</span>
+<span class="w">    </span><span class="sd">"""Build the command prefix for a pip install in the current interpreter.</span>
 
-<span class="sd">    Uses ``uv pip install --python &lt;interpreter&gt;`` when pip isn&#39;t present in</span>
+<span class="sd">    Uses ``uv pip install --python &lt;interpreter&gt;`` when pip isn't present in</span>
 <span class="sd">    the running interpreter (e.g. minimal uv-managed venvs); ``--python`` must</span>
 <span class="sd">    follow the subcommand for uv.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">_using_uv</span><span class="p">():</span>
-        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;uv&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="s2">&quot;--python&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_install_build_tools</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Install modern build tools.&quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installing modern build tools&quot;</span><span class="p">)</span>
-    <span class="c1"># uv pip rejects &quot;pip&quot; as a target when pip isn&#39;t already present; only</span>
-    <span class="c1"># upgrade pip when we&#39;re actually using pip.</span>
+<span class="w">    </span><span class="sd">"""Install modern build tools."""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing modern build tools"</span><span class="p">)</span>
+    <span class="c1"># uv pip rejects "pip" as a target when pip isn't already present; only</span>
+    <span class="c1"># upgrade pip when we're actually using pip.</span>
     <span class="k">if</span> <span class="n">_using_uv</span><span class="p">():</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;build&quot;</span><span class="p">]</span>
+        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"build"</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--upgrade&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">]</span>
+        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"--upgrade"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">]</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_install_cmd</span><span class="p">()</span> <span class="o">+</span> <span class="n">packages</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Failed to install build tools: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Failed to install build tools: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_install_dependencies</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Install project dependencies.&quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installing project dependencies&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Install project dependencies."""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing project dependencies"</span><span class="p">)</span>
     <span class="n">pip_install</span> <span class="o">=</span> <span class="n">_pip_install_cmd</span><span class="p">()</span>
 
     <span class="c1"># Try different dependency files</span>
-    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installing from pyproject.toml&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"pyproject.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from pyproject.toml"</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not install in editable mode, continuing...&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;setup.cfg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installing from setup.cfg&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Could not install in editable mode, continuing..."</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"setup.cfg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from setup.cfg"</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not install in editable mode, continuing...&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Installing from requirements.txt&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Could not install in editable mode, continuing..."</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"requirements.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from requirements.txt"</span><span class="p">)</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="s2">&quot;requirements.txt&quot;</span><span class="p">],</span>
+            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-r"</span><span class="p">,</span> <span class="s2">"requirements.txt"</span><span class="p">],</span>
             <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -231,11 +231,11 @@
 <div class="viewcode-block" id="build_distributions">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.build_distributions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_distributions</span><span class="p">(</span>
-    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dist&quot;</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"dist"</span><span class="p">,</span>
     <span class="n">build_sdist</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">build_wheel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Build distribution packages.</span>
 
 <span class="sd">    Args:</span>
@@ -245,7 +245,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Install build tools</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_install_build_tools</span><span class="p">():</span>
         <span class="k">return</span> <span class="mi">1</span>
@@ -254,36 +254,36 @@
     <span class="n">_install_dependencies</span><span class="p">()</span>
 
     <span class="c1"># Build distributions</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building distributions&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Building distributions"</span><span class="p">)</span>
 
-    <span class="n">build_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">]</span>
+    <span class="n">build_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">]</span>
 
     <span class="c1"># Determine what to build</span>
     <span class="k">if</span> <span class="n">build_sdist</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">build_wheel</span><span class="p">:</span>
-        <span class="n">build_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--sdist&quot;</span><span class="p">)</span>
+        <span class="n">build_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--sdist"</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">build_wheel</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">build_sdist</span><span class="p">:</span>
-        <span class="n">build_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--wheel&quot;</span><span class="p">)</span>
+        <span class="n">build_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--wheel"</span><span class="p">)</span>
     <span class="c1"># If both true, build creates both by default</span>
 
     <span class="c1"># Set output directory</span>
     <span class="k">if</span> <span class="n">output_dir</span><span class="p">:</span>
-        <span class="n">build_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--outdir&quot;</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">])</span>
+        <span class="n">build_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">"--outdir"</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">])</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">build_args</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Running: </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">build_args</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">build_args</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Build failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Build failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">1</span>
 
     <span class="c1"># List built distributions</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">output_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Built distributions:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Built distributions:"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">output_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
             <span class="n">size</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">/</span> <span class="mi">1024</span>  <span class="c1"># KB</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">40s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">8.1f</span><span class="si">}</span><span class="s2"> KB&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">40s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">8.1f</span><span class="si">}</span><span class="s2"> KB"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="mi">0</span></div>
 
@@ -292,36 +292,36 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Main entry point."""</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Build Python distribution packages&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Build Python distribution packages"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--output-dir&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output directory for built distributions&quot;</span><span class="p">,</span>
+        <span class="s2">"--output-dir"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"dist"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Output directory for built distributions"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--sdist&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="s2">"--sdist"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Build source distribution (default)&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Build source distribution (default)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--wheel&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="s2">"--wheel"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Build wheel distribution (default)&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Build wheel distribution (default)"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--no-sdist&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip building source distribution&quot;</span><span class="p">,</span>
+        <span class="s2">"--no-sdist"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Skip building source distribution"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--no-wheel&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip building wheel distribution&quot;</span><span class="p">,</span>
+        <span class="s2">"--no-wheel"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Skip building wheel distribution"</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -334,7 +334,7 @@
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

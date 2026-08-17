@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.export_ci_env &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scripts.export_ci_env &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -222,38 +222,38 @@ repository variables (<code class="docutils literal notranslate"><span class="pr
 <code class="docutils literal notranslate"><span class="pre">mask_values</span></code> for re-masking; variable- and default-sourced values are
 not masked (they are not sensitive by definition).</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UNSET_THING&quot;</span><span class="p">,</span> <span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;LOG_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">},</span>
-<span class="gp">... </span>    <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-xxx&quot;</span><span class="p">,</span> <span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
-<span class="gp">... </span>    <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">"TAVILY_API_KEY"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"UNSET_THING"</span><span class="p">,</span> <span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"LOG_LEVEL"</span><span class="p">:</span> <span class="s2">"DEBUG"</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-xxx"</span><span class="p">,</span> <span class="s2">"TAVILY_API_KEY"</span><span class="p">:</span> <span class="s2">""</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">},</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">exported</span>
-<span class="go">[&#39;LOG_LEVEL&#39;, &#39;OPENAI_API_KEY&#39;, &#39;COSMO_TEST_LEVEL&#39;]</span>
+<span class="go">['LOG_LEVEL', 'OPENAI_API_KEY', 'COSMO_TEST_LEVEL']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span>
 <span class="go">[]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">missing_test</span>
-<span class="go">[&#39;TAVILY_API_KEY&#39;]</span>
+<span class="go">['TAVILY_API_KEY']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span>  <span class="c1"># only the secret-sourced value</span>
-<span class="go">[&#39;sk-xxx&#39;]</span>
+<span class="go">['sk-xxx']</span>
 </pre></div>
 </div>
 <p>A required var with no backing secret <em>or</em> variable is reported (caller
 should fail CI):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span><span class="o">.</span><span class="n">missing_required</span>
-<span class="go">[(&#39;PYPI_PASSWORD&#39;, &#39;PYPI_PASSWORD&#39;)]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span><span class="o">.</span><span class="n">missing_required</span>
+<span class="go">[('PYPI_PASSWORD', 'PYPI_PASSWORD')]</span>
 </pre></div>
 </div>
 <p>Aliases let an env var read a differently-named secret:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;HF_WRITE_TOKEN&quot;</span><span class="p">},</span>
-<span class="gp">... </span>    <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;HF_WRITE_TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;hf_xxx&quot;</span><span class="p">})</span>
+<span class="gp">... </span>    <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">"HF_TOKEN"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">"HF_TOKEN"</span><span class="p">:</span> <span class="s2">"HF_WRITE_TOKEN"</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"HF_WRITE_TOKEN"</span><span class="p">:</span> <span class="s2">"hf_xxx"</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">exported</span>
-<span class="go">[&#39;HF_TOKEN&#39;]</span>
+<span class="go">['HF_TOKEN']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
-<span class="go">[&#39;HF_TOKEN=hf_xxx&#39;]</span>
+<span class="go">['HF_TOKEN=hf_xxx']</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -274,19 +274,19 @@ single-encoded blob is also accepted. Named entries win over blob entries
 (they are the same caller values anyway), and non-exportable keys (the
 blob itself, <code class="docutils literal notranslate"><span class="pre">github_token</span></code>) are dropped.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">({</span>
-<span class="gp">... </span>    <span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="s1">&#39;&quot;{</span><span class="se">\\</span><span class="s1">n  </span><span class="se">\\</span><span class="s1">&quot;MY_KEY</span><span class="se">\\</span><span class="s1">&quot;: </span><span class="se">\\</span><span class="s1">&quot;v1</span><span class="se">\\</span><span class="s1">&quot;,</span><span class="se">\\</span><span class="s1">n  </span><span class="se">\\</span><span class="s1">&quot;github_token</span><span class="se">\\</span><span class="s1">&quot;: </span><span class="se">\\</span><span class="s1">&quot;t</span><span class="se">\\</span><span class="s1">&quot;</span><span class="se">\\</span><span class="s1">n}&quot;&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-named&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="s1">'"{</span><span class="se">\\</span><span class="s1">n  </span><span class="se">\\</span><span class="s1">"MY_KEY</span><span class="se">\\</span><span class="s1">": </span><span class="se">\\</span><span class="s1">"v1</span><span class="se">\\</span><span class="s1">",</span><span class="se">\\</span><span class="s1">n  </span><span class="se">\\</span><span class="s1">"github_token</span><span class="se">\\</span><span class="s1">": </span><span class="se">\\</span><span class="s1">"t</span><span class="se">\\</span><span class="s1">"</span><span class="se">\\</span><span class="s1">n}"'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-named"</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
-<span class="go">[&#39;MY_KEY&#39;, &#39;OPENAI_API_KEY&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="p">[</span><span class="s2">&quot;MY_KEY&quot;</span><span class="p">]</span>
-<span class="go">&#39;v1&#39;</span>
+<span class="go">['MY_KEY', 'OPENAI_API_KEY']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="p">[</span><span class="s2">"MY_KEY"</span><span class="p">]</span>
+<span class="go">'v1'</span>
 </pre></div>
 </div>
 <p>Malformed blobs are ignored rather than fatal (the named layer still
 works, and required-validation reports any name that failed to resolve):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_transported_secrets</span><span class="p">({</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="s2">&quot;not json&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">})</span>
-<span class="go">{&#39;A&#39;: &#39;x&#39;}</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_transported_secrets</span><span class="p">({</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="s2">"not json"</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">})</span>
+<span class="go">{'A': 'x'}</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.licensing &mdash; wads 0.2.14 documentation</title>
+  <title>wads.licensing &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -176,12 +176,12 @@ See pygithub for details.
 <dd class="field-even"><p>Resolved author name or placeholder</p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="s1">&#39;John Doe&#39;</span><span class="p">)</span>
-<span class="go">&#39;John Doe&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">pyproject_authors</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Jane Smith&#39;</span><span class="p">}])</span>
-<span class="go">&#39;Jane Smith&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://github.com/myorg/myrepo&#39;</span><span class="p">)</span>
-<span class="go">&#39;myorg&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="s1">'John Doe'</span><span class="p">)</span>
+<span class="go">'John Doe'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">pyproject_authors</span><span class="o">=</span><span class="p">[{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Jane Smith'</span><span class="p">}])</span>
+<span class="go">'Jane Smith'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_author</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s1">'https://github.com/myorg/myrepo'</span><span class="p">)</span>
+<span class="go">'myorg'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -206,10 +206,10 @@ See pygithub for details.
 <dd class="field-even"><p>License text with substituted values</p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Copyright [yyyy] [fullname]&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">&#39;John&#39;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2025</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">"Copyright [yyyy] [fullname]"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">'John'</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2025</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
-<span class="go">&#39;Copyright 2025 John&#39;</span>
+<span class="go">'Copyright 2025 John'</span>
 </pre></div>
 </div>
 </dd></dl>

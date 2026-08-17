@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.2.14 documentation</title>
+  <title>wads.pack &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -170,7 +170,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span>  <span class="c1"># see what you got</span>
 <span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">increment</span><span class="o">-</span><span class="n">configs</span><span class="o">-</span><span class="n">version</span>  <span class="c1"># update (increment the version and write that in setup.cfg</span>
 <span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span><span class="o">-</span><span class="n">version</span>  <span class="c1"># see that it worked</span>
-<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span>  <span class="c1"># ... if you really want to see the whole configs again (you&#39;re really paranoid)</span>
+<span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">current</span><span class="o">-</span><span class="n">configs</span>  <span class="c1"># ... if you really want to see the whole configs again (you're really paranoid)</span>
 <span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span><span class="o">-</span><span class="n">setup</span>  <span class="c1"># see that it worked</span>
 <span class="n">python</span> <span class="n">pack</span><span class="o">.</span><span class="n">py</span> <span class="n">twine</span><span class="o">-</span><span class="n">upload</span><span class="o">-</span><span class="n">dist</span>  <span class="c1"># publish</span>
 <span class="c1"># and then go check things work...</span>
@@ -208,8 +208,8 @@
 <p>Routes through <a class="reference internal" href="#wads.pack.http_get_json" title="wads.pack.http_get_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">http_get_json()</span></code></a>, so it works whether or not the optional
 <code class="docutils literal notranslate"><span class="pre">requests</span></code> dependency is installed (urllib fallback), and returns <code class="docutils literal notranslate"><span class="pre">None</span></code>
 when the package isn’t on PyPI instead of raising.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">current_pypi_version</span><span class="p">(</span><span class="s1">&#39;wads&#39;</span><span class="p">)</span>
-<span class="go">&#39;0.1.19&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">current_pypi_version</span><span class="p">(</span><span class="s1">'wads'</span><span class="p">)</span>
+<span class="go">'0.1.19'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -225,17 +225,17 @@ or a module/package name string.</p>
 whose name and containing directory is the same):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">wads</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">wads</span><span class="p">)</span>
-<span class="go">(.../wads&#39;, &#39;wads&#39;)</span>
+<span class="go">(.../wads', 'wads')</span>
 </pre></div>
 </div>
 <p>You can also just specify the name of the package (it will be imported):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="s1">&#39;wads&#39;</span><span class="p">)</span>
-<span class="go">(&#39;.../wads&#39;, &#39;wads&#39;)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="s1">'wads'</span><span class="p">)</span>
+<span class="go">('.../wads', 'wads')</span>
 </pre></div>
 </div>
 <p>Or you can specify the path to the package directory explicitly:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="s1">&#39;/home/user/projects/wads&#39;</span><span class="p">)</span>
-<span class="go">(&#39;/home/user/projects/wads&#39;, &#39;wads&#39;)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="s1">'/home/user/projects/wads'</span><span class="p">)</span>
+<span class="go">('/home/user/projects/wads', 'wads')</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -244,8 +244,8 @@ whose name and containing directory is the same):</p>
 <dt class="sig sig-object py" id="wads.pack.folders_that_have_init_py_files">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">folders_that_have_init_py_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#folders_that_have_init_py_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.folders_that_have_init_py_files" title="Link to this definition"></a></dt>
 <dd><p>Get a list of folders in the package directory that have an __init__.py file.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="s1">&#39;/home/user/projects/wads&#39;</span><span class="p">)</span>
-<span class="go">[&#39;wads&#39;, &#39;wads/util&#39;, &#39;wads/pack&#39;, &#39;wads/docs_gen&#39;]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="s1">'/home/user/projects/wads'</span><span class="p">)</span>
+<span class="go">['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -256,13 +256,13 @@ whose name and containing directory is the same):</p>
 <dd><p>Get the path to the directory containing the module’s code file.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">os</span><span class="p">)</span>
-<span class="go">&#39;/usr/lib/python3.8&#39;</span>
+<span class="go">'/usr/lib/python3.8'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">sklearn</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">sklearn</span><span class="p">)</span>
-<span class="go">&#39;/usr/local/lib/python3.8/dist-packages/sklearn&#39;</span>
+<span class="go">'/usr/local/lib/python3.8/dist-packages/sklearn'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">local_package</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">local_package</span><span class="p">)</span>
-<span class="go">&#39;/home/user/projects/local_package/local_package&#39;</span>
+<span class="go">'/home/user/projects/local_package/local_package'</span>
 </pre></div>
 </div>
 <p>Read more: <a class="reference external" href="https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632">https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632</a></p>
@@ -322,8 +322,8 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <dt class="sig sig-object py" id="wads.pack.highest_pypi_version">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">highest_pypi_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_requests</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#highest_pypi_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.highest_pypi_version" title="Link to this definition"></a></dt>
 <dd><p>Return version of package on pypi.python.org using json.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">highest_pypi_version</span><span class="p">(</span><span class="s1">&#39;wads&#39;</span><span class="p">)</span>
-<span class="go">&#39;0.1.19&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">highest_pypi_version</span><span class="p">(</span><span class="s1">'wads'</span><span class="p">)</span>
+<span class="go">'0.1.19'</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -353,12 +353,12 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">postprocess_ini_section_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#postprocess_ini_section_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.postprocess_ini_section_items" title="Link to this definition"></a></dt>
 <dd><p>Transform newline-separated string values into actual list of strings (assuming that intent)</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section_from_ini</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;wads&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">packaging</span><span class="se">\n\t</span><span class="s1">publishing&#39;</span>
+<span class="gp">... </span>    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'wads'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">'keywords'</span><span class="p">:</span> <span class="s1">'</span><span class="se">\n\t</span><span class="s1">packaging</span><span class="se">\n\t</span><span class="s1">publishing'</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">section_for_python</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">postprocess_ini_section_items</span><span class="p">(</span><span class="n">section_from_ini</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">section_for_python</span>
-<span class="go">{&#39;name&#39;: &#39;wads&#39;, &#39;keywords&#39;: [&#39;packaging&#39;, &#39;publishing&#39;]}</span>
+<span class="go">{'name': 'wads', 'keywords': ['packaging', 'publishing']}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -368,11 +368,11 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">preprocess_ini_section_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference internal" href="../../_modules/wads/pack.html#preprocess_ini_section_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.preprocess_ini_section_items" title="Link to this definition"></a></dt>
 <dd><p>Transform list values into newline-separated strings, in view of writing the value to a ini formatted section</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;wads&#39;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;documentation&#39;</span><span class="p">,</span> <span class="s1">&#39;packaging&#39;</span><span class="p">,</span> <span class="s1">&#39;publishing&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'wads'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">'keywords'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'documentation'</span><span class="p">,</span> <span class="s1">'packaging'</span><span class="p">,</span> <span class="s1">'publishing'</span><span class="p">]</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">for_ini</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">preprocess_ini_section_items</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;keywords =&#39;</span> <span class="o">+</span> <span class="n">for_ini</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'keywords ='</span> <span class="o">+</span> <span class="n">for_ini</span><span class="p">[</span><span class="s1">'keywords'</span><span class="p">])</span>
 <span class="go">keywords =</span>
 <span class="go">    documentation</span>
 <span class="go">    packaging</span>
@@ -493,15 +493,15 @@ is, and increment that.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">&#39;wads&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">'wads'</span><span class="p">)</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">&#39;wads-test&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">'wads-test'</span><span class="p">)</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">&#39;wads_test&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">'wads_test'</span><span class="p">)</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">&#39;_wads_test&#39;</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">'_wads_test'</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">&#39;wads-test-&#39;</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_package_name</span><span class="p">(</span><span class="s1">'wads-test-'</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">False</span>
 </pre></div>
 </div>

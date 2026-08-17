@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.set_env_vars &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scripts.set_env_vars &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,7 +134,7 @@
              
   <h1>Source code for wads.scripts.set_env_vars</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="sd">Set Environment Variables from GitHub Secrets</span>
 
 <span class="sd">This script reads the CI configuration from pyproject.toml and sets environment</span>
@@ -147,7 +147,7 @@
 <span class="sd">    SECRETS_CONTEXT - JSON string of all GitHub Secrets</span>
 <span class="sd">    GITHUB_ENV - Path to GitHub Actions environment file</span>
 <span class="sd">    GITHUB_STEP_SUMMARY - Path to GitHub Actions step summary file</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -156,43 +156,43 @@
 
 <span class="c1"># Reserved env vars that should not be set from secrets</span>
 <span class="n">RESERVED_VARS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;GITHUB_TOKEN&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_ACTOR&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_REPOSITORY&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_REF&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_SHA&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_WORKSPACE&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_EVENT_NAME&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_EVENT_PATH&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_RUN_ID&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_RUN_NUMBER&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_ACTION&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;GITHUB_ACTIONS&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;CI&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;HOME&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PATH&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;SHELL&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;USER&quot;</span><span class="p">,</span>
+    <span class="s2">"GITHUB_TOKEN"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_ACTOR"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_REPOSITORY"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_REF"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_SHA"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_WORKSPACE"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_EVENT_NAME"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_EVENT_PATH"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_RUN_ID"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_RUN_NUMBER"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_ACTION"</span><span class="p">,</span>
+    <span class="s2">"GITHUB_ACTIONS"</span><span class="p">,</span>
+    <span class="s2">"CI"</span><span class="p">,</span>
+    <span class="s2">"HOME"</span><span class="p">,</span>
+    <span class="s2">"PATH"</span><span class="p">,</span>
+    <span class="s2">"SHELL"</span><span class="p">,</span>
+    <span class="s2">"USER"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_env_var</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set environment variable for subsequent GitHub Actions steps.&quot;&quot;&quot;</span>
-    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Set environment variable for subsequent GitHub Actions steps."""</span>
+    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">env_file</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_ENV not set, skipping: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: GITHUB_ENV not set, skipping: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="c1"># Escape multiline values</span>
-        <span class="n">delimiter</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;EOF_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;&lt;</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">delimiter</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"EOF_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;&lt;</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">delimiter</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="set_environment_variables">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">set_environment_variables</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_environment_variables</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Set environment variables from GitHub Secrets based on CI config.</span>
 
 <span class="sd">    Args:</span>
@@ -200,7 +200,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
 
@@ -208,10 +208,10 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
 
         <span class="c1"># Get secrets (GitHub Actions provides this as JSON)</span>
-        <span class="n">secrets_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SECRETS_CONTEXT&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">secrets_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SECRETS_CONTEXT"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">secrets</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">secrets_json</span><span class="p">)</span>
 
-        <span class="c1"># Track what we&#39;re setting</span>
+        <span class="c1"># Track what we're setting</span>
         <span class="n">set_vars</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">missing_required</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">missing_test</span> <span class="o">=</span> <span class="p">[]</span>
@@ -228,17 +228,17 @@
                 <span class="n">skipped_reserved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
                 <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>  <span class="c1"># Treat as missing</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;[ERROR] Cannot set reserved env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+                    <span class="sa">f</span><span class="s2">"[ERROR] Cannot set reserved env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
                 <span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
                 <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
                 <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Set required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[OK] Set required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">missing_required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Missing required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Missing required env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
 
         <span class="c1"># Process test env vars</span>
         <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">test_vars</span><span class="p">:</span>
@@ -249,11 +249,11 @@
             <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
                 <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
                 <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Set test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[OK] Set test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">missing_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;[WARN] Missing test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> (tests may fail or be skipped)&quot;</span>
+                    <span class="sa">f</span><span class="s2">"[WARN] Missing test env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> (tests may fail or be skipped)"</span>
                 <span class="p">)</span>
 
         <span class="c1"># Process extra env vars (no warnings)</span>
@@ -265,61 +265,61 @@
             <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">secrets</span><span class="p">:</span>
                 <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">secrets</span><span class="p">[</span><span class="n">var_name</span><span class="p">])</span>
                 <span class="n">set_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Set extra env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[OK] Set extra env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Set default env vars</span>
         <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>  <span class="c1"># Don&#39;t override existing</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>  <span class="c1"># Don't override existing</span>
                 <span class="n">_set_env_var</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] Set default env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[OK] Set default env var: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Print summary</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Environment Variables Summary:&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Set: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Environment Variables Summary:"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Set: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">missing_test</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  [WARN] Missing test vars: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  [WARN] Missing test vars: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">skipped_reserved</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Skipped reserved vars: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Skipped reserved vars: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
 
         <span class="c1"># Create GitHub Actions step summary</span>
-        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">)</span>
+        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_STEP_SUMMARY"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">summary_file</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## Environment Variables</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"## Environment Variables</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">set_vars</span><span class="p">:</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[OK] **Set </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables** from secrets</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[OK] **Set </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">set_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> variables** from secrets</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">missing_test</span><span class="p">:</span>
                     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;[WARN] **Missing test variables:** </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">"[WARN] **Missing test variables:** </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_test</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
                     <span class="p">)</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;_Tests requiring these may fail or be skipped_</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"_Tests requiring these may fail or be skipped_</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">skipped_reserved</span><span class="p">:</span>
                     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;[INFO] Skipped reserved variables: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">"[INFO] Skipped reserved variables: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_reserved</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
                     <span class="p">)</span>
 
         <span class="c1"># Fail if required vars are missing</span>
         <span class="k">if</span> <span class="n">missing_required</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[ERROR] ERROR: Missing required environment variables!&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">[ERROR] ERROR: Missing required environment variables!"</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;   Add these to GitHub Secrets: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_required</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"   Add these to GitHub Secrets: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_required</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="mi">1</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[OK] Environment variables configured successfully&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">[OK] Environment variables configured successfully"</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span>
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[ERROR] pyproject.toml not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[ERROR] pyproject.toml not found"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">1</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Error setting environment variables: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Error setting environment variables: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 
         <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
@@ -330,13 +330,13 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
-    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;.&quot;</span>
+<span class="w">    </span><span class="sd">"""Main entry point."""</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"."</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">set_environment_variables</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">))</span></div>
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

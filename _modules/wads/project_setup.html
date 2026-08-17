@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.project_setup &mdash; wads 0.2.14 documentation</title>
+  <title>wads.project_setup &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.project_setup</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Project setup utilities: name checking, GitHub operations, and orchestration.</span>
+<span></span><span class="sd">"""Project setup utilities: name checking, GitHub operations, and orchestration.</span>
 
 <span class="sd">This module provides the building blocks for AI-assisted project creation.</span>
 <span class="sd">Each function is independently useful — they can be called from Python, CLI, or</span>
@@ -144,7 +144,7 @@
 <span class="sd">- Manage name candidate files (pools of potential names)</span>
 <span class="sd">- Create GitHub repositories via the gh CLI</span>
 <span class="sd">- Orchestrate full project creation (repo → populate → commit/push)</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -165,30 +165,30 @@
 <span class="c1"># Name availability checking</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
-<span class="n">PYPI_PROJECT_URL</span> <span class="o">=</span> <span class="s2">&quot;https://pypi.org/project/</span><span class="si">{name}</span><span class="s2">/&quot;</span>
-<span class="n">GITHUB_REPO_URL</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/</span><span class="si">{org}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">&quot;</span>
+<span class="n">PYPI_PROJECT_URL</span> <span class="o">=</span> <span class="s2">"https://pypi.org/project/</span><span class="si">{name}</span><span class="s2">/"</span>
+<span class="n">GITHUB_REPO_URL</span> <span class="o">=</span> <span class="s2">"https://github.com/</span><span class="si">{org}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">"</span>
 
 
 <div class="viewcode-block" id="is_available_on_pypi">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.is_available_on_pypi">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_available_on_pypi</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a package name is unclaimed on PyPI.</span>
+<span class="w">    </span><span class="sd">"""Check if a package name is unclaimed on PyPI.</span>
 
 <span class="sd">    Returns True if the name is available (no package exists with that name).</span>
 
-<span class="sd">    &gt;&gt;&gt; is_available_on_pypi(&quot;wads&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; is_available_on_pypi("wads")  # doctest: +SKIP</span>
 <span class="sd">    False</span>
-<span class="sd">    &gt;&gt;&gt; is_available_on_pypi(&quot;zzz_nonexistent_pkg_12345&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; is_available_on_pypi("zzz_nonexistent_pkg_12345")  # doctest: +SKIP</span>
 <span class="sd">    True</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">url</span> <span class="o">=</span> <span class="n">PYPI_PACKAGE_JSON_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">http_get_json</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="c1"># urllib path returns None on HTTPError (404) → available</span>
         <span class="k">return</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="c1"># requests path raises ValueError(&quot;response code was 404&quot;) → available</span>
-        <span class="k">if</span> <span class="s2">&quot;404&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+        <span class="c1"># requests path raises ValueError("response code was 404") → available</span>
+        <span class="k">if</span> <span class="s2">"404"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="c1"># Other status codes (500, etc.) → unknown, treat as unavailable</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -200,7 +200,7 @@
 <div class="viewcode-block" id="pypi_project_url">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.pypi_project_url">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pypi_project_url</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the PyPI project page URL for a package name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the PyPI project page URL for a package name."""</span>
     <span class="k">return</span> <span class="n">PYPI_PROJECT_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
@@ -208,7 +208,7 @@
 <div class="viewcode-block" id="github_repo_url">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.github_repo_url">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the GitHub repository URL for org/name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the GitHub repository URL for org/name."""</span>
     <span class="n">org</span> <span class="o">=</span> <span class="n">org</span> <span class="ow">or</span> <span class="n">_resolve_org</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">GITHUB_REPO_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
@@ -217,15 +217,15 @@
 <div class="viewcode-block" id="is_available_on_github">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.is_available_on_github">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_available_on_github</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a repository name is available on GitHub.</span>
+<span class="w">    </span><span class="sd">"""Check if a repository name is available on GitHub.</span>
 
 <span class="sd">    Requires the ``gh`` CLI to be installed and authenticated.</span>
 <span class="sd">    Returns True if no repo exists at org/name.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">org</span> <span class="o">=</span> <span class="n">org</span> <span class="ow">or</span> <span class="n">_resolve_org</span><span class="p">()</span>
     <span class="n">_require_gh</span><span class="p">()</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;repo&quot;</span><span class="p">,</span> <span class="s2">&quot;view&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"view"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
         <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span></div>
@@ -235,16 +235,16 @@
 <div class="viewcode-block" id="check_name_availability">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.check_name_availability">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_name_availability</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check a package name&#39;s validity and availability on PyPI and GitHub.</span>
+<span class="w">    </span><span class="sd">"""Check a package name's validity and availability on PyPI and GitHub.</span>
 
 <span class="sd">    Returns a dict with keys:</span>
 <span class="sd">        name, valid_pep508, pypi_available, pypi_url,</span>
 <span class="sd">        github_available, github_url</span>
 
-<span class="sd">    &gt;&gt;&gt; result = check_name_availability(&quot;wads&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; result[&quot;valid_pep508&quot;]  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; result = check_name_availability("wads")  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; result["valid_pep508"]  # doctest: +SKIP</span>
 <span class="sd">    True</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="n">validate_package_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">pypi_avail</span> <span class="o">=</span> <span class="n">is_available_on_pypi</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span>
@@ -258,12 +258,12 @@
         <span class="n">gh_url</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-        <span class="s2">&quot;valid_pep508&quot;</span><span class="p">:</span> <span class="n">valid</span><span class="p">,</span>
-        <span class="s2">&quot;pypi_available&quot;</span><span class="p">:</span> <span class="n">pypi_avail</span><span class="p">,</span>
-        <span class="s2">&quot;pypi_url&quot;</span><span class="p">:</span> <span class="n">pypi_url</span><span class="p">,</span>
-        <span class="s2">&quot;github_available&quot;</span><span class="p">:</span> <span class="n">github_avail</span><span class="p">,</span>
-        <span class="s2">&quot;github_url&quot;</span><span class="p">:</span> <span class="n">gh_url</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="s2">"valid_pep508"</span><span class="p">:</span> <span class="n">valid</span><span class="p">,</span>
+        <span class="s2">"pypi_available"</span><span class="p">:</span> <span class="n">pypi_avail</span><span class="p">,</span>
+        <span class="s2">"pypi_url"</span><span class="p">:</span> <span class="n">pypi_url</span><span class="p">,</span>
+        <span class="s2">"github_available"</span><span class="p">:</span> <span class="n">github_avail</span><span class="p">,</span>
+        <span class="s2">"github_url"</span><span class="p">:</span> <span class="n">gh_url</span><span class="p">,</span>
     <span class="p">}</span></div>
 
 
@@ -271,7 +271,7 @@
 <div class="viewcode-block" id="check_names">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.check_names">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_names</span><span class="p">(</span><span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check multiple names for availability. Returns a list of result dicts.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Check multiple names for availability. Returns a list of result dicts."""</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">check_name_availability</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span></div>
 
 
@@ -284,22 +284,22 @@
 <div class="viewcode-block" id="list_name_candidate_files">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.list_name_candidate_files">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_name_candidate_files</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;List all name candidate files in the name_candidates directory.</span>
+<span class="w">    </span><span class="sd">"""List all name candidate files in the name_candidates directory.</span>
 
 <span class="sd">    Name candidate files are plain text files (one name per line).</span>
 <span class="sd">    Lines starting with # are comments; blank lines are ignored.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">name_candidates_dir</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="p">[]</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span></div>
 
 
 
 <div class="viewcode-block" id="load_name_candidates">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.load_name_candidates">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_name_candidates</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load name candidates from a file or all files in the name_candidates directory.</span>
+<span class="w">    </span><span class="sd">"""Load name candidates from a file or all files in the name_candidates directory.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        filepath: Specific file to load from. If None, loads from all files</span>
@@ -307,7 +307,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        List of candidate names (deduplicated, preserving order).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_parse_name_file</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
 
@@ -323,11 +323,11 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse_name_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a name candidate file: one name per line, # comments, blank lines.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Parse a name candidate file: one name per line, # comments, blank lines."""</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">line</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">):</span>
             <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">names</span>
 
@@ -340,34 +340,34 @@
 <div class="viewcode-block" id="detect_github_username">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.detect_github_username">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">detect_github_username</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect the current GitHub username.</span>
+<span class="w">    </span><span class="sd">"""Detect the current GitHub username.</span>
 
 <span class="sd">    Tries ``gh auth status`` first, then falls back to ``git config user.name``.</span>
 <span class="sd">    Returns None if detection fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Try gh CLI first</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;gh&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"gh"</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">],</span>
+                <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"auth"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">],</span>
                 <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">output</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="o">+</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
-            <span class="c1"># Look for &quot;Logged in to github.com account &lt;username&gt;&quot;</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Logged in to github\.com account (\S+)&quot;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+            <span class="c1"># Look for "Logged in to github.com account &lt;username&gt;"</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Logged in to github\.com account (\S+)"</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
-                <span class="c1"># Alternative format: &quot;account &lt;username&gt;&quot;</span>
-                <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;account\s+(\S+)&quot;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+                <span class="c1"># Alternative format: "account &lt;username&gt;"</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"account\s+(\S+)"</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;()&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"()"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">pass</span>
 
     <span class="c1"># Fall back to git config</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;--global&quot;</span><span class="p">,</span> <span class="s2">&quot;user.name&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"--global"</span><span class="p">,</span> <span class="s2">"user.name"</span><span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
@@ -381,28 +381,28 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_org</span><span class="p">(</span><span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the GitHub org/username to use.</span>
+<span class="w">    </span><span class="sd">"""Resolve the GitHub org/username to use.</span>
 
 <span class="sd">    Priority: explicit arg &gt; user preferences &gt; detected username.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">org</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">org</span>
     <span class="n">prefs</span> <span class="o">=</span> <span class="n">read_user_preferences</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_org&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">&quot;default_org&quot;</span><span class="p">]</span>
-    <span class="n">username</span> <span class="o">=</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;github_username&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">detect_github_username</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default_org"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">prefs</span><span class="p">[</span><span class="s2">"default_org"</span><span class="p">]</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"github_username"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">detect_github_username</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">username</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">username</span>
     <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span>
-        <span class="s2">&quot;Could not determine GitHub org/username. &quot;</span>
-        <span class="s2">&quot;Set it via user preferences or ensure `gh` CLI is authenticated.&quot;</span>
+        <span class="s2">"Could not determine GitHub org/username. "</span>
+        <span class="s2">"Set it via user preferences or ensure `gh` CLI is authenticated."</span>
     <span class="p">)</span>
 
 
 <div class="viewcode-block" id="repo_exists">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.repo_exists">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">repo_exists</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a GitHub repository exists at org/name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Check if a GitHub repository exists at org/name."""</span>
     <span class="k">return</span> <span class="ow">not</span> <span class="n">is_available_on_github</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span></div>
 
 
@@ -413,12 +413,12 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">public</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">clone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">clone_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a GitHub repository via the ``gh`` CLI.</span>
+<span class="w">    </span><span class="sd">"""Create a GitHub repository via the ``gh`` CLI.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: Repository name.</span>
@@ -434,17 +434,17 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        EnvironmentError: If ``gh`` CLI is not available.</span>
 <span class="sd">        subprocess.CalledProcessError: If repo creation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">_require_gh</span><span class="p">()</span>
     <span class="n">org</span> <span class="o">=</span> <span class="n">org</span> <span class="ow">or</span> <span class="n">_resolve_org</span><span class="p">()</span>
-    <span class="n">full_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">visibility</span> <span class="o">=</span> <span class="s2">&quot;--public&quot;</span> <span class="k">if</span> <span class="n">public</span> <span class="k">else</span> <span class="s2">&quot;--private&quot;</span>
+    <span class="n">full_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">visibility</span> <span class="o">=</span> <span class="s2">"--public"</span> <span class="k">if</span> <span class="n">public</span> <span class="k">else</span> <span class="s2">"--private"</span>
 
-    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;repo&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="n">full_name</span><span class="p">,</span> <span class="n">visibility</span><span class="p">]</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"create"</span><span class="p">,</span> <span class="n">full_name</span><span class="p">,</span> <span class="n">visibility</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--description&quot;</span><span class="p">,</span> <span class="n">description</span><span class="p">])</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">"--description"</span><span class="p">,</span> <span class="n">description</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">clone</span><span class="p">:</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--clone&quot;</span><span class="p">)</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--clone"</span><span class="p">)</span>
 
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">clone_dir</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">)</span>
@@ -463,10 +463,10 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">setup_project</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">author</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mit&quot;</span><span class="p">,</span>
+    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mit"</span><span class="p">,</span>
     <span class="n">root_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">proj_rootdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">create_repo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -475,7 +475,7 @@
     <span class="n">setup_opsward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Orchestrate full project creation.</span>
+<span class="w">    </span><span class="sd">"""Orchestrate full project creation.</span>
 
 <span class="sd">    Steps (each independently skippable via keyword args):</span>
 <span class="sd">    1. Validate name</span>
@@ -485,7 +485,7 @@
 <span class="sd">    5. Run opsward generate (if setup_opsward and opsward is available)</span>
 
 <span class="sd">    Returns a summary dict with keys: path, steps_completed, warnings.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.populate</span><span class="w"> </span><span class="kn">import</span> <span class="n">populate_pkg_dir</span>
 
     <span class="n">log</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="kc">None</span>
@@ -494,22 +494,22 @@
 
     <span class="c1"># 1. Validate name</span>
     <span class="n">validate_package_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;name_validated&quot;</span><span class="p">)</span>
-    <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; is valid (PEP 508)&quot;</span><span class="p">)</span>
+    <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"name_validated"</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Name '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' is valid (PEP 508)"</span><span class="p">)</span>
 
     <span class="c1"># Resolve org and paths</span>
     <span class="n">resolved_org</span> <span class="o">=</span> <span class="n">org</span> <span class="ow">or</span> <span class="n">_resolve_org</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">root_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">root_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://github.com/</span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">root_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://github.com/</span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">proj_rootdir</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
     <span class="c1"># 2. Create GitHub repo</span>
     <span class="k">if</span> <span class="n">create_repo</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">repo_exists</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">):</span>
-            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Repository </span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists, skipping creation&quot;</span><span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;repo_already_exists:</span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Repository </span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists, skipping creation"</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"repo_already_exists:</span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating GitHub repository: </span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Creating GitHub repository: </span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">create_github_repo</span><span class="p">(</span>
                 <span class="n">name</span><span class="p">,</span>
                 <span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">,</span>
@@ -518,50 +518,50 @@
                 <span class="n">clone</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">clone_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
             <span class="p">)</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;repo_created&quot;</span><span class="p">)</span>
-            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Repository created at </span><span class="si">{</span><span class="n">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"repo_created"</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Repository created at </span><span class="si">{</span><span class="n">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Ensure local dir exists</span>
     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># 3. Populate project files</span>
     <span class="k">if</span> <span class="n">populate</span><span class="p">:</span>
-        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Populating project files in </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Populating project files in </span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Merge author from preferences if not provided</span>
         <span class="k">if</span> <span class="n">author</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">prefs</span> <span class="o">=</span> <span class="n">read_user_preferences</span><span class="p">()</span>
-            <span class="n">author</span> <span class="o">=</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_author&quot;</span><span class="p">)</span>
+            <span class="n">author</span> <span class="o">=</span> <span class="n">prefs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default_author"</span><span class="p">)</span>
 
         <span class="n">populate_pkg_dir</span><span class="p">(</span>
             <span class="n">pkg_dir</span><span class="p">,</span>
             <span class="n">description</span><span class="o">=</span><span class="n">description</span>
-            <span class="ow">or</span> <span class="s2">&quot;There is a bit of an air of mystery around this project...&quot;</span><span class="p">,</span>
+            <span class="ow">or</span> <span class="s2">"There is a bit of an air of mystery around this project..."</span><span class="p">,</span>
             <span class="n">root_url</span><span class="o">=</span><span class="n">root_url</span><span class="p">,</span>
             <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
             <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;populated&quot;</span><span class="p">)</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"populated"</span><span class="p">)</span>
 
     <span class="c1"># 4. Create dev docs</span>
     <span class="k">if</span> <span class="n">create_devdocs</span><span class="p">:</span>
         <span class="n">created</span> <span class="o">=</span> <span class="n">create_misc_docs</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
-        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;devdocs_created&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Created dev docs: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">created</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"devdocs_created"</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Created dev docs: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">created</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># 5. Set up opsward</span>
     <span class="k">if</span> <span class="n">setup_opsward</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">setup_opsward_for_project</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">):</span>
-            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;opsward_configured&quot;</span><span class="p">)</span>
-            <span class="n">log</span><span class="p">(</span><span class="s2">&quot;Opsward AI agent setup configured&quot;</span><span class="p">)</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"opsward_configured"</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s2">"Opsward AI agent setup configured"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;opsward_not_available&quot;</span><span class="p">)</span>
-            <span class="n">log</span><span class="p">(</span><span class="s2">&quot;Opsward not available — skipping AI agent setup&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"opsward_not_available"</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s2">"Opsward not available — skipping AI agent setup"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">pkg_dir</span><span class="p">,</span>
-        <span class="s2">&quot;steps_completed&quot;</span><span class="p">:</span> <span class="n">steps</span><span class="p">,</span>
-        <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="n">warnings</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="s2">"steps_completed"</span><span class="p">:</span> <span class="n">steps</span><span class="p">,</span>
+        <span class="s2">"warnings"</span><span class="p">:</span> <span class="n">warnings</span><span class="p">,</span>
     <span class="p">}</span></div>
 
 
@@ -573,30 +573,30 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">sections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create misc/docs/ directory with template markdown files.</span>
+<span class="w">    </span><span class="sd">"""Create misc/docs/ directory with template markdown files.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        pkg_dir: Project root directory.</span>
 <span class="sd">        sections: List of section names to create. Defaults to</span>
-<span class="sd">            [&quot;research&quot;, &quot;design&quot;, &quot;roadmap&quot;].</span>
+<span class="sd">            ["research", "design", "roadmap"].</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        List of created file paths.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">sections</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;research&quot;</span><span class="p">,</span> <span class="s2">&quot;design&quot;</span><span class="p">,</span> <span class="s2">&quot;roadmap&quot;</span><span class="p">]</span>
+        <span class="n">sections</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"research"</span><span class="p">,</span> <span class="s2">"design"</span><span class="p">,</span> <span class="s2">"roadmap"</span><span class="p">]</span>
 
-    <span class="n">docs_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;misc&quot;</span><span class="p">,</span> <span class="s2">&quot;docs&quot;</span><span class="p">)</span>
+    <span class="n">docs_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">"misc"</span><span class="p">,</span> <span class="s2">"docs"</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">created</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
-        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">.md&quot;</span><span class="p">)</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">.md"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">title</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TODO: Add </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2"> notes here.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"TODO: Add </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2"> notes here.</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">created</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">created</span></div>
@@ -606,27 +606,27 @@
 <div class="viewcode-block" id="setup_opsward_for_project">
 <a class="viewcode-back" href="../../module_docs/wads/project_setup.html#wads.project_setup.setup_opsward_for_project">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">setup_opsward_for_project</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set up AI agent configuration using opsward, if available.</span>
+<span class="w">    </span><span class="sd">"""Set up AI agent configuration using opsward, if available.</span>
 
 <span class="sd">    Returns True if opsward ran successfully, False if not available.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Try Python import first</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 
-        <span class="n">opsward</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;opsward&quot;</span><span class="p">)</span>
-        <span class="c1"># Use opsward&#39;s generate functionality if available</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">opsward</span><span class="p">,</span> <span class="s2">&quot;generate&quot;</span><span class="p">):</span>
+        <span class="n">opsward</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">"opsward"</span><span class="p">)</span>
+        <span class="c1"># Use opsward's generate functionality if available</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">opsward</span><span class="p">,</span> <span class="s2">"generate"</span><span class="p">):</span>
             <span class="n">opsward</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">write</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">pass</span>
 
     <span class="c1"># Fall back to CLI</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;opsward&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"opsward"</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;opsward&quot;</span><span class="p">,</span> <span class="s2">&quot;generate&quot;</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">&quot;--write&quot;</span><span class="p">],</span>
+                <span class="p">[</span><span class="s2">"opsward"</span><span class="p">,</span> <span class="s2">"generate"</span><span class="p">,</span> <span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">"--write"</span><span class="p">],</span>
                 <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
@@ -644,15 +644,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_gh</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise informative error if gh CLI is not installed.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;gh&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raise informative error if gh CLI is not installed."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"gh"</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span>
-            <span class="s2">&quot;The GitHub CLI (gh) is required but not installed.</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Install it from: https://cli.github.com/</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;  macOS: brew install gh</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;  Linux: https://github.com/cli/cli/blob/trunk/docs/install_linux.md</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;  Windows: winget install --id GitHub.cli</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;After installing, run: gh auth login&quot;</span>
+            <span class="s2">"The GitHub CLI (gh) is required but not installed.</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Install it from: https://cli.github.com/</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  macOS: brew install gh</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  Linux: https://github.com/cli/cli/blob/trunk/docs/install_linux.md</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  Windows: winget install --id GitHub.cli</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"After installing, run: gh auth login"</span>
         <span class="p">)</span>
 </pre></div>
 

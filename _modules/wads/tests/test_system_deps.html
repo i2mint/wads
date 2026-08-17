@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_system_deps &mdash; wads 0.2.14 documentation</title>
+  <title>wads.tests.test_system_deps &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.tests.test_system_deps</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Quick test to verify system dependencies functionality.&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Quick test to verify system dependencies functionality."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
@@ -148,12 +148,12 @@
 <div class="viewcode-block" id="test_system_deps_list">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_list">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_list</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system dependencies as a simple list (Ubuntu only).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test system dependencies as a simple list (Ubuntu only)."""</span>
     <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">]}}</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test-project"</span><span class="p">},</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"testing"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"system_dependencies"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile1"</span><span class="p">]}}</span>
             <span class="p">}</span>
         <span class="p">},</span>
     <span class="p">}</span>
@@ -161,40 +161,40 @@
     <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
 
     <span class="c1"># Check property</span>
-    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">system_dependencies</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">system_dependencies</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile1"</span><span class="p">]</span>
 
     <span class="c1"># Check normalization</span>
     <span class="n">normalized</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">normalized</span> <span class="o">==</span> <span class="p">{</span>
-        <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[],</span>
-        <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"ubuntu"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile1"</span><span class="p">],</span>
+        <span class="s2">"macos"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"windows"</span><span class="p">:</span> <span class="p">[],</span>
     <span class="p">}</span>
 
     <span class="c1"># Check pre-test steps generation</span>
     <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="s2">&quot;Install System Dependencies&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get update&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg libsndfile1&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"Install System Dependencies"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"sudo apt-get update"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"sudo apt-get install -y ffmpeg libsndfile1"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_list passed&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ test_system_deps_list passed"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_system_deps_dict">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_dict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_dict</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system dependencies as a platform-specific dict.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test system dependencies as a platform-specific dict."""</span>
     <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test-project"</span><span class="p">},</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"testing"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"system_dependencies"</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">"ubuntu"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile1"</span><span class="p">],</span>
+                            <span class="s2">"macos"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile"</span><span class="p">],</span>
+                            <span class="s2">"windows"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">],</span>
                         <span class="p">}</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
@@ -207,30 +207,30 @@
     <span class="c1"># Check normalization</span>
     <span class="n">normalized</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">_normalize_system_deps</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">normalized</span> <span class="o">==</span> <span class="p">{</span>
-        <span class="s2">&quot;ubuntu&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile1&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;macos&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;libsndfile&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
+        <span class="s2">"ubuntu"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile1"</span><span class="p">],</span>
+        <span class="s2">"macos"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"libsndfile"</span><span class="p">],</span>
+        <span class="s2">"windows"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">],</span>
     <span class="p">}</span>
 
     <span class="c1"># Check Ubuntu pre-test steps</span>
     <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg libsndfile1&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"sudo apt-get install -y ffmpeg libsndfile1"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
 
     <span class="c1"># Check Windows validation job</span>
     <span class="n">windows_job</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_windows_validation_job</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="s2">&quot;choco install -y ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">windows_job</span>
+    <span class="k">assert</span> <span class="s2">"choco install -y ffmpeg"</span> <span class="ow">in</span> <span class="n">windows_job</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_dict passed&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ test_system_deps_dict passed"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_no_system_deps">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_no_system_deps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_no_system_deps</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that no system deps results in empty steps.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test that no system deps results in empty steps."""</span>
     <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{}}}},</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test-project"</span><span class="p">},</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"testing"</span><span class="p">:</span> <span class="p">{}}}},</span>
     <span class="p">}</span>
 
     <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
@@ -240,23 +240,23 @@
 
     <span class="c1"># Should generate no steps</span>
     <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="n">pre_test_steps</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">pre_test_steps</span> <span class="o">==</span> <span class="s2">""</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_no_system_deps passed&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ test_no_system_deps passed"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_system_deps_with_pre_test_commands">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_with_pre_test_commands">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_system_deps_with_pre_test_commands</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test system deps combined with custom pre-test commands.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test system deps combined with custom pre-test commands."""</span>
     <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;commands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;pre_test&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;python setup_data.py&quot;</span><span class="p">,</span> <span class="s2">&quot;echo &#39;Ready&#39;&quot;</span><span class="p">]},</span>
-                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">]},</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test-project"</span><span class="p">},</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"commands"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"pre_test"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"python setup_data.py"</span><span class="p">,</span> <span class="s2">"echo 'Ready'"</span><span class="p">]},</span>
+                    <span class="s2">"testing"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"system_dependencies"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">]},</span>
                 <span class="p">}</span>
             <span class="p">}</span>
         <span class="p">},</span>
@@ -266,28 +266,28 @@
 
     <span class="c1"># Should have both system deps and pre-test commands</span>
     <span class="n">pre_test_steps</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">generate_pre_test_steps</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="s2">&quot;Install System Dependencies&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;sudo apt-get install -y ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;Pre-test Setup&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;python setup_data.py&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
-    <span class="k">assert</span> <span class="s2">&quot;echo &#39;Ready&#39;&quot;</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"Install System Dependencies"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"sudo apt-get install -y ffmpeg"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"Pre-test Setup"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"python setup_data.py"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
+    <span class="k">assert</span> <span class="s2">"echo 'Ready'"</span> <span class="ow">in</span> <span class="n">pre_test_steps</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_system_deps_with_pre_test_commands passed&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ test_system_deps_with_pre_test_commands passed"</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="test_ci_template_substitutions">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_ci_template_substitutions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_ci_template_substitutions</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test that system deps are included in template substitutions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test that system deps are included in template substitutions."""</span>
     <span class="n">pyproject_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test-project&quot;</span><span class="p">},</span>
-        <span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;wads&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;ci&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;testing&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;system_dependencies&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">],</span>
-                        <span class="s2">&quot;python_versions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;3.10&quot;</span><span class="p">,</span> <span class="s2">&quot;3.12&quot;</span><span class="p">],</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test-project"</span><span class="p">},</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"testing"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"system_dependencies"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">],</span>
+                        <span class="s2">"python_versions"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"3.10"</span><span class="p">,</span> <span class="s2">"3.12"</span><span class="p">],</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
             <span class="p">}</span>
@@ -298,23 +298,23 @@
     <span class="n">substitutions</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">to_ci_template_substitutions</span><span class="p">()</span>
 
     <span class="c1"># Check that PRE_TEST_STEPS includes system deps</span>
-    <span class="k">assert</span> <span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span> <span class="ow">in</span> <span class="n">substitutions</span>
-    <span class="k">assert</span> <span class="s2">&quot;ffmpeg&quot;</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">&quot;#PRE_TEST_STEPS#&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"#PRE_TEST_STEPS#"</span> <span class="ow">in</span> <span class="n">substitutions</span>
+    <span class="k">assert</span> <span class="s2">"ffmpeg"</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="p">[</span><span class="s2">"#PRE_TEST_STEPS#"</span><span class="p">]</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ test_ci_template_substitutions passed&quot;</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ test_ci_template_substitutions passed"</span><span class="p">)</span></div>
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">test_system_deps_list</span><span class="p">()</span>
     <span class="n">test_system_deps_dict</span><span class="p">()</span>
     <span class="n">test_no_system_deps</span><span class="p">()</span>
     <span class="n">test_system_deps_with_pre_test_commands</span><span class="p">()</span>
     <span class="n">test_ci_template_substitutions</span><span class="p">()</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ All tests passed!&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"="</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ All tests passed!"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 </pre></div>
 
            </div>

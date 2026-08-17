@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.2.14 documentation</title>
+  <title>wads.migration &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -160,20 +160,20 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_setuptools_to_hatching</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># From a file (use actual file path)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">'setup.cfg'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># From a dict with complete metadata</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="gp">... </span>        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;myproject&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.1.0&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;A sample project&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://github.com/user/myproject&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;MIT&#39;</span>
+<span class="gp">... </span>    <span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'myproject'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'version'</span><span class="p">:</span> <span class="s1">'0.1.0'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'A sample project'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://github.com/user/myproject'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'license'</span><span class="p">:</span> <span class="s1">'MIT'</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;name = &quot;myproject&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'name = "myproject"'</span> <span class="ow">in</span> <span class="n">result</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -206,11 +206,11 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># If MANIFEST.in doesn&#39;t exist</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">analyze_manifest_in</span><span class="p">(</span><span class="s1">&#39;nonexistent/MANIFEST.in&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;exists&#39;</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># If MANIFEST.in doesn't exist</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">analyze_manifest_in</span><span class="p">(</span><span class="s1">'nonexistent/MANIFEST.in'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">'exists'</span><span class="p">]</span>
 <span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;needs_migration&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s1">'needs_migration'</span><span class="p">]</span>
 <span class="go">False</span>
 </pre></div>
 </div>
@@ -244,10 +244,10 @@ per-repo signal of which secrets the tests actually consume.</p>
 not a signal of usage, and scanning it would re-introduce the very
 over-assignment the new model removes.</p></li>
 </ul>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span> <span class="o">=</span> <span class="s1">'''</span>
 <span class="gp">... </span><span class="s1">env:</span>
 <span class="gp">... </span><span class="s1">  PROJECT_NAME: myproj</span>
-<span class="gp">... </span><span class="s1">  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || &#39;&#39; }}</span>
+<span class="gp">... </span><span class="s1">  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}</span>
 <span class="gp">... </span><span class="s1">  HF_TOKEN: ${{ secrets.HF_WRITE_TOKEN }}</span>
 <span class="gp">... </span><span class="s1">jobs:</span>
 <span class="gp">... </span><span class="s1">  publish:</span>
@@ -255,9 +255,9 @@ over-assignment the new model removes.</p></li>
 <span class="gp">... </span><span class="s1">      - uses: x</span>
 <span class="gp">... </span><span class="s1">        with:</span>
 <span class="gp">... </span><span class="s1">          pypi-token: ${{ secrets.PYPI_PASSWORD }}</span>
-<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">'''</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;HF_WRITE_TOKEN&quot;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"OPENAI_API_KEY"</span><span class="p">,</span> <span class="s2">"HF_TOKEN"</span><span class="p">:</span> <span class="s2">"HF_WRITE_TOKEN"</span><span class="p">}</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -308,17 +308,17 @@ warning.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;i2mint/wads/.github/workflows/uv-ci.yml@master&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'i2mint/wads/.github/workflows/uv-ci.yml@master'</span> <span class="ow">in</span> <span class="n">stub</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}&#39;</span> <span class="ow">in</span> <span class="n">stub</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}'</span> <span class="ow">in</span> <span class="n">stub</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pinned</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="s1">&#39;@0.2.15&#39;</span><span class="p">)</span>  <span class="c1"># warns on stderr</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;uv-ci.yml@0.2.15&#39;</span> <span class="ow">in</span> <span class="n">pinned</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pinned</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="s1">'@0.2.15'</span><span class="p">)</span>  <span class="c1"># warns on stderr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'uv-ci.yml@0.2.15'</span> <span class="ow">in</span> <span class="n">pinned</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">named</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="s1">&#39;named&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}&#39;</span> <span class="ow">in</span> <span class="n">named</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">named</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="s1">'named'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}'</span> <span class="ow">in</span> <span class="n">named</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;WADS_CI_SECRETS_JSON&#39;</span> <span class="ow">in</span> <span class="n">named</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'WADS_CI_SECRETS_JSON'</span> <span class="ow">in</span> <span class="n">named</span>
 <span class="go">False</span>
 </pre></div>
 </div>
@@ -344,10 +344,10 @@ from the old CI file.</p></li>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s1">&#39;name: CI</span><span class="se">\n</span><span class="s1">on: push&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;astral-sh/setup-uv&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_uv</span><span class="p">(</span><span class="s1">'name: CI</span><span class="se">\n</span><span class="s1">on: push'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'astral-sh/setup-uv'</span> <span class="ow">in</span> <span class="n">result</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;build-dist-uv&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'build-dist-uv'</span> <span class="ow">in</span> <span class="n">result</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -408,33 +408,33 @@ to generate proper configuration.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># From file path</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">&#39;setup.cfg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s1">'setup.cfg'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># From dict with all required fields</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
-<span class="gp">... </span>        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;myproj&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.1.0&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;My project&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://github.com/user/myproj&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;MIT&#39;</span>
+<span class="gp">... </span>    <span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'myproj'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'version'</span><span class="p">:</span> <span class="s1">'0.1.0'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'My project'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://github.com/user/myproj'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'license'</span><span class="p">:</span> <span class="s1">'MIT'</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;name = &quot;myproj&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'name = "myproj"'</span> <span class="ow">in</span> <span class="n">result</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># With defaults for missing fields</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">minimal</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0&#39;</span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minimal</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'test'</span><span class="p">,</span> <span class="s1">'version'</span><span class="p">:</span> <span class="s1">'1.0'</span><span class="p">}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">minimal</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
-<span class="gp">... </span>        <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Test project&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://test.com&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="s1">&#39;MIT&#39;</span>
+<span class="gp">... </span>        <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'Test project'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://test.com'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'license'</span><span class="p">:</span> <span class="s1">'MIT'</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;name = &quot;test&quot;&#39;</span> <span class="ow">in</span> <span class="n">result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'name = "test"'</span> <span class="ow">in</span> <span class="n">result</span>
 <span class="go">True</span>
 </pre></div>
 </div>

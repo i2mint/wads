@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.profiles &mdash; wads 0.2.14 documentation</title>
+  <title>wads.profiles &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.profiles</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Declarative generation *profiles* and *overlays* built on the engine.</span>
+<span></span><span class="sd">"""Declarative generation *profiles* and *overlays* built on the engine.</span>
 
 <span class="sd">A *profile* is a named declarative description of a project setup expressed as a</span>
 <span class="sd">list of :class:`wads.templating.Artifact`. The default profile (``python-lib``)</span>
@@ -154,7 +154,7 @@
 
 <span class="sd">Nothing here runs by default; the Python ``populate`` path and the</span>
 <span class="sd">``name/name/`` root layout are untouched.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -188,20 +188,20 @@
 
 <span class="c1"># Map common license identifiers to SPDX identifiers npm expects.</span>
 <span class="n">_SPDX_BY_NAME</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;mit&quot;</span><span class="p">:</span> <span class="s2">&quot;MIT&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apache&quot;</span><span class="p">:</span> <span class="s2">&quot;Apache-2.0&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apache-2.0&quot;</span><span class="p">:</span> <span class="s2">&quot;Apache-2.0&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apache software license&quot;</span><span class="p">:</span> <span class="s2">&quot;Apache-2.0&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;bsd&quot;</span><span class="p">:</span> <span class="s2">&quot;BSD-3-Clause&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;bsd-3-clause&quot;</span><span class="p">:</span> <span class="s2">&quot;BSD-3-Clause&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;gpl&quot;</span><span class="p">:</span> <span class="s2">&quot;GPL-3.0-or-later&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;gpl-3.0&quot;</span><span class="p">:</span> <span class="s2">&quot;GPL-3.0-or-later&quot;</span><span class="p">,</span>
+    <span class="s2">"mit"</span><span class="p">:</span> <span class="s2">"MIT"</span><span class="p">,</span>
+    <span class="s2">"apache"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+    <span class="s2">"apache-2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+    <span class="s2">"apache software license"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+    <span class="s2">"bsd"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
+    <span class="s2">"bsd-3-clause"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
+    <span class="s2">"gpl"</span><span class="p">:</span> <span class="s2">"GPL-3.0-or-later"</span><span class="p">,</span>
+    <span class="s2">"gpl-3.0"</span><span class="p">:</span> <span class="s2">"GPL-3.0-or-later"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_to_spdx</span><span class="p">(</span><span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">license_name</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;MIT&quot;</span>
+        <span class="k">return</span> <span class="s2">"MIT"</span>
     <span class="k">return</span> <span class="n">_SPDX_BY_NAME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">license_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">license_name</span><span class="p">)</span>
 
 
@@ -217,33 +217,33 @@
 <span class="c1"># owns its own subdir and a per-subdir workflow file.</span>
 <span class="c1"># --------------------------------------------------------------------------------------</span>
 
-<span class="c1"># The reusable workflow each profile&#39;s stub calls (hosted in this repo).</span>
-<span class="n">_SINGLE_PACKAGE_REUSABLE</span> <span class="o">=</span> <span class="s2">&quot;npm-ci.yml&quot;</span>
-<span class="n">_MONOREPO_REUSABLE</span> <span class="o">=</span> <span class="s2">&quot;npm-ci-monorepo.yml&quot;</span>
+<span class="c1"># The reusable workflow each profile's stub calls (hosted in this repo).</span>
+<span class="n">_SINGLE_PACKAGE_REUSABLE</span> <span class="o">=</span> <span class="s2">"npm-ci.yml"</span>
+<span class="n">_MONOREPO_REUSABLE</span> <span class="o">=</span> <span class="s2">"npm-ci-monorepo.yml"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-component workflow filename, collision-free across subdirs.</span>
+<span class="w">    </span><span class="sd">"""Per-component workflow filename, collision-free across subdirs.</span>
 
 <span class="sd">    Back-compat anchor: the historical single overlay (subdir ``js``) keeps the</span>
 <span class="sd">    bare ``npm-ci.yml`` name, so existing ``js`` output stays byte-compatible;</span>
 <span class="sd">    every other component gets ``npm-ci-&lt;subdir&gt;.yml`` (slashes flattened),</span>
 <span class="sd">    path-filtered to its own subdir.</span>
 
-<span class="sd">    &gt;&gt;&gt; _workflow_basename(&quot;js&quot;)</span>
-<span class="sd">    &#39;npm-ci.yml&#39;</span>
-<span class="sd">    &gt;&gt;&gt; _workflow_basename(&quot;ts&quot;)</span>
-<span class="sd">    &#39;npm-ci-ts.yml&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">subdir</span> <span class="o">==</span> <span class="s2">&quot;js&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;npm-ci.yml&quot;</span>
-    <span class="n">slug</span> <span class="o">=</span> <span class="n">subdir</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;npm-ci-</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.yml&quot;</span>
+<span class="sd">    &gt;&gt;&gt; _workflow_basename("js")</span>
+<span class="sd">    'npm-ci.yml'</span>
+<span class="sd">    &gt;&gt;&gt; _workflow_basename("ts")</span>
+<span class="sd">    'npm-ci-ts.yml'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">subdir</span> <span class="o">==</span> <span class="s2">"js"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"npm-ci.yml"</span>
+    <span class="n">slug</span> <span class="o">=</span> <span class="n">subdir</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"npm-ci-</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.yml"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_workflow_name</span><span class="p">(</span><span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Human-facing workflow ``name:`` -- ``NPM CI`` for the ``js`` anchor.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;NPM CI&quot;</span> <span class="k">if</span> <span class="n">subdir</span> <span class="o">==</span> <span class="s2">&quot;js&quot;</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;NPM CI (</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">)&quot;</span>
+<span class="w">    </span><span class="sd">"""Human-facing workflow ``name:`` -- ``NPM CI`` for the ``js`` anchor."""</span>
+    <span class="k">return</span> <span class="s2">"NPM CI"</span> <span class="k">if</span> <span class="n">subdir</span> <span class="o">==</span> <span class="s2">"js"</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"NPM CI (</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">)"</span>
 
 
 <div class="viewcode-block" id="frontend_context">
@@ -252,47 +252,47 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">profile_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
-    <span class="n">package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
-    <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;packages/*&quot;</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.1"</span><span class="p">,</span>
+    <span class="n">package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"npm"</span><span class="p">,</span>
+    <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"packages/*"</span><span class="p">,</span>
     <span class="n">example_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the render context shared by all frontend-profile templates.</span>
+<span class="w">    </span><span class="sd">"""Build the render context shared by all frontend-profile templates.</span>
 
-<span class="sd">    The returned mapping is a superset: it carries the keys every profile&#39;s</span>
+<span class="sd">    The returned mapping is a superset: it carries the keys every profile's</span>
 <span class="sd">    templates may reference (single-package and monorepo). Unused keys are</span>
 <span class="sd">    harmless under Jinja ``StrictUndefined`` because that only errors on keys a</span>
 <span class="sd">    template *references* yet are missing.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">reusable</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_MONOREPO_REUSABLE</span>
-        <span class="k">if</span> <span class="n">profile_name</span> <span class="o">==</span> <span class="s2">&quot;ts-monorepo&quot;</span>
+        <span class="k">if</span> <span class="n">profile_name</span> <span class="o">==</span> <span class="s2">"ts-monorepo"</span>
         <span class="k">else</span> <span class="n">_SINGLE_PACKAGE_REUSABLE</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;npm_package_name&quot;</span><span class="p">:</span> <span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">,</span>
-        <span class="s2">&quot;npm_version&quot;</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
-        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
-        <span class="s2">&quot;npm_license&quot;</span><span class="p">:</span> <span class="n">_to_spdx</span><span class="p">(</span><span class="n">license</span><span class="p">),</span>
-        <span class="s2">&quot;npm_subdir&quot;</span><span class="p">:</span> <span class="n">subdir</span><span class="p">,</span>
-        <span class="s2">&quot;npm_package_manager&quot;</span><span class="p">:</span> <span class="n">package_manager</span><span class="p">,</span>
+        <span class="s2">"npm_package_name"</span><span class="p">:</span> <span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">,</span>
+        <span class="s2">"npm_version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
+        <span class="s2">"description"</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+        <span class="s2">"npm_license"</span><span class="p">:</span> <span class="n">_to_spdx</span><span class="p">(</span><span class="n">license</span><span class="p">),</span>
+        <span class="s2">"npm_subdir"</span><span class="p">:</span> <span class="n">subdir</span><span class="p">,</span>
+        <span class="s2">"npm_package_manager"</span><span class="p">:</span> <span class="n">package_manager</span><span class="p">,</span>
         <span class="c1"># Stub workflow wiring (per-component, collision-free):</span>
-        <span class="s2">&quot;npm_workflow_name&quot;</span><span class="p">:</span> <span class="n">_workflow_name</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
-        <span class="s2">&quot;npm_workflow_file&quot;</span><span class="p">:</span> <span class="n">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
-        <span class="s2">&quot;reusable_workflow&quot;</span><span class="p">:</span> <span class="n">reusable</span><span class="p">,</span>
+        <span class="s2">"npm_workflow_name"</span><span class="p">:</span> <span class="n">_workflow_name</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
+        <span class="s2">"npm_workflow_file"</span><span class="p">:</span> <span class="n">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
+        <span class="s2">"reusable_workflow"</span><span class="p">:</span> <span class="n">reusable</span><span class="p">,</span>
         <span class="c1"># Monorepo-only context (ignored by single-package templates):</span>
-        <span class="s2">&quot;npm_workspace_glob&quot;</span><span class="p">:</span> <span class="n">workspace_glob</span><span class="p">,</span>
-        <span class="s2">&quot;example_package_name&quot;</span><span class="p">:</span> <span class="n">example_package_name</span> <span class="ow">or</span> <span class="p">(</span><span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">),</span>
+        <span class="s2">"npm_workspace_glob"</span><span class="p">:</span> <span class="n">workspace_glob</span><span class="p">,</span>
+        <span class="s2">"example_package_name"</span><span class="p">:</span> <span class="n">example_package_name</span> <span class="ow">or</span> <span class="p">(</span><span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">),</span>
     <span class="p">}</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_src</span><span class="p">(</span><span class="n">tpl_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FilesystemTemplateSource</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One-entry filesystem source whose key is the template&#39;s basename.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""One-entry filesystem source whose key is the template's basename."""</span>
     <span class="k">return</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tpl_path</span><span class="p">))</span>
 
 
@@ -305,14 +305,14 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Artifact</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The ``.github/workflows/&lt;file&gt;.yml`` stub for a component in ``subdir``.</span>
+<span class="w">    </span><span class="sd">"""The ``.github/workflows/&lt;file&gt;.yml`` stub for a component in ``subdir``.</span>
 
 <span class="sd">    The target filename is resolved in Python (collision-free per subdir); the</span>
 <span class="sd">    stub *content* renders the same filename into its own path filter via the</span>
 <span class="sd">    ``npm_workflow_file`` context key.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_jinja</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;.github/workflows/</span><span class="si">{</span><span class="n">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">github_ci_npm_stub_path</span>
+        <span class="sa">f</span><span class="s2">".github/workflows/</span><span class="si">{</span><span class="n">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">github_ci_npm_stub_path</span>
     <span class="p">)</span>
 
 
@@ -320,47 +320,47 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_js_artifacts</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;``js`` profile: the original #32 overlay (back-compat anchor).&quot;&quot;&quot;</span>
-    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;npm_subdir&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""``js`` profile: the original #32 overlay (back-compat anchor)."""</span>
+    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"npm_subdir"</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span>
-        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_tpl_path</span><span class="p">),</span>
+        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json"</span><span class="p">,</span> <span class="n">package_json_tpl_path</span><span class="p">),</span>
         <span class="n">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
     <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ts_artifacts</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;``ts`` profile: single-package TypeScript (tsconfig + src + build/test).&quot;&quot;&quot;</span>
-    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;npm_subdir&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""``ts`` profile: single-package TypeScript (tsconfig + src + build/test)."""</span>
+    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"npm_subdir"</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span>
-        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_ts_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/tsconfig.json&quot;</span><span class="p">,</span> <span class="n">tsconfig_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
+        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json"</span><span class="p">,</span> <span class="n">package_json_ts_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/tsconfig.json"</span><span class="p">,</span> <span class="n">tsconfig_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.ts"</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
         <span class="c1"># Ship a passing starter test so the `test` step is green out of the</span>
         <span class="c1"># box: `vitest run` exits 1 when it finds *no* test files (issue #41).</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.test.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/src/index.test.ts"</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
         <span class="n">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
     <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ts_monorepo_artifacts</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;``ts-monorepo`` profile: pnpm workspaces + turbo, one example package.</span>
+<span class="w">    </span><span class="sd">"""``ts-monorepo`` profile: pnpm workspaces + turbo, one example package.</span>
 
 <span class="sd">    The workspace root lives at ``&lt;subdir&gt;/`` and an example package at</span>
 <span class="sd">    ``&lt;subdir&gt;/packages/core/``. The stub calls the reusable *monorepo* workflow,</span>
 <span class="sd">    which discovers and matrixes over the workspace packages.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&quot;npm_subdir&quot;</span><span class="p">]</span>
-    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/packages/core&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"npm_subdir"</span><span class="p">]</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/packages/core"</span>
     <span class="k">return</span> <span class="p">[</span>
-        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_monorepo_root_tpl_path</span><span class="p">),</span>
-        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/pnpm-workspace.yaml&quot;</span><span class="p">,</span> <span class="n">pnpm_workspace_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/turbo.json&quot;</span><span class="p">,</span> <span class="n">turbo_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/tsconfig.base.json&quot;</span><span class="p">,</span> <span class="n">tsconfig_base_tpl_path</span><span class="p">),</span>
-        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/package.json&quot;</span><span class="p">,</span> <span class="n">package_json_monorepo_pkg_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/tsconfig.json&quot;</span><span class="p">,</span> <span class="n">tsconfig_monorepo_pkg_tpl_path</span><span class="p">),</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
+        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json"</span><span class="p">,</span> <span class="n">package_json_monorepo_root_tpl_path</span><span class="p">),</span>
+        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/pnpm-workspace.yaml"</span><span class="p">,</span> <span class="n">pnpm_workspace_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/turbo.json"</span><span class="p">,</span> <span class="n">turbo_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/tsconfig.base.json"</span><span class="p">,</span> <span class="n">tsconfig_base_tpl_path</span><span class="p">),</span>
+        <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/package.json"</span><span class="p">,</span> <span class="n">package_json_monorepo_pkg_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/tsconfig.json"</span><span class="p">,</span> <span class="n">tsconfig_monorepo_pkg_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.ts"</span><span class="p">,</span> <span class="n">ts_index_tpl_path</span><span class="p">),</span>
         <span class="c1"># Passing starter test so `turbo run test` is green out of the box (#41).</span>
-        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.test.ts&quot;</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
+        <span class="n">_copy</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pkg_dir</span><span class="si">}</span><span class="s2">/src/index.test.ts"</span><span class="p">,</span> <span class="n">ts_index_test_tpl_path</span><span class="p">),</span>
         <span class="n">_stub_artifact</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
     <span class="p">]</span>
 
@@ -369,20 +369,20 @@
 <a class="viewcode-back" href="../../module_docs/wads/profiles.html#wads.profiles.FrontendProfile">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FrontendProfile</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A declarative frontend language/toolchain profile.</span>
+<span class="w">    </span><span class="sd">"""A declarative frontend language/toolchain profile.</span>
 
-<span class="sd">    :param name: registry key (e.g. ``&quot;js&quot;``, ``&quot;ts&quot;``, ``&quot;ts-monorepo&quot;``).</span>
+<span class="sd">    :param name: registry key (e.g. ``"js"``, ``"ts"``, ``"ts-monorepo"``).</span>
 <span class="sd">    :param default_subdir: subdir the component lives in when unspecified.</span>
-<span class="sd">    :param default_package_manager: ``&quot;npm&quot;`` or ``&quot;pnpm&quot;``.</span>
+<span class="sd">    :param default_package_manager: ``"npm"`` or ``"pnpm"``.</span>
 <span class="sd">    :param artifacts: ``context -&gt; list[Artifact]`` builder for this profile.</span>
 <span class="sd">    :param description: one-line human summary.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">default_subdir</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">default_package_manager</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">artifacts</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
 
 
 
@@ -393,7 +393,7 @@
 <div class="viewcode-block" id="register_frontend_profile">
 <a class="viewcode-back" href="../../module_docs/wads/profiles.html#wads.profiles.register_frontend_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_frontend_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">:</span> <span class="n">FrontendProfile</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrontendProfile</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register (or override) a frontend profile by name. Returns the profile.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Register (or override) a frontend profile by name. Returns the profile."""</span>
     <span class="n">FRONTEND_PROFILES</span><span class="p">[</span><span class="n">profile</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile</span>
     <span class="k">return</span> <span class="n">profile</span></div>
 
@@ -402,42 +402,42 @@
 <div class="viewcode-block" id="get_frontend_profile">
 <a class="viewcode-back" href="../../module_docs/wads/profiles.html#wads.profiles.get_frontend_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_frontend_profile</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrontendProfile</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up a registered profile, with an informative error if unknown.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Look up a registered profile, with an informative error if unknown."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">FRONTEND_PROFILES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">available</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">FRONTEND_PROFILES</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">&quot;(none registered)&quot;</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">FRONTEND_PROFILES</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"(none registered)"</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Unknown frontend profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Unknown frontend profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 
 
 <span class="n">register_frontend_profile</span><span class="p">(</span>
     <span class="n">FrontendProfile</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;js&quot;</span><span class="p">,</span>
-        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">&quot;js&quot;</span><span class="p">,</span>
-        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">&quot;npm&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"js"</span><span class="p">,</span>
+        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">"js"</span><span class="p">,</span>
+        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">"npm"</span><span class="p">,</span>
         <span class="n">artifacts</span><span class="o">=</span><span class="n">_js_artifacts</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;JavaScript single package (the original #32 overlay).&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"JavaScript single package (the original #32 overlay)."</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
 <span class="n">register_frontend_profile</span><span class="p">(</span>
     <span class="n">FrontendProfile</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ts&quot;</span><span class="p">,</span>
-        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">&quot;ts&quot;</span><span class="p">,</span>
-        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">&quot;npm&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"ts"</span><span class="p">,</span>
+        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">"ts"</span><span class="p">,</span>
+        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">"npm"</span><span class="p">,</span>
         <span class="n">artifacts</span><span class="o">=</span><span class="n">_ts_artifacts</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;TypeScript single package (tsconfig + tsup build + vitest).&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"TypeScript single package (tsconfig + tsup build + vitest)."</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
 <span class="n">register_frontend_profile</span><span class="p">(</span>
     <span class="n">FrontendProfile</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ts-monorepo&quot;</span><span class="p">,</span>
-        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">&quot;ts&quot;</span><span class="p">,</span>
-        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">&quot;pnpm&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"ts-monorepo"</span><span class="p">,</span>
+        <span class="n">default_subdir</span><span class="o">=</span><span class="s2">"ts"</span><span class="p">,</span>
+        <span class="n">default_package_manager</span><span class="o">=</span><span class="s2">"pnpm"</span><span class="p">,</span>
         <span class="n">artifacts</span><span class="o">=</span><span class="n">_ts_monorepo_artifacts</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;TypeScript monorepo (pnpm workspaces + turbo).&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"TypeScript monorepo (pnpm workspaces + turbo)."</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
 
@@ -447,32 +447,32 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">apply_frontend</span><span class="p">(</span>
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"js"</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">subdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.1"</span><span class="p">,</span>
     <span class="n">package_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;packages/*&quot;</span><span class="p">,</span>
+    <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"packages/*"</span><span class="p">,</span>
     <span class="n">example_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenerationResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply one frontend profile component to an existing project directory.</span>
+<span class="w">    </span><span class="sd">"""Apply one frontend profile component to an existing project directory.</span>
 
-<span class="sd">    ``subdir`` and ``package_manager`` default to the selected profile&#39;s</span>
+<span class="sd">    ``subdir`` and ``package_manager`` default to the selected profile's</span>
 <span class="sd">    defaults. Returns the :class:`wads.templating.GenerationResult`.</span>
 
 <span class="sd">    &gt;&gt;&gt; import tempfile</span>
 <span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
-<span class="sd">    &gt;&gt;&gt; res = apply_frontend(d, profile=&quot;ts&quot;, project_name=&quot;widget&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; res = apply_frontend(d, profile="ts", project_name="widget")</span>
 <span class="sd">    &gt;&gt;&gt; sorted(res.added)  # doctest: +NORMALIZE_WHITESPACE</span>
-<span class="sd">    [&#39;.github/workflows/npm-ci-ts.yml&#39;, &#39;ts/package.json&#39;, &#39;ts/src/index.test.ts&#39;,</span>
-<span class="sd">     &#39;ts/src/index.ts&#39;, &#39;ts/tsconfig.json&#39;]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',</span>
+<span class="sd">     'ts/src/index.ts', 'ts/tsconfig.json']</span>
+<span class="sd">    """</span>
     <span class="n">prof</span> <span class="o">=</span> <span class="n">get_frontend_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
     <span class="n">subdir</span> <span class="o">=</span> <span class="n">subdir</span> <span class="ow">or</span> <span class="n">prof</span><span class="o">.</span><span class="n">default_subdir</span>
     <span class="n">package_manager</span> <span class="o">=</span> <span class="n">package_manager</span> <span class="ow">or</span> <span class="n">prof</span><span class="o">.</span><span class="n">default_package_manager</span>
@@ -507,16 +507,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">npm_overlay_context</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
+    <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"js"</span><span class="p">,</span>
     <span class="n">npm_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
-    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
+    <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.1"</span><span class="p">,</span>
+    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"npm"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deprecated: render context for the ``js`` overlay. Use :func:`apply_frontend`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Deprecated: render context for the ``js`` overlay. Use :func:`apply_frontend`."""</span>
     <span class="k">return</span> <span class="n">frontend_context</span><span class="p">(</span>
-        <span class="n">profile_name</span><span class="o">=</span><span class="s2">&quot;js&quot;</span><span class="p">,</span>
+        <span class="n">profile_name</span><span class="o">=</span><span class="s2">"js"</span><span class="p">,</span>
         <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
         <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
@@ -530,9 +530,9 @@
 
 <div class="viewcode-block" id="npm_overlay_artifacts">
 <a class="viewcode-back" href="../../module_docs/wads/profiles.html#wads.profiles.npm_overlay_artifacts">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">npm_overlay_artifacts</span><span class="p">(</span><span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deprecated: the ``js`` overlay artifacts. Use the ``js`` frontend profile.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_js_artifacts</span><span class="p">({</span><span class="s2">&quot;npm_subdir&quot;</span><span class="p">:</span> <span class="n">npm_subdir</span><span class="p">})</span></div>
+<span class="k">def</span><span class="w"> </span><span class="nf">npm_overlay_artifacts</span><span class="p">(</span><span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"js"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Deprecated: the ``js`` overlay artifacts. Use the ``js`` frontend profile."""</span>
+    <span class="k">return</span> <span class="n">_js_artifacts</span><span class="p">({</span><span class="s2">"npm_subdir"</span><span class="p">:</span> <span class="n">npm_subdir</span><span class="p">})</span></div>
 
 
 
@@ -542,24 +542,24 @@
     <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;js&quot;</span><span class="p">,</span>
+    <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"js"</span><span class="p">,</span>
     <span class="n">npm_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
-    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npm&quot;</span><span class="p">,</span>
+    <span class="n">npm_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.1"</span><span class="p">,</span>
+    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"npm"</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deprecated alias for ``apply_frontend(profile=&quot;js&quot;, ...)`` (issue #32 surface).</span>
+<span class="w">    </span><span class="sd">"""Deprecated alias for ``apply_frontend(profile="js", ...)`` (issue #32 surface).</span>
 
 <span class="sd">    Kept so existing callers and tests keep working; new code should call</span>
 <span class="sd">    :func:`apply_frontend`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">apply_frontend</span><span class="p">(</span>
         <span class="n">pkg_dir</span><span class="p">,</span>
-        <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;js&quot;</span><span class="p">,</span>
+        <span class="n">profile</span><span class="o">=</span><span class="s2">"js"</span><span class="p">,</span>
         <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
         <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
@@ -585,23 +585,23 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">make_tests_overlay_artifacts</span><span class="p">(</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">with_data_util</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Artifacts that scaffold a ``tests/`` folder for a project.</span>
+<span class="w">    </span><span class="sd">"""Artifacts that scaffold a ``tests/`` folder for a project.</span>
 
 <span class="sd">    Writes ``tests/__init__.py``, ``tests/test_&lt;project_name&gt;.py`` (a smoke</span>
 <span class="sd">    test), and optionally ``tests/util.py`` (a ``tests/data`` accessor, per #4).</span>
 <span class="sd">    The smoke-test filename embeds the package name, so it is built here where</span>
 <span class="sd">    the name is known.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">init_src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tests_init_tpl_path</span><span class="p">))</span>
     <span class="n">smoke_src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">test_smoke_tpl_path</span><span class="p">))</span>
     <span class="n">util_src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tests_util_tpl_path</span><span class="p">))</span>
 
     <span class="n">artifacts</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">Artifact</span><span class="o">.</span><span class="n">from_copy</span><span class="p">(</span>
-            <span class="s2">&quot;tests/__init__.py&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tests_init_tpl_path</span><span class="p">),</span> <span class="n">init_src</span>
+            <span class="s2">"tests/__init__.py"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tests_init_tpl_path</span><span class="p">),</span> <span class="n">init_src</span>
         <span class="p">),</span>
         <span class="n">Artifact</span><span class="o">.</span><span class="n">from_jinja</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;tests/test_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">.py&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"tests/test_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">.py"</span><span class="p">,</span>
             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">test_smoke_tpl_path</span><span class="p">),</span>
             <span class="n">smoke_src</span><span class="p">,</span>
         <span class="p">),</span>
@@ -609,7 +609,7 @@
     <span class="k">if</span> <span class="n">with_data_util</span><span class="p">:</span>
         <span class="n">artifacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">Artifact</span><span class="o">.</span><span class="n">from_jinja</span><span class="p">(</span>
-                <span class="s2">&quot;tests/util.py&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tests_util_tpl_path</span><span class="p">),</span> <span class="n">util_src</span>
+                <span class="s2">"tests/util.py"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tests_util_tpl_path</span><span class="p">),</span> <span class="n">util_src</span>
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">artifacts</span></div>
@@ -627,11 +627,11 @@
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scaffold a ``tests/`` folder in an existing project (issue #4).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Scaffold a ``tests/`` folder in an existing project (issue #4)."""</span>
     <span class="k">return</span> <span class="n">generate</span><span class="p">(</span>
         <span class="n">pkg_dir</span><span class="p">,</span>
         <span class="n">make_tests_overlay_artifacts</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">with_data_util</span><span class="o">=</span><span class="n">with_data_util</span><span class="p">),</span>
-        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">project_name</span><span class="p">},</span>
         <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
         <span class="n">on_add</span><span class="o">=</span><span class="n">on_add</span><span class="p">,</span>
         <span class="n">on_skip</span><span class="o">=</span><span class="n">on_skip</span><span class="p">,</span>

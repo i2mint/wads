@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_export_ci_env &mdash; wads 0.2.14 documentation</title>
+  <title>wads.tests.test_export_ci_env &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.tests.test_export_ci_env</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Tests for the run-time env-export logic (``wads.scripts.export_ci_env``).&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Tests for the run-time env-export logic (``wads.scripts.export_ci_env``)."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
@@ -146,60 +146,60 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_exports_only_configured_and_set</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">],</span>
-        <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">],</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UNSET_THING&quot;</span><span class="p">],</span>
-        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;LOG_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">},</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-x&quot;</span><span class="p">,</span> <span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;OTHER&quot;</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">},</span>
+        <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">],</span>
+        <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">"TAVILY_API_KEY"</span><span class="p">],</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"UNSET_THING"</span><span class="p">],</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"LOG_LEVEL"</span><span class="p">:</span> <span class="s2">"DEBUG"</span><span class="p">},</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-x"</span><span class="p">,</span> <span class="s2">"TAVILY_API_KEY"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"OTHER"</span><span class="p">:</span> <span class="s2">"y"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;LOG_LEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="s2">&quot;OTHER&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span>  <span class="c1"># passed but not declared -&gt; not exported</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"LOG_LEVEL"</span><span class="p">,</span> <span class="s2">"OPENAI_API_KEY"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"OTHER"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span>  <span class="c1"># passed but not declared -&gt; not exported</span>
     <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span> <span class="o">==</span> <span class="p">[]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_test</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;TAVILY_API_KEY&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="s2">&quot;LOG_LEVEL=DEBUG&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
-    <span class="k">assert</span> <span class="s2">&quot;OPENAI_API_KEY=sk-x&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_test</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"TAVILY_API_KEY"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"LOG_LEVEL=DEBUG"</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
+    <span class="k">assert</span> <span class="s2">"OPENAI_API_KEY=sk-x"</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_required_missing_is_reported</span><span class="p">():</span>
-    <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span> <span class="o">==</span> <span class="p">[(</span><span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">,</span> <span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">)]</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span> <span class="o">==</span> <span class="p">[(</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,</span> <span class="s2">"PYPI_PASSWORD"</span><span class="p">)]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_alias_resolution</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">],</span>
-        <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;HF_WRITE_TOKEN&quot;</span><span class="p">},</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;HF_WRITE_TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;hf_x&quot;</span><span class="p">},</span>
+        <span class="n">test</span><span class="o">=</span><span class="p">[</span><span class="s2">"HF_TOKEN"</span><span class="p">],</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">"HF_TOKEN"</span><span class="p">:</span> <span class="s2">"HF_WRITE_TOKEN"</span><span class="p">},</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"HF_WRITE_TOKEN"</span><span class="p">:</span> <span class="s2">"hf_x"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;HF_TOKEN&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;HF_TOKEN=hf_x&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"HF_TOKEN"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"HF_TOKEN=hf_x"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_secret_overrides_default_of_same_name</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TOKEN&quot;</span><span class="p">],</span>
-        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;literal&quot;</span><span class="p">},</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;TOKEN&quot;</span><span class="p">:</span> <span class="s2">&quot;from-secret&quot;</span><span class="p">},</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"TOKEN"</span><span class="p">],</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"TOKEN"</span><span class="p">:</span> <span class="s2">"literal"</span><span class="p">},</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"TOKEN"</span><span class="p">:</span> <span class="s2">"from-secret"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># default written first, secret-backed var of same name skipped (already seen),</span>
     <span class="c1"># so the literal default stands — defaults are authoritative when both exist.</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;TOKEN&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;TOKEN=literal&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"TOKEN"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"TOKEN=literal"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_multiline_value_uses_heredoc</span><span class="p">():</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">_gh_env_assignment</span><span class="p">(</span><span class="s2">&quot;SSH_PRIVATE_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;-----BEGIN-----</span><span class="se">\n</span><span class="s2">abc</span><span class="se">\n</span><span class="s2">-----END-----&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">out</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;SSH_PRIVATE_KEY&lt;&lt;&quot;</span><span class="p">)</span>
-    <span class="n">delim</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">_gh_env_assignment</span><span class="p">(</span><span class="s2">"SSH_PRIVATE_KEY"</span><span class="p">,</span> <span class="s2">"-----BEGIN-----</span><span class="se">\n</span><span class="s2">abc</span><span class="se">\n</span><span class="s2">-----END-----"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">out</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"SSH_PRIVATE_KEY&lt;&lt;"</span><span class="p">)</span>
+    <span class="n">delim</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"&lt;&lt;"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">out</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">delim</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">delim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;-----BEGIN-----</span><span class="se">\n</span><span class="s2">abc</span><span class="se">\n</span><span class="s2">-----END-----&quot;</span>
+    <span class="k">assert</span> <span class="n">delim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">"-----BEGIN-----</span><span class="se">\n</span><span class="s2">abc</span><span class="se">\n</span><span class="s2">-----END-----"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_single_line_value_plain</span><span class="p">():</span>
-    <span class="k">assert</span> <span class="n">_gh_env_assignment</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;A=b&quot;</span>
+    <span class="k">assert</span> <span class="n">_gh_env_assignment</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"A=b"</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -207,69 +207,69 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <span class="n">CALLER_SECRETS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-blob&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span>  <span class="c1"># deliberately outside the legacy superset</span>
-    <span class="s2">&quot;github_token&quot;</span><span class="p">:</span> <span class="s2">&quot;ghs_x&quot;</span><span class="p">,</span>
+    <span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-blob"</span><span class="p">,</span>
+    <span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">,</span>  <span class="c1"># deliberately outside the legacy superset</span>
+    <span class="s2">"github_token"</span><span class="p">:</span> <span class="s2">"ghs_x"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_blob</span><span class="p">(</span><span class="n">double_encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The transported value as GitHub produces it from toJSON (2-space indent).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The transported value as GitHub produces it from toJSON (2-space indent)."""</span>
     <span class="n">once</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">CALLER_SECRETS</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">once</span><span class="p">)</span> <span class="k">if</span> <span class="n">double_encoded</span> <span class="k">else</span> <span class="n">once</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_merge_expands_double_encoded_blob</span><span class="p">():</span>
-    <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">({</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()})</span>
-    <span class="k">assert</span> <span class="n">merged</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-blob&quot;</span><span class="p">,</span> <span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">}</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">({</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()})</span>
+    <span class="k">assert</span> <span class="n">merged</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-blob"</span><span class="p">,</span> <span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_merge_expands_single_encoded_blob</span><span class="p">():</span>
     <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">(</span>
-        <span class="p">{</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">_blob</span><span class="p">(</span><span class="n">double_encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">)}</span>
+        <span class="p">{</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">_blob</span><span class="p">(</span><span class="n">double_encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">)}</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">merged</span><span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;3&quot;</span>
+    <span class="k">assert</span> <span class="n">merged</span><span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"3"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_merge_named_secret_wins_and_infra_keys_dropped</span><span class="p">():</span>
     <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">(</span>
-        <span class="p">{</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">_blob</span><span class="p">(),</span> <span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">:</span> <span class="s2">&quot;sk-named&quot;</span><span class="p">}</span>
+        <span class="p">{</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">_blob</span><span class="p">(),</span> <span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"sk-named"</span><span class="p">}</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">merged</span><span class="p">[</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;sk-named&quot;</span>
-    <span class="k">assert</span> <span class="s2">&quot;github_token&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span>
-    <span class="k">assert</span> <span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span>
+    <span class="k">assert</span> <span class="n">merged</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"sk-named"</span>
+    <span class="k">assert</span> <span class="s2">"github_token"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span>
+    <span class="k">assert</span> <span class="s2">"WADS_CI_SECRETS_JSON"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">merged</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_merge_tolerates_malformed_blob</span><span class="p">():</span>
     <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">(</span>
-        <span class="p">{</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="s2">&quot;not json&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">}</span>
+        <span class="p">{</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="s2">"not json"</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">}</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">merged</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">}</span>
+    <span class="k">assert</span> <span class="n">merged</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"A"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="test_blob_sourced_values_are_export_equivalent_to_named">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_blob_sourced_values_are_export_equivalent_to_named">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_blob_sourced_values_are_export_equivalent_to_named</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;An out-of-superset name transported via the blob exports normally.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""An out-of-superset name transported via the blob exports normally."""</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">],</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()},</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">],</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL=3&quot;</span><span class="p">]</span></div>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL=3"</span><span class="p">]</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_blob_sourced_values_are_masked</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;OPENAI_API_KEY&quot;</span><span class="p">],</span>
-        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;LOG_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">},</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()},</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">],</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"LOG_LEVEL"</span><span class="p">:</span> <span class="s2">"DEBUG"</span><span class="p">},</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">_blob</span><span class="p">()},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># secret-sourced values are re-masked; literal defaults are not.</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;sk-blob&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"sk-blob"</span><span class="p">]</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -279,44 +279,44 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_vars_fallback_for_non_secret_values</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">],</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">],</span>
         <span class="n">secrets</span><span class="o">=</span><span class="p">{},</span>
-        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">},</span>
+        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL=3&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL=3"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span> <span class="o">==</span> <span class="p">[]</span>  <span class="c1"># variables are not sensitive -&gt; no mask</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_secret_beats_variable_of_same_name</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">],</span>
-        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="s2">&quot;from-secret&quot;</span><span class="p">},</span>
-        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="s2">&quot;from-var&quot;</span><span class="p">},</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"X"</span><span class="p">],</span>
+        <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"X"</span><span class="p">:</span> <span class="s2">"from-secret"</span><span class="p">},</span>
+        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">"X"</span><span class="p">:</span> <span class="s2">"from-var"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;X=from-secret&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;from-secret&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"X=from-secret"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"from-secret"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_required_satisfied_by_variable</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">],</span>
-        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">},</span>
+        <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">],</span>
+        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span> <span class="o">==</span> <span class="p">[]</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">exported</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_alias_applies_to_variable_lookup</span><span class="p">():</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
-        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;VERBOSITY&quot;</span><span class="p">],</span>
-        <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;VERBOSITY&quot;</span><span class="p">:</span> <span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">},</span>
-        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;COSMO_TEST_LEVEL&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">},</span>
+        <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"VERBOSITY"</span><span class="p">],</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">"VERBOSITY"</span><span class="p">:</span> <span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">},</span>
+        <span class="n">vars_</span><span class="o">=</span><span class="p">{</span><span class="s2">"COSMO_TEST_LEVEL"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">},</span>
         <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;VERBOSITY=3&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">plan</span><span class="o">.</span><span class="n">assignments</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"VERBOSITY=3"</span><span class="p">]</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -327,78 +327,78 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">test_main_always_required_and_masks</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">,</span> <span class="n">capsys</span><span class="p">):</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_ci_env</span> <span class="k">as</span> <span class="n">mod</span>
 
-    <span class="n">gh_env</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;github_env&quot;</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">gh_env</span><span class="p">))</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_ALWAYS_REQUIRED&quot;</span><span class="p">,</span> <span class="s1">&#39;[&quot;PYPI_PASSWORD&quot;]&#39;</span><span class="p">)</span>
+    <span class="n">gh_env</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"github_env"</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">gh_env</span><span class="p">))</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"WADS_ENV_ALWAYS_REQUIRED"</span><span class="p">,</span> <span class="s1">'["PYPI_PASSWORD"]'</span><span class="p">)</span>
     <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span>
-        <span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;WADS_CI_SECRETS_JSON&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;PYPI_PASSWORD&quot;</span><span class="p">:</span> <span class="s2">&quot;pypi-tok&quot;</span><span class="p">,</span> <span class="s2">&quot;github_token&quot;</span><span class="p">:</span> <span class="s2">&quot;t&quot;</span><span class="p">},</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))}),</span>
+        <span class="s2">"WADS_SECRETS_JSON"</span><span class="p">,</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"WADS_CI_SECRETS_JSON"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">:</span> <span class="s2">"pypi-tok"</span><span class="p">,</span> <span class="s2">"github_token"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">},</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))}),</span>
     <span class="p">)</span>
-    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;WADS_ENV_REQUIRED&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_TEST&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_EXTRA&quot;</span><span class="p">,</span>
-                  <span class="s2">&quot;WADS_ENV_DEFAULTS&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_ALIASES&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_VARS_JSON&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"WADS_ENV_REQUIRED"</span><span class="p">,</span> <span class="s2">"WADS_ENV_TEST"</span><span class="p">,</span> <span class="s2">"WADS_ENV_EXTRA"</span><span class="p">,</span>
+                  <span class="s2">"WADS_ENV_DEFAULTS"</span><span class="p">,</span> <span class="s2">"WADS_ENV_ALIASES"</span><span class="p">,</span> <span class="s2">"WADS_VARS_JSON"</span><span class="p">):</span>
         <span class="n">monkeypatch</span><span class="o">.</span><span class="n">delenv</span><span class="p">(</span><span class="n">unset</span><span class="p">,</span> <span class="n">raising</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="n">mod</span><span class="o">.</span><span class="n">main</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">out</span>
-    <span class="k">assert</span> <span class="s2">&quot;::add-mask::pypi-tok&quot;</span> <span class="ow">in</span> <span class="n">out</span>
-    <span class="k">assert</span> <span class="s2">&quot;PYPI_PASSWORD=pypi-tok&quot;</span> <span class="ow">in</span> <span class="n">gh_env</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">"::add-mask::pypi-tok"</span> <span class="ow">in</span> <span class="n">out</span>
+    <span class="k">assert</span> <span class="s2">"PYPI_PASSWORD=pypi-tok"</span> <span class="ow">in</span> <span class="n">gh_env</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="test_masks_percent_escape">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_masks_percent_escape">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_masks_percent_escape</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">,</span> <span class="n">capsys</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A value containing literal %25/%0A must register the percent-ESCAPED</span>
-<span class="sd">    mask, or the runner&#39;s percent-decoding registers the wrong string and the</span>
-<span class="sd">    real value stays unmasked (reviewer finding F3).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A value containing literal %25/%0A must register the percent-ESCAPED</span>
+<span class="sd">    mask, or the runner's percent-decoding registers the wrong string and the</span>
+<span class="sd">    real value stays unmasked (reviewer finding F3)."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_ci_env</span> <span class="k">as</span> <span class="n">mod</span>
 
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;github_env&quot;</span><span class="p">))</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_EXTRA&quot;</span><span class="p">,</span> <span class="s1">&#39;[&quot;DATABASE_URL&quot;]&#39;</span><span class="p">)</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"github_env"</span><span class="p">))</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"WADS_ENV_EXTRA"</span><span class="p">,</span> <span class="s1">'["DATABASE_URL"]'</span><span class="p">)</span>
     <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span>
-        <span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">:</span> <span class="s2">&quot;postgres://u:p%25w@host/db&quot;</span><span class="p">}),</span>
+        <span class="s2">"WADS_SECRETS_JSON"</span><span class="p">,</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"DATABASE_URL"</span><span class="p">:</span> <span class="s2">"postgres://u:p%25w@host/db"</span><span class="p">}),</span>
     <span class="p">)</span>
-    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;WADS_ENV_REQUIRED&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_ALWAYS_REQUIRED&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_TEST&quot;</span><span class="p">,</span>
-                  <span class="s2">&quot;WADS_ENV_DEFAULTS&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_ALIASES&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_VARS_JSON&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"WADS_ENV_REQUIRED"</span><span class="p">,</span> <span class="s2">"WADS_ENV_ALWAYS_REQUIRED"</span><span class="p">,</span> <span class="s2">"WADS_ENV_TEST"</span><span class="p">,</span>
+                  <span class="s2">"WADS_ENV_DEFAULTS"</span><span class="p">,</span> <span class="s2">"WADS_ENV_ALIASES"</span><span class="p">,</span> <span class="s2">"WADS_VARS_JSON"</span><span class="p">):</span>
         <span class="n">monkeypatch</span><span class="o">.</span><span class="n">delenv</span><span class="p">(</span><span class="n">unset</span><span class="p">,</span> <span class="n">raising</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="n">mod</span><span class="o">.</span><span class="n">main</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">out</span>
-    <span class="k">assert</span> <span class="s2">&quot;::add-mask::postgres://u:p%2525w@host/db&quot;</span> <span class="ow">in</span> <span class="n">out</span></div>
+    <span class="k">assert</span> <span class="s2">"::add-mask::postgres://u:p%2525w@host/db"</span> <span class="ow">in</span> <span class="n">out</span></div>
 
 
 
 <div class="viewcode-block" id="test_malformed_secrets_json_is_redacted">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_malformed_secrets_json_is_redacted">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_malformed_secrets_json_is_redacted</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">,</span> <span class="n">capsys</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A parse failure of the secrets context must never echo the raw value.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A parse failure of the secrets context must never echo the raw value."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_ci_env</span> <span class="k">as</span> <span class="n">mod</span>
 
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;github_env&quot;</span><span class="p">))</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span> <span class="s1">&#39;{&quot;SECRET_VALUE&quot;: &quot;sk-leakme&quot;&#39;</span><span class="p">)</span>  <span class="c1"># truncated</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"github_env"</span><span class="p">))</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"WADS_SECRETS_JSON"</span><span class="p">,</span> <span class="s1">'{"SECRET_VALUE": "sk-leakme"'</span><span class="p">)</span>  <span class="c1"># truncated</span>
     <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">SystemExit</span><span class="p">):</span>
         <span class="n">mod</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
     <span class="n">err</span> <span class="o">=</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">err</span>
-    <span class="k">assert</span> <span class="s2">&quot;sk-leakme&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">err</span>
-    <span class="k">assert</span> <span class="s2">&quot;withheld&quot;</span> <span class="ow">in</span> <span class="n">err</span></div>
+    <span class="k">assert</span> <span class="s2">"sk-leakme"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">err</span>
+    <span class="k">assert</span> <span class="s2">"withheld"</span> <span class="ow">in</span> <span class="n">err</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_main_fails_on_missing_always_required</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">monkeypatch</span><span class="p">,</span> <span class="n">capsys</span><span class="p">):</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_ci_env</span> <span class="k">as</span> <span class="n">mod</span>
 
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">&quot;github_env&quot;</span><span class="p">))</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;WADS_ENV_ALWAYS_REQUIRED&quot;</span><span class="p">,</span> <span class="s1">&#39;[&quot;PYPI_PASSWORD&quot;]&#39;</span><span class="p">)</span>
-    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;WADS_SECRETS_JSON&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;WADS_ENV_REQUIRED&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_TEST&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_EXTRA&quot;</span><span class="p">,</span>
-                  <span class="s2">&quot;WADS_ENV_DEFAULTS&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_ENV_ALIASES&quot;</span><span class="p">,</span> <span class="s2">&quot;WADS_VARS_JSON&quot;</span><span class="p">):</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"github_env"</span><span class="p">))</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"WADS_ENV_ALWAYS_REQUIRED"</span><span class="p">,</span> <span class="s1">'["PYPI_PASSWORD"]'</span><span class="p">)</span>
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">"WADS_SECRETS_JSON"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">unset</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"WADS_ENV_REQUIRED"</span><span class="p">,</span> <span class="s2">"WADS_ENV_TEST"</span><span class="p">,</span> <span class="s2">"WADS_ENV_EXTRA"</span><span class="p">,</span>
+                  <span class="s2">"WADS_ENV_DEFAULTS"</span><span class="p">,</span> <span class="s2">"WADS_ENV_ALIASES"</span><span class="p">,</span> <span class="s2">"WADS_VARS_JSON"</span><span class="p">):</span>
         <span class="n">monkeypatch</span><span class="o">.</span><span class="n">delenv</span><span class="p">(</span><span class="n">unset</span><span class="p">,</span> <span class="n">raising</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="n">mod</span><span class="o">.</span><span class="n">main</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="s2">&quot;PYPI_PASSWORD&quot;</span> <span class="ow">in</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">err</span>
+    <span class="k">assert</span> <span class="s2">"PYPI_PASSWORD"</span> <span class="ow">in</span> <span class="n">capsys</span><span class="o">.</span><span class="n">readouterr</span><span class="p">()</span><span class="o">.</span><span class="n">err</span>
 </pre></div>
 
            </div>

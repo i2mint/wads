@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.read_ci_config &mdash; wads 0.2.14 documentation</title>
+  <title>wads.scripts.read_ci_config &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,7 +134,7 @@
              
   <h1>Source code for wads.scripts.read_ci_config</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="sd">Read CI Configuration and Export to GitHub Actions</span>
 
 <span class="sd">This script reads CI configuration from pyproject.toml and exports it as</span>
@@ -147,7 +147,7 @@
 <span class="sd">    GITHUB_OUTPUT - Path to GitHub Actions output file</span>
 <span class="sd">    GITHUB_ENV - Path to GitHub Actions environment file</span>
 <span class="sd">    GITHUB_STEP_SUMMARY - Path to GitHub Actions step summary file</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -156,42 +156,42 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_output</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set GitHub Actions output.&quot;&quot;&quot;</span>
-    <span class="n">output_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_OUTPUT&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Set GitHub Actions output."""</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_OUTPUT"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">output_file</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_OUTPUT not set, skipping output: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+            <span class="sa">f</span><span class="s2">"Warning: GITHUB_OUTPUT not set, skipping output: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
         <span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="c1"># Handle multiline values</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_env</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set GitHub Actions environment variable.&quot;&quot;&quot;</span>
-    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Set GitHub Actions environment variable."""</span>
+    <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_ENV"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">env_file</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: GITHUB_ENV not set, skipping env var: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: GITHUB_ENV not set, skipping env var: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="read_and_export_ci_config">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.read_and_export_ci_config">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Read CI configuration and export to GitHub Actions.</span>
 
 <span class="sd">    Args:</span>
@@ -199,7 +199,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_ci_config</span>
 
@@ -209,77 +209,77 @@
         <span class="c1"># Export as outputs and environment variables</span>
 
         <span class="c1"># Project metadata</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;project-name&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
-        <span class="n">_set_env</span><span class="p">(</span><span class="s2">&quot;PROJECT_NAME&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"project-name"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">_set_env</span><span class="p">(</span><span class="s2">"PROJECT_NAME"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
 
         <span class="c1"># Testing configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;python-versions&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;pytest-args&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;coverage-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;exclude-paths&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">))</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;test-on-windows&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;tests-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"python-versions"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"pytest-args"</span><span class="p">,</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"coverage-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"exclude-paths"</span><span class="p">,</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span><span class="p">))</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"test-on-windows"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"tests-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span><span class="p">)</span>
 
         <span class="c1"># Build configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;build-sdist&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;build-wheel&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"build-sdist"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"build-wheel"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
 
         <span class="c1"># Installer configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;installer&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;install-extras&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">install_extras</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"installer"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">installer</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"install-extras"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">install_extras</span><span class="p">)</span>
 
         <span class="c1"># Metrics configuration</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_enabled</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-config-path&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_config_path</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-storage-branch&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_storage_branch</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-python-version&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_python_version</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;metrics-force-run&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_force_run</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"metrics-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"metrics-config-path"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_config_path</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"metrics-storage-branch"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_storage_branch</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"metrics-python-version"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_python_version</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"metrics-force-run"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">metrics_force_run</span><span class="p">)</span>
 
         <span class="c1"># Quality / docs gates (consumed by template `if:` conditions)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;ruff-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_ruff_enabled</span><span class="p">())</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;black-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_black_enabled</span><span class="p">())</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;mypy-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_mypy_enabled</span><span class="p">())</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;docs-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">docs_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"ruff-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_ruff_enabled</span><span class="p">())</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"black-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_black_enabled</span><span class="p">())</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"mypy-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">is_mypy_enabled</span><span class="p">())</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"docs-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">docs_enabled</span><span class="p">)</span>
 
         <span class="c1"># Publish gate + commit-message markers (consumed by the publish job)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;publish-enabled&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_enabled</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;skip-ci-marker&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;publish-marker&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"publish-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"skip-ci-marker"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"publish-marker"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span><span class="p">)</span>
 
         <span class="c1"># Environment-variable policy (consumed by the export-ci-env action).</span>
         <span class="c1"># These decide which secrets are written into the job environment and</span>
         <span class="c1"># which are mandatory; the transport superset lives in the workflow YAML.</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;env-required&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;env-test&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_test</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;env-extra&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_extra</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;env-defaults&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">)</span>
-        <span class="n">_set_output</span><span class="p">(</span><span class="s2">&quot;env-aliases&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_secret_aliases</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-required"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-test"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_test</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-extra"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_extra</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-defaults"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-aliases"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_secret_aliases</span><span class="p">)</span>
 
         <span class="c1"># Print summary</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[OK] CI configuration loaded successfully&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Project: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Python versions: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Coverage: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Test on Windows: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[OK] CI configuration loaded successfully"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Project: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Python versions: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Coverage: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Test on Windows: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="c1"># Add to GitHub Actions step summary if available</span>
-        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">)</span>
+        <span class="n">summary_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GITHUB_STEP_SUMMARY"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">summary_file</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## CI Configuration</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Project:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Python Versions:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Coverage Enabled:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- **Test on Windows:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"## CI Configuration</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- **Project:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- **Python Versions:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- **Coverage Enabled:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- **Test on Windows:** </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="mi">0</span>
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[ERROR] pyproject.toml not found&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[ERROR] pyproject.toml not found"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">1</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Error reading CI config: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Error reading CI config: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
 
         <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
@@ -290,13 +290,13 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point.&quot;&quot;&quot;</span>
-    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;.&quot;</span>
+<span class="w">    </span><span class="sd">"""Main entry point."""</span>
+    <span class="n">pyproject_path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"."</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">read_and_export_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">))</span></div>
 
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 

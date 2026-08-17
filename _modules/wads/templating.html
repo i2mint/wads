@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.templating &mdash; wads 0.2.14 documentation</title>
+  <title>wads.templating &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,7 +133,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.templating</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Declarative, template-source-driven generation engine.</span>
+<span></span><span class="sd">"""Declarative, template-source-driven generation engine.</span>
 
 <span class="sd">The core idea (issue #32, originally #3): a *template source* is any</span>
 <span class="sd">``Mapping[str, str]`` mapping a relative path to template *content*. Three</span>
@@ -168,10 +168,10 @@
 <span class="sd">just a list of artifacts; :func:`generate` walks one and writes the files,</span>
 <span class="sd">honoring an ``overwrite`` set and recording actions on an optional tracker.</span>
 
-<span class="sd">&gt;&gt;&gt; source = {&quot;greeting.txt&quot;: &quot;Hello &lt;&lt; name &gt;&gt;!&quot;}</span>
-<span class="sd">&gt;&gt;&gt; render(source[&quot;greeting.txt&quot;], {&quot;name&quot;: &quot;world&quot;})</span>
-<span class="sd">&#39;Hello world!&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&gt;&gt;&gt; source = {"greeting.txt": "Hello &lt;&lt; name &gt;&gt;!"}</span>
+<span class="sd">&gt;&gt;&gt; render(source["greeting.txt"], {"name": "world"})</span>
+<span class="sd">'Hello world!'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -187,27 +187,27 @@
 <div class="viewcode-block" id="FilesystemTemplateSource">
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.FilesystemTemplateSource">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FilesystemTemplateSource</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A template source backed by a local folder.</span>
+<span class="w">    </span><span class="sd">"""A template source backed by a local folder.</span>
 
 <span class="sd">    Keys are POSIX-style relative paths of the files under ``root``; values are</span>
 <span class="sd">    the (text) file contents, read lazily on access.</span>
 
 <span class="sd">    &gt;&gt;&gt; import tempfile, os</span>
 <span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
-<span class="sd">    &gt;&gt;&gt; _ = open(os.path.join(d, &quot;a.txt&quot;), &quot;w&quot;).write(&quot;A&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; _ = open(os.path.join(d, "a.txt"), "w").write("A")</span>
 <span class="sd">    &gt;&gt;&gt; src = FilesystemTemplateSource(d)</span>
-<span class="sd">    &gt;&gt;&gt; src[&quot;a.txt&quot;]</span>
-<span class="sd">    &#39;A&#39;</span>
+<span class="sd">    &gt;&gt;&gt; src["a.txt"]</span>
+<span class="sd">    'A'</span>
 <span class="sd">    &gt;&gt;&gt; list(src)</span>
-<span class="sd">    [&#39;a.txt&#39;]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    ['a.txt']</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"utf-8"</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_abspath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abspath</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -221,7 +221,7 @@
             <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
                 <span class="n">full</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                 <span class="n">rel</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">full</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
-                <span class="k">yield</span> <span class="n">rel</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">rel</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span></div>
@@ -231,28 +231,28 @@
 <div class="viewcode-block" id="GithubTemplateSource">
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.GithubTemplateSource">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GithubTemplateSource</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A template source backed by a folder in a GitHub repository.</span>
+<span class="w">    </span><span class="sd">"""A template source backed by a folder in a GitHub repository.</span>
 
 <span class="sd">    Files are fetched lazily from ``raw.githubusercontent.com``. Uses the</span>
 <span class="sd">    standard library only (no ``requests`` dependency) so it stays usable in a</span>
 <span class="sd">    light install.</span>
 
-<span class="sd">    :param repo: ``&quot;owner/name&quot;`` slug.</span>
-<span class="sd">    :param ref: branch, tag, or commit (default ``&quot;master&quot;``).</span>
+<span class="sd">    :param repo: ``"owner/name"`` slug.</span>
+<span class="sd">    :param ref: branch, tag, or commit (default ``"master"``).</span>
 <span class="sd">    :param subdir: folder within the repo to treat as the template root.</span>
 
 <span class="sd">    Listing (``__iter__`` / ``__len__``) uses the GitHub trees API and is only</span>
 <span class="sd">    needed when enumerating; direct ``source[key]`` access does not list.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;master&quot;</span><span class="p">,</span> <span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"master"</span><span class="p">,</span> <span class="n">subdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="o">=</span> <span class="n">subdir</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="o">=</span> <span class="n">subdir</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_raw_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://raw.githubusercontent.com/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"https://raw.githubusercontent.com/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlopen</span>
@@ -260,7 +260,7 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">urlopen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_url</span><span class="p">(</span><span class="n">key</span><span class="p">))</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
@@ -271,15 +271,15 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlopen</span>
 
         <span class="n">api</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">/git/trees/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">?recursive=1&quot;</span>
+            <span class="sa">f</span><span class="s2">"https://api.github.com/repos/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="si">}</span><span class="s2">/git/trees/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">?recursive=1"</span>
         <span class="p">)</span>
         <span class="k">with</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">api</span><span class="p">)</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>
-            <span class="n">tree</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tree&quot;</span><span class="p">,</span> <span class="p">[])</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tree"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subdir</span> <span class="k">else</span> <span class="s2">""</span>
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;blob&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"blob"</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
                     <span class="k">continue</span>
@@ -302,22 +302,22 @@
 <span class="c1">#: Jinja2 delimiters chosen to avoid colliding with ``${{ ... }}`` (GitHub</span>
 <span class="c1">#: Actions) and ``${...}`` (shell).</span>
 <span class="n">JINJA_DELIMITERS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-    <span class="n">variable_start_string</span><span class="o">=</span><span class="s2">&quot;&lt;&lt;&quot;</span><span class="p">,</span>
-    <span class="n">variable_end_string</span><span class="o">=</span><span class="s2">&quot;&gt;&gt;&quot;</span><span class="p">,</span>
-    <span class="n">block_start_string</span><span class="o">=</span><span class="s2">&quot;&lt;%&quot;</span><span class="p">,</span>
-    <span class="n">block_end_string</span><span class="o">=</span><span class="s2">&quot;%&gt;&quot;</span><span class="p">,</span>
-    <span class="n">comment_start_string</span><span class="o">=</span><span class="s2">&quot;&lt;#&quot;</span><span class="p">,</span>
-    <span class="n">comment_end_string</span><span class="o">=</span><span class="s2">&quot;#&gt;&quot;</span><span class="p">,</span>
+    <span class="n">variable_start_string</span><span class="o">=</span><span class="s2">"&lt;&lt;"</span><span class="p">,</span>
+    <span class="n">variable_end_string</span><span class="o">=</span><span class="s2">"&gt;&gt;"</span><span class="p">,</span>
+    <span class="n">block_start_string</span><span class="o">=</span><span class="s2">"&lt;%"</span><span class="p">,</span>
+    <span class="n">block_end_string</span><span class="o">=</span><span class="s2">"%&gt;"</span><span class="p">,</span>
+    <span class="n">comment_start_string</span><span class="o">=</span><span class="s2">"&lt;#"</span><span class="p">,</span>
+    <span class="n">comment_end_string</span><span class="o">=</span><span class="s2">"#&gt;"</span><span class="p">,</span>
 <span class="p">)</span>
 
 
 <div class="viewcode-block" id="make_jinja_env">
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.make_jinja_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_jinja_env</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a Jinja2 environment with wads&#39;s custom delimiters.</span>
+<span class="w">    </span><span class="sd">"""Build a Jinja2 environment with wads's custom delimiters.</span>
 
 <span class="sd">    Extra keyword arguments override the defaults (e.g. ``undefined``).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
@@ -333,11 +333,11 @@
 <div class="viewcode-block" id="render">
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.render">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``content`` as a Jinja2 template with wads delimiters.</span>
+<span class="w">    </span><span class="sd">"""Render ``content`` as a Jinja2 template with wads delimiters.</span>
 
-<span class="sd">    &gt;&gt;&gt; render(&quot;v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;&quot;, {&quot;major&quot;: 1, &quot;minor&quot;: 2})</span>
-<span class="sd">    &#39;v1.2&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; render("v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;", {"major": 1, "minor": 2})</span>
+<span class="sd">    'v1.2'</span>
+<span class="sd">    """</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env</span> <span class="ow">or</span> <span class="n">make_jinja_env</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">env</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">context</span><span class="p">))</span></div>
 
@@ -346,11 +346,11 @@
 <div class="viewcode-block" id="apply_placeholders">
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.apply_placeholders">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">apply_placeholders</span><span class="p">(</span><span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy ``#TOKEN#`` substitution used by the older CI templates.</span>
+<span class="w">    </span><span class="sd">"""Legacy ``#TOKEN#`` substitution used by the older CI templates.</span>
 
-<span class="sd">    &gt;&gt;&gt; apply_placeholders(&quot;name=#NAME#&quot;, {&quot;#NAME#&quot;: &quot;wads&quot;})</span>
-<span class="sd">    &#39;name=wads&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; apply_placeholders("name=#NAME#", {"#NAME#": "wads"})</span>
+<span class="sd">    'name=wads'</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">token</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">content</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">content</span></div>
@@ -361,8 +361,8 @@
 <span class="c1"># Declarative artifacts and the generation loop</span>
 <span class="c1"># --------------------------------------------------------------------------------------</span>
 
-<span class="c1"># A content producer turns the resolved config/context into the file&#39;s text.</span>
-<span class="c1"># Returning ``None`` means &quot;skip this artifact&quot;.</span>
+<span class="c1"># A content producer turns the resolved config/context into the file's text.</span>
+<span class="c1"># Returning ``None`` means "skip this artifact".</span>
 <span class="n">ContentProducer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
 
 
@@ -370,7 +370,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.Artifact">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Artifact</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One file to generate within a project.</span>
+<span class="w">    </span><span class="sd">"""One file to generate within a project.</span>
 
 <span class="sd">    :param target: relative path of the file in the generated project.</span>
 <span class="sd">    :param content: a callable ``context -&gt; str | None`` producing the file</span>
@@ -378,7 +378,7 @@
 <span class="sd">        ``copy`` / ``jinja`` / ``placeholder`` strategies.</span>
 <span class="sd">    :param when: optional predicate ``context -&gt; bool`` gating generation.</span>
 <span class="sd">    :param binary: if True, ``content`` returns ``bytes`` and is written binary.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">target</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">content</span><span class="p">:</span> <span class="n">ContentProducer</span>
@@ -389,7 +389,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.Artifact.from_copy">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_copy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">TemplateSource</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Artifact that copies ``source[source_key]`` verbatim.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Artifact that copies ``source[source_key]`` verbatim."""</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">source</span><span class="p">[</span><span class="n">source_key</span><span class="p">],</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
 
 
@@ -397,7 +397,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.Artifact.from_jinja">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_jinja</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">TemplateSource</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Artifact that renders ``source[source_key]`` with Jinja2.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Artifact that renders ``source[source_key]`` with Jinja2."""</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">render</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="n">source_key</span><span class="p">],</span> <span class="n">ctx</span><span class="p">),</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
 
 
@@ -412,7 +412,7 @@
         <span class="n">placeholders</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
         <span class="o">**</span><span class="n">kw</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Artifact that applies ``#TOKEN#`` substitution to a template.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Artifact that applies ``#TOKEN#`` substitution to a template."""</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">target</span><span class="p">,</span>
             <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">apply_placeholders</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="n">source_key</span><span class="p">],</span> <span class="n">placeholders</span><span class="p">(</span><span class="n">ctx</span><span class="p">)),</span>
@@ -426,7 +426,7 @@
 <a class="viewcode-back" href="../../module_docs/wads/templating.html#wads.templating.GenerationResult">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GenerationResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of :func:`generate`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Outcome of :func:`generate`."""</span>
 
     <span class="n">added</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">skipped</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -446,13 +446,13 @@
     <span class="n">on_skip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">on_error</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenerationResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a list of :class:`Artifact` to ``target_dir``.</span>
+<span class="w">    </span><span class="sd">"""Apply a list of :class:`Artifact` to ``target_dir``.</span>
 
 <span class="sd">    An artifact is written when its target does not exist *or* its target is in</span>
 <span class="sd">    ``overwrite``. Parent directories are created as needed. Each action is</span>
 <span class="sd">    reported through the optional ``on_*`` callbacks and accumulated in the</span>
 <span class="sd">    returned :class:`GenerationResult`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overwrite</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">overwrite</span> <span class="o">=</span> <span class="p">{</span><span class="n">overwrite</span><span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
@@ -481,13 +481,13 @@
             <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;wb&quot;</span> <span class="k">if</span> <span class="n">art</span><span class="o">.</span><span class="n">binary</span> <span class="k">else</span> <span class="s2">&quot;w&quot;</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="s2">"wb"</span> <span class="k">if</span> <span class="n">art</span><span class="o">.</span><span class="n">binary</span> <span class="k">else</span> <span class="s2">"w"</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">art</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">on_add</span><span class="p">:</span>
                 <span class="n">on_add</span><span class="p">(</span><span class="n">art</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - report, don&#39;t abort the batch</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - report, don't abort the batch</span>
             <span class="n">result</span><span class="o">.</span><span class="n">errored</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">art</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
             <span class="k">if</span> <span class="n">on_error</span><span class="p">:</span>
                 <span class="n">on_error</span><span class="p">(</span><span class="n">art</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>

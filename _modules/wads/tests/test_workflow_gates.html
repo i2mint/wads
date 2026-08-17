@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.tests.test_workflow_gates &mdash; wads 0.2.14 documentation</title>
+  <title>wads.tests.test_workflow_gates &mdash; wads 0.2.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71c180b9"></script>
+      <script src="../../../_static/documentation_options.js?v=d5b904a0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,86 +133,86 @@
            <div itemprop="articleBody">
              
   <h1>Source code for wads.tests.test_workflow_gates</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Regression guards for two CI wiring bugs (see issue #45 follow-up).</span>
+<span></span><span class="sd">"""Regression guards for two CI wiring bugs (see issue #45 follow-up).</span>
 
 <span class="sd">1. A GitHub *expression* (``${{ ... }}``) written literally inside an action</span>
-<span class="sd">   manifest&#39;s input ``description``/``default`` is evaluated at manifest-load</span>
+<span class="sd">   manifest's input ``description``/``default`` is evaluated at manifest-load</span>
 <span class="sd">   time. Referencing the ``secrets`` context there crashes the whole action</span>
-<span class="sd">   (&quot;Unrecognized named-value: &#39;secrets&#39;&quot;), which took down the validation job.</span>
+<span class="sd">   ("Unrecognized named-value: 'secrets'"), which took down the validation job.</span>
 
-<span class="sd">2. The reusable workflow&#39;s ``publish`` job must be gated on the Linux</span>
+<span class="sd">2. The reusable workflow's ``publish`` job must be gated on the Linux</span>
 <span class="sd">   ``validation`` matrix — a failing test must block publication. This pins</span>
 <span class="sd">   that the gate has no status-function escape hatch (``!cancelled()`` /</span>
 <span class="sd">   ``always()``) and that ``validation`` is a dependency.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="n">REPO_ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">ACTIONS_DIR</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">&quot;actions&quot;</span>
-<span class="n">UV_CI</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">&quot;.github&quot;</span> <span class="o">/</span> <span class="s2">&quot;workflows&quot;</span> <span class="o">/</span> <span class="s2">&quot;uv-ci.yml&quot;</span>
+<span class="n">ACTIONS_DIR</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">"actions"</span>
+<span class="n">UV_CI</span> <span class="o">=</span> <span class="n">REPO_ROOT</span> <span class="o">/</span> <span class="s2">".github"</span> <span class="o">/</span> <span class="s2">"workflows"</span> <span class="o">/</span> <span class="s2">"uv-ci.yml"</span>
 
 
 <div class="viewcode-block" id="test_no_action_input_embeds_github_expression">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_gates.html#wads.tests.test_workflow_gates.test_no_action_input_embeds_github_expression">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_no_action_input_embeds_github_expression</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;No action.yml input description/default may contain a `${{ }}` expression.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""No action.yml input description/default may contain a `${{ }}` expression."""</span>
     <span class="n">offenders</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">action_yml</span> <span class="ow">in</span> <span class="n">ACTIONS_DIR</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*/action.yml&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">action_yml</span> <span class="ow">in</span> <span class="n">ACTIONS_DIR</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*/action.yml"</span><span class="p">):</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">action_yml</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"inputs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"description"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">):</span>
                 <span class="n">val</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;${{&quot;</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
-                    <span class="n">offenders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action_yml</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"${{"</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+                    <span class="n">offenders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">action_yml</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">assert</span> <span class="ow">not</span> <span class="n">offenders</span><span class="p">,</span> <span class="p">(</span>
-        <span class="s2">&quot;GitHub expressions in action input description/default are evaluated at &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;manifest load and can crash the action: </span><span class="si">{</span><span class="n">offenders</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="s2">"GitHub expressions in action input description/default are evaluated at "</span>
+        <span class="sa">f</span><span class="s2">"manifest load and can crash the action: </span><span class="si">{</span><span class="n">offenders</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_jobs</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;jobs&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">"jobs"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_is_gated_on_validation</span><span class="p">():</span>
-    <span class="n">publish</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)[</span><span class="s2">&quot;publish&quot;</span><span class="p">]</span>
-    <span class="n">needs</span> <span class="o">=</span> <span class="n">publish</span><span class="p">[</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="s2">&quot;validation&quot;</span> <span class="ow">in</span> <span class="n">needs</span> <span class="ow">and</span> <span class="s2">&quot;setup&quot;</span> <span class="ow">in</span> <span class="n">needs</span>
-    <span class="n">cond</span> <span class="o">=</span> <span class="n">publish</span><span class="p">[</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
+    <span class="n">publish</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)[</span><span class="s2">"publish"</span><span class="p">]</span>
+    <span class="n">needs</span> <span class="o">=</span> <span class="n">publish</span><span class="p">[</span><span class="s2">"needs"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"validation"</span> <span class="ow">in</span> <span class="n">needs</span> <span class="ow">and</span> <span class="s2">"setup"</span> <span class="ow">in</span> <span class="n">needs</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">publish</span><span class="p">[</span><span class="s2">"if"</span><span class="p">]</span>
     <span class="c1"># No status function -&gt; implicit success() requires all `needs` to pass,</span>
     <span class="c1"># so a failing validation blocks publish. Reject the escape hatches.</span>
-    <span class="k">assert</span> <span class="s2">&quot;cancelled(&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="p">(</span>
-        <span class="s2">&quot;publish must not bypass validation via !cancelled()&quot;</span>
+    <span class="k">assert</span> <span class="s2">"cancelled("</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="p">(</span>
+        <span class="s2">"publish must not bypass validation via !cancelled()"</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="s2">&quot;always(&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="s2">&quot;publish must not run via always()&quot;</span>
+    <span class="k">assert</span> <span class="s2">"always("</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="p">,</span> <span class="s2">"publish must not run via always()"</span>
 
 
 <div class="viewcode-block" id="test_publish_gates_on_actual_default_branch">
 <a class="viewcode-back" href="../../../module_docs/wads/tests/test_workflow_gates.html#wads.tests.test_workflow_gates.test_publish_gates_on_actual_default_branch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_publish_gates_on_actual_default_branch</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Publish must key off the repo&#39;s real default branch, not a literal master/main.</span>
+<span class="w">    </span><span class="sd">"""Publish must key off the repo's real default branch, not a literal master/main.</span>
 
 <span class="sd">    Keeps publish and github-pages consistent and correct for repos whose</span>
-<span class="sd">    default branch is neither &#39;master&#39; nor &#39;main&#39;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">cond</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)[</span><span class="s2">&quot;publish&quot;</span><span class="p">][</span><span class="s2">&quot;if&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="s2">&quot;github.event.repository.default_branch&quot;</span> <span class="ow">in</span> <span class="n">cond</span>
-    <span class="k">assert</span> <span class="s2">&quot;refs/heads/master&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span> <span class="ow">and</span> <span class="s2">&quot;refs/heads/main&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span></div>
+<span class="sd">    default branch is neither 'master' nor 'main'.</span>
+<span class="sd">    """</span>
+    <span class="n">cond</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)[</span><span class="s2">"publish"</span><span class="p">][</span><span class="s2">"if"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"github.event.repository.default_branch"</span> <span class="ow">in</span> <span class="n">cond</span>
+    <span class="k">assert</span> <span class="s2">"refs/heads/master"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span> <span class="ow">and</span> <span class="s2">"refs/heads/main"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_windows_validation_is_optional_and_separate</span><span class="p">():</span>
     <span class="n">jobs</span> <span class="o">=</span> <span class="n">_jobs</span><span class="p">(</span><span class="n">UV_CI</span><span class="p">)</span>
-    <span class="n">win</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">&quot;windows-validation&quot;</span><span class="p">]</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">"windows-validation"</span><span class="p">]</span>
     <span class="c1"># Windows is continue-on-error and is NOT a publish dependency, so it never</span>
     <span class="c1"># blocks publication.</span>
-    <span class="k">assert</span> <span class="n">win</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;continue-on-error&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
-    <span class="k">assert</span> <span class="s2">&quot;windows-validation&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">&quot;publish&quot;</span><span class="p">][</span><span class="s2">&quot;needs&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">win</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"continue-on-error"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+    <span class="k">assert</span> <span class="s2">"windows-validation"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">[</span><span class="s2">"publish"</span><span class="p">][</span><span class="s2">"needs"</span><span class="p">]</span>
 </pre></div>
 
            </div>
