@@ -300,3 +300,42 @@ def test_short_secret_value_warns_mask_hazard(monkeypatch, capsys):
         variable=True,
     )
     assert "mask" not in capsys.readouterr().out
+
+
+def test_mask_hazard_warning_fires_without_gh(monkeypatch, capsys):
+    """The hazard must be flagged whenever wads holds the value — including
+    when `gh` is absent and the user will run `gh secret set` by hand
+    (adversarial-review finding: the old order returned before the check)."""
+    import wads.secrets_cli as m
+
+    monkeypatch.setattr(m, "_gh_available", lambda: False)
+    m._maybe_set_github_value(
+        "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", "ci.yml"
+    )
+    out = capsys.readouterr().out
+    assert "mask" in out
+    assert "gh secret set" in out  # manual instruction still printed
+
+
+def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
+    """--variable is a dead end on inline repos (no vars fallback), so the
+    remedy there must be a committed default, not --variable."""
+    import wads.secrets_cli as m
+
+    monkeypatch.setattr(m, "_gh_available", lambda: True)
+    monkeypatch.setattr(m, "set_github_secret", lambda *a, **k: True)
+
+    inline_ci = tmp_path / "ci.yml"
+    inline_ci.write_text("name: CI\non: [push]\njobs: {}\n")
+    m._maybe_set_github_value(
+        "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", str(inline_ci)
+    )
+    out = capsys.readouterr().out
+    assert "defaults" in out and "--variable" not in out
+
+    stub_ci = tmp_path / "stub.yml"
+    stub_ci.write_text(migrate_ci_to_stub())
+    m._maybe_set_github_value(
+        "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", str(stub_ci)
+    )
+    assert "--variable" in capsys.readouterr().out

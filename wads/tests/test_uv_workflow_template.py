@@ -459,6 +459,81 @@ class TestSecretEnvScoping:
         # windows keeps its literal UTF-8 entries even with no secret vars
         assert str(data["jobs"]["windows-validation"]["env"]["PYTHONUTF8"]) == "1"
 
+    def test_default_is_authoritative_over_same_named_secret(self, template_content):
+        """A var in BOTH env.defaults and an envvars bucket renders only at
+        workflow level (the committed default), never as a job-level
+        `${{ secrets.X || '' }}` that would override it with '' in the test
+        jobs (adversarial-review finding; matches export-ci-env semantics)."""
+        config = {
+            "project": {"name": "demo"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "env": {
+                            "extra_envvars": ["COSMO_TEST_LEVEL"],
+                            "defaults": {"COSMO_TEST_LEVEL": "3"},
+                        }
+                    }
+                }
+            },
+        }
+        data = yaml.safe_load(self._render(template_content, config))
+        assert str(data["env"]["COSMO_TEST_LEVEL"]) == "3"
+        # the only declared var is defaulted, so the test jobs add nothing
+        assert "env" not in data["jobs"]["validation"]
+        assert "COSMO_TEST_LEVEL" not in data["jobs"]["windows-validation"]["env"]
+
+    def test_windows_literal_env_keys_are_not_duplicated(self, template_content):
+        """Declaring PYTHONUTF8 as an envvar must not render a duplicate key
+        in the windows job's env mapping (which fails the whole workflow at
+        parse time); the validation job still receives it."""
+        config = {
+            "project": {"name": "demo"},
+            "tool": {"wads": {"ci": {"env": {"test_envvars": ["PYTHONUTF8"]}}}},
+        }
+        rendered = self._render(template_content, config)
+        data = yaml.safe_load(rendered)
+        assert (
+            data["jobs"]["validation"]["env"]["PYTHONUTF8"]
+            == "${{ secrets.PYTHONUTF8 || '' }}"
+        )
+        assert str(data["jobs"]["windows-validation"]["env"]["PYTHONUTF8"]) == "1"
+        # exactly one PYTHONUTF8 key line inside the windows job's env
+        windows_section = rendered[rendered.index("windows-validation:") :]
+        windows_section = windows_section[: windows_section.index("steps:")]
+        assert windows_section.count("PYTHONUTF8:") == 1
+
+    def test_migrate_warns_about_test_job_scoping(self, tmp_path):
+        """migrate_ci_to_uv announces the #61 scoping change when the repo
+        declares secret-backed vars, and stays quiet when it declares none."""
+        from wads.migration import migrate_ci_to_uv
+
+        wf = tmp_path / ".github" / "workflows"
+        wf.mkdir(parents=True)
+        (wf / "ci.yml").write_text("name: old\non: push\n")
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "demo"\n\n'
+            "[tool.wads.ci.env]\nextra_envvars = [\"COSMO_TEST_LEVEL\"]\n"
+        )
+        result = migrate_ci_to_uv(wf / "ci.yml")
+        assert "scoped to the test jobs" in result
+
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "demo"\n')
+        result = migrate_ci_to_uv(wf / "ci.yml")
+        assert "scoped to the test jobs" not in result
+
+    def test_minimal_placeholder_render_helper(self, template_content):
+        """render_minimal_env_placeholders (used by the populate static path
+        and the migrate fallback) leaks no placeholders and stays valid."""
+        from wads.ci_config import render_minimal_env_placeholders
+
+        rendered = render_minimal_env_placeholders(template_content, "demo")
+        for placeholder in ("#ENV_BLOCK#", "#TEST_ENV_BLOCK#", "#TEST_ENV_VARS#"):
+            assert placeholder not in rendered
+        data = yaml.safe_load(rendered)
+        assert data["env"]["PROJECT_NAME"] == "demo"
+        assert "env" not in data["jobs"]["validation"]
+
     def test_fallback_render_strips_placeholders(self):
         """migrate_ci_to_uv without a pyproject.toml (string input) must not
         leak placeholders and must stay valid YAML."""
