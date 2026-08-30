@@ -164,13 +164,15 @@ plus the README badge set.
   points alone, whatever library they use. But **never introduce `argh` in new
   code**: it is LGPL-3.0-or-later, and packages across this ecosystem are being
   migrated off it, so a polish pass that adds it is adding work someone else has
-  to undo. New or replacement CLIs use stdlib `argparse` or Click.
+  to undo. The house CLI adapter is **`cw`** (`pip install cw` — MIT, zero
+  runtime dependencies); `python-dispatching` owns the idiom.
 - If the polish genuinely cannot avoid touching an existing `argh` entry point,
   that is a **migration, not a polish**: capture a golden of the script's
-  `--help` and its real invocations first, say so explicitly to the user, and
-  get their go-ahead. Do not do it silently inside a metadata pass.
-  <!-- argh-migration stage 2: name the house CLI adapter here once it ships.
-       Marker string: argh-migration -->
+  `--help` and its real invocations first (`cw.testing.characterize` /
+  `replay` exist for exactly this), say so explicitly to the user, and get their
+  go-ahead. Do not do it silently inside a metadata pass. Note that swapping
+  `argh` for `cw` also changes a dependency, which this skill's first guardrail
+  forbids — one more reason it is not a polish.
 
 ## Related skills
 
