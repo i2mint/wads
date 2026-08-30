@@ -111,6 +111,11 @@ enabled = true
 [tool.wads.ci.build]
 sdist = true
 wheel = true
+
+# Opt-in licence gate over the installed dependency closure (default: off).
+# See "Licence Perimeter" under CI Configuration Reference.
+[tool.wads.licence]
+enabled = false
 ```
 
 The default `ci.yml` is a small stub that calls wads's reusable workflow
@@ -328,6 +333,53 @@ wheel = true
 [tool.wads.ci.publish]
 enabled = true  # Publish to PyPI on main/master
 ```
+
+### Licence Perimeter (`wads-licence-check`)
+
+Fails the build when the **installed dependency closure** carries a licence the
+project's policy forbids — copyleft (GPL / AGPL / LGPL), or source-available /
+non-commercial (SSPL, BUSL, Elastic-2.0, RAIL, CC-BY-NC).
+
+It walks the *transitive* closure, not just the declared list, because that is
+where the exposures actually hide, and it reads a distribution's declaration
+through a **precision ladder** — PEP 639 `License-Expression`, then the
+`License ::` trove classifiers, then the **first line** of the free-text
+`License` field. No single field is enough: `click` declares an expression and
+no classifiers, `i2` declares neither and only a free-text field, and a
+whole-field substring scan flags BSD-3-Clause numpy as copyleft because its
+field carries an LGPL URL for a vendored notice.
+
+Run it anywhere:
+
+```bash
+wads-licence-check                                    # this project
+wads-licence-check path/to/project --json             # for a fleet sweep
+wads-licence-check . --python .venv/bin/python        # read another env
+```
+
+The CI gate is **opt-in**. A repo that declares nothing sees no change:
+
+```toml
+[tool.wads.licence]
+enabled = true                    # default false: opt in per repo
+allowed = ["MIT", "BSD", "Apache-2.0", "ISC"]
+forbidden = ["AGPL", "GPL", "LGPL", "SSPL", "BUSL", "Elastic-2.0", "RAIL"]
+include-extras = []               # [] = hard deps only; ["*"] = every extra
+unknown-is-failure = true         # a blank licence field is *unaudited*, not fine
+unclassified-is-failure = false   # e.g. MPL-2.0: reported, does not fail
+
+[tool.wads.licence.exceptions]
+certifi = "MPL-2.0 — weak, file-level, over an unmodified CA bundle. Audited 2026-08."
+```
+
+Note the table lives under `[tool.wads]`, not `[tool.wads.ci]`: the policy is a
+fact about the package, and the tool is useful outside CI. Only `enabled` is a
+CI concern.
+
+Every run first proves the live policy still catches known-copyleft
+declarations *and* still clears known-permissive ones, and refuses to report at
+all if it cannot — a detector nobody has demonstrated is a detector nobody has
+checked.
 
 ## System Dependencies
 

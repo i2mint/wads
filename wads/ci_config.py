@@ -377,6 +377,31 @@ class CIConfig:
         """Check if metrics should run even on workflow failure."""
         return self.metrics_config.get("force_run", False)
 
+    # ⚖️ LICENCE PERIMETER
+    @property
+    def licence_config(self) -> dict:
+        """The ``[tool.wads.licence]`` table.
+
+        Note it sits under ``[tool.wads]``, NOT under ``[tool.wads.ci]``: the
+        policy is a fact about the package's dependency perimeter, and
+        :mod:`wads.licence_check` is useful outside CI. Only the ``enabled``
+        flag below is a CI concern.
+        """
+        return self.data.get("tool", {}).get("wads", {}).get("licence", {})
+
+    @property
+    def licence_enabled(self) -> bool:
+        """Whether CI should run the licence-perimeter gate.
+
+        Defaults to **False**. This one is opt-in rather than opt-out, unlike
+        every other gate here, and deliberately so: the reusable workflow is
+        called by the whole fleet, and turning a new failing check on for all
+        of them at once reddens every caller's CI in one merge. Set
+        ``[tool.wads.licence].enabled = true`` per repo, once its exposures are
+        resolved.
+        """
+        return self.licence_config.get("enabled", False)
+
     @property
     def ops(self) -> dict:
         """Get system dependencies configuration from [tool.wads.ops.*] sections.

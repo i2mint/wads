@@ -104,6 +104,10 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("mypy-enabled", config.is_mypy_enabled())
         _set_output("docs-enabled", config.docs_enabled)
 
+        # Licence perimeter gate. Opt-in (default false) so adding it to the
+        # reusable workflow cannot redden the CI of every caller at once.
+        _set_output("licence-enabled", config.licence_enabled)
+
         # Publish gate + commit-message markers (consumed by the publish job)
         _set_output("publish-enabled", config.publish_enabled)
         _set_output("skip-ci-marker", config.publish_skip_ci_marker)
