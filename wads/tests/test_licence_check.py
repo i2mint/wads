@@ -762,6 +762,10 @@ def test_the_module_has_no_third_party_imports():
     being emptied by the dependency-removal campaign, without dragging a
     toolchain in behind it. `tomli` is the sole conditional import, and only on
     Python 3.10, where `tomllib` does not yet exist.
+
+    Both TOML names are allowed through: `tomllib` IS stdlib, but only from
+    3.11, so `sys.stdlib_module_names` on 3.10 does not know it -- which is the
+    exact interpreter the guarded import exists for.
     """
     source = (REPO_ROOT / "wads" / "licence_check.py").read_text()
     stdlib = set(sys.stdlib_module_names)
@@ -774,8 +778,11 @@ def test_the_module_has_no_third_party_imports():
             module = line.split()[1].split(".")[0]
             if module != "__future__":
                 imported.add(module)
+    toml_readers = {"tomli", "tomllib"}
     third_party = {m for m in imported if m not in stdlib and m != "wads"}
-    assert third_party <= {"tomli"}, f"third-party imports: {sorted(third_party)}"
+    assert third_party <= toml_readers, (
+        f"third-party imports: {sorted(third_party - toml_readers)}"
+    )
 
 
 def test_the_console_script_is_declared():
