@@ -815,8 +815,14 @@ def test_the_cli_exits_nonzero_on_a_breach_and_zero_when_clean(tmp_path, capsys)
 
     The exit code IS the gate. Everything else in this file is only advice if
     the process comes back 0 to the CI runner.
+
+    Both fixtures are wads's OWN core dependencies -- `jinja2` (BSD-3-Clause)
+    and `argh` (LGPL) -- so they are installed wherever `wads.licence_check` is
+    importable at all. Naming anything else couples the test to whichever
+    extras happen to be present, and the run then fails on the
+    nothing-is-installed guard rather than on what it meant to check.
     """
-    _write_project(tmp_path, dependencies=["requests"])
+    _write_project(tmp_path, dependencies=["jinja2"])
     clean = subprocess.run(
         [sys.executable, "-m", "wads.licence_check", str(tmp_path)],
         capture_output=True,
