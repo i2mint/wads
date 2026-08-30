@@ -159,8 +159,18 @@ plus the README badge set.
   required and PEP 639 deprecates relying on it for license info.
 - Keep `requires-python` as the source of truth for install gating; classifiers
   are search-only and must not contradict it.
-- Preserve the user's existing style (house style: un-versioned deps by default,
-  `argh`-based scripts — leave those untouched).
+- Preserve the user's existing style (house style: un-versioned deps by default).
+- **This is a metadata pass — do not rewrite CLI scripts.** Leave existing entry
+  points alone, whatever library they use. But **never introduce `argh` in new
+  code**: it is LGPL-3.0-or-later, and packages across this ecosystem are being
+  migrated off it, so a polish pass that adds it is adding work someone else has
+  to undo. New or replacement CLIs use stdlib `argparse` or Click.
+- If the polish genuinely cannot avoid touching an existing `argh` entry point,
+  that is a **migration, not a polish**: capture a golden of the script's
+  `--help` and its real invocations first, say so explicitly to the user, and
+  get their go-ahead. Do not do it silently inside a metadata pass.
+  <!-- argh-migration stage 2: name the house CLI adapter here once it ships.
+       Marker string: argh-migration -->
 
 ## Related skills
 
