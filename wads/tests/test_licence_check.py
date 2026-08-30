@@ -180,13 +180,8 @@ def test_the_ladder_prefers_the_expression_over_a_disagreeing_classifier():
 
 @pytest.mark.parametrize(
     "name,declaration",
-    lc.COPYLEFT_CANARIES
+    tuple((c.label, c.declaration) for c in lc.COPYLEFT_CANARIES)
     + (
-        (
-            "ultralytics classifier",
-            "License :: OSI Approved :: GNU Affero General Public License v3 "
-            "or later (AGPLv3+)",
-        ),
         ("phoenix (Elastic-2.0, field only)", "Elastic-2.0"),
         ("a BUSL-licensed distribution", "Business Source License 1.1"),
         ("an SSPL-licensed distribution", "SSPL-1.0"),
@@ -255,10 +250,16 @@ def test_lgpl_does_not_leak_out_of_the_gpl_pattern_and_vice_versa():
         )
     )
     assert not lgpl_permissive.matched_forbidden("LGPL-2.1-or-later")
+    assert not lgpl_permissive.matched_forbidden(
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)"
+    )
     assert lgpl_permissive.matched_forbidden("GPL-3.0-or-later")
     assert lgpl_permissive.matched_forbidden("AGPL-3.0")
-    # And it is still a usable detector, so the self-check lets it run.
-    assert lc.self_check(lgpl_permissive)
+    # And it is still a usable detector, so the self-check lets it run -- but it
+    # says out loud, on every run, which family it stopped gating on.
+    checked = lc.self_check(lgpl_permissive)
+    assert checked.caught
+    assert checked.uncovered_families == ("LGPL",)
 
 
 # --------------------------------------------------------------------------------------
@@ -436,9 +437,9 @@ def test_the_shipped_default_policy_passes_its_own_self_check():
 
     The defaults are what every repo that opts in gets on day one.
     """
-    assert lc.self_check(lc.LicencePolicy()) == tuple(
-        label for label, _ in lc.COPYLEFT_CANARIES
-    )
+    checked = lc.self_check(lc.LicencePolicy())
+    assert checked.caught == tuple(c.label for c in lc.COPYLEFT_CANARIES)
+    assert checked.uncovered_families == ()
 
 
 # --------------------------------------------------------------------------------------
@@ -616,14 +617,18 @@ def test_an_environment_with_none_of_the_closure_installed_refuses_to_report(tmp
 def test_a_partially_installed_closure_reports_what_it_could_not_read(tmp_path):
     """MUTATION: drop `not-installed` from the report.
 
-    A name the walk could not read is a hole in the perimeter. It does not fail
-    the build (platform- and marker-conditional dependencies are legitimately
-    absent), but it must be visible, because "no violations found" over a
-    closure half of which was never read is not the same claim.
+    A name the walk could not read is a hole in the perimeter, and "no
+    violations found" over a closure half of which was never read is not the
+    same claim. Marker-conditional dependencies ARE legitimately absent, and
+    they get their own status (see the NOT_APPLICABLE tests); everything else
+    fails.
     """
     _write_project(tmp_path, dependencies=["requests", "not-a-real-distribution"])
     report = lc.check(tmp_path, readers=FAKE_READERS)
-    assert report.ok
+    # A declared dependency nobody could read is a hole in the perimeter, not a
+    # footnote: one installed survivor used to turn any number of unread
+    # copyleft dependencies into a green.
+    assert not report.ok
     missing = [v.name for v in report.of_status(lc.Status.NOT_INSTALLED)]
     assert missing == ["not-a-real-distribution"]
     assert "NOT INSTALLED" in report.render()
@@ -762,6 +767,13 @@ def test_the_module_has_no_third_party_imports():
     being emptied by the dependency-removal campaign, without dragging a
     toolchain in behind it. `tomli` is the sole conditional import, and only on
     Python 3.10, where `tomllib` does not yet exist.
+
+    Note what this does and does not claim. It reads the source text, so it is
+    an assertion about THIS FILE, not about the process: importing
+    `wads.licence_check` runs `wads/__init__`, which pulls wads's own core
+    dependencies into `sys.modules` like any other import. The module's
+    docstring says so; the claim here is "adds no dependency of its own", not
+    isolation.
 
     Both TOML names are allowed through: `tomllib` IS stdlib, but only from
     3.11, so `sys.stdlib_module_names` on 3.10 does not know it -- which is the
@@ -923,3 +935,576 @@ def test_a_stale_exception_is_reported(tmp_path):
     assert report.stale_exceptions == ("long-gone",)
     assert "STALE EXCEPTIONS" in report.render()
     assert report.as_dict()["stale_exceptions"] == ["long-gone"]
+
+
+# --------------------------------------------------------------------------------------
+# 9. The LGPL/AGPL substring hole, and the regressions that let it ship
+#
+# Every test below corresponds to a finding from the independent adversarial
+# review of this module (wads#71). They are grouped here rather than scattered
+# because they share one root cause: patterns and canaries were written from the
+# same mental model, so the spellings nobody thought of were missing from BOTH.
+# --------------------------------------------------------------------------------------
+
+#: Every GPL-family spelling this gate must catch. Written out, rather than
+#: derived from the patterns, because deriving it from the patterns is exactly
+#: how four modern LGPL classifiers went unnoticed for a whole release.
+REAL_COPYLEFT_SPELLINGS = (
+    # The five official LGPL trove classifiers. Four of these were MISSED.
+    "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    # GPL and AGPL classifiers.
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    # Spelled out, no acronym anywhere -- the form a free-text field carries.
+    "GNU Lesser General Public License",
+    "GNU Lesser General Public License v3 or later",
+    "GNU General Public License",
+    "GNU General Public License v2 or later",
+    "GNU Affero General Public License v3",
+    # Bare acronym plus version, the other free-text form.
+    "LGPL",
+    "LGPLv2",
+    "LGPLv2+",
+    "LGPLv3",
+    "LGPLv3+",
+    "AGPLv3",
+    "AGPLv3+",
+    "GPLv3",
+    # SPDX identifiers.
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-only",
+    "GPL-3.0-or-later",
+    "AGPL-3.0",
+    "AGPL-3.0-or-later",
+)
+
+
+@pytest.mark.parametrize("declaration", REAL_COPYLEFT_SPELLINGS)
+def test_every_real_copyleft_spelling_is_caught(declaration):
+    r"""MUTATION: restore the trailing word boundary on `\bLGPL\b` / `\bAGPL\b`.
+
+    This is the finding. `\b` after the acronym cannot match `LGPLv2+` or
+    `AGPLv3` -- the acronym runs straight into the version with no boundary
+    between them -- so four of the five official LGPL trove classifiers, and
+    every bare `LGPLvN` free-text field, sailed through a gate built to stop
+    exactly them. A project whose entire closure was LGPL reported PERIMETER
+    HOLDS, exit 0.
+
+    The same shape hid in the spelled-out forms: nothing matched
+    `GNU Lesser General Public License` unless it also carried the acronym.
+    """
+    matched = lc.LicencePolicy().matched_forbidden(declaration)
+    assert matched, f"{declaration!r} is copyleft and the default policy misses it"
+
+
+def test_the_trove_classifier_list_has_no_uncaught_gpl_family_member():
+    """MUTATION: hand-pick the canaries from the same mental model as the patterns.
+
+    The canary set is only as good as the imagination that wrote it, which is
+    why the four missing LGPL spellings were missing from BOTH. This test does
+    not consult the canaries: it sweeps the classifier strings themselves.
+
+    Uses the vendored copy of the classifier list if `trove_classifiers` is not
+    installed, so it is a real assertion in CI either way.
+    """
+    try:
+        from trove_classifiers import classifiers
+    except ImportError:  # pragma: no cover - trove_classifiers is not a wads dep
+        classifiers = REAL_COPYLEFT_SPELLINGS
+    policy = lc.LicencePolicy()
+    gpl_family = [
+        c
+        for c in classifiers
+        if c.startswith("License ::") and ("GPL" in c or "General Public" in c)
+    ]
+    assert gpl_family, "the sweep found nothing to sweep"
+    missed = [c for c in gpl_family if not policy.matched_forbidden(c)]
+    assert not missed, f"GPL-family classifiers the default policy misses: {missed}"
+
+
+def test_a_closure_that_is_entirely_lgpl_breaches_the_perimeter(tmp_path):
+    """MUTATION: the blocker, end to end rather than at the regex.
+
+    The regex tests above would pass against a policy whose patterns were right
+    and whose wiring was wrong. This is the whole path: pyproject in, exit code
+    out, over a closure whose every member declares a modern LGPL classifier.
+    """
+    records = {
+        f"lgpl{n}": (
+            f"Name: lgpl{n}\nClassifier: License :: OSI Approved :: GNU Lesser "
+            f"General Public License v{n} or later (LGPLv{n}+)\n"
+        )
+        for n in (2, 3)
+    }
+    readers = lc.MetadataReaders(
+        lambda name: message_from_string(records[lc.normalise(name)]),
+        lambda name: [],
+    )
+    _write_project(tmp_path, dependencies=list(records))
+    report = lc.check(tmp_path, readers=readers)
+    assert not report.ok
+    assert {v.name for v in report.of_status(lc.Status.FORBIDDEN)} == set(records)
+    assert "PERIMETER BREACHED" in report.render()
+
+
+def test_a_policy_that_covers_a_licence_family_only_in_part_refuses_to_run():
+    r"""MUTATION: `self_check` passing on ONE canary.
+
+    Requiring a single canary is what let the blocker above ship: `\bLGPL\b`
+    caught the legacy classifier, the self-check said "caught 1", and four
+    modern spellings walked. Partial coverage of a family is never a deliberate
+    stance -- it is the bug -- so it is refused, and the message names the
+    spellings that got away.
+    """
+    partial = lc.LicencePolicy(forbidden=(r"\bAGPL", r"\bAffero\b", r"\bLGPL\b"))
+    with pytest.raises(lc.DetectorError) as raised:
+        lc.self_check(partial)
+    assert "LGPLv3 classifier" in str(raised.value)
+    assert "LGPLv2+ classifier" in str(raised.value)
+
+
+def test_narrowing_forbidden_to_one_family_cannot_pass_silently(tmp_path):
+    """MUTATION: as above, but through `check`, where it actually bit.
+
+    `forbidden = ["AGPL"]` used to pass the gate and report a GPL-3.0-or-later
+    dependency as a mere notice, exit 0. It now cannot run at all, because it
+    covers AGPL in part.
+    """
+    _write_project(
+        tmp_path, dependencies=["html2text"], licence={"forbidden": ["AGPL"]}
+    )
+    with pytest.raises(lc.DetectorError):
+        lc.check(tmp_path, readers=FAKE_READERS)
+
+
+def test_dropping_a_whole_family_is_allowed_and_is_announced_in_every_run(tmp_path):
+    """MUTATION: report an uncovered family silently, or not at all.
+
+    Permitting a family outright IS a coherent stance (LGPL for dynamically
+    linked libraries is the usual one), so it must stay expressible. But it must
+    not be invisible: "PERIMETER HOLDS" over a closure containing LGPL, from a
+    policy that quietly stopped gating on LGPL, is the same lie in a new hat.
+    """
+    forbidden = [p for p in lc.DFLT_FORBIDDEN if "LGPL" not in p and "Lesser" not in p]
+    _write_project(tmp_path, dependencies=["soxr"], licence={"forbidden": forbidden})
+    report = lc.check(tmp_path, readers=FAKE_READERS)
+    assert report.uncovered_families == ("LGPL",)
+    assert "NOT GATED ON by this policy: LGPL" in report.render()
+    assert report.as_dict()["uncovered_families"] == ["LGPL"]
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "BSL-1.0",
+        "License :: OSI Approved :: Boost Software License 1.0 (BSL-1.0)",
+        "Boost Software License 1.0",
+    ],
+)
+def test_the_boost_software_licence_is_not_mistaken_for_business_source(declaration):
+    r"""MUTATION: put `\bBSL\b` back into DFLT_NON_COMMERCIAL.
+
+    One TLA, two licences with opposite meanings: `BSL-1.0` is the Boost
+    Software License, permissive and OSI-approved; the Business Source License
+    is `BUSL-1.1`. The pattern aimed at the second flagged the first.
+    """
+    policy = lc.LicencePolicy()
+    assert not policy.matched_forbidden(declaration)
+    assert policy.matched_allowed(declaration)
+
+
+@pytest.mark.parametrize(
+    "declaration", ["Business Source License 1.1", "BUSL-1.1", "SSPL-1.0"]
+)
+def test_source_available_licences_are_still_caught(declaration):
+    r"""MUTATION: delete `\bBUSL\b` along with `\bBSL\b`.
+
+    Removing the over-broad pattern must not remove the family it was aimed at.
+    """
+    assert lc.LicencePolicy().matched_forbidden(declaration)
+
+
+def test_0bsd_is_permissive_not_unclassified():
+    r"""MUTATION: drop `\b0BSD\b` and rely on `\bBSD\b`.
+
+    There is no word boundary between a digit and a letter, so `\bBSD\b` cannot
+    reach inside `0BSD` -- and the SPDX id of one of the most permissive
+    licences in existence landed in UNCLASSIFIED: noise by default, a build
+    failure under `unclassified-is-failure`.
+    """
+    policy = lc.LicencePolicy()
+    assert policy.matched_allowed("0BSD")
+    assert not policy.matched_forbidden("0BSD")
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        "GPL-2.0-only WITH Classpath-exception-2.0",
+        "GPL-2.0-only with Classpath-exception-2.0",
+        "GPLv2 with linking exception",
+    ],
+)
+def test_a_gpl_with_a_linking_exception_is_spared(declaration):
+    """MUTATION: drop the lookahead on the GPL pattern.
+
+    The `WITH <exception>` spellings are the reason the lookahead exists, and
+    widening the acronym patterns must not have eaten it.
+    """
+    assert not lc.LicencePolicy().matched_forbidden(declaration)
+
+
+# --- Dual-licensed declarations -------------------------------------------------------
+
+
+def test_an_spdx_or_takes_the_permissive_option(tmp_path):
+    """MUTATION: run `matched_forbidden` over the whole blob and stop there.
+
+    `marisa-trie` declares `MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)`. SPDX's
+    OR is a choice offered to the recipient, so failing the build on the option
+    nobody has to take is simply wrong -- and it is the mirror image of the
+    blocker above: both come from substring-matching a concatenated blob.
+    """
+    records = {
+        "marisa-trie": (
+            "Name: marisa-trie\nLicense-Expression: MIT AND (BSD-2-Clause OR "
+            "LGPL-2.1-or-later)\n"
+        )
+    }
+    readers = lc.MetadataReaders(
+        lambda name: message_from_string(records[lc.normalise(name)]),
+        lambda name: [],
+    )
+    _write_project(tmp_path, dependencies=["marisa-trie"])
+    report = lc.check(tmp_path, readers=readers)
+    assert report.ok
+    verdict = report.verdicts[0]
+    assert verdict.status == lc.Status.ALLOWED
+    assert "dual-licensed" in verdict.note
+
+
+def test_side_by_side_classifiers_become_a_question_not_a_failure(tmp_path):
+    """MUTATION: let `forbidden` win unconditionally over `allowed`.
+
+    Joining a distribution's `License ::` classifiers produces a list, not an
+    OR: `docutils` ships Public Domain, BSD AND GPL classifiers together and
+    nobody can tell from metadata which applies to which file. Failing the build
+    is a guess; so is passing it. It is a question for a human -- and docutils
+    is transitive under Sphinx, so guessing "forbidden" reddens every repo with
+    a docs toolchain.
+    """
+    records = {
+        "docutils": (
+            "Name: docutils\nClassifier: License :: Public Domain\n"
+            "Classifier: License :: OSI Approved :: BSD License\n"
+            "Classifier: License :: OSI Approved :: GNU General Public License (GPL)\n"
+        )
+    }
+    readers = lc.MetadataReaders(
+        lambda name: message_from_string(records[lc.normalise(name)]),
+        lambda name: [],
+    )
+    _write_project(tmp_path, dependencies=["docutils"])
+    report = lc.check(tmp_path, readers=readers)
+    assert report.ok
+    verdict = report.verdicts[0]
+    assert verdict.status == lc.Status.UNCLASSIFIED
+    assert "GPL" in verdict.note and "BSD" in verdict.note
+
+
+def test_an_or_with_no_permissive_option_is_still_forbidden():
+    """MUTATION: treat any OR as a way out.
+
+    `pycairo` declares `LGPL-2.1-only OR MPL-1.1`. Both options are restricted,
+    so there is nothing to pick and the declaration stands as it is.
+    """
+    policy = lc.LicencePolicy()
+    assert policy.permissive_option("LGPL-2.1-only OR MPL-1.1") == ""
+    assert policy.matched_forbidden("LGPL-2.1-only OR MPL-1.1")
+
+
+def test_the_word_or_inside_a_licence_name_is_not_a_disjunction():
+    """MUTATION: split on a case-insensitive `or`.
+
+    "GNU General Public License v2 **or** later" is one licence, not two. SPDX's
+    operator is uppercase by specification, which is what makes this safe.
+    """
+    policy = lc.LicencePolicy()
+    assert policy.permissive_option("GNU General Public License v2 or later") == ""
+    assert policy.matched_forbidden("GNU General Public License v2 or later")
+
+
+# --- What was never looked at ---------------------------------------------------------
+
+
+def test_a_declared_dependency_that_is_not_installed_fails_the_run(tmp_path):
+    """MUTATION: restore `if declared and not installed`.
+
+    The old refusal was all-or-nothing: ONE installed survivor made any number
+    of unread copyleft dependencies into a green. A dependency the check could
+    not read is a hole in the perimeter, not a footnote.
+    """
+    _write_project(tmp_path, dependencies=["requests", "never-installed"])
+    report = lc.check(tmp_path, readers=FAKE_READERS)
+    assert not report.ok
+    assert [v.name for v in report.failures] == ["never-installed"]
+
+
+def test_a_marker_gated_dependency_is_not_a_failure(tmp_path):
+    """MUTATION: fail every uninstalled name.
+
+    `tomli; python_version < "3.11"` is legitimately absent on 3.12 -- wads
+    declares exactly that -- and failing on it would make the gate unusable.
+    The distinction is the marker, and it is detectable from the requirement.
+    """
+    _write_project(
+        tmp_path, dependencies=['never-installed; python_version < "3.0"', "requests"]
+    )
+    report = lc.check(tmp_path, readers=FAKE_READERS)
+    assert report.ok
+    absent = report.of_status(lc.Status.NOT_APPLICABLE)
+    assert [v.name for v in absent] == ["never-installed"]
+    assert "NOT APPLICABLE" in report.render()
+
+
+def test_a_marker_gated_transitive_dependency_is_also_recognised(tmp_path):
+    """MUTATION: check markers on the project's own requirements only.
+
+    The marker can be three levels down, on a `Requires-Dist` line, and the
+    reasoning is identical there.
+    """
+    requires = {"requests": ['never-installed; sys_platform == "nosuchos"']}
+    readers = lc.MetadataReaders(
+        fake_read_metadata, lambda name: requires.get(lc.normalise(name), [])
+    )
+    _write_project(tmp_path, dependencies=["requests"])
+    report = lc.check(tmp_path, readers=readers)
+    assert report.ok
+    assert [v.name for v in report.of_status(lc.Status.NOT_APPLICABLE)] == [
+        "never-installed"
+    ]
+
+
+def test_an_unconditional_path_beats_a_conditional_one(tmp_path):
+    """MUTATION: mark a name conditional if ANY path to it carries a marker.
+
+    A dependency required outright and ALSO required conditionally elsewhere is
+    required outright. Getting this backwards would hand back the blind spot.
+    """
+    _write_project(
+        tmp_path,
+        dependencies=[
+            "requests",
+            "never-installed",
+            'never-installed; python_version < "3.0"',
+        ],
+    )
+    report = lc.check(tmp_path, readers=FAKE_READERS)
+    assert not report.ok
+    assert [v.name for v in report.of_status(lc.Status.NOT_INSTALLED)] == [
+        "never-installed"
+    ]
+
+
+def test_dynamic_dependencies_are_refused_rather_than_read_as_zero(tmp_path):
+    """MUTATION: `project.get('dependencies', [])`.
+
+    A project with `dynamic = ["dependencies"]` reported `declared: 0 /
+    closure: 0 / PERIMETER HOLDS` with no warning at all -- a confident green
+    over a dependency list this tool never saw.
+    """
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\nversion = "0.0.1"\ndynamic = ["dependencies"]\n'
+    )
+    with pytest.raises(lc.DetectorError) as raised:
+        lc.check(tmp_path, readers=FAKE_READERS)
+    assert "dynamic" in str(raised.value)
+
+
+def test_an_absent_dependencies_key_is_refused(tmp_path):
+    """MUTATION: treat a missing key the same as an empty list.
+
+    Requirements living in `setup.py` or `requirements.txt` are requirements
+    this tool cannot see, and "declared: 0" over them is not a finding.
+    """
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\nversion = "0.1"\n')
+    with pytest.raises(lc.DetectorError):
+        lc.check(tmp_path, readers=FAKE_READERS)
+
+
+def test_an_explicitly_empty_dependency_list_is_fine(tmp_path):
+    """MUTATION: refuse on `declared == 0`.
+
+    `dol` and `cw` really do declare `dependencies = []`. An assertion somebody
+    wrote is not the same as an absence nobody noticed, and the discriminator is
+    the key, never the count.
+    """
+    _write_project(tmp_path, dependencies=[])
+    report = lc.check(tmp_path, readers=FAKE_READERS)
+    assert report.ok
+    assert report.declared == ()
+
+
+# --- Configuration: one schema, and values that are what they say ---------------------
+
+
+def test_the_superseded_table_shape_is_rejected_with_its_migration():
+    """MUTATION: fold `allow` in as a silent alias for `allowed`.
+
+    Two spellings of one table is worse than either: a repo written against the
+    other shape reads as configured and is not. Rejected -- but with the
+    migration, because whoever hits this did not choose it.
+    """
+    for key, expect in (("allow", "allowed"), ("project_licence", "drop it")):
+        with pytest.raises(ValueError) as raised:
+            lc.LicencePolicy.from_mapping({key: ["MIT"]})
+        assert expect in str(raised.value)
+        assert "earlier table shape" in str(raised.value)
+
+
+def test_an_exceptions_array_of_tables_is_read_and_carries_its_provenance():
+    """MUTATION: `dict(value)` over an array-of-tables.
+
+    A two-key table silently became `{'dependency': 'reason'}` -- no error, a
+    policy that adjudicated a distribution named "dependency". The
+    array-of-tables shape is the one that carries `decided` and `decided_in`,
+    which is what an adjudication somebody can be asked about looks like.
+    """
+    policy = lc.LicencePolicy.from_mapping(
+        {
+            "exceptions": [
+                {
+                    "dependency": "PyGithub",
+                    "licence": "LGPL (classifier only)",
+                    "scope": "core",
+                    "decided": "2026-08-30",
+                    "decided_in": "https://example.invalid/issues/10",
+                    "reason": "Accepted, not removable.",
+                }
+            ]
+        }
+    )
+    reason = policy.exception_for("pygithub")
+    assert reason.startswith("Accepted, not removable.")
+    assert "decided: 2026-08-30" in reason
+    assert "https://example.invalid/issues/10" in reason
+    assert policy.exception_for("dependency") == ""
+
+
+def test_an_exception_without_a_reason_is_refused():
+    """MUTATION: accept an entry with only a `dependency`.
+
+    An exception without a written reason is a name nobody can be asked about,
+    which is the state recording one is supposed to end.
+    """
+    with pytest.raises(ValueError) as raised:
+        lc.LicencePolicy.from_mapping({"exceptions": [{"dependency": "PyGithub"}]})
+    assert "reason" in str(raised.value)
+
+
+def test_a_malformed_exceptions_entry_says_so():
+    """MUTATION: let a non-table entry through to `dict()`.
+
+    `dict(['PyGithub'])` raised `dictionary update sequence element #0 has
+    length 8; 2 is required`, which tells a reader nothing about their config.
+    """
+    with pytest.raises(ValueError) as raised:
+        lc.LicencePolicy.from_mapping({"exceptions": ["PyGithub"]})
+    assert "dependency" in str(raised.value)
+
+
+@pytest.mark.parametrize("key", ["allowed", "forbidden", "include-extras"])
+def test_a_bare_string_where_a_list_belongs_is_refused(key):
+    """MUTATION: `tuple(value)` with no type check.
+
+    `allowed = "MIT"` became the three regexes `M`, `I`, `T` -- silently, and
+    it reads as configured. `tuple()` over a string is the trap.
+    """
+    with pytest.raises(ValueError) as raised:
+        lc.LicencePolicy.from_mapping({key: "MIT"})
+    assert "list of strings" in str(raised.value)
+
+
+def test_an_unparseable_pattern_exits_two_not_one(tmp_path):
+    """MUTATION: leave `re.error` out of main's caught exceptions.
+
+    Exit 1 means PERIMETER BREACHED. A tool whose crash is indistinguishable
+    from its finding has no error path -- and a broken regex in pyproject is a
+    config error, which is exit 2.
+    """
+    _write_project(tmp_path, dependencies=["requests"], licence={"forbidden": ["GPL("]})
+    assert lc.main([str(tmp_path)]) == lc.EXIT_ERROR
+
+
+def test_an_unreadable_python_exits_two_not_one(tmp_path):
+    """MUTATION: hoist `readers_for(search_path_of(...))` back out of the try.
+
+    It sat outside `main`'s try/except, so a bad `--python` raised an uncaught
+    traceback and exited 1.
+    """
+    _write_project(tmp_path, dependencies=["requests"])
+    assert (
+        lc.main([str(tmp_path), "--python", str(tmp_path / "no-such-python")])
+        == lc.EXIT_ERROR
+    )
+
+
+def test_perimeter_holds_carries_the_count_of_what_it_did_not_adjudicate(tmp_path):
+    """MUTATION: print a bare `PERIMETER HOLDS`.
+
+    The last line is the only one most people read in a CI log, and printing it
+    directly beneath a list of unadjudicated rows contradicts the list.
+    """
+    _write_project(tmp_path, dependencies=["certifi"])
+    rendered = lc.check(tmp_path, readers=FAKE_READERS).render()
+    assert "PERIMETER HOLDS (1 not adjudicated" in rendered
+
+
+@pytest.mark.parametrize(
+    "declaration", ["MPL-2.0", "MPL-2.0 AND MIT", "EPL-2.0", "CDDL-1.0"]
+)
+def test_weak_copyleft_short_declarations_are_not_swept_up(declaration):
+    """MUTATION: a broad `GENERAL PUBLIC` pattern over whole licence documents.
+
+    MPL-2.0 and EPL-2.0 both NAME the GPL in their secondary-licence clauses, so
+    a gate that scans an inlined licence document flags them. This module reads
+    the free-text field ONE LINE deep and prefers the expression and classifiers
+    above it, which is what keeps that from happening -- pinned here so the
+    ladder is not quietly widened.
+    """
+    assert not lc.LicencePolicy().matched_forbidden(declaration)
+
+
+def test_the_readme_worked_example_is_a_superset_of_the_defaults():
+    """MUTATION: a README example that silently NARROWS the shipped policy.
+
+    `allowed` / `forbidden` REPLACE the defaults rather than extending them, so
+    the earlier README block — a tidy list of seven bare acronyms — was a
+    worked example of losing nine forbidden patterns, and it read as a
+    tightening. This test reads the block out of README.md and holds it to the
+    property the prose now claims: it starts from the defaults and adds.
+
+    It also proves the block PARSES as TOML and survives `from_mapping`, which
+    catches the `"\\bGPL"`-in-a-basic-string trap (the escape becomes a
+    backspace character and the pattern matches nothing).
+    """
+    readme = (REPO_ROOT / "README.md").read_text()
+    start = readme.index("forbidden = [\n")
+    end = readme.index("]\n", start) + 2
+    table = "[tool.wads.licence]\n" + readme[start:end]
+    parsed = lc.tomllib.loads(table)["tool"]["wads"]["licence"]
+    policy = lc.LicencePolicy.from_mapping(parsed)
+    missing = set(lc.DFLT_FORBIDDEN) - set(policy.forbidden)
+    assert not missing, f"the README example drops shipped patterns: {sorted(missing)}"
+    # And the resulting policy is one the tool would actually agree to run.
+    checked = lc.self_check(policy)
+    assert checked.uncovered_families == ()
