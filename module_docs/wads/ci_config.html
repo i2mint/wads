@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.16 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.17 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e2418eca"></script>
+      <script src="../../_static/documentation_options.js?v=46390ad3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -92,6 +92,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_black_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_black_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_mypy_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_mypy_enabled()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.is_ruff_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_ruff_enabled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.licence_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.licence_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.licence_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.licence_enabled</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_config_path"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_config_path</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.metrics_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.metrics_enabled</span></code></a></li>
@@ -127,6 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licence_check.html">wads.licence_check</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="npm_config.html">wads.npm_config</a></li>
@@ -157,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
@@ -511,6 +515,28 @@ installs <code class="docutils literal notranslate"><span class="pre">.[create]<
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.is_ruff_enabled">
 <span class="sig-name descname"><span class="pre">is_ruff_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.is_ruff_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.is_ruff_enabled" title="Link to this definition"></a></dt>
 <dd><p>Check if Ruff linter is enabled.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.licence_config">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">licence_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.licence_config" title="Link to this definition"></a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">[tool.wads.licence]</span></code> table.</p>
+<p>Note it sits under <code class="docutils literal notranslate"><span class="pre">[tool.wads]</span></code>, NOT under <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code>: the
+policy is a fact about the package’s dependency perimeter, and
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">wads.licence_check</span></code> is useful outside CI. Only the <code class="docutils literal notranslate"><span class="pre">enabled</span></code>
+flag below is a CI concern.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.licence_enabled">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">licence_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.licence_enabled" title="Link to this definition"></a></dt>
+<dd><p>Whether CI should run the licence-perimeter gate.</p>
+<p>Defaults to <strong>False</strong>. This one is opt-in rather than opt-out, unlike
+every other gate here, and deliberately so: the reusable workflow is
+called by the whole fleet, and turning a new failing check on for all
+of them at once reddens every caller’s CI in one merge. Set
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.licence].enabled</span> <span class="pre">=</span> <span class="pre">true</span></code> per repo, once its exposures are
+resolved.</p>
 </dd></dl>
 
 <dl class="py property">
