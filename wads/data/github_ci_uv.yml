@@ -38,6 +38,7 @@ jobs:
       black-enabled: ${{ steps.config.outputs.black-enabled }}
       mypy-enabled: ${{ steps.config.outputs.mypy-enabled }}
       docs-enabled: ${{ steps.config.outputs.docs-enabled }}
+      licence-enabled: ${{ steps.config.outputs.licence-enabled }}
       publish-enabled: ${{ steps.config.outputs.publish-enabled }}
       skip-ci-marker: ${{ steps.config.outputs.skip-ci-marker }}
       publish-marker: ${{ steps.config.outputs.publish-marker }}
@@ -109,6 +110,29 @@ jobs:
       - name: Lint Validation
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff check --output-format=github ${{ needs.setup.outputs.project-name }}
+
+      # Licence perimeter: fail the build if the INSTALLED dependency closure
+      # carries a copyleft / non-commercial licence the project's policy
+      # forbids. Opt-in via [tool.wads.licence].enabled = true, so a repo that
+      # declares nothing sees no change in CI behaviour at all.
+      #
+      # Run once, on the FIRST python-versions entry only: the answer does not
+      # vary by interpreter, and N identical failures across the matrix is
+      # noise. (The Windows job is a separate job and never runs this.)
+      #
+      # `--python` is load-bearing. `uvx` runs the tool in its OWN isolated
+      # environment, which contains wads and nothing of the project; without
+      # pointing it at the project's .venv the check would read the wrong
+      # closure and report a confident, wrong green.
+      - name: Licence Perimeter
+        if: needs.setup.outputs.licence-enabled == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
+        run: |
+          if [ ! -f ".venv/bin/activate" ]; then
+            echo "::error::no .venv found; the licence gate must read the project's own installed closure, not uvx's isolated one"
+            exit 1
+          fi
+          source .venv/bin/activate
+          uvx --from wads wads-licence-check . --python "$VIRTUAL_ENV/bin/python"
 
       - name: Type Check (mypy)
         if: needs.setup.outputs.mypy-enabled == 'true'

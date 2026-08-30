@@ -116,3 +116,8 @@ venv.bak/
 
 # PyCharm
 .idea
+
+# uv.lock: wads is a library, not an application. A committed resolved lock
+# changes what `uv sync` / `uv run` does for everyone working in the repo, and
+# it is invalidated by the CI version bump on every merge.
+uv.lock

@@ -68,6 +68,9 @@ outputs:
   docs-enabled:
     description: 'Whether the GitHub Pages docs publishing job should run (true/false). Defaults to true; set [tool.wads.ci.docs].enabled = false in pyproject.toml to disable.'
     value: ${{ steps.config.outputs.docs-enabled }}
+  licence-enabled:
+    description: 'Whether the licence-perimeter gate should run in CI (true/false). Defaults to FALSE; set [tool.wads.licence].enabled = true in pyproject.toml to opt in.'
+    value: ${{ steps.config.outputs.licence-enabled }}
   publish-enabled:
     description: 'Whether the publish job should run (true/false). Defaults to true; set [tool.wads.ci.publish].enabled = false in pyproject.toml to disable. Can be overridden per-commit via publish-marker.'
     value: ${{ steps.config.outputs.publish-enabled }}

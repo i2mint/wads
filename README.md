@@ -111,6 +111,11 @@ enabled = true
 [tool.wads.ci.build]
 sdist = true
 wheel = true
+
+# Opt-in licence gate over the installed dependency closure (default: off).
+# See "Licence Perimeter" under CI Configuration Reference.
+[tool.wads.licence]
+enabled = false
 ```
 
 The default `ci.yml` is a small stub that calls wads's reusable workflow
@@ -328,6 +333,128 @@ wheel = true
 [tool.wads.ci.publish]
 enabled = true  # Publish to PyPI on main/master
 ```
+
+### Licence Perimeter (`wads-licence-check`)
+
+Fails the build when the **installed dependency closure** carries a licence the
+project's policy forbids — copyleft (GPL / AGPL / LGPL), or source-available /
+non-commercial (SSPL, BUSL, Elastic-2.0, RAIL, CC-BY-NC).
+
+It walks the *transitive* closure, not just the declared list, because that is
+where the exposures actually hide, and it reads a distribution's declaration
+through a **precision ladder** — PEP 639 `License-Expression`, then the
+`License ::` trove classifiers, then the **first line** of the free-text
+`License` field. No single field is enough: `click` declares an expression and
+no classifiers, `i2` declares neither and only a free-text field, and a
+whole-field substring scan flags BSD-3-Clause numpy as copyleft because its
+field carries an LGPL URL for a vendored notice.
+
+Run it anywhere:
+
+```bash
+wads-licence-check                                    # this project
+wads-licence-check path/to/project --json             # for a fleet sweep
+wads-licence-check . --python .venv/bin/python        # read another env
+```
+
+The CI gate is **opt-in**. A repo that declares nothing sees no change:
+
+```toml
+[tool.wads.licence]
+enabled = true                    # default false: opt in per repo
+include-extras = []               # [] = hard deps only; ["*"] = every extra
+unknown-is-failure = true         # a blank licence field is *unaudited*, not fine
+unclassified-is-failure = false   # e.g. MPL-2.0: reported, does not fail
+
+[tool.wads.licence.exceptions]
+certifi = "MPL-2.0 — weak, file-level, over an unmodified CA bundle. Audited 2026-08."
+```
+
+That is the whole configuration most repos need. The `allowed` / `forbidden`
+pattern lists are deliberately absent from it: **they REPLACE the defaults, they
+do not extend them**, so writing them out by hand is a narrowing unless the list
+is a superset of what ships. If you do set them, write them as TOML **literal**
+strings — single quotes — because a basic string processes escapes and turns
+`"\bGPL"` into a backspace character followed by `GPL`, which matches nothing:
+
+```toml
+[tool.wads.licence]
+# Start from wads.licence_check.DFLT_FORBIDDEN and ADD, rather than replacing:
+forbidden = [
+  '\bAGPL',
+  '\bAffero\b',
+  '\bGPL(?![\w.+-]*\s+with\b)',
+  '\bGNU General Public\b',
+  '\bLGPL',
+  '\bLesser General Public\b',
+  '\bLibrary General Public\b',
+  '\bNethack General Public\b',
+  '\bEUPL\b',
+  '\bBusiness Source\b',
+  '\bBUSL\b',
+  '\bSSPL\b',
+  '\bElastic[- ]?(2\.0|License|v2)\b',
+  '(?:\b|-)(?:open)?rail(?:-m)?\b',
+  '\bCC[- ]BY[- ]NC\b',
+  '\bNon[- ]?Commercial\b',
+  '\bProprietary\b',
+  '\bYourOwnAddition\b',   # the point: ADD to the defaults, never restate a subset
+]
+```
+
+Exceptions take either the terse map above or an array-of-tables, which is the
+shape to reach for when the decision needs a record behind it:
+
+```toml
+[[tool.wads.licence.exceptions]]
+dependency = "PyGithub"
+licence = "LGPL (classifier only; no SPDX expression published)"
+scope = "core"
+decided = "2026-08-30"
+decided_in = "https://github.com/thorwhalen/hubcap/issues/10"
+reason = """
+Accepted, not removable: PyGithub's objects are this package's values, so there
+is no honest "core without it" to install. Consumed by ordinary import, neither
+vendored nor patched, so the LGPL relink freedom is intact.
+"""
+```
+
+Note the table lives under `[tool.wads]`, not `[tool.wads.ci]`: the policy is a
+fact about the package, and the tool is useful outside CI. Only `enabled` is a
+CI concern.
+
+Exit codes are `0` (holds), `1` (breached) and `2` (the tool could not run —
+bad config, unreadable environment, a policy that cannot detect).
+
+#### The self-check
+
+Every run first proves the live policy still catches known-copyleft
+declarations *and* still clears known-permissive ones, and refuses to report at
+all if it cannot — a detector nobody has demonstrated is a detector nobody has
+checked.
+
+The bar is per licence FAMILY, caught whole or not at all. Permitting a family
+outright is a coherent stance (LGPL for dynamically linked libraries is the
+usual one) and stays expressible; it is then named in every run's output, so
+"PERIMETER HOLDS" is never read as "there is no LGPL in here". Catching *part*
+of a family is refused, because it is never a stance — it is the bug. A gate
+whose LGPL pattern ended in `\b` caught the legacy `GNU Library or Lesser`
+classifier and missed `LGPLv2`, `LGPLv2+`, `LGPLv3` and `LGPLv3+`, i.e. every
+modern spelling, while reporting itself as working.
+
+#### What counts as a failure
+
+`forbidden` and a blank declaration (`unknown-is-failure`, default on) fail, and
+so does a **declared dependency that is not installed** in the environment being
+read: that is a piece of the perimeter nobody looked at, and it is the same
+confident-green failure as reading the wrong environment. The one exception is a
+requirement gated on an environment marker (`tomli; python_version < "3.11"`),
+which is reported as `NOT APPLICABLE` and does not fail.
+
+For the same reason the tool refuses to run at all on a project whose
+`[project].dependencies` is absent or listed in `dynamic` — an empty closure it
+could not read is not an empty closure. Write `dependencies = []` if a project
+genuinely has none.
 
 ## System Dependencies
 

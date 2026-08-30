@@ -25,6 +25,7 @@ LIGHT_MODULES = [
     "wads.npm_config",
     "wads.profiles",
     "wads.licensing",
+    "wads.licence_check",
     "wads.util",
 ]
 
