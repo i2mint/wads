@@ -351,3 +351,72 @@ def test_extraction_handles_crlf_and_an_absent_head_commit(path):
     """
     assert _run_extraction(path, "Subject (#7)\r\nbody\r\n") == "Subject (#7)"
     assert _run_extraction(path, "") == ""
+
+
+# ---------------------------------------------------------------------------
+# The marker gates must read the commit SUBJECT, never the whole message.
+#
+# A squash-merge folds the entire PR BODY into the squash commit message, so a
+# `contains()` over the full message fires on a PR that merely writes ABOUT a
+# marker. That has already cost this fleet two real signals: a spurious publish
+# on a publish-disabled repo (2026-08-17), and a run that was never created at
+# all (2026-09-02).
+#
+# This sweeps EVERY reusable workflow rather than the one that was fixed,
+# because the first pass at this change fixed uv-ci.yml and left both npm
+# workflows still gating publication on the full message.
+# ---------------------------------------------------------------------------
+
+WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
+
+
+def _live_workflows():
+    return sorted(WORKFLOWS_DIR.glob("*.yml"))
+
+
+def test_no_live_workflow_gates_a_job_on_the_full_commit_message():
+    offenders = []
+    for path in _live_workflows():
+        for number, line in enumerate(path.read_text().splitlines(), 1):
+            if "head_commit.message" not in line:
+                continue
+            # The one legitimate use: handing the message to a step through the
+            # environment, where it is data rather than a gate.
+            if "HEAD_COMMIT_MESSAGE" in line:
+                continue
+            offenders.append(f"{path.name}:{number}: {line.strip()}")
+    assert not offenders, (
+        "these gate on the full commit message, which a squash-merge fills "
+        "with the PR body:\n  " + "\n  ".join(offenders)
+    )
+
+
+def test_every_workflow_with_a_marker_gate_extracts_the_subject_safely():
+    """The extraction must take the message through `env:`, never splice it
+    into a command line — it is untrusted, attacker-influenced, multi-line text."""
+    for path in _live_workflows():
+        text = path.read_text()
+        if "commit_subject" not in text and "commit-subject" not in text:
+            continue
+        doc = yaml.safe_load(text)
+        steps = doc["jobs"]["setup"]["steps"]
+        commit_step = next((s for s in steps if s.get("id") == "commit"), None)
+        assert commit_step is not None, f"{path.name}: no subject-extraction step"
+        assert "HEAD_COMMIT_MESSAGE" in (commit_step.get("env") or {}), (
+            f"{path.name}: the message must reach bash through env:, not inline"
+        )
+        assert "${{ github.event.head_commit.message }}" not in commit_step["run"], (
+            f"{path.name}: the message is spliced into the run script — a "
+            "commit subject containing a quote could then become shell syntax"
+        )
+
+
+def test_the_subject_gate_is_used_wherever_a_marker_is_matched():
+    """A workflow that names a marker must match it against the subject."""
+    for path in _live_workflows():
+        text = path.read_text()
+        if "publish_marker" not in text and "publish-marker" not in text:
+            continue
+        assert "commit_subject" in text or "commit-subject" in text, (
+            f"{path.name} matches a publish marker but has no subject output"
+        )
