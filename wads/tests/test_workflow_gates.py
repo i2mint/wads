@@ -404,10 +404,18 @@ def test_a_trailing_marker_in_the_subject_still_satisfies_the_gate(path):
 
 @bash_required
 @pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
-def test_extraction_survives_a_hostile_commit_message(path):
-    """Shell metacharacters in the message are data, never syntax."""
-    hostile = "fix `id` and \"q\" $(touch /tmp/wads_pwned) '; echo pwned' (#9)"
+def test_extraction_survives_a_hostile_commit_message(path, tmp_path):
+    """Shell metacharacters in the message are data, never syntax.
+
+    Proved two ways: the subject comes back byte-identical, AND the command
+    substitution the message carries did not run — asserted on the artefact
+    it would have created, so this fails on execution even if the string
+    happened to compare equal.
+    """
+    canary = tmp_path / "pwned"
+    hostile = f"fix `id` and \"q\" $(touch {canary}) '; echo pwned' (#9)"
     assert _run_extraction(path, hostile + "\n\nbody\n") == hostile
+    assert not canary.exists(), "the commit message was EVALUATED, not quoted"
 
 
 @bash_required
