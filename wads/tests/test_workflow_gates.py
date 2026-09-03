@@ -105,6 +105,7 @@ import tempfile
 import pytest
 
 DATA_DIR = REPO_ROOT / "wads" / "data"
+WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 # Every workflow that carries a marker gate AND a setup job to hang the
 # subject output on. Keep in sync with the templates; a new gated template
@@ -118,9 +119,43 @@ GATED_WORKFLOWS = (
 SUBJECT_OUTPUT_REF = "needs.setup.outputs.commit-subject"
 WHOLE_MESSAGE_REF = "github.event.head_commit.message"
 
+# The uv side names job outputs with hyphens, the npm side with underscores.
+SUBJECT_OUTPUT_NAMES = ("commit-subject", "commit_subject")
+
 
 def _workflow(path: Path) -> dict:
     return yaml.safe_load(path.read_text())
+
+
+def _subject_output_name(setup_job: dict) -> str | None:
+    outputs = setup_job.get("outputs") or {}
+    return next((n for n in SUBJECT_OUTPUT_NAMES if n in outputs), None)
+
+
+def _discover_extracting_workflows():
+    """Every workflow that computes a commit subject — found, not listed.
+
+    Deliberately DISCOVERED rather than enumerated. A hardcoded list is what
+    let the two npm reusable workflows keep gating publication on the full
+    message while the uv side was being fixed: "the files I was looking at"
+    is not a population. Anything that grows a subject output is covered by
+    the behavioural tests below the day it appears.
+    """
+    found = []
+    for path in sorted(WORKFLOWS_DIR.glob("*.yml")) + sorted(DATA_DIR.glob("*.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text())
+        except yaml.YAMLError:
+            continue
+        if not isinstance(doc, dict):
+            continue
+        setup = (doc.get("jobs") or {}).get("setup")
+        if isinstance(setup, dict) and _subject_output_name(setup):
+            found.append(path)
+    return tuple(found)
+
+
+EXTRACTING_WORKFLOWS = _discover_extracting_workflows()
 
 
 def _job_conditions(path: Path):
@@ -224,16 +259,25 @@ def test_commit_message_reaches_the_shell_only_through_the_environment(path):
 
 def _extraction_step(path: Path) -> dict:
     setup = _workflow(path)["jobs"]["setup"]
-    outputs = setup["outputs"]
-    step_id = re.search(r"steps\.([\w-]+)\.outputs", outputs["commit-subject"]).group(1)
+    name = _subject_output_name(setup)
+    assert name, f"{path.name}: setup job exposes no commit-subject output"
+    step_id = re.search(r"steps\.([\w-]+)\.outputs", setup["outputs"][name]).group(1)
     return next(s for s in setup["steps"] if s.get("id") == step_id)
 
 
-def test_every_gated_workflow_ships_the_same_extraction_script():
-    """The templates are copies of one another; the script must not drift."""
-    scripts = {p.name: _extraction_step(p)["run"] for p in GATED_WORKFLOWS}
+def test_every_extracting_workflow_ships_the_same_script():
+    """One extraction script, copied across workflows; it must not drift.
+
+    Covers the npm reusable workflows too, whose copies would otherwise be
+    verified by nothing executable.
+    """
+    scripts = {p.name: _extraction_step(p)["run"] for p in EXTRACTING_WORKFLOWS}
+    assert len(scripts) >= len(GATED_WORKFLOWS), (
+        f"discovery found fewer extracting workflows than are known to exist: "
+        f"{sorted(scripts)}"
+    )
     assert len(set(scripts.values())) == 1, (
-        f"extraction scripts diverged across templates: {list(scripts)}"
+        f"extraction scripts diverged across workflows: {sorted(scripts)}"
     )
 
 
@@ -254,7 +298,6 @@ def _run_extraction(path: Path, message: str) -> str:
             os.environ,
             HEAD_COMMIT_MESSAGE=message,
             GITHUB_OUTPUT=github_output,
-            RANDOM="",  # bash regenerates $RANDOM; presence here must not matter
         )
         result = subprocess.run(
             ["bash", "-e", "-c", step["run"]],
@@ -277,20 +320,43 @@ def _gh_contains(haystack: str, needle: str) -> bool:
     return needle.lower() in haystack.lower()
 
 
+def _bash_is_usable() -> bool:
+    """Is there a POSIX bash here that can actually run a script?
+
+    Probes the capability rather than the platform, because `which("bash")`
+    is not evidence of one: on a GitHub windows-latest runner it resolves to
+    `C:\\Windows\\System32\\bash.exe`, the WSL launcher, which exits 1 with no
+    distro installed. The production shell for these workflows is the Linux
+    runner's bash; the blocking Linux legs run these tests, and a box without
+    a working bash reports them as SKIPPED rather than as failures nobody can
+    act on.
+    """
+    if shutil.which("bash") is None:
+        return False
+    try:
+        probe = subprocess.run(
+            ["bash", "-c", "printf ok"], capture_output=True, text=True, timeout=30
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return probe.returncode == 0 and probe.stdout.strip() == "ok"
+
+
 bash_required = pytest.mark.skipif(
-    shutil.which("bash") is None, reason="needs bash to run the workflow's own script"
+    not _bash_is_usable(),
+    reason="needs a working POSIX bash to run the workflow's own script",
 )
 
 
 @bash_required
-@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
 def test_extraction_keeps_only_the_first_line(path):
     message = "Land the thing (#41)\n\nSecond line\nThird line\n"
     assert _run_extraction(path, message) == "Land the thing (#41)"
 
 
 @bash_required
-@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
 def test_a_marker_only_in_the_body_does_not_satisfy_the_gate(path):
     """THE regression this change exists to prevent.
 
@@ -312,7 +378,7 @@ def test_a_marker_only_in_the_body_does_not_satisfy_the_gate(path):
 
 
 @bash_required
-@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
 def test_a_trailing_marker_in_the_subject_still_satisfies_the_gate(path):
     """The half `startsWith()` would have broken.
 
@@ -333,7 +399,7 @@ def test_a_trailing_marker_in_the_subject_still_satisfies_the_gate(path):
 
 
 @bash_required
-@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
 def test_extraction_survives_a_hostile_commit_message(path):
     """Shell metacharacters in the message are data, never syntax."""
     hostile = "fix `id` and \"q\" $(touch /tmp/wads_pwned) '; echo pwned' (#9)"
@@ -341,7 +407,7 @@ def test_extraction_survives_a_hostile_commit_message(path):
 
 
 @bash_required
-@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", EXTRACTING_WORKFLOWS, ids=lambda p: p.name)
 def test_extraction_handles_crlf_and_an_absent_head_commit(path):
     """CRLF leaves no stray carriage return; no head commit yields no subject.
 
@@ -366,8 +432,6 @@ def test_extraction_handles_crlf_and_an_absent_head_commit(path):
 # because the first pass at this change fixed uv-ci.yml and left both npm
 # workflows still gating publication on the full message.
 # ---------------------------------------------------------------------------
-
-WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 
 def _live_workflows():
