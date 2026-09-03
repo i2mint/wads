@@ -72,13 +72,13 @@ outputs:
     description: 'Whether the licence-perimeter gate should run in CI (true/false). Defaults to FALSE; set [tool.wads.licence].enabled = true in pyproject.toml to opt in.'
     value: ${{ steps.config.outputs.licence-enabled }}
   publish-enabled:
-    description: 'Whether the publish job should run (true/false). Defaults to true; set [tool.wads.ci.publish].enabled = false in pyproject.toml to disable. Can be overridden per-commit via publish-marker.'
+    description: 'Whether the publish job should run (true/false). Defaults to true; set [tool.wads.ci.publish].enabled = false in pyproject.toml to disable. Can be overridden per-commit via publish-marker in the commit subject line.'
     value: ${{ steps.config.outputs.publish-enabled }}
   skip-ci-marker:
-    description: 'Commit-message substring that suppresses the publish job when publishing is enabled. Defaults to "[skip ci]". Set via [tool.wads.ci.publish].skip_ci_marker.'
+    description: 'Substring that suppresses the publish job when publishing is enabled, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[skip ci]". Set via [tool.wads.ci.publish].skip_ci_marker.'
     value: ${{ steps.config.outputs.skip-ci-marker }}
   publish-marker:
-    description: 'Commit-message substring that forces the publish job even when publishing is disabled. Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
+    description: 'Substring that forces the publish job even when publishing is disabled, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
     value: ${{ steps.config.outputs.publish-marker }}
   env-required:
     description: 'JSON array of required env-var names from [tool.wads.ci.env].required_envvars. CI fails if any is not set in secrets.'
