@@ -107,9 +107,13 @@ import pytest
 DATA_DIR = REPO_ROOT / "wads" / "data"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
-# Every workflow that carries a marker gate AND a setup job to hang the
-# subject output on. Keep in sync with the templates; a new gated template
-# belongs here.
+# The uv-family workflows, whose gate expressions the structural tests below
+# assert in full (hyphenated output names, the configurable marker pair).
+#
+# This one IS a list, and the list is checked: `EXTRACTING_WORKFLOWS` below is
+# discovered from the tree, and the drift guard fails if discovery returns
+# fewer files than this tuple names. So the tuple is a floor on what must be
+# found, never the ceiling on what is covered.
 GATED_WORKFLOWS = (
     UV_CI,
     DATA_DIR / "github_ci_uv.yml",
