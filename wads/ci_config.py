@@ -300,28 +300,35 @@ class CIConfig:
         """Check if publishing is enabled.
 
         When True (the default), the publish job runs on main/master unless the
-        commit message contains :attr:`publish_skip_ci_marker`. When False, the
-        publish job is skipped unless the commit message contains
-        :attr:`publish_marker`.
+        commit *subject line* contains :attr:`publish_skip_ci_marker`. When
+        False, the publish job is skipped unless the commit *subject line*
+        contains :attr:`publish_marker`.
+
+        Both markers are matched against the first line of the commit message
+        only. A squash-merge folds the entire PR body into the squash commit
+        message, so a full-message match fires on a PR that merely writes
+        about a marker.
         """
         return self.publish_config.get("enabled", True)
 
     @property
     def publish_skip_ci_marker(self) -> str:
-        """Commit-message substring that suppresses publishing.
+        """Commit-subject substring that suppresses publishing.
 
-        Used when publishing is enabled: a commit whose message contains this
-        marker skips the publish job. Defaults to ``"[skip ci]"`` (which GitHub
-        also natively recognises to skip the whole workflow).
+        Used when publishing is enabled: a commit whose *subject line* (the
+        first line of its message) contains this marker skips the publish job.
+        Defaults to ``"[skip ci]"`` (which GitHub also natively recognises to
+        skip the whole workflow).
         """
         return self.publish_config.get("skip_ci_marker", "[skip ci]")
 
     @property
     def publish_marker(self) -> str:
-        """Commit-message substring that forces publishing.
+        """Commit-subject substring that forces publishing.
 
-        Used when publishing is disabled: a commit whose message contains this
-        marker still runs the publish job. Defaults to ``"[publish]"``.
+        Used when publishing is disabled: a commit whose *subject line* (the
+        first line of its message) contains this marker still runs the publish
+        job. Defaults to ``"[publish]"``.
         """
         return self.publish_config.get("publish_marker", "[publish]")
 

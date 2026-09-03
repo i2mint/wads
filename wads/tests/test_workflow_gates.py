@@ -72,3 +72,282 @@ def test_windows_validation_is_optional_and_separate():
     # blocks publication.
     assert win.get("continue-on-error") is True
     assert "windows-validation" not in jobs["publish"]["needs"]
+
+
+# ---------------------------------------------------------------------------
+# Marker gates match the commit SUBJECT, never the whole commit message.
+#
+# A squash-merge folds the ENTIRE PR BODY into the squash commit message. A
+# gate written as `contains(github.event.head_commit.message, '<marker>')`
+# therefore fires on a PR that merely WRITES ABOUT a marker — which is how a
+# PR body quoting the publish marker forced a publish on a repo that had
+# publishing disabled and reddened a default branch that had just gone green
+# for the first time in a year.
+#
+# The gates now read a `commit-subject` output that the setup job computes as
+# the first line of the message. `startsWith()` is NOT an acceptable
+# substitute and these tests reject it: this house's marker convention is
+# TRAILING and GitHub appends " (#N)" to every squash subject, so a prefix
+# match would convert a gate that fires too often into one that silently
+# never fires.
+#
+# Nothing here was covered before: the old assertions only checked that the
+# gate *referenced* the marker outputs, so a refactor could have swapped the
+# matching function back with the whole suite green.
+# ---------------------------------------------------------------------------
+
+import os
+import re
+import shutil
+import subprocess
+import tempfile
+
+import pytest
+
+DATA_DIR = REPO_ROOT / "wads" / "data"
+
+# Every workflow that carries a marker gate AND a setup job to hang the
+# subject output on. Keep in sync with the templates; a new gated template
+# belongs here.
+GATED_WORKFLOWS = (
+    UV_CI,
+    DATA_DIR / "github_ci_uv.yml",
+    DATA_DIR / "github_ci_publish_2025.yml",
+)
+
+SUBJECT_OUTPUT_REF = "needs.setup.outputs.commit-subject"
+WHOLE_MESSAGE_REF = "github.event.head_commit.message"
+
+
+def _workflow(path: Path) -> dict:
+    return yaml.safe_load(path.read_text())
+
+
+def _job_conditions(path: Path):
+    """Yield (job_name, if_condition) for every job that declares one."""
+    for name, job in _workflow(path)["jobs"].items():
+        cond = job.get("if")
+        if cond:
+            yield name, cond
+
+
+def _contains_haystacks(condition: str):
+    """First argument of every `contains(...)` call in a job condition."""
+    return [m.strip() for m in re.findall(r"contains\(\s*([^,]+?)\s*,", condition)]
+
+
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_marker_gates_match_the_subject_not_the_whole_message(path):
+    """Every `contains()` gate reads the subject output, not the raw message.
+
+    This is the assertion that was missing: the pre-existing tests checked
+    only that the marker OUTPUTS were referenced, never WHICH haystack the
+    matching function was handed.
+    """
+    offenders = []
+    for job, cond in _job_conditions(path):
+        if WHOLE_MESSAGE_REF in cond:
+            offenders.append(f"{job}: reads the whole commit message")
+        for haystack in _contains_haystacks(cond):
+            if haystack != SUBJECT_OUTPUT_REF:
+                offenders.append(f"{job}: contains() over {haystack!r}")
+    assert not offenders, (
+        f"{path.name}: marker gates must match the commit subject "
+        f"({SUBJECT_OUTPUT_REF}); a PR body is folded into the squash commit "
+        f"message and would otherwise trip the gate: {offenders}"
+    )
+
+
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_no_gate_uses_startswith(path):
+    """`startsWith()` is the wrong fix and must not appear in a gate.
+
+    Markers are written at the END of a subject and GitHub appends " (#N)"
+    to every squash subject, so a prefix match never fires — the same defect
+    as the body trap, in the direction nobody notices.
+    """
+    offenders = [job for job, cond in _job_conditions(path) if "startsWith(" in cond]
+    assert not offenders, (
+        f"{path.name}: startsWith() cannot match this house's TRAILING marker "
+        f"convention and would silently disable the gate: {offenders}"
+    )
+
+
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_setup_job_publishes_the_commit_subject_output(path):
+    """The subject output exists and is wired to the extraction step's id."""
+    setup = _workflow(path)["jobs"]["setup"]
+    outputs = setup["outputs"]
+    assert "commit-subject" in outputs, "setup job must expose commit-subject"
+    step_ids = {s.get("id") for s in setup["steps"]}
+    referenced = re.search(r"steps\.([\w-]+)\.outputs", outputs["commit-subject"])
+    assert referenced, (
+        f"commit-subject output must read a step output: {outputs['commit-subject']!r}"
+    )
+    assert referenced.group(1) in step_ids, (
+        f"commit-subject reads step id {referenced.group(1)!r}, which no step declares"
+    )
+
+
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_every_gated_job_depends_on_setup(path):
+    """A job reading `needs.setup.*` must actually declare `setup` in needs."""
+    jobs = _workflow(path)["jobs"]
+    for name, job in jobs.items():
+        cond = job.get("if", "")
+        if "needs.setup." not in cond:
+            continue
+        needs = job.get("needs")
+        needs = [needs] if isinstance(needs, str) else (needs or [])
+        assert "setup" in needs, (
+            f"{path.name}:{name} reads needs.setup but does not need it"
+        )
+
+
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_commit_message_reaches_the_shell_only_through_the_environment(path):
+    """The untrusted message is never spliced into the run script.
+
+    Interpolating `${{ github.event.head_commit.message }}` into `run:` would
+    let a crafted commit message inject shell syntax into the setup job.
+    """
+    step = _extraction_step(path)
+    assert "${{" not in step["run"], (
+        "the commit message must not be interpolated into the run script; "
+        "pass it via env: so quotes/newlines cannot become shell syntax"
+    )
+    env_values = " ".join(str(v) for v in (step.get("env") or {}).values())
+    assert WHOLE_MESSAGE_REF in env_values, (
+        "the extraction step must receive the message through env:"
+    )
+
+
+def _extraction_step(path: Path) -> dict:
+    setup = _workflow(path)["jobs"]["setup"]
+    outputs = setup["outputs"]
+    step_id = re.search(r"steps\.([\w-]+)\.outputs", outputs["commit-subject"]).group(1)
+    return next(s for s in setup["steps"] if s.get("id") == step_id)
+
+
+def test_every_gated_workflow_ships_the_same_extraction_script():
+    """The templates are copies of one another; the script must not drift."""
+    scripts = {p.name: _extraction_step(p)["run"] for p in GATED_WORKFLOWS}
+    assert len(set(scripts.values())) == 1, (
+        f"extraction scripts diverged across templates: {list(scripts)}"
+    )
+
+
+# --- behavioural: run the shipped script, then evaluate the real gate ------
+
+
+def _run_extraction(path: Path, message: str) -> str:
+    """Execute the workflow's own extraction script and return the subject.
+
+    This runs the shipped shell, not a re-implementation of it, so a change
+    to the script is a change to what this test observes.
+    """
+    step = _extraction_step(path)
+    with tempfile.TemporaryDirectory() as tmp:
+        github_output = os.path.join(tmp, "github_output")
+        open(github_output, "w").close()
+        env = dict(
+            os.environ,
+            HEAD_COMMIT_MESSAGE=message,
+            GITHUB_OUTPUT=github_output,
+            RANDOM="",  # bash regenerates $RANDOM; presence here must not matter
+        )
+        result = subprocess.run(
+            ["bash", "-e", "-c", step["run"]],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        raw = open(github_output).read()
+    # $GITHUB_OUTPUT heredoc form: `name<<DELIM\n<value>\nDELIM\n`
+    lines = raw.splitlines()
+    assert lines[0].startswith("subject<<"), raw
+    delimiter = lines[0].split("<<", 1)[1]
+    assert lines[-1] == delimiter, raw
+    return "\n".join(lines[1:-1])
+
+
+def _gh_contains(haystack: str, needle: str) -> bool:
+    """GitHub's `contains()` for strings: case-insensitive substring."""
+    return needle.lower() in haystack.lower()
+
+
+bash_required = pytest.mark.skipif(
+    shutil.which("bash") is None, reason="needs bash to run the workflow's own script"
+)
+
+
+@bash_required
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_extraction_keeps_only_the_first_line(path):
+    message = "Land the thing (#41)\n\nSecond line\nThird line\n"
+    assert _run_extraction(path, message) == "Land the thing (#41)"
+
+
+@bash_required
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_a_marker_only_in_the_body_does_not_satisfy_the_gate(path):
+    """THE regression this change exists to prevent.
+
+    A squash commit whose body merely discusses a marker must not trip the
+    gate. Asserted as the gate's VERDICT, not as the presence of a string.
+    """
+    marker = "[" + "publish" + "]"  # assembled so this file carries no literal marker
+    message = (
+        "Gate the publish job on the subject line (#41)\n"
+        "\n"
+        f"A PR body that writes {marker} used to force a publish, because the\n"
+        "squash commit message contains the whole body.\n"
+    )
+    subject = _run_extraction(path, message)
+    assert _gh_contains(message, marker), "precondition: the full message does match"
+    assert not _gh_contains(subject, marker), (
+        "a marker appearing only in a body line must not satisfy the gate"
+    )
+
+
+@bash_required
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_a_trailing_marker_in_the_subject_still_satisfies_the_gate(path):
+    """The half `startsWith()` would have broken.
+
+    Real squash subjects put the marker last, after which GitHub appends
+    " (#N)". Both must still match.
+    """
+    marker = "[" + "bump minor" + "]"
+    subject_line = (
+        "cw v1: an MIT replacement for argh, bit-for-bit compatible "
+        f"by default {marker} (#33)"
+    )
+    subject = _run_extraction(path, subject_line + "\n\nBody text.\n")
+    assert subject == subject_line
+    assert _gh_contains(subject, marker)
+    assert not subject.startswith(marker), (
+        "documents why startsWith() is rejected: the marker is trailing"
+    )
+
+
+@bash_required
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_extraction_survives_a_hostile_commit_message(path):
+    """Shell metacharacters in the message are data, never syntax."""
+    hostile = "fix `id` and \"q\" $(touch /tmp/wads_pwned) '; echo pwned' (#9)"
+    assert _run_extraction(path, hostile + "\n\nbody\n") == hostile
+
+
+@bash_required
+@pytest.mark.parametrize("path", GATED_WORKFLOWS, ids=lambda p: p.name)
+def test_extraction_handles_crlf_and_an_absent_head_commit(path):
+    """CRLF leaves no stray carriage return; no head commit yields no subject.
+
+    On a pull_request event `github.event.head_commit` is null, the
+    expression renders empty, and every `contains()` gate is false — the
+    same verdict the whole-message form gave.
+    """
+    assert _run_extraction(path, "Subject (#7)\r\nbody\r\n") == "Subject (#7)"
+    assert _run_extraction(path, "") == ""

@@ -28,8 +28,51 @@ jobs:
       black-enabled: ${{ steps.config.outputs.black-enabled }}
       mypy-enabled: ${{ steps.config.outputs.mypy-enabled }}
       docs-enabled: ${{ steps.config.outputs.docs-enabled }}
+      commit-subject: ${{ steps.commit.outputs.subject }}
 
     steps:
+      # ------------------------------------------------------------------
+      # The marker gates below (skip-ci, publish) match against the commit
+      # SUBJECT — its first line — and never against the whole message.
+      #
+      # Why: a squash-merge folds the ENTIRE PR BODY into the squash commit
+      # message. A `contains()` over the full message therefore fires on a
+      # PR that merely WRITES ABOUT a marker. That is not hypothetical: a PR
+      # body quoting the publish marker forced a publish on a repo that had
+      # publishing disabled, and turned a default branch that had been green
+      # for the first time in a year red.
+      #
+      # Why not `startsWith()`: this house's marker convention is TRAILING
+      # ("cw v1: an MIT replacement for argh ... [bump minor]") and GitHub
+      # appends " (#N)" to every squash subject. A prefix match would turn a
+      # gate that fires too often into one that SILENTLY NEVER FIRES — the
+      # same defect, in the direction nobody notices.
+      #
+      # Shell safety: the commit message is untrusted, attacker-influenced,
+      # multi-line text. It reaches bash ONLY through the environment, never
+      # spliced into a command line, so quotes, newlines and backticks in it
+      # cannot become shell syntax. The value is written with the
+      # $GITHUB_OUTPUT heredoc form under a per-run random delimiter.
+      #
+      # On events with no head commit (e.g. pull_request) the expression
+      # renders empty, the subject is empty, and every `contains()` gate is
+      # false — the same verdict the full-message form gave.
+      # ------------------------------------------------------------------
+      - name: Extract commit subject
+        id: commit
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          subject="${HEAD_COMMIT_MESSAGE%%$'\n'*}"
+          subject="${subject%$'\r'}"
+          delimiter="wads-subject-${RANDOM}${RANDOM}${RANDOM}"
+          {
+            printf 'subject<<%s\n' "$delimiter"
+            printf '%s\n' "$subject"
+            printf '%s\n' "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+          printf 'commit subject: %s\n' "$subject"
+
       - uses: actions/checkout@v4
       
       - name: Read CI Config
@@ -41,7 +84,7 @@ jobs:
   # Second job: Validation using the config
   validation:
     name: Validation
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]')"
     needs: setup
     runs-on: ubuntu-latest
     strategy:
@@ -111,7 +154,7 @@ jobs:
   # Optional Windows testing (if enabled in config)
   windows-validation:
     name: Windows Tests
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true'"
     needs: setup
     runs-on: windows-latest
     continue-on-error: true
@@ -156,7 +199,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -221,7 +264,7 @@ jobs:
       contents: write
       pages: write
       id-token: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
     needs: [setup, publish]
     runs-on: ubuntu-latest
 

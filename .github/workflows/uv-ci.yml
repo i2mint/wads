@@ -210,6 +210,7 @@ jobs:
       publish-enabled: ${{ steps.config.outputs.publish-enabled }}
       skip-ci-marker: ${{ steps.config.outputs.skip-ci-marker }}
       publish-marker: ${{ steps.config.outputs.publish-marker }}
+      commit-subject: ${{ steps.commit.outputs.subject }}
       env-required: ${{ steps.config.outputs.env-required }}
       env-test: ${{ steps.config.outputs.env-test }}
       env-extra: ${{ steps.config.outputs.env-extra }}
@@ -217,6 +218,48 @@ jobs:
       env-aliases: ${{ steps.config.outputs.env-aliases }}
 
     steps:
+      # ------------------------------------------------------------------
+      # The marker gates below (skip-ci, publish) match against the commit
+      # SUBJECT — its first line — and never against the whole message.
+      #
+      # Why: a squash-merge folds the ENTIRE PR BODY into the squash commit
+      # message. A `contains()` over the full message therefore fires on a
+      # PR that merely WRITES ABOUT a marker. That is not hypothetical: a PR
+      # body quoting the publish marker forced a publish on a repo that had
+      # publishing disabled, and turned a default branch that had been green
+      # for the first time in a year red.
+      #
+      # Why not `startsWith()`: this house's marker convention is TRAILING
+      # ("cw v1: an MIT replacement for argh ... [bump minor]") and GitHub
+      # appends " (#N)" to every squash subject. A prefix match would turn a
+      # gate that fires too often into one that SILENTLY NEVER FIRES — the
+      # same defect, in the direction nobody notices.
+      #
+      # Shell safety: the commit message is untrusted, attacker-influenced,
+      # multi-line text. It reaches bash ONLY through the environment, never
+      # spliced into a command line, so quotes, newlines and backticks in it
+      # cannot become shell syntax. The value is written with the
+      # $GITHUB_OUTPUT heredoc form under a per-run random delimiter.
+      #
+      # On events with no head commit (e.g. pull_request) the expression
+      # renders empty, the subject is empty, and every `contains()` gate is
+      # false — the same verdict the full-message form gave.
+      # ------------------------------------------------------------------
+      - name: Extract commit subject
+        id: commit
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          subject="${HEAD_COMMIT_MESSAGE%%$'\n'*}"
+          subject="${subject%$'\r'}"
+          delimiter="wads-subject-${RANDOM}${RANDOM}${RANDOM}"
+          {
+            printf 'subject<<%s\n' "$delimiter"
+            printf '%s\n' "$subject"
+            printf '%s\n' "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+          printf 'commit subject: %s\n' "$subject"
+
       - uses: actions/checkout@v6
 
       - name: Set up uv
@@ -234,7 +277,7 @@ jobs:
   # Second job: Validation using the config
   validation:
     name: Validation
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]')"
     needs: setup
     runs-on: ubuntu-latest
     strategy:
@@ -341,7 +384,7 @@ jobs:
   # Optional Windows testing (if enabled in config)
   windows-validation:
     name: Windows Tests
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false'"
     needs: setup
     runs-on: windows-latest
     continue-on-error: true
@@ -395,14 +438,21 @@ jobs:
   # Publishing job
   #
   # Gated by [tool.wads.ci.publish] in pyproject.toml (read via the setup job):
-  #   - skip-ci-marker  : when publishing is enabled, a commit message containing
-  #                       this substring skips the publish job (default "[skip ci]").
+  #   - skip-ci-marker  : when publishing is enabled, a commit SUBJECT LINE
+  #                       containing this substring skips the publish job
+  #                       (default "[skip ci]").
   #   - publish-enabled : whether publishing runs at all (default true).
-  #   - publish-marker  : when publishing is disabled, a commit message containing
-  #                       this substring forces the publish job (default "[publish]").
+  #   - publish-marker  : when publishing is disabled, a commit SUBJECT LINE
+  #                       containing this substring forces the publish job
+  #                       (default "[publish]").
   # The publish-enabled check uses `== 'true'` (fail-closed): if an older wads
   # without these outputs is installed by read-ci-config, publishing is skipped
   # rather than run unintentionally.
+  #
+  # SUBJECT, not message: both markers are matched against the setup job's
+  # `commit-subject` output (the first line), never the full message, because
+  # a squash-merge folds the whole PR BODY into the squash commit message —
+  # see the note on the extraction step in the setup job.
   #
   # VALIDATION GATES PUBLISH. The `if:` contains no status function (no
   # `always()`/`!cancelled()`), so GitHub applies the implicit `success()`:
@@ -415,7 +465,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(github.event.head_commit.message, needs.setup.outputs.skip-ci-marker) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(github.event.head_commit.message, needs.setup.outputs.publish-marker))"
+    if: "!contains(needs.setup.outputs.commit-subject, needs.setup.outputs.skip-ci-marker) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -514,7 +564,7 @@ jobs:
     permissions:
       contents: write
       pages: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
