@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.18 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.19 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ae23a911"></script>
+      <script src="../../_static/documentation_options.js?v=0a5b2d08"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -460,28 +460,35 @@
 <span class="w">        </span><span class="sd">"""Check if publishing is enabled.</span>
 
 <span class="sd">        When True (the default), the publish job runs on main/master unless the</span>
-<span class="sd">        commit message contains :attr:`publish_skip_ci_marker`. When False, the</span>
-<span class="sd">        publish job is skipped unless the commit message contains</span>
-<span class="sd">        :attr:`publish_marker`.</span>
+<span class="sd">        commit *subject line* contains :attr:`publish_skip_ci_marker`. When</span>
+<span class="sd">        False, the publish job is skipped unless the commit *subject line*</span>
+<span class="sd">        contains :attr:`publish_marker`.</span>
+
+<span class="sd">        Both markers are matched against the first line of the commit message</span>
+<span class="sd">        only. A squash-merge folds the entire PR body into the squash commit</span>
+<span class="sd">        message, so a full-message match fires on a PR that merely writes</span>
+<span class="sd">        about a marker.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_skip_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Commit-message substring that suppresses publishing.</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that suppresses publishing.</span>
 
-<span class="sd">        Used when publishing is enabled: a commit whose message contains this</span>
-<span class="sd">        marker skips the publish job. Defaults to ``"[skip ci]"`` (which GitHub</span>
-<span class="sd">        also natively recognises to skip the whole workflow).</span>
+<span class="sd">        Used when publishing is enabled: a commit whose *subject line* (the</span>
+<span class="sd">        first line of its message) contains this marker skips the publish job.</span>
+<span class="sd">        Defaults to ``"[skip ci]"`` (which GitHub also natively recognises to</span>
+<span class="sd">        skip the whole workflow).</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skip_ci_marker"</span><span class="p">,</span> <span class="s2">"[skip ci]"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">publish_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Commit-message substring that forces publishing.</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that forces publishing.</span>
 
-<span class="sd">        Used when publishing is disabled: a commit whose message contains this</span>
-<span class="sd">        marker still runs the publish job. Defaults to ``"[publish]"``.</span>
+<span class="sd">        Used when publishing is disabled: a commit whose *subject line* (the</span>
+<span class="sd">        first line of its message) contains this marker still runs the publish</span>
+<span class="sd">        job. Defaults to ``"[publish]"``.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_marker"</span><span class="p">,</span> <span class="s2">"[publish]"</span><span class="p">)</span>
 
