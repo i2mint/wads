@@ -1442,9 +1442,10 @@ def get_github_project_description(
 
 
 def main():
-    import argh  # TODO: replace by argparse, or require argh in wads?
+    """Entry point of the ``populate`` console script."""
+    import cw
 
-    argh.dispatch_command(populate_pkg_dir)
+    raise SystemExit(cw.dispatch(populate_pkg_dir))
 
 
 if __name__ == "__main__":

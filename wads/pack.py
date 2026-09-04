@@ -54,7 +54,14 @@ from collections.abc import Mapping, Iterable, Generator, Sequence
 from configparser import ConfigParser
 from functools import partial
 
-import argh
+# NOTE: `cw` is imported lazily, inside the two functions that need it, and NOT
+# here. `wads/__init__.py` imports `wads.populate`, which imports this module, so
+# anything imported at this level is imported by `import wads` -- including by
+# `python -m wads.scripts.read_ci_config`, which the reusable CI workflow runs
+# against a bare checkout before any of this project's dependencies exist. A
+# module-level CLI import there is a bootstrap dependency nobody declared, and it
+# also contradicts the core dependency list's stated aim of keeping `import wads`
+# cheap. `wads/tests/test_cli_surface.py` asserts this stays true.
 
 CONFIG_FILE_NAME = "setup.cfg"
 PYPROJECT_FILE_NAME = "pyproject.toml"
@@ -216,7 +223,9 @@ def check_in(
     def confirm(action, default):
         if auto_choose_default_action:
             return default
-        return argh.interaction.confirm(action, default)
+        import cw
+
+        return cw.confirm(action, default=default)
 
     def verify_current_changes():
         print_step_title("Verify current changes")
@@ -1584,37 +1593,32 @@ def process_missing_module_docstrings(
 # -----------------------------------------------------------------------------
 
 
-argh_kwargs = {
-    "namespace": "pack",
-    "functions": [
-        generate_and_publish_docs,
-        current_configs,
-        increment_configs_version,
-        current_configs_version,
-        twine_upload_dist,
-        read_and_resolve_setup_configs,
-        update_setup_cfg,
-        go,
-        goo,
-        check_in,
-        get_name_from_configs,
-        run_setup,
-        current_pypi_version,
-        extract_pkg_dir_and_name,
-        git_commit_and_push,
-        process_missing_module_docstrings,
-    ],
-    "namespace_kwargs": {
-        "title": "Package Configurations",
-        "description": "Utils to package and publish.",
-    },
-}
+#: The commands ``pack`` exposes, in the order they appear in ``pack --help``.
+COMMANDS = [
+    generate_and_publish_docs,
+    current_configs,
+    increment_configs_version,
+    current_configs_version,
+    twine_upload_dist,
+    read_and_resolve_setup_configs,
+    update_setup_cfg,
+    go,
+    goo,
+    check_in,
+    get_name_from_configs,
+    run_setup,
+    current_pypi_version,
+    extract_pkg_dir_and_name,
+    git_commit_and_push,
+    process_missing_module_docstrings,
+]
 
 
 def main():
-    import argh  # pip install argh
+    """Entry point of the ``pack`` console script."""
+    import cw
 
-    argh.dispatch_commands(argh_kwargs.get("functions", None))
+    raise SystemExit(cw.dispatch(COMMANDS))
 
 
 if __name__ == "__main__":

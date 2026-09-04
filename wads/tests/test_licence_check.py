@@ -13,6 +13,7 @@ metadata, not invented. That is what makes them evidence.
 
 import doctest
 import json
+import os
 import subprocess
 import sys
 from email import message_from_string
@@ -448,6 +449,7 @@ def test_the_shipped_default_policy_passes_its_own_self_check():
 
 
 def _write_project(directory, *, dependencies, optional=None, licence=None):
+    directory.mkdir(parents=True, exist_ok=True)
     lines = [
         "[project]",
         'name = "fake-project"',
@@ -822,41 +824,79 @@ def test_module_doctests():
     )
 
 
+#: A distribution name that exists nowhere on PyPI, so the fabricated
+#: ``dist-info`` below can never be shadowed by something really installed.
+CANARY_DIST = "wads-lgpl-canary-fixture"
+
+
+def _fabricate_installed_lgpl_dist(directory):
+    """Write a real ``.dist-info`` for :data:`CANARY_DIST` and return its parent.
+
+    Put the returned directory on a subprocess's ``PYTHONPATH`` and
+    ``importlib.metadata`` discovers it exactly as it discovers a pip install --
+    which is the only way to exercise the FORBIDDEN path end-to-end without
+    making the test depend on some copyleft package happening to be present in
+    whatever environment CI built. It used to depend on `argh`, and that was
+    fine only for as long as wads itself declared `argh`.
+    """
+    dist_info = directory / f"{CANARY_DIST.replace('-', '_')}-1.0.dist-info"
+    dist_info.mkdir(parents=True, exist_ok=True)
+    (dist_info / "METADATA").write_text(
+        "Metadata-Version: 2.1\n"
+        f"Name: {CANARY_DIST}\n"
+        "Version: 1.0\n"
+        "Classifier: License :: OSI Approved :: GNU Library or Lesser "
+        "General Public License (LGPL)\n",
+        encoding="utf-8",
+    )
+    return directory
+
+
 def test_the_cli_exits_nonzero_on_a_breach_and_zero_when_clean(tmp_path, capsys):
     """MUTATION: always `return 0`, or raise instead of exiting cleanly.
 
     The exit code IS the gate. Everything else in this file is only advice if
     the process comes back 0 to the CI runner.
 
-    Both fixtures are wads's OWN core dependencies -- `jinja2` (BSD-3-Clause)
-    and `argh` (LGPL) -- so they are installed wherever `wads.licence_check` is
-    importable at all. Naming anything else couples the test to whichever
-    extras happen to be present, and the run then fails on the
-    nothing-is-installed guard rather than on what it meant to check.
+    The clean fixture is `jinja2` (BSD-3-Clause), one of wads's own core
+    dependencies, so it is installed wherever `wads.licence_check` is importable
+    at all. The breach fixture is a `.dist-info` this test writes and puts on
+    the subprocess's `PYTHONPATH`: naming a real copyleft package would couple
+    the test to whichever extras happen to be present, and the run would then
+    fail on the nothing-is-installed guard rather than on what it meant to
+    check.
     """
-    _write_project(tmp_path, dependencies=["jinja2"])
+    _write_project(tmp_path / "clean", dependencies=["jinja2"])
     clean = subprocess.run(
-        [sys.executable, "-m", "wads.licence_check", str(tmp_path)],
+        [sys.executable, "-m", "wads.licence_check", str(tmp_path / "clean")],
         capture_output=True,
         text=True,
         cwd=REPO_ROOT,
     )
     assert clean.returncode == lc.EXIT_OK, clean.stderr
 
-    _write_project(tmp_path, dependencies=["argh"])
+    site = _fabricate_installed_lgpl_dist(tmp_path / "site")
+    _write_project(tmp_path / "breach", dependencies=[CANARY_DIST])
     breach = subprocess.run(
-        [sys.executable, "-m", "wads.licence_check", str(tmp_path), "--json"],
+        [
+            sys.executable,
+            "-m",
+            "wads.licence_check",
+            str(tmp_path / "breach"),
+            "--json",
+        ],
         capture_output=True,
         text=True,
         cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(site)},
     )
     assert breach.returncode == lc.EXIT_BREACH, breach.stderr
     payload = json.loads(breach.stdout)
     assert payload["ok"] is False
     assert any(
-        v["name"] == "argh" and v["status"] == lc.Status.FORBIDDEN
+        v["name"] == lc.normalise(CANARY_DIST) and v["status"] == lc.Status.FORBIDDEN
         for v in payload["verdicts"]
-    )
+    ), payload["verdicts"]
 
     missing = subprocess.run(
         [sys.executable, "-m", "wads.licence_check", str(tmp_path / "nope")],
@@ -892,10 +932,15 @@ def test_reading_another_environments_metadata(tmp_path):
 def test_the_repo_itself_can_be_audited():
     """MUTATION: none -- this is the smoke test.
 
-    wads declares `argh` (LGPL-3.0-or-later) today, so this asserts the tool
-    runs end-to-end against a real pyproject and a real installed closure, not
-    that the result is clean. When the fleet campaign removes argh from wads,
-    this repo becomes a candidate for `[tool.wads.licence].enabled = true`.
+    It asserts the tool runs end-to-end against a real pyproject and a real
+    installed closure, not that the result is clean. Cleanliness is deliberately
+    NOT asserted here: it is a property of whatever happens to be installed in
+    the environment running the test, and a stale editable install whose
+    recorded `Requires-Dist` predates a dependency change is enough to make it
+    lie in either direction. wads declared `argh` (LGPL) until the cw migration;
+    now that it does not, this repo is a candidate for
+    `[tool.wads.licence].enabled = true`, which is where a cleanliness claim
+    belongs -- in the gate, read from a freshly resolved environment.
     """
     report = lc.check(REPO_ROOT)
     assert report.declared

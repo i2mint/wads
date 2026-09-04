@@ -93,20 +93,3 @@ except FileNotFoundError:
 pkg_path_names = (".gitignore", "setup.py")
 
 from wads.populate import populate_pkg_dir
-
-
-def main():
-    import argh  # pip install argh
-
-    from wads.pack import argh_kwargs as pack_kw
-
-    # from wads.docs_gen import argh_kwargs as docs_gen_kw
-
-    parser = argh.ArghParser()
-    parser.add_commands(**pack_kw)
-    # parser.add_commands(**docs_gen_kw)
-    parser.dispatch()
-
-
-if __name__ == "__main__":
-    main()
