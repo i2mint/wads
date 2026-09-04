@@ -54,7 +54,14 @@ from collections.abc import Mapping, Iterable, Generator, Sequence
 from configparser import ConfigParser
 from functools import partial
 
-import cw
+# NOTE: `cw` is imported lazily, inside the two functions that need it, and NOT
+# here. `wads/__init__.py` imports `wads.populate`, which imports this module, so
+# anything imported at this level is imported by `import wads` -- including by
+# `python -m wads.scripts.read_ci_config`, which the reusable CI workflow runs
+# against a bare checkout before any of this project's dependencies exist. A
+# module-level CLI import there is a bootstrap dependency nobody declared, and it
+# also contradicts the core dependency list's stated aim of keeping `import wads`
+# cheap. `wads/tests/test_cli_surface.py` asserts this stays true.
 
 CONFIG_FILE_NAME = "setup.cfg"
 PYPROJECT_FILE_NAME = "pyproject.toml"
@@ -216,6 +223,8 @@ def check_in(
     def confirm(action, default):
         if auto_choose_default_action:
             return default
+        import cw
+
         return cw.confirm(action, default=default)
 
     def verify_current_changes():
@@ -1607,6 +1616,8 @@ COMMANDS = [
 
 def main():
     """Entry point of the ``pack`` console script."""
+    import cw
+
     raise SystemExit(cw.dispatch(COMMANDS))
 
 

@@ -116,3 +116,32 @@ def test_the_golden_carries_no_machine_specific_prog(name):
         f"{name}.json records prog={golden['prog']!r}; rewrite it to [{name!r}] "
         "before committing (see this module's docstring)"
     )
+
+
+def test_importing_wads_does_not_import_cw():
+    """MUTATION: move `import cw` back to the top of `wads/pack.py`.
+
+    `wads/__init__.py` imports `wads.populate`, which imports `wads.pack`, so
+    anything `wads.pack` imports at module level is imported by a bare
+    `import wads`. The reusable CI workflow runs
+    `python -m wads.scripts.read_ci_config .` against a checkout *before* the
+    project's dependencies are installed -- that is how it learns which python
+    versions and extras to install -- so a module-level CLI import there is a
+    bootstrap dependency nobody declared. On this repo specifically it is a
+    chicken-and-egg: the config step installs the PUBLISHED wads for its
+    dependencies and then runs the CHECKED-OUT wads, which is one release ahead
+    of them.
+
+    Checked in a subprocess, because this process has certainly imported cw
+    already.
+    """
+    import subprocess
+
+    probe = "import sys; import wads; sys.exit(1 if 'cw' in sys.modules else 0)"
+    result = subprocess.run(
+        [sys.executable, "-c", probe], capture_output=True, text=True
+    )
+    assert result.returncode == 0, (
+        "`import wads` pulled in cw. Keep the CLI import inside the functions "
+        f"that need it.\n{result.stdout}{result.stderr}"
+    )
