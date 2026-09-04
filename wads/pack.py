@@ -54,7 +54,7 @@ from collections.abc import Mapping, Iterable, Generator, Sequence
 from configparser import ConfigParser
 from functools import partial
 
-import argh
+import cw
 
 CONFIG_FILE_NAME = "setup.cfg"
 PYPROJECT_FILE_NAME = "pyproject.toml"
@@ -216,7 +216,7 @@ def check_in(
     def confirm(action, default):
         if auto_choose_default_action:
             return default
-        return argh.interaction.confirm(action, default)
+        return cw.confirm(action, default=default)
 
     def verify_current_changes():
         print_step_title("Verify current changes")
@@ -1584,37 +1584,30 @@ def process_missing_module_docstrings(
 # -----------------------------------------------------------------------------
 
 
-argh_kwargs = {
-    "namespace": "pack",
-    "functions": [
-        generate_and_publish_docs,
-        current_configs,
-        increment_configs_version,
-        current_configs_version,
-        twine_upload_dist,
-        read_and_resolve_setup_configs,
-        update_setup_cfg,
-        go,
-        goo,
-        check_in,
-        get_name_from_configs,
-        run_setup,
-        current_pypi_version,
-        extract_pkg_dir_and_name,
-        git_commit_and_push,
-        process_missing_module_docstrings,
-    ],
-    "namespace_kwargs": {
-        "title": "Package Configurations",
-        "description": "Utils to package and publish.",
-    },
-}
+#: The commands ``pack`` exposes, in the order they appear in ``pack --help``.
+COMMANDS = [
+    generate_and_publish_docs,
+    current_configs,
+    increment_configs_version,
+    current_configs_version,
+    twine_upload_dist,
+    read_and_resolve_setup_configs,
+    update_setup_cfg,
+    go,
+    goo,
+    check_in,
+    get_name_from_configs,
+    run_setup,
+    current_pypi_version,
+    extract_pkg_dir_and_name,
+    git_commit_and_push,
+    process_missing_module_docstrings,
+]
 
 
 def main():
-    import argh  # pip install argh
-
-    argh.dispatch_commands(argh_kwargs.get("functions", None))
+    """Entry point of the ``pack`` console script."""
+    raise SystemExit(cw.dispatch(COMMANDS))
 
 
 if __name__ == "__main__":

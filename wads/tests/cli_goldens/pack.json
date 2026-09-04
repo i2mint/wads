@@ -1,0 +1,248 @@
+{
+  "cases": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack [-h]\n            {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n            ...\n\npositional arguments:\n  {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n    generate-and-publish-docs\n    current-configs\n    increment-configs-version\n                        Increment version in config file (pyproject.toml and/or setup.cfg).\n    current-configs-version\n    twine-upload-dist   Publish to pypi. Runs ``python -m twine upload dist/*``\n    read-and-resolve-setup-configs\n                        make setup params and call setup :param pkg_dir: Directory where the pkg\n                        is (which is also where the setup.cfg is) :param new_deploy: whether this\n                        setup for a new deployment (publishing to pypi) or not :param version: The\n                        version number to set this up as. If not given will look at\n                        setup.cfg[metadata] for one, and if not found there will use the current\n                        version (requesting pypi.org) and bump it if the new_deploy flag is on\n    update-setup-cfg    Update setup.cfg or pyproject.toml. If version is not given, will ask pypi\n                        (via http request) what the current version is, and increment that.\n    go                  Update version, package and deploy: Runs in a sequence:\n                        increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist\n                        :param version: The desired version (if not given, will increment the\n                        current version :param verbose: Whether to print stuff or not :param\n                        skip_git_commit: Whether to skip the git commit and push step :param\n                        answer_yes_to_all_prompts: If you do git commit and push, whether to ask\n                        confirmation after showing status\n    goo                 Validate, normalize, stage, commit and push your local changes to a remote\n                        repository. :param pkg_dir: The relative or absolute path of the working\n                        directory. Defaults to '.'. :type pkg_dir: str, optional :param\n                        commit_message: Your commit message :type commit_message: str :param\n                        git_dir: The relative or absolute path of the git directory. If None, it\n                        will be taken to be \"{work_tree}/.git/\". Defaults to None. :type git_dir:\n                        str, optional :param auto_choose_default_action: Set to True if you don't\n                        want to be prompted and automatically select the default action. Defaults\n                        to False. :type auto_choose_default_action: bool, optional :param\n                        bypass_docstring_validation: Set to True if you don't want to check if a\n                        docstring exists for every module, class and function. Defaults to False.\n                        :type bypass_docstring_validation: bool, optional :param bypass_tests: Set\n                        to True if you don't want to run doctests and other tests. Defaults to\n                        False. :type bypass_tests: bool, optional :param bypass_code_formatting:\n                        Set to True if you don't want the code to be automatically formatted using\n                        axblack. Defaults to False. :type bypass_code_formatting: bool, optional\n                        :param verbose: Set to True if you want to log extra information during\n                        the process. Defaults to False. :type verbose: bool, optional\n    check-in            Validate, normalize, stage, commit and push your local changes to a remote\n                        repository. :param commit_message: Your commit message :type\n                        commit_message: str :param work_tree: The relative or absolute path of the\n                        working directory. Defaults to '.'. :type work_tree: str, optional :param\n                        git_dir: The relative or absolute path of the git directory. If None, it\n                        will be taken to be \"{work_tree}/.git/\". Defaults to None. :type git_dir:\n                        str, optional :param auto_choose_default_action: Set to True if you don't\n                        want to be prompted and automatically select the default action. Defaults\n                        to False. :type auto_choose_default_action: bool, optional :param\n                        bypass_docstring_validation: Set to True if you don't want to check if a\n                        docstring exists for every module, class and function. Defaults to False.\n                        :type bypass_docstring_validation: bool, optional :param bypass_tests: Set\n                        to True if you don't want to run doctests and other tests. Defaults to\n                        False. :type bypass_tests: bool, optional :param bypass_code_formatting:\n                        Set to True if you don't want the code to be automatically formatted using\n                        axblack. Defaults to False. :type bypass_code_formatting: bool, optional\n                        :param verbose: Set to True if you want to log extra information during\n                        the process. Defaults to False. :type verbose: bool, optional :param\n                        pre_git_hooks: A sequence of git commands to run before the git commit.\n                        Defaults to ().\n    get-name-from-configs\n                        Get name from local config file (pyproject.toml or setup.cfg)\n    run-setup           Run ``python -m build`` (modern PEP 517 compliant build)\n    current-pypi-version\n                        Return version of package on pypi.python.org using json. Routes through\n                        :func:`http_get_json`, so it works whether or not the optional\n                        ``requests`` dependency is installed (urllib fallback), and returns\n                        ``None`` when the package isn't on PyPI instead of raising. >>>\n                        current_pypi_version('wads') # doctest: +SKIP '0.1.19'\n    extract-pkg-dir-and-name\n                        Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`. Optionally\n                        validates the pkg_dir is actually one (has a pkg_name/__init__.py file)\n                        Also processes input to get a path from a pathlib.Path object, or a module\n                        object, or a module/package name string. `pkg_spec` can be an imported\n                        package (must be a locally developped package) whose name and containing\n                        directory is the same): >>> import wads >>> extract_pkg_dir_and_name(wads)\n                        # doctest: +ELLIPSIS (.../wads', 'wads') You can also just specify the\n                        name of the package (it will be imported): >>>\n                        extract_pkg_dir_and_name('wads') # doctest: +SKIP ('.../wads', 'wads') Or\n                        you can specify the path to the package directory explicitly: >>>\n                        extract_pkg_dir_and_name('/home/user/projects/wads') # doctest: +SKIP\n                        ('/home/user/projects/wads', 'wads')\n    git-commit-and-push\n    process-missing-module-docstrings\n                        Goes through modules of package, sees which ones don't have docstrings,\n                        and gives you the option to write one. The function will go through all\n                        .py files (except those mentioned in exceptions), check if there's a\n                        module docstring (that is, that the first non-white characters are triple-\n                        quotes (double or single)). What happens with that depends on the\n                        ``action`` argument, If ``action='list'``, those modules missing\n                        docstrings will be listed. If ``action='count'``, the count of those\n                        modules missing docstrings will be returned. If ``action='input'``, for\n                        every module you'll be given the option to enter a SINGLE LINE module\n                        docstring (though you could include multi-lines with \\n). Just type the\n                        docstring you want and hit enter to go to the next module with missing\n                        docstring. Or, you can also: - type exit, or e: To exit this process -\n                        type skip, or s: To skip the module and go to the next - type funcs, or f:\n                        To see a print out of functions, classes, and methods - just hit enter, to\n                        get some lines of code (the first, then the next, etc.) - enter a number,\n                        or a number:number, to specify what lines you want to see printed Printing\n                        lines helps you write an informed module docstring :keyword module,\n                        docstr, docstrings, module doc strings\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: pack [-h] {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings} ..."
+    },
+    {
+      "argv": [],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack [-h]\n            {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n            ...\n",
+      "tier": 1,
+      "usage": "usage: pack [-h] {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings} ..."
+    },
+    {
+      "argv": [
+        "generate-and-publish-docs",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack generate-and-publish-docs [-h] [-p PUBLISH_DOCS_TO] pkg-dir\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -p PUBLISH_DOCS_TO, --publish-docs-to PUBLISH_DOCS_TO\n                        'github'\n",
+      "tier": 3,
+      "usage": "usage: pack generate-and-publish-docs [-h] [-p PUBLISH_DOCS_TO] pkg-dir"
+    },
+    {
+      "argv": [
+        "current-configs",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack current-configs [-h] pkg-dir\n\npositional arguments:\n  pkg-dir     -\n\noptions:\n  -h, --help  show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: pack current-configs [-h] pkg-dir"
+    },
+    {
+      "argv": [
+        "increment-configs-version",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack increment-configs-version [-h] [-v VERSION] pkg-dir\n\nIncrement version in config file (pyproject.toml and/or setup.cfg).\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -v VERSION, --version VERSION\n                        -\n",
+      "tier": 3,
+      "usage": "usage: pack increment-configs-version [-h] [-v VERSION] pkg-dir"
+    },
+    {
+      "argv": [
+        "current-configs-version",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack current-configs-version [-h] pkg-dir\n\npositional arguments:\n  pkg-dir     -\n\noptions:\n  -h, --help  show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: pack current-configs-version [-h] pkg-dir"
+    },
+    {
+      "argv": [
+        "twine-upload-dist",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack twine-upload-dist [-h] [-o OPTIONS_STR] pkg-dir\n\nPublish to pypi. Runs ``python -m twine upload dist/*``\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -o OPTIONS_STR, --options-str OPTIONS_STR\n                        -\n",
+      "tier": 3,
+      "usage": "usage: pack twine-upload-dist [-h] [-o OPTIONS_STR] pkg-dir"
+    },
+    {
+      "argv": [
+        "read-and-resolve-setup-configs",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack read-and-resolve-setup-configs [-h] [-n] [-v VERSION] [-a] pkg-dir\n\nmake setup params and call setup\n\n:param pkg_dir: Directory where the pkg is (which is also where the setup.cfg is)\n:param new_deploy: whether this setup for a new deployment (publishing to pypi) or not\n:param version: The version number to set this up as.\n                If not given will look at setup.cfg[metadata] for one,\n                and if not found there will use the current version (requesting pypi.org)\n                and bump it if the new_deploy flag is on\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --new-deploy      False\n  -v VERSION, --version VERSION\n                        -\n  -a, --assert-names    True\n",
+      "tier": 3,
+      "usage": "usage: pack read-and-resolve-setup-configs [-h] [-n] [-v VERSION] [-a] pkg-dir"
+    },
+    {
+      "argv": [
+        "update-setup-cfg",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack update-setup-cfg [-h] [-n] [--version VERSION] [--verbose] pkg-dir\n\nUpdate setup.cfg or pyproject.toml.\nIf version is not given, will ask pypi (via http request) what the current version\nis, and increment that.\n\npositional arguments:\n  pkg-dir            -\n\noptions:\n  -h, --help         show this help message and exit\n  -n, --new-deploy   False\n  --version VERSION  -\n  --verbose          True\n",
+      "tier": 3,
+      "usage": "usage: pack update-setup-cfg [-h] [-n] [--version VERSION] [--verbose] pkg-dir"
+    },
+    {
+      "argv": [
+        "go",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack go [-h] [--version VERSION] [-p PUBLISH_DOCS_TO] [--verbose] [-s] [-a]\n               [-t TWINE_UPLOAD_OPTIONS_STR] [-k] [-c COMMIT_MESSAGE]\n               pkg-dir\n\nUpdate version, package and deploy:\nRuns in a sequence: increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist\n\n:param version: The desired version (if not given, will increment the current version\n:param verbose: Whether to print stuff or not\n:param skip_git_commit: Whether to skip the git commit and push step\n:param answer_yes_to_all_prompts: If you do git commit and push, whether to ask confirmation after showing status\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  --version VERSION     -\n  -p PUBLISH_DOCS_TO, --publish-docs-to PUBLISH_DOCS_TO\n                        -\n  --verbose             True\n  -s, --skip-git-commit\n                        False\n  -a, --answer-yes-to-all-prompts\n                        False\n  -t TWINE_UPLOAD_OPTIONS_STR, --twine-upload-options-str TWINE_UPLOAD_OPTIONS_STR\n                        ''\n  -k, --keep-dist-pkgs  False\n  -c COMMIT_MESSAGE, --commit-message COMMIT_MESSAGE\n                        ''\n",
+      "tier": 3,
+      "usage": "usage: pack go [-h] [--version VERSION] [-p PUBLISH_DOCS_TO] [--verbose] [-s] [-a] [-t TWINE_UPLOAD_OPTIONS_STR] [-k] [-c COMMIT_MESSAGE] pkg-dir"
+    },
+    {
+      "argv": [
+        "goo",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack goo [-h] [-g GIT_DIR] [-a] [--bypass-docstring-validation] [--bypass-tests]\n                [--bypass-code-formatting] [-v]\n                pkg-dir commit-message\n\nValidate, normalize, stage, commit and push your local changes to a remote repository.\n\n:param pkg_dir: The relative or absolute path of the working directory. Defaults to '.'.\n:type pkg_dir: str, optional\n:param commit_message: Your commit message\n:type commit_message: str\n:param git_dir: The relative or absolute path of the git directory. If None, it will be taken to be \"{work_tree}/.git/\". Defaults to None.\n:type git_dir: str, optional\n:param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action. Defaults to False.\n:type auto_choose_default_action: bool, optional\n:param bypass_docstring_validation: Set to True if you don't want to check if a docstring exists for every module, class and function. Defaults to False.\n:type bypass_docstring_validation: bool, optional\n:param bypass_tests: Set to True if you don't want to run doctests and other tests. Defaults to False.\n:type bypass_tests: bool, optional\n:param bypass_code_formatting: Set to True if you don't want the code to be automatically formatted using axblack. Defaults to False.\n:type bypass_code_formatting: bool, optional\n:param verbose: Set to True if you want to log extra information during the process. Defaults to False.\n:type verbose: bool, optional\n\npositional arguments:\n  pkg-dir               -\n  commit-message        -\n\noptions:\n  -h, --help            show this help message and exit\n  -g GIT_DIR, --git-dir GIT_DIR\n                        -\n  -a, --auto-choose-default-action\n                        False\n  --bypass-docstring-validation\n                        False\n  --bypass-tests        False\n  --bypass-code-formatting\n                        False\n  -v, --verbose         False\n",
+      "tier": 3,
+      "usage": "usage: pack goo [-h] [-g GIT_DIR] [-a] [--bypass-docstring-validation] [--bypass-tests] [--bypass-code-formatting] [-v] pkg-dir commit-message"
+    },
+    {
+      "argv": [
+        "check-in",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack check-in [-h] [-w WORK_TREE] [-g GIT_DIR] [-a] [--bypass-docstring-validation]\n                     [--bypass-tests] [--bypass-code-formatting] [-v] [-p [PRE_GIT_HOOKS ...]]\n                     commit-message\n\nValidate, normalize, stage, commit and push your local changes to a remote repository.\n\n:param commit_message: Your commit message\n:type commit_message: str\n:param work_tree: The relative or absolute path of the working directory. Defaults to '.'.\n:type work_tree: str, optional\n:param git_dir: The relative or absolute path of the git directory. If None, it will be taken to be \"{work_tree}/.git/\". Defaults to None.\n:type git_dir: str, optional\n:param auto_choose_default_action: Set to True if you don't want to be prompted and automatically select the default action. Defaults to False.\n:type auto_choose_default_action: bool, optional\n:param bypass_docstring_validation: Set to True if you don't want to check if a docstring exists for every module, class and function. Defaults to False.\n:type bypass_docstring_validation: bool, optional\n:param bypass_tests: Set to True if you don't want to run doctests and other tests. Defaults to False.\n:type bypass_tests: bool, optional\n:param bypass_code_formatting: Set to True if you don't want the code to be automatically formatted using axblack. Defaults to False.\n:type bypass_code_formatting: bool, optional\n:param verbose: Set to True if you want to log extra information during the process. Defaults to False.\n:type verbose: bool, optional\n:param pre_git_hooks: A sequence of git commands to run before the git commit. Defaults to ().\n\npositional arguments:\n  commit-message        -\n\noptions:\n  -h, --help            show this help message and exit\n  -w WORK_TREE, --work-tree WORK_TREE\n                        '.'\n  -g GIT_DIR, --git-dir GIT_DIR\n                        -\n  -a, --auto-choose-default-action\n                        False\n  --bypass-docstring-validation\n                        False\n  --bypass-tests        False\n  --bypass-code-formatting\n                        False\n  -v, --verbose         False\n  -p [PRE_GIT_HOOKS ...], --pre-git-hooks [PRE_GIT_HOOKS ...]\n                        ()\n",
+      "tier": 3,
+      "usage": "usage: pack check-in [-h] [-w WORK_TREE] [-g GIT_DIR] [-a] [--bypass-docstring-validation] [--bypass-tests] [--bypass-code-formatting] [-v] [-p [PRE_GIT_HOOKS ...]] commit-message"
+    },
+    {
+      "argv": [
+        "get-name-from-configs",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack get-name-from-configs [-h] [-a] [-v] pkg-dir\n\nGet name from local config file (pyproject.toml or setup.cfg)\n\npositional arguments:\n  pkg-dir              -\n\noptions:\n  -h, --help           show this help message and exit\n  -a, --assert-exists  True\n  -v, --validate-name  True\n",
+      "tier": 3,
+      "usage": "usage: pack get-name-from-configs [-h] [-a] [-v] pkg-dir"
+    },
+    {
+      "argv": [
+        "run-setup",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack run-setup [-h] pkg-dir\n\nRun ``python -m build`` (modern PEP 517 compliant build)\n\npositional arguments:\n  pkg-dir     -\n\noptions:\n  -h, --help  show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: pack run-setup [-h] pkg-dir"
+    },
+    {
+      "argv": [
+        "current-pypi-version",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack current-pypi-version [-h] [-n NAME] [-u] pkg-dir\n\nReturn version of package on pypi.python.org using json.\n\nRoutes through :func:`http_get_json`, so it works whether or not the optional\n``requests`` dependency is installed (urllib fallback), and returns ``None``\nwhen the package isn't on PyPI instead of raising.\n\n>>> current_pypi_version('wads')  # doctest: +SKIP\n'0.1.19'\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -n NAME, --name NAME  -\n  -u, --use-requests    True\n",
+      "tier": 3,
+      "usage": "usage: pack current-pypi-version [-h] [-n NAME] [-u] pkg-dir"
+    },
+    {
+      "argv": [
+        "extract-pkg-dir-and-name",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack extract-pkg-dir-and-name [-h] [-v] pkg-spec\n\nExtracts the pkg_dir and pkg_dirname from the input `pkg_spec`.\nOptionally validates the pkg_dir is actually one (has a pkg_name/__init__.py file)\n\nAlso processes input to get a path from a pathlib.Path object, or a module object,\nor a module/package name string.\n\n`pkg_spec` can be an imported package (must be a locally developped package)\nwhose name and containing directory is the same):\n\n>>> import wads\n>>> extract_pkg_dir_and_name(wads)  # doctest: +ELLIPSIS\n(.../wads', 'wads')\n\nYou can also just specify the name of the package (it will be imported):\n\n>>> extract_pkg_dir_and_name('wads')  # doctest: +SKIP\n('.../wads', 'wads')\n\nOr you can specify the path to the package directory explicitly:\n\n>>> extract_pkg_dir_and_name('/home/user/projects/wads')  # doctest: +SKIP\n('/home/user/projects/wads', 'wads')\n\npositional arguments:\n  pkg-spec        -\n\noptions:\n  -h, --help      show this help message and exit\n  -v, --validate  True\n",
+      "tier": 3,
+      "usage": "usage: pack extract-pkg-dir-and-name [-h] [-v] pkg-spec"
+    },
+    {
+      "argv": [
+        "git-commit-and-push",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack git-commit-and-push [-h] [--version VERSION] [--verbose] [-a] [-c COMMIT_MESSAGE]\n                                [-w WHAT_TO_ADD]\n                                pkg-dir\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  --version VERSION     -\n  --verbose             True\n  -a, --answer-yes-to-all-prompts\n                        False\n  -c COMMIT_MESSAGE, --commit-message COMMIT_MESSAGE\n                        ''\n  -w WHAT_TO_ADD, --what-to-add WHAT_TO_ADD\n                        '*'\n",
+      "tier": 3,
+      "usage": "usage: pack git-commit-and-push [-h] [--version VERSION] [--verbose] [-a] [-c COMMIT_MESSAGE] [-w WHAT_TO_ADD] pkg-dir"
+    },
+    {
+      "argv": [
+        "process-missing-module-docstrings",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack process-missing-module-docstrings [-h] [-a ACTION] [-e [EXCEPTIONS ...]]\n                                              [-d DOCSTR_TEMPLATE]\n                                              pkg-dir\n\nGoes through modules of package, sees which ones don't have docstrings,\nand gives you the option to write one.\n\nThe function will go through all .py files (except those mentioned in exceptions),\ncheck if there's a module docstring (that is, that the first non-white characters are\ntriple-quotes (double or single)).\n\nWhat happens with that depends on the ``action`` argument,\n\nIf ``action='list'``, those modules missing docstrings will be listed.\nIf ``action='count'``, the count of those modules missing docstrings will be returned.\n\nIf ``action='input'``, for every module you'll be given the option to enter a\nSINGLE LINE module docstring (though you could include multi-lines with \\n).\nJust type the docstring you want and hit enter to go to the next module with missing docstring.\nOr, you can also:\n    - type exit, or e: To exit this process\n    - type skip, or s: To skip the module and go to the next\n    - type funcs, or f: To see a print out of functions, classes, and methods\n    - just hit enter, to get some lines of code (the first, then the next, etc.)\n    - enter a number, or a number:number, to specify what lines you want to see printed\nPrinting lines helps you write an informed module docstring\n\n:keyword module, docstr, docstrings, module doc strings\n\npositional arguments:\n  pkg-dir               -\n\noptions:\n  -h, --help            show this help message and exit\n  -a ACTION, --action ACTION\n                        'input'\n  -e [EXCEPTIONS ...], --exceptions [EXCEPTIONS ...]\n                        ()\n  -d DOCSTR_TEMPLATE, --docstr-template DOCSTR_TEMPLATE\n                        '\"\"\"\\n{user_input}\\n\"\"\"\\n'\n",
+      "tier": 3,
+      "usage": "usage: pack process-missing-module-docstrings [-h] [-a ACTION] [-e [EXCEPTIONS ...]] [-d DOCSTR_TEMPLATE] pkg-dir"
+    },
+    {
+      "argv": [
+        "no-such-command"
+      ],
+      "returncode": 2,
+      "stderr": "usage: pack [-h]\n            {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n            ...\npack: error: argument {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}: invalid choice: 'no-such-command' (choose from generate-and-publish-docs, current-configs, increment-configs-version, current-configs-version, twine-upload-dist, read-and-resolve-setup-configs, update-setup-cfg, go, goo, check-in, get-name-from-configs, run-setup, current-pypi-version, extract-pkg-dir-and-name, git-commit-and-push, process-missing-module-docstrings)\n",
+      "stdout": "",
+      "tier": 1,
+      "usage": "usage: pack [-h] {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings} ... pack: error: argument {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}: invalid choice: 'no-such-command' (choose from generate-and-publish-docs, current-configs, increment-configs-version, current-configs-version, twine-upload-dist, read-and-resolve-setup-configs, update-setup-cfg, go, goo, check-in, get-name-from-configs, run-setup, current-pypi-version, extract-pkg-dir-and-name, git-commit-and-push, process-missing-module-docstrings)"
+    },
+    {
+      "argv": [
+        "current-configs",
+        "--no-such-flag"
+      ],
+      "returncode": 2,
+      "stderr": "usage: pack current-configs [-h] pkg-dir\npack current-configs: error: the following arguments are required: pkg-dir\n",
+      "stdout": "",
+      "tier": 1,
+      "usage": "usage: pack current-configs [-h] pkg-dir pack current-configs: error: the following arguments are required: pkg-dir"
+    },
+    {
+      "argv": [
+        "-h"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: pack [-h]\n            {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n            ...\n\npositional arguments:\n  {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings}\n    generate-and-publish-docs\n    current-configs\n    increment-configs-version\n                        Increment version in config file (pyproject.toml and/or setup.cfg).\n    current-configs-version\n    twine-upload-dist   Publish to pypi. Runs ``python -m twine upload dist/*``\n    read-and-resolve-setup-configs\n                        make setup params and call setup :param pkg_dir: Directory where the pkg\n                        is (which is also where the setup.cfg is) :param new_deploy: whether this\n                        setup for a new deployment (publishing to pypi) or not :param version: The\n                        version number to set this up as. If not given will look at\n                        setup.cfg[metadata] for one, and if not found there will use the current\n                        version (requesting pypi.org) and bump it if the new_deploy flag is on\n    update-setup-cfg    Update setup.cfg or pyproject.toml. If version is not given, will ask pypi\n                        (via http request) what the current version is, and increment that.\n    go                  Update version, package and deploy: Runs in a sequence:\n                        increment_configs_version, update_setup_cfg, run_setup, twine_upload_dist\n                        :param version: The desired version (if not given, will increment the\n                        current version :param verbose: Whether to print stuff or not :param\n                        skip_git_commit: Whether to skip the git commit and push step :param\n                        answer_yes_to_all_prompts: If you do git commit and push, whether to ask\n                        confirmation after showing status\n    goo                 Validate, normalize, stage, commit and push your local changes to a remote\n                        repository. :param pkg_dir: The relative or absolute path of the working\n                        directory. Defaults to '.'. :type pkg_dir: str, optional :param\n                        commit_message: Your commit message :type commit_message: str :param\n                        git_dir: The relative or absolute path of the git directory. If None, it\n                        will be taken to be \"{work_tree}/.git/\". Defaults to None. :type git_dir:\n                        str, optional :param auto_choose_default_action: Set to True if you don't\n                        want to be prompted and automatically select the default action. Defaults\n                        to False. :type auto_choose_default_action: bool, optional :param\n                        bypass_docstring_validation: Set to True if you don't want to check if a\n                        docstring exists for every module, class and function. Defaults to False.\n                        :type bypass_docstring_validation: bool, optional :param bypass_tests: Set\n                        to True if you don't want to run doctests and other tests. Defaults to\n                        False. :type bypass_tests: bool, optional :param bypass_code_formatting:\n                        Set to True if you don't want the code to be automatically formatted using\n                        axblack. Defaults to False. :type bypass_code_formatting: bool, optional\n                        :param verbose: Set to True if you want to log extra information during\n                        the process. Defaults to False. :type verbose: bool, optional\n    check-in            Validate, normalize, stage, commit and push your local changes to a remote\n                        repository. :param commit_message: Your commit message :type\n                        commit_message: str :param work_tree: The relative or absolute path of the\n                        working directory. Defaults to '.'. :type work_tree: str, optional :param\n                        git_dir: The relative or absolute path of the git directory. If None, it\n                        will be taken to be \"{work_tree}/.git/\". Defaults to None. :type git_dir:\n                        str, optional :param auto_choose_default_action: Set to True if you don't\n                        want to be prompted and automatically select the default action. Defaults\n                        to False. :type auto_choose_default_action: bool, optional :param\n                        bypass_docstring_validation: Set to True if you don't want to check if a\n                        docstring exists for every module, class and function. Defaults to False.\n                        :type bypass_docstring_validation: bool, optional :param bypass_tests: Set\n                        to True if you don't want to run doctests and other tests. Defaults to\n                        False. :type bypass_tests: bool, optional :param bypass_code_formatting:\n                        Set to True if you don't want the code to be automatically formatted using\n                        axblack. Defaults to False. :type bypass_code_formatting: bool, optional\n                        :param verbose: Set to True if you want to log extra information during\n                        the process. Defaults to False. :type verbose: bool, optional :param\n                        pre_git_hooks: A sequence of git commands to run before the git commit.\n                        Defaults to ().\n    get-name-from-configs\n                        Get name from local config file (pyproject.toml or setup.cfg)\n    run-setup           Run ``python -m build`` (modern PEP 517 compliant build)\n    current-pypi-version\n                        Return version of package on pypi.python.org using json. Routes through\n                        :func:`http_get_json`, so it works whether or not the optional\n                        ``requests`` dependency is installed (urllib fallback), and returns\n                        ``None`` when the package isn't on PyPI instead of raising. >>>\n                        current_pypi_version('wads') # doctest: +SKIP '0.1.19'\n    extract-pkg-dir-and-name\n                        Extracts the pkg_dir and pkg_dirname from the input `pkg_spec`. Optionally\n                        validates the pkg_dir is actually one (has a pkg_name/__init__.py file)\n                        Also processes input to get a path from a pathlib.Path object, or a module\n                        object, or a module/package name string. `pkg_spec` can be an imported\n                        package (must be a locally developped package) whose name and containing\n                        directory is the same): >>> import wads >>> extract_pkg_dir_and_name(wads)\n                        # doctest: +ELLIPSIS (.../wads', 'wads') You can also just specify the\n                        name of the package (it will be imported): >>>\n                        extract_pkg_dir_and_name('wads') # doctest: +SKIP ('.../wads', 'wads') Or\n                        you can specify the path to the package directory explicitly: >>>\n                        extract_pkg_dir_and_name('/home/user/projects/wads') # doctest: +SKIP\n                        ('/home/user/projects/wads', 'wads')\n    git-commit-and-push\n    process-missing-module-docstrings\n                        Goes through modules of package, sees which ones don't have docstrings,\n                        and gives you the option to write one. The function will go through all\n                        .py files (except those mentioned in exceptions), check if there's a\n                        module docstring (that is, that the first non-white characters are triple-\n                        quotes (double or single)). What happens with that depends on the\n                        ``action`` argument, If ``action='list'``, those modules missing\n                        docstrings will be listed. If ``action='count'``, the count of those\n                        modules missing docstrings will be returned. If ``action='input'``, for\n                        every module you'll be given the option to enter a SINGLE LINE module\n                        docstring (though you could include multi-lines with \\n). Just type the\n                        docstring you want and hit enter to go to the next module with missing\n                        docstring. Or, you can also: - type exit, or e: To exit this process -\n                        type skip, or s: To skip the module and go to the next - type funcs, or f:\n                        To see a print out of functions, classes, and methods - just hit enter, to\n                        get some lines of code (the first, then the next, etc.) - enter a number,\n                        or a number:number, to specify what lines you want to see printed Printing\n                        lines helps you write an informed module docstring :keyword module,\n                        docstr, docstrings, module doc strings\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: pack [-h] {generate-and-publish-docs,current-configs,increment-configs-version,current-configs-version,twine-upload-dist,read-and-resolve-setup-configs,update-setup-cfg,go,goo,check-in,get-name-from-configs,run-setup,current-pypi-version,extract-pkg-dir-and-name,git-commit-and-push,process-missing-module-docstrings} ..."
+    }
+  ],
+  "cw_golden": 1,
+  "env": {
+    "COLUMNS": "100",
+    "NO_COLOR": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONUTF8": "1",
+    "TERM": "dumb"
+  },
+  "newlines": "lf",
+  "note": "Recorded from the argh implementation at wads 0.2.19, immediately before the argh->cw migration. Re-record only with a deliberate, documented CLI change.",
+  "prog": [
+    "pack"
+  ],
+  "recorded_with": {
+    "implementation": "CPython",
+    "platform": "Darwin",
+    "python": "3.12.12"
+  }
+}
