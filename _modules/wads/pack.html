@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.pack &mdash; wads 0.2.19 documentation</title>
+  <title>wads.pack &mdash; wads 0.2.20 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0a5b2d08"></script>
+      <script src="../../_static/documentation_options.js?v=20e0ead2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -82,6 +82,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
@@ -191,7 +192,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParser</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">argh</span>
+<span class="c1"># NOTE: `cw` is imported lazily, inside the two functions that need it, and NOT</span>
+<span class="c1"># here. `wads/__init__.py` imports `wads.populate`, which imports this module, so</span>
+<span class="c1"># anything imported at this level is imported by `import wads` -- including by</span>
+<span class="c1"># `python -m wads.scripts.read_ci_config`, which the reusable CI workflow runs</span>
+<span class="c1"># against a bare checkout before any of this project's dependencies exist. A</span>
+<span class="c1"># module-level CLI import there is a bootstrap dependency nobody declared, and it</span>
+<span class="c1"># also contradicts the core dependency list's stated aim of keeping `import wads`</span>
+<span class="c1"># cheap. `wads/tests/test_cli_surface.py` asserts this stays true.</span>
 
 <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s2">"setup.cfg"</span>
 <span class="n">PYPROJECT_FILE_NAME</span> <span class="o">=</span> <span class="s2">"pyproject.toml"</span>
@@ -361,7 +369,9 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">confirm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">auto_choose_default_action</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">default</span>
-        <span class="k">return</span> <span class="n">argh</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
+
+        <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">confirm</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">verify_current_changes</span><span class="p">():</span>
         <span class="n">print_step_title</span><span class="p">(</span><span class="s2">"Verify current changes"</span><span class="p">)</span>
@@ -1799,37 +1809,35 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
-<span class="n">argh_kwargs</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"namespace"</span><span class="p">:</span> <span class="s2">"pack"</span><span class="p">,</span>
-    <span class="s2">"functions"</span><span class="p">:</span> <span class="p">[</span>
-        <span class="n">generate_and_publish_docs</span><span class="p">,</span>
-        <span class="n">current_configs</span><span class="p">,</span>
-        <span class="n">increment_configs_version</span><span class="p">,</span>
-        <span class="n">current_configs_version</span><span class="p">,</span>
-        <span class="n">twine_upload_dist</span><span class="p">,</span>
-        <span class="n">read_and_resolve_setup_configs</span><span class="p">,</span>
-        <span class="n">update_setup_cfg</span><span class="p">,</span>
-        <span class="n">go</span><span class="p">,</span>
-        <span class="n">goo</span><span class="p">,</span>
-        <span class="n">check_in</span><span class="p">,</span>
-        <span class="n">get_name_from_configs</span><span class="p">,</span>
-        <span class="n">run_setup</span><span class="p">,</span>
-        <span class="n">current_pypi_version</span><span class="p">,</span>
-        <span class="n">extract_pkg_dir_and_name</span><span class="p">,</span>
-        <span class="n">git_commit_and_push</span><span class="p">,</span>
-        <span class="n">process_missing_module_docstrings</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="s2">"namespace_kwargs"</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Package Configurations"</span><span class="p">,</span>
-        <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Utils to package and publish."</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">}</span>
+<span class="c1">#: The commands ``pack`` exposes, in the order they appear in ``pack --help``.</span>
+<span class="n">COMMANDS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">generate_and_publish_docs</span><span class="p">,</span>
+    <span class="n">current_configs</span><span class="p">,</span>
+    <span class="n">increment_configs_version</span><span class="p">,</span>
+    <span class="n">current_configs_version</span><span class="p">,</span>
+    <span class="n">twine_upload_dist</span><span class="p">,</span>
+    <span class="n">read_and_resolve_setup_configs</span><span class="p">,</span>
+    <span class="n">update_setup_cfg</span><span class="p">,</span>
+    <span class="n">go</span><span class="p">,</span>
+    <span class="n">goo</span><span class="p">,</span>
+    <span class="n">check_in</span><span class="p">,</span>
+    <span class="n">get_name_from_configs</span><span class="p">,</span>
+    <span class="n">run_setup</span><span class="p">,</span>
+    <span class="n">current_pypi_version</span><span class="p">,</span>
+    <span class="n">extract_pkg_dir_and_name</span><span class="p">,</span>
+    <span class="n">git_commit_and_push</span><span class="p">,</span>
+    <span class="n">process_missing_module_docstrings</span><span class="p">,</span>
+<span class="p">]</span>
 
 
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../module_docs/wads/pack.html#wads.pack.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">argh</span>  <span class="c1"># pip install argh</span>
+<span class="w">    </span><span class="sd">"""Entry point of the ``pack`` console script."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
 
-    <span class="n">argh</span><span class="o">.</span><span class="n">dispatch_commands</span><span class="p">(</span><span class="n">argh_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"functions"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">COMMANDS</span><span class="p">))</span></div>
+
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.populate &mdash; wads 0.2.19 documentation</title>
+  <title>wads.populate &mdash; wads 0.2.20 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=0a5b2d08"></script>
+      <script src="../../_static/documentation_options.js?v=20e0ead2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -76,6 +76,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.populate.cd"><code class="docutils literal notranslate"><span class="pre">cd()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.populate.get_github_project_description"><code class="docutils literal notranslate"><span class="pre">get_github_project_description()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.populate.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.populate.populate_pkg_dir"><code class="docutils literal notranslate"><span class="pre">populate_pkg_dir()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.populate.populate_proj_from_url"><code class="docutils literal notranslate"><span class="pre">populate_proj_from_url()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.populate.update_pack_and_setup_py"><code class="docutils literal notranslate"><span class="pre">update_pack_and_setup_py()</span></code></a></li>
@@ -101,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
@@ -217,6 +219,12 @@ the easiest way to reach private repos without managing a token.</p></li>
 <p>Never raises on a fetch failure: a missing or unreachable description should
 not block project creation (a genuinely missing repo surfaces clearly at the
 subsequent <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.populate.main">
+<span class="sig-prename descclassname"><span class="pre">wads.populate.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/populate.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.populate.main" title="Link to this definition"></a></dt>
+<dd><p>Entry point of the <code class="docutils literal notranslate"><span class="pre">populate</span></code> console script.</p>
 </dd></dl>
 
 <dl class="py function">
