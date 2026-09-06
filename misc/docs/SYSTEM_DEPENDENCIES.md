@@ -62,6 +62,9 @@ install.windows = "command to install"
 # Optional metadata
 note = "Additional notes or platform-specific guidance"
 alternatives = ["alternative1", "alternative2"]
+
+# Optional: seconds allowed per install command (default: 300)
+install_timeout = 900
 ```
 
 ### Field Descriptions
@@ -74,6 +77,7 @@ alternatives = ["alternative1", "alternative2"]
 | `install.{platform}` | Required | Command(s) to install the dependency |
 | `note` | Optional | Additional information (e.g., Alpine instructions) |
 | `alternatives` | Optional | Alternative packages that provide similar functionality |
+| `install_timeout` | Optional | Seconds allowed for *each* install command (default: 300). Raise it for a dependency that is slow but healthy — a cold-cache `apt-get install ffmpeg` on a GitHub runner has hit the 300s wall. |
 
 ### Supported Platforms
 
@@ -475,7 +479,31 @@ check.linux = "which pkg || dpkg -s pkg || rpm -q pkg"
 
 ### Installation Timeout
 
-**Default timeout:** 5 minutes per dependency
+**Default timeout:** 300 seconds (5 minutes) per install *command*.
+
+A failure looks like this in the CI log:
+
+```
+✗ Installation failed for ffmpeg: Timeout after 300s running: sudo apt-get install -y ffmpeg
+```
+
+**Raise the ceiling for that dependency** — the timeout is declarable:
+
+```toml
+[tool.wads.ops.ffmpeg]
+install_timeout = 900
+install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
+```
+
+To raise it for every dependency that declares none, pass the action's
+`install-timeout` input (or `--install-timeout` to the CLI):
+
+```yaml
+- name: Install System Dependencies
+  uses: i2mint/wads/actions/install-system-deps@master
+  with:
+    install-timeout: '900'
+```
 
 **If installing from source or large packages:**
 Consider pre-building or using a Docker image instead.

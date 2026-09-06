@@ -13,6 +13,10 @@ inputs:
     description: 'Skip checking if dependencies are already installed'
     required: false
     default: 'false'
+  install-timeout:
+    description: 'Per-command install timeout in seconds for dependencies that declare no install_timeout of their own. Empty keeps the installer default (300).'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -47,6 +51,12 @@ runs:
 
         if [ "${{ inputs.skip-check }}" = "true" ]; then
           ARGS="$ARGS --skip-check"
+        fi
+
+        # Only appended when set, so the flag is never passed to a wads release
+        # that predates it (the "Install wads" step above pulls from PyPI).
+        if [ -n "${{ inputs.install-timeout }}" ]; then
+          ARGS="$ARGS --install-timeout ${{ inputs.install-timeout }}"
         fi
 
         # Run the installer script
