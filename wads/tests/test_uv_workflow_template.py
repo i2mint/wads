@@ -195,10 +195,19 @@ class TestUvWorkflowTemplate:
         assert "if" in windows_job
         assert "test-on-windows" in windows_job["if"]
 
-    def test_windows_validation_is_non_blocking(self, template_data):
-        """Test that Windows validation has continue-on-error."""
+    def test_windows_validation_is_non_blocking_by_default(self, template_data):
+        """Windows validation stays informational unless a repo opts in.
+
+        ``continue-on-error`` is a fail-closed expression rather than a literal
+        since ``[tool.wads.ci.testing].windows_blocking`` became declarable:
+        only the string 'true' blocks, so an unset output (no declaration, or an
+        older ``read-ci-config``) keeps the historical behaviour. Full coverage
+        of the knob lives in ``test_windows_blocking.py``.
+        """
         windows_job = template_data["jobs"]["windows-validation"]
-        assert windows_job.get("continue-on-error") is True
+        assert windows_job.get("continue-on-error") == (
+            "${{ needs.setup.outputs.windows-blocking != 'true' }}"
+        )
 
     def test_job_dependencies(self, template_data):
         """Test that job dependencies form a valid DAG."""

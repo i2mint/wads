@@ -245,8 +245,12 @@ coverage_report_format = ["term", "xml"] # terminal, xml, html, etc.
 # Test paths to exclude (in addition to pytest configuration)
 exclude_paths = ["examples", "scrap"]
 
-# Run tests on Windows (informational only, may fail)
+# Run tests on Windows (informational by default, may fail)
 test_on_windows = true
+
+# Make a failing Windows leg turn the run red (default: false = informational).
+# Reddens the run only -- publishing does not depend on the Windows job.
+# windows_blocking = true
 
 
 # ============================================================================

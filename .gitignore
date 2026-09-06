@@ -2,9 +2,12 @@
 .claude/scratch/
 .claude/scheduled_tasks.lock
 docs/*
-wads_configs.json
-data/wads_configs.json
-wads/data/wads_configs.json
+
+# NOTE: do NOT ignore wads/data/wads_configs.json. It is tracked, and hatchling
+# honours this file when collecting package data: an ignore pattern here drops
+# it from the wheel and the sdist while leaving it present in every checkout, so
+# a pip-installed wads silently falls back to the different hardcoded defaults in
+# wads/__init__.py (issue #78).
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

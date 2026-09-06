@@ -68,9 +68,15 @@ def test_publish_gates_on_actual_default_branch():
 def test_windows_validation_is_optional_and_separate():
     jobs = _jobs(UV_CI)
     win = jobs["windows-validation"]
-    # Windows is continue-on-error and is NOT a publish dependency, so it never
-    # blocks publication.
-    assert win.get("continue-on-error") is True
+    # Windows is non-blocking unless a repo opts in with
+    # [tool.wads.ci.testing].windows_blocking, and is NEVER a publish
+    # dependency, so it never blocks publication either way. The gate is
+    # fail-closed (`!= 'true'`): an unset output leaves the leg informational,
+    # which is what an older read-ci-config emits and what every repo that has
+    # not opted in gets. See test_windows_blocking.py.
+    assert win.get("continue-on-error") == (
+        "${{ needs.setup.outputs.windows-blocking != 'true' }}"
+    )
     assert "windows-validation" not in jobs["publish"]["needs"]
 
 

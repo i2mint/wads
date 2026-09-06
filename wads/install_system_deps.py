@@ -3,6 +3,18 @@ Install system dependencies from [tool.wads.ops.*] sections in pyproject.toml.
 
 This script reads system dependency configurations and installs them on the appropriate platform.
 It can be used as a standalone CLI tool or imported as a module.
+
+Each ``[tool.wads.ops.<dep>]`` section may declare an ``install_timeout`` (seconds)
+to raise the per-command ceiling for a dependency that is slow but healthy — a
+cold-cache ``apt-get install ffmpeg`` on a GitHub runner is the motivating case.
+Without a declaration the timeout stays at :data:`DFLT_INSTALL_TIMEOUT`::
+
+    [tool.wads.ops.ffmpeg]
+    install_timeout = 900
+    install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
+
+The CLI's ``--install-timeout`` sets the fallback for dependencies that declare
+none; a declaration always wins over it.
 """
 
 import sys
@@ -22,6 +34,13 @@ else:
         print("ERROR: tomli package required for Python < 3.11", file=sys.stderr)
         print("Install with: pip install tomli", file=sys.stderr)
         sys.exit(1)
+
+
+# Seconds allowed for a single command. Install commands get a generous ceiling
+# (package managers fetch over the network); check commands are local and fast.
+# Both are overridable — see `install_system_dependencies` and the CLI.
+DFLT_INSTALL_TIMEOUT = 300
+DFLT_CHECK_TIMEOUT = 10
 
 
 def find_pyproject(path: str) -> Path:
@@ -53,7 +72,9 @@ def read_system_deps(pyproject_path: Path) -> Dict[str, dict]:
     return data.get("tool", {}).get("wads", {}).get("ops", {})
 
 
-def check_if_installed(dep_name: str, check_cmds: any, timeout: int = 10) -> bool:
+def check_if_installed(
+    dep_name: str, check_cmds: any, timeout: float = DFLT_CHECK_TIMEOUT
+) -> bool:
     """
     Check if dependency is already installed using check commands.
 
@@ -89,7 +110,7 @@ def check_if_installed(dep_name: str, check_cmds: any, timeout: int = 10) -> boo
 
 
 def install_dependency(
-    dep_name: str, install_cmds: any, timeout: int = 300
+    dep_name: str, install_cmds: any, timeout: float = DFLT_INSTALL_TIMEOUT
 ) -> Tuple[bool, Optional[str]]:
     """
     Install a dependency using install commands.
@@ -133,7 +154,9 @@ def install_dependency(
                 return False, f"Exit code {result.returncode}"
 
         except subprocess.TimeoutExpired:
-            return False, f"Timeout after {timeout}s"
+            # Name the command: a multi-command install (e.g. an apt update
+            # followed by an apt install) is otherwise indistinguishable in the log.
+            return False, f"Timeout after {timeout}s running: {cmd}"
         except Exception as e:
             return False, str(e)
 
@@ -145,6 +168,8 @@ def install_system_dependencies(
     platform: Optional[str] = None,
     skip_check: bool = False,
     verbose: bool = True,
+    *,
+    default_install_timeout: float = DFLT_INSTALL_TIMEOUT,
 ) -> Tuple[int, int, int]:
     """
     Install system dependencies from pyproject.toml.
@@ -154,6 +179,8 @@ def install_system_dependencies(
         platform: Platform to install for (linux/macos/windows), auto-detect if None
         skip_check: Skip checking if dependencies are already installed
         verbose: Print detailed progress
+        default_install_timeout: Per-command install timeout (seconds) for
+            dependencies that declare no ``install_timeout`` of their own.
 
     Returns:
         (installed_count, skipped_count, failed_count)
@@ -200,6 +227,29 @@ def install_system_dependencies(
     if verbose:
         print(f"Found {len(ops)} system dependencies\n")
 
+    def timeout_for(dep_name: str, dep_config: dict) -> float:
+        """Per-command install timeout declared by a dep, else the default.
+
+        A non-numeric or non-positive `install_timeout` is reported and ignored
+        rather than raised: a typo in pyproject.toml should not take down the
+        whole install step, it should degrade to the default ceiling.
+        """
+        declared = dep_config.get("install_timeout")
+        if declared is None:
+            return default_install_timeout
+        is_valid_number = isinstance(declared, (int, float)) and not isinstance(
+            declared, bool
+        )
+        if not is_valid_number or declared <= 0:
+            if verbose:
+                print(
+                    f"Warning: ignoring invalid install_timeout={declared!r} for "
+                    f"{dep_name}; using {default_install_timeout}s",
+                    file=sys.stderr,
+                )
+            return default_install_timeout
+        return declared
+
     # Process each dependency
     installed_count = 0
     skipped_count = 0
@@ -237,10 +287,13 @@ def install_system_dependencies(
             continue
 
         # Install
+        install_timeout = timeout_for(dep_name, dep_config)
         if verbose:
-            print(f"\nInstalling {dep_name}...")
+            print(
+                f"\nInstalling {dep_name}... (timeout: {install_timeout}s per command)"
+            )
 
-        success, error = install_dependency(dep_name, install_cmds)
+        success, error = install_dependency(dep_name, install_cmds, install_timeout)
 
         if success:
             if verbose:
@@ -305,6 +358,16 @@ def main():
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress output except errors"
     )
+    parser.add_argument(
+        "--install-timeout",
+        type=float,
+        default=DFLT_INSTALL_TIMEOUT,
+        metavar="SECONDS",
+        help=(
+            "Per-command install timeout for dependencies that declare no "
+            f"install_timeout of their own (default: {DFLT_INSTALL_TIMEOUT})"
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -313,6 +376,7 @@ def main():
         platform=args.platform,
         skip_check=args.skip_check,
         verbose=not args.quiet,
+        default_install_timeout=args.install_timeout,
     )
 
     # Exit with error if any failed

@@ -262,6 +262,23 @@ class CIConfig:
         return self.testing_config.get("test_on_windows", True)
 
     @property
+    def windows_blocking(self) -> bool:
+        """Whether a failing Windows leg should turn the CI run red.
+
+        Defaults to False — the historical behaviour, where the Windows job is
+        informational (``continue-on-error``) and a Windows-only defect merges
+        behind a green tick. Opt in with ``windows_blocking = true`` under
+        ``[tool.wads.ci.testing]``.
+
+        Takes effect in the uv workflows (the reusable
+        ``.github/workflows/uv-ci.yml`` and its ``wads/data/github_ci_uv.yml``
+        mirror), via the ``windows-blocking`` output of the read-ci-config
+        action. It makes the RUN red; it does not gate publication —
+        ``publish`` does not depend on the Windows job.
+        """
+        return self.testing_config.get("windows_blocking", False)
+
+    @property
     def system_dependencies(self) -> dict | list:
         """Get system dependencies for CI environments (DEPRECATED).
 

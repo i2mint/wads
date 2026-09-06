@@ -193,6 +193,7 @@ jobs:
       coverage-enabled: ${{ steps.config.outputs.coverage-enabled }}
       exclude-paths: ${{ steps.config.outputs.exclude-paths }}
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
+      windows-blocking: ${{ steps.config.outputs.windows-blocking }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -387,7 +388,12 @@ jobs:
     if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false'"
     needs: setup
     runs-on: windows-latest
-    continue-on-error: true
+    # Fail-closed opt-in ([tool.wads.ci.testing].windows_blocking): only the
+    # literal 'true' makes the Windows leg block. An unset output - an older
+    # read-ci-config that does not emit it - yields '' != 'true', i.e. the
+    # historical informational behaviour. Blocking reddens the RUN; publish
+    # still does not depend on this job.
+    continue-on-error: ${{ needs.setup.outputs.windows-blocking != 'true' }}
     env:
       # PEP 540 UTF-8 mode: avoid cp1252 UnicodeDecode/EncodeError when test
       # code reads source files or scripts print non-ASCII characters.

@@ -297,7 +297,14 @@ coverage_enabled = true                      # Enable coverage
 coverage_threshold = 80                      # Minimum coverage %
 exclude_paths = ["examples", "scrap"]        # Paths to exclude
 test_on_windows = true                       # Run Windows tests
+windows_blocking = false                     # true = a failing Windows leg reddens the run
 ```
+
+`windows_blocking` defaults to `false`: the Windows job is informational
+(`continue-on-error`), which is how Windows-only defects — backslash path
+separators, locale-decoded `read_text()` — merge behind a green tick. Set it to
+`true` to make the run red. It reddens the **run**, not the release: `publish`
+does not depend on the Windows job.
 
 ### Code Quality Tools
 
