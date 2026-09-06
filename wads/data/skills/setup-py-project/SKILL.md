@@ -223,6 +223,20 @@ After the main setup, offer (don't force) these extras:
 7. **Enable GitHub Discussions**: **Do this automatically** unless the user
    explicitly asked not to. See the procedure below.
 
+8. **Ensure the `manual-task` label exists**: **Do this automatically.** GitHub
+   has no default-labels feature for personal accounts, so each new repo needs
+   the label created explicitly. It marks issues that are blocked on a human —
+   an agent files one instead of burying the blocker in a message nobody
+   re-reads — and the label is the cross-repo query surface for finding them, so
+   keep the name identical everywhere.
+   ```bash
+   DESC="Requires the repo owner at the keyboard — agent cannot proceed on its own."
+   gh label create manual-task --repo ORG/REPO --color d93f0b --description "$DESC" \
+     || gh label edit manual-task --repo ORG/REPO --color d93f0b --description "$DESC"
+   ```
+   The `|| gh label edit` fallback makes this idempotent: on a repo that already
+   has the label, re-running just reconciles its colour and description.
+
 ### GitHub Pages + Discussions (gh)
 
 Run this after the repo exists on GitHub (after the initial push, ideally after
