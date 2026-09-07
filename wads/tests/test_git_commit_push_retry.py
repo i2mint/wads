@@ -14,19 +14,50 @@ assumed. They cover the four paths that matter:
 - the branch moved: the bump commit is replayed on top and lands;
 - retries disabled: the historical single-attempt failure is still available;
 - the replay conflicts: it fails loudly and leaves no rebase in progress.
+
+They need a POSIX shell, and skip where there is none — the publish job that
+runs this step is ubuntu-only.
 """
 
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
+
+def _working_bash():
+    """Path to a bash that can actually run a script, or None.
+
+    Presence is not enough. On a Windows runner ``shutil.which("bash")`` finds
+    WSL's stub in ``System32``, which answers every invocation with "Windows
+    Subsystem for Linux has no installed distributions" and runs nothing — so
+    the candidate is probed rather than trusted.
+    """
+    candidate = shutil.which("bash")
+    if candidate is None:
+        return None
+    try:
+        probe = subprocess.run(
+            [candidate, "-c", "echo ok"], capture_output=True, text=True, timeout=30
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return candidate if probe.stdout.strip() == "ok" else None
+
+
+BASH = _working_bash()
+
+# The step under test runs as `shell: bash` in the publish job, which is
+# `runs-on: ubuntu-latest` — it never executes on Windows. Testing it under Git
+# Bash would only add Windows path and quoting semantics that production never
+# meets, so the Windows leg of the matrix skips rather than reports noise.
 pytestmark = pytest.mark.skipif(
-    shutil.which("bash") is None or shutil.which("git") is None,
-    reason="needs bash and git to exercise the push-back script",
+    sys.platform == "win32" or BASH is None or shutil.which("git") is None,
+    reason="needs a POSIX bash and git to exercise the push-back script",
 )
 
 DEFAULT_BRANCH = "main"
@@ -99,7 +130,7 @@ def _configure(path: Path):
 def run_push_step(clone: Path, *, retries: str = "3", branch: str = ""):
     """Run the action's push step in ``clone``, as the composite action does."""
     return subprocess.run(
-        ["bash", "-c", push_step_script()],
+        [BASH, "-c", push_step_script()],
         cwd=clone,
         capture_output=True,
         text=True,
