@@ -134,8 +134,33 @@ runs:
           echo "Push rejected: '$branch' moved during this run. Rebasing onto it and retrying ($attempt/$retries)."
           git fetch origin "$branch"
           if ! git rebase FETCH_HEAD; then
-            git rebase --abort || true
-            echo "::error::Cannot replay this commit onto the current 'origin/$branch': the incoming changes conflict with it. Resolve by hand."
-            exit 1
+            # Two generated version bumps conflict on the version line whenever a
+            # concurrent release's bump landed while this one ran (i2mint/wads#83).
+            # The commit being replayed carries the version that was just
+            # published, so for the version files it is always the right side.
+            # Anything else in conflict is a real change from the other merge
+            # that a formatter hunk must not overwrite: abort, as before.
+            conflicted=$(git diff --name-only --diff-filter=U)
+            only_version_files=1
+            for path in $conflicted; do
+              case "$path" in
+                pyproject.toml|setup.cfg|setup.py) ;;
+                *) only_version_files=0 ;;
+              esac
+            done
+            if [ -n "$conflicted" ] && [ "$only_version_files" = 1 ]; then
+              echo "Version file conflict with a concurrent bump; keeping the replayed version in: $conflicted"
+              git checkout --theirs -- $conflicted
+              git add -- $conflicted
+              if ! GIT_EDITOR=true git rebase --continue; then
+                git rebase --abort || true
+                echo "::error::Cannot replay this commit onto the current 'origin/$branch' even after resolving the version files. Resolve by hand."
+                exit 1
+              fi
+            else
+              git rebase --abort || true
+              echo "::error::Cannot replay this commit onto the current 'origin/$branch': the incoming changes conflict with it. Resolve by hand."
+              exit 1
+            fi
           fi
         done
