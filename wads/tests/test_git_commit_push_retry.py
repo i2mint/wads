@@ -276,15 +276,50 @@ class TestPushBackRecovery:
         assert result.returncode == 1
         assert "could not be replayed after 0 rebase attempt(s)" in result.stdout
 
-    def test_conflicting_replay_fails_cleanly(self, remote_and_clone, tmp_path):
-        """A genuine conflict aborts the rebase rather than wedging the repo."""
+    def test_conflicting_version_bumps_keep_the_replayed_version(
+        self, remote_and_clone, tmp_path
+    ):
+        """Two releases in flight: the later bump lands on top of the earlier one.
+
+        The concurrent commit is another CI bump of the same version line, which
+        is exactly what a second release run leaves behind (i2mint/wads#83). The
+        replayed commit carries the version that was just published, so it wins.
+        """
         origin, clone = remote_and_clone
-        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
-        # The concurrent merge rewrites the very line the bump rewrote.
+        _commit(clone, "pyproject.toml", 'version = "0.0.4"\n', "**CI** bump to 0.0.4")
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "keeping the replayed version" in result.stdout
+        assert _subjects(clone, f"origin/{DEFAULT_BRANCH}")[:2] == [
+            "**CI** bump to 0.0.4",
+            "**CI** bump to 0.0.3",
+        ]
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:pyproject.toml", cwd=clone
+        ).stdout
+        assert shown == 'version = "0.0.4"\n'
+        assert not (clone / ".git" / "rebase-merge").exists()
+
+    def test_conflicting_replay_fails_cleanly(self, remote_and_clone, tmp_path):
+        """A conflict outside the version files aborts rather than wedging the repo.
+
+        A formatter hunk replayed over a real change from the concurrent merge
+        would silently drop that change, so nothing but version files is ever
+        resolved automatically.
+        """
+        origin, clone = remote_and_clone
+        _commit(clone, "README.md", "formatted by CI\n", "**CI** Formatted code")
         other = tmp_path / "conflicting"
         _git("clone", str(origin), str(other), cwd=tmp_path)
         _configure(other)
-        _commit(other, "pyproject.toml", 'version = "9.9.9"\n', "hand-edited version")
+        _commit(other, "README.md", "a real change\n", "a real change")
         _git("push", "origin", DEFAULT_BRANCH, cwd=other)
 
         result = run_push_step(clone)
@@ -294,6 +329,24 @@ class TestPushBackRecovery:
         # No rebase left in progress for a human to trip over.
         assert not (clone / ".git" / "rebase-merge").exists()
         assert not (clone / ".git" / "rebase-apply").exists()
+
+    def test_a_version_conflict_mixed_with_another_still_aborts(
+        self, remote_and_clone, tmp_path
+    ):
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.4"\n', "**CI** bump to 0.0.4")
+        _commit(clone, "README.md", "formatted by CI\n", "**CI** Formatted code")
+        other = tmp_path / "mixed"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
+        _commit(other, "README.md", "a real change\n", "a real change")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert not (clone / ".git" / "rebase-merge").exists()
 
     def test_pushing_another_branch_does_not_rebase_the_checked_out_one(
         self, remote_and_clone, tmp_path
