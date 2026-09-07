@@ -200,6 +200,69 @@ class TestPushBackRecovery:
         assert result.returncode == 0, result.stdout + result.stderr
         assert _subjects(origin, DEFAULT_BRANCH)[0] == "**CI** bump to 0.0.3"
 
+    def test_branch_that_moved_by_two_commits_is_replayed_over_both(
+        self, remote_and_clone, tmp_path
+    ):
+        """One rejection, several commits behind: replay lands on the newest tip."""
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
+        other = tmp_path / "two-merges"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, "a.md", "first\n", "merge one")
+        _commit(other, "b.md", "second\n", "merge two")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _subjects(origin, DEFAULT_BRANCH)[:3] == [
+            "**CI** bump to 0.0.3",
+            "merge two",
+            "merge one",
+        ]
+
+    def test_replay_works_from_a_shallow_checkout(self, tmp_path, monkeypatch):
+        """A depth-1 runner checkout must still be able to replay the bump.
+
+        `actions/checkout` clones shallow unless asked otherwise (the publish
+        jobs set `fetch-depth: 0`, but this action is generic). A shallow
+        repository has no history to rebase against beyond its grafted
+        boundary, so this is verified rather than assumed.
+        """
+        monkeypatch.setenv("HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "home" / "gitconfig"))
+        (tmp_path / "home").mkdir()
+
+        origin = tmp_path / "origin.git"
+        _git("init", "--bare", "-b", DEFAULT_BRANCH, str(origin), cwd=tmp_path)
+        seed = tmp_path / "seed"
+        _git("clone", str(origin), str(seed), cwd=tmp_path)
+        _configure(seed)
+        _commit(seed, "pyproject.toml", 'version = "0.0.2"\n', "seed")
+        _commit(seed, "history.md", "older\n", "earlier work")
+        _git("push", "-u", "origin", DEFAULT_BRANCH, cwd=seed)
+
+        # `--depth` is ignored for a plain local path, so go through file://
+        # to get a genuinely shallow clone, like a runner checkout.
+        shallow = tmp_path / "shallow"
+        _git("clone", "--depth", "1", origin.as_uri(), str(shallow), cwd=tmp_path)
+        _configure(shallow)
+        assert (shallow / ".git" / "shallow").exists(), "clone was not shallow"
+
+        _commit(
+            shallow, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3"
+        )
+        _land_a_concurrent_merge(origin, tmp_path)
+
+        result = run_push_step(shallow)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _subjects(origin, DEFAULT_BRANCH)[:2] == [
+            "**CI** bump to 0.0.3",
+            "another merge",
+        ]
+
     def test_zero_retries_keeps_the_historical_failure(
         self, remote_and_clone, tmp_path
     ):
