@@ -31,6 +31,13 @@ inputs:
     description: "Allow empty commits"
     required: false
     default: "false"
+  push-rebase-retries:
+    description: >-
+      How many times to rebase onto the remote branch and retry when a push is
+      rejected as non-fast-forward (i.e. the branch moved while the job ran).
+      Set to 0 to fail on the first rejection.
+    required: false
+    default: "3"
 
 runs:
   using: 'composite'
@@ -76,14 +83,59 @@ runs:
     - name: Push Changes
       if: ${{ inputs.push == 'true' }}
       shell: bash
+      env:
+        TARGET_BRANCH: ${{ inputs.branch }}
+        REBASE_RETRIES: ${{ inputs.push-rebase-retries }}
       run: |
-        set -e
+        set -eo pipefail
 
-        if [ -n "${{ inputs.branch }}" ]; then
-          branch="${{ inputs.branch }}"
+        if [ -n "$TARGET_BRANCH" ]; then
+          branch="$TARGET_BRANCH"
         else
           branch=$(git rev-parse --abbrev-ref HEAD)
         fi
+        current=$(git rev-parse --abbrev-ref HEAD)
 
-        echo "Pushing to branch: $branch"
-        git push origin "$branch"
+        # Replaying only makes sense when the ref we push IS the checked-out
+        # branch (the CI publish job's case). If the caller asked to push some
+        # other local branch, or HEAD is detached, keep the historical
+        # single-attempt behaviour rather than rebasing the wrong thing.
+        retries="$REBASE_RETRIES"
+        if [ "$branch" != "$current" ] || [ "$current" = "HEAD" ]; then
+          retries=0
+        fi
+
+        # The first attempt is exactly what this action has always done, so the
+        # normal case — nothing else landed on the branch while the job ran — is
+        # unchanged. Only the rejection path below is new.
+        #
+        # Why that path matters (i2mint/wads#81): the CI publish job uploads to
+        # PyPI and *then* pushes the version-bump commit back to the default
+        # branch. When a second PR is merged during the run, that push is
+        # rejected as non-fast-forward, so the release exists on PyPI while its
+        # bump commit and tag never land, and the run goes red. The commit being
+        # pushed is a tiny generated one (formatting + version bump) that does
+        # not touch what a merge touches, so replaying it on top of whatever
+        # arrived meanwhile is the correct resolution. Rebase rather than merge,
+        # to keep the generated commit as a single tip commit.
+        attempt=0
+        while true; do
+          echo "Pushing to branch: $branch"
+          if git push origin "$branch"; then
+            exit 0
+          fi
+
+          attempt=$((attempt + 1))
+          if [ "$attempt" -gt "$retries" ]; then
+            echo "::error::Push to '$branch' was rejected and could not be replayed after $retries rebase attempt(s)."
+            exit 1
+          fi
+
+          echo "Push rejected: '$branch' moved during this run. Rebasing onto it and retrying ($attempt/$retries)."
+          git fetch origin "$branch"
+          if ! git rebase FETCH_HEAD; then
+            git rebase --abort || true
+            echo "::error::Cannot replay this commit onto the current 'origin/$branch': the incoming changes conflict with it. Resolve by hand."
+            exit 1
+          fi
+        done
