@@ -534,6 +534,16 @@ jobs:
         with:
           pypi-token: ${{ secrets.PYPI_PASSWORD || env.PYPI_PASSWORD }}
 
+      # Pushing the bump back can lose a race with a second merge landing on the
+      # default branch mid-run — PyPI has the release, the push is rejected as
+      # non-fast-forward, the run goes red and no tag is pushed (issue #81). The
+      # git-commit action now replays the bump onto the moved branch and retries
+      # (see its `push-rebase-retries` input), which is why no `concurrency`
+      # group is set on this job: GitHub keeps at most one *pending* run per
+      # group, so a third merge arriving during a queued release cancels the
+      # second one outright — trading a red run for a skipped release. (The
+      # newer `queue: max` lifts that limit, but unrecognised workflow syntax
+      # fails to parse, and this file is consumed by ~180 repos via @master.)
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
         with:

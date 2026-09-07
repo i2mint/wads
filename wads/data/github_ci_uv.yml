@@ -318,6 +318,12 @@ jobs:
         with:
           pypi-token: ${{ secrets.PYPI_PASSWORD }}
 
+      # A second merge landing on the default branch mid-run used to make this
+      # push-back fail as non-fast-forward: PyPI had the release, but the bump
+      # commit and tag never landed and the run went red (i2mint/wads#81). The
+      # git-commit action replays the bump onto the moved branch and retries;
+      # see its `push-rebase-retries` input, and the note in
+      # i2mint/wads .github/workflows/uv-ci.yml on why no `concurrency` group.
       - name: Commit Changes
         uses: i2mint/wads/actions/git-commit@master
         with:
