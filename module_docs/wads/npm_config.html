@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.npm_config &mdash; wads 0.2.24 documentation</title>
+  <title>wads.npm_config &mdash; wads 0.2.25 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/documentation_options.js?v=78e9746c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -69,13 +69,17 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">wads.npm_config</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NPM_CI_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_CI_DEFAULTS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NPM_PUBLISH_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_PUBLISH_DEFAULTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NPM_TRIGGER_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_TRIGGER_DEFAULTS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.NpmCIConfig"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.from_file"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.from_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.has_ci_config()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.package_manager"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.package_manager</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.run_ci_marker"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.run_ci_marker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.npm_config.NpmCIConfig.trigger_mode"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig.trigger_mode</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_PACKAGE_MANAGERS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.npm_config.TRIGGER_MODES"><code class="docutils literal notranslate"><span class="pre">TRIGGER_MODES</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
@@ -112,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_npm_ci_trigger_gate.html">wads.tests.test_npm_ci_trigger_gate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
@@ -192,6 +197,14 @@ consumers — no field, no <code class="docutils literal notranslate"><span clas
 <dd><p>Defaults for the nested <code class="docutils literal notranslate"><span class="pre">wads.ci.publish</span></code> block.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.npm_config.NPM_TRIGGER_DEFAULTS">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NPM_TRIGGER_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'mode':</span> <span class="pre">'auto',</span> <span class="pre">'runCiMarker':</span> <span class="pre">'[run</span> <span class="pre">ci]'}</span></span><a class="headerlink" href="#wads.npm_config.NPM_TRIGGER_DEFAULTS" title="Link to this definition"></a></dt>
+<dd><p>Defaults for the nested <code class="docutils literal notranslate"><span class="pre">wads.ci.trigger</span></code> block. Same values as the Python
+side (<code class="docutils literal notranslate"><span class="pre">wads.ci_config.DFLT_TRIGGER_MODE</span></code> / <code class="docutils literal notranslate"><span class="pre">DFLT_RUN_CI_MARKER</span></code>) so a repo
+with both a pyproject.toml and a package.json can use one marker convention.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NpmCIConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_json_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/npm_config.html#NpmCIConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_config.NpmCIConfig" title="Link to this definition"></a></dt>
@@ -218,12 +231,48 @@ consumers — no field, no <code class="docutils literal notranslate"><span clas
 the declared value.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.run_ci_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run_ci_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.run_ci_marker" title="Link to this definition"></a></dt>
+<dd><p>Commit-subject substring that runs CI in <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> mode.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code> (same default as the Python side). Must be a
+non-empty single line: an empty marker would match every subject and
+silently turn on-demand back into auto.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.trigger_mode">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.trigger_mode" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> means nothing runs unless the commit <em>subject line</em>
+contains <a class="reference internal" href="#wads.npm_config.NpmCIConfig.run_ci_marker" title="wads.npm_config.NpmCIConfig.run_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">run_ci_marker</span></code></a>, or the run is a manual
+<code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>. Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> on any other value.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">NpmCIConfig</span><span class="p">({})</span><span class="o">.</span><span class="n">trigger_mode</span>
+<span class="go">'auto'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NpmCIConfig</span><span class="p">({</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"trigger"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"on-demand"</span><span class="p">}}}})</span><span class="o">.</span><span class="n">trigger_mode</span>
+<span class="go">'on-demand'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>When CI runs</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="wads.npm_config.SUPPORTED_PACKAGE_MANAGERS">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_PACKAGE_MANAGERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('npm',</span> <span class="pre">'pnpm')</span></span><a class="headerlink" href="#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS" title="Link to this definition"></a></dt>
 <dd><p>Package managers the reusable npm CI workflow knows how to drive.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.npm_config.TRIGGER_MODES">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">TRIGGER_MODES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('auto',</span> <span class="pre">'on-demand')</span></span><a class="headerlink" href="#wads.npm_config.TRIGGER_MODES" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">wads.ci.trigger.mode</span></code> values the reusable workflow understands. Mirrors
+<code class="docutils literal notranslate"><span class="pre">wads.ci_config.TRIGGER_MODES</span></code> (the Python/pyproject.toml side).</p>
 </dd></dl>
 
 </section>

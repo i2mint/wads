@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; wads 0.2.24 documentation</title>
+  <title>Index &mdash; wads 0.2.25 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/documentation_options.js?v=78e9746c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -98,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_ci_trigger_gate.html">wads.tests.test_npm_ci_trigger_gate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
@@ -765,6 +766,8 @@
 </li>
         <li><a href="module_docs/wads/tests/test_integration_system_deps.html#module-wads.tests.test_integration_system_deps">wads.tests.test_integration_system_deps</a>
 </li>
+        <li><a href="module_docs/wads/tests/test_npm_ci_trigger_gate.html#module-wads.tests.test_npm_ci_trigger_gate">wads.tests.test_npm_ci_trigger_gate</a>
+</li>
         <li><a href="module_docs/wads/tests/test_system_deps.html#module-wads.tests.test_system_deps">wads.tests.test_system_deps</a>
 </li>
         <li><a href="module_docs/wads/toml_util.html#module-wads.toml_util">wads.toml_util</a>
@@ -786,13 +789,15 @@
 </li>
       <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NPM_CI_DEFAULTS">NPM_CI_DEFAULTS (in module wads.npm_config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/profiles.html#wads.profiles.npm_overlay_artifacts">npm_overlay_artifacts() (in module wads.profiles)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/profiles.html#wads.profiles.npm_overlay_context">npm_overlay_context() (in module wads.profiles)</a>
 </li>
       <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NPM_PUBLISH_DEFAULTS">NPM_PUBLISH_DEFAULTS (in module wads.npm_config)</a>
+</li>
+      <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NPM_TRIGGER_DEFAULTS">NPM_TRIGGER_DEFAULTS (in module wads.npm_config)</a>
 </li>
       <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig">NpmCIConfig (class in wads.npm_config)</a>
 </li>
@@ -916,10 +921,10 @@
 </li>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_secrets_passthrough">render_stub_secrets_passthrough() (in module wads.ci_secrets)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_trigger">render_stub_trigger() (in module wads.ci_trigger)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets">render_workflow_call_secrets() (in module wads.ci_secrets)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.replace_import_names">replace_import_names() (in module wads.util)</a>
@@ -941,7 +946,11 @@
       <li><a href="module_docs/wads/ci_local.html#wads.ci_local.run_ci_local">run_ci_local() (in module wads.ci_local)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.run_ci_marker">run_ci_marker (wads.ci_config.CIConfig property)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig.run_ci_marker">(wads.npm_config.NpmCIConfig property)</a>
 </li>
+      </ul></li>
       <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.run_ci_on_demand">run_ci_on_demand() (in module wads.ci_trigger)</a>
 </li>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands">run_install_commands() (in module wads.scrap.handle_non_python_installs)</a>
@@ -1077,6 +1086,12 @@
       <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.trigger_for_workflow">trigger_for_workflow() (in module wads.ci_trigger)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.trigger_mode">trigger_mode (wads.ci_config.CIConfig property)</a>
+
+      <ul>
+        <li><a href="module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig.trigger_mode">(wads.npm_config.NpmCIConfig property)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/wads/npm_config.html#wads.npm_config.TRIGGER_MODES">TRIGGER_MODES (in module wads.npm_config)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.twine_upload_dist">twine_upload_dist() (in module wads.pack)</a>
 </li>
@@ -1389,6 +1404,13 @@
 
       <ul>
         <li><a href="module_docs/wads/tests/test_integration_system_deps.html#module-wads.tests.test_integration_system_deps">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.tests.test_npm_ci_trigger_gate
+
+      <ul>
+        <li><a href="module_docs/wads/tests/test_npm_ci_trigger_gate.html#module-wads.tests.test_npm_ci_trigger_gate">module</a>
 </li>
       </ul></li>
       <li>

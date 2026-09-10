@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.npm_config &mdash; wads 0.2.24 documentation</title>
+  <title>wads.npm_config &mdash; wads 0.2.25 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/documentation_options.js?v=78e9746c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -98,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_npm_ci_trigger_gate.html">wads.tests.test_npm_ci_trigger_gate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
@@ -202,6 +203,18 @@
     <span class="s2">"access"</span><span class="p">:</span> <span class="s2">"public"</span><span class="p">,</span>
 <span class="p">}</span>
 
+<span class="c1">#: ``wads.ci.trigger.mode`` values the reusable workflow understands. Mirrors</span>
+<span class="c1">#: ``wads.ci_config.TRIGGER_MODES`` (the Python/pyproject.toml side).</span>
+<span class="n">TRIGGER_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"on-demand"</span><span class="p">)</span>
+
+<span class="c1">#: Defaults for the nested ``wads.ci.trigger`` block. Same values as the Python</span>
+<span class="c1">#: side (``wads.ci_config.DFLT_TRIGGER_MODE`` / ``DFLT_RUN_CI_MARKER``) so a repo</span>
+<span class="c1">#: with both a pyproject.toml and a package.json can use one marker convention.</span>
+<span class="n">NPM_TRIGGER_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"auto"</span><span class="p">,</span>
+    <span class="s2">"runCiMarker"</span><span class="p">:</span> <span class="s2">"[run ci]"</span><span class="p">,</span>
+<span class="p">}</span>
+
 
 <div class="viewcode-block" id="NpmCIConfig">
 <a class="viewcode-back" href="../../module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig">[docs]</a>
@@ -212,6 +225,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">package_json_data</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trigger"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="NpmCIConfig.from_file">
 <a class="viewcode-back" href="../../module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig.from_file">[docs]</a>
@@ -307,7 +321,45 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">access</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"access"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"access"</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"access"</span><span class="p">,</span> <span class="n">NPM_PUBLISH_DEFAULTS</span><span class="p">[</span><span class="s2">"access"</span><span class="p">])</span>
+
+    <span class="c1"># --- ci.trigger.* (mirrors CIConfig.trigger_mode / run_ci_marker) ---</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trigger_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""When CI runs: ``"auto"`` (default) or ``"on-demand"``.</span>
+
+<span class="sd">        ``"on-demand"`` means nothing runs unless the commit *subject line*</span>
+<span class="sd">        contains :attr:`run_ci_marker`, or the run is a manual</span>
+<span class="sd">        ``workflow_dispatch``. Raises ``ValueError`` on any other value.</span>
+
+<span class="sd">        &gt;&gt;&gt; NpmCIConfig({}).trigger_mode</span>
+<span class="sd">        'auto'</span>
+<span class="sd">        &gt;&gt;&gt; NpmCIConfig({"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}).trigger_mode</span>
+<span class="sd">        'on-demand'</span>
+<span class="sd">        """</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRIGGER_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"wads.ci.trigger.mode must be one of </span><span class="si">{</span><span class="n">TRIGGER_MODES</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that runs CI in ``"on-demand"`` mode.</span>
+
+<span class="sd">        Defaults to ``"[run ci]"`` (same default as the Python side). Must be a</span>
+<span class="sd">        non-empty single line: an empty marker would match every subject and</span>
+<span class="sd">        silently turn on-demand back into auto.</span>
+<span class="sd">        """</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"runCiMarker"</span><span class="p">,</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"runCiMarker"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">marker</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">marker</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"wads.ci.trigger.runCiMarker must be a non-empty, single-line "</span>
+                <span class="sa">f</span><span class="s2">"string, got </span><span class="si">{</span><span class="n">marker</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">marker</span></div>
 
 </pre></div>
 
