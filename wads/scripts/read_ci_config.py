@@ -113,6 +113,12 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("skip-ci-marker", config.publish_skip_ci_marker)
         _set_output("publish-marker", config.publish_marker)
 
+        # Trigger gate (consumed by every job after setup): in on-demand mode
+        # a job runs only on workflow_dispatch or a commit subject carrying
+        # the run-ci marker.
+        _set_output("trigger-mode", config.trigger_mode)
+        _set_output("run-ci-marker", config.run_ci_marker)
+
         # Environment-variable policy (consumed by the export-ci-env action).
         # These decide which secrets are written into the job environment and
         # which are mandatory; the transport superset lives in the workflow YAML.

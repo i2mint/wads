@@ -272,6 +272,51 @@ The tool will:
 - Identify root causes
 - Generate fix instructions with file locations and suggested changes
 
+## On-demand CI
+
+For repos that should not run CI on every push (Actions minutes are free on public repos but metered on private ones), set:
+
+```toml
+[tool.wads.ci.trigger]
+mode = "on-demand"          # default "auto": every push and PR, as before
+run_ci_marker = "[run ci]"  # the default marker
+```
+
+**Nothing runs unless asked.** CI runs only when the commit *subject* (its first line) contains the marker, or when someone starts it by hand (`gh workflow run ci.yml --ref <branch>`, or the Actions tab), which is always allowed. Tests, publishing and GitHub Pages all obey the same gate.
+
+```bash
+git commit -m "Fix the parser [run ci]"   # runs CI
+git commit -m "Fix the parser"            # runs nothing
+```
+
+A marker quoted only in a squash-merged PR body does not count. The stub's zero-cost pre-filter lets that run start (one short setup job), and the reusable workflow checks the extracted subject before running anything else.
+
+Worth knowing before you flip:
+
+- **A manual run on the default branch releases** when publishing is enabled, exactly like a `[run ci]` push. To test without releasing, run it on another branch, or use `wads ci-local`.
+- **The `[publish]` marker needs `[run ci]` in the same subject.** This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **Only the pushed head commit's subject counts,** not earlier commits in the same push.
+- **On-demand stubs drop the `pull_request` trigger.** A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.
+
+Flip a repo in one idempotent command. It sets on-demand, `python_versions = ["3.12"]` and `test_on_windows = false`, and re-renders the stub, keeping its pin and secrets transport:
+
+```bash
+wads-migrate ci-on-demand --dry-run   # show the diff, write nothing
+wads-migrate ci-on-demand --commit    # apply and commit; then `git push`
+```
+
+Do locally what CI would have done, from the same `[tool.wads.ci]` config:
+
+```bash
+wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), build
+wads ci-local --dry-run   # print the plan, run nothing
+wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
+```
+
+`--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages.
+
+To go back, set `mode = "auto"` and run `wads-migrate ci-to-stub`. Workflow files other than `ci.yml` (cron jobs, Pages, npm) are not governed by the trigger; `ci-on-demand` lists any that still run unasked.
+
 ## CI Configuration Reference
 
 Wads uses `pyproject.toml` as a single source of truth for CI configuration. Here's what you can configure:

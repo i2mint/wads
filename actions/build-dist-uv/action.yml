@@ -18,12 +18,17 @@ runs:
       shell: bash
       run: |
         set -e
+        # `uv build` builds both by default and has no flag to exclude one; it
+        # takes --sdist or --wheel to build only that one. (wads.ci_local's
+        # uv_build_args mirrors this mapping for `wads ci-local`.)
         BUILD_ARGS=""
-        if [ "${{ inputs.sdist }}" = "false" ]; then
-          BUILD_ARGS="$BUILD_ARGS --no-sdist"
-        fi
-        if [ "${{ inputs.wheel }}" = "false" ]; then
-          BUILD_ARGS="$BUILD_ARGS --no-wheel"
+        if [ "${{ inputs.sdist }}" = "false" ] && [ "${{ inputs.wheel }}" = "false" ]; then
+          echo "::error::[tool.wads.ci.build] disables both sdist and wheel: nothing to build"
+          exit 1
+        elif [ "${{ inputs.sdist }}" = "false" ]; then
+          BUILD_ARGS="--wheel"
+        elif [ "${{ inputs.wheel }}" = "false" ]; then
+          BUILD_ARGS="--sdist"
         fi
         uv build $BUILD_ARGS
         echo "Built distributions:"

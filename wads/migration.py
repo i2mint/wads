@@ -866,6 +866,8 @@ def migrate_ci_to_stub(
     *,
     pin: str = "@master",
     transport: str = "json",
+    trigger_mode: Optional[str] = None,
+    run_ci_marker: Optional[str] = None,
 ) -> str:
     """Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.
 
@@ -895,6 +897,13 @@ def migrate_ci_to_stub(
             in the frozen wads superset or GitHub rejects the workflow at
             parse time (issue #63) — out-of-superset names trigger a loud
             warning.
+        trigger_mode: ``"auto"`` or ``"on-demand"``. ``None`` (default) takes
+            ``[tool.wads.ci.trigger].mode`` from the pyproject.toml of the repo
+            holding ``old_ci`` (``"auto"`` when there is none). On-demand stubs
+            run nothing unless the commit subject carries the run-ci marker or
+            the run is a ``workflow_dispatch``; see :mod:`wads.ci_trigger`.
+        run_ci_marker: The on-demand marker; ``None`` takes it from the same
+            pyproject (default ``"[run ci]"``).
 
     Returns:
         The stub workflow content as a string.
@@ -971,7 +980,23 @@ def migrate_ci_to_stub(
             "#SECRETS_BLOCK#",
             render_stub_secrets_passthrough(_stub_secret_names_for(old_ci)),
         )
-    return stub
+    # The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an
+    # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
+    from wads.ci_trigger import (
+        render_stub_inputs,
+        render_stub_trigger,
+        stub_inputs_of,
+        trigger_for_workflow,
+    )
+
+    declared_mode, declared_marker = trigger_for_workflow(old_ci)
+    stub = render_stub_trigger(
+        stub,
+        mode=trigger_mode or declared_mode,
+        run_ci_marker=run_ci_marker or declared_marker,
+    )
+    # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
+    return render_stub_inputs(stub, stub_inputs_of(old_ci))
 
 
 def _stub_secret_names_for(old_ci) -> list:
@@ -1255,9 +1280,10 @@ def main():
     )
     stub_parser.add_argument(
         "--pin",
-        default="@master",
+        default=None,
         help=(
-            "wads ref to pin in the stub. Defaults to '@master' (floats with "
+            "wads ref to pin in the stub. Defaults to the existing stub's pin, "
+            "else '@master' (floats with "
             "wads — convenient, occasional CI breakage on bad wads merges). "
             "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "
             "default JSON transport needs a ref whose uv-ci.yml declares "
@@ -1267,15 +1293,63 @@ def main():
     )
     stub_parser.add_argument(
         "--transport",
-        default="json",
+        default=None,
         choices=("json", "named"),
         help=(
-            "How the stub passes secrets to the reusable workflow. 'json' "
+            "How the stub passes secrets to the reusable workflow (default: the "
+            "existing stub's, else json). 'json' "
             "(default) serializes the repo's whole secrets context into one "
             "WADS_CI_SECRETS_JSON secret — any secret name works. 'named' "
             "passes an explicit subset (minimal secret surface), but every "
             "name must be in the frozen wads superset or the workflow cannot "
             "start."
+        ),
+    )
+
+    # Flip a repo to on-demand CI (nothing runs unless asked)
+    od_parser = subparsers.add_parser(
+        "ci-on-demand",
+        help=(
+            "Flip a repo to on-demand CI: [tool.wads.ci.trigger] mode = "
+            "'on-demand', a one-version Linux-only test matrix, and a re-rendered "
+            "stub. Idempotent. CI then runs only for a '[run ci]' commit subject "
+            "or a manual workflow_dispatch."
+        ),
+    )
+    od_parser.add_argument(
+        "repo", nargs="?", default=".", help="Repo directory (default: .)"
+    )
+    od_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the diff of what would change; write nothing.",
+    )
+    od_parser.add_argument(
+        "--python-versions",
+        default="3.12",
+        help="Comma-separated test matrix to set (default: 3.12).",
+    )
+    od_parser.add_argument(
+        "--test-on-windows",
+        action="store_true",
+        help="Keep the Windows test leg (default: turn it off).",
+    )
+    od_parser.add_argument(
+        "--run-ci-marker",
+        default=None,
+        help="Set a custom run-ci marker (default: leave as is, i.e. '[run ci]').",
+    )
+    od_parser.add_argument(
+        "--workflow",
+        default=".github/workflows/ci.yml",
+        help="The CI workflow file to govern (default: .github/workflows/ci.yml).",
+    )
+    od_parser.add_argument(
+        "--commit",
+        action="store_true",
+        help=(
+            "Commit exactly the changed files (refuses if they already had "
+            "uncommitted changes). Does not push."
         ),
     )
 
@@ -1395,12 +1469,9 @@ def main():
             # an old/2025 CI directly to the stub would skip the per-repo
             # `[tool.wads.ci]` audit that ci-to-uv performs.
             existing = input_path.read_text()
-            is_uv = (
-                "Continuous Integration (uv)" in existing
-                or "i2mint/wads/actions/run-tests-uv" in existing
-                or "i2mint/wads/.github/workflows/uv-ci.yml" in existing
-            )
-            if not is_uv:
+            from wads.ci_trigger import classify_ci_workflow
+
+            if classify_ci_workflow(existing) not in ("stub", "inline-uv"):
                 print(
                     f"Refusing to convert {input_path}: it doesn't look like a uv CI "
                     "workflow. Run `wads-migrate ci-to-uv` first to land on uv, "
@@ -1417,9 +1488,25 @@ def main():
             if pyproject is not None:
                 carried = carry_ci_env_into_pyproject(existing, pyproject)
 
-            result = migrate_ci_to_stub(
-                str(input_path), pin=args.pin, transport=args.transport
-            )
+            from wads.ci_trigger import stub_customizations, stub_shape
+
+            # Default to what the existing stub already uses, so a plain re-render
+            # (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.
+            shape = stub_shape(existing)
+            pin = args.pin or shape["pin"]
+            transport = args.transport or shape["transport"]
+            if classify_ci_workflow(existing) == "stub":
+                try:
+                    _, dropped = stub_customizations(existing)
+                except Exception:
+                    dropped = []
+                if dropped:
+                    print(
+                        "warning: the re-rendered stub drops these customizations: "
+                        f"{', '.join(dropped)}",
+                        file=sys.stderr,
+                    )
+            result = migrate_ci_to_stub(str(input_path), pin=pin, transport=transport)
 
             output_path = Path(args.output) if args.output else input_path
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1433,13 +1520,29 @@ def main():
                     "ensure the matching GitHub secrets are set.",
                     file=sys.stderr,
                 )
-            if args.pin == "@master":
+            if pin == "@master":
                 print(
                     "\nPinned to @master (floats with wads). If you need version "
                     "stability for this repo, re-run with `--pin @vX.Y.Z` "
                     "(latest wads tag visible via `gh release list -R i2mint/wads`).",
                     file=sys.stderr,
                 )
+
+        elif args.command == "ci-on-demand":
+            from wads.ci_trigger import run_ci_on_demand
+
+            versions = [v.strip() for v in args.python_versions.split(",") if v.strip()]
+            sys.exit(
+                run_ci_on_demand(
+                    args.repo,
+                    dry_run=args.dry_run,
+                    python_versions=versions,
+                    test_on_windows=args.test_on_windows,
+                    run_ci_marker=args.run_ci_marker,
+                    workflow=args.workflow,
+                    commit=args.commit,
+                )
+            )
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

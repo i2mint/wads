@@ -210,6 +210,8 @@ jobs:
       publish-enabled: ${{ steps.config.outputs.publish-enabled }}
       skip-ci-marker: ${{ steps.config.outputs.skip-ci-marker }}
       publish-marker: ${{ steps.config.outputs.publish-marker }}
+      trigger-mode: ${{ steps.config.outputs.trigger-mode }}
+      run-ci-marker: ${{ steps.config.outputs.run-ci-marker }}
       commit-subject: ${{ steps.commit.outputs.subject }}
       env-required: ${{ steps.config.outputs.env-required }}
       env-test: ${{ steps.config.outputs.env-test }}
@@ -274,10 +276,27 @@ jobs:
         with:
           pyproject-path: .
 
+  # TRIGGER GATE. Every job after `setup` carries the same clause:
+  #   (trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch'
+  #    || contains(commit-subject, run-ci-marker))
+  # [tool.wads.ci.trigger].mode = "auto" (the default) makes it always true, so
+  # auto repos behave exactly as before. "on-demand" means NOTHING RUNS UNLESS
+  # ASKED: the commit SUBJECT must carry run_ci_marker (default "[run ci]"), or
+  # the run must be a manual workflow_dispatch (always allowed). Publishing and
+  # Pages obey the same gate. `!= 'on-demand'` fails OPEN to auto when
+  # read-ci-config installed a wads too old to emit the output: a repo that
+  # never asked for on-demand must not lose its CI to a version skew.
+  #
+  # An on-demand caller stub also pre-filters at zero cost (no runner is
+  # scheduled for an ordinary push). That pre-filter can only test the whole
+  # message (expressions have no split), so THIS clause, over the extracted
+  # subject, is the decision: a marker quoted only in a squash-merged PR body
+  # costs the setup job and runs nothing else.
+
   # Second job: Validation using the config
   validation:
     name: Validation
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]')"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: ubuntu-latest
     strategy:
@@ -384,7 +403,7 @@ jobs:
   # Optional Windows testing (if enabled in config)
   windows-validation:
     name: Windows Tests
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: windows-latest
     continue-on-error: true
@@ -445,6 +464,9 @@ jobs:
   #   - publish-marker  : when publishing is disabled, a commit SUBJECT LINE
   #                       containing this substring forces the publish job
   #                       (default "[publish]").
+  #   - trigger-mode    : in on-demand mode, publish also needs the run-ci
+  #                       marker in the subject or a workflow_dispatch —
+  #                       the TRIGGER GATE above `validation`.
   # The publish-enabled check uses `== 'true'` (fail-closed): if an older wads
   # without these outputs is installed by read-ci-config, publishing is skipped
   # rather than run unintentionally.
@@ -465,7 +487,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(needs.setup.outputs.commit-subject, needs.setup.outputs.skip-ci-marker) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker))"
+    if: "!contains(needs.setup.outputs.commit-subject, needs.setup.outputs.skip-ci-marker) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -574,7 +596,7 @@ jobs:
     permissions:
       contents: write
       pages: write
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false'"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 

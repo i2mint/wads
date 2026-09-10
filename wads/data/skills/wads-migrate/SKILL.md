@@ -121,6 +121,27 @@ it carried; review them afterward and promote to `required`/`test` if a test
 truly depends on one. Use `wads-secrets add` only for secrets the old workflow
 did **not** already reference (e.g. a brand-new dependency).
 
+## On-demand CI (repos that must not run CI on every push)
+
+`[tool.wads.ci.trigger] mode = "on-demand"` makes CI run only for a commit **subject** containing `run_ci_marker` (default `[run ci]`) or a manual `workflow_dispatch`; publish and Pages obey the same gate. The default `mode = "auto"` is unchanged behaviour, and its stub renders byte-identical to the template.
+
+Detect it: an on-demand stub has `on: push` + `workflow_dispatch` (no `pull_request`), a top comment "ON-DEMAND CI: NOTHING RUNS UNLESS ASKED", and a job-level `if:` naming the marker.
+
+Flip one repo (idempotent, one command):
+
+```bash
+wads-migrate ci-on-demand --dry-run    # print the diff, write nothing
+wads-migrate ci-on-demand --commit     # write + commit exactly pyproject.toml and ci.yml
+git push                               # the pushed commit carries the on-demand stub, so the push itself runs nothing
+wads ci-local                          # what CI would have run: lint, tests, build
+```
+
+What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin and secrets transport; **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.
+
+`ci-to-stub` and `fleet-stub` read `[tool.wads.ci.trigger]`, so a refresh sweep never reverts an on-demand repo. `ci-to-stub` keeps the existing stub's pin, secrets transport and `with:` inputs unless `--pin`/`--transport` are given, and warns about anything else it drops. The flip instead refuses a stub with other customizations (extra jobs, custom triggers), or a pyproject layout tomlkit cannot edit safely, and prints the hand edit. A manual `workflow_dispatch` on the default branch releases, like a `[run ci]` push; the `[publish]` marker needs `[run ci]` in the same subject. To go back: set `mode = "auto"`, then `wads-migrate ci-to-stub`.
+
+`wads ci-local --publish` is the local release path for on-demand repos: format, bump version with isee (as CI), build, `uv publish`, commit, tag, push. It refuses on a dirty tree, off the default branch, behind origin, or without a token (`$PYPI_PASSWORD` → `$UV_PUBLISH_TOKEN` → `~/.pypirc`). `wads ci-local --dry-run` prints the plan.
+
 ## New Project
 
 ```bash
