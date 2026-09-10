@@ -19,6 +19,7 @@ from wads.ci_local import (
     RELEASE_COMMIT_MESSAGE,
     RELEASE_TAG_MESSAGE,
     UPLOADS,
+    VERSION_TOOL,
     WRITES,
     RunResult,
     ci_local,
@@ -338,7 +339,7 @@ def test_publish_refuses_without_credentials(repo):
 def test_publish_releases_like_the_publish_job(repo):
     runner = FakeRunner(
         *_git_state(),
-        (["uvx", "--from", "isee", "isee", "gen-semver"], RunResult(0, "Installed 3\n0.2.1\n")),
+        ([*VERSION_TOOL, "gen-semver"], RunResult(0, "Installed 3\n0.2.1\n")),
     )
     out = io.StringIO()
     report = run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
@@ -349,7 +350,7 @@ def test_publish_releases_like_the_publish_job(repo):
     others = [c for c in runner.calls if c is not upload]
     assert all(c["env"].get("UV_PUBLISH_TOKEN") != TOKEN for c in others if "PYPI" not in str(c))
     argvs = runner.argvs()
-    assert ["uvx", "--from", "isee", "isee", "update-pyproject-toml", "--version=0.2.1"] in argvs
+    assert [*VERSION_TOOL, "update-pyproject-toml", "--version=0.2.1"] in argvs
     assert ["git", "commit", "--all", "-m", "**CI** Formatted code + Updated version to 0.2.1 [skip ci]"] in argvs
     assert ["git", "tag", "-a", "0.2.1", "-m", "Release version 0.2.1"] in argvs
     assert argvs[-2:] == [["git", "push", "origin", "master"], ["git", "push", "origin", "0.2.1"]]
@@ -359,7 +360,7 @@ def test_publish_releases_like_the_publish_job(repo):
 
 
 def test_a_bad_version_stops_before_any_write(repo):
-    runner = FakeRunner(*_git_state(), (["uvx", "--from", "isee"], RunResult(0, "oops\n")))
+    runner = FakeRunner(*_git_state(), (list(VERSION_TOOL), RunResult(0, "oops\n")))
     report = run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=io.StringIO())
     assert report.failure.name == "bump version"
     assert not [c for c in runner.calls if c["side_effect"] in (UPLOADS, PUSHES)]
@@ -368,13 +369,18 @@ def test_a_bad_version_stops_before_any_write(repo):
 def test_a_failure_after_the_upload_says_how_to_finish(repo):
     runner = FakeRunner(
         *_git_state(),
-        (["uvx", "--from", "isee", "isee", "gen-semver"], RunResult(0, "0.2.1\n")),
+        ([*VERSION_TOOL, "gen-semver"], RunResult(0, "0.2.1\n")),
         (["git", "push", "origin", "master"], RunResult(1)),
     )
     out = io.StringIO()
     run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
     assert "AFTER the upload: PyPI has 0.2.1" in out.getvalue()
     assert "git push origin master && git push origin 0.2.1" in out.getvalue()
+
+
+def test_the_version_tool_brings_pip():
+    """isee imports pip at load; a bare uvx environment has none (found on a real run)."""
+    assert VERSION_TOOL[-1] == "isee" and "pip" in VERSION_TOOL
 
 
 # --- credentials and the never-upload guard ----------------------------------------------

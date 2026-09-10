@@ -50,7 +50,9 @@ RELEASE_COMMIT_MESSAGE = (
     "**CI** Formatted code + Updated version to <<version>> [skip ci]"
 )
 RELEASE_TAG_MESSAGE = "Release version <<version>>"
-VERSION_TOOL = ("uvx", "--from", "isee", "isee")  # what bump-version-number runs
+# What bump-version-number runs. `--with pip`: isee imports pip at module load, which
+# CI's setup-python environment has and a bare uvx environment does not.
+VERSION_TOOL = ("uvx", "--from", "isee", "--with", "pip", "isee")
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 
 # Run-time placeholders in a Step's argv/env, in the templating engine's << >> style
