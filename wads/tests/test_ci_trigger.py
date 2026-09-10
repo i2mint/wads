@@ -578,3 +578,99 @@ def test_wads_migrate_ci_on_demand_command_line(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "would change" in out and '+mode = "on-demand"' in out
     assert CIConfig.from_file(tmp_path).trigger_mode == "auto", "dry run wrote nothing"
+
+
+# --- review follow-ups ---------------------------------------------------------------
+
+
+def test_flip_keeps_the_inputs_a_stub_passes(tmp_path):
+    from wads.ci_trigger import render_stub_inputs
+
+    ci = _write_repo(
+        tmp_path,
+        pyproject=COMMENTED_PYPROJECT,
+        ci=render_stub_inputs(STUB_TEMPLATE, {"project-name": "my_pkg"}),
+    )
+    assert flip_to_on_demand(tmp_path).status == "changed"
+    job = yaml.safe_load(ci.read_text())["jobs"]["ci"]
+    assert job["with"] == {"project-name": "my_pkg"}
+    assert job["if"] == stub_if_expression(MARKER)
+    assert flip_to_on_demand(tmp_path).status == "unchanged"
+
+
+def test_flip_refuses_a_stub_a_rerender_would_strip(tmp_path):
+    customized = (
+        STUB_TEMPLATE
+        + "  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hi\n"
+    )
+    ci = _write_repo(tmp_path, pyproject=COMMENTED_PYPROJECT, ci=customized)
+    result = flip_to_on_demand(tmp_path)
+    assert result.status == "refused" and result.changes == {}
+    assert ci.read_text() == customized
+    assert (tmp_path / "pyproject.toml").read_text() == COMMENTED_PYPROJECT
+    assert "job `lint`" in result.notes[0] and "by hand" in result.notes[0]
+
+
+def test_ci_to_stub_keeps_the_existing_pin_transport_and_inputs(
+    tmp_path, monkeypatch, capsys
+):
+    from wads.ci_trigger import render_stub_inputs
+    from wads.migration import main
+
+    named = render_stub_inputs(
+        migrate_ci_to_stub(pin="@0.2.30", transport="named"),
+        {"project-name": "my_pkg"},
+    )
+    ci = _write_repo(tmp_path, pyproject=ON_DEMAND_PYPROJECT, ci=named)
+    monkeypatch.setattr("sys.argv", ["wads-migrate", "ci-to-stub", str(ci)])
+    main()
+    job = yaml.safe_load(ci.read_text())["jobs"]["ci"]
+    assert job["uses"].endswith("@0.2.30")
+    assert "WADS_CI_SECRETS_JSON" not in job["secrets"]
+    assert job["with"] == {"project-name": "my_pkg"}
+    assert job["if"] == stub_if_expression(MARKER)
+
+
+@pytest.mark.parametrize(
+    "layout",
+    [
+        '[project]\nname = "x"\n\n[tool.wads]\nci = {testing = {python_versions = ["3.10"]}}\n',
+        '[project]\nname = "x"\n\n[tool]\nwads.ci.testing.python_versions = ["3.10"]\n',
+    ],
+    ids=["inline-table", "dotted-keys"],
+)
+def test_flip_refuses_a_pyproject_layout_it_cannot_edit(tmp_path, layout):
+    _write_repo(tmp_path, pyproject=layout, ci=STUB_TEMPLATE)
+    result = flip_to_on_demand(tmp_path)
+    assert result.status == "refused" and result.changes == {}
+    assert (tmp_path / "pyproject.toml").read_text() == layout
+    assert "by hand" in result.notes[-1]
+
+
+def test_cli_commit_refuses_a_marker_its_own_commit_message_carries(
+    git_stub_repo, capsys
+):
+    assert run_ci_on_demand(git_stub_repo, commit=True, run_ci_marker="on-demand") == 2
+    assert "would run CI" in capsys.readouterr().err
+    assert _git(git_stub_repo, "log", "-1", "--format=%s") == "init"
+    assert CIConfig.from_file(git_stub_repo).trigger_mode == "auto"
+
+
+def test_every_event_nobody_asks_for_is_reported(tmp_path):
+    _stub_repo(tmp_path)
+    workflows = tmp_path / ".github" / "workflows"
+    (workflows / "after.yml").write_text(
+        "on:\n  workflow_run:\n    workflows: [CI]\njobs: {}\n"
+    )
+    (workflows / "manual.yml").write_text(
+        "on: [workflow_dispatch, repository_dispatch]\njobs: {}\n"
+    )
+    notes = flip_to_on_demand(tmp_path, dry_run=True).notes
+    assert any("after.yml (workflow_run)" in note for note in notes)
+    assert not any("manual.yml" in note for note in notes)
+
+
+def test_the_on_demand_header_warns_that_a_manual_default_branch_run_releases():
+    text = render_stub_trigger(STUB_TEMPLATE, mode="on-demand")
+    assert "a manual run on the DEFAULT branch releases" in text
+    assert "only the pushed HEAD commit's subject" in text

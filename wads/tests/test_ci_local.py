@@ -348,7 +348,10 @@ def test_publish_releases_like_the_publish_job(repo):
     assert upload["argv"][:2] == ["uv", "publish"] and upload["argv"][2].endswith("/dist/*")
     assert upload["env"]["UV_PUBLISH_TOKEN"] == TOKEN
     others = [c for c in runner.calls if c is not upload]
-    assert all(c["env"].get("UV_PUBLISH_TOKEN") != TOKEN for c in others if "PYPI" not in str(c))
+    assert not any(
+        TOKEN in c["env"].values() for c in others
+    ), "only the upload step may see the PyPI token"
+    assert "PYPI_PASSWORD" not in upload["env"]
     argvs = runner.argvs()
     assert [*VERSION_TOOL, "update-pyproject-toml", "--version=0.2.1"] in argvs
     assert ["git", "commit", "--all", "-m", "**CI** Formatted code + Updated version to 0.2.1 [skip ci]"] in argvs
@@ -375,7 +378,9 @@ def test_a_failure_after_the_upload_says_how_to_finish(repo):
     out = io.StringIO()
     run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
     assert "AFTER the upload: PyPI has 0.2.1" in out.getvalue()
-    assert "git push origin master && git push origin 0.2.1" in out.getvalue()
+    advice = out.getvalue().split("Finish by hand, in order:")[1]
+    assert "  git push origin master\n  git push origin 0.2.1" in advice
+    assert "git commit" not in advice, "the commit already happened"
 
 
 def test_the_version_tool_brings_pip():
@@ -432,3 +437,53 @@ def test_the_wads_console_script_dispatches_ci_local(repo, capsys):
     code = cw.dispatch(_dispatch_funcs, ["ci-local", "--dry-run", "--repo", str(repo)], prog="wads")
     assert code == 0
     assert "wads ci-local plan" in capsys.readouterr().out
+
+
+def test_a_commit_failure_after_the_upload_lists_every_remaining_step(repo):
+    runner = FakeRunner(
+        *_git_state(),
+        ([*VERSION_TOOL, "gen-semver"], RunResult(0, "0.2.1\n")),
+        (["git", "commit"], RunResult(1)),
+    )
+    out = io.StringIO()
+    run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
+    advice = out.getvalue().split("Finish by hand, in order:")[1].splitlines()[1:5]
+    assert advice == [
+        "  git commit --all -m '**CI** Formatted code + Updated version to 0.2.1 [skip ci]'",
+        "  git tag -a 0.2.1 -m 'Release version 0.2.1'",
+        "  git push origin master",
+        "  git push origin 0.2.1",
+    ]
+
+
+def test_an_upload_failure_warns_of_a_partial_upload_and_a_dirty_tree(repo):
+    runner = FakeRunner(
+        *_git_state(),
+        ([*VERSION_TOOL, "gen-semver"], RunResult(0, "0.2.1\n")),
+        (["uv", "publish"], RunResult(1)),
+    )
+    out = io.StringIO()
+    run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
+    text = out.getvalue()
+    assert "may be PARTIAL" in text and "https://pypi.org/project/pkg/0.2.1/" in text
+    assert "changed by: format (ruff), write version (pyproject.toml)" in text
+    assert "git checkout -- ." in text
+    assert "Nothing was uploaded" not in text
+
+
+def test_a_failure_before_the_upload_says_nothing_went_up(repo):
+    runner = FakeRunner(
+        *_git_state(),
+        ([*VERSION_TOOL, "gen-semver"], RunResult(0, "0.2.1\n")),
+        (["uv", "build"], RunResult(1)),
+    )
+    out = io.StringIO()
+    run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
+    assert "Nothing was uploaded." in out.getvalue()
+    assert "git checkout -- ." in out.getvalue()

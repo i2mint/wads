@@ -27,12 +27,13 @@ from __future__ import annotations
 
 import difflib
 import json
-import subprocess
+import os
 import re
+import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 from wads.ci_config import (
     CIConfig,
@@ -50,8 +51,23 @@ DFLT_FLIP_COMMIT_MESSAGE = "ci: switch to on-demand CI ([tool.wads.ci.trigger])"
 AUTO_ON_LINE = "on: [push, pull_request]\n"
 CI_JOB_ANCHOR = "  ci:\n    uses: "
 
-# Events that make a workflow run without anyone asking (reported by the flip).
-UNASKED_EVENTS = frozenset({"push", "pull_request", "pull_request_target", "schedule"})
+# Events someone has to ask for. Every other event in a workflow's `on:` (push, PR,
+# cron, workflow_run, ...) makes it run unasked, and the flip reports it.
+ASKED_EVENTS = frozenset({"workflow_dispatch", "workflow_call", "repository_dispatch"})
+
+# What a stub may hold that a re-render reproduces (anything else would be dropped).
+_TEMPLATE_TRIGGERS = (
+    ["push", "pull_request"],
+    {"push": None, "workflow_dispatch": None},
+)
+_STUB_JOB_KEYS = ("uses", "permissions", "secrets", "if", "with")
+_STUB_IF_PREFIX = (
+    "github.event_name == 'workflow_dispatch' || "
+    "contains(github.event.head_commit.message, '"
+)
+_USES_LINE = re.compile(
+    r"^    uses: i2mint/wads/\.github/workflows/uv-ci\.yml@\S+\n", re.MULTILINE
+)
 
 _PIN_RE = re.compile(r"uv-ci\.yml(@\S+)")
 
@@ -87,7 +103,11 @@ def _on_demand_header(run_ci_marker: str) -> str:
 #       git commit -m "Fix the parser {run_ci_marker}"
 #   - or it is started by hand, which is always allowed:
 #       gh workflow run ci.yml --ref <branch>    (or Actions tab > Run workflow)
-# Publishing obeys the same gate. To do locally what CI would have done:
+# Publishing obeys the same gate, so a manual run on the DEFAULT branch releases
+# (when publishing is enabled), exactly like a {run_ci_marker} push: to only test,
+# run it on another branch, or run `wads ci-local`. The publish marker needs
+# {run_ci_marker} in the same subject, and only the pushed HEAD commit's subject
+# counts. To do locally what CI would have done:
 #   wads ci-local              # lint, tests, build
 #   wads ci-local --publish    # + version bump, PyPI upload, tag, push
 #
@@ -97,7 +117,8 @@ def _on_demand_header(run_ci_marker: str) -> str:
 # workflow re-checks the extracted SUBJECT before any job runs. A marker quoted
 # only in a squash-merged PR body therefore costs one short setup job, nothing
 # else. This file is rendered from pyproject.toml: after changing
-# [tool.wads.ci.trigger], re-render it with `wads-migrate ci-to-stub`.
+# [tool.wads.ci.trigger], re-render it with `wads-migrate ci-to-stub` (which
+# keeps this stub's pin, secrets transport and `with:` inputs).
 on:
   push:
   workflow_dispatch:
@@ -153,11 +174,9 @@ def repo_pyproject_for(ci_path) -> Optional[Path]:
     Walks up from the workflow, stopping at the first directory that holds a ``.git``
     so an enclosing project's pyproject is never mistaken for this repo's.
     """
-    if not ci_path:
+    if not ci_path or not os.path.isfile(str(ci_path)):
         return None
     path = Path(ci_path)
-    if not path.is_file():
-        return None
     for parent in path.resolve().parents:
         candidate = parent / "pyproject.toml"
         if candidate.is_file():
@@ -264,25 +283,34 @@ def set_on_demand_in_pyproject(
     Comments and layout survive (tomlkit), and a key already holding its target value
     is not touched, so applying this twice returns the first result unchanged.
     """
-    tomlkit = _import_tomlkit()
-    doc = tomlkit.parse(text)
-    ci_path = ("tool", "wads", "ci")
-    trigger = _table_at(tomlkit, doc, (*ci_path, "trigger"))
-    _assign(trigger, "mode", "on-demand")
     if run_ci_marker is not None:
-        _assign(trigger, "run_ci_marker", run_ci_marker)
-    testing = _table_at(tomlkit, doc, (*ci_path, "testing"))
-    _assign(testing, "python_versions", list(python_versions))
-    _assign(testing, "test_on_windows", bool(test_on_windows))
-    new_text = tomlkit.dumps(doc)
-
-    config = CIConfig(tomllib.loads(new_text))
+        validate_trigger("on-demand", run_ci_marker)
+    tomlkit = _import_tomlkit()
+    try:
+        doc = tomlkit.parse(text)
+        ci_path = ("tool", "wads", "ci")
+        trigger = _table_at(tomlkit, doc, (*ci_path, "trigger"))
+        _assign(trigger, "mode", "on-demand")
+        if run_ci_marker is not None:
+            _assign(trigger, "run_ci_marker", run_ci_marker)
+        testing = _table_at(tomlkit, doc, (*ci_path, "testing"))
+        _assign(testing, "python_versions", list(python_versions))
+        _assign(testing, "test_on_windows", bool(test_on_windows))
+        new_text = tomlkit.dumps(doc)
+        config = CIConfig(tomllib.loads(new_text))
+    except (
+        Exception
+    ) as exc:  # tomlkit cannot safely edit inline-table or dotted layouts
+        raise ValueError(
+            f"could not edit its [tool.wads.ci] layout ({type(exc).__name__}: {exc}); "
+            "set the on-demand values by hand"
+        ) from exc
     applied = (config.trigger_mode, config.python_versions, config.test_on_windows)
     wanted = ("on-demand", list(python_versions), bool(test_on_windows))
     if applied != wanted:
-        raise RuntimeError(
-            f"could not apply {wanted} to pyproject.toml (got {applied}); its "
-            "[tool.wads.ci] layout is unusual -- set the values by hand"
+        raise ValueError(
+            f"its [tool.wads.ci] layout took the edit as {applied}, not {wanted}; "
+            "set the on-demand values by hand"
         )
     return new_text
 
@@ -305,9 +333,17 @@ def _assign(table, key, value):
         table[key] = value
 
 
-def _stub_shape(ci_text: str, kind: str) -> dict:
-    """The pin and secrets transport a re-rendered stub must keep."""
-    if kind != "stub":
+def stub_shape(ci_text: Optional[str]) -> dict:
+    """The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.
+
+    Defaults (``@master``, ``json``) for anything that is not a stub.
+
+    >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
+    {'pin': '@0.2.30', 'transport': 'named'}
+    >>> stub_shape(None)
+    {'pin': '@master', 'transport': 'json'}
+    """
+    if classify_ci_workflow(ci_text) != "stub":
         return {"pin": "@master", "transport": "json"}
     from wads.ci_secrets import render_stub_json_transport
 
@@ -316,6 +352,77 @@ def _stub_shape(ci_text: str, kind: str) -> dict:
         "pin": match.group(1) if match else "@master",
         "transport": "json" if render_stub_json_transport() in ci_text else "named",
     }
+
+
+def stub_customizations(text: str) -> tuple[dict, list]:
+    r"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.
+
+    ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a
+    re-render; ``dropped`` names everything else a re-render would silently lose.
+    Raises ``yaml.YAMLError`` when the text does not parse.
+
+    >>> stub_customizations(
+    ...     "on: [push, pull_request]\njobs:\n  ci:\n    uses: x\n"
+    ...     "    with:\n      project-name: my_pkg\n"
+    ... )
+    ({'project-name': 'my_pkg'}, [])
+    >>> stub_customizations("on: [push]\njobs:\n  ci:\n    uses: x\n  lint:\n    runs-on: y\n")[1]
+    ['`on: ["push"]`', 'job `lint`']
+    """
+    import yaml
+
+    doc = yaml.safe_load(text) or {}
+    dropped = [
+        f"top-level `{key}`" for key in doc if key not in ("name", "on", True, "jobs")
+    ]
+    triggers = doc.get("on", doc.get(True))  # PyYAML reads a bare `on:` as True
+    if triggers not in _TEMPLATE_TRIGGERS:
+        dropped.append(f"`on: {json.dumps(triggers)}`")
+    jobs = doc.get("jobs") or {}
+    dropped += [f"job `{name}`" for name in jobs if name != "ci"]
+    job = jobs.get("ci") or {}
+    dropped += [f"`jobs.ci.{key}`" for key in job if key not in _STUB_JOB_KEYS]
+    condition = job.get("if")
+    if condition is not None and not str(condition).startswith(_STUB_IF_PREFIX):
+        dropped.append("`jobs.ci.if`")
+    inputs = job.get("with") or {}
+    if not isinstance(inputs, dict) or any(
+        isinstance(value, (dict, list)) for value in inputs.values()
+    ):
+        dropped.append("`jobs.ci.with` (not a flat mapping)")
+        inputs = {}
+    return dict(inputs), dropped
+
+
+def stub_inputs_of(ci_path) -> dict:
+    """The ``with:`` inputs an existing stub file passes; ``{}`` if none or not a stub."""
+    import yaml
+
+    if not ci_path or not os.path.isfile(str(ci_path)):
+        return {}
+    text = Path(ci_path).read_text()
+    if classify_ci_workflow(text) != "stub":
+        return {}
+    try:
+        return stub_customizations(text)[0]
+    except yaml.YAMLError:
+        return {}
+
+
+def render_stub_inputs(stub: str, inputs: Mapping) -> str:
+    """Add a ``with:`` block (the reusable workflow's inputs) under the stub's ``uses:``."""
+    if not inputs:
+        return stub
+    import yaml
+
+    block = yaml.safe_dump(
+        {"with": dict(inputs)}, default_flow_style=False, sort_keys=False
+    )
+    indented = "".join(f"    {line}\n" for line in block.splitlines())
+    match = _USES_LINE.search(stub)
+    if match is None:
+        raise ValueError("stub template changed shape: no `uses: ...uv-ci.yml@` line")
+    return stub[: match.end()] + indented + stub[match.end() :]
 
 
 def unasked_workflows(repo, *, workflow: str = DFLT_CI_WORKFLOW) -> list[str]:
@@ -344,7 +451,7 @@ def unasked_workflows(repo, *, workflow: str = DFLT_CI_WORKFLOW) -> list[str]:
             events = set(triggers)
         else:
             events = set()
-        hits = sorted(events & UNASKED_EVENTS)
+        hits = sorted(str(event) for event in events - ASKED_EVENTS)
         if hits:
             found.append(f"{path.relative_to(repo)} ({', '.join(hits)})")
     return found
@@ -361,7 +468,9 @@ def flip_to_on_demand(
 ) -> FlipResult:
     """Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.
 
-    - a **stub** ``ci.yml`` is re-rendered keeping its pin and secrets transport;
+    - a **stub** ``ci.yml`` is re-rendered keeping its pin, secrets transport and
+      ``with:`` inputs, or **refused** if it holds anything else a re-render would drop
+      (extra jobs, custom triggers);
     - an **inline uv** workflow becomes the stub, carrying its secret-backed env vars
       into ``[tool.wads.ci.env]`` first (as ``wads-migrate ci-to-stub`` does);
     - **no** ``ci.yml``: only pyproject changes (nothing runs on push anyway);
@@ -392,6 +501,25 @@ def flip_to_on_demand(
         )
         return result
 
+    if kind == "stub":
+        import yaml
+
+        try:
+            _, dropped = stub_customizations(old_ci)
+        except yaml.YAMLError as exc:
+            dropped = [f"YAML that does not parse ({type(exc).__name__})"]
+        if dropped:
+            marker = run_ci_marker or DFLT_RUN_CI_MARKER
+            result.status = "refused"
+            result.notes.append(
+                f"{workflow} has customizations a re-render would drop: "
+                f"{', '.join(dropped)}. Flip it by hand: in pyproject.toml set "
+                '[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '
+                "workflow use `on: [push, workflow_dispatch]` and give the job that calls "
+                f"uv-ci.yml `if: {json.dumps(stub_if_expression(marker))}`."
+            )
+            return result
+
     with tempfile.TemporaryDirectory(prefix="wads-flip-") as tmp:
         shadow = Path(tmp)
         (shadow / ".git").mkdir()  # bounds the pyproject lookup to the shadow repo
@@ -404,21 +532,26 @@ def flip_to_on_demand(
                     "carried env var(s) from the inline workflow into "
                     f"[tool.wads.ci.env].extra_envvars: {', '.join(carried)}"
                 )
-        shadow_py.write_text(
-            set_on_demand_in_pyproject(
+        try:
+            on_demand_py = set_on_demand_in_pyproject(
                 shadow_py.read_text(),
                 python_versions=python_versions,
                 test_on_windows=test_on_windows,
                 run_ci_marker=run_ci_marker,
             )
-        )
+        except ValueError as exc:
+            result.status = "refused"
+            result.changes = {}
+            result.notes.append(f"pyproject.toml left unchanged: {exc}")
+            return result
+        shadow_py.write_text(on_demand_py)
         new_py = shadow_py.read_text()
         new_ci = old_ci
         if kind in ("stub", "inline-uv"):
             shadow_ci = shadow / workflow
             shadow_ci.parent.mkdir(parents=True, exist_ok=True)
             shadow_ci.write_text(old_ci)
-            shape = _stub_shape(old_ci, kind)
+            shape = stub_shape(old_ci)
             new_ci = migrate_ci_to_stub(str(shadow_ci), **shape)
             if shape["pin"] != "@master":
                 result.notes.append(
@@ -502,6 +635,17 @@ def run_ci_on_demand(
     repo = Path(repo)
     governed = ["pyproject.toml", workflow]
     if commit and not dry_run:
+        marker = run_ci_marker
+        if marker is None and (repo / "pyproject.toml").is_file():
+            marker = CIConfig.from_file(repo).run_ci_marker
+        if marker and marker.lower() in DFLT_FLIP_COMMIT_MESSAGE.lower():
+            print(
+                f"Refusing --commit: the run-ci marker {marker!r} occurs in the flip's "
+                f"commit message ({DFLT_FLIP_COMMIT_MESSAGE!r}), so pushing it would run "
+                "CI. Flip without --commit and commit with your own message.",
+                file=err,
+            )
+            return 2
         dirty = uncommitted(repo, governed)
         if dirty:
             print(

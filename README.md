@@ -291,6 +291,13 @@ git commit -m "Fix the parser"            # runs nothing
 
 A marker quoted only in a squash-merged PR body does not count. The stub's zero-cost pre-filter lets that run start (one short setup job), and the reusable workflow checks the extracted subject before running anything else.
 
+Worth knowing before you flip:
+
+- **A manual run on the default branch releases** when publishing is enabled, exactly like a `[run ci]` push. To test without releasing, run it on another branch, or use `wads ci-local`.
+- **The `[publish]` marker needs `[run ci]` in the same subject.** This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **Only the pushed head commit's subject counts,** not earlier commits in the same push.
+- **On-demand stubs drop the `pull_request` trigger.** A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.
+
 Flip a repo in one idempotent command. It sets on-demand, `python_versions = ["3.12"]` and `test_on_windows = false`, and re-renders the stub, keeping its pin and secrets transport:
 
 ```bash

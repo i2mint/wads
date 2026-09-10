@@ -982,14 +982,21 @@ def migrate_ci_to_stub(
         )
     # The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an
     # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
-    from wads.ci_trigger import render_stub_trigger, trigger_for_workflow
+    from wads.ci_trigger import (
+        render_stub_inputs,
+        render_stub_trigger,
+        stub_inputs_of,
+        trigger_for_workflow,
+    )
 
     declared_mode, declared_marker = trigger_for_workflow(old_ci)
-    return render_stub_trigger(
+    stub = render_stub_trigger(
         stub,
         mode=trigger_mode or declared_mode,
         run_ci_marker=run_ci_marker or declared_marker,
     )
+    # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
+    return render_stub_inputs(stub, stub_inputs_of(old_ci))
 
 
 def _stub_secret_names_for(old_ci) -> list:
@@ -1273,9 +1280,10 @@ def main():
     )
     stub_parser.add_argument(
         "--pin",
-        default="@master",
+        default=None,
         help=(
-            "wads ref to pin in the stub. Defaults to '@master' (floats with "
+            "wads ref to pin in the stub. Defaults to the existing stub's pin, "
+            "else '@master' (floats with "
             "wads — convenient, occasional CI breakage on bad wads merges). "
             "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "
             "default JSON transport needs a ref whose uv-ci.yml declares "
@@ -1285,10 +1293,11 @@ def main():
     )
     stub_parser.add_argument(
         "--transport",
-        default="json",
+        default=None,
         choices=("json", "named"),
         help=(
-            "How the stub passes secrets to the reusable workflow. 'json' "
+            "How the stub passes secrets to the reusable workflow (default: the "
+            "existing stub's, else json). 'json' "
             "(default) serializes the repo's whole secrets context into one "
             "WADS_CI_SECRETS_JSON secret — any secret name works. 'named' "
             "passes an explicit subset (minimal secret surface), but every "
@@ -1479,9 +1488,25 @@ def main():
             if pyproject is not None:
                 carried = carry_ci_env_into_pyproject(existing, pyproject)
 
-            result = migrate_ci_to_stub(
-                str(input_path), pin=args.pin, transport=args.transport
-            )
+            from wads.ci_trigger import stub_customizations, stub_shape
+
+            # Default to what the existing stub already uses, so a plain re-render
+            # (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.
+            shape = stub_shape(existing)
+            pin = args.pin or shape["pin"]
+            transport = args.transport or shape["transport"]
+            if classify_ci_workflow(existing) == "stub":
+                try:
+                    _, dropped = stub_customizations(existing)
+                except Exception:
+                    dropped = []
+                if dropped:
+                    print(
+                        "warning: the re-rendered stub drops these customizations: "
+                        f"{', '.join(dropped)}",
+                        file=sys.stderr,
+                    )
+            result = migrate_ci_to_stub(str(input_path), pin=pin, transport=transport)
 
             output_path = Path(args.output) if args.output else input_path
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1495,7 +1520,7 @@ def main():
                     "ensure the matching GitHub secrets are set.",
                     file=sys.stderr,
                 )
-            if args.pin == "@master":
+            if pin == "@master":
                 print(
                     "\nPinned to @master (floats with wads). If you need version "
                     "stability for this repo, re-run with `--pin @vX.Y.Z` "

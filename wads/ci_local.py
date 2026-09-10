@@ -18,6 +18,11 @@ format in place, bump the version with ``isee`` (as CI does), build, ``uv publis
 commit, tag and push. Before any of that it refuses on a dirty tree, a branch other than
 the default, a branch behind its remote, or missing PyPI credentials.
 
+Known differences from CI: the developer's environment passes through to the commands
+(minus PyPI credentials, which only the upload step sees), where CI exports only the
+variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
+installed; and lint runs on the tree as it is, where CI formats first.
+
 Every command goes through one ``runner`` seam. The default runs subprocesses; tests pass
 a fake. The default also refuses upload and push steps while pytest is running, so no test
 can ever spend or publish.
@@ -64,6 +69,15 @@ _PLACEHOLDER = re.compile(r"<<(\w+)>>")
 # Side-effect classes. The default runner refuses the outward ones under pytest.
 WRITES, UPLOADS, PUSHES = "writes", "uploads", "pushes"
 OUTWARD_SIDE_EFFECTS = (UPLOADS, PUSHES)
+
+# Kept out of every step's environment except the upload's, as CI keeps them out of
+# lint, tests, the version bump and build hooks.
+PUBLISH_CREDENTIAL_VARS = (
+    "PYPI_PASSWORD",
+    "UV_PUBLISH_TOKEN",
+    "UV_PUBLISH_USERNAME",
+    "UV_PUBLISH_PASSWORD",
+)
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
 
@@ -443,7 +457,7 @@ def _check_not_behind(ctx) -> Optional[str]:
 
 
 def _check_pypi_token(ctx) -> Optional[str]:
-    token, source = resolve_pypi_token(environ=ctx.env)
+    token, source = resolve_pypi_token(environ=ctx.source_env)
     if not token:
         return (
             "no PyPI API token: set $PYPI_PASSWORD, or put `username = __token__` and "
@@ -490,6 +504,7 @@ class _Context:
     env: dict
     values: dict
     notes: list = field(default_factory=list)
+    source_env: dict = field(default_factory=dict)  # unsanitized: credentials live here
 
     def run(self, argv, *, capture=False, side_effect=""):
         return self.runner(
@@ -589,23 +604,60 @@ class CILocalReport:
             return "Result: PASSED. CI would have reported this run green."
         if failure.check is not None and self.publish:
             return f"Result: REFUSED to publish ({failure.name}). Nothing was changed."
-        uploaded = any(
-            step.side_effect == UPLOADS and status == PASSED
-            for step, status, _ in self.outcomes
-        )
-        if uploaded:
-            version = self.values.get("version", "<version>")
-            branch = self.values.get("default_branch", "<branch>")
+        if not self.publish:
             return (
-                f"Result: FAILED at {failure.name!r} AFTER the upload: PyPI has "
-                f"{version}. Finish by hand: git push origin {branch} && "
-                f"git push origin {version}"
+                f"Result: FAILED at {failure.name!r}. CI would have reported this run red, "
+                "and publish would not have run."
             )
-        tail = " Nothing was uploaded." if self.publish else ""
-        return (
-            f"Result: FAILED at {failure.name!r}. CI would have reported this run red, "
-            f"and publish would not have run.{tail}"
-        )
+        return "\n".join(self._publish_failure_lines(failure))
+
+    def _publish_failure_lines(self, failure: Step) -> list:
+        """What a failed publish left behind, and how to recover, from the steps that passed."""
+        steps = [step for step, _, _ in self.outcomes]
+        passed = {id(step) for step, status, _ in self.outcomes if status == PASSED}
+        upload = next((step for step in steps if step.side_effect == UPLOADS), None)
+        version = self.values.get("version", "<version>")
+        if upload is not None and id(upload) in passed:
+            remaining = [
+                step
+                for step in steps[steps.index(upload) + 1 :]
+                if id(step) not in passed
+            ]
+            lines = [
+                f"Result: FAILED at {failure.name!r} AFTER the upload: PyPI has {version}. "
+                "Finish by hand, in order:"
+            ]
+            lines += [
+                "  " + shlex.join(_show(item, self.values) for item in step.argv)
+                for step in remaining
+            ]
+            if any(step.side_effect == PUSHES for step in remaining):
+                lines.append(
+                    "  (if a push is rejected because origin moved: `git pull --rebase`, "
+                    "then push again)"
+                )
+            return lines
+        lines = [
+            f"Result: FAILED at {failure.name!r}. CI would have reported this run red."
+        ]
+        if failure is upload:
+            lines.append(
+                "The upload failed and may be PARTIAL (one file up, another not): check "
+                f"https://pypi.org/project/{self.project}/{version}/ before retrying."
+            )
+        else:
+            lines.append("Nothing was uploaded.")
+        wrote = [
+            step.name
+            for step in steps
+            if step.side_effect == WRITES and id(step) in passed
+        ]
+        if wrote:
+            lines.append(
+                f"The working tree was changed by: {', '.join(wrote)}. Undo with "
+                "`git checkout -- .` before re-running (--publish refuses a dirty tree)."
+            )
+        return lines
 
     def render(self) -> str:
         header = (
@@ -646,11 +698,18 @@ def run_ci_local(
     out = out or sys.stdout
     config = config if config is not None else CIConfig.from_file(repo)
     steps = plan_ci_local(repo, publish=publish, config=config)
-    env = dict(os.environ if environ is None else environ)
+    source_env = dict(os.environ if environ is None else environ)
+    env = {k: v for k, v in source_env.items() if k not in PUBLISH_CREDENTIAL_VARS}
     # Committed defaults are authoritative, as in CI's export-ci-env.
     env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
     workdir = tempfile.mkdtemp(prefix="wads-ci-local-")
-    ctx = _Context(repo=repo, runner=runner, env=env, values={"workdir": workdir})
+    ctx = _Context(
+        repo=repo,
+        runner=runner,
+        env=env,
+        values={"workdir": workdir},
+        source_env=source_env,
+    )
     report = CILocalReport(
         project=config.project_name,
         publish=publish,
