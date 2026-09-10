@@ -28,6 +28,17 @@
 #     "packageManager": "pnpm@x.y.z" field in their package.json (pnpm's own
 #     convention) — the pnpm setup reads the version from there. npm consumers
 #     are unaffected (no pnpm-lock.yaml → npm).
+#   - wads.ci.trigger (mirrors [tool.wads.ci.trigger] on the Python side):
+#     mode "auto" (default) runs on every call, as always. mode "on-demand"
+#     means NOTHING RUNS UNLESS ASKED — validate/publish only run when the
+#     commit SUBJECT contains wads.ci.trigger.runCiMarker (default "[run ci]"),
+#     or the run is a manual workflow_dispatch (always allowed). The caller
+#     stub's own `on:`/job-level `if:` is a separate, zero-cost pre-filter (see
+#     wads/data/github_ci_npm_stub.yml); this workflow's gate below is the real
+#     decision, re-checked against the extracted subject so a marker quoted
+#     only in a squash-merged PR body costs one setup job and runs nothing
+#     else. Local equivalent: `npm run ci-local` (lint, typecheck, test, build
+#     — see README).
 
 name: NPM CI
 
@@ -64,6 +75,8 @@ jobs:
       registry: ${{ steps.cfg.outputs.registry }}
       provenance: ${{ steps.cfg.outputs.provenance }}
       access: ${{ steps.cfg.outputs.access }}
+      trigger_mode: ${{ steps.cfg.outputs.trigger_mode }}
+      run_ci_marker: ${{ steps.cfg.outputs.run_ci_marker }}
     steps:
       # The publish gate below matches the commit SUBJECT (first line), never
       # the whole message: a squash-merge folds the entire PR BODY into the
@@ -97,11 +110,23 @@ jobs:
               const p = require('./package.json');
               const ci = (p.wads && p.wads.ci) || {};
               const pub = ci.publish || {};
+              const trig = ci.trigger || {};
               // Explicit packageManager wins; else auto-detect pnpm via its
               // lockfile; else npm. Existing npm repos (no field, no
               // pnpm-lock.yaml) resolve to npm — unchanged behavior.
               let pm = ci.packageManager || '';
               if (!pm) pm = fs.existsSync('pnpm-lock.yaml') ? 'pnpm' : 'npm';
+              // Fails loudly (non-zero exit) on an invalid mode, mirroring
+              // CIConfig.trigger_mode on the Python side — a typo must not
+              // silently fall back to auto.
+              const mode = trig.mode || 'auto';
+              if (mode !== 'auto' && mode !== 'on-demand') {
+                throw new Error(\`wads.ci.trigger.mode must be 'auto' or 'on-demand', got '\${mode}'\`);
+              }
+              const marker = trig.runCiMarker || '[run ci]';
+              if (!marker || /\\n/.test(marker)) {
+                throw new Error('wads.ci.trigger.runCiMarker must be a non-empty, single-line string');
+              }
               const out = {
                 package_manager: pm,
                 node_versions: JSON.stringify(ci.nodeVersions || ['20','22','24']),
@@ -114,15 +139,25 @@ jobs:
                 registry: pub.registry || 'https://registry.npmjs.org',
                 provenance: String(pub.provenance !== false),
                 access: pub.access || 'public',
+                trigger_mode: mode,
+                run_ci_marker: marker,
               };
               for (const [k,v] of Object.entries(out)) console.log(k+'='+v);
             "
           }
           read_cfg >> "$GITHUB_OUTPUT"
 
+  # TRIGGER GATE (mirrors uv-ci.yml). trigger_mode == 'auto' (default) makes
+  # this always true. 'on-demand' means nothing runs unless the commit SUBJECT
+  # carries run_ci_marker, or it's a manual workflow_dispatch (always
+  # allowed). Publish carries the same clause, ANDed with its own opt-in gate.
   validate:
     name: Validate (node ${{ matrix.node }})
     needs: setup
+    if: >-
+      needs.setup.outputs.trigger_mode != 'on-demand' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -185,12 +220,18 @@ jobs:
     name: Publish to npm
     needs: [setup, validate]
     runs-on: ubuntu-latest
-    # Opt-in: enabled in package.json AND push to default branch AND marker present.
+    # Opt-in: enabled in package.json AND push to default branch AND marker
+    # present, AND (in on-demand mode) the same push also carries
+    # run_ci_marker — publish never fires from a workflow_dispatch (this job
+    # only runs on `push`, unlike the Python side's single validate+publish
+    # job), so the trigger gate here only needs the marker branch.
     if: >-
       needs.setup.outputs.publish_enabled == 'true' &&
       github.event_name == 'push' &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
-      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.publish_marker)
+      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.publish_marker) &&
+      (needs.setup.outputs.trigger_mode != 'on-demand' ||
+       contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker))
     steps:
       - uses: actions/checkout@v4
       - name: Setup pnpm

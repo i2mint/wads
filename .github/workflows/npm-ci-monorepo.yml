@@ -28,6 +28,8 @@
 #     the registry (idempotent; no auto-bump). Publishes with provenance.
 #   - pnpm only (monorepos are pnpm-workspace based); the pnpm version is read
 #     from the root package.json "packageManager" field by pnpm/action-setup.
+#   - wads.ci.trigger: same on-demand gate as npm-ci.yml (mode "auto"/
+#     "on-demand", runCiMarker) read from the root package.json.
 
 name: NPM CI (monorepo)
 
@@ -63,6 +65,8 @@ jobs:
       registry: ${{ steps.cfg.outputs.registry }}
       provenance: ${{ steps.cfg.outputs.provenance }}
       access: ${{ steps.cfg.outputs.access }}
+      trigger_mode: ${{ steps.cfg.outputs.trigger_mode }}
+      run_ci_marker: ${{ steps.cfg.outputs.run_ci_marker }}
     steps:
       # The publish gate below matches the commit SUBJECT (first line), never
       # the whole message: a squash-merge folds the entire PR BODY into the
@@ -97,6 +101,15 @@ jobs:
             const p = require('./package.json');
             const ci = (p.wads && p.wads.ci) || {};
             const pub = ci.publish || {};
+            const trig = ci.trigger || {};
+            const mode = trig.mode || 'auto';
+            if (mode !== 'auto' && mode !== 'on-demand') {
+              throw new Error(\`wads.ci.trigger.mode must be 'auto' or 'on-demand', got '\${mode}'\`);
+            }
+            const marker = trig.runCiMarker || '[run ci]';
+            if (!marker || /\\n/.test(marker)) {
+              throw new Error('wads.ci.trigger.runCiMarker must be a non-empty, single-line string');
+            }
             const out = {
               node_versions: JSON.stringify(ci.nodeVersions || ['20','22','24']),
               publish_node: String(ci.publishNode || '24'),
@@ -108,13 +121,20 @@ jobs:
               registry: pub.registry || 'https://registry.npmjs.org',
               provenance: String(pub.provenance !== false),
               access: pub.access || 'public',
+              trigger_mode: mode,
+              run_ci_marker: marker,
             };
             for (const [k,v] of Object.entries(out)) console.log(k+'='+v);
           " >> "$GITHUB_OUTPUT"
 
+  # TRIGGER GATE (mirrors npm-ci.yml / uv-ci.yml).
   validate:
     name: Validate (node ${{ matrix.node }})
     needs: setup
+    if: >-
+      needs.setup.outputs.trigger_mode != 'on-demand' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -164,12 +184,17 @@ jobs:
     name: Publish workspace packages to npm
     needs: [setup, validate]
     runs-on: ubuntu-latest
-    # Opt-in: enabled in root package.json AND push to default branch AND marker present.
+    # Opt-in: enabled in root package.json AND push to default branch AND
+    # marker present, AND (in on-demand mode) the same push also carries
+    # run_ci_marker (publish only ever runs on `push`, so no workflow_dispatch
+    # branch is needed here — see npm-ci.yml).
     if: >-
       needs.setup.outputs.publish_enabled == 'true' &&
       github.event_name == 'push' &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
-      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.publish_marker)
+      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.publish_marker) &&
+      (needs.setup.outputs.trigger_mode != 'on-demand' ||
+       contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker))
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
