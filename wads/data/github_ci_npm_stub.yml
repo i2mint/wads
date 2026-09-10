@@ -9,6 +9,14 @@
 # Publishing uses OIDC trusted publishing by default (configure the trusted
 # publisher for this repo + workflow filename on npmjs.com). NPM_TOKEN is only
 # needed as a fallback (e.g. the very first publish of a new package name).
+#
+# On-demand CI (opt-in, mirrors [tool.wads.ci.trigger] on the Python side):
+# set wads.ci.trigger.mode="on-demand" in package.json and the reusable
+# workflow's validate/publish jobs run only when the commit SUBJECT contains
+# wads.ci.trigger.runCiMarker (default "[run ci]"), or the run is a manual
+# `gh workflow run << npm_workflow_file >> --ref <branch>` (always allowed).
+# To do locally what CI would have done: `npm run ci-local` (lint, test,
+# build — add that script to package.json if it isn't there already).
 name: << npm_workflow_name >>
 on:
   push:

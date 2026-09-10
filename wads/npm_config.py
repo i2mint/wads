@@ -58,6 +58,18 @@ NPM_PUBLISH_DEFAULTS = {
     "access": "public",
 }
 
+#: ``wads.ci.trigger.mode`` values the reusable workflow understands. Mirrors
+#: ``wads.ci_config.TRIGGER_MODES`` (the Python/pyproject.toml side).
+TRIGGER_MODES = ("auto", "on-demand")
+
+#: Defaults for the nested ``wads.ci.trigger`` block. Same values as the Python
+#: side (``wads.ci_config.DFLT_TRIGGER_MODE`` / ``DFLT_RUN_CI_MARKER``) so a repo
+#: with both a pyproject.toml and a package.json can use one marker convention.
+NPM_TRIGGER_DEFAULTS = {
+    "mode": "auto",
+    "runCiMarker": "[run ci]",
+}
+
 
 class NpmCIConfig:
     """Typed accessors over a ``package.json`` ``wads.ci`` configuration block."""
@@ -66,6 +78,7 @@ class NpmCIConfig:
         self._data = package_json_data or {}
         self._ci = (self._data.get("wads") or {}).get("ci") or {}
         self._publish = self._ci.get("publish") or {}
+        self._trigger = self._ci.get("trigger") or {}
 
     @classmethod
     def from_file(cls, package_json_path: Union[str, Path]) -> "NpmCIConfig":
@@ -156,3 +169,41 @@ class NpmCIConfig:
     @property
     def access(self) -> str:
         return self._publish.get("access", NPM_PUBLISH_DEFAULTS["access"])
+
+    # --- ci.trigger.* (mirrors CIConfig.trigger_mode / run_ci_marker) ---
+
+    @property
+    def trigger_mode(self) -> str:
+        """When CI runs: ``"auto"`` (default) or ``"on-demand"``.
+
+        ``"on-demand"`` means nothing runs unless the commit *subject line*
+        contains :attr:`run_ci_marker`, or the run is a manual
+        ``workflow_dispatch``. Raises ``ValueError`` on any other value.
+
+        >>> NpmCIConfig({}).trigger_mode
+        'auto'
+        >>> NpmCIConfig({"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}).trigger_mode
+        'on-demand'
+        """
+        mode = self._trigger.get("mode", NPM_TRIGGER_DEFAULTS["mode"])
+        if mode not in TRIGGER_MODES:
+            raise ValueError(
+                f"wads.ci.trigger.mode must be one of {TRIGGER_MODES}, got {mode!r}"
+            )
+        return mode
+
+    @property
+    def run_ci_marker(self) -> str:
+        """Commit-subject substring that runs CI in ``"on-demand"`` mode.
+
+        Defaults to ``"[run ci]"`` (same default as the Python side). Must be a
+        non-empty single line: an empty marker would match every subject and
+        silently turn on-demand back into auto.
+        """
+        marker = self._trigger.get("runCiMarker", NPM_TRIGGER_DEFAULTS["runCiMarker"])
+        if not isinstance(marker, str) or not marker.strip() or "\n" in marker:
+            raise ValueError(
+                "wads.ci.trigger.runCiMarker must be a non-empty, single-line "
+                f"string, got {marker!r}"
+            )
+        return marker

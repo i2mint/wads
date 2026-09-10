@@ -60,6 +60,37 @@ def test_npm_config_reads_values():
     assert cfg.access == "restricted"
 
 
+def test_npm_config_trigger_defaults():
+    cfg = NpmCIConfig({"name": "x"})
+    assert cfg.trigger_mode == "auto"
+    assert cfg.run_ci_marker == "[run ci]"
+
+
+def test_npm_config_trigger_on_demand():
+    cfg = NpmCIConfig(
+        {
+            "name": "x",
+            "wads": {
+                "ci": {"trigger": {"mode": "on-demand", "runCiMarker": "[go]"}}
+            },
+        }
+    )
+    assert cfg.trigger_mode == "on-demand"
+    assert cfg.run_ci_marker == "[go]"
+
+
+def test_npm_config_trigger_mode_rejects_invalid():
+    cfg = NpmCIConfig({"wads": {"ci": {"trigger": {"mode": "sometimes"}}}})
+    with pytest.raises(ValueError, match="trigger.mode"):
+        cfg.trigger_mode
+
+
+def test_npm_config_trigger_marker_rejects_empty():
+    cfg = NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": ""}}}})
+    with pytest.raises(ValueError, match="runCiMarker"):
+        cfg.run_ci_marker
+
+
 def test_spdx_mapping():
     assert _to_spdx("mit") == "MIT"
     assert _to_spdx("apache-2.0") == "Apache-2.0"
