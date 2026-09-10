@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_local &mdash; wads 0.2.24 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="wads.ci_secrets" href="ci_secrets.html" />
+    <link rel="prev" title="wads.ci_config" href="ci_config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">wads.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">wads.ci_local</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.CILocalReport"><code class="docutils literal notranslate"><span class="pre">CILocalReport</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_local.CILocalReport.failure"><code class="docutils literal notranslate"><span class="pre">CILocalReport.failure</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.RunResult"><code class="docutils literal notranslate"><span class="pre">RunResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.ci_local"><code class="docutils literal notranslate"><span class="pre">ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.plan_ci_local"><code class="docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.pytest_argv"><code class="docutils literal notranslate"><span class="pre">pytest_argv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.render_plan"><code class="docutils literal notranslate"><span class="pre">render_plan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.resolve_pypi_token"><code class="docutils literal notranslate"><span class="pre">resolve_pypi_token()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.run_ci_local"><code class="docutils literal notranslate"><span class="pre">run_ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.subprocess_runner"><code class="docutils literal notranslate"><span class="pre">subprocess_runner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.uv_build_args"><code class="docutils literal notranslate"><span class="pre">uv_build_args()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wads.ci_local.venv_python"><code class="docutils literal notranslate"><span class="pre">venv_python()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_trigger.html">wads.ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licence_check.html">wads.licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="secrets_cli.html">wads.secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templating.html">wads.templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_git_commit_push_retry.html">wads.tests.test_git_commit_push_retry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_secrets_cli.html">wads.tests.test_secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">wads.ci_local</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/wads/ci_local.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-wads.ci_local">
+<span id="wads-ci-local"></span><h1>wads.ci_local<a class="headerlink" href="#module-wads.ci_local" title="Link to this heading"></a></h1>
+<p>Do locally what the wads CI would have done: the same <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code>, no Actions minutes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> reads the repo’s <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> through <a class="reference internal" href="ci_config.html#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">wads.ci_config.CIConfig</span></code></a>,
+the object the reusable workflow’s setup job reads, and runs in order:</p>
+<ol class="arabic simple">
+<li><p><strong>lint</strong>: <code class="docutils literal notranslate"><span class="pre">ruff</span> <span class="pre">format</span> <span class="pre">--check</span></code> (reported, never fatal: CI reformats in place and moves
+on), then <code class="docutils literal notranslate"><span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">&lt;project&gt;</span></code>, both through <code class="docutils literal notranslate"><span class="pre">uvx</span></code> so the repo’s own <code class="docutils literal notranslate"><span class="pre">[tool.ruff]</span></code>
+applies exactly as in CI. Black and mypy too, when enabled.</p></li>
+<li><p><strong>tests</strong>: for each <code class="docutils literal notranslate"><span class="pre">python_versions</span></code> entry, a fresh <code class="docutils literal notranslate"><span class="pre">uv</span></code> venv in a temporary
+directory, <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[extras]</span></code>, then pytest with the arguments
+<code class="docutils literal notranslate"><span class="pre">actions/run-tests-uv</span></code> builds (coverage, <code class="docutils literal notranslate"><span class="pre">--doctest-modules</span></code> and its option flags,
+one <code class="docutils literal notranslate"><span class="pre">--ignore</span></code> per excluded path, then <code class="docutils literal notranslate"><span class="pre">pytest_args</span></code>).</p></li>
+<li><p><strong>build</strong>: <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">build</span></code> into the temporary directory, never the repo’s <code class="docutils literal notranslate"><span class="pre">dist/</span></code>, so a
+stale artifact can never be uploaded.</p></li>
+</ol>
+<p>With <code class="docutils literal notranslate"><span class="pre">publish=True</span></code> it does what the publish job does in place of the plain build:
+format in place, bump the version with <code class="docutils literal notranslate"><span class="pre">isee</span></code> (as CI does), build, <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">publish</span></code>,
+commit, tag and push. Before any of that it refuses on a dirty tree, a branch other than
+the default, a branch behind its remote, or missing PyPI credentials.</p>
+<p>Known differences from CI: the developer’s environment passes through to the commands
+(minus PyPI credentials, which only the upload step sees), where CI exports only the
+variables <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> declares; <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> system packages are not
+installed; and lint runs on the tree as it is, where CI formats first.</p>
+<p>Every command goes through one <code class="docutils literal notranslate"><span class="pre">runner</span></code> seam. The default runs subprocesses; tests pass
+a fake. The default also refuses upload and push steps while pytest is running, so no test
+can ever spend or publish.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">steps</span> <span class="o">=</span> <span class="n">plan_ci_local</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">CIConfig</span><span class="p">({</span><span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"pkg"</span><span class="p">}}))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">][:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">['format check (ruff)', 'lint (ruff)', 'python 3.10: venv']</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.ci_local.CILocalReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">CILocalReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">python_versions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcomes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/ci_local.html#CILocalReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.CILocalReport" title="Link to this definition"></a></dt>
+<dd><p>The outcome of a <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> run, rendered the way CI would summarise it.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_local.CILocalReport.failure">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">failure</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#wads.ci_local.Step" title="wads.ci_local.Step"><span class="pre">Step</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#wads.ci_local.CILocalReport.failure" title="Link to this definition"></a></dt>
+<dd><p>The blocking step that failed, if any.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.ci_local.RunResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">RunResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returncode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/ci_local.html#RunResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.RunResult" title="Link to this definition"></a></dt>
+<dd><p>What a runner reports back: the exit code, and stdout when it was captured.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.ci_local.Step">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">Step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side_effect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/ci_local.html#Step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.Step" title="Link to this definition"></a></dt>
+<dd><p>One thing CI would do: a command (<code class="docutils literal notranslate"><span class="pre">argv</span></code>) or an in-process <code class="docutils literal notranslate"><span class="pre">check</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">argv</span></code> and <code class="docutils literal notranslate"><span class="pre">env</span></code> values may hold <code class="docutils literal notranslate"><span class="pre">&lt;&lt;workdir&gt;&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;version&gt;&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&lt;&lt;default_branch&gt;&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;&lt;pypi_token&gt;&gt;</span></code>, filled in at run time. A non-<code class="docutils literal notranslate"><span class="pre">blocking</span></code>
+failure is reported without stopping the run. <code class="docutils literal notranslate"><span class="pre">capture</span></code> names the context value that
+receives the command’s last stdout line. A <code class="docutils literal notranslate"><span class="pre">check</span></code> takes the run context and returns
+an error message, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it passes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.ci_local">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/wads/ci_local.html#ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.ci_local" title="Link to this definition"></a></dt>
+<dd><p>Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.</p>
+<p>Lint, tests (a fresh uv venv per configured Python) and build. With –publish, the
+publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
+refusing on a dirty tree, off the default branch, or without PyPI credentials. With
+–dry-run, print the plan and run nothing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.plan_ci_local">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">plan_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ci_config.html#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><span class="pre">CIConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'posix'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#wads.ci_local.Step" title="wads.ci_local.Step"><span class="pre">Step</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#plan_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.plan_ci_local" title="Link to this definition"></a></dt>
+<dd><p>Everything <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> would run for <code class="docutils literal notranslate"><span class="pre">repo</span></code>, in order, without running it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.pytest_argv">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">pytest_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ci_config.html#wads.ci_config.CIConfig" title="wads.ci_config.CIConfig"><span class="pre">CIConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#pytest_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.pytest_argv" title="Link to this definition"></a></dt>
+<dd><p>The pytest arguments <code class="docutils literal notranslate"><span class="pre">actions/run-tests-uv</span></code> builds, in its order.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">CIConfig</span><span class="p">({</span><span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"pkg"</span><span class="p">}}))</span>
+<span class="go">['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',</span>
+<span class="go"> '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',</span>
+<span class="go"> '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.render_plan">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">render_plan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#wads.ci_local.Step" title="wads.ci_local.Step"><span class="pre">Step</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#render_plan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.render_plan" title="Link to this definition"></a></dt>
+<dd><p>The plan as numbered lines, flagging non-blocking and side-effecting steps.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.resolve_pypi_token">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">resolve_pypi_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pypirc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#resolve_pypi_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.resolve_pypi_token" title="Link to this definition"></a></dt>
+<dd><p>Find a PyPI API token, most specific source first. Returns <code class="docutils literal notranslate"><span class="pre">(token,</span> <span class="pre">source)</span></code>.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">$PYPI_PASSWORD</span></code>, the secret name CI reads;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$UV_PUBLISH_TOKEN</span></code>, what <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">publish</span></code> itself reads;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.pypirc</span></code>, section <code class="docutils literal notranslate"><span class="pre">[pypi]</span></code>: <code class="docutils literal notranslate"><span class="pre">password</span></code>, when <code class="docutils literal notranslate"><span class="pre">username</span></code> is <code class="docutils literal notranslate"><span class="pre">__token__</span></code>
+(or absent) or the password is a <code class="docutils literal notranslate"><span class="pre">pypi-</span></code> token.</p></li>
+</ol>
+<p>Token-only, like CI. The token itself is never printed.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_pypi_token</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="p">{</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">:</span> <span class="s2">"pypi-x"</span><span class="p">,</span> <span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">:</span> <span class="s2">"pypi-y"</span><span class="p">})</span>
+<span class="go">('pypi-x', '$PYPI_PASSWORD')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_pypi_token</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="p">{},</span> <span class="n">pypirc</span><span class="o">=</span><span class="s2">"/nonexistent/.pypirc"</span><span class="p">)</span>
+<span class="go">(None, '')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.run_ci_local">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">run_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">repo='.',</span> <span class="pre">*,</span> <span class="pre">publish:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">config:</span> <span class="pre">~wads.ci_config.CIConfig</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">runner:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~wads.ci_local.RunResult]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">subprocess_runner&gt;,</span> <span class="pre">environ:</span> <span class="pre">~typing.Mapping[str,</span> <span class="pre">str]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">out=None,</span> <span class="pre">keep_workdir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.ci_local.CILocalReport" title="wads.ci_local.CILocalReport"><span class="pre">CILocalReport</span></a></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#run_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.run_ci_local" title="Link to this definition"></a></dt>
+<dd><p>Run <a class="reference internal" href="#wads.ci_local.plan_ci_local" title="wads.ci_local.plan_ci_local"><code class="xref py py-func docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a>’s steps, stop at the first blocking failure, and report.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.subprocess_runner">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">subprocess_runner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side_effect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#wads.ci_local.RunResult" title="wads.ci_local.RunResult"><span class="pre">RunResult</span></a></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#subprocess_runner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.subprocess_runner" title="Link to this definition"></a></dt>
+<dd><p>The default runner: really run <code class="docutils literal notranslate"><span class="pre">argv</span></code>, streaming its output.</p>
+<p>Refuses outward side effects (upload, push) while pytest is running.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.uv_build_args">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">uv_build_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wheel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#uv_build_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.uv_build_args" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">build</span></code> selection flags for <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.build]</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">uv_build_args</span><span class="p">()</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uv_build_args</span><span class="p">(</span><span class="n">sdist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">['--wheel']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uv_build_args</span><span class="p">(</span><span class="n">wheel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">['--sdist']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.venv_python">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">venv_python</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">venv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'posix'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/ci_local.html#venv_python"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.venv_python" title="Link to this definition"></a></dt>
+<dd><p>Path of the interpreter inside a venv directory.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">venv_python</span><span class="p">(</span><span class="s2">"v"</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="s2">"posix"</span><span class="p">)</span>
+<span class="go">'v/bin/python'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">venv_python</span><span class="p">(</span><span class="s2">"v"</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="s2">"nt"</span><span class="p">)</span>
+<span class="go">'v/Scripts/python.exe'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ci_config.html" class="btn btn-neutral float-left" title="wads.ci_config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ci_secrets.html" class="btn btn-neutral float-right" title="wads.ci_secrets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

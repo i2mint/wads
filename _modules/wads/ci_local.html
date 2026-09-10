@@ -1,0 +1,987 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_local &mdash; wads 0.2.24 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/__main__.html">wads.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_local.html">wads.ci_local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licence_check.html">wads.licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/secrets_cli.html">wads.secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/templating.html">wads.templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_git_commit_push_retry.html">wads.tests.test_git_commit_push_retry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_secrets_cli.html">wads.tests.test_secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.ci_local</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.ci_local</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Do locally what the wads CI would have done: the same ``[tool.wads.ci]``, no Actions minutes.</span>
+
+<span class="sd">``wads ci-local`` reads the repo's ``pyproject.toml`` through :class:`wads.ci_config.CIConfig`,</span>
+<span class="sd">the object the reusable workflow's setup job reads, and runs in order:</span>
+
+<span class="sd">1. **lint**: ``ruff format --check`` (reported, never fatal: CI reformats in place and moves</span>
+<span class="sd">   on), then ``ruff check &lt;project&gt;``, both through ``uvx`` so the repo's own ``[tool.ruff]``</span>
+<span class="sd">   applies exactly as in CI. Black and mypy too, when enabled.</span>
+<span class="sd">2. **tests**: for each ``python_versions`` entry, a fresh ``uv`` venv in a temporary</span>
+<span class="sd">   directory, ``uv pip install -e .[extras]``, then pytest with the arguments</span>
+<span class="sd">   ``actions/run-tests-uv`` builds (coverage, ``--doctest-modules`` and its option flags,</span>
+<span class="sd">   one ``--ignore`` per excluded path, then ``pytest_args``).</span>
+<span class="sd">3. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a</span>
+<span class="sd">   stale artifact can never be uploaded.</span>
+
+<span class="sd">With ``publish=True`` it does what the publish job does in place of the plain build:</span>
+<span class="sd">format in place, bump the version with ``isee`` (as CI does), build, ``uv publish``,</span>
+<span class="sd">commit, tag and push. Before any of that it refuses on a dirty tree, a branch other than</span>
+<span class="sd">the default, a branch behind its remote, or missing PyPI credentials.</span>
+
+<span class="sd">Known differences from CI: the developer's environment passes through to the commands</span>
+<span class="sd">(minus PyPI credentials, which only the upload step sees), where CI exports only the</span>
+<span class="sd">variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not</span>
+<span class="sd">installed; and lint runs on the tree as it is, where CI formats first.</span>
+
+<span class="sd">Every command goes through one ``runner`` seam. The default runs subprocesses; tests pass</span>
+<span class="sd">a fake. The default also refuses upload and push steps while pytest is running, so no test</span>
+<span class="sd">can ever spend or publish.</span>
+
+<span class="sd">&gt;&gt;&gt; steps = plan_ci_local(".", config=CIConfig({"project": {"name": "pkg"}}))</span>
+<span class="sd">&gt;&gt;&gt; [s.name for s in steps][:3]</span>
+<span class="sd">['format check (ruff)', 'lint (ruff)', 'python 3.10: venv']</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+
+<span class="c1"># Mirrors of values the CI actions hardcode. Tests pin each against its source</span>
+<span class="c1"># (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.</span>
+<span class="n">DOCTEST_OPTIONFLAGS</span> <span class="o">=</span> <span class="s2">"ELLIPSIS IGNORE_EXCEPTION_DETAIL"</span>
+<span class="n">RELEASE_COMMIT_MESSAGE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"**CI** Formatted code + Updated version to &lt;&lt;version&gt;&gt; [skip ci]"</span>
+<span class="p">)</span>
+<span class="n">RELEASE_TAG_MESSAGE</span> <span class="o">=</span> <span class="s2">"Release version &lt;&lt;version&gt;&gt;"</span>
+<span class="c1"># What bump-version-number runs. `--with pip`: isee imports pip at module load, which</span>
+<span class="c1"># CI's setup-python environment has and a bare uvx environment does not.</span>
+<span class="n">VERSION_TOOL</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"--from"</span><span class="p">,</span> <span class="s2">"isee"</span><span class="p">,</span> <span class="s2">"--with"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"isee"</span><span class="p">)</span>
+<span class="n">VERSION_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\d+\.\d+\.\d+$"</span><span class="p">)</span>
+
+<span class="c1"># Run-time placeholders in a Step's argv/env, in the templating engine's &lt;&lt; &gt;&gt; style</span>
+<span class="c1"># (so they cannot collide with braces in a user's pytest_args).</span>
+<span class="n">WORKDIR</span> <span class="o">=</span> <span class="s2">"&lt;&lt;workdir&gt;&gt;"</span>
+<span class="n">DIST_DIR</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/dist"</span>
+<span class="n">_PLACEHOLDER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"&lt;&lt;(\w+)&gt;&gt;"</span><span class="p">)</span>
+
+<span class="c1"># Side-effect classes. The default runner refuses the outward ones under pytest.</span>
+<span class="n">WRITES</span><span class="p">,</span> <span class="n">UPLOADS</span><span class="p">,</span> <span class="n">PUSHES</span> <span class="o">=</span> <span class="s2">"writes"</span><span class="p">,</span> <span class="s2">"uploads"</span><span class="p">,</span> <span class="s2">"pushes"</span>
+<span class="n">OUTWARD_SIDE_EFFECTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">UPLOADS</span><span class="p">,</span> <span class="n">PUSHES</span><span class="p">)</span>
+
+<span class="c1"># Kept out of every step's environment except the upload's, as CI keeps them out of</span>
+<span class="c1"># lint, tests, the version bump and build hooks.</span>
+<span class="n">PUBLISH_CREDENTIAL_VARS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"PYPI_PASSWORD"</span><span class="p">,</span>
+    <span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">,</span>
+    <span class="s2">"UV_PUBLISH_USERNAME"</span><span class="p">,</span>
+    <span class="s2">"UV_PUBLISH_PASSWORD"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">PASSED</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"FAIL"</span><span class="p">,</span> <span class="s2">"skip"</span>
+
+<span class="n">_INSTALL_HINTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"uv"</span><span class="p">:</span> <span class="s2">"install uv: https://docs.astral.sh/uv/getting-started/installation/"</span><span class="p">,</span>
+    <span class="s2">"uvx"</span><span class="p">:</span> <span class="s2">"install uv (it provides uvx): https://docs.astral.sh/uv/getting-started/installation/"</span><span class="p">,</span>
+    <span class="s2">"git"</span><span class="p">:</span> <span class="s2">"install git: https://git-scm.com/downloads"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="Step">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.Step">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Step</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One thing CI would do: a command (``argv``) or an in-process ``check``.</span>
+
+<span class="sd">    ``argv`` and ``env`` values may hold ``&lt;&lt;workdir&gt;&gt;``, ``&lt;&lt;version&gt;&gt;``,</span>
+<span class="sd">    ``&lt;&lt;default_branch&gt;&gt;`` or ``&lt;&lt;pypi_token&gt;&gt;``, filled in at run time. A non-``blocking``</span>
+<span class="sd">    failure is reported without stopping the run. ``capture`` names the context value that</span>
+<span class="sd">    receives the command's last stdout line. A ``check`` takes the run context and returns</span>
+<span class="sd">    an error message, or ``None`` when it passes.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">argv</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">check</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">side_effect</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">capture</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">env</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"(check) </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RunResult">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.RunResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RunResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What a runner reports back: the exit code, and stdout when it was captured."""</span>
+
+    <span class="n">returncode</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">stdout</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+
+
+
+<span class="n">Runner</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">RunResult</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="subprocess_runner">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.subprocess_runner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">subprocess_runner</span><span class="p">(</span>
+    <span class="n">argv</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">cwd</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">capture</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">side_effect</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The default runner: really run ``argv``, streaming its output.</span>
+
+<span class="sd">    Refuses outward side effects (upload, push) while pytest is running.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">side_effect</span> <span class="ow">in</span> <span class="n">OUTWARD_SIDE_EFFECTS</span> <span class="ow">and</span> <span class="s2">"PYTEST_CURRENT_TEST"</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"refusing a </span><span class="si">{</span><span class="n">side_effect</span><span class="si">!r}</span><span class="s2"> step under pytest: </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">argv</span><span class="p">),</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">env</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="n">capture</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="n">tool</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">RunResult</span><span class="p">(</span><span class="mi">127</span><span class="p">,</span> <span class="n">_INSTALL_HINTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tool</span><span class="si">!r}</span><span class="s2"> not found on PATH"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">capture</span> <span class="ow">and</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">RunResult</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="k">if</span> <span class="n">capture</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># What CI runs, as data</span>
+
+
+<div class="viewcode-block" id="pytest_argv">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.pytest_argv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The pytest arguments ``actions/run-tests-uv`` builds, in its order.</span>
+
+<span class="sd">    &gt;&gt;&gt; pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">    ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',</span>
+<span class="sd">     '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',</span>
+<span class="sd">     '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']</span>
+<span class="sd">    """</span>
+    <span class="n">argv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">:</span>
+        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--cov=</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"--cov-report=term-missing"</span><span class="p">]</span>
+    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--doctest-modules"</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"doctest_optionflags=</span><span class="si">{</span><span class="n">DOCTEST_OPTIONFLAGS</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--ignore=</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="c1"># The action joins pytest_args with spaces and `eval`s the result.</span>
+    <span class="n">argv</span> <span class="o">+=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">argv</span></div>
+
+
+
+<div class="viewcode-block" id="uv_build_args">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.uv_build_args">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">uv_build_args</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">sdist</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">wheel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``uv build`` selection flags for ``[tool.wads.ci.build]``.</span>
+
+<span class="sd">    &gt;&gt;&gt; uv_build_args()</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; uv_build_args(sdist=False)</span>
+<span class="sd">    ['--wheel']</span>
+<span class="sd">    &gt;&gt;&gt; uv_build_args(wheel=False)</span>
+<span class="sd">    ['--sdist']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">sdist</span> <span class="ow">or</span> <span class="n">wheel</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"[tool.wads.ci.build] disables both sdist and wheel: nothing to build"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sdist</span> <span class="ow">and</span> <span class="n">wheel</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s2">"--sdist"</span><span class="p">]</span> <span class="k">if</span> <span class="n">sdist</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"--wheel"</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="venv_python">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.venv_python">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">venv_python</span><span class="p">(</span><span class="n">venv</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Path of the interpreter inside a venv directory.</span>
+
+<span class="sd">    &gt;&gt;&gt; venv_python("v", platform="posix")</span>
+<span class="sd">    'v/bin/python'</span>
+<span class="sd">    &gt;&gt;&gt; venv_python("v", platform="nt")</span>
+<span class="sd">    'v/Scripts/python.exe'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">venv</span><span class="si">}</span><span class="s2">/Scripts/python.exe"</span> <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">"nt"</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">venv</span><span class="si">}</span><span class="s2">/bin/python"</span></div>
+
+
+
+<div class="viewcode-block" id="plan_ci_local">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.plan_ci_local">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plan_ci_local</span><span class="p">(</span>
+    <span class="n">repo</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CIConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Everything ``wads ci-local`` would run for ``repo``, in order, without running it."""</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">_publish_preconditions</span><span class="p">()</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_required_env_step</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">))</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_quality_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_release_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="n">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">steps</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_required_env_step</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Step</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"required env var(s) not set: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="s2">"(CI would fail at export-ci-env)"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">Step</span><span class="p">(</span>
+        <span class="s2">"required env vars"</span><span class="p">,</span>
+        <span class="n">check</span><span class="o">=</span><span class="n">check</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">"set: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> ([tool.wads.ci.env].required_envvars)"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quality_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">project_name</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_ruff_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Step</span><span class="p">(</span>
+                <span class="s2">"format check (ruff)"</span><span class="p">,</span>
+                <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"ruff"</span><span class="p">,</span> <span class="s2">"format"</span><span class="p">,</span> <span class="s2">"--check"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">),</span>
+                <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_black_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Step</span><span class="p">(</span>
+                <span class="s2">"format check (black)"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"black"</span><span class="p">,</span> <span class="s2">"--check"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">),</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_ruff_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Step</span><span class="p">(</span><span class="s2">"lint (ruff)"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"ruff"</span><span class="p">,</span> <span class="s2">"check"</span><span class="p">,</span> <span class="n">project</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_mypy_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Step</span><span class="p">(</span><span class="s2">"type check (mypy)"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"mypy"</span><span class="p">,</span> <span class="n">project</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">licence_enabled</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">".[</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">install_extras</span><span class="si">}</span><span class="s2">]"</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">install_extras</span> <span class="k">else</span> <span class="s2">"."</span>
+    <span class="n">runner_deps</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="s2">"pytest-cov"</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span> <span class="k">else</span> <span class="p">(</span><span class="s2">"pytest"</span><span class="p">,)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">version</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">):</span>
+        <span class="n">venv</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/py</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">python</span> <span class="o">=</span> <span class="n">venv_python</span><span class="p">(</span><span class="n">venv</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">)</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"python </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">steps</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">Step</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: venv"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"venv"</span><span class="p">,</span> <span class="n">venv</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">version</span><span class="p">)),</span>
+            <span class="n">Step</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: install"</span><span class="p">,</span>
+                <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">python</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">licence_enabled</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Step</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: licence perimeter"</span><span class="p">,</span>
+                    <span class="p">(</span>
+                        <span class="s2">"uvx"</span><span class="p">,</span>
+                        <span class="s2">"--from"</span><span class="p">,</span>
+                        <span class="s2">"wads"</span><span class="p">,</span>
+                        <span class="s2">"wads-licence-check"</span><span class="p">,</span>
+                        <span class="s2">"."</span><span class="p">,</span>
+                        <span class="s2">"--python"</span><span class="p">,</span>
+                        <span class="n">python</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span><span class="p">:</span>
+            <span class="n">steps</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">Step</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: install pytest"</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">python</span><span class="p">,</span> <span class="o">*</span><span class="n">runner_deps</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">Step</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: tests"</span><span class="p">,</span> <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">))),</span>
+            <span class="p">]</span>
+    <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="n">uv_build_args</span><span class="p">(</span><span class="n">sdist</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">,</span> <span class="n">wheel</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">Step</span><span class="p">(</span><span class="s2">"build"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">,</span> <span class="s2">"--out-dir"</span><span class="p">,</span> <span class="n">DIST_DIR</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">))]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_release_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_ruff_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Step</span><span class="p">(</span><span class="s2">"format (ruff)"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"ruff"</span><span class="p">,</span> <span class="s2">"format"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">),</span> <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">is_black_enabled</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Step</span><span class="p">(</span><span class="s2">"format (black)"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"uvx"</span><span class="p">,</span> <span class="s2">"black"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">),</span> <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">))</span>
+    <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"bump version"</span><span class="p">,</span>
+            <span class="p">(</span><span class="o">*</span><span class="n">VERSION_TOOL</span><span class="p">,</span> <span class="s2">"gen-semver"</span><span class="p">,</span> <span class="s2">"--output-mode=print"</span><span class="p">),</span>
+            <span class="n">capture</span><span class="o">=</span><span class="s2">"version"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">"setup.cfg"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Step</span><span class="p">(</span>
+                <span class="s2">"write version (setup.cfg)"</span><span class="p">,</span>
+                <span class="p">(</span><span class="o">*</span><span class="n">VERSION_TOOL</span><span class="p">,</span> <span class="s2">"update-setup-cfg"</span><span class="p">,</span> <span class="s2">"--version=&lt;&lt;version&gt;&gt;"</span><span class="p">),</span>
+                <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"write version (pyproject.toml)"</span><span class="p">,</span>
+            <span class="p">(</span><span class="o">*</span><span class="n">VERSION_TOOL</span><span class="p">,</span> <span class="s2">"update-pyproject-toml"</span><span class="p">,</span> <span class="s2">"--version=&lt;&lt;version&gt;&gt;"</span><span class="p">),</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"upload to PyPI"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"publish"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DIST_DIR</span><span class="si">}</span><span class="s2">/*"</span><span class="p">),</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">UPLOADS</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="p">((</span><span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">,</span> <span class="s2">"&lt;&lt;pypi_token&gt;&gt;"</span><span class="p">),),</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"commit release"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"commit"</span><span class="p">,</span> <span class="s2">"--all"</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="n">RELEASE_COMMIT_MESSAGE</span><span class="p">),</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"tag release"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"tag"</span><span class="p">,</span> <span class="s2">"-a"</span><span class="p">,</span> <span class="s2">"&lt;&lt;version&gt;&gt;"</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="n">RELEASE_TAG_MESSAGE</span><span class="p">),</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">WRITES</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"push branch"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"push"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"&lt;&lt;default_branch&gt;&gt;"</span><span class="p">),</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">PUSHES</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span><span class="s2">"push tag"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"push"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"&lt;&lt;version&gt;&gt;"</span><span class="p">),</span> <span class="n">side_effect</span><span class="o">=</span><span class="n">PUSHES</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Publish preconditions</span>
+
+
+<div class="viewcode-block" id="resolve_pypi_token">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.resolve_pypi_token">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_pypi_token</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pypirc</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Find a PyPI API token, most specific source first. Returns ``(token, source)``.</span>
+
+<span class="sd">    1. ``$PYPI_PASSWORD``, the secret name CI reads;</span>
+<span class="sd">    2. ``$UV_PUBLISH_TOKEN``, what ``uv publish`` itself reads;</span>
+<span class="sd">    3. ``~/.pypirc``, section ``[pypi]``: ``password``, when ``username`` is ``__token__``</span>
+<span class="sd">       (or absent) or the password is a ``pypi-`` token.</span>
+
+<span class="sd">    Token-only, like CI. The token itself is never printed.</span>
+
+<span class="sd">    &gt;&gt;&gt; resolve_pypi_token(environ={"PYPI_PASSWORD": "pypi-x", "UV_PUBLISH_TOKEN": "pypi-y"})</span>
+<span class="sd">    ('pypi-x', '$PYPI_PASSWORD')</span>
+<span class="sd">    &gt;&gt;&gt; resolve_pypi_token(environ={}, pypirc="/nonexistent/.pypirc")</span>
+<span class="sd">    (None, '')</span>
+<span class="sd">    """</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,</span> <span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">environ</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"$</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pypirc</span><span class="p">)</span> <span class="k">if</span> <span class="n">pypirc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".pypirc"</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">interpolation</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">configparser</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">parser</span><span class="o">.</span><span class="n">has_section</span><span class="p">(</span><span class="s2">"pypi"</span><span class="p">):</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pypi"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pypi"</span><span class="p">,</span> <span class="s2">"username"</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"__token__"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">password</span> <span class="ow">and</span> <span class="p">(</span><span class="n">username</span> <span class="o">==</span> <span class="s2">"__token__"</span> <span class="ow">or</span> <span class="n">password</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"pypi-"</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">password</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> [pypi]"</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">((</span><span class="s2">"git"</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_clean_tree</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">code</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">code</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"`git status` failed: is this a git repository?"</span>
+    <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">"the working tree is dirty; commit or stash first:</span><span class="se">\n</span><span class="s2">      "</span>
+            <span class="o">+</span> <span class="n">status</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">      "</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_default_branch</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">code</span><span class="p">,</span> <span class="n">ref</span> <span class="o">=</span> <span class="n">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">"symbolic-ref"</span><span class="p">,</span> <span class="s2">"--short"</span><span class="p">,</span> <span class="s2">"refs/remotes/origin/HEAD"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">code</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">ref</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"cannot tell origin's default branch; run `git remote set-head origin --auto`"</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="n">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">"branch"</span><span class="p">,</span> <span class="s2">"--show-current"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">current</span> <span class="o">!=</span> <span class="n">default</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"on </span><span class="si">{</span><span class="n">current</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'a detached HEAD'</span><span class="si">}</span><span class="s2">, not the default branch </span><span class="si">{</span><span class="n">default</span><span class="si">!r}</span><span class="s2">: "</span>
+            <span class="sa">f</span><span class="s2">"CI publishes only from </span><span class="si">{</span><span class="n">default</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">"default_branch"</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_not_behind</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">default</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">"default_branch"</span><span class="p">]</span>
+    <span class="n">code</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"--quiet"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">code</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"`git fetch origin </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">` failed"</span>
+    <span class="n">code</span><span class="p">,</span> <span class="n">behind</span> <span class="o">=</span> <span class="n">_git_output</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s2">"rev-list"</span><span class="p">,</span> <span class="s2">"--count"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"HEAD..origin/</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">code</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">behind</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"could not compare HEAD with origin/</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">behind</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"HEAD is </span><span class="si">{</span><span class="n">behind</span><span class="si">}</span><span class="s2"> commit(s) behind origin/</span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">; pull first"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_pypi_token</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">token</span><span class="p">,</span> <span class="n">source</span> <span class="o">=</span> <span class="n">resolve_pypi_token</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">source_env</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">token</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">"no PyPI API token: set $PYPI_PASSWORD, or put `username = __token__` and "</span>
+            <span class="s2">"`password = pypi-...` under [pypi] in ~/.pypirc"</span>
+        <span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">"pypi_token"</span><span class="p">]</span> <span class="o">=</span> <span class="n">token</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PyPI token from </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_publish_preconditions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"clean working tree"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">_check_clean_tree</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"`git status --porcelain` is empty"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"on the default branch"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">_check_default_branch</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"current branch is origin's default branch"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"up to date with origin"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">_check_not_behind</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"after `git fetch`, HEAD is not behind origin"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"PyPI credentials"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">_check_pypi_token</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"$PYPI_PASSWORD, else $UV_PUBLISH_TOKEN, else ~/.pypirc [pypi]"</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Running and reporting</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Context</span><span class="p">:</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">runner</span><span class="p">:</span> <span class="n">Runner</span>
+    <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">source_env</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>  <span class="c1"># unsanitized: credentials live here</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">capture</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">side_effect</span><span class="o">=</span><span class="s2">""</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runner</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">argv</span><span class="p">),</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span>
+            <span class="n">capture</span><span class="o">=</span><span class="n">capture</span><span class="p">,</span>
+            <span class="n">side_effect</span><span class="o">=</span><span class="n">side_effect</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fill</span><span class="p">(</span><span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replace</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unresolved placeholder &lt;&lt;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&gt;&gt; (an earlier step did not set it)"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">_PLACEHOLDER</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="n">template</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_show</span><span class="p">(</span><span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fill what is known, keep the rest, and never show the token."""</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"pypi_token"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">_PLACEHOLDER</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">safe</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">template</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_last_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_execute</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="n">Step</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">_Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">FAILED</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">if</span> <span class="n">error</span> <span class="k">else</span> <span class="p">(</span><span class="n">PASSED</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">_fill</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">argv</span><span class="p">]</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">_fill</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">env</span><span class="p">})</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">runner</span><span class="p">(</span>
+        <span class="n">argv</span><span class="p">,</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="n">capture</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">capture</span><span class="p">),</span>
+        <span class="n">side_effect</span><span class="o">=</span><span class="n">step</span><span class="o">.</span><span class="n">side_effect</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">hint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">": </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">127</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="n">FAILED</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}{</span><span class="n">hint</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">capture</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">_last_line</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">capture</span> <span class="o">==</span> <span class="s2">"version"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">VERSION_PATTERN</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FAILED</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"not a version number: </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">step</span><span class="o">.</span><span class="n">capture</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">PASSED</span><span class="p">,</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">PASSED</span><span class="p">,</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="CILocalReport">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.CILocalReport">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CILocalReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The outcome of a ``wads ci-local`` run, rendered the way CI would summarise it."""</span>
+
+    <span class="n">project</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">trigger_mode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">python_versions</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">outcomes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># (Step, status, detail)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The blocking step that failed, if any."""</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">step</span>
+                <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span>
+                <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">FAILED</span> <span class="ow">and</span> <span class="n">step</span><span class="o">.</span><span class="n">blocking</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="ow">is</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">verdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">failure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span>
+        <span class="k">if</span> <span class="n">failure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Result: PASSED. Released </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'version'</span><span class="p">,</span><span class="w"> </span><span class="s1">'?'</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="s2">"as the CI publish job would have."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="s2">"Result: PASSED. CI would have reported this run green."</span>
+        <span class="k">if</span> <span class="n">failure</span><span class="o">.</span><span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"Result: REFUSED to publish (</span><span class="si">{</span><span class="n">failure</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">). Nothing was changed."</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Result: FAILED at </span><span class="si">{</span><span class="n">failure</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. CI would have reported this run red, "</span>
+                <span class="s2">"and publish would not have run."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_publish_failure_lines</span><span class="p">(</span><span class="n">failure</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_publish_failure_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">failure</span><span class="p">:</span> <span class="n">Step</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""What a failed publish left behind, and how to recover, from the steps that passed."""</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">step</span> <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">]</span>
+        <span class="n">passed</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">PASSED</span><span class="p">}</span>
+        <span class="n">upload</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">step</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">==</span> <span class="n">UPLOADS</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="s2">"&lt;version&gt;"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">upload</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">id</span><span class="p">(</span><span class="n">upload</span><span class="p">)</span> <span class="ow">in</span> <span class="n">passed</span><span class="p">:</span>
+            <span class="n">remaining</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">step</span>
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">[</span><span class="n">steps</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">upload</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+                <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">passed</span>
+            <span class="p">]</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">"Result: FAILED at </span><span class="si">{</span><span class="n">failure</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> AFTER the upload: PyPI has </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="s2">"Finish by hand, in order:"</span>
+            <span class="p">]</span>
+            <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="s2">"  "</span> <span class="o">+</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_show</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">remaining</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">==</span> <span class="n">PUSHES</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">):</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">"  (if a push is rejected because origin moved: `git pull --rebase`, "</span>
+                    <span class="s2">"then push again)"</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">lines</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">"Result: FAILED at </span><span class="si">{</span><span class="n">failure</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. CI would have reported this run red."</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">failure</span> <span class="ow">is</span> <span class="n">upload</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">"The upload failed and may be PARTIAL (one file up, another not): check "</span>
+                <span class="sa">f</span><span class="s2">"https://pypi.org/project/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">/ before retrying."</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Nothing was uploaded."</span><span class="p">)</span>
+        <span class="n">wrote</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">==</span> <span class="n">WRITES</span> <span class="ow">and</span> <span class="nb">id</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="ow">in</span> <span class="n">passed</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">wrote</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The working tree was changed by: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wrote</span><span class="p">)</span><span class="si">}</span><span class="s2">. Undo with "</span>
+                <span class="s2">"`git checkout -- .` before re-running (--publish refuses a dirty tree)."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"wads ci-local: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2">  (trigger: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">trigger_mode</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"python: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_versions</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"publish: </span><span class="si">{</span><span class="s1">'yes'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'no'</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">header</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">detail</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="s2">"warn"</span> <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">FAILED</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">step</span><span class="o">.</span><span class="n">blocking</span> <span class="k">else</span> <span class="n">status</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">detail</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">detail</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">flag</span><span class="si">:</span><span class="s2">&lt;4</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">width</span><span class="si">}}</span><span class="s2">  </span><span class="si">{</span><span class="n">first</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">note</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">]</span>
+        <span class="n">failure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span>
+        <span class="k">if</span> <span class="n">failure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="n">d</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">failure</span> <span class="ow">and</span> <span class="n">st</span> <span class="o">==</span> <span class="n">FAILED</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">detail</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  "</span> <span class="o">+</span> <span class="n">detail</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verdict</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_ci_local">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.run_ci_local">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_ci_local</span><span class="p">(</span>
+    <span class="n">repo</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CIConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">runner</span><span class="p">:</span> <span class="n">Runner</span> <span class="o">=</span> <span class="n">subprocess_runner</span><span class="p">,</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keep_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CILocalReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report."""</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">source_env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">source_env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">}</span>
+    <span class="c1"># Committed defaults are authoritative, as in CI's export-ci-env.</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="n">workdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"wads-ci-local-"</span><span class="p">)</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">_Context</span><span class="p">(</span>
+        <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+        <span class="n">runner</span><span class="o">=</span><span class="n">runner</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span><span class="s2">"workdir"</span><span class="p">:</span> <span class="n">workdir</span><span class="p">},</span>
+        <span class="n">source_env</span><span class="o">=</span><span class="n">source_env</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">CILocalReport</span><span class="p">(</span>
+        <span class="n">project</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
+        <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span>
+        <span class="n">trigger_mode</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span>
+        <span class="n">python_versions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">stopped</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">stopped</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">outcomes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span><span class="p">,</span> <span class="n">SKIPPED</span><span class="p">,</span> <span class="s2">"not reached"</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="c1"># Flush: the command's own output goes straight to the terminal, and an</span>
+            <span class="c1"># unflushed header would land after it.</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">==&gt; </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_show</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">display</span><span class="p">(),</span><span class="w"> </span><span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">,</span>
+                <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">status</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">_execute</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">status</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">FAILED</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">outcomes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">detail</span><span class="p">))</span>
+            <span class="n">stopped</span> <span class="o">=</span> <span class="n">status</span> <span class="o">==</span> <span class="n">FAILED</span> <span class="ow">and</span> <span class="n">step</span><span class="o">.</span><span class="n">blocking</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_workdir</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">notes</span> <span class="o">+=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="s2">"default_branch"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">report</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<div class="viewcode-block" id="render_plan">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.render_plan">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_plan</span><span class="p">(</span><span class="n">steps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Step</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The plan as numbered lines, flagging non-blocking and side-effecting steps."""</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"wads ci-local plan (&lt;&lt;workdir&gt;&gt; is a fresh temporary directory; "</span>
+        <span class="s2">"&lt;&lt;version&gt;&gt; comes from the bump step):"</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">number</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="p">([]</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">blocking</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"non-blocking"</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">step</span><span class="o">.</span><span class="n">side_effect</span><span class="p">]</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">side_effect</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"  [</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span><span class="si">}</span><span class="s2">]"</span> <span class="k">if</span> <span class="n">tags</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">number</span><span class="si">:</span><span class="s2">&gt;2</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">display</span><span class="p">()</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ci_local">
+<a class="viewcode-back" href="../../module_docs/wads/ci_local.html#wads.ci_local.ci_local">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.</span>
+
+<span class="sd">    Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the</span>
+<span class="sd">    publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,</span>
+<span class="sd">    refusing on a dirty tree, off the default branch, or without PyPI credentials. With</span>
+<span class="sd">    --dry-run, print the plan and run nothing.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">render_plan</span><span class="p">(</span><span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">run_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

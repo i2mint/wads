@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; wads 0.2.23 documentation</title>
+  <title>&lt;no title&gt; &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=171860b8"></script>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,12 +48,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -82,7 +85,9 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -144,6 +149,10 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads.html#console-scripts">Console Scripts</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/__main__.html">wads.__main__</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/__main__.html#wads.__main__.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.CIDiagnosis"><code class="docutils literal notranslate"><span class="pre">CIDiagnosis</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.DependencyIssue"><code class="docutils literal notranslate"><span class="pre">DependencyIssue</span></code></a></li>
@@ -203,6 +212,21 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_local.html">wads.ci_local</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.CILocalReport"><code class="docutils literal notranslate"><span class="pre">CILocalReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.RunResult"><code class="docutils literal notranslate"><span class="pre">RunResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.ci_local"><code class="docutils literal notranslate"><span class="pre">ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.plan_ci_local"><code class="docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.pytest_argv"><code class="docutils literal notranslate"><span class="pre">pytest_argv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.render_plan"><code class="docutils literal notranslate"><span class="pre">render_plan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.resolve_pypi_token"><code class="docutils literal notranslate"><span class="pre">resolve_pypi_token()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.run_ci_local"><code class="docutils literal notranslate"><span class="pre">run_ci_local()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.subprocess_runner"><code class="docutils literal notranslate"><span class="pre">subprocess_runner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.uv_build_args"><code class="docutils literal notranslate"><span class="pre">uv_build_args()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.venv_python"><code class="docutils literal notranslate"><span class="pre">venv_python()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_secrets.html">wads.ci_secrets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#transport-one-json-secret-the-modern-default">Transport: one JSON secret (the modern default)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#the-named-superset-legacy-transport-kept-for-back-compat">The named superset (legacy transport, kept for back-compat)</a></li>
@@ -214,6 +238,26 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_json_transport"><code class="docutils literal notranslate"><span class="pre">render_stub_json_transport()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_secrets_passthrough"><code class="docutils literal notranslate"><span class="pre">render_stub_secrets_passthrough()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets"><code class="docutils literal notranslate"><span class="pre">render_workflow_call_secrets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_trigger.html">wads.ci_trigger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult"><code class="docutils literal notranslate"><span class="pre">FlipResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.classify_ci_workflow"><code class="docutils literal notranslate"><span class="pre">classify_ci_workflow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.commit_paths"><code class="docutils literal notranslate"><span class="pre">commit_paths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.flip_to_on_demand"><code class="docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_inputs"><code class="docutils literal notranslate"><span class="pre">render_stub_inputs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_trigger"><code class="docutils literal notranslate"><span class="pre">render_stub_trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.repo_pyproject_for"><code class="docutils literal notranslate"><span class="pre">repo_pyproject_for()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.run_ci_on_demand"><code class="docutils literal notranslate"><span class="pre">run_ci_on_demand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.set_on_demand_in_pyproject"><code class="docutils literal notranslate"><span class="pre">set_on_demand_in_pyproject()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_customizations"><code class="docutils literal notranslate"><span class="pre">stub_customizations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_if_expression"><code class="docutils literal notranslate"><span class="pre">stub_if_expression()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_inputs_of"><code class="docutils literal notranslate"><span class="pre">stub_inputs_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_shape"><code class="docutils literal notranslate"><span class="pre">stub_shape()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.trigger_for_workflow"><code class="docutils literal notranslate"><span class="pre">trigger_for_workflow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.unasked_workflows"><code class="docutils literal notranslate"><span class="pre">unasked_workflows()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.uncommitted"><code class="docutils literal notranslate"><span class="pre">uncommitted()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.validate_trigger"><code class="docutils literal notranslate"><span class="pre">validate_trigger()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a><ul>
@@ -435,7 +479,9 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a><ul>

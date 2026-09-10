@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.2.23 documentation</title>
+  <title>wads.migration &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=171860b8"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -50,12 +50,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
@@ -95,7 +98,9 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -275,7 +280,7 @@ over-assignment the new model removes.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.migration.migrate_ci_to_stub">
-<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_stub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'&#64;master'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transport</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'json'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_stub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_stub" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">migrate_ci_to_stub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_ci</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'&#64;master'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transport</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'json'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/wads/migration.html#migrate_ci_to_stub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.migrate_ci_to_stub" title="Link to this definition"></a></dt>
 <dd><p>Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.</p>
 <p>The stub is ~5 lines and replaces a repo’s full inline CI with a single
 <cite>uses:</cite> of <cite>i2mint/wads/.github/workflows/uv-ci.yml</cite>. All per-repo
@@ -304,6 +309,13 @@ repos that want a minimal secret surface; every name must then be
 in the frozen wads superset or GitHub rejects the workflow at
 parse time (issue #63) — out-of-superset names trigger a loud
 warning.</p></li>
+<li><p><strong>trigger_mode</strong> – <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">None</span></code> (default) takes
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger].mode</span></code> from the pyproject.toml of the repo
+holding <code class="docutils literal notranslate"><span class="pre">old_ci</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> when there is none). On-demand stubs
+run nothing unless the commit subject carries the run-ci marker or
+the run is a <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>; see <a class="reference internal" href="ci_trigger.html#module-wads.ci_trigger" title="wads.ci_trigger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">wads.ci_trigger</span></code></a>.</p></li>
+<li><p><strong>run_ci_marker</strong> – The on-demand marker; <code class="docutils literal notranslate"><span class="pre">None</span></code> takes it from the same
+pyproject (default <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code>).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

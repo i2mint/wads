@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.23 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=171860b8"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="wads.ci_secrets" href="ci_secrets.html" />
+    <link rel="next" title="wads.ci_local" href="ci_local.html" />
     <link rel="prev" title="wads.agents.test_analyzer" href="agents/test_analyzer.html" /> 
 </head>
 
@@ -50,6 +50,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
@@ -109,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.pytest_args"><code class="docutils literal notranslate"><span class="pre">CIConfig.pytest_args</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.python_versions"><code class="docutils literal notranslate"><span class="pre">CIConfig.python_versions</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.quality_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.quality_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.run_ci_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.run_ci_marker</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.stub_secret_names"><code class="docutils literal notranslate"><span class="pre">CIConfig.stub_secret_names()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.system_dependencies"><code class="docutils literal notranslate"><span class="pre">CIConfig.system_dependencies</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.test_on_windows"><code class="docutils literal notranslate"><span class="pre">CIConfig.test_on_windows</span></code></a></li>
@@ -117,6 +119,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_env_block"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_env_block()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_template_substitutions"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_template_substitutions()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.to_pre_test_step"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_pre_test_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_mode"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_mode</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
@@ -124,7 +128,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install_skills.html">wads.install_skills</a></li>
@@ -153,7 +159,9 @@
 <li class="toctree-l1"><a class="reference internal" href="tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -651,6 +659,16 @@ skip the whole workflow).</p>
 <dd><p>Get code quality tool configuration.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.run_ci_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run_ci_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.run_ci_marker" title="Link to this definition"></a></dt>
+<dd><p>Commit-subject substring that runs CI in <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> mode.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code>. Matched against the first line of the
+commit message only (a squash-merge folds the PR body into the rest).
+Must be a non-empty single line: an empty marker would match every
+subject and silently turn on-demand back into auto.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.stub_secret_names">
 <span class="sig-name descname"><span class="pre">stub_secret_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">always</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('PYPI_PASSWORD',)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/wads/ci_config.html#CIConfig.stub_secret_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.CIConfig.stub_secret_names" title="Link to this definition"></a></dt>
@@ -726,6 +744,35 @@ no real test suite and whose modules are not import-clean.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.trigger_config">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.trigger_config" title="Link to this definition"></a></dt>
+<dd><p>Get the <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code> table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.trigger_mode">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.trigger_mode" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) or <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> runs on every push and pull request, as wads always has.
+<code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> means <strong>nothing runs unless asked</strong>: every job (tests,
+publish, Pages) runs only when the commit <em>subject line</em> contains
+<a class="reference internal" href="#wads.ci_config.CIConfig.run_ci_marker" title="wads.ci_config.CIConfig.run_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">run_ci_marker</span></code></a>, or on a manual <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>.</p>
+<p>Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> on any other value, so a typo fails the CI setup
+job loudly rather than silently choosing a mode.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CIConfig</span><span class="p">({})</span><span class="o">.</span><span class="n">trigger_mode</span>
+<span class="go">'auto'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"trigger"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"on-demand"</span><span class="p">}}}}})</span><span class="o">.</span><span class="n">trigger_mode</span>
+<span class="go">'on-demand'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>When CI runs</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
@@ -782,7 +829,7 @@ workflow never carries literal placeholder lines.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="agents/test_analyzer.html" class="btn btn-neutral float-left" title="wads.agents.test_analyzer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ci_secrets.html" class="btn btn-neutral float-right" title="wads.ci_secrets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ci_local.html" class="btn btn-neutral float-right" title="wads.ci_local" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

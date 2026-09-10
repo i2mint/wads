@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.migration &mdash; wads 0.2.23 documentation</title>
+  <title>wads.migration &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=171860b8"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,12 +47,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -81,7 +84,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -1022,6 +1027,8 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">pin</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"@master"</span><span class="p">,</span>
     <span class="n">transport</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"json"</span><span class="p">,</span>
+    <span class="n">trigger_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.</span>
 
@@ -1051,6 +1058,13 @@
 <span class="sd">            in the frozen wads superset or GitHub rejects the workflow at</span>
 <span class="sd">            parse time (issue #63) — out-of-superset names trigger a loud</span>
 <span class="sd">            warning.</span>
+<span class="sd">        trigger_mode: ``"auto"`` or ``"on-demand"``. ``None`` (default) takes</span>
+<span class="sd">            ``[tool.wads.ci.trigger].mode`` from the pyproject.toml of the repo</span>
+<span class="sd">            holding ``old_ci`` (``"auto"`` when there is none). On-demand stubs</span>
+<span class="sd">            run nothing unless the commit subject carries the run-ci marker or</span>
+<span class="sd">            the run is a ``workflow_dispatch``; see :mod:`wads.ci_trigger`.</span>
+<span class="sd">        run_ci_marker: The on-demand marker; ``None`` takes it from the same</span>
+<span class="sd">            pyproject (default ``"[run ci]"``).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The stub workflow content as a string.</span>
@@ -1127,7 +1141,23 @@
             <span class="s2">"#SECRETS_BLOCK#"</span><span class="p">,</span>
             <span class="n">render_stub_secrets_passthrough</span><span class="p">(</span><span class="n">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)),</span>
         <span class="p">)</span>
-    <span class="k">return</span> <span class="n">stub</span></div>
+    <span class="c1"># The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an</span>
+    <span class="c1"># on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">render_stub_inputs</span><span class="p">,</span>
+        <span class="n">render_stub_trigger</span><span class="p">,</span>
+        <span class="n">stub_inputs_of</span><span class="p">,</span>
+        <span class="n">trigger_for_workflow</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">declared_mode</span><span class="p">,</span> <span class="n">declared_marker</span> <span class="o">=</span> <span class="n">trigger_for_workflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="n">stub</span> <span class="o">=</span> <span class="n">render_stub_trigger</span><span class="p">(</span>
+        <span class="n">stub</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">trigger_mode</span> <span class="ow">or</span> <span class="n">declared_mode</span><span class="p">,</span>
+        <span class="n">run_ci_marker</span><span class="o">=</span><span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">declared_marker</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.</span>
+    <span class="k">return</span> <span class="n">render_stub_inputs</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">stub_inputs_of</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))</span></div>
 
 
 
@@ -1420,9 +1450,10 @@
     <span class="p">)</span>
     <span class="n">stub_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">"--pin"</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">"@master"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"wads ref to pin in the stub. Defaults to '@master' (floats with "</span>
+            <span class="s2">"wads ref to pin in the stub. Defaults to the existing stub's pin, "</span>
+            <span class="s2">"else '@master' (floats with "</span>
             <span class="s2">"wads — convenient, occasional CI breakage on bad wads merges). "</span>
             <span class="s2">"Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "</span>
             <span class="s2">"default JSON transport needs a ref whose uv-ci.yml declares "</span>
@@ -1432,15 +1463,63 @@
     <span class="p">)</span>
     <span class="n">stub_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">"--transport"</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s2">"json"</span><span class="p">,</span> <span class="s2">"named"</span><span class="p">),</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"How the stub passes secrets to the reusable workflow. 'json' "</span>
+            <span class="s2">"How the stub passes secrets to the reusable workflow (default: the "</span>
+            <span class="s2">"existing stub's, else json). 'json' "</span>
             <span class="s2">"(default) serializes the repo's whole secrets context into one "</span>
             <span class="s2">"WADS_CI_SECRETS_JSON secret — any secret name works. 'named' "</span>
             <span class="s2">"passes an explicit subset (minimal secret surface), but every "</span>
             <span class="s2">"name must be in the frozen wads superset or the workflow cannot "</span>
             <span class="s2">"start."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Flip a repo to on-demand CI (nothing runs unless asked)</span>
+    <span class="n">od_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s2">"ci-on-demand"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Flip a repo to on-demand CI: [tool.wads.ci.trigger] mode = "</span>
+            <span class="s2">"'on-demand', a one-version Linux-only test matrix, and a re-rendered "</span>
+            <span class="s2">"stub. Idempotent. CI then runs only for a '[run ci]' commit subject "</span>
+            <span class="s2">"or a manual workflow_dispatch."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"repo"</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">"?"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Repo directory (default: .)"</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--dry-run"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Print the diff of what would change; write nothing."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--python-versions"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"3.12"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Comma-separated test matrix to set (default: 3.12)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--test-on-windows"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Keep the Windows test leg (default: turn it off)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--run-ci-marker"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Set a custom run-ci marker (default: leave as is, i.e. '[run ci]')."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--workflow"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">".github/workflows/ci.yml"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"The CI workflow file to govern (default: .github/workflows/ci.yml)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">od_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--commit"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Commit exactly the changed files (refuses if they already had "</span>
+            <span class="s2">"uncommitted changes). Does not push."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -1560,12 +1639,9 @@
             <span class="c1"># an old/2025 CI directly to the stub would skip the per-repo</span>
             <span class="c1"># `[tool.wads.ci]` audit that ci-to-uv performs.</span>
             <span class="n">existing</span> <span class="o">=</span> <span class="n">input_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
-            <span class="n">is_uv</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">"Continuous Integration (uv)"</span> <span class="ow">in</span> <span class="n">existing</span>
-                <span class="ow">or</span> <span class="s2">"i2mint/wads/actions/run-tests-uv"</span> <span class="ow">in</span> <span class="n">existing</span>
-                <span class="ow">or</span> <span class="s2">"i2mint/wads/.github/workflows/uv-ci.yml"</span> <span class="ow">in</span> <span class="n">existing</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_uv</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">classify_ci_workflow</span>
+
+            <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stub"</span><span class="p">,</span> <span class="s2">"inline-uv"</span><span class="p">):</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Refusing to convert </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2">: it doesn't look like a uv CI "</span>
                     <span class="s2">"workflow. Run `wads-migrate ci-to-uv` first to land on uv, "</span>
@@ -1582,9 +1658,25 @@
             <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">pyproject</span><span class="p">)</span>
 
-            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">transport</span>
-            <span class="p">)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stub_customizations</span><span class="p">,</span> <span class="n">stub_shape</span>
+
+            <span class="c1"># Default to what the existing stub already uses, so a plain re-render</span>
+            <span class="c1"># (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+            <span class="n">pin</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pin</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">]</span>
+            <span class="n">transport</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">transport</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"transport"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"stub"</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">dropped</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="s2">"warning: the re-rendered stub drops these customizations: "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">input_path</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">pin</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">)</span>
 
             <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="k">else</span> <span class="n">input_path</span>
             <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1598,13 +1690,29 @@
                     <span class="s2">"ensure the matching GitHub secrets are set."</span><span class="p">,</span>
                     <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">pin</span> <span class="o">==</span> <span class="s2">"@master"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pin</span> <span class="o">==</span> <span class="s2">"@master"</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="s2">"</span><span class="se">\n</span><span class="s2">Pinned to @master (floats with wads). If you need version "</span>
                     <span class="s2">"stability for this repo, re-run with `--pin @vX.Y.Z` "</span>
                     <span class="s2">"(latest wads tag visible via `gh release list -R i2mint/wads`)."</span><span class="p">,</span>
                     <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
                 <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">"ci-on-demand"</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_ci_on_demand</span>
+
+            <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">python_versions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span>
+                <span class="n">run_ci_on_demand</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+                    <span class="n">dry_run</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">,</span>
+                    <span class="n">python_versions</span><span class="o">=</span><span class="n">versions</span><span class="p">,</span>
+                    <span class="n">test_on_windows</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">,</span>
+                    <span class="n">run_ci_marker</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">run_ci_marker</span><span class="p">,</span>
+                    <span class="n">workflow</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workflow</span><span class="p">,</span>
+                    <span class="n">commit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">commit</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>

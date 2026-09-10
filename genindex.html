@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; wads 0.2.23 documentation</title>
+  <title>Index &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=171860b8"></script>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,12 +47,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -81,7 +84,9 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -246,6 +251,8 @@
 </li>
       <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.check_system_dependency">check_system_dependency() (in module wads.setup_utils)</a>
 </li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.ci_local">ci_local() (in module wads.ci_local)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig">CIConfig (class in wads.ci_config)</a>
 </li>
       <li><a href="module_docs/wads/agents.html#wads.agents.CIDiagnosis">CIDiagnosis (class in wads.agents)</a>
@@ -254,12 +261,16 @@
         <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis">(class in wads.agents.ci_debug_agent)</a>
 </li>
       </ul></li>
-      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.classify_workflow">classify_workflow() (in module wads.repo_audit)</a>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.CILocalReport">CILocalReport (class in wads.ci_local)</a>
 </li>
-      <li><a href="module_docs/wads/pack.html#wads.pack.COMMANDS">COMMANDS (in module wads.pack)</a>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.classify_ci_workflow">classify_ci_workflow() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/repo_audit.html#wads.repo_audit.classify_workflow">classify_workflow() (in module wads.repo_audit)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/pack.html#wads.pack.COMMANDS">COMMANDS (in module wads.pack)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_format">commands_format (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_lint">commands_lint (wads.ci_config.CIConfig property)</a>
@@ -269,6 +280,8 @@
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_pre_test">commands_pre_test (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.commands_test">commands_test (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.commit_paths">commit_paths() (in module wads.ci_trigger)</a>
 </li>
       <li><a href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_ci_workflow">compare_ci_workflow() (in module wads.config_comparison)</a>
 </li>
@@ -332,6 +345,8 @@
 </li>
       <li><a href="module_docs/wads/setup_utils.html#wads.setup_utils.DiagnosticResult">DiagnosticResult (class in wads.setup_utils)</a>
 </li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult.diff">diff() (wads.ci_trigger.FlipResult method)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.docs_builder">docs_builder (wads.ci_config.CIConfig property)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.docs_config">docs_config (wads.ci_config.CIConfig property)</a>
@@ -382,6 +397,8 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.CILocalReport.failure">failure (wads.ci_local.CILocalReport property)</a>
+</li>
       <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_logs">fetch_workflow_logs() (in module wads.agents.ci_debug_agent)</a>
 </li>
       <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_runs">fetch_workflow_runs() (in module wads.agents.ci_debug_agent)</a>
@@ -394,10 +411,14 @@
 </li>
       <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.fleet_stub">fleet_stub() (in module wads.fleet_migrate)</a>
 </li>
-      <li><a href="module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">folders_that_have_init_py_files() (in module wads.pack)</a>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.flip_to_on_demand">flip_to_on_demand() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult">FlipResult (class in wads.ci_trigger)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files">folders_that_have_init_py_files() (in module wads.pack)</a>
+</li>
       <li><a href="module_docs/wads/templating.html#wads.templating.Artifact.from_copy">from_copy() (wads.templating.Artifact class method)</a>
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.from_file">from_file() (wads.ci_config.CIConfig class method)</a>
@@ -588,9 +609,11 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.main">main() (in module wads.agents.ci_debug_agent)</a>
+      <li><a href="module_docs/wads/__main__.html#wads.__main__.main">main() (in module wads.__main__)</a>
 
       <ul>
+        <li><a href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.main">(in module wads.agents.ci_debug_agent)</a>
+</li>
         <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.main">(in module wads.agents.dependency_resolver)</a>
 </li>
         <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.main">(in module wads.agents.test_analyzer)</a>
@@ -670,6 +693,8 @@
       <ul>
         <li><a href="module_docs/wads.html#module-wads">wads</a>
 </li>
+        <li><a href="module_docs/wads/__main__.html#module-wads.__main__">wads.__main__</a>
+</li>
         <li><a href="module_docs/wads/agents.html#module-wads.agents">wads.agents</a>
 </li>
         <li><a href="module_docs/wads/agents/ci_debug_agent.html#module-wads.agents.ci_debug_agent">wads.agents.ci_debug_agent</a>
@@ -680,7 +705,11 @@
 </li>
         <li><a href="module_docs/wads/ci_config.html#module-wads.ci_config">wads.ci_config</a>
 </li>
+        <li><a href="module_docs/wads/ci_local.html#module-wads.ci_local">wads.ci_local</a>
+</li>
         <li><a href="module_docs/wads/ci_secrets.html#module-wads.ci_secrets">wads.ci_secrets</a>
+</li>
+        <li><a href="module_docs/wads/ci_trigger.html#module-wads.ci_trigger">wads.ci_trigger</a>
 </li>
         <li><a href="module_docs/wads/config_comparison.html#module-wads.config_comparison">wads.config_comparison</a>
 </li>
@@ -795,6 +824,8 @@
         <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.parse_pytest_output">(in module wads.agents.test_analyzer)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.plan_ci_local">plan_ci_local() (in module wads.ci_local)</a>
+</li>
       <li><a href="module_docs/wads/populate.html#wads.populate.populate_pkg_dir">populate_pkg_dir() (in module wads.populate)</a>
 </li>
       <li><a href="module_docs/wads/populate.html#wads.populate.populate_proj_from_url">populate_proj_from_url() (in module wads.populate)</a>
@@ -837,6 +868,8 @@
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.pytest_args">pytest_args (wads.ci_config.CIConfig property)</a>
 </li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.pytest_argv">pytest_argv() (in module wads.ci_local)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.python_versions">python_versions (wads.ci_config.CIConfig property)</a>
 </li>
   </ul></td>
@@ -875,17 +908,25 @@
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.render_minimal_env_placeholders">render_minimal_env_placeholders() (in module wads.ci_config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.render_plan">render_plan() (in module wads.ci_local)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_inputs">render_stub_inputs() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_json_transport">render_stub_json_transport() (in module wads.ci_secrets)</a>
 </li>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_secrets_passthrough">render_stub_secrets_passthrough() (in module wads.ci_secrets)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_trigger">render_stub_trigger() (in module wads.ci_trigger)</a>
 </li>
       <li><a href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets">render_workflow_call_secrets() (in module wads.ci_secrets)</a>
 </li>
       <li><a href="module_docs/wads/util.html#wads.util.replace_import_names">replace_import_names() (in module wads.util)</a>
 </li>
       <li><a href="module_docs/wads/project_setup.html#wads.project_setup.repo_exists">repo_exists() (in module wads.project_setup)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.repo_pyproject_for">repo_pyproject_for() (in module wads.ci_trigger)</a>
 </li>
       <li><a href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.RepoResult">RepoResult (class in wads.fleet_migrate)</a>
 </li>
@@ -895,9 +936,19 @@
 </li>
       <li><a href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.resolve_package_name">resolve_package_name() (in module wads.agents.dependency_resolver)</a>
 </li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.resolve_pypi_token">resolve_pypi_token() (in module wads.ci_local)</a>
+</li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.run_ci_local">run_ci_local() (in module wads.ci_local)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.run_ci_marker">run_ci_marker (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.run_ci_on_demand">run_ci_on_demand() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands">run_install_commands() (in module wads.scrap.handle_non_python_installs)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.run_setup">run_setup() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.RunResult">RunResult (class in wads.ci_local)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -913,6 +964,8 @@
 </li>
       <li><a href="module_docs/wads/secrets_cli.html#wads.secrets_cli.set_github_secret">set_github_secret() (in module wads.secrets_cli)</a>
 </li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.set_on_demand_in_pyproject">set_on_demand_in_pyproject() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/toml_util.html#wads.toml_util.set_project_version">set_project_version() (in module wads.toml_util)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.set_version">set_version() (in module wads.pack)</a>
@@ -923,15 +976,27 @@
 </li>
       <li><a href="module_docs/wads/project_setup.html#wads.project_setup.setup_project">setup_project() (in module wads.project_setup)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/populate.html#wads.populate.PopulateTracker.skip">skip() (wads.populate.PopulateTracker method)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.sorted_versions">sorted_versions() (in module wads.pack)</a>
 </li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.Step">Step (class in wads.ci_local)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_customizations">stub_customizations() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_if_expression">stub_if_expression() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_inputs_of">stub_inputs_of() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.stub_secret_names">stub_secret_names() (wads.ci_config.CIConfig method)</a>
 </li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_shape">stub_shape() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/secrets_cli.html#wads.secrets_cli.stub_transport_mode">stub_transport_mode() (in module wads.secrets_cli)</a>
+</li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.subprocess_runner">subprocess_runner() (in module wads.ci_local)</a>
 </li>
       <li><a href="module_docs/wads/licensing.html#wads.licensing.substitute_license_placeholders">substitute_license_placeholders() (in module wads.licensing)</a>
 </li>
@@ -975,8 +1040,6 @@
 </li>
       <li><a href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_list">test_system_deps_list() (in module wads.tests.test_system_deps)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_with_pre_test_commands">test_system_deps_with_pre_test_commands() (in module wads.tests.test_system_deps)</a>
 </li>
       <li><a href="module_docs/wads/agents.html#wads.agents.TestAnalysisReport">TestAnalysisReport (class in wads.agents)</a>
@@ -985,6 +1048,8 @@
         <li><a href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.TestAnalysisReport">(class in wads.agents.test_analyzer)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/agents.html#wads.agents.TestFailure">TestFailure (class in wads.agents)</a>
 
       <ul>
@@ -1007,6 +1072,12 @@
 </li>
       <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.to_pre_test_step">to_pre_test_step() (wads.ci_config.CIConfig method)</a>
 </li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.trigger_config">trigger_config (wads.ci_config.CIConfig property)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.trigger_for_workflow">trigger_for_workflow() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig.trigger_mode">trigger_mode (wads.ci_config.CIConfig property)</a>
+</li>
       <li><a href="module_docs/wads/pack.html#wads.pack.twine_upload_dist">twine_upload_dist() (in module wads.pack)</a>
 </li>
   </ul></td>
@@ -1015,6 +1086,10 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.unasked_workflows">unasked_workflows() (in module wads.ci_trigger)</a>
+</li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.uncommitted">uncommitted() (in module wads.ci_trigger)</a>
+</li>
       <li><a href="module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py">update_pack_and_setup_py() (in module wads.populate)</a>
 </li>
       <li><a href="module_docs/wads/toml_util.html#wads.toml_util.update_project_metadata">update_project_metadata() (in module wads.toml_util)</a>
@@ -1027,6 +1102,8 @@
 </li>
       <li><a href="module_docs/wads/user_dirs.html#wads.user_dirs.user_preferences_path">user_preferences_path() (in module wads.user_dirs)</a>
 </li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.uv_build_args">uv_build_args() (in module wads.ci_local)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1037,9 +1114,13 @@
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.validate_package_name">validate_package_name() (in module wads.pack)</a>
 </li>
+      <li><a href="module_docs/wads/ci_trigger.html#wads.ci_trigger.validate_trigger">validate_trigger() (in module wads.ci_trigger)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/wads/pack.html#wads.pack.validate_versions">validate_versions() (in module wads.pack)</a>
+</li>
+      <li><a href="module_docs/wads/ci_local.html#wads.ci_local.venv_python">venv_python() (in module wads.ci_local)</a>
 </li>
       <li><a href="module_docs/wads/pack.html#wads.pack.versions_from_pypi">versions_from_pypi() (in module wads.pack)</a>
 </li>
@@ -1054,6 +1135,13 @@
 
       <ul>
         <li><a href="module_docs/wads.html#module-wads">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.__main__
+
+      <ul>
+        <li><a href="module_docs/wads/__main__.html#module-wads.__main__">module</a>
 </li>
       </ul></li>
       <li>
@@ -1092,10 +1180,24 @@
 </li>
       </ul></li>
       <li>
+    wads.ci_local
+
+      <ul>
+        <li><a href="module_docs/wads/ci_local.html#module-wads.ci_local">module</a>
+</li>
+      </ul></li>
+      <li>
     wads.ci_secrets
 
       <ul>
         <li><a href="module_docs/wads/ci_secrets.html#module-wads.ci_secrets">module</a>
+</li>
+      </ul></li>
+      <li>
+    wads.ci_trigger
+
+      <ul>
+        <li><a href="module_docs/wads/ci_trigger.html#module-wads.ci_trigger">module</a>
 </li>
       </ul></li>
       <li>
@@ -1182,6 +1284,8 @@
         <li><a href="module_docs/wads/repo_audit.html#module-wads.repo_audit">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scrap.handle_non_python_installs
 
@@ -1189,8 +1293,6 @@
         <li><a href="module_docs/wads/scrap/handle_non_python_installs.html#module-wads.scrap.handle_non_python_installs">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     wads.scripts
 

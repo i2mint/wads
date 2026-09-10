@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.scripts.read_ci_config &mdash; wads 0.2.23 documentation</title>
+  <title>wads.scripts.read_ci_config &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=171860b8"></script>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,12 +47,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -81,7 +84,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -253,6 +258,12 @@
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"publish-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_enabled</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"skip-ci-marker"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_skip_ci_marker</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"publish-marker"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">publish_marker</span><span class="p">)</span>
+
+        <span class="c1"># Trigger gate (consumed by every job after setup): in on-demand mode</span>
+        <span class="c1"># a job runs only on workflow_dispatch or a commit subject carrying</span>
+        <span class="c1"># the run-ci marker.</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"trigger-mode"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"run-ci-marker"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span><span class="p">)</span>
 
         <span class="c1"># Environment-variable policy (consumed by the export-ci-env action).</span>
         <span class="c1"># These decide which secrets are written into the job environment and</span>

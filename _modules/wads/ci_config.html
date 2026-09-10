@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>wads.ci_config &mdash; wads 0.2.23 documentation</title>
+  <title>wads.ci_config &mdash; wads 0.2.24 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=171860b8"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -47,12 +47,15 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/__main__.html">wads.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_local.html">wads.ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
@@ -81,7 +84,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
@@ -163,6 +168,13 @@
 <span class="c1"># (data/github_ci_uv.yml). The #TEST_ENV_VARS# substitution must not re-emit</span>
 <span class="c1"># them: a duplicate key in one YAML mapping fails the workflow at parse time.</span>
 <span class="n">WINDOWS_JOB_LITERAL_ENV</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"PYTHONUTF8"</span><span class="p">,</span> <span class="s2">"PYTHONIOENCODING"</span><span class="p">)</span>
+
+<span class="c1"># [tool.wads.ci.trigger]: WHEN CI runs at all. "auto" runs on every push/PR</span>
+<span class="c1"># (the historical behaviour); "on-demand" runs nothing unless asked — a commit</span>
+<span class="c1"># subject carrying the run-ci marker, or a manual workflow_dispatch.</span>
+<span class="n">TRIGGER_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"on-demand"</span><span class="p">)</span>
+<span class="n">DFLT_TRIGGER_MODE</span> <span class="o">=</span> <span class="s2">"auto"</span>
+<span class="n">DFLT_RUN_CI_MARKER</span> <span class="o">=</span> <span class="s2">"[run ci]"</span>
 
 
 <div class="viewcode-block" id="render_minimal_env_placeholders">
@@ -493,6 +505,54 @@
 <span class="sd">        job. Defaults to ``"[publish]"``.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_marker"</span><span class="p">,</span> <span class="s2">"[publish]"</span><span class="p">)</span>
+
+    <span class="c1"># 🚦 TRIGGER (whether CI runs at all)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trigger_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get the ``[tool.wads.ci.trigger]`` table."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trigger"</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trigger_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""When CI runs: ``"auto"`` (the default) or ``"on-demand"``.</span>
+
+<span class="sd">        ``"auto"`` runs on every push and pull request, as wads always has.</span>
+<span class="sd">        ``"on-demand"`` means **nothing runs unless asked**: every job (tests,</span>
+<span class="sd">        publish, Pages) runs only when the commit *subject line* contains</span>
+<span class="sd">        :attr:`run_ci_marker`, or on a manual ``workflow_dispatch``.</span>
+
+<span class="sd">        Raises ``ValueError`` on any other value, so a typo fails the CI setup</span>
+<span class="sd">        job loudly rather than silently choosing a mode.</span>
+
+<span class="sd">        &gt;&gt;&gt; CIConfig({}).trigger_mode</span>
+<span class="sd">        'auto'</span>
+<span class="sd">        &gt;&gt;&gt; CIConfig({"tool": {"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}}).trigger_mode</span>
+<span class="sd">        'on-demand'</span>
+<span class="sd">        """</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="n">DFLT_TRIGGER_MODE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRIGGER_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"[tool.wads.ci.trigger].mode must be one of </span><span class="si">{</span><span class="n">TRIGGER_MODES</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that runs CI in ``"on-demand"`` mode.</span>
+
+<span class="sd">        Defaults to ``"[run ci]"``. Matched against the first line of the</span>
+<span class="sd">        commit message only (a squash-merge folds the PR body into the rest).</span>
+<span class="sd">        Must be a non-empty single line: an empty marker would match every</span>
+<span class="sd">        subject and silently turn on-demand back into auto.</span>
+<span class="sd">        """</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"run_ci_marker"</span><span class="p">,</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">marker</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">marker</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"[tool.wads.ci.trigger].run_ci_marker must be a non-empty, "</span>
+                <span class="sa">f</span><span class="s2">"single-line string, got </span><span class="si">{</span><span class="n">marker</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">marker</span>
 
     <span class="c1"># 📄 DOCUMENTATION SETTINGS</span>
     <span class="nd">@property</span>

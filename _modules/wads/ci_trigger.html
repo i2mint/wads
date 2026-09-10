@@ -1,0 +1,914 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wads.ci_trigger &mdash; wads 0.2.24 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wads
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads.html">wads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/__main__.html">wads.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents.html">wads.agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_local.html">wads.ci_local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licence_check.html">wads.licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/licensing.html">wads.licensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/migration.html">wads.migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/pack.html">wads.pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/populate.html">wads.populate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/profiles.html">wads.profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts.html">wads.scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/secrets_cli.html">wads.secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/templating.html">wads.templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_git_commit_push_retry.html">wads.tests.test_git_commit_push_retry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_secrets_cli.html">wads.tests.test_secrets_cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_templating.html">wads.tests.test_templating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/wads/util.html">wads.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wads</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">wads.ci_trigger</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for wads.ci_trigger</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""On-demand CI: render a repo's caller stub from ``[tool.wads.ci.trigger]``, and flip</span>
+<span class="sd">a repo to on-demand in one idempotent command.</span>
+
+<span class="sd">``[tool.wads.ci.trigger].mode`` decides whether CI runs at all:</span>
+
+<span class="sd">- ``"auto"`` (the default): every push and pull request, as wads always has. The stub</span>
+<span class="sd">  renders byte-identical to ``wads/data/github_ci_uv_stub.yml``.</span>
+<span class="sd">- ``"on-demand"``: **nothing runs unless asked** -- the commit subject carries</span>
+<span class="sd">  ``run_ci_marker`` (default ``"[run ci]"``), or someone starts a ``workflow_dispatch``.</span>
+
+<span class="sd">Two gates, because workflow expressions cannot split a string:</span>
+
+<span class="sd">1. The stub's job-level ``if:`` is a zero-cost pre-filter. An ordinary push schedules</span>
+<span class="sd">   no runner at all, but the pre-filter can only ask whether the marker is *anywhere*</span>
+<span class="sd">   in the commit message.</span>
+<span class="sd">2. The reusable workflow's setup job extracts the subject line, and every other job</span>
+<span class="sd">   gates on the marker being in *that* (the TRIGGER GATE note in</span>
+<span class="sd">   ``.github/workflows/uv-ci.yml``). A marker quoted only in a squash-merged PR body</span>
+<span class="sd">   passes gate 1, costs one setup job, and runs nothing else.</span>
+
+<span class="sd">The flip (:func:`flip_to_on_demand`, CLI ``wads-migrate ci-on-demand``) sets the mode</span>
+<span class="sd">plus a cheap test matrix and re-renders the stub. Everything is computed in a shadow</span>
+<span class="sd">copy of the repo first, so a dry run and a real run take the same path.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">difflib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CIConfig</span><span class="p">,</span>
+    <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">,</span>
+    <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span>
+    <span class="n">tomllib</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DFLT_CI_WORKFLOW</span> <span class="o">=</span> <span class="s2">".github/workflows/ci.yml"</span>
+<span class="n">DFLT_ON_DEMAND_PYTHON_VERSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"3.12"</span><span class="p">,)</span>
+<span class="n">DFLT_FLIP_COMMIT_MESSAGE</span> <span class="o">=</span> <span class="s2">"ci: switch to on-demand CI ([tool.wads.ci.trigger])"</span>
+
+<span class="c1"># The two lines of wads/data/github_ci_uv_stub.yml that the on-demand render rewrites.</span>
+<span class="c1"># A test pins that the template still carries each exactly once.</span>
+<span class="n">AUTO_ON_LINE</span> <span class="o">=</span> <span class="s2">"on: [push, pull_request]</span><span class="se">\n</span><span class="s2">"</span>
+<span class="n">CI_JOB_ANCHOR</span> <span class="o">=</span> <span class="s2">"  ci:</span><span class="se">\n</span><span class="s2">    uses: "</span>
+
+<span class="c1"># Events someone has to ask for. Every other event in a workflow's `on:` (push, PR,</span>
+<span class="c1"># cron, workflow_run, ...) makes it run unasked, and the flip reports it.</span>
+<span class="n">ASKED_EVENTS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"workflow_dispatch"</span><span class="p">,</span> <span class="s2">"workflow_call"</span><span class="p">,</span> <span class="s2">"repository_dispatch"</span><span class="p">})</span>
+
+<span class="c1"># What a stub may hold that a re-render reproduces (anything else would be dropped).</span>
+<span class="n">_TEMPLATE_TRIGGERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">[</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"pull_request"</span><span class="p">],</span>
+    <span class="p">{</span><span class="s2">"push"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"workflow_dispatch"</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">_STUB_JOB_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">"permissions"</span><span class="p">,</span> <span class="s2">"secrets"</span><span class="p">,</span> <span class="s2">"if"</span><span class="p">,</span> <span class="s2">"with"</span><span class="p">)</span>
+<span class="n">_STUB_IF_PREFIX</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"github.event_name == 'workflow_dispatch' || "</span>
+    <span class="s2">"contains(github.event.head_commit.message, '"</span>
+<span class="p">)</span>
+<span class="n">_USES_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"^    uses: i2mint/wads/\.github/workflows/uv-ci\.yml@\S+\n"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
+<span class="p">)</span>
+
+<span class="n">_PIN_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"uv-ci\.yml(@\S+)"</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Rendering</span>
+
+
+<div class="viewcode-block" id="stub_if_expression">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_if_expression">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_if_expression</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The on-demand stub's job-level pre-filter, as a workflow expression.</span>
+
+<span class="sd">    &gt;&gt;&gt; stub_if_expression("[run ci]")</span>
+<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"</span>
+
+<span class="sd">    A quote in the marker is doubled, which is how workflow expressions escape it:</span>
+
+<span class="sd">    &gt;&gt;&gt; stub_if_expression("it's")</span>
+<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"</span>
+<span class="sd">    """</span>
+    <span class="n">literal</span> <span class="o">=</span> <span class="n">run_ci_marker</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span> <span class="s2">"''"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s2">"github.event_name == 'workflow_dispatch' || "</span>
+        <span class="sa">f</span><span class="s2">"contains(github.event.head_commit.message, '</span><span class="si">{</span><span class="n">literal</span><span class="si">}</span><span class="s2">')"</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_demand_header</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"""</span><span class="se">\</span>
+<span class="s2"># --- ON-DEMAND CI: NOTHING RUNS UNLESS ASKED ---------------------------------</span>
+<span class="s2"># pyproject.toml sets [tool.wads.ci.trigger] mode = "on-demand". A push does</span>
+<span class="s2"># NOT run tests, build, publish or docs. CI runs only when:</span>
+<span class="s2">#   - the commit SUBJECT (its first line) contains </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span>
+<span class="s2">#       git commit -m "Fix the parser </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2">"</span>
+<span class="s2">#   - or it is started by hand, which is always allowed:</span>
+<span class="s2">#       gh workflow run ci.yml --ref &lt;branch&gt;    (or Actions tab &gt; Run workflow)</span>
+<span class="s2"># Publishing obeys the same gate, so a manual run on the DEFAULT branch releases</span>
+<span class="s2"># (when publishing is enabled), exactly like a </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2"> push: to only test,</span>
+<span class="s2"># run it on another branch, or run `wads ci-local`. The publish marker needs</span>
+<span class="s2"># </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2"> in the same subject, and only the pushed HEAD commit's subject</span>
+<span class="s2"># counts. To do locally what CI would have done:</span>
+<span class="s2">#   wads ci-local              # lint, tests, build</span>
+<span class="s2">#   wads ci-local --publish    # + version bump, PyPI upload, tag, push</span>
+<span class="s2">#</span>
+<span class="s2"># The job-level `if:` below is a zero-cost pre-filter: an ordinary push</span>
+<span class="s2"># schedules no runner at all. Workflow expressions cannot split out the first</span>
+<span class="s2"># line, so it matches the marker anywhere in the message, and the reusable</span>
+<span class="s2"># workflow re-checks the extracted SUBJECT before any job runs. A marker quoted</span>
+<span class="s2"># only in a squash-merged PR body therefore costs one short setup job, nothing</span>
+<span class="s2"># else. This file is rendered from pyproject.toml: after changing</span>
+<span class="s2"># [tool.wads.ci.trigger], re-render it with `wads-migrate ci-to-stub` (which</span>
+<span class="s2"># keeps this stub's pin, secrets transport and `with:` inputs).</span>
+<span class="s2">on:</span>
+<span class="s2">  push:</span>
+<span class="s2">  workflow_dispatch:</span>
+<span class="s2">"""</span>
+
+
+<div class="viewcode-block" id="validate_trigger">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.validate_trigger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_trigger</span><span class="p">(</span><span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate a (mode, marker) pair with the same rules the CI setup job applies.</span>
+
+<span class="sd">    &gt;&gt;&gt; validate_trigger("on-demand", "[run ci]")</span>
+<span class="sd">    ('on-demand', '[run ci]')</span>
+<span class="sd">    &gt;&gt;&gt; validate_trigger("sometimes", "[run ci]")</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'</span>
+<span class="sd">    """</span>
+    <span class="n">trigger</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span> <span class="s2">"run_ci_marker"</span><span class="p">:</span> <span class="n">run_ci_marker</span><span class="p">}</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"trigger"</span><span class="p">:</span> <span class="n">trigger</span><span class="p">}}}})</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span></div>
+
+
+
+<div class="viewcode-block" id="render_stub_trigger">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_trigger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_stub_trigger</span><span class="p">(</span>
+    <span class="n">stub</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the caller stub for a trigger mode.</span>
+
+<span class="sd">    ``"auto"`` returns ``stub`` unchanged. ``"on-demand"`` replaces the push/PR trigger</span>
+<span class="sd">    with push + ``workflow_dispatch``, puts the plain-language explanation above it, and</span>
+<span class="sd">    adds the pre-filter ``if:`` to the ``ci`` job.</span>
+<span class="sd">    """</span>
+    <span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span> <span class="o">=</span> <span class="n">validate_trigger</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stub</span>
+    <span class="k">for</span> <span class="n">anchor</span> <span class="ow">in</span> <span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">CI_JOB_ANCHOR</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stub</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"stub template changed shape: expected exactly one </span><span class="si">{</span><span class="n">anchor</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+    <span class="n">gated_job</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"  ci:</span><span class="se">\n</span><span class="s2">    if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stub_if_expression</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">))</span><span class="si">}</span><span class="se">\n</span><span class="s2">    uses: "</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">_on_demand_header</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+        <span class="n">CI_JOB_ANCHOR</span><span class="p">,</span> <span class="n">gated_job</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="repo_pyproject_for">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.repo_pyproject_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">repo_pyproject_for</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The ``pyproject.toml`` of the repo holding workflow file ``ci_path``, if any.</span>
+
+<span class="sd">    Walks up from the workflow, stopping at the first directory that holds a ``.git``</span>
+<span class="sd">    so an enclosing project's pyproject is never mistaken for this repo's.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ci_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">parent</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+        <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">candidate</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="trigger_for_workflow">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.trigger_for_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The ``(mode, run_ci_marker)`` declared by the repo holding ``ci_path``.</span>
+
+<span class="sd">    Defaults when there is no such file or no pyproject. An invalid trigger table</span>
+<span class="sd">    raises: a stub must never silently render ``auto`` for a repo that asked for</span>
+<span class="sd">    ``on-demand``.</span>
+<span class="sd">    """</span>
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">repo_pyproject_for</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span> <span class="n">DFLT_RUN_CI_MARKER</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The flip</span>
+
+
+<div class="viewcode-block" id="classify_ci_workflow">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.classify_ci_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify_ci_workflow</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Classify a ``ci.yml``: ``'missing'``, ``'stub'``, ``'inline-uv'`` or ``'other'``.</span>
+
+<span class="sd">    &gt;&gt;&gt; classify_ci_workflow(None)</span>
+<span class="sd">    'missing'</span>
+<span class="sd">    &gt;&gt;&gt; classify_ci_workflow("uses: i2mint/wads/.github/workflows/uv-ci.yml@master")</span>
+<span class="sd">    'stub'</span>
+<span class="sd">    &gt;&gt;&gt; classify_ci_workflow("uses: i2mint/wads/actions/run-tests-uv@master")</span>
+<span class="sd">    'inline-uv'</span>
+<span class="sd">    &gt;&gt;&gt; classify_ci_workflow("uses: actions/setup-python@v5")</span>
+<span class="sd">    'other'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"missing"</span>
+    <span class="k">if</span> <span class="s2">"i2mint/wads/.github/workflows/uv-ci.yml"</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"stub"</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="s2">"Continuous Integration (uv)"</span> <span class="ow">in</span> <span class="n">text</span>
+        <span class="ow">or</span> <span class="s2">"i2mint/wads/actions/run-tests-uv"</span> <span class="ow">in</span> <span class="n">text</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"inline-uv"</span>
+    <span class="k">return</span> <span class="s2">"other"</span></div>
+
+
+
+<div class="viewcode-block" id="FlipResult">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlipResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What :func:`flip_to_on_demand` changed or, on a dry run, would change.</span>
+
+<span class="sd">    ``status`` is ``"changed"``, ``"unchanged"`` (already on-demand) or ``"refused"``</span>
+<span class="sd">    (nothing written; ``notes`` says why). ``changes`` maps a repo-relative path to its</span>
+<span class="sd">    ``(old, new)`` text.</span>
+<span class="sd">    """</span>
+
+    <span class="n">repo</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unchanged"</span>
+    <span class="n">changes</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FlipResult.diff">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult.diff">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diff</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Unified diff of every change."""</span>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">difflib</span><span class="o">.</span><span class="n">unified_diff</span><span class="p">(</span>
+                    <span class="n">old</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="n">new</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="n">fromfile</span><span class="o">=</span><span class="sa">f</span><span class="s2">"a/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">tofile</span><span class="o">=</span><span class="sa">f</span><span class="s2">"b/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_import_tomlkit</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomlkit</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on the install</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">"flipping a repo to on-demand edits pyproject.toml without losing its "</span>
+            <span class="s2">"comments, which needs `tomlkit`: `pip install tomlkit` or "</span>
+            <span class="s2">"`pip install wads[create]`"</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">tomlkit</span>
+
+
+<div class="viewcode-block" id="set_on_demand_in_pyproject">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.set_on_demand_in_pyproject">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_on_demand_in_pyproject</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">python_versions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_ON_DEMAND_PYTHON_VERSIONS</span><span class="p">,</span>
+    <span class="n">test_on_windows</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return pyproject.toml ``text`` with the on-demand settings applied.</span>
+
+<span class="sd">    Sets ``[tool.wads.ci.trigger].mode = "on-demand"`` (and ``run_ci_marker`` when</span>
+<span class="sd">    given), ``[tool.wads.ci.testing].python_versions`` and ``test_on_windows``.</span>
+<span class="sd">    Comments and layout survive (tomlkit), and a key already holding its target value</span>
+<span class="sd">    is not touched, so applying this twice returns the first result unchanged.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">run_ci_marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">validate_trigger</span><span class="p">(</span><span class="s2">"on-demand"</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">)</span>
+    <span class="n">tomlkit</span> <span class="o">=</span> <span class="n">_import_tomlkit</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">ci_path</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="s2">"wads"</span><span class="p">,</span> <span class="s2">"ci"</span><span class="p">)</span>
+        <span class="n">trigger</span> <span class="o">=</span> <span class="n">_table_at</span><span class="p">(</span><span class="n">tomlkit</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">ci_path</span><span class="p">,</span> <span class="s2">"trigger"</span><span class="p">))</span>
+        <span class="n">_assign</span><span class="p">(</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"on-demand"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">run_ci_marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_assign</span><span class="p">(</span><span class="n">trigger</span><span class="p">,</span> <span class="s2">"run_ci_marker"</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">)</span>
+        <span class="n">testing</span> <span class="o">=</span> <span class="n">_table_at</span><span class="p">(</span><span class="n">tomlkit</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">ci_path</span><span class="p">,</span> <span class="s2">"testing"</span><span class="p">))</span>
+        <span class="n">_assign</span><span class="p">(</span><span class="n">testing</span><span class="p">,</span> <span class="s2">"python_versions"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">python_versions</span><span class="p">))</span>
+        <span class="n">_assign</span><span class="p">(</span><span class="n">testing</span><span class="p">,</span> <span class="s2">"test_on_windows"</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">test_on_windows</span><span class="p">))</span>
+        <span class="n">new_text</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">tomllib</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">new_text</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span>
+        <span class="ne">Exception</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># tomlkit cannot safely edit inline-table or dotted layouts</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"could not edit its [tool.wads.ci] layout (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">); "</span>
+            <span class="s2">"set the on-demand values by hand"</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="n">applied</span> <span class="o">=</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">python_versions</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">)</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"on-demand"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">python_versions</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">test_on_windows</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">applied</span> <span class="o">!=</span> <span class="n">wanted</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"its [tool.wads.ci] layout took the edit as </span><span class="si">{</span><span class="n">applied</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">wanted</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="s2">"set the on-demand values by hand"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_text</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_table_at</span><span class="p">(</span><span class="n">tomlkit</span><span class="p">,</span> <span class="n">container</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The table at ``keys``, creating it (intermediates as header-less super tables)."""</span>
+    <span class="k">for</span> <span class="n">depth</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">container</span><span class="p">:</span>
+            <span class="n">is_leaf</span> <span class="o">=</span> <span class="n">depth</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">container</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tomlkit</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">is_super_table</span><span class="o">=</span><span class="ow">not</span> <span class="n">is_leaf</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">container</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">container</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assign</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="s2">"unwrap"</span><span class="p">):</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">current</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="stub_shape">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_shape">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_shape</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.</span>
+
+<span class="sd">    Defaults (``@master``, ``json``) for anything that is not a stub.</span>
+
+<span class="sd">    &gt;&gt;&gt; stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")</span>
+<span class="sd">    {'pin': '@0.2.30', 'transport': 'named'}</span>
+<span class="sd">    &gt;&gt;&gt; stub_shape(None)</span>
+<span class="sd">    {'pin': '@master', 'transport': 'json'}</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"stub"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"pin"</span><span class="p">:</span> <span class="s2">"@master"</span><span class="p">,</span> <span class="s2">"transport"</span><span class="p">:</span> <span class="s2">"json"</span><span class="p">}</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_stub_json_transport</span>
+
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_PIN_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"pin"</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="s2">"@master"</span><span class="p">,</span>
+        <span class="s2">"transport"</span><span class="p">:</span> <span class="s2">"json"</span> <span class="k">if</span> <span class="n">render_stub_json_transport</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ci_text</span> <span class="k">else</span> <span class="s2">"named"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="stub_customizations">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_customizations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_customizations</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.</span>
+
+<span class="sd">    ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a</span>
+<span class="sd">    re-render; ``dropped`` names everything else a re-render would silently lose.</span>
+<span class="sd">    Raises ``yaml.YAMLError`` when the text does not parse.</span>
+
+<span class="sd">    &gt;&gt;&gt; stub_customizations(</span>
+<span class="sd">    ...     "on: [push, pull_request]\njobs:\n  ci:\n    uses: x\n"</span>
+<span class="sd">    ...     "    with:\n      project-name: my_pkg\n"</span>
+<span class="sd">    ... )</span>
+<span class="sd">    ({'project-name': 'my_pkg'}, [])</span>
+<span class="sd">    &gt;&gt;&gt; stub_customizations("on: [push]\njobs:\n  ci:\n    uses: x\n  lint:\n    runs-on: y\n")[1]</span>
+<span class="sd">    ['`on: ["push"]`', 'job `lint`']</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"top-level `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">doc</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"on"</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"jobs"</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">triggers</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on"</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># PyYAML reads a bare `on:` as True</span>
+    <span class="k">if</span> <span class="n">triggers</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_TEMPLATE_TRIGGERS</span><span class="p">:</span>
+        <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`on: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span><span class="si">}</span><span class="s2">`"</span><span class="p">)</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">dropped</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"job `</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">jobs</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"ci"</span><span class="p">]</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">dropped</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"`jobs.ci.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">job</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_STUB_JOB_KEYS</span><span class="p">]</span>
+    <span class="n">condition</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"if"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_STUB_IF_PREFIX</span><span class="p">):</span>
+        <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"`jobs.ci.if`"</span><span class="p">)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="p">):</span>
+        <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"`jobs.ci.with` (not a flat mapping)"</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">dropped</span></div>
+
+
+
+<div class="viewcode-block" id="stub_inputs_of">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_inputs_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_inputs_of</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``with:`` inputs an existing stub file passes; ``{}`` if none or not a stub."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ci_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"stub"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stub_customizations</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+
+<div class="viewcode-block" id="render_stub_inputs">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_inputs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_stub_inputs</span><span class="p">(</span><span class="n">stub</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add a ``with:`` block (the reusable workflow's inputs) under the stub's ``uses:``."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stub</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="n">block</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">"with"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">inputs</span><span class="p">)},</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">indented</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_USES_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">stub</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stub template changed shape: no `uses: ...uv-ci.yml@` line"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stub</span><span class="p">[:</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()]</span> <span class="o">+</span> <span class="n">indented</span> <span class="o">+</span> <span class="n">stub</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span></div>
+
+
+
+<div class="viewcode-block" id="unasked_workflows">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.unasked_workflows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unasked_workflows</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_CI_WORKFLOW</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Other workflow files in ``repo`` that run without anyone asking (push, PR, cron).</span>
+
+<span class="sd">    The flip only governs ``workflow``; these keep running and are worth knowing about.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">governed</span> <span class="o">=</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="n">workflow</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">".github"</span> <span class="o">/</span> <span class="s2">"workflows"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.y*ml"</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">==</span> <span class="n">governed</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">triggers</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on"</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># PyYAML reads a bare `on:` as True</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">{</span><span class="n">triggers</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">hits</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span> <span class="o">-</span> <span class="n">ASKED_EVENTS</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hits</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="flip_to_on_demand">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.flip_to_on_demand">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flip_to_on_demand</span><span class="p">(</span>
+    <span class="n">repo</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">python_versions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_ON_DEMAND_PYTHON_VERSIONS</span><span class="p">,</span>
+    <span class="n">test_on_windows</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_CI_WORKFLOW</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlipResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.</span>
+
+<span class="sd">    - a **stub** ``ci.yml`` is re-rendered keeping its pin, secrets transport and</span>
+<span class="sd">      ``with:`` inputs, or **refused** if it holds anything else a re-render would drop</span>
+<span class="sd">      (extra jobs, custom triggers);</span>
+<span class="sd">    - an **inline uv** workflow becomes the stub, carrying its secret-backed env vars</span>
+<span class="sd">      into ``[tool.wads.ci.env]`` first (as ``wads-migrate ci-to-stub`` does);</span>
+<span class="sd">    - **no** ``ci.yml``: only pyproject changes (nothing runs on push anyway);</span>
+<span class="sd">    - anything else (2025/legacy/custom workflow) is **refused** and nothing is</span>
+<span class="sd">      written, because it would ignore the setting and keep running on every push.</span>
+
+<span class="sd">    Idempotent: a second run reports ``"unchanged"`` and writes nothing.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">,</span> <span class="n">migrate_ci_to_stub</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">repo</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pyproject</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no pyproject.toml in </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">: not a wads-managed repo"</span><span class="p">)</span>
+    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">repo</span> <span class="o">/</span> <span class="n">workflow</span>
+    <span class="n">old_py</span> <span class="o">=</span> <span class="n">pyproject</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="n">old_ci</span> <span class="o">=</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="k">if</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">FlipResult</span><span class="p">(</span><span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"other"</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"refused"</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> is not a wads uv workflow (2025, legacy or custom), so it would "</span>
+            <span class="s2">"ignore [tool.wads.ci.trigger] and keep running on every push. Move it to uv "</span>
+            <span class="sa">f</span><span class="s2">"first -- `wads-migrate ci-to-uv </span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> -o </span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2">` -- then re-run "</span>
+            <span class="s2">"`wads-migrate ci-on-demand`."</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"stub"</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"YAML that does not parse (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
+            <span class="n">marker</span> <span class="o">=</span> <span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">DFLT_RUN_CI_MARKER</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"refused"</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> has customizations a re-render would drop: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">. Flip it by hand: in pyproject.toml set "</span>
+                <span class="s1">'[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '</span>
+                <span class="s2">"workflow use `on: [push, workflow_dispatch]` and give the job that calls "</span>
+                <span class="sa">f</span><span class="s2">"uv-ci.yml `if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stub_if_expression</span><span class="p">(</span><span class="n">marker</span><span class="p">))</span><span class="si">}</span><span class="s2">`."</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"wads-flip-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">shadow</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">shadow</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>  <span class="c1"># bounds the pyproject lookup to the shadow repo</span>
+        <span class="n">shadow_py</span> <span class="o">=</span> <span class="n">shadow</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+        <span class="n">shadow_py</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">old_py</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"inline-uv"</span><span class="p">:</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">old_ci</span><span class="p">,</span> <span class="n">shadow_py</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">"carried env var(s) from the inline workflow into "</span>
+                    <span class="sa">f</span><span class="s2">"[tool.wads.ci.env].extra_envvars: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">carried</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">on_demand_py</span> <span class="o">=</span> <span class="n">set_on_demand_in_pyproject</span><span class="p">(</span>
+                <span class="n">shadow_py</span><span class="o">.</span><span class="n">read_text</span><span class="p">(),</span>
+                <span class="n">python_versions</span><span class="o">=</span><span class="n">python_versions</span><span class="p">,</span>
+                <span class="n">test_on_windows</span><span class="o">=</span><span class="n">test_on_windows</span><span class="p">,</span>
+                <span class="n">run_ci_marker</span><span class="o">=</span><span class="n">run_ci_marker</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"refused"</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">changes</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"pyproject.toml left unchanged: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="n">shadow_py</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">on_demand_py</span><span class="p">)</span>
+        <span class="n">new_py</span> <span class="o">=</span> <span class="n">shadow_py</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+        <span class="n">new_ci</span> <span class="o">=</span> <span class="n">old_ci</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stub"</span><span class="p">,</span> <span class="s2">"inline-uv"</span><span class="p">):</span>
+            <span class="n">shadow_ci</span> <span class="o">=</span> <span class="n">shadow</span> <span class="o">/</span> <span class="n">workflow</span>
+            <span class="n">shadow_ci</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shadow_ci</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+            <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">shadow_ci</span><span class="p">),</span> <span class="o">**</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"the stub stays pinned to </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]</span><span class="si">}</span><span class="s2">. Its pre-filter works on "</span>
+                    <span class="s2">"any pin, but only a uv-ci.yml with the on-demand job gates "</span>
+                    <span class="s2">"(i2mint/wads#85) keeps a marker quoted in a PR body from running "</span>
+                    <span class="s2">"the whole CI."</span>
+                <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"missing"</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"no </span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2">: nothing runs on push. pyproject now says on-demand, so a "</span>
+            <span class="s2">"stub rendered later (`wads-migrate ci-to-stub`) will be on-demand too."</span>
+        <span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">notes</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"still runs unasked, not governed by this flip: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">unasked_workflows</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">workflow</span><span class="o">=</span><span class="n">workflow</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">new_py</span> <span class="o">!=</span> <span class="n">old_py</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="p">[</span><span class="s2">"pyproject.toml"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_py</span><span class="p">,</span> <span class="n">new_py</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">new_ci</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">new_ci</span> <span class="o">!=</span> <span class="n">old_ci</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="p">[</span><span class="n">workflow</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_ci</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="n">new_ci</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"changed"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">changes</span> <span class="k">else</span> <span class="s2">"unchanged"</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">changes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">relpath</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="n">relpath</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Git helpers for the CLI's --commit</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CompletedProcess</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="uncommitted">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.uncommitted">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">uncommitted</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Which of ``paths`` have uncommitted changes (``git status --porcelain`` lines)."""</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">_git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">,</span> <span class="s2">"--"</span><span class="p">,</span> <span class="o">*</span><span class="n">paths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"git status failed in </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span></div>
+
+
+
+<div class="viewcode-block" id="commit_paths">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.commit_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">commit_paths</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Commit exactly ``paths`` and return the new commit's short sha."""</span>
+    <span class="k">for</span> <span class="n">args</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="s2">"--"</span><span class="p">,</span> <span class="o">*</span><span class="n">paths</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"commit"</span><span class="p">,</span> <span class="s2">"--quiet"</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="s2">"--"</span><span class="p">,</span> <span class="o">*</span><span class="n">paths</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">_git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"git </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--short"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="run_ci_on_demand">
+<a class="viewcode-back" href="../../module_docs/wads/ci_trigger.html#wads.ci_trigger.run_ci_on_demand">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_ci_on_demand</span><span class="p">(</span>
+    <span class="n">repo</span><span class="o">=</span><span class="s2">"."</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">python_versions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_ON_DEMAND_PYTHON_VERSIONS</span><span class="p">,</span>
+    <span class="n">test_on_windows</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_CI_WORKFLOW</span><span class="p">,</span>
+    <span class="n">commit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">err</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``wads-migrate ci-on-demand``: flip, report, optionally commit. Returns an exit code.</span>
+
+<span class="sd">    ``0`` changed or already on-demand, ``2`` refused (nothing written).</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="n">err</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="n">governed</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"pyproject.toml"</span><span class="p">,</span> <span class="n">workflow</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">commit</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="n">run_ci_marker</span>
+        <span class="k">if</span> <span class="n">marker</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">marker</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">run_ci_marker</span>
+        <span class="k">if</span> <span class="n">marker</span> <span class="ow">and</span> <span class="n">marker</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">DFLT_FLIP_COMMIT_MESSAGE</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Refusing --commit: the run-ci marker </span><span class="si">{</span><span class="n">marker</span><span class="si">!r}</span><span class="s2"> occurs in the flip's "</span>
+                <span class="sa">f</span><span class="s2">"commit message (</span><span class="si">{</span><span class="n">DFLT_FLIP_COMMIT_MESSAGE</span><span class="si">!r}</span><span class="s2">), so pushing it would run "</span>
+                <span class="s2">"CI. Flip without --commit and commit with your own message."</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">err</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="n">dirty</span> <span class="o">=</span> <span class="n">uncommitted</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">governed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dirty</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">"Refusing --commit: these files already have uncommitted changes, which "</span>
+                <span class="s2">"the flip commit would sweep in:</span><span class="se">\n</span><span class="s2">  "</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">  "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirty</span><span class="p">),</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">err</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">flip_to_on_demand</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span>
+        <span class="n">python_versions</span><span class="o">=</span><span class="n">python_versions</span><span class="p">,</span>
+        <span class="n">test_on_windows</span><span class="o">=</span><span class="n">test_on_windows</span><span class="p">,</span>
+        <span class="n">run_ci_marker</span><span class="o">=</span><span class="n">run_ci_marker</span><span class="p">,</span>
+        <span class="n">workflow</span><span class="o">=</span><span class="n">workflow</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">verb</span> <span class="o">=</span> <span class="s2">"would change"</span> <span class="k">if</span> <span class="n">dry_run</span> <span class="k">else</span> <span class="s2">"changed"</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"refused"</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ refused: </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"unchanged"</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ already on-demand, nothing to do: </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">verb</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="p">)</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">diff</span><span class="p">(),</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">note</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  note: </span><span class="si">{</span><span class="n">note</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">err</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"refused"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">commit</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="p">:</span>
+        <span class="n">sha</span> <span class="o">=</span> <span class="n">commit_paths</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">changes</span><span class="p">),</span> <span class="n">message</span><span class="o">=</span><span class="n">DFLT_FLIP_COMMIT_MESSAGE</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"✓ committed </span><span class="si">{</span><span class="n">sha</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">DFLT_FLIP_COMMIT_MESSAGE</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  push it: the pushed commit carries the on-demand stub, so the push "</span>
+            <span class="s2">"itself runs nothing."</span><span class="p">,</span>
+            <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
