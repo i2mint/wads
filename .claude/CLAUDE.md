@@ -26,6 +26,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 | `[tool.wads.ci.quality]` | Ruff/Black/Mypy settings |
 | `[tool.wads.ci.build]` | sdist/wheel build settings |
 | `[tool.wads.ci.publish]` | PyPI publishing settings |
+| `[tool.wads.ci.trigger]` | `mode = "auto"` (default) or `"on-demand"`: nothing runs unless the commit subject has `run_ci_marker` (default `[run ci]`) or the run is a `workflow_dispatch`. Stub rendering + the `ci-on-demand` flip live in `wads/ci_trigger.py`; `wads ci-local` (`wads/ci_local.py`) runs the same config locally |
 | `[tool.wads.ci.docs]` | Documentation generation (epythet) |
 | `[tool.wads.ci.metrics]` | Code metrics tracking (umpyre) |
 | `[tool.wads.ops.*]` | System/OS-level dependencies (ffmpeg, ODBC, etc.) |
@@ -277,6 +278,12 @@ wads-secrets add DB_URL --kind required           # fail CI if unset
 wads-secrets add OPENAI_API_KEY --no-github       # edit files only
 wads-secrets list                                 # show configured env vars
 wads-secrets superset                             # names the stub may pass
+
+# On-demand CI: nothing runs unless the commit subject has "[run ci]" (or workflow_dispatch)
+wads-migrate ci-on-demand --dry-run               # diff: trigger + python 3.12 + no Windows + stub
+wads-migrate ci-on-demand --commit                # apply and commit (idempotent), then git push
+wads ci-local                                     # lint, tests, build from [tool.wads.ci]
+wads ci-local --publish                           # + bump, upload, commit, tag, push (refuses dirty/off-default)
 
 # Debug CI failures
 wads-ci-debug myorg/myrepo --fix

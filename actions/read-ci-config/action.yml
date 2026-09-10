@@ -80,6 +80,12 @@ outputs:
   publish-marker:
     description: 'Substring that forces the publish job even when publishing is disabled, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
     value: ${{ steps.config.outputs.publish-marker }}
+  trigger-mode:
+    description: 'When CI runs: "auto" (every push/PR, the default) or "on-demand" (nothing runs unless asked - a commit SUBJECT carrying run-ci-marker, or a manual workflow_dispatch; publishing obeys the same gate). Set via [tool.wads.ci.trigger].mode.'
+    value: ${{ steps.config.outputs.trigger-mode }}
+  run-ci-marker:
+    description: 'Substring that runs CI in on-demand mode, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[run ci]". Set via [tool.wads.ci.trigger].run_ci_marker.'
+    value: ${{ steps.config.outputs.run-ci-marker }}
   env-required:
     description: 'JSON array of required env-var names from [tool.wads.ci.env].required_envvars. CI fails if any is not set in secrets.'
     value: ${{ steps.config.outputs.env-required }}

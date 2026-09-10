@@ -25,6 +25,13 @@ else:
 # them: a duplicate key in one YAML mapping fails the workflow at parse time.
 WINDOWS_JOB_LITERAL_ENV = ("PYTHONUTF8", "PYTHONIOENCODING")
 
+# [tool.wads.ci.trigger]: WHEN CI runs at all. "auto" runs on every push/PR
+# (the historical behaviour); "on-demand" runs nothing unless asked — a commit
+# subject carrying the run-ci marker, or a manual workflow_dispatch.
+TRIGGER_MODES = ("auto", "on-demand")
+DFLT_TRIGGER_MODE = "auto"
+DFLT_RUN_CI_MARKER = "[run ci]"
+
 
 def render_minimal_env_placeholders(template_text: str, project_name: str) -> str:
     """Render the inline template's env placeholders without a [tool.wads.ci]
@@ -331,6 +338,54 @@ class CIConfig:
         job. Defaults to ``"[publish]"``.
         """
         return self.publish_config.get("publish_marker", "[publish]")
+
+    # 🚦 TRIGGER (whether CI runs at all)
+    @property
+    def trigger_config(self) -> dict:
+        """Get the ``[tool.wads.ci.trigger]`` table."""
+        return self.ci_config.get("trigger", {})
+
+    @property
+    def trigger_mode(self) -> str:
+        """When CI runs: ``"auto"`` (the default) or ``"on-demand"``.
+
+        ``"auto"`` runs on every push and pull request, as wads always has.
+        ``"on-demand"`` means **nothing runs unless asked**: every job (tests,
+        publish, Pages) runs only when the commit *subject line* contains
+        :attr:`run_ci_marker`, or on a manual ``workflow_dispatch``.
+
+        Raises ``ValueError`` on any other value, so a typo fails the CI setup
+        job loudly rather than silently choosing a mode.
+
+        >>> CIConfig({}).trigger_mode
+        'auto'
+        >>> CIConfig({"tool": {"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}}).trigger_mode
+        'on-demand'
+        """
+        mode = self.trigger_config.get("mode", DFLT_TRIGGER_MODE)
+        if mode not in TRIGGER_MODES:
+            raise ValueError(
+                f"[tool.wads.ci.trigger].mode must be one of {TRIGGER_MODES}, "
+                f"got {mode!r}"
+            )
+        return mode
+
+    @property
+    def run_ci_marker(self) -> str:
+        """Commit-subject substring that runs CI in ``"on-demand"`` mode.
+
+        Defaults to ``"[run ci]"``. Matched against the first line of the
+        commit message only (a squash-merge folds the PR body into the rest).
+        Must be a non-empty single line: an empty marker would match every
+        subject and silently turn on-demand back into auto.
+        """
+        marker = self.trigger_config.get("run_ci_marker", DFLT_RUN_CI_MARKER)
+        if not isinstance(marker, str) or not marker.strip() or "\n" in marker:
+            raise ValueError(
+                "[tool.wads.ci.trigger].run_ci_marker must be a non-empty, "
+                f"single-line string, got {marker!r}"
+            )
+        return marker
 
     # 📄 DOCUMENTATION SETTINGS
     @property
