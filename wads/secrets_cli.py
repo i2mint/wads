@@ -6,10 +6,11 @@ for the model):
 1. **pyproject** ``[tool.wads.ci.env]`` — declares the env var (and whether it
    is required), so the reusable workflow exports it into the job environment.
 2. **transport** — the repo's ``ci.yml`` stub passes secrets to the reusable
-   workflow. Modern stubs pass the whole secrets context as one
-   ``WADS_CI_SECRETS_JSON`` secret, so *no per-secret stub edit is needed*;
-   legacy named-transport stubs list each secret explicitly (and every listed
-   name must be in the frozen wads superset).
+   workflow. Stubs list each secret by name (the default), so ``add`` also
+   adds the secret to the stub, and every listed name must be in the wads
+   superset (:data:`wads.ci_secrets.DEFAULT_CI_SECRETS`). Opt-in JSON stubs
+   pass the whole secrets context as one ``WADS_CI_SECRETS_JSON`` secret and
+   need no per-secret stub edit.
 
 ``wads-secrets add`` performs the needed edits in one step, and can also set
 the secret's value on GitHub via ``gh`` — so a single command takes a secret
@@ -294,7 +295,7 @@ def add(
         else:
             print("· transport: repo variables need none (vars context)")
     elif mode == "named" and secret_name not in DEFAULT_CI_SECRETS:
-        # A named-transport stub may only pass names in the frozen superset —
+        # A named-transport stub may only pass names in the superset —
         # anything else makes the workflow FAIL TO START (parse-time
         # startup_failure, issue #63). Refuse the edit that would cause it.
         print(
@@ -302,10 +303,10 @@ def add(
             f"(wads/ci_secrets.py), and this repo's stub passes secrets by "
             f"name — passing this one would make the workflow FAIL TO START, "
             f"so ci.yml was NOT edited (declared in pyproject only). Either "
-            f"regenerate the stub with the JSON transport "
-            f"(`wads-migrate ci-to-stub`), which passes every secret; or, if "
-            f"the value is not sensitive, use "
-            f"`wads-secrets add {var_name} --variable` instead."
+            f"add {secret_name!r} to the superset in wads/ci_secrets.py (one "
+            f"line; adding a name never breaks an existing stub) and re-run "
+            f"this once that wads is released; or, if the value is not "
+            f"sensitive, use `wads-secrets add {var_name} --variable` instead."
         )
     else:
         stub_changed, reason = add_secret_to_stub(ci_file, secret_name)

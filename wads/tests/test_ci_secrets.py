@@ -64,7 +64,7 @@ def _secrets_from_workflow(path: Path):
 def test_uv_ci_secrets_match_ssot_exactly():
     """The reusable workflow's declared secrets must equal WORKFLOW_CALL_SECRETS.
 
-    That is the JSON transport secret first, then the frozen legacy superset.
+    That is the JSON transport secret first, then the superset.
     If this fails, you edited one side only. Regenerate the YAML block from
     wads.ci_secrets.render_workflow_call_secrets().
     """
@@ -94,13 +94,18 @@ def test_stub_passthrough_render():
     )
 
 
-def test_stub_json_transport_render_matches_stub_template():
-    """The stub template must carry exactly the rendered JSON-transport line.
+def test_stub_template_uses_the_named_transport():
+    """The default stub passes PYPI_PASSWORD by name and nothing else (issue #74).
 
-    migrate_ci_to_stub's named mode locates this line in the template to
-    replace it, so renderer and template may not drift.
+    migrate_ci_to_stub renders a repo's names into this block, and swaps in
+    the rendered JSON-transport line only when that transport is asked for.
     """
+    stub_tpl = (REPO_ROOT / "wads" / "data" / "github_ci_uv_stub.yml").read_text()
+    secrets = yaml.safe_load(stub_tpl)["jobs"]["ci"]["secrets"]
+    assert secrets == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
+    assert render_stub_secrets_passthrough(["PYPI_PASSWORD"]) in stub_tpl
+
+
+def test_stub_json_transport_render():
     line = render_stub_json_transport()
     assert line == "      WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}"
-    stub_tpl = REPO_ROOT / "wads" / "data" / "github_ci_uv_stub.yml"
-    assert line in stub_tpl.read_text()

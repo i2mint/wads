@@ -1,6 +1,12 @@
 """Tests for the run-time env-export logic (``wads.scripts.export_ci_env``)."""
 
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
 
 from wads.scripts.export_ci_env import (
     _gh_env_assignment,
@@ -255,3 +261,69 @@ def test_main_fails_on_missing_always_required(tmp_path, monkeypatch, capsys):
 
     assert mod.main() == 1
     assert "PYPI_PASSWORD" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# The action runs this file isolated: from its own checkout, stdlib only
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ACTION_DIR = REPO_ROOT / "actions" / "export-ci-env"
+SCRIPT = REPO_ROOT / "wads" / "scripts" / "export_ci_env.py"
+
+
+def test_action_runs_the_script_from_its_own_checkout_without_pip():
+    steps = yaml.safe_load((ACTION_DIR / "action.yml").read_text())["runs"]["steps"]
+    runs = [step.get("run", "") for step in steps]
+    assert not any("pip install" in run for run in runs)
+    (run,) = [run for run in runs if "export_ci_env" in run]
+    assert run.strip() == (
+        'python -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"'
+    )
+    relative = ACTION_DIR / ".." / ".." / "wads" / "scripts" / "export_ci_env.py"
+    assert relative.resolve() == SCRIPT
+
+
+def test_script_runs_isolated_on_the_standard_library(tmp_path):
+    """What the action runs: ``python -I -S`` on the file, with wads not importable.
+
+    Dummy values only. The undeclared one is neither exported nor masked.
+    """
+    github_env = tmp_path / "github_env"
+    blob = json.dumps(
+        json.dumps({"DUMMY_DECLARED": "dummy-1", "DUMMY_UNDECLARED": "dummy-2"})
+    )
+    env = {k: v for k, v in os.environ.items() if not k.startswith("WADS_")}
+    env.update(
+        GITHUB_ENV=str(github_env),
+        WADS_ENV_REQUIRED='["DUMMY_DECLARED"]',
+        WADS_SECRETS_JSON=json.dumps({"WADS_CI_SECRETS_JSON": blob}),
+    )
+    runner = (
+        "import runpy, sys\n"
+        "try:\n"
+        f"    runpy.run_path({str(SCRIPT)!r}, run_name='__main__')\n"
+        "    code = 0\n"
+        "except SystemExit as exc:\n"
+        "    code = exc.code\n"
+        "print('wads imported' if 'wads' in sys.modules else 'wads not imported')\n"
+        "sys.exit(code)\n"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-I", "-S", "-c", runner],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "wads not imported" in proc.stdout
+    assert "::add-mask::dummy-1" in proc.stdout
+    assert "dummy-2" not in proc.stdout
+    assert github_env.read_text() == "DUMMY_DECLARED=dummy-1\n"
+
+
+def test_isolated_fallback_spells_the_transport_secret_like_ci_secrets():
+    from wads.ci_secrets import JSON_TRANSPORT_SECRET
+
+    assert f'JSON_TRANSPORT_SECRET = "{JSON_TRANSPORT_SECRET}"' in SCRIPT.read_text()

@@ -118,7 +118,7 @@ def _on_demand_header(run_ci_marker: str) -> str:
 # only in a squash-merged PR body therefore costs one short setup job, nothing
 # else. This file is rendered from pyproject.toml: after changing
 # [tool.wads.ci.trigger], re-render it with `wads-migrate ci-to-stub` (which
-# keeps this stub's pin, secrets transport and `with:` inputs).
+# keeps this stub's pin and `with:` inputs; a JSON secrets transport becomes named).
 on:
   push:
   workflow_dispatch:
@@ -334,17 +334,19 @@ def _assign(table, key, value):
 
 
 def stub_shape(ci_text: Optional[str]) -> dict:
-    """The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.
+    """The ``pin`` and secrets ``transport`` of a stub.
 
-    Defaults (``@master``, ``json``) for anything that is not a stub.
+    A re-render keeps the pin. A ``json`` transport is reported as found;
+    re-renders convert it to ``named`` unless asked to keep it (i2mint/wads#74).
+    Defaults (``@master``, ``named``) for anything that is not a stub.
 
     >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
     {'pin': '@0.2.30', 'transport': 'named'}
     >>> stub_shape(None)
-    {'pin': '@master', 'transport': 'json'}
+    {'pin': '@master', 'transport': 'named'}
     """
     if classify_ci_workflow(ci_text) != "stub":
-        return {"pin": "@master", "transport": "json"}
+        return {"pin": "@master", "transport": "named"}
     from wads.ci_secrets import render_stub_json_transport
 
     match = _PIN_RE.search(ci_text)
@@ -468,7 +470,7 @@ def flip_to_on_demand(
 ) -> FlipResult:
     """Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.
 
-    - a **stub** ``ci.yml`` is re-rendered keeping its pin, secrets transport and
+    - a **stub** ``ci.yml`` is re-rendered keeping its pin (a JSON secrets transport becomes named) and
       ``with:`` inputs, or **refused** if it holds anything else a re-render would drop
       (extra jobs, custom triggers);
     - an **inline uv** workflow becomes the stub, carrying its secret-backed env vars
@@ -552,6 +554,14 @@ def flip_to_on_demand(
             shadow_ci.parent.mkdir(parents=True, exist_ok=True)
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
+            if shape["transport"] == "json":
+                shape["transport"] = "named"
+                result.notes.append(
+                    "the stub's JSON secrets transport becomes named (PYPI_PASSWORD "
+                    "+ the [tool.wads.ci.env] names; i2mint/wads#74). Re-render with "
+                    "`wads-migrate ci-to-stub --transport json` to keep passing every "
+                    "secret."
+                )
             new_ci = migrate_ci_to_stub(str(shadow_ci), **shape)
             if shape["pin"] != "@master":
                 result.notes.append(

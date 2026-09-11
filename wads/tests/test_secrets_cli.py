@@ -34,14 +34,14 @@ def _make_repo(tmp_path, stub_text):
 
 @pytest.fixture
 def repo(tmp_path):
-    """A repo with the default (JSON-transport) stub."""
-    return _make_repo(tmp_path, migrate_ci_to_stub())
+    """A repo with an opt-in JSON-transport stub."""
+    return _make_repo(tmp_path, migrate_ci_to_stub(transport="json"))
 
 
 @pytest.fixture
 def named_repo(tmp_path):
-    """A repo with a legacy named-transport stub."""
-    return _make_repo(tmp_path, migrate_ci_to_stub(transport="named"))
+    """A repo with the default named-transport stub."""
+    return _make_repo(tmp_path, migrate_ci_to_stub())
 
 
 def test_add_env_var_and_alias(repo):
@@ -67,7 +67,7 @@ def test_add_env_var_idempotent(repo):
 
 
 def test_json_stub_needs_no_transport_edit(repo):
-    """The default stub transports everything; add_secret_to_stub is a no-op."""
+    """A JSON stub transports everything; add_secret_to_stub is a no-op."""
     ci = repo / ".github" / "workflows" / "ci.yml"
     assert stub_transport_mode(ci) == "json"
     before = ci.read_text()
@@ -222,13 +222,24 @@ def test_add_variable_skips_transport_and_superset(repo, capsys):
 def test_json_stub_pinned_to_old_tag_warns(capsys):
     """Reviewer finding F2: a JSON stub pinned to a pre-JSON tag cannot start;
     migrate_ci_to_stub must warn on any non-master pin with json transport."""
-    stub = migrate_ci_to_stub(pin="@0.2.14")
+    stub = migrate_ci_to_stub(pin="@0.2.14", transport="json")
     assert "uv-ci.yml@0.2.14" in stub
     err = capsys.readouterr().err
     assert "CANNOT START" in err and "--transport named" in err
-    # named transport with a pin is fine — no warning
-    migrate_ci_to_stub(pin="@0.2.14", transport="named")
+    # the default named transport with a pin is fine — no warning
+    migrate_ci_to_stub(pin="@0.2.14")
     assert "CANNOT START" not in capsys.readouterr().err
+
+
+def test_the_default_stub_passes_secrets_by_name(tmp_path, capsys):
+    """Issue #74: the default stub lists secrets by name; JSON is an explicit
+    opt-in that says what it hands over."""
+    ci = _make_repo(tmp_path, migrate_ci_to_stub()) / ".github" / "workflows" / "ci.yml"
+    assert stub_transport_mode(ci) == "named"
+    assert "warning" not in capsys.readouterr().err
+    migrate_ci_to_stub(transport="json")
+    err = capsys.readouterr().err
+    assert "EVERY secret" in err and "i2mint/wads#74" in err
 
 
 def test_named_stub_warns_outside_superset_names(tmp_path, capsys):

@@ -364,7 +364,9 @@ def test_on_demand_stub_says_nothing_runs_unless_asked():
     assert set(stub[True]) == {"push", "workflow_dispatch"}, "no pull_request trigger"
     assert stub["jobs"]["ci"]["if"] == stub_if_expression(MARKER)
     assert stub["jobs"]["ci"]["uses"] == "i2mint/wads/.github/workflows/uv-ci.yml@master"
-    assert "WADS_CI_SECRETS_JSON" in stub["jobs"]["ci"]["secrets"]
+    assert stub["jobs"]["ci"]["secrets"] == {
+        "PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"
+    }
 
 
 @bash_required
@@ -629,6 +631,38 @@ def test_ci_to_stub_keeps_the_existing_pin_transport_and_inputs(
     assert "WADS_CI_SECRETS_JSON" not in job["secrets"]
     assert job["with"] == {"project-name": "my_pkg"}
     assert job["if"] == stub_if_expression(MARKER)
+
+
+def test_flip_converts_a_json_stub_to_the_named_transport(tmp_path, capsys):
+    """A re-render never keeps the JSON transport unless asked (i2mint/wads#74)."""
+    as_json = migrate_ci_to_stub(transport="json")
+    _write_repo(tmp_path, pyproject=COMMENTED_PYPROJECT, ci=as_json)
+    result = flip_to_on_demand(tmp_path)
+    job = yaml.safe_load((tmp_path / ".github/workflows/ci.yml").read_text())["jobs"]["ci"]
+    assert job["secrets"] == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
+    assert any("--transport json" in note for note in result.notes)
+
+
+def test_ci_to_stub_converts_a_json_stub_unless_asked_to_keep_it(
+    tmp_path, monkeypatch, capsys
+):
+    from wads.migration import main
+
+    as_json = migrate_ci_to_stub(transport="json")
+    ci = _write_repo(tmp_path, pyproject=ON_DEMAND_PYPROJECT, ci=as_json)
+    capsys.readouterr()
+    monkeypatch.setattr("sys.argv", ["wads-migrate", "ci-to-stub", str(ci)])
+    main()
+    job = yaml.safe_load(ci.read_text())["jobs"]["ci"]
+    assert job["secrets"] == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
+    assert "--transport json to keep it" in capsys.readouterr().err
+
+    argv = ["wads-migrate", "ci-to-stub", str(ci), "--transport", "json"]
+    monkeypatch.setattr("sys.argv", argv)
+    main()
+    job = yaml.safe_load(ci.read_text())["jobs"]["ci"]
+    assert list(job["secrets"]) == ["WADS_CI_SECRETS_JSON"]
+    assert "EVERY secret" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(

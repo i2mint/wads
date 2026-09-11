@@ -30,9 +30,9 @@ as an escape valve for repos that need to customize CI beyond `[tool.wads.ci.*]`
 | Con | Mitigation |
 |---|---|
 | Bad wads merge breaks CI everywhere on next run | Wads's own CI runs the reusable workflow first — canary catches obvious breaks. **Crucially: broken CI ≠ broken release.** Publish is gated on workflow success, so a bad wads change blocks publication for downstream consumers until wads is fixed, but never ships a broken artifact. This is what makes floating `@master` safe by default. |
-| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @0.2.15` writes the stub with a tag pin instead of `@master` (i2mint tags are bare versions — **no `v` prefix**; `@v0.2.15` would reference a nonexistent ref). A default (JSON-transport) stub needs a tag from a release **after 0.2.14** — older tags don't declare `WADS_CI_SECRETS_JSON` and the workflow is rejected at parse time (the CLI warns loudly if you try). The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
-| A secret your tests need isn't reaching CI | Run `wads-secrets add VAR_NAME` (see "Secrets" below). It declares the var in `[tool.wads.ci.env]`; on the default JSON transport nothing else is needed (every repo secret is passed automatically). Only a stub on the opt-in *named* transport needs a pass-through line, which the CLI adds — refusing names outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), since passing one would make the workflow fail to start. |
-| Secrets must reach a reusable workflow owned by a different account | The stub passes secrets **explicitly** (NOT `secrets: inherit`, which is unreliable cross-owner). The default is the JSON transport — the whole `secrets` context serialized into the one declared secret `WADS_CI_SECRETS_JSON`. A named-transport stub instead lists each name, generated from `[tool.wads.ci.env]` at migrate time and extended by `wads-secrets add`. |
+| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @0.2.15` writes the stub with a tag pin instead of `@master` (i2mint tags are bare versions — **no `v` prefix**; `@v0.2.15` would reference a nonexistent ref). An opt-in JSON-transport stub needs a tag from a release **after 0.2.14** — older tags don't declare `WADS_CI_SECRETS_JSON` and the workflow is rejected at parse time (the CLI warns loudly if you try); the default named stub works with any tag. The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
+| A secret your tests need isn't reaching CI | Run `wads-secrets add VAR_NAME` (see "Secrets" below). It declares the var in `[tool.wads.ci.env]` and adds the pass-through line to the default (named) stub — refusing names outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), since passing one would make the workflow fail to start; add the name to the superset (additive, breaks no stub) or use `--variable` for a non-sensitive value. An opt-in JSON-transport stub needs no pass-through line. |
+| Secrets must reach a reusable workflow owned by a different account | The stub passes secrets **explicitly** (NOT `secrets: inherit`, which is unreliable cross-owner). The default named stub lists each name, generated from `[tool.wads.ci.env]` at migrate time and extended by `wads-secrets add`. The opt-in JSON transport (`--transport json`) instead serializes the whole `secrets` context — every secret the repo can read, org-level included — into the one declared secret `WADS_CI_SECRETS_JSON`; GitHub holds new public repos that use it for approval (i2mint/wads#74). Re-renders convert a JSON stub to named unless `--transport json` is passed. |
 
 ## Detecting Current Format
 
@@ -226,9 +226,9 @@ writes it into the job environment, (b) adds the pass-through line to the stub's
 `secrets:` block so the secret is transported to the reusable workflow, and (c)
 `gh secret set`s the value if `gh` is installed (value from `$VAR_NAME` or
 `--value`). See the **Secrets** section below for the full model. Superset
-limits only apply to stubs on the opt-in *named* transport (the CLI refuses an
-edit that would make such a stub fail to start); the default JSON transport
-accepts any secret name.
+limits apply to the default *named* transport (the CLI refuses an edit that
+would make such a stub fail to start); only the opt-in JSON transport accepts
+any secret name.
 
 Do NOT hand-edit job-level `env:` blocks in ci.yml. Declare via
 `[tool.wads.ci.env]` (or `wads-secrets add`, which is the safe way to do both).
@@ -250,18 +250,7 @@ the repo's CI shape.
 
 Secrets reach a stub repo's CI through two coordinated layers:
 
-1. **Transport** — the stub's `secrets:` block *passes* secrets to the
-   reusable workflow. The default (since the wads#64 fix) is the **JSON
-   transport**: the whole `secrets` context serialized into the one declared
-   secret `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — any secret
-   name works, there is no fixed list to fall outside of. The opt-in
-   alternative (`wads-migrate ci-to-stub --transport named`) passes each
-   secret by name for a minimal surface; named transport is limited to the
-   superset declared in the wads-side `uv-ci.yml` (`on.workflow_call.secrets`,
-   generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`) — a stub naming
-   anything outside it fails at parse time (issue #63). Either way, explicit
-   pass-through is used, NOT `secrets: inherit` (unreliable across GitHub
-   accounts).
+1. **Transport** — the stub's `secrets:` block *passes* secrets to the reusable workflow. The default is the **named transport**: `PYPI_PASSWORD` plus the secret behind each `[tool.wads.ci.env]`-declared var, each by name, and nothing else. Named transport is limited to the superset declared in the wads-side `uv-ci.yml` (`on.workflow_call.secrets`, generated from `wads.ci_secrets.DEFAULT_CI_SECRETS`) — a stub naming anything outside it fails at parse time (issue #63), so the superset grows additively. The opt-in alternative (`wads-migrate ci-to-stub --transport json`) serializes the whole `secrets` context into the one declared secret `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — any secret name works, but every secret the repo can read reaches the workflow, and GitHub holds new public repos that use it for approval (issue #74). Either way, explicit pass-through is used, NOT `secrets: inherit` (unreliable across GitHub accounts).
 2. **Env-assignment** — `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
    ENV_VAR≠SECRET_NAME) decides which passed secrets become job env vars. The
@@ -272,10 +261,10 @@ Secrets reach a stub repo's CI through two coordinated layers:
 **`wads-secrets add VAR_NAME [SECRET_NAME]`** does both layers (+ `gh secret set`)
 in one step — the recommended way. `wads-secrets list` shows what's configured;
 `wads-secrets superset` prints the names a *named*-transport stub may pass
-(irrelevant on the default JSON transport). For a named-transport repo needing
-a name outside the superset: regenerate with the JSON transport
-(`wads-migrate ci-to-stub`), PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits
-all repos), or use `--variable` if the value isn't sensitive.
+(irrelevant on an opt-in JSON-transport stub). For a repo needing a name
+outside the superset: PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (additive,
+benefits all repos, breaks no stub), or use `--variable` if the value isn't
+sensitive.
 
 Publishing runs only on the repo's **default branch**, when validation passes,
 when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.
@@ -334,8 +323,8 @@ gh repo edit ORG/REPO --enable-discussions       # enable when false
 - [ ] `pyproject.toml` has correct metadata (name, version, dependencies)
 - [ ] `[tool.wads.ci]` section present (or defaults are acceptable)
 - [ ] Secrets the code needs are configured via `wads-secrets add` (declares
-      in `[tool.wads.ci.env]`; on a named-transport stub it also adds the
-      pass-through line — the default JSON transport needs none)
+      in `[tool.wads.ci.env]`; on the default named stub it also adds the
+      pass-through line)
 - [ ] `.github/workflows/ci.yml` is the stub (calls `uv-ci.yml@master`) OR the
       inline `github_ci_uv.yml` escape valve
 - [ ] `PYPI_PASSWORD` secret is a PyPI API token

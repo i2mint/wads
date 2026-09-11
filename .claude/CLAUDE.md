@@ -101,7 +101,7 @@ consumer on their next CI run — no per-repo edit, no `wads-migrate` sweep.
 | Tradeoff | Pin strategy |
 |---|---|
 | Float with wads (default) | `@master` — convenient; bad wads merge breaks CI everywhere on next run, but never reaches PyPI (publish is gated on workflow success) |
-| Freeze | `@0.2.15` (or any later tag; no `v` prefix) — set via `wads-migrate ci-to-stub --pin @0.2.15`; the repo only picks up wads updates when re-pinned. A JSON-transport stub needs a tag whose uv-ci.yml declares `WADS_CI_SECRETS_JSON` (releases after 0.2.14); older pins need `--transport named` |
+| Freeze | `@0.2.15` (or any later tag; no `v` prefix) — set via `wads-migrate ci-to-stub --pin @0.2.15`; the repo only picks up wads updates when re-pinned. An opt-in JSON-transport stub needs a tag whose uv-ci.yml declares `WADS_CI_SECRETS_JSON` (releases after 0.2.14) |
 
 The "CI failure ≠ broken release" property is what makes `@master` safe by
 default: a botched wads update blocks publication of all downstream packages
@@ -119,23 +119,11 @@ A reusable workflow's secret *interface* (`on.workflow_call.secrets`) must be
 static YAML and `secrets: inherit` is unreliable cross-owner, so secrets are
 handled in two decoupled layers:
 
-1. **Transport** — the modern stub passes ONE statically-declared secret,
-   `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the caller's whole
-   secrets context, double-encoded so the value is single-line (a multiline
-   secret is masked per line, and the pretty-printed `{`/`}` lines would
-   become global masks mangling every brace in the log). Any secret name a
-   repo has reaches the workflow — nothing to enumerate, nothing to fall
-   outside of. The 62-name superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`) is
-   still declared in `uv-ci.yml` but **frozen**: it exists only so old
-   named-transport stubs keep working (a test in `test_ci_secrets.py` pins the
-   YAML to `WORKFLOW_CALL_SECRETS` = JSON secret + superset). Named transport
-   remains available for minimal-secret-surface repos via
-   `wads-migrate ci-to-stub --transport named`, which warns loudly on
-   out-of-superset names (they make the workflow unstartable — issue #63).
+1. **Transport** — the default stub passes secrets **by name**: `PYPI_PASSWORD` plus the backing secret of each `[tool.wads.ci.env]`-declared env var (`CIConfig.stub_secret_names`). The called workflow receives those and nothing else, each masked on its own. Every passed name must be in the superset `uv-ci.yml` declares (`wads.ci_secrets.DEFAULT_CI_SECRETS`; a test in `test_ci_secrets.py` pins the YAML to `WORKFLOW_CALL_SECRETS` = JSON secret + superset) or the workflow is unstartable (issue #63), so the superset grows **additively** (adding a `required: false` name never breaks a stub); `wads-secrets add` and `ci-to-stub` warn on out-of-superset names. Opt-in: `wads-migrate ci-to-stub --transport json` passes ONE secret, `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the caller's whole secrets context, double-encoded so the value is single-line (a multiline secret is masked per line, and pretty-printed `{`/`}` lines would become global masks). Any name then works, but every secret the repo can read (org-level included) reaches the workflow, and GitHub holds new public repos that use it for approval (issue #74). Re-renders (`ci-to-stub`, `ci-on-demand`) convert a JSON stub to named unless `ci-to-stub --transport json` is passed.
 2. **Env-assignment** — *which* values become job env vars (and which are
    required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
-   ENV_VAR≠SECRET_NAME). The `export-ci-env` action (`wads/scripts/export_ci_env.py`)
+   ENV_VAR≠SECRET_NAME). The `export-ci-env` action runs `wads/scripts/export_ci_env.py` from its own checkout with `python -I -S` (stdlib only; nothing installed from PyPI runs in that step) and
    reads these via `read-ci-config` outputs plus `toJSON(secrets)` /
    `toJSON(vars)`, resolves each declared name **secrets-first then repo
    variables** (the `vars` context resolves to the caller's repo in a reusable
@@ -147,11 +135,7 @@ handled in two decoupled layers:
    `PYPI_PASSWORD` through the same step (`always-required` input) so either
    transport feeds it.
 
-To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates pyproject
-(and, on legacy named stubs, the stub's pass-through) and can `gh secret set`
-the value. For non-sensitive values use `wads-secrets add NAME --variable`
-(repo variable; no transport, no masking) or put a literal in
-`[tool.wads.ci.env].defaults`.
+To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates pyproject and, on a named stub, the stub's pass-through, and can `gh secret set` the value. For non-sensitive values use `wads-secrets add NAME --variable` (repo variable; no transport, no masking) or put a literal in `[tool.wads.ci.env].defaults`.
 
 ### CI Workflow Flow (uv-ci.yml — the reusable workflow)
 

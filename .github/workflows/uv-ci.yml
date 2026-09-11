@@ -6,13 +6,12 @@ name: Continuous Integration (uv, reusable)
 # section, read by the setup job below.
 #
 # SECRETS — two layers (see wads/ci_secrets.py for the full rationale):
-#   1. Transport: the modern stub passes ONE secret, WADS_CI_SECRETS_JSON —
-#      the caller's whole `secrets` context, double-JSON-encoded
-#      (`toJSON(toJSON(secrets))`, single-line so per-line masking can't
-#      register `{`/`}` as global masks). Any secret name a repo has is
-#      transported; there is no fixed list to fall outside of (issue #63).
-#      The remaining named declarations below are the FROZEN legacy superset,
-#      kept only so older stubs that pass named subsets keep working.
+#   1. Transport: the default stub passes secrets BY NAME — PYPI_PASSWORD plus
+#      the names its [tool.wads.ci.env] declares, each one of the superset
+#      declared below (it grows additively). An opt-in stub instead passes ONE
+#      secret, WADS_CI_SECRETS_JSON — the caller's whole `secrets` context,
+#      double-JSON-encoded (`toJSON(toJSON(secrets))`, single-line so per-line
+#      masking can't register `{`/`}` as global masks).
 #      (Cross-owner `secrets: inherit` is unreliable, so we never rely on it.)
 #   2. Env-assignment: which secrets actually become job environment variables
 #      (and which are required) is driven entirely by the caller's
@@ -36,9 +35,9 @@ on:
         default: ""
 
     # ─── SECRETS (generated from wads.ci_secrets.WORKFLOW_CALL_SECRETS) ───
-    # WADS_CI_SECRETS_JSON is the modern transport: the caller's whole secrets
-    # context as one double-encoded JSON secret. The named entries after it
-    # are the FROZEN legacy superset (back-compat for named-transport stubs).
+    # WADS_CI_SECRETS_JSON is the opt-in JSON transport: the caller's whole
+    # secrets context as one double-encoded JSON secret. The named entries
+    # after it are the superset a named-transport stub (the default) may pass.
     # Every entry is `required: false`; run-time enforcement of required
     # secrets happens in the export-ci-env step (and PYPI_PASSWORD in the
     # publish job). Edit wads/ci_secrets.py, not this block by hand — a test
