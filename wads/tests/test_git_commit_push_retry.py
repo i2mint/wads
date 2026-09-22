@@ -283,7 +283,8 @@ class TestPushBackRecovery:
 
         The concurrent commit is another CI bump of the same version line, which
         is exactly what a second release run leaves behind (i2mint/wads#83). The
-        replayed commit carries the version that was just published, so it wins.
+        version this run just published to PyPI must still land in git even
+        though the whole-file content resolves onto upstream (i2mint/wads#89).
         """
         origin, clone = remote_and_clone
         _commit(clone, "pyproject.toml", 'version = "0.0.4"\n', "**CI** bump to 0.0.4")
@@ -296,7 +297,7 @@ class TestPushBackRecovery:
         result = run_push_step(clone)
 
         assert result.returncode == 0, result.stdout + result.stderr
-        assert "keeping the replayed version" in result.stdout
+        assert "replaying only the version bump" in result.stdout
         assert _subjects(clone, f"origin/{DEFAULT_BRANCH}")[:2] == [
             "**CI** bump to 0.0.4",
             "**CI** bump to 0.0.3",
@@ -305,6 +306,56 @@ class TestPushBackRecovery:
             "show", f"origin/{DEFAULT_BRANCH}:pyproject.toml", cwd=clone
         ).stdout
         assert shown == 'version = "0.0.4"\n'
+        assert not (clone / ".git" / "rebase-merge").exists()
+
+    def test_real_content_merged_concurrently_survives_the_version_bump_replay(
+        self, remote_and_clone, tmp_path
+    ):
+        """i2mint/wads#89: a real PR merge racing the bump commit must not lose data.
+
+        Reproduces the exact incident: a PR adds a whole new TOML table to
+        ``pyproject.toml`` (here standing in for ``[tool.hatch.build]``) and
+        merges to the default branch while this run's version-bump-and-format
+        commit is in flight on the same file. The old ``checkout --theirs``
+        resolution took the replayed commit's WHOLE file -- the version bump's
+        pre-merge snapshot -- silently deleting the new table. The fix must keep
+        the table (from upstream) AND still land the just-published version
+        number (from the replayed commit) in the same conflict resolution.
+        """
+        origin, clone = remote_and_clone
+        # This run's own bump commit: only the version line changes (0.0.2 seed
+        # -> 0.0.3), no other content.
+        _commit(
+            clone,
+            "pyproject.toml",
+            'version = "0.0.3"\n',
+            "**CI** bump to 0.0.3",
+        )
+        # A real, concurrently-merged PR: adds a whole new table, no version
+        # bump (still 0.0.2, the seed version) -- exactly what #95 looked like
+        # landing while a stale bump job was mid-flight.
+        other = tmp_path / "real-merge"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(
+            other,
+            "pyproject.toml",
+            'version = "0.0.2"\n\n[tool.hatch.build]\nskip-excluded-dirs = true\n',
+            "feat: add tool.hatch.build",
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:pyproject.toml", cwd=clone
+        ).stdout
+        # Both properties at once: the real merge's table survives, AND the
+        # version this run published lands (not the pre-merge "0.0.2").
+        assert "[tool.hatch.build]" in shown
+        assert "skip-excluded-dirs = true" in shown
+        assert 'version = "0.0.3"' in shown
         assert not (clone / ".git" / "rebase-merge").exists()
 
     def test_conflicting_replay_fails_cleanly(self, remote_and_clone, tmp_path):
