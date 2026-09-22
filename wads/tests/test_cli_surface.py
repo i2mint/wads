@@ -41,35 +41,19 @@ cw_testing = pytest.importorskip(
 )
 
 GOLDENS_DIR = Path(__file__).parent / "cli_goldens"
-REPO_ROOT = Path(__file__).resolve().parents[2]
 
 #: Console scripts declared in ``[project.scripts]`` that these goldens pin.
 PINNED_SCRIPTS = ("pack", "populate")
 
-
-def _pinned_env(name):
-    """Environment that makes ``name``'s ``--help`` the same on every machine.
-
-    ``populate``'s parser is built from ``populate_pkg_dir``'s defaults, and
-    those come from ``wads_configs.json``, which ``wads/__init__.py`` looks up
-    at ``$WADS_CONFIGS_FILE`` and falls back to a hardcoded dict for. The two
-    do not agree: the file says ``verbose: true`` (so ``--verbose`` is a
-    ``store_false`` flag) and the fallback says ``verbose: null`` (so
-    ``--verbose VERBOSE`` takes a value). Which one a machine sees depends on
-    whether that file is present -- and it is NOT shipped in the built wheel,
-    because ``.gitignore`` names it and hatchling honours the VCS ignore file,
-    even though the file is tracked in git and so is present in every checkout.
-
-    Pinning the variable makes the assertion be about the dispatcher, which is
-    what this file is for. The underlying split -- the same ``populate`` having
-    two different grammars depending on install shape -- is a wads packaging
-    defect that predates the cw migration and is filed separately.
-    """
-    if name == "populate":
-        return {
-            "WADS_CONFIGS_FILE": str(REPO_ROOT / "wads" / "data" / "wads_configs.json")
-        }
-    return {}
+# NOTE: ``populate``'s parser is built from ``populate_pkg_dir``'s defaults,
+# which come from ``wads_configs.json``. Until issue #78 that file was tracked
+# but ``.gitignore``d, so hatchling dropped it from the wheel and a pip-installed
+# ``populate`` fell back to the different hardcoded defaults in
+# ``wads/__init__.py`` -- ``--verbose`` a bare flag in a checkout, an option
+# demanding a value from a wheel. These goldens therefore had to pin
+# ``$WADS_CONFIGS_FILE`` to keep the grammar stable. The file now ships, so the
+# pin is gone and the replay exercises the real default resolution;
+# ``test_packaging_data_files.py`` is what keeps it that way.
 
 
 def _console_script(name):
@@ -96,9 +80,7 @@ def test_the_command_line_did_not_move(name):
     script = _console_script(name)
     if script is None:
         pytest.skip(f"console script {name!r} is not installed in this environment")
-    cw_testing.assert_replay(
-        GOLDENS_DIR / f"{name}.json", prog=[str(script)], env=_pinned_env(name)
-    )
+    cw_testing.assert_replay(GOLDENS_DIR / f"{name}.json", prog=[str(script)])
 
 
 @pytest.mark.parametrize("name", PINNED_SCRIPTS)

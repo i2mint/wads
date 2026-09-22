@@ -71,7 +71,9 @@ pkg_join = lambda *paths: os.path.join(pkg_dir, *paths)
 # TODO: Change to use ini format? (Or yaml or toml?)
 wads_configs_file = os.getenv("WADS_CONFIGS_FILE", rjoin(data_dir, "wads_configs.json"))
 try:
-    wads_configs = json.load(open(wads_configs_file))
+    with open(wads_configs_file, encoding="utf-8") as _f:
+        wads_configs = json.load(_f)
+    del _f
 except FileNotFoundError:
     wads_configs = {
         "populate_dflts": {
