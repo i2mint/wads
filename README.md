@@ -323,13 +323,14 @@ Wads uses `pyproject.toml` as a single source of truth for CI configuration. Her
 
 ### Install Extras
 
-By default CI installs only your package's core dependencies. If your test suite
-needs an extra (e.g. a heavier `create`/`dev` group), declare it so CI installs
-`.[extras]`:
+New projects default to installing the `dev` extra in CI (`.[dev]`), matching
+the `dev` extra the template declares under `[project.optional-dependencies]`
+-- so test-time tooling (pytest, ruff, ...) actually gets installed instead of
+silently never running. Override or opt out explicitly:
 
 ```toml
 [tool.wads.ci.install]
-extras = "dev"          # or a list, e.g. ["dev", "test"]
+extras = "dev"          # or a list, e.g. ["dev", "test"]; "" installs core deps only
 ```
 
 ### Python Versions and Testing
