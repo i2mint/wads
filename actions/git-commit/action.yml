@@ -135,11 +135,27 @@ runs:
           git fetch origin "$branch"
           if ! git rebase FETCH_HEAD; then
             # Two generated version bumps conflict on the version line whenever a
-            # concurrent release's bump landed while this one ran (i2mint/wads#83).
-            # The commit being replayed carries the version that was just
-            # published, so for the version files it is always the right side.
-            # Anything else in conflict is a real change from the other merge
-            # that a formatter hunk must not overwrite: abort, as before.
+            # concurrent release's bump landed while this one ran (i2mint/wads#83),
+            # OR a real PR merged and touched the same file(s) while this run's
+            # bump/format commit was in flight (i2mint/wads#89 regression: this
+            # branch used to resolve by `checkout --theirs`, taking the WHOLE
+            # conflicted file from the commit being replayed -- this job's own
+            # stale snapshot, captured before the concurrent merge landed. That
+            # silently discarded any real content the concurrent merge added,
+            # e.g. an entire `[tool.hatch.build]` table, keeping only the
+            # version-line change this job actually cared about).
+            #
+            # The correct resolution needs BOTH properties #83 and #89 each only
+            # got half of: the real, concurrently-merged file content must
+            # survive (take `--ours` -- during a rebase "ours" is the branch
+            # being rebased ONTO, i.e. the just-fetched upstream), and the
+            # version number this run just published to PyPI must still land in
+            # git (the whole reason #83 exists -- git must not end up recording
+            # an older version than what's live). So: keep upstream's content,
+            # then reapply only the version-line edit on top of it, reading the
+            # target version out of the replayed commit's side of the conflict
+            # (git conflict stage 3, ":3:<path>") rather than trusting any
+            # particular whole-file side.
             conflicted=$(git diff --name-only --diff-filter=U)
             only_version_files=1
             for path in $conflicted; do
@@ -149,9 +165,30 @@ runs:
               esac
             done
             if [ -n "$conflicted" ] && [ "$only_version_files" = 1 ]; then
-              echo "Version file conflict with a concurrent bump; keeping the replayed version in: $conflicted"
-              git checkout --theirs -- $conflicted
-              git add -- $conflicted
+              echo "Version file conflict with a concurrent change; keeping upstream content, replaying only the version bump in: $conflicted"
+              for path in $conflicted; do
+                theirs_content=$(git show ":3:$path" 2>/dev/null || true)
+                new_version=$(printf '%s\n' "$theirs_content" \
+                  | grep -m1 -E '^[[:space:]]*version[[:space:]]*=' \
+                  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+                git checkout --ours -- "$path"
+                if [ -n "$new_version" ]; then
+                  case "$path" in
+                    pyproject.toml)
+                      sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$new_version\"/" "$path"
+                      ;;
+                    setup.cfg)
+                      sed -i -E "s/^version = [0-9]+\.[0-9]+\.[0-9]+/version = $new_version/" "$path"
+                      ;;
+                    setup.py)
+                      # No fixed version-field syntax to target safely; skip --
+                      # the next publish run's own bump step corrects it, and
+                      # skipping never loses data (unlike the old --theirs).
+                      ;;
+                  esac
+                fi
+                git add -- "$path"
+              done
               if ! GIT_EDITOR=true git rebase --continue; then
                 git rebase --abort || true
                 echo "::error::Cannot replay this commit onto the current 'origin/$branch' even after resolving the version files. Resolve by hand."
