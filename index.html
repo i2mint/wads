@@ -1,612 +1,1041 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="API reference" href="api.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>wads</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
 
 
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to wads’s documentation! &mdash; wads 0.2.25 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  --color-brand-primary: #00648f;
+  --color-brand-content: #00648f;
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=78e9746c"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
-      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="wads" href="module_docs/wads.html" /> 
-</head>
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #45c7f7;
+  --color-brand-content: #45c7f7;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #45c7f7;
+  --color-brand-content: #45c7f7;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
 
-          
-          
-          <a href="#" class="icon icon-home">
-            wads
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/__main__.html">wads.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_local.html">wads.ci_local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_secrets.html">wads.ci_secrets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_trigger.html">wads.ci_trigger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_skills.html">wads.install_skills</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_system_deps.html">wads.install_system_deps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licence_check.html">wads.licence_check</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licensing.html">wads.licensing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration.html">wads.migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/npm_config.html">wads.npm_config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/pack.html">wads.pack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/profiles.html">wads.profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/project_setup.html">wads.project_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/repo_audit.html">wads.repo_audit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html">wads.scripts.export_ci_env</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/secrets_cli.html">wads.secrets_cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/setup_utils.html">wads.setup_utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/templating.html">wads.templating</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_git_commit_push_retry.html">wads.tests.test_git_commit_push_retry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_ci_trigger_gate.html">wads.tests.test_npm_ci_trigger_gate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_secrets_cli.html">wads.tests.test_secrets_cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html">wads.tests.test_system_deps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_templating.html">wads.tests.test_templating</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/toml_util.html">wads.toml_util</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/user_dirs.html">wads.user_dirs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/util.html">wads.util</a></li>
-</ul>
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">wads</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to wads’s documentation!</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="welcome-to-wads-s-documentation">
-<h1>Welcome to wads’s documentation!<a class="headerlink" href="#welcome-to-wads-s-documentation" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads.html">wads</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads.html#console-scripts">Console Scripts</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/__main__.html">wads.__main__</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/__main__.html#wads.__main__.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents.html">wads.agents</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.CIDiagnosis"><code class="docutils literal notranslate"><span class="pre">CIDiagnosis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.DependencyIssue"><code class="docutils literal notranslate"><span class="pre">DependencyIssue</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.DependencyReport"><code class="docutils literal notranslate"><span class="pre">DependencyReport</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.TestAnalysisReport"><code class="docutils literal notranslate"><span class="pre">TestAnalysisReport</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.TestFailure"><code class="docutils literal notranslate"><span class="pre">TestFailure</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.TestFailurePattern"><code class="docutils literal notranslate"><span class="pre">TestFailurePattern</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.analyze_dependencies"><code class="docutils literal notranslate"><span class="pre">analyze_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.diagnose_ci_failure"><code class="docutils literal notranslate"><span class="pre">diagnose_ci_failure()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents.html#wads.agents.parse_pytest_output"><code class="docutils literal notranslate"><span class="pre">parse_pytest_output()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html">wads.agents.ci_debug_agent</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis"><code class="docutils literal notranslate"><span class="pre">CIDiagnosis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.TestFailure"><code class="docutils literal notranslate"><span class="pre">TestFailure</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_ci_failure"><code class="docutils literal notranslate"><span class="pre">diagnose_ci_failure()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_missing_python_deps"><code class="docutils literal notranslate"><span class="pre">diagnose_missing_python_deps()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.diagnose_missing_system_deps"><code class="docutils literal notranslate"><span class="pre">diagnose_missing_system_deps()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_logs"><code class="docutils literal notranslate"><span class="pre">fetch_workflow_logs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.fetch_workflow_runs"><code class="docutils literal notranslate"><span class="pre">fetch_workflow_runs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.generate_fix_instructions"><code class="docutils literal notranslate"><span class="pre">generate_fix_instructions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.get_github_token"><code class="docutils literal notranslate"><span class="pre">get_github_token()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.parse_ci_warnings"><code class="docutils literal notranslate"><span class="pre">parse_ci_warnings()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.parse_pytest_failures"><code class="docutils literal notranslate"><span class="pre">parse_pytest_failures()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/ci_debug_agent.html#wads.agents.ci_debug_agent.print_diagnosis"><code class="docutils literal notranslate"><span class="pre">print_diagnosis()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html">wads.agents.dependency_resolver</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyIssue"><code class="docutils literal notranslate"><span class="pre">DependencyIssue</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.DependencyReport"><code class="docutils literal notranslate"><span class="pre">DependencyReport</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.analyze_dependencies"><code class="docutils literal notranslate"><span class="pre">analyze_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.extract_imports_from_file"><code class="docutils literal notranslate"><span class="pre">extract_imports_from_file()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.get_installed_packages"><code class="docutils literal notranslate"><span class="pre">get_installed_packages()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.parse_error_message"><code class="docutils literal notranslate"><span class="pre">parse_error_message()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.print_report"><code class="docutils literal notranslate"><span class="pre">print_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.read_project_dependencies"><code class="docutils literal notranslate"><span class="pre">read_project_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.resolve_package_name"><code class="docutils literal notranslate"><span class="pre">resolve_package_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/dependency_resolver.html#wads.agents.dependency_resolver.scan_project_imports"><code class="docutils literal notranslate"><span class="pre">scan_project_imports()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html">wads.agents.test_analyzer</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.TestAnalysisReport"><code class="docutils literal notranslate"><span class="pre">TestAnalysisReport</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.TestFailurePattern"><code class="docutils literal notranslate"><span class="pre">TestFailurePattern</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.categorize_failure"><code class="docutils literal notranslate"><span class="pre">categorize_failure()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.parse_pytest_output"><code class="docutils literal notranslate"><span class="pre">parse_pytest_output()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.print_report"><code class="docutils literal notranslate"><span class="pre">print_report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/agents/test_analyzer.html#wads.agents.test_analyzer.suggest_fix"><code class="docutils literal notranslate"><span class="pre">suggest_fix()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_config.html">wads.ci_config</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.CIConfig"><code class="docutils literal notranslate"><span class="pre">CIConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_config.html#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_local.html">wads.ci_local</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.CILocalReport"><code class="docutils literal notranslate"><span class="pre">CILocalReport</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.RunResult"><code class="docutils literal notranslate"><span class="pre">RunResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.ci_local"><code class="docutils literal notranslate"><span class="pre">ci_local()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.plan_ci_local"><code class="docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.pytest_argv"><code class="docutils literal notranslate"><span class="pre">pytest_argv()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.render_plan"><code class="docutils literal notranslate"><span class="pre">render_plan()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.resolve_pypi_token"><code class="docutils literal notranslate"><span class="pre">resolve_pypi_token()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.run_ci_local"><code class="docutils literal notranslate"><span class="pre">run_ci_local()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.subprocess_runner"><code class="docutils literal notranslate"><span class="pre">subprocess_runner()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.uv_build_args"><code class="docutils literal notranslate"><span class="pre">uv_build_args()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_local.html#wads.ci_local.venv_python"><code class="docutils literal notranslate"><span class="pre">venv_python()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_secrets.html">wads.ci_secrets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#transport-one-json-secret-the-modern-default">Transport: one JSON secret (the modern default)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#the-named-superset-legacy-transport-kept-for-back-compat">The named superset (legacy transport, kept for back-compat)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.DEFAULT_CI_SECRETS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_CI_SECRETS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.InvalidSecretName"><code class="docutils literal notranslate"><span class="pre">InvalidSecretName</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.WORKFLOW_CALL_SECRETS"><code class="docutils literal notranslate"><span class="pre">WORKFLOW_CALL_SECRETS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.is_valid_secret_name"><code class="docutils literal notranslate"><span class="pre">is_valid_secret_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.normalize_secret_name"><code class="docutils literal notranslate"><span class="pre">normalize_secret_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_json_transport"><code class="docutils literal notranslate"><span class="pre">render_stub_json_transport()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_stub_secrets_passthrough"><code class="docutils literal notranslate"><span class="pre">render_stub_secrets_passthrough()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets"><code class="docutils literal notranslate"><span class="pre">render_workflow_call_secrets()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/ci_trigger.html">wads.ci_trigger</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.FlipResult"><code class="docutils literal notranslate"><span class="pre">FlipResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.classify_ci_workflow"><code class="docutils literal notranslate"><span class="pre">classify_ci_workflow()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.commit_paths"><code class="docutils literal notranslate"><span class="pre">commit_paths()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.flip_to_on_demand"><code class="docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_inputs"><code class="docutils literal notranslate"><span class="pre">render_stub_inputs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.render_stub_trigger"><code class="docutils literal notranslate"><span class="pre">render_stub_trigger()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.repo_pyproject_for"><code class="docutils literal notranslate"><span class="pre">repo_pyproject_for()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.run_ci_on_demand"><code class="docutils literal notranslate"><span class="pre">run_ci_on_demand()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.set_on_demand_in_pyproject"><code class="docutils literal notranslate"><span class="pre">set_on_demand_in_pyproject()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_customizations"><code class="docutils literal notranslate"><span class="pre">stub_customizations()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_if_expression"><code class="docutils literal notranslate"><span class="pre">stub_if_expression()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_inputs_of"><code class="docutils literal notranslate"><span class="pre">stub_inputs_of()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.stub_shape"><code class="docutils literal notranslate"><span class="pre">stub_shape()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.trigger_for_workflow"><code class="docutils literal notranslate"><span class="pre">trigger_for_workflow()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.unasked_workflows"><code class="docutils literal notranslate"><span class="pre">unasked_workflows()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.uncommitted"><code class="docutils literal notranslate"><span class="pre">uncommitted()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/ci_trigger.html#wads.ci_trigger.validate_trigger"><code class="docutils literal notranslate"><span class="pre">validate_trigger()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/config_comparison.html">wads.config_comparison</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_ci_workflow"><code class="docutils literal notranslate"><span class="pre">compare_ci_workflow()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_manifest_in"><code class="docutils literal notranslate"><span class="pre">compare_manifest_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">compare_pyproject_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.compare_setup_cfg"><code class="docutils literal notranslate"><span class="pre">compare_setup_cfg()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/config_comparison.html#wads.config_comparison.summarize_config_status"><code class="docutils literal notranslate"><span class="pre">summarize_config_status()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/fleet_migrate.html">wads.fleet_migrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.RepoResult"><code class="docutils literal notranslate"><span class="pre">RepoResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.fleet_stub"><code class="docutils literal notranslate"><span class="pre">fleet_stub()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.migrate_one_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_one_to_stub()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.read_sweep_state"><code class="docutils literal notranslate"><span class="pre">read_sweep_state()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/fleet_migrate.html#wads.fleet_migrate.select_candidates"><code class="docutils literal notranslate"><span class="pre">select_candidates()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_skills.html">wads.install_skills</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_skills.html#wads.install_skills.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_skills.html#wads.install_skills.list_available_skills"><code class="docutils literal notranslate"><span class="pre">list_available_skills()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_skills.html#wads.install_skills.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/install_system_deps.html">wads.install_system_deps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.check_if_installed"><code class="docutils literal notranslate"><span class="pre">check_if_installed()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.detect_platform"><code class="docutils literal notranslate"><span class="pre">detect_platform()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.find_pyproject"><code class="docutils literal notranslate"><span class="pre">find_pyproject()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.install_dependency"><code class="docutils literal notranslate"><span class="pre">install_dependency()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.install_system_dependencies"><code class="docutils literal notranslate"><span class="pre">install_system_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/install_system_deps.html#wads.install_system_deps.read_system_deps"><code class="docutils literal notranslate"><span class="pre">read_system_deps()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licence_check.html">wads.licence_check</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/licensing.html">wads.licensing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/licensing.html#wads.licensing.get_licenses_from_github"><code class="docutils literal notranslate"><span class="pre">get_licenses_from_github()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/licensing.html#wads.licensing.resolve_author"><code class="docutils literal notranslate"><span class="pre">resolve_author()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/licensing.html#wads.licensing.substitute_license_placeholders"><code class="docutils literal notranslate"><span class="pre">substitute_license_placeholders()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/migration.html">wads.migration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.carry_ci_env_into_pyproject"><code class="docutils literal notranslate"><span class="pre">carry_ci_env_into_pyproject()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.extract_ci_env_vars"><code class="docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_ci_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_stub()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_ci_to_uv"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_uv()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/migration.html#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/npm_config.html">wads.npm_config</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.NPM_CI_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_CI_DEFAULTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.NPM_PUBLISH_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_PUBLISH_DEFAULTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.NPM_TRIGGER_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">NPM_TRIGGER_DEFAULTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.NpmCIConfig"><code class="docutils literal notranslate"><span class="pre">NpmCIConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_PACKAGE_MANAGERS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/npm_config.html#wads.npm_config.TRIGGER_MODES"><code class="docutils literal notranslate"><span class="pre">TRIGGER_MODES</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/pack.html">wads.pack</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.COMMANDS"><code class="docutils literal notranslate"><span class="pre">COMMANDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.check_in"><code class="docutils literal notranslate"><span class="pre">check_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.current_pypi_version"><code class="docutils literal notranslate"><span class="pre">current_pypi_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.extract_pkg_dir_and_name"><code class="docutils literal notranslate"><span class="pre">extract_pkg_dir_and_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.folders_that_have_init_py_files"><code class="docutils literal notranslate"><span class="pre">folders_that_have_init_py_files()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.get_module_path"><code class="docutils literal notranslate"><span class="pre">get_module_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.get_name_from_configs"><code class="docutils literal notranslate"><span class="pre">get_name_from_configs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.get_pkg_name"><code class="docutils literal notranslate"><span class="pre">get_pkg_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.go"><code class="docutils literal notranslate"><span class="pre">go()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.goo"><code class="docutils literal notranslate"><span class="pre">goo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.highest_pypi_version"><code class="docutils literal notranslate"><span class="pre">highest_pypi_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.http_get_json"><code class="docutils literal notranslate"><span class="pre">http_get_json()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.increment_configs_version"><code class="docutils literal notranslate"><span class="pre">increment_configs_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.postprocess_ini_section_items"><code class="docutils literal notranslate"><span class="pre">postprocess_ini_section_items()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.preprocess_ini_section_items"><code class="docutils literal notranslate"><span class="pre">preprocess_ini_section_items()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.process_missing_module_docstrings"><code class="docutils literal notranslate"><span class="pre">process_missing_module_docstrings()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.pyproject_toml_version"><code class="docutils literal notranslate"><span class="pre">pyproject_toml_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.read_and_resolve_setup_configs"><code class="docutils literal notranslate"><span class="pre">read_and_resolve_setup_configs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.run_setup"><code class="docutils literal notranslate"><span class="pre">run_setup()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.set_version"><code class="docutils literal notranslate"><span class="pre">set_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.setup_cfg_version"><code class="docutils literal notranslate"><span class="pre">setup_cfg_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.sorted_versions"><code class="docutils literal notranslate"><span class="pre">sorted_versions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.twine_upload_dist"><code class="docutils literal notranslate"><span class="pre">twine_upload_dist()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.update_setup_cfg"><code class="docutils literal notranslate"><span class="pre">update_setup_cfg()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.validate_package_name"><code class="docutils literal notranslate"><span class="pre">validate_package_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.validate_versions"><code class="docutils literal notranslate"><span class="pre">validate_versions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/pack.html#wads.pack.versions_from_pypi"><code class="docutils literal notranslate"><span class="pre">versions_from_pypi()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/populate.html">wads.populate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.PopulateTracker"><code class="docutils literal notranslate"><span class="pre">PopulateTracker</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.cd"><code class="docutils literal notranslate"><span class="pre">cd()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.get_github_project_description"><code class="docutils literal notranslate"><span class="pre">get_github_project_description()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.populate_pkg_dir"><code class="docutils literal notranslate"><span class="pre">populate_pkg_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.populate_proj_from_url"><code class="docutils literal notranslate"><span class="pre">populate_proj_from_url()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.update_pack_and_setup_py"><code class="docutils literal notranslate"><span class="pre">update_pack_and_setup_py()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/populate.html#wads.populate.write_pyproject_configs"><code class="docutils literal notranslate"><span class="pre">write_pyproject_configs()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/profiles.html">wads.profiles</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.FRONTEND_PROFILES"><code class="docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.FrontendProfile"><code class="docutils literal notranslate"><span class="pre">FrontendProfile</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.apply_frontend"><code class="docutils literal notranslate"><span class="pre">apply_frontend()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.apply_npm_overlay"><code class="docutils literal notranslate"><span class="pre">apply_npm_overlay()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.apply_tests_overlay"><code class="docutils literal notranslate"><span class="pre">apply_tests_overlay()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.frontend_context"><code class="docutils literal notranslate"><span class="pre">frontend_context()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.get_frontend_profile"><code class="docutils literal notranslate"><span class="pre">get_frontend_profile()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.make_tests_overlay_artifacts"><code class="docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.npm_overlay_artifacts"><code class="docutils literal notranslate"><span class="pre">npm_overlay_artifacts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.npm_overlay_context"><code class="docutils literal notranslate"><span class="pre">npm_overlay_context()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/profiles.html#wads.profiles.register_frontend_profile"><code class="docutils literal notranslate"><span class="pre">register_frontend_profile()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/project_setup.html">wads.project_setup</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.check_name_availability"><code class="docutils literal notranslate"><span class="pre">check_name_availability()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.check_names"><code class="docutils literal notranslate"><span class="pre">check_names()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.create_github_repo"><code class="docutils literal notranslate"><span class="pre">create_github_repo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.create_misc_docs"><code class="docutils literal notranslate"><span class="pre">create_misc_docs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.detect_github_username"><code class="docutils literal notranslate"><span class="pre">detect_github_username()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.github_repo_url"><code class="docutils literal notranslate"><span class="pre">github_repo_url()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.is_available_on_github"><code class="docutils literal notranslate"><span class="pre">is_available_on_github()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.is_available_on_pypi"><code class="docutils literal notranslate"><span class="pre">is_available_on_pypi()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.list_name_candidate_files"><code class="docutils literal notranslate"><span class="pre">list_name_candidate_files()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.load_name_candidates"><code class="docutils literal notranslate"><span class="pre">load_name_candidates()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.pypi_project_url"><code class="docutils literal notranslate"><span class="pre">pypi_project_url()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.repo_exists"><code class="docutils literal notranslate"><span class="pre">repo_exists()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.setup_opsward_for_project"><code class="docutils literal notranslate"><span class="pre">setup_opsward_for_project()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/project_setup.html#wads.project_setup.setup_project"><code class="docutils literal notranslate"><span class="pre">setup_project()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/repo_audit.html">wads.repo_audit</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/repo_audit.html#wads.repo_audit.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/repo_audit.html#wads.repo_audit.audit_github"><code class="docutils literal notranslate"><span class="pre">audit_github()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/repo_audit.html#wads.repo_audit.audit_repo"><code class="docutils literal notranslate"><span class="pre">audit_repo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/repo_audit.html#wads.repo_audit.classify_workflow"><code class="docutils literal notranslate"><span class="pre">classify_workflow()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html">wads.scrap.handle_non_python_installs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_ci"><code class="docutils literal notranslate"><span class="pre">make_install_instructions_for_ci()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.make_install_instructions_for_readme"><code class="docutils literal notranslate"><span class="pre">make_install_instructions_for_readme()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scrap/handle_non_python_installs.html#wads.scrap.handle_non_python_installs.run_install_commands"><code class="docutils literal notranslate"><span class="pre">run_install_commands()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts.html">wads.scripts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html">wads.scripts.build_dist</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.build_distributions"><code class="docutils literal notranslate"><span class="pre">build_distributions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/build_dist.html#wads.scripts.build_dist.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html">wads.scripts.export_ci_env</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.ExportPlan"><code class="docutils literal notranslate"><span class="pre">ExportPlan</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.export_ci_env"><code class="docutils literal notranslate"><span class="pre">export_ci_env()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/export_ci_env.html#wads.scripts.export_ci_env.merge_transported_secrets"><code class="docutils literal notranslate"><span class="pre">merge_transported_secrets()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html">wads.scripts.install_deps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.install_from_dependency_files"><code class="docutils literal notranslate"><span class="pre">install_from_dependency_files()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.install_pypi_packages"><code class="docutils literal notranslate"><span class="pre">install_pypi_packages()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/install_deps.html#wads.scripts.install_deps.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/read_ci_config.html">wads.scripts.read_ci_config</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/read_ci_config.html#wads.scripts.read_ci_config.read_and_export_ci_config"><code class="docutils literal notranslate"><span class="pre">read_and_export_ci_config()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/set_env_vars.html">wads.scripts.set_env_vars</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables"><code class="docutils literal notranslate"><span class="pre">set_environment_variables()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html">wads.scripts.validate_ci_env</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/scripts/validate_ci_env.html#wads.scripts.validate_ci_env.validate_ci_environment"><code class="docutils literal notranslate"><span class="pre">validate_ci_environment()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/secrets_cli.html">wads.secrets_cli</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.add"><code class="docutils literal notranslate"><span class="pre">add()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.add_env_var_to_pyproject"><code class="docutils literal notranslate"><span class="pre">add_env_var_to_pyproject()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.add_secret_to_stub"><code class="docutils literal notranslate"><span class="pre">add_secret_to_stub()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.list_"><code class="docutils literal notranslate"><span class="pre">list_()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.set_github_secret"><code class="docutils literal notranslate"><span class="pre">set_github_secret()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.stub_transport_mode"><code class="docutils literal notranslate"><span class="pre">stub_transport_mode()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/secrets_cli.html#wads.secrets_cli.superset"><code class="docutils literal notranslate"><span class="pre">superset()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/setup_utils.html">wads.setup_utils</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.DiagnosticResult"><code class="docutils literal notranslate"><span class="pre">DiagnosticResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.InstallResult"><code class="docutils literal notranslate"><span class="pre">InstallResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.check_environment_variables"><code class="docutils literal notranslate"><span class="pre">check_environment_variables()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.check_system_dependency"><code class="docutils literal notranslate"><span class="pre">check_system_dependency()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.diagnose_setup"><code class="docutils literal notranslate"><span class="pre">diagnose_setup()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.get_current_platform"><code class="docutils literal notranslate"><span class="pre">get_current_platform()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.get_installed_pip_packages"><code class="docutils literal notranslate"><span class="pre">get_installed_pip_packages()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.install_python_dependencies"><code class="docutils literal notranslate"><span class="pre">install_python_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.install_system_dependencies"><code class="docutils literal notranslate"><span class="pre">install_system_dependencies()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.is_package_importable"><code class="docutils literal notranslate"><span class="pre">is_package_importable()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/setup_utils.html#wads.setup_utils.print_diagnostic_report"><code class="docutils literal notranslate"><span class="pre">print_diagnostic_report()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/templating.html">wads.templating</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.FilesystemTemplateSource"><code class="docutils literal notranslate"><span class="pre">FilesystemTemplateSource</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.GenerationResult"><code class="docutils literal notranslate"><span class="pre">GenerationResult</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.GithubTemplateSource"><code class="docutils literal notranslate"><span class="pre">GithubTemplateSource</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.JINJA_DELIMITERS"><code class="docutils literal notranslate"><span class="pre">JINJA_DELIMITERS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.apply_placeholders"><code class="docutils literal notranslate"><span class="pre">apply_placeholders()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.generate"><code class="docutils literal notranslate"><span class="pre">generate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.make_jinja_env"><code class="docutils literal notranslate"><span class="pre">make_jinja_env()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/templating.html#wads.templating.render"><code class="docutils literal notranslate"><span class="pre">render()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/conftest.html">wads.tests.conftest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/data/example_module.html">wads.tests.data.example_module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_action_definitions.html">wads.tests.test_action_definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_env_extraction.html">wads.tests.test_ci_env_extraction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_local.html">wads.tests.test_ci_local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_secrets.html">wads.tests.test_ci_secrets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_ci_trigger.html">wads.tests.test_ci_trigger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_cli_surface.html">wads.tests.test_cli_surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_config_comparison.html">wads.tests.test_config_comparison</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html">wads.tests.test_env_vars</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_in_template_substitutions"><code class="docutils literal notranslate"><span class="pre">test_env_vars_in_template_substitutions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_parsing"><code class="docutils literal notranslate"><span class="pre">test_env_vars_parsing()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_env_vars.html#wads.tests.test_env_vars.test_env_vars_yaml_generation"><code class="docutils literal notranslate"><span class="pre">test_env_vars_yaml_generation()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_export_ci_env.html">wads.tests.test_export_ci_env</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_blob_sourced_values_are_export_equivalent_to_named"><code class="docutils literal notranslate"><span class="pre">test_blob_sourced_values_are_export_equivalent_to_named()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_malformed_secrets_json_is_redacted"><code class="docutils literal notranslate"><span class="pre">test_malformed_secrets_json_is_redacted()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_export_ci_env.html#wads.tests.test_export_ci_env.test_masks_percent_escape"><code class="docutils literal notranslate"><span class="pre">test_masks_percent_escape()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_frontend_profiles.html">wads.tests.test_frontend_profiles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_git_commit_push_retry.html">wads.tests.test_git_commit_push_retry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_install_extras.html">wads.tests.test_install_extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_integration_system_deps.html">wads.tests.test_integration_system_deps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_integration_system_deps.html#wads.tests.test_integration_system_deps.test_integration_system_deps_in_generated_ci"><code class="docutils literal notranslate"><span class="pre">test_integration_system_deps_in_generated_ci()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_licence_check.html">wads.tests.test_licence_check</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_light_install.html">wads.tests.test_light_install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_migration.html">wads.tests.test_migration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_ci_trigger_gate.html">wads.tests.test_npm_ci_trigger_gate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_npm_setup.html">wads.tests.test_npm_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_and_pack.html">wads.tests.test_populate_and_pack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_populate_characterization.html">wads.tests.test_populate_characterization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_project_setup.html">wads.tests.test_project_setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_script_cli.html">wads.tests.test_script_cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_scripts.html">wads.tests.test_scripts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_secrets_cli.html">wads.tests.test_secrets_cli</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html">wads.tests.test_system_deps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_ci_template_substitutions"><code class="docutils literal notranslate"><span class="pre">test_ci_template_substitutions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_no_system_deps"><code class="docutils literal notranslate"><span class="pre">test_no_system_deps()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_dict"><code class="docutils literal notranslate"><span class="pre">test_system_deps_dict()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_list"><code class="docutils literal notranslate"><span class="pre">test_system_deps_list()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/tests/test_system_deps.html#wads.tests.test_system_deps.test_system_deps_with_pre_test_commands"><code class="docutils literal notranslate"><span class="pre">test_system_deps_with_pre_test_commands()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_templating.html">wads.tests.test_templating</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_tests_overlay.html">wads.tests.test_tests_overlay</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_user_dirs.html">wads.tests.test_user_dirs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_uv_workflow_template.html">wads.tests.test_uv_workflow_template</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_workflow_gates.html">wads.tests.test_workflow_gates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/tests/test_workflow_template.html">wads.tests.test_workflow_template</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/toml_util.html">wads.toml_util</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.get_project_metadata"><code class="docutils literal notranslate"><span class="pre">get_project_metadata()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.get_project_name"><code class="docutils literal notranslate"><span class="pre">get_project_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.get_project_version"><code class="docutils literal notranslate"><span class="pre">get_project_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.read_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">read_pyproject_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.set_project_version"><code class="docutils literal notranslate"><span class="pre">set_project_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.update_project_metadata"><code class="docutils literal notranslate"><span class="pre">update_project_metadata()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.update_project_url"><code class="docutils literal notranslate"><span class="pre">update_project_url()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/toml_util.html#wads.toml_util.write_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">write_pyproject_toml()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/user_dirs.html">wads.user_dirs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.cache_dir"><code class="docutils literal notranslate"><span class="pre">cache_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.config_dir"><code class="docutils literal notranslate"><span class="pre">config_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.data_dir"><code class="docutils literal notranslate"><span class="pre">data_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.name_candidates_dir"><code class="docutils literal notranslate"><span class="pre">name_candidates_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.read_user_preferences"><code class="docutils literal notranslate"><span class="pre">read_user_preferences()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.user_preferences_path"><code class="docutils literal notranslate"><span class="pre">user_preferences_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/user_dirs.html#wads.user_dirs.write_user_preferences"><code class="docutils literal notranslate"><span class="pre">write_user_preferences()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/wads/util.html">wads.util</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.find_obj"><code class="docutils literal notranslate"><span class="pre">find_obj()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.git"><code class="docutils literal notranslate"><span class="pre">git()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.highlight"><code class="docutils literal notranslate"><span class="pre">highlight()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.import_obj"><code class="docutils literal notranslate"><span class="pre">import_obj()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.mk_import_root_replacer"><code class="docutils literal notranslate"><span class="pre">mk_import_root_replacer()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.mk_replacer_from_dict"><code class="docutils literal notranslate"><span class="pre">mk_replacer_from_dict()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/wads/util.html#wads.util.replace_import_names"><code class="docutils literal notranslate"><span class="pre">replace_import_names()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-<p>Release: 0.2.25</p>
-<p>Last change: Sep 10, 2026</p>
-</section>
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="module_docs/wads.html" class="btn btn-neutral float-right" title="wads" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
     </div>
+    <div class="header-center">
+      <a href="#"><div class="brand">wads</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+  
+  <span class="sidebar-brand-text">wads</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">API reference</a><input aria-label="Toggle navigation of API reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_autosummary/wads.html">wads</a><input aria-label="Toggle navigation of wads" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/wads.agents.html">wads.agents</a><input aria-label="Toggle navigation of wads.agents" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.agents.ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.agents.dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.agents.test_analyzer.html">wads.agents.test_analyzer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.ci_local.html">wads.ci_local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.ci_trigger.html">wads.ci_trigger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.licence_check.html">wads.licence_check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.licensing.html">wads.licensing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.migration.html">wads.migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.pack.html">wads.pack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.populate.html">wads.populate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.profiles.html">wads.profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/wads.scripts.html">wads.scripts</a><input aria-label="Toggle navigation of wads.scripts" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.templating.html">wads.templating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.util.html">wads.util</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ai-agents.html">For AI agents</a></li>
+</ul>
 
-  <hr/>
+</div>
+</div>
 
-  <div role="contentinfo">
-    <p></p>
-  </div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/index.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <!-- generated by epythet -->
+<section id="wads">
+<h1>wads<a class="headerlink" href="#wads" title="Link to this heading">¶</a></h1>
+<p>Modern Python project packaging and CI/CD tools for developers who want to focus on code, not configuration.</p>
+<p><a class="reference external" href="https://pypi.org/project/wads/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/wads.svg" /></a>
+<a class="reference external" href="https://pypi.org/project/wads/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/wads.svg" /></a></p>
+<section id="what-is-wads">
+<h2>What is Wads?<a class="headerlink" href="#what-is-wads" title="Link to this heading">¶</a></h2>
+<p>Wads helps you:</p>
+<ul class="simple">
+<li><p><strong>Create new Python projects</strong> with modern tooling (pyproject.toml, GitHub Actions)</p></li>
+<li><p><strong>Manage CI/CD workflows</strong> with configuration-driven GitHub Actions</p></li>
+<li><p><strong>Handle system dependencies</strong> declaratively in pyproject.toml</p></li>
+<li><p><strong>Migrate legacy projects</strong> from setup.cfg to modern formats</p></li>
+<li><p><strong>Debug CI failures</strong> with automated diagnostics</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>wads<span class="w">          </span><span class="c1"># light core: config reading + templating engine</span>
+pip<span class="w"> </span>install<span class="w"> </span>wads<span class="o">[</span>create<span class="o">]</span><span class="w">  </span><span class="c1"># full project-creation / publishing toolchain</span>
+pip<span class="w"> </span>install<span class="w"> </span>wads<span class="o">[</span>all<span class="o">]</span><span class="w">     </span><span class="c1"># create + docs</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">wads</span></code> ships a <strong>light core</strong> (just enough to read <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code> /
+<code class="docutils literal notranslate"><span class="pre">package.json</span></code> config and run the templating engine — handy in CI) plus a
+heavier <code class="docutils literal notranslate"><span class="pre">create</span></code> extra (<code class="docutils literal notranslate"><span class="pre">requests</span></code>, <code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">wheel</span></code>, <code class="docutils literal notranslate"><span class="pre">ruamel.yaml</span></code>) for
+scaffolding and publishing. Use <code class="docutils literal notranslate"><span class="pre">wads[create]</span></code> (or <code class="docutils literal notranslate"><span class="pre">wads[all]</span></code>) when running
+<code class="docutils literal notranslate"><span class="pre">populate</span></code>/<code class="docutils literal notranslate"><span class="pre">pack</span></code> to create or publish projects.</p>
+</section>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
+<section id="create-a-new-project">
+<h3>Create a New Project<a class="headerlink" href="#create-a-new-project" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>populate<span class="w"> </span>my-project<span class="w"> </span>--root-url<span class="w"> </span>https://github.com/user/my-project
+<span class="nb">cd</span><span class="w"> </span>my-project
+</pre></div>
+</div>
+<p>This creates a complete project structure with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (modern build configuration)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">README.md</span></code>, <code class="docutils literal notranslate"><span class="pre">LICENSE</span></code>, <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code></p></li>
+<li><p>Package directory with <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code></p></li>
+<li><p>GitHub Actions CI/CD workflow (optional)</p></li>
+</ul>
+</section>
+<section id="add-a-frontend-component-for-js-ts-parts-optional">
+<h3>Add a frontend component for JS/TS parts (optional)<a class="headerlink" href="#add-a-frontend-component-for-js-ts-parts-optional" title="Link to this heading">¶</a></h3>
+<p>Python projects often ship a frontend component (a widget, a browser UI, a
+TypeScript library). <code class="docutils literal notranslate"><span class="pre">populate</span> <span class="pre">--frontend</span> <span class="pre">&lt;profile&gt;</span></code> adds a parametrized
+<strong>NPM CI</strong> alongside the Python one, following the same
+“config-file-driven, fixed-workflow” model. Pick one or more <strong>profiles</strong>:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Profile</p></th>
+<th class="head"><p>Adds</p></th>
+<th class="head"><p>Subdir</p></th>
+<th class="head"><p>CI</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">js</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">package.json</span></code> (npm)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">js/</span></code></p></td>
+<td><p>single-package <code class="docutils literal notranslate"><span class="pre">npm-ci.yml</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">package.json</span></code> + <code class="docutils literal notranslate"><span class="pre">tsconfig.json</span></code> + <code class="docutils literal notranslate"><span class="pre">src/index.ts</span></code> (tsup build, vitest)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ts/</span></code></p></td>
+<td><p>single-package <code class="docutils literal notranslate"><span class="pre">npm-ci.yml</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts-monorepo</span></code></p></td>
+<td><p>pnpm workspace root + <code class="docutils literal notranslate"><span class="pre">turbo.json</span></code> + an example <code class="docutils literal notranslate"><span class="pre">packages/core</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ts/</span></code></p></td>
+<td><p>matrixed <code class="docutils literal notranslate"><span class="pre">npm-ci-monorepo.yml</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># A single TypeScript component:</span>
+populate<span class="w"> </span>my-project<span class="w"> </span>--root-url<span class="w"> </span>https://github.com/user/my-project<span class="w"> </span>--frontend<span class="w"> </span>ts
 
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+<span class="c1"># Several components at once — each in its own subdir, no workflow collision:</span>
+populate<span class="w"> </span>my-project<span class="w"> </span>--root-url<span class="w"> </span>https://github.com/user/my-project<span class="w"> </span>--frontend<span class="w"> </span>js,ts
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--with-npm</span></code> is kept as a back-compat alias for <code class="docutils literal notranslate"><span class="pre">--frontend</span> <span class="pre">js</span></code>.</p>
+<p>Each component gets:</p>
+<ul class="simple">
+<li><p>a <code class="docutils literal notranslate"><span class="pre">package.json</span></code> with a namespaced <code class="docutils literal notranslate"><span class="pre">&quot;wads&quot;</span></code> config block (<code class="docutils literal notranslate"><span class="pre">wads.ci.*</span></code>)
+controlling node versions, lint/test/build commands, and publishing —
+analogous to <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code> in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>;</p></li>
+<li><p>a path-filtered <code class="docutils literal notranslate"><span class="pre">.github/workflows/npm-ci[-&lt;subdir&gt;].yml</span></code> stub calling wads’s
+reusable NPM workflow (the <code class="docutils literal notranslate"><span class="pre">js</span></code> component keeps the bare <code class="docutils literal notranslate"><span class="pre">npm-ci.yml</span></code>; every
+other component gets <code class="docutils literal notranslate"><span class="pre">npm-ci-&lt;subdir&gt;.yml</span></code>, so multiple components never
+collide).</p></li>
+</ul>
+<p><strong>Validation runs on every push/PR; publishing is opt-in.</strong> It publishes only
+when <code class="docutils literal notranslate"><span class="pre">wads.ci.publish.enabled</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> <strong>and</strong> the commit message contains
+the marker <strong><code class="docutils literal notranslate"><span class="pre">[publish-npm]</span></code></strong> (deliberately distinct from the Python side).
+Publishing uses npm OIDC trusted publishing + provenance by default (no
+long-lived token). For a single component, customize the subdirectory and
+package name with <code class="docutils literal notranslate"><span class="pre">--npm-subdir</span></code> / <code class="docutils literal notranslate"><span class="pre">--npm-package-name</span></code>.</p>
+<p><strong>Package manager: npm or pnpm.</strong> The single-package reusable workflow drives
+<strong>npm</strong> by default and <strong>pnpm</strong> when selected — either explicitly via
+<code class="docutils literal notranslate"><span class="pre">wads.ci.packageManager</span></code> (or <code class="docutils literal notranslate"><span class="pre">populate</span> <span class="pre">--npm-package-manager</span> <span class="pre">pnpm</span></code>) or
+auto-detected from a <code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> in the package directory. pnpm consumers
+should declare a <code class="docutils literal notranslate"><span class="pre">&quot;packageManager&quot;:</span> <span class="pre">&quot;pnpm&#64;x.y.z&quot;</span></code> field in their <code class="docutils literal notranslate"><span class="pre">package.json</span></code>
+(pnpm’s own convention); the CI reads the pnpm version from there. Existing npm
+consumers are unaffected (no <code class="docutils literal notranslate"><span class="pre">pnpm-lock.yaml</span></code> → npm). The <code class="docutils literal notranslate"><span class="pre">ts-monorepo</span></code> profile
+is pnpm-based by design.</p>
+<p>The profile set is extensible: register your own with
+<code class="docutils literal notranslate"><span class="pre">wads.profiles.register_frontend_profile(...)</span></code>.</p>
+</section>
+<section id="configure-ci-in-pyproject-toml">
+<h3>Configure CI in pyproject.toml<a class="headerlink" href="#configure-ci-in-pyproject-toml" title="Link to this heading">¶</a></h3>
+<p>Edit your <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> to configure CI behavior:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.testing]</span>
+<span class="n">python_versions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"3.10"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3.12"</span><span class="p">]</span>
+<span class="n">pytest_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"-v"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--tb=short"</span><span class="p">]</span>
+<span class="n">coverage_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">test_on_windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 
-</footer>
+<span class="k">[tool.wads.ci.quality.ruff]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[tool.wads.ci.build]</span>
+<span class="n">sdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">wheel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="c1"># Opt-in licence gate over the installed dependency closure (default: off).</span>
+<span class="c1"># See "Licence Perimeter" under CI Configuration Reference.</span>
+<span class="k">[tool.wads.licence]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</pre></div>
+</div>
+<p>The default <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> is a small stub that calls wads’s reusable workflow
+(<code class="docutils literal notranslate"><span class="pre">i2mint/wads/.github/workflows/uv-ci.yml&#64;master</span></code>); all behavior is driven by
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.*]</span></code> above. Publishing to PyPI happens automatically on your
+repo’s <strong>default branch</strong> — but only when the Linux test matrix passes.</p>
+</section>
+<section id="configure-secrets-ci-environment-variables">
+<h3>Configure Secrets (CI environment variables)<a class="headerlink" href="#configure-secrets-ci-environment-variables" title="Link to this heading">¶</a></h3>
+<p>If your tests need API keys or other secrets, declare them once and let wads
+wire up both the GitHub Actions transport and the job environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads-secrets<span class="w"> </span>add<span class="w"> </span>OPENAI_API_KEY<span class="w">            </span><span class="c1"># env var == GitHub secret name</span>
+wads-secrets<span class="w"> </span>add<span class="w"> </span>HF_TOKEN<span class="w"> </span>HF_WRITE_TOKEN<span class="w">    </span><span class="c1"># env var &lt;- differently-named secret</span>
+wads-secrets<span class="w"> </span>add<span class="w"> </span>DATABASE_URL<span class="w"> </span>--kind<span class="w"> </span>required<span class="w">   </span><span class="c1"># fail CI if the secret is unset</span>
+wads-secrets<span class="w"> </span>add<span class="w"> </span>TEST_LEVEL<span class="w"> </span>--variable<span class="w">      </span><span class="c1"># non-sensitive value -&gt; repo variable</span>
+wads-secrets<span class="w"> </span>list<span class="w">                           </span><span class="c1"># show what's configured</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">wads-secrets</span> <span class="pre">add</span></code> (a) records the variable in <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> and (b)
+runs <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">secret</span> <span class="pre">set</span></code> (or <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">variable</span> <span class="pre">set</span></code> with <code class="docutils literal notranslate"><span class="pre">--variable</span></code>) if <code class="docutils literal notranslate"><span class="pre">gh</span></code> is
+installed (value taken from <code class="docutils literal notranslate"><span class="pre">$VAR_NAME</span></code> or <code class="docutils literal notranslate"><span class="pre">--value</span></code>). Under the hood there
+are two layers: a <strong>transport</strong> — the stub passes your repo’s whole secrets
+context to the reusable workflow as one <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> secret, so any
+secret name works — and an <strong>env policy</strong> (<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> —
+<code class="docutils literal notranslate"><span class="pre">required_envvars</span></code> / <code class="docutils literal notranslate"><span class="pre">test_envvars</span></code> / <code class="docutils literal notranslate"><span class="pre">extra_envvars</span></code> / <code class="docutils literal notranslate"><span class="pre">defaults</span></code> /
+<code class="docutils literal notranslate"><span class="pre">secret_aliases</span></code>) that decides which values become job env vars. Each declared
+name resolves against secrets first, then repository <em>variables</em> (the right
+home for non-sensitive values); committed constants can go straight into
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env].defaults</span></code>. A <code class="docutils literal notranslate"><span class="pre">required</span></code> name that resolves to nothing
+fails the build; an undeclared secret is never written to the environment.
+Note the JSON transport hands <strong>every</strong> secret the repo can read — including
+org-level ones — to the reusable workflow (which only exports the declared
+ones). If you want the workflow to receive <em>only</em> the names you list, use
+<code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span> <span class="pre">--transport</span> <span class="pre">named</span></code> — that mode is limited to the
+frozen superset in <code class="docutils literal notranslate"><span class="pre">wads.ci_secrets.DEFAULT_CI_SECRETS</span></code>, and is also the
+right choice for orgs with very large shared secrets (the serialized context
+must fit in one secret value). Older stubs pass secrets by name the same way;
+regenerate with <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code> to switch to the JSON transport.</p>
+</section>
+<section id="declare-system-dependencies">
+<h3>Declare System Dependencies<a class="headerlink" href="#declare-system-dependencies" title="Link to this heading">¶</a></h3>
+<p>Need ffmpeg, ODBC drivers, or other system packages in CI? Declare them in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ops.ffmpeg]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Multimedia framework for video/audio processing"</span>
+<span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://ffmpeg.org/"</span>
+
+<span class="n">check</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"which ffmpeg"</span>
+<span class="n">check</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"which ffmpeg"</span>
+
+<span class="n">install</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sudo apt-get install -y ffmpeg"</span>
+<span class="n">install</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew install ffmpeg"</span>
+<span class="n">install</span><span class="p">.</span><span class="n">windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"choco install ffmpeg -y"</span>
+
+<span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Required for audio processing features"</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">install-system-deps</span></code> action in your CI workflow will automatically install these.</p>
+</section>
+</section>
+<section id="core-features">
+<h2>Core Features<a class="headerlink" href="#core-features" title="Link to this heading">¶</a></h2>
+<section id="project-setup-populate">
+<h3>1. Project Setup (<code class="docutils literal notranslate"><span class="pre">populate</span></code>)<a class="headerlink" href="#project-setup-populate" title="Link to this heading">¶</a></h3>
+<p>Create new Python projects with modern best practices:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic usage</span>
+populate<span class="w"> </span>my-project
+
+<span class="c1"># With custom settings</span>
+populate<span class="w"> </span>my-project<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--root-url<span class="w"> </span>https://github.com/myorg/my-project<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--description<span class="w"> </span><span class="s2">"My awesome project"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--author<span class="w"> </span><span class="s2">"Your Name"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--license<span class="w"> </span>apache
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--root-url</span></code>: GitHub repository URL</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--description</span></code>: Project description</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--author</span></code>: Author name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--license</span></code>: License type (mit, apache, bsd, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--keywords</span></code>: Comma-separated keywords</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--overwrite</span></code>: Files to overwrite if they exist</p></li>
+</ul>
+<p><strong>Tip:</strong> Configure defaults in <code class="docutils literal notranslate"><span class="pre">wads_configs.json</span></code> or use <code class="docutils literal notranslate"><span class="pre">WADS_CONFIGS_FILE</span></code> environment variable to point to your custom config.</p>
+</section>
+<section id="package-and-publish-pack">
+<h3>2. Package and Publish (<code class="docutils literal notranslate"><span class="pre">pack</span></code>)<a class="headerlink" href="#package-and-publish-pack" title="Link to this heading">¶</a></h3>
+<p>Build and publish packages to PyPI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># See current configuration</span>
+pack<span class="w"> </span>current-configs
+
+<span class="c1"># Increment version and publish</span>
+pack<span class="w"> </span>go<span class="w"> </span>.
+
+<span class="c1"># Or step-by-step</span>
+pack<span class="w"> </span>increment-configs-version
+pack<span class="w"> </span>run-setup
+pack<span class="w"> </span>twine-upload-dist
+</pre></div>
+</div>
+</section>
+<section id="migration-tools-wads-migrate">
+<h3>3. Migration Tools (<code class="docutils literal notranslate"><span class="pre">wads-migrate</span></code>)<a class="headerlink" href="#migration-tools-wads-migrate" title="Link to this heading">¶</a></h3>
+<p>Migrate legacy projects to modern format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Migrate setup.cfg to pyproject.toml</span>
+wads-migrate<span class="w"> </span>setup-to-pyproject<span class="w"> </span>setup.cfg<span class="w"> </span>-o<span class="w"> </span>pyproject.toml
+
+<span class="c1"># Migrate old CI workflow to new format</span>
+wads-migrate<span class="w"> </span>ci-old-to-new<span class="w"> </span>.github/workflows/old-ci.yml<span class="w"> </span>-o<span class="w"> </span>.github/workflows/ci.yml
+</pre></div>
+</div>
+<p><strong>Python API:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">,</span> <span class="n">migrate_github_ci_old_to_new</span>
+
+<span class="c1"># From setup.cfg file</span>
+<span class="n">pyproject_content</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="s2">"setup.cfg"</span><span class="p">)</span>
+
+<span class="c1"># From setup.cfg dict</span>
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"myproject"</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"1.0.0"</span><span class="p">}}</span>
+<span class="n">pyproject_content</span> <span class="o">=</span> <span class="n">migrate_setuptools_to_hatching</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Migrate CI workflow</span>
+<span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_github_ci_old_to_new</span><span class="p">(</span><span class="s2">".github/workflows/ci.yml"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="ci-debugging-wads-ci-debug">
+<h3>4. CI Debugging (<code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code>)<a class="headerlink" href="#ci-debugging-wads-ci-debug" title="Link to this heading">¶</a></h3>
+<p>Diagnose and fix GitHub Actions CI failures:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Analyze latest failure</span>
+wads-ci-debug<span class="w"> </span>myorg/myrepo
+
+<span class="c1"># Analyze specific run</span>
+wads-ci-debug<span class="w"> </span>myorg/myrepo<span class="w"> </span>--run-id<span class="w"> </span><span class="m">1234567890</span>
+
+<span class="c1"># Generate fix instructions</span>
+wads-ci-debug<span class="w"> </span>myorg/myrepo<span class="w"> </span>--fix<span class="w"> </span>--local-repo<span class="w"> </span>.
+</pre></div>
+</div>
+<p>The tool will:</p>
+<ul class="simple">
+<li><p>Fetch CI logs from GitHub</p></li>
+<li><p>Parse test failures and errors</p></li>
+<li><p>Identify root causes</p></li>
+<li><p>Generate fix instructions with file locations and suggested changes</p></li>
+</ul>
+</section>
+</section>
+<section id="on-demand-ci">
+<h2>On-demand CI<a class="headerlink" href="#on-demand-ci" title="Link to this heading">¶</a></h2>
+<p>For repos that should not run CI on every push (Actions minutes are free on public repos but metered on private ones), set:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.trigger]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"on-demand"</span><span class="w">          </span><span class="c1"># default "auto": every push and PR, as before</span>
+<span class="n">run_ci_marker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"[run ci]"</span><span class="w">  </span><span class="c1"># the default marker</span>
+</pre></div>
+</div>
+<p><strong>Nothing runs unless asked.</strong> CI runs only when the commit <em>subject</em> (its first line) contains the marker, or when someone starts it by hand (<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">workflow</span> <span class="pre">run</span> <span class="pre">ci.yml</span> <span class="pre">--ref</span> <span class="pre">&lt;branch&gt;</span></code>, or the Actions tab), which is always allowed. Tests, publishing and GitHub Pages all obey the same gate.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Fix the parser [run ci]"</span><span class="w">   </span><span class="c1"># runs CI</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Fix the parser"</span><span class="w">            </span><span class="c1"># runs nothing</span>
+</pre></div>
+</div>
+<p>A marker quoted only in a squash-merged PR body does not count. The stub’s zero-cost pre-filter lets that run start (one short setup job), and the reusable workflow checks the extracted subject before running anything else.</p>
+<p>Worth knowing before you flip:</p>
+<ul class="simple">
+<li><p><strong>A manual run on the default branch releases</strong> when publishing is enabled, exactly like a <code class="docutils literal notranslate"><span class="pre">[run</span> <span class="pre">ci]</span></code> push. To test without releasing, run it on another branch, or use <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code>.</p></li>
+<li><p><strong>The <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> marker needs <code class="docutils literal notranslate"><span class="pre">[run</span> <span class="pre">ci]</span></code> in the same subject.</strong> This applies to repos with publishing disabled, where <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> forces a release.</p></li>
+<li><p><strong>Only the pushed head commit’s subject counts,</strong> not earlier commits in the same push.</p></li>
+<li><p><strong>On-demand stubs drop the <code class="docutils literal notranslate"><span class="pre">pull_request</span></code> trigger.</strong> A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.</p></li>
+</ul>
+<p>Flip a repo in one idempotent command. It sets on-demand, <code class="docutils literal notranslate"><span class="pre">python_versions</span> <span class="pre">=</span> <span class="pre">[&quot;3.12&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">test_on_windows</span> <span class="pre">=</span> <span class="pre">false</span></code>, and re-renders the stub, keeping its pin and secrets transport:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads-migrate<span class="w"> </span>ci-on-demand<span class="w"> </span>--dry-run<span class="w">   </span><span class="c1"># show the diff, write nothing</span>
+wads-migrate<span class="w"> </span>ci-on-demand<span class="w"> </span>--commit<span class="w">    </span><span class="c1"># apply and commit; then `git push`</span>
+</pre></div>
+</div>
+<p>Do locally what CI would have done, from the same <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code> config:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads<span class="w"> </span>ci-local<span class="w">             </span><span class="c1"># lint (ruff), tests (a fresh uv venv per python_versions entry), build</span>
+wads<span class="w"> </span>ci-local<span class="w"> </span>--dry-run<span class="w">   </span><span class="c1"># print the plan, run nothing</span>
+wads<span class="w"> </span>ci-local<span class="w"> </span>--publish<span class="w">   </span><span class="c1"># instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--publish</span></code> refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (<code class="docutils literal notranslate"><span class="pre">$PYPI_PASSWORD</span></code>, then <code class="docutils literal notranslate"><span class="pre">$UV_PUBLISH_TOKEN</span></code>, then <code class="docutils literal notranslate"><span class="pre">~/.pypirc</span></code> <code class="docutils literal notranslate"><span class="pre">[pypi]</span></code> with <code class="docutils literal notranslate"><span class="pre">username</span> <span class="pre">=</span> <span class="pre">__token__</span></code>). <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> needs <a class="reference external" href="https://docs.astral.sh/uv/getting-started/installation/">uv</a> and git on <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, and does not install <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> system packages.</p>
+<p>To go back, set <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> and run <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code>. Workflow files other than <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> (cron jobs, Pages, npm) are not governed by the trigger; <code class="docutils literal notranslate"><span class="pre">ci-on-demand</span></code> lists any that still run unasked.</p>
+</section>
+<section id="ci-configuration-reference">
+<h2>CI Configuration Reference<a class="headerlink" href="#ci-configuration-reference" title="Link to this heading">¶</a></h2>
+<p>Wads uses <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as a single source of truth for CI configuration. Here’s what you can configure:</p>
+<section id="install-extras">
+<h3>Install Extras<a class="headerlink" href="#install-extras" title="Link to this heading">¶</a></h3>
+<p>By default CI installs only your package’s core dependencies. If your test suite
+needs an extra (e.g. a heavier <code class="docutils literal notranslate"><span class="pre">create</span></code>/<code class="docutils literal notranslate"><span class="pre">dev</span></code> group), declare it so CI installs
+<code class="docutils literal notranslate"><span class="pre">.[extras]</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.install]</span>
+<span class="n">extras</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">          </span><span class="c1"># or a list, e.g. ["dev", "test"]</span>
+</pre></div>
+</div>
+</section>
+<section id="python-versions-and-testing">
+<h3>Python Versions and Testing<a class="headerlink" href="#python-versions-and-testing" title="Link to this heading">¶</a></h3>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.testing]</span>
+<span class="n">python_versions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"3.10"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3.11"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3.12"</span><span class="p">]</span><span class="w">  </span><span class="c1"># Test matrix</span>
+<span class="n">pytest_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"-v"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--tb=short"</span><span class="p">]</span><span class="w">           </span><span class="c1"># Pytest arguments</span>
+<span class="n">coverage_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                      </span><span class="c1"># Enable coverage</span>
+<span class="n">coverage_threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">80</span><span class="w">                      </span><span class="c1"># Minimum coverage %</span>
+<span class="n">exclude_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"examples"</span><span class="p">,</span><span class="w"> </span><span class="s2">"scrap"</span><span class="p">]</span><span class="w">        </span><span class="c1"># Paths to exclude</span>
+<span class="n">test_on_windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                       </span><span class="c1"># Run Windows tests</span>
+<span class="n">windows_blocking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w">                     </span><span class="c1"># true = a failing Windows leg reddens the run</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">windows_blocking</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code>: the Windows job is informational
+(<code class="docutils literal notranslate"><span class="pre">continue-on-error</span></code>), which is how Windows-only defects — backslash path
+separators, locale-decoded <code class="docutils literal notranslate"><span class="pre">read_text()</span></code> — merge behind a green tick. Set it to
+<code class="docutils literal notranslate"><span class="pre">true</span></code> to make the run red. It reddens the <strong>run</strong>, not the release: <code class="docutils literal notranslate"><span class="pre">publish</span></code>
+does not depend on the Windows job.</p>
+</section>
+<section id="code-quality-tools">
+<h3>Code Quality Tools<a class="headerlink" href="#code-quality-tools" title="Link to this heading">¶</a></h3>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.quality.ruff]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1"># line_length = 88</span>
+
+<span class="k">[tool.wads.ci.quality.mypy]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1"># strict = true</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-commands">
+<h3>Custom Commands<a class="headerlink" href="#custom-commands" title="Link to this heading">¶</a></h3>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.commands]</span>
+<span class="n">pre_test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"python scripts/setup_test_data.py"</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">post_test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"python scripts/cleanup.py"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="build-and-publish">
+<h3>Build and Publish<a class="headerlink" href="#build-and-publish" title="Link to this heading">¶</a></h3>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.build]</span>
+<span class="n">sdist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">wheel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[tool.wads.ci.publish]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">  </span><span class="c1"># Publish to PyPI on main/master</span>
+</pre></div>
+</div>
+</section>
+<section id="licence-perimeter-wads-licence-check">
+<h3>Licence Perimeter (<code class="docutils literal notranslate"><span class="pre">wads-licence-check</span></code>)<a class="headerlink" href="#licence-perimeter-wads-licence-check" title="Link to this heading">¶</a></h3>
+<p>Fails the build when the <strong>installed dependency closure</strong> carries a licence the
+project’s policy forbids — copyleft (GPL / AGPL / LGPL), or source-available /
+non-commercial (SSPL, BUSL, Elastic-2.0, RAIL, CC-BY-NC).</p>
+<p>It walks the <em>transitive</em> closure, not just the declared list, because that is
+where the exposures actually hide, and it reads a distribution’s declaration
+through a <strong>precision ladder</strong> — PEP 639 <code class="docutils literal notranslate"><span class="pre">License-Expression</span></code>, then the
+<code class="docutils literal notranslate"><span class="pre">License</span> <span class="pre">::</span></code> trove classifiers, then the <strong>first line</strong> of the free-text
+<code class="docutils literal notranslate"><span class="pre">License</span></code> field. No single field is enough: <code class="docutils literal notranslate"><span class="pre">click</span></code> declares an expression and
+no classifiers, <code class="docutils literal notranslate"><span class="pre">i2</span></code> declares neither and only a free-text field, and a
+whole-field substring scan flags BSD-3-Clause numpy as copyleft because its
+field carries an LGPL URL for a vendored notice.</p>
+<p>Run it anywhere:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads-licence-check<span class="w">                                    </span><span class="c1"># this project</span>
+wads-licence-check<span class="w"> </span>path/to/project<span class="w"> </span>--json<span class="w">             </span><span class="c1"># for a fleet sweep</span>
+wads-licence-check<span class="w"> </span>.<span class="w"> </span>--python<span class="w"> </span>.venv/bin/python<span class="w">        </span><span class="c1"># read another env</span>
+</pre></div>
+</div>
+<p>The CI gate is <strong>opt-in</strong>. A repo that declares nothing sees no change:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.licence]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                    </span><span class="c1"># default false: opt in per repo</span>
+<span class="n">include-extras</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w">               </span><span class="c1"># [] = hard deps only; ["*"] = every extra</span>
+<span class="n">unknown-is-failure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">         </span><span class="c1"># a blank licence field is *unaudited*, not fine</span>
+<span class="n">unclassified-is-failure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w">   </span><span class="c1"># e.g. MPL-2.0: reported, does not fail</span>
+
+<span class="k">[tool.wads.licence.exceptions]</span>
+<span class="n">certifi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MPL-2.0 — weak, file-level, over an unmodified CA bundle. Audited 2026-08."</span>
+</pre></div>
+</div>
+<p>That is the whole configuration most repos need. The <code class="docutils literal notranslate"><span class="pre">allowed</span></code> / <code class="docutils literal notranslate"><span class="pre">forbidden</span></code>
+pattern lists are deliberately absent from it: <strong>they REPLACE the defaults, they
+do not extend them</strong>, so writing them out by hand is a narrowing unless the list
+is a superset of what ships. If you do set them, write them as TOML <strong>literal</strong>
+strings — single quotes — because a basic string processes escapes and turns
+<code class="docutils literal notranslate"><span class="pre">&quot;\bGPL&quot;</span></code> into a backspace character followed by <code class="docutils literal notranslate"><span class="pre">GPL</span></code>, which matches nothing:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.licence]</span>
+<span class="c1"># Start from wads.licence_check.DFLT_FORBIDDEN and ADD, rather than replacing:</span>
+<span class="n">forbidden</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s1">'\bAGPL'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bAffero\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bGPL(?![\w.+-]*\s+with\b)'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bGNU General Public\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bLGPL'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bLesser General Public\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bLibrary General Public\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bNethack General Public\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bEUPL\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bBusiness Source\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bBUSL\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bSSPL\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bElastic[- ]?(2\.0|License|v2)\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'(?:\b|-)(?:open)?rail(?:-m)?\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bCC[- ]BY[- ]NC\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bNon[- ]?Commercial\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bProprietary\b'</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">'\bYourOwnAddition\b'</span><span class="p">,</span><span class="w">   </span><span class="c1"># the point: ADD to the defaults, never restate a subset</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>Exceptions take either the terse map above or an array-of-tables, which is the
+shape to reach for when the decision needs a record behind it:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[tool.wads.licence.exceptions]]</span>
+<span class="n">dependency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"PyGithub"</span>
+<span class="n">licence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"LGPL (classifier only; no SPDX expression published)"</span>
+<span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"core"</span>
+<span class="n">decided</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2026-08-30"</span>
+<span class="n">decided_in</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://github.com/thorwhalen/hubcap/issues/10"</span>
+<span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"""</span>
+<span class="s2">Accepted, not removable: PyGithub's objects are this package's values, so there</span>
+<span class="s2">is no honest "core without it" to install. Consumed by ordinary import, neither</span>
+<span class="s2">vendored nor patched, so the LGPL relink freedom is intact.</span>
+<span class="s2">"""</span>
+</pre></div>
+</div>
+<p>Note the table lives under <code class="docutils literal notranslate"><span class="pre">[tool.wads]</span></code>, not <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci]</span></code>: the policy is a
+fact about the package, and the tool is useful outside CI. Only <code class="docutils literal notranslate"><span class="pre">enabled</span></code> is a
+CI concern.</p>
+<p>Exit codes are <code class="docutils literal notranslate"><span class="pre">0</span></code> (holds), <code class="docutils literal notranslate"><span class="pre">1</span></code> (breached) and <code class="docutils literal notranslate"><span class="pre">2</span></code> (the tool could not run —
+bad config, unreadable environment, a policy that cannot detect).</p>
+<section id="the-self-check">
+<h4>The self-check<a class="headerlink" href="#the-self-check" title="Link to this heading">¶</a></h4>
+<p>Every run first proves the live policy still catches known-copyleft
+declarations <em>and</em> still clears known-permissive ones, and refuses to report at
+all if it cannot — a detector nobody has demonstrated is a detector nobody has
+checked.</p>
+<p>The bar is per licence FAMILY, caught whole or not at all. Permitting a family
+outright is a coherent stance (LGPL for dynamically linked libraries is the
+usual one) and stays expressible; it is then named in every run’s output, so
+“PERIMETER HOLDS” is never read as “there is no LGPL in here”. Catching <em>part</em>
+of a family is refused, because it is never a stance — it is the bug. A gate
+whose LGPL pattern ended in <code class="docutils literal notranslate"><span class="pre">\b</span></code> caught the legacy <code class="docutils literal notranslate"><span class="pre">GNU</span> <span class="pre">Library</span> <span class="pre">or</span> <span class="pre">Lesser</span></code>
+classifier and missed <code class="docutils literal notranslate"><span class="pre">LGPLv2</span></code>, <code class="docutils literal notranslate"><span class="pre">LGPLv2+</span></code>, <code class="docutils literal notranslate"><span class="pre">LGPLv3</span></code> and <code class="docutils literal notranslate"><span class="pre">LGPLv3+</span></code>, i.e. every
+modern spelling, while reporting itself as working.</p>
+</section>
+<section id="what-counts-as-a-failure">
+<h4>What counts as a failure<a class="headerlink" href="#what-counts-as-a-failure" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">forbidden</span></code> and a blank declaration (<code class="docutils literal notranslate"><span class="pre">unknown-is-failure</span></code>, default on) fail, and
+so does a <strong>declared dependency that is not installed</strong> in the environment being
+read: that is a piece of the perimeter nobody looked at, and it is the same
+confident-green failure as reading the wrong environment. The one exception is a
+requirement gated on an environment marker (<code class="docutils literal notranslate"><span class="pre">tomli;</span> <span class="pre">python_version</span> <span class="pre">&lt;</span> <span class="pre">&quot;3.11&quot;</span></code>),
+which is reported as <code class="docutils literal notranslate"><span class="pre">NOT</span> <span class="pre">APPLICABLE</span></code> and does not fail.</p>
+<p>For the same reason the tool refuses to run at all on a project whose
+<code class="docutils literal notranslate"><span class="pre">[project].dependencies</span></code> is absent or listed in <code class="docutils literal notranslate"><span class="pre">dynamic</span></code> — an empty closure it
+could not read is not an empty closure. Write <code class="docutils literal notranslate"><span class="pre">dependencies</span> <span class="pre">=</span> <span class="pre">[]</span></code> if a project
+genuinely has none.</p>
+</section>
+</section>
+</section>
+<section id="system-dependencies">
+<h2>System Dependencies<a class="headerlink" href="#system-dependencies" title="Link to this heading">¶</a></h2>
+<p>System dependencies are declared using the <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> format and automatically installed in CI via the <code class="docutils literal notranslate"><span class="pre">install-system-deps</span></code> action.</p>
+<p><strong>Format:</strong></p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ops.</span><span class="err">{</span><span class="k">package-name</span><span class="err">}</span><span class="k">]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Description of the package"</span>
+<span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://package-homepage.com"</span>
+
+<span class="c1"># Check if already installed (exit code 0 = present)</span>
+<span class="n">check</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"which package-name"</span>
+<span class="n">check</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew list package-name"</span>
+<span class="n">check</span><span class="p">.</span><span class="n">windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"where package-name"</span>
+
+<span class="c1"># Install commands (string or list of strings)</span>
+<span class="n">install</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sudo apt-get install -y package-name"</span>
+<span class="n">install</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew install package-name"</span>
+<span class="n">install</span><span class="p">.</span><span class="n">windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"choco install package-name -y"</span>
+
+<span class="c1"># Optional metadata</span>
+<span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Additional installation notes"</span>
+<span class="n">alternatives</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"alternative-package"</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Real-world example (ODBC drivers):</strong></p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ops.unixodbc]</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ODBC driver interface for database connectivity"</span>
+<span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://www.unixodbc.org/"</span>
+
+<span class="n">check</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dpkg -s unixodbc || rpm -q unixODBC"</span>
+<span class="n">check</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew list unixodbc"</span>
+
+<span class="n">install</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"sudo apt-get update"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"sudo apt-get install -y unixodbc unixodbc-dev"</span>
+<span class="p">]</span>
+<span class="n">install</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew install unixodbc"</span>
+
+<span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"On Alpine: apk add unixodbc unixodbc-dev"</span>
+<span class="n">alternatives</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"iodbc"</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">docs/SYSTEM_DEPENDENCIES.md</span></a> for comprehensive examples.</p>
+</section>
+<section id="claude-code-skills">
+<h2>Claude Code Skills<a class="headerlink" href="#claude-code-skills" title="Link to this heading">¶</a></h2>
+<p>Wads ships with <a class="reference external" href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> skills for AI-assisted workflows. Install them globally so they’re available in every project:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads-install-skills
+</pre></div>
+</div>
+<p>This symlinks skills to <code class="docutils literal notranslate"><span class="pre">~/.claude/skills/</span></code>, so they stay in sync when wads is updated:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Command</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/setup-py-project</span></code></p></td>
+<td><p>AI-guided Python project creation: name suggestions, PyPI/GitHub availability checking, repo creation, file population</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/wads-migrate</span></code></p></td>
+<td><p>Migrate projects to modern wads setup (pyproject.toml + uv CI)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">setup</span><span class="o">-</span><span class="n">py</span><span class="o">-</span><span class="n">project</span> <span class="s2">"a tool for audio signal processing"</span>
+</pre></div>
+</div>
+<p>To list available skills without installing: <code class="docutils literal notranslate"><span class="pre">wads-install-skills</span> <span class="pre">--list</span></code>
+To update existing skills: <code class="docutils literal notranslate"><span class="pre">wads-install-skills</span> <span class="pre">--force</span></code></p>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong><a class="reference internal" href="#misc/docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">System Dependencies Guide</span></a></strong> - <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> format and examples</p></li>
+<li><p><strong><a class="reference internal" href="#misc/docs/MIGRATION.md"><span class="xref myst">Migration Guide</span></a></strong> - Migrate from setup.cfg to pyproject.toml</p></li>
+<li><p><strong><a class="reference internal" href="#misc/docs/UTILITIES.md"><span class="xref myst">Utilities Reference</span></a></strong> - CLI tools (<code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code>, <code class="docutils literal notranslate"><span class="pre">wads-migrate</span></code>)</p></li>
+<li><p><strong><a class="reference internal" href="#CLAUDE.md"><span class="xref myst">CLAUDE.md</span></a></strong> - AI agent guide for working with this project</p></li>
+</ul>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="version-tag-misalignment">
+<h3>Version Tag Misalignment<a class="headerlink" href="#version-tag-misalignment" title="Link to this heading">¶</a></h3>
+<p>If PyPI publishing fails with “appears to already exist”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WARNING</span>  <span class="n">Skipping</span> <span class="n">mypackage</span><span class="o">-</span><span class="mf">0.1.4</span><span class="o">-</span><span class="n">py3</span><span class="o">-</span><span class="n">none</span><span class="o">-</span><span class="nb">any</span><span class="o">.</span><span class="n">whl</span> <span class="n">because</span> <span class="n">it</span> <span class="n">appears</span> <span class="n">to</span> <span class="n">already</span> <span class="n">exist</span>
+</pre></div>
+</div>
+<p>This means your git tags are misaligned with the version in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
+<p><strong>Fix:</strong></p>
+<ol class="arabic">
+<li><p>Check the current PyPI version: https://pypi.org/project/your-package/</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">version</span></code> in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> to a higher number</p></li>
+<li><p>Create and push git tag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>tag<span class="w"> </span><span class="m">0</span>.1.5
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span><span class="m">0</span>.1.5
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="ci-failures">
+<h3>CI Failures<a class="headerlink" href="#ci-failures" title="Link to this heading">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code> to analyze failures:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads-ci-debug<span class="w"> </span>myorg/myrepo<span class="w"> </span>--fix
+</pre></div>
+</div>
+<p>Common issues:</p>
+<ul class="simple">
+<li><p>Missing system dependencies → Add to <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code></p></li>
+<li><p>Python version incompatibilities → Check <code class="docutils literal notranslate"><span class="pre">python_versions</span></code> in <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.testing]</span></code></p></li>
+<li><p>Test failures → Review generated fix instructions</p></li>
+</ul>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading">¶</a></h2>
+<section id="running-tests">
+<h3>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>wads/tests/
+</pre></div>
+</div>
+</section>
+<section id="building-documentation">
+<h3>Building Documentation<a class="headerlink" href="#building-documentation" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[docs]"</span>
+epythet<span class="w"> </span>build
+</pre></div>
+</div>
+</section>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
+<p>Apache Software License 2.0</p>
+</section>
+<section id="links">
+<h2>Links<a class="headerlink" href="#links" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>PyPI:</strong> https://pypi.org/project/wads/</p></li>
+<li><p><strong>GitHub:</strong> https://github.com/i2mint/wads</p></li>
+<li><p><strong>Issues:</strong> https://github.com/i2mint/wads/issues</p></li>
+</ul>
+<p class="epythet-aggregates">This documentation as a single file: <a href="wads.md">wads.md</a> (Markdown, for agents).</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 13:15 UTC from <a href="https://github.com/i2mint/wads/commit/825af115eaadcae916ff717264a100353bb67786">825af11</a> (master) · wads 0.2.26 · <a href="about-this-build.html">about this build</a></p>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="api.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">API reference</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">wads</a><ul>
+<li><a class="reference internal" href="#what-is-wads">What is Wads?</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li><a class="reference internal" href="#create-a-new-project">Create a New Project</a></li>
+<li><a class="reference internal" href="#add-a-frontend-component-for-js-ts-parts-optional">Add a frontend component for JS/TS parts (optional)</a></li>
+<li><a class="reference internal" href="#configure-ci-in-pyproject-toml">Configure CI in pyproject.toml</a></li>
+<li><a class="reference internal" href="#configure-secrets-ci-environment-variables">Configure Secrets (CI environment variables)</a></li>
+<li><a class="reference internal" href="#declare-system-dependencies">Declare System Dependencies</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#core-features">Core Features</a><ul>
+<li><a class="reference internal" href="#project-setup-populate">1. Project Setup (<code class="docutils literal notranslate"><span class="pre">populate</span></code>)</a></li>
+<li><a class="reference internal" href="#package-and-publish-pack">2. Package and Publish (<code class="docutils literal notranslate"><span class="pre">pack</span></code>)</a></li>
+<li><a class="reference internal" href="#migration-tools-wads-migrate">3. Migration Tools (<code class="docutils literal notranslate"><span class="pre">wads-migrate</span></code>)</a></li>
+<li><a class="reference internal" href="#ci-debugging-wads-ci-debug">4. CI Debugging (<code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code>)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#on-demand-ci">On-demand CI</a></li>
+<li><a class="reference internal" href="#ci-configuration-reference">CI Configuration Reference</a><ul>
+<li><a class="reference internal" href="#install-extras">Install Extras</a></li>
+<li><a class="reference internal" href="#python-versions-and-testing">Python Versions and Testing</a></li>
+<li><a class="reference internal" href="#code-quality-tools">Code Quality Tools</a></li>
+<li><a class="reference internal" href="#custom-commands">Custom Commands</a></li>
+<li><a class="reference internal" href="#build-and-publish">Build and Publish</a></li>
+<li><a class="reference internal" href="#licence-perimeter-wads-licence-check">Licence Perimeter (<code class="docutils literal notranslate"><span class="pre">wads-licence-check</span></code>)</a><ul>
+<li><a class="reference internal" href="#the-self-check">The self-check</a></li>
+<li><a class="reference internal" href="#what-counts-as-a-failure">What counts as a failure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#system-dependencies">System Dependencies</a></li>
+<li><a class="reference internal" href="#claude-code-skills">Claude Code Skills</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#version-tag-misalignment">Version Tag Misalignment</a></li>
+<li><a class="reference internal" href="#ci-failures">CI Failures</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#development">Development</a><ul>
+<li><a class="reference internal" href="#running-tests">Running Tests</a></li>
+<li><a class="reference internal" href="#building-documentation">Building Documentation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#license">License</a></li>
+<li><a class="reference internal" href="#links">Links</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
         </div>
       </div>
-    </section>
+      
+      
+    </aside>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</div><script src="_static/documentation_options.js?v=de89189a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=fd10adb8"></script>
+    </body>
 </html>

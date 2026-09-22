@@ -1,0 +1,739 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="alternate" type="text/markdown" href="wads.ci_trigger.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="wads.ci_trigger.html.md">
+<link rel="describedby" href="llms.txt"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="wads.config_comparison" href="wads.config_comparison.html"><link rel="prev" title="wads.ci_secrets" href="wads.ci_secrets.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>wads.ci_trigger - wads</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  --color-brand-primary: #00648f;
+  --color-brand-content: #00648f;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #45c7f7;
+  --color-brand-content: #45c7f7;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #45c7f7;
+  --color-brand-content: #45c7f7;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">wads</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">wads</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../api.html">API reference</a><input aria-label="Toggle navigation of API reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="wads.html">wads</a><input aria-label="Toggle navigation of wads" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="wads.agents.html">wads.agents</a><input aria-label="Toggle navigation of wads.agents" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="wads.agents.ci_debug_agent.html">wads.agents.ci_debug_agent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.agents.dependency_resolver.html">wads.agents.dependency_resolver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.agents.test_analyzer.html">wads.agents.test_analyzer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wads.ci_config.html">wads.ci_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.ci_local.html">wads.ci_local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.ci_secrets.html">wads.ci_secrets</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">wads.ci_trigger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.config_comparison.html">wads.config_comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.fleet_migrate.html">wads.fleet_migrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.install_skills.html">wads.install_skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.install_system_deps.html">wads.install_system_deps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.licence_check.html">wads.licence_check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.licensing.html">wads.licensing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.migration.html">wads.migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.pack.html">wads.pack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.populate.html">wads.populate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.profiles.html">wads.profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.project_setup.html">wads.project_setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.repo_audit.html">wads.repo_audit</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="wads.scripts.html">wads.scripts</a><input aria-label="Toggle navigation of wads.scripts" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.build_dist.html">wads.scripts.build_dist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.install_deps.html">wads.scripts.install_deps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.read_ci_config.html">wads.scripts.read_ci_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.set_env_vars.html">wads.scripts.set_env_vars</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wads.secrets_cli.html">wads.secrets_cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.templating.html">wads.templating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.toml_util.html">wads.toml_util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.user_dirs.html">wads.user_dirs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.util.html">wads.util</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/_autosummary/wads.ci_trigger.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-wads.ci_trigger">
+<span id="wads-ci-trigger"></span><h1>wads.ci_trigger<a class="headerlink" href="#module-wads.ci_trigger" title="Link to this heading">¶</a></h1>
+<p>On-demand CI: render a repo’s caller stub from <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code>, and flip
+a repo to on-demand in one idempotent command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger].mode</span></code> decides whether CI runs at all:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default): every push and pull request, as wads always has. The stub
+renders byte-identical to <code class="docutils literal notranslate"><span class="pre">wads/data/github_ci_uv_stub.yml</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>: <strong>nothing runs unless asked</strong> – the commit subject carries
+<code class="docutils literal notranslate"><span class="pre">run_ci_marker</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code>), or someone starts a <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>.</p></li>
+</ul>
+<p>Two gates, because workflow expressions cannot split a string:</p>
+<ol class="arabic simple">
+<li><p>The stub’s job-level <code class="docutils literal notranslate"><span class="pre">if:</span></code> is a zero-cost pre-filter. An ordinary push schedules
+no runner at all, but the pre-filter can only ask whether the marker is <em>anywhere</em>
+in the commit message.</p></li>
+<li><p>The reusable workflow’s setup job extracts the subject line, and every other job
+gates on the marker being in <em>that</em> (the TRIGGER GATE note in
+<code class="docutils literal notranslate"><span class="pre">.github/workflows/uv-ci.yml</span></code>). A marker quoted only in a squash-merged PR body
+passes gate 1, costs one setup job, and runs nothing else.</p></li>
+</ol>
+<p>The flip (<a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand" title="wads.ci_trigger.flip_to_on_demand"><code class="xref py py-func docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a>, CLI <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-on-demand</span></code>) sets the mode
+plus a cheap test matrix and re-renders the stub. Everything is computed in a shadow
+copy of the repo first, so a dry run and a real run take the same path.</p>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.classify_ci_workflow" title="wads.ci_trigger.classify_ci_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_ci_workflow</span></code></a>(text)</p></td>
+<td><p>Classify a <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code>: <code class="docutils literal notranslate"><span class="pre">'missing'</span></code>, <code class="docutils literal notranslate"><span class="pre">'stub'</span></code>, <code class="docutils literal notranslate"><span class="pre">'inline-uv'</span></code> or <code class="docutils literal notranslate"><span class="pre">'other'</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.commit_paths" title="wads.ci_trigger.commit_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commit_paths</span></code></a>(repo, paths, *, message)</p></td>
+<td><p>Commit exactly <code class="docutils literal notranslate"><span class="pre">paths</span></code> and return the new commit's short sha.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand" title="wads.ci_trigger.flip_to_on_demand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flip_to_on_demand</span></code></a>([repo, python_versions, ...])</p></td>
+<td><p>Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.render_stub_inputs" title="wads.ci_trigger.render_stub_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_stub_inputs</span></code></a>(stub, inputs)</p></td>
+<td><p>Add a <code class="docutils literal notranslate"><span class="pre">with:</span></code> block (the reusable workflow's inputs) under the stub's <code class="docutils literal notranslate"><span class="pre">uses:</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.render_stub_trigger" title="wads.ci_trigger.render_stub_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_stub_trigger</span></code></a>(stub, *[, mode, ...])</p></td>
+<td><p>Render the caller stub for a trigger mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.repo_pyproject_for" title="wads.ci_trigger.repo_pyproject_for"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_pyproject_for</span></code></a>(ci_path)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> of the repo holding workflow file <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>, if any.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.run_ci_on_demand" title="wads.ci_trigger.run_ci_on_demand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_ci_on_demand</span></code></a>([repo, dry_run, ...])</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-on-demand</span></code>: flip, report, optionally commit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.set_on_demand_in_pyproject" title="wads.ci_trigger.set_on_demand_in_pyproject"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_on_demand_in_pyproject</span></code></a>(text, *[, ...])</p></td>
+<td><p>Return pyproject.toml <code class="docutils literal notranslate"><span class="pre">text</span></code> with the on-demand settings applied.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_customizations" title="wads.ci_trigger.stub_customizations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_customizations</span></code></a>(text)</p></td>
+<td><p>Split what a stub holds beyond the template into <code class="docutils literal notranslate"><span class="pre">(with_inputs,</span> <span class="pre">dropped)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_if_expression" title="wads.ci_trigger.stub_if_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_if_expression</span></code></a>([run_ci_marker])</p></td>
+<td><p>The on-demand stub's job-level pre-filter, as a workflow expression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_inputs_of" title="wads.ci_trigger.stub_inputs_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_inputs_of</span></code></a>(ci_path)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs an existing stub file passes; <code class="docutils literal notranslate"><span class="pre">{}</span></code> if none or not a stub.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_shape" title="wads.ci_trigger.stub_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_shape</span></code></a>(ci_text)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub, which a re-render must keep.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.trigger_for_workflow" title="wads.ci_trigger.trigger_for_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger_for_workflow</span></code></a>(ci_path)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">run_ci_marker)</span></code> declared by the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.unasked_workflows" title="wads.ci_trigger.unasked_workflows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unasked_workflows</span></code></a>(repo, *[, workflow])</p></td>
+<td><p>Other workflow files in <code class="docutils literal notranslate"><span class="pre">repo</span></code> that run without anyone asking (push, PR, cron).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.uncommitted" title="wads.ci_trigger.uncommitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncommitted</span></code></a>(repo, paths)</p></td>
+<td><p>Which of <code class="docutils literal notranslate"><span class="pre">paths</span></code> have uncommitted changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span> <span class="pre">--porcelain</span></code> lines).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.validate_trigger" title="wads.ci_trigger.validate_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_trigger</span></code></a>(mode, run_ci_marker)</p></td>
+<td><p>Validate a (mode, marker) pair with the same rules the CI setup job applies.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.FlipResult" title="wads.ci_trigger.FlipResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FlipResult</span></code></a>(repo[, status, changes, notes])</p></td>
+<td><p>What <a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand" title="wads.ci_trigger.flip_to_on_demand"><code class="xref py py-func docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a> changed or, on a dry run, would change.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.ci_trigger.FlipResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">FlipResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unchanged'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#FlipResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.FlipResult" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>What <a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand" title="wads.ci_trigger.flip_to_on_demand"><code class="xref py py-func docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a> changed or, on a dry run, would change.</p>
+<p><code class="docutils literal notranslate"><span class="pre">status</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;changed&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unchanged&quot;</span></code> (already on-demand) or <code class="docutils literal notranslate"><span class="pre">&quot;refused&quot;</span></code>
+(nothing written; <code class="docutils literal notranslate"><span class="pre">notes</span></code> says why). <code class="docutils literal notranslate"><span class="pre">changes</span></code> maps a repo-relative path to its
+<code class="docutils literal notranslate"><span class="pre">(old,</span> <span class="pre">new)</span></code> text.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="wads.ci_trigger.FlipResult.diff">
+<span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#FlipResult.diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.FlipResult.diff" title="Link to this definition">¶</a></dt>
+<dd><p>Unified diff of every change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.classify_ci_workflow">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">classify_ci_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#classify_ci_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.classify_ci_workflow" title="Link to this definition">¶</a></dt>
+<dd><p>Classify a <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code>: <code class="docutils literal notranslate"><span class="pre">'missing'</span></code>, <code class="docutils literal notranslate"><span class="pre">'stub'</span></code>, <code class="docutils literal notranslate"><span class="pre">'inline-uv'</span></code> or <code class="docutils literal notranslate"><span class="pre">'other'</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classify_ci_workflow</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">'missing'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_ci_workflow</span><span class="p">(</span><span class="s2">"uses: i2mint/wads/.github/workflows/uv-ci.yml@master"</span><span class="p">)</span>
+<span class="go">'stub'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_ci_workflow</span><span class="p">(</span><span class="s2">"uses: i2mint/wads/actions/run-tests-uv@master"</span><span class="p">)</span>
+<span class="go">'inline-uv'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_ci_workflow</span><span class="p">(</span><span class="s2">"uses: actions/setup-python@v5"</span><span class="p">)</span>
+<span class="go">'other'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.commit_paths">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">commit_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#commit_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.commit_paths" title="Link to this definition">¶</a></dt>
+<dd><p>Commit exactly <code class="docutils literal notranslate"><span class="pre">paths</span></code> and return the new commit’s short sha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.flip_to_on_demand">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">flip_to_on_demand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">python_versions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.12',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_on_windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.github/workflows/ci.yml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#flip_to_on_demand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.flip_to_on_demand" title="Link to this definition">¶</a></dt>
+<dd><p>Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.</p>
+<ul class="simple">
+<li><p>a <strong>stub</strong> <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> is re-rendered keeping its pin, secrets transport and
+<code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs, or <strong>refused</strong> if it holds anything else a re-render would drop
+(extra jobs, custom triggers);</p></li>
+<li><p>an <strong>inline uv</strong> workflow becomes the stub, carrying its secret-backed env vars
+into <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> first (as <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code> does);</p></li>
+<li><p><strong>no</strong> <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code>: only pyproject changes (nothing runs on push anyway);</p></li>
+<li><p>anything else (2025/legacy/custom workflow) is <strong>refused</strong> and nothing is
+written, because it would ignore the setting and keep running on every push.</p></li>
+</ul>
+<p>Idempotent: a second run reports <code class="docutils literal notranslate"><span class="pre">&quot;unchanged&quot;</span></code> and writes nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.ci_trigger.FlipResult" title="wads.ci_trigger.FlipResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlipResult</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.render_stub_inputs">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">render_stub_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stub</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#render_stub_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.render_stub_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Add a <code class="docutils literal notranslate"><span class="pre">with:</span></code> block (the reusable workflow’s inputs) under the stub’s <code class="docutils literal notranslate"><span class="pre">uses:</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.render_stub_trigger">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">render_stub_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stub</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#render_stub_trigger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.render_stub_trigger" title="Link to this definition">¶</a></dt>
+<dd><p>Render the caller stub for a trigger mode.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> returns <code class="docutils literal notranslate"><span class="pre">stub</span></code> unchanged. <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> replaces the push/PR trigger
+with push + <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>, puts the plain-language explanation above it, and
+adds the pre-filter <code class="docutils literal notranslate"><span class="pre">if:</span></code> to the <code class="docutils literal notranslate"><span class="pre">ci</span></code> job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.repo_pyproject_for">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">repo_pyproject_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#repo_pyproject_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.repo_pyproject_for" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> of the repo holding workflow file <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>, if any.</p>
+<p>Walks up from the workflow, stopping at the first directory that holds a <code class="docutils literal notranslate"><span class="pre">.git</span></code>
+so an enclosing project’s pyproject is never mistaken for this repo’s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.run_ci_on_demand">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">run_ci_on_demand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">python_versions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.12',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_on_windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.github/workflows/ci.yml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#run_ci_on_demand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.run_ci_on_demand" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-on-demand</span></code>: flip, report, optionally commit. Returns an exit code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> changed or already on-demand, <code class="docutils literal notranslate"><span class="pre">2</span></code> refused (nothing written).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.set_on_demand_in_pyproject">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">set_on_demand_in_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">python_versions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.12',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_on_windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#set_on_demand_in_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.set_on_demand_in_pyproject" title="Link to this definition">¶</a></dt>
+<dd><p>Return pyproject.toml <code class="docutils literal notranslate"><span class="pre">text</span></code> with the on-demand settings applied.</p>
+<p>Sets <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger].mode</span> <span class="pre">=</span> <span class="pre">&quot;on-demand&quot;</span></code> (and <code class="docutils literal notranslate"><span class="pre">run_ci_marker</span></code> when
+given), <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.testing].python_versions</span></code> and <code class="docutils literal notranslate"><span class="pre">test_on_windows</span></code>.
+Comments and layout survive (tomlkit), and a key already holding its target value
+is not touched, so applying this twice returns the first result unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.stub_customizations">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_customizations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_customizations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_customizations" title="Link to this definition">¶</a></dt>
+<dd><p>Split what a stub holds beyond the template into <code class="docutils literal notranslate"><span class="pre">(with_inputs,</span> <span class="pre">dropped)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">with_inputs</span></code> (a flat <code class="docutils literal notranslate"><span class="pre">with:</span></code> mapping, e.g. <code class="docutils literal notranslate"><span class="pre">project-name</span></code>) survives a
+re-render; <code class="docutils literal notranslate"><span class="pre">dropped</span></code> names everything else a re-render would silently lose.
+Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLError</span></code> when the text does not parse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_customizations</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">"on: [push, pull_request]</span><span class="se">\n</span><span class="s2">jobs:</span><span class="se">\n</span><span class="s2">  ci:</span><span class="se">\n</span><span class="s2">    uses: x</span><span class="se">\n</span><span class="s2">"</span>
+<span class="gp">... </span>    <span class="s2">"    with:</span><span class="se">\n</span><span class="s2">      project-name: my_pkg</span><span class="se">\n</span><span class="s2">"</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">({'project-name': 'my_pkg'}, [])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stub_customizations</span><span class="p">(</span><span class="s2">"on: [push]</span><span class="se">\n</span><span class="s2">jobs:</span><span class="se">\n</span><span class="s2">  ci:</span><span class="se">\n</span><span class="s2">    uses: x</span><span class="se">\n</span><span class="s2">  lint:</span><span class="se">\n</span><span class="s2">    runs-on: y</span><span class="se">\n</span><span class="s2">"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">['`on: ["push"]`', 'job `lint`']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.stub_if_expression">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_if_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_if_expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_if_expression" title="Link to this definition">¶</a></dt>
+<dd><p>The on-demand stub’s job-level pre-filter, as a workflow expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"[run ci]"</span><span class="p">)</span>
+<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"</span>
+</pre></div>
+</div>
+<p>A quote in the marker is doubled, which is how workflow expressions escape it:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"it's"</span><span class="p">)</span>
+<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.stub_inputs_of">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_inputs_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_inputs_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_inputs_of" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs an existing stub file passes; <code class="docutils literal notranslate"><span class="pre">{}</span></code> if none or not a stub.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.stub_shape">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_shape" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub, which a re-render must keep.</p>
+<p>Defaults (<code class="docutils literal notranslate"><span class="pre">&#64;master</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>) for anything that is not a stub.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_shape</span><span class="p">(</span><span class="s2">"uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30"</span><span class="p">)</span>
+<span class="go">{'pin': '@0.2.30', 'transport': 'named'}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stub_shape</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">{'pin': '@master', 'transport': 'json'}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.trigger_for_workflow">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">trigger_for_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#trigger_for_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.trigger_for_workflow" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">run_ci_marker)</span></code> declared by the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>.</p>
+<p>Defaults when there is no such file or no pyproject. An invalid trigger table
+raises: a stub must never silently render <code class="docutils literal notranslate"><span class="pre">auto</span></code> for a repo that asked for
+<code class="docutils literal notranslate"><span class="pre">on-demand</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.unasked_workflows">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">unasked_workflows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.github/workflows/ci.yml'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#unasked_workflows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.unasked_workflows" title="Link to this definition">¶</a></dt>
+<dd><p>Other workflow files in <code class="docutils literal notranslate"><span class="pre">repo</span></code> that run without anyone asking (push, PR, cron).</p>
+<p>The flip only governs <code class="docutils literal notranslate"><span class="pre">workflow</span></code>; these keep running and are worth knowing about.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.uncommitted">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">uncommitted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#uncommitted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.uncommitted" title="Link to this definition">¶</a></dt>
+<dd><p>Which of <code class="docutils literal notranslate"><span class="pre">paths</span></code> have uncommitted changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span> <span class="pre">--porcelain</span></code> lines).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.validate_trigger">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">validate_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#validate_trigger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.validate_trigger" title="Link to this definition">¶</a></dt>
+<dd><p>Validate a (mode, marker) pair with the same rules the CI setup job applies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_trigger</span><span class="p">(</span><span class="s2">"on-demand"</span><span class="p">,</span> <span class="s2">"[run ci]"</span><span class="p">)</span>
+<span class="go">('on-demand', '[run ci]')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validate_trigger</span><span class="p">(</span><span class="s2">"sometimes"</span><span class="p">,</span> <span class="s2">"[run ci]"</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="wads.config_comparison.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">wads.config_comparison</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="wads.ci_secrets.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">wads.ci_secrets</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">wads.ci_trigger</a><ul>
+<li><a class="reference internal" href="#wads.ci_trigger.FlipResult"><code class="docutils literal notranslate"><span class="pre">FlipResult</span></code></a><ul>
+<li><a class="reference internal" href="#wads.ci_trigger.FlipResult.diff"><code class="docutils literal notranslate"><span class="pre">FlipResult.diff()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#wads.ci_trigger.classify_ci_workflow"><code class="docutils literal notranslate"><span class="pre">classify_ci_workflow()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.commit_paths"><code class="docutils literal notranslate"><span class="pre">commit_paths()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand"><code class="docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.render_stub_inputs"><code class="docutils literal notranslate"><span class="pre">render_stub_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.render_stub_trigger"><code class="docutils literal notranslate"><span class="pre">render_stub_trigger()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.repo_pyproject_for"><code class="docutils literal notranslate"><span class="pre">repo_pyproject_for()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.run_ci_on_demand"><code class="docutils literal notranslate"><span class="pre">run_ci_on_demand()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.set_on_demand_in_pyproject"><code class="docutils literal notranslate"><span class="pre">set_on_demand_in_pyproject()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.stub_customizations"><code class="docutils literal notranslate"><span class="pre">stub_customizations()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.stub_if_expression"><code class="docutils literal notranslate"><span class="pre">stub_if_expression()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.stub_inputs_of"><code class="docutils literal notranslate"><span class="pre">stub_inputs_of()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.stub_shape"><code class="docutils literal notranslate"><span class="pre">stub_shape()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.trigger_for_workflow"><code class="docutils literal notranslate"><span class="pre">trigger_for_workflow()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.unasked_workflows"><code class="docutils literal notranslate"><span class="pre">unasked_workflows()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.uncommitted"><code class="docutils literal notranslate"><span class="pre">uncommitted()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.validate_trigger"><code class="docutils literal notranslate"><span class="pre">validate_trigger()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=de89189a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    </body>
+</html>
