@@ -634,6 +634,13 @@ needs an extra (e.g. a heavier <code class="docutils literal notranslate"><span 
 separators, locale-decoded <code class="docutils literal notranslate"><span class="pre">read_text()</span></code> — merge behind a green tick. Set it to
 <code class="docutils literal notranslate"><span class="pre">true</span></code> to make the run red. It reddens the <strong>run</strong>, not the release: <code class="docutils literal notranslate"><span class="pre">publish</span></code>
 does not depend on the Windows job.</p>
+<p>This knob only reaches the uv-based CI (<code class="docutils literal notranslate"><span class="pre">github_ci_uv.yml</span></code> / the reusable
+<code class="docutils literal notranslate"><span class="pre">uv-ci.yml</span></code> workflow, the default for new projects). The legacy
+<code class="docutils literal notranslate"><span class="pre">github_ci_publish_2025.yml</span></code> template and its <code class="docutils literal notranslate"><span class="pre">actions/windows-tests</span></code> action
+still hardcode <code class="docutils literal notranslate"><span class="pre">continue-on-error:</span> <span class="pre">true</span></code> unconditionally — a failing Windows
+leg there stays informational regardless of this setting. Repos on the legacy
+template should migrate to the uv stub (<code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code>) to pick it
+up (see i2mint/wads#90).</p>
 </section>
 <section id="code-quality-tools">
 <h3>Code Quality Tools<a class="headerlink" href="#code-quality-tools" title="Link to this heading">¶</a></h3>
@@ -931,7 +938,7 @@ epythet<span class="w"> </span>build
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 13:15 UTC from <a href="https://github.com/i2mint/wads/commit/825af115eaadcae916ff717264a100353bb67786">825af11</a> (master) · wads 0.2.26 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 13:33 UTC from <a href="https://github.com/i2mint/wads/commit/6d3023cc5a30f91a8436a4d248a07f6e7d8d2e73">6d3023c</a> (master) · wads 0.2.27 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1031,7 +1038,7 @@ epythet<span class="w"> </span>build
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=de89189a"></script>
+</div><script src="_static/documentation_options.js?v=77c96cfc"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

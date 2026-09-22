@@ -357,6 +357,14 @@ separators, locale-decoded `read_text()` — merge behind a green tick. Set it t
 `true` to make the run red. It reddens the **run**, not the release: `publish`
 does not depend on the Windows job.
 
+This knob only reaches the uv-based CI (`github_ci_uv.yml` / the reusable
+`uv-ci.yml` workflow, the default for new projects). The legacy
+`github_ci_publish_2025.yml` template and its `actions/windows-tests` action
+still hardcode `continue-on-error: true` unconditionally — a failing Windows
+leg there stays informational regardless of this setting. Repos on the legacy
+template should migrate to the uv stub (`wads-migrate ci-to-stub`) to pick it
+up (see i2mint/wads#90).
+
 ### Code Quality Tools
 
 ```toml
