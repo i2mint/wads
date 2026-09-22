@@ -1,4 +1,4 @@
-> built 2026-09-22 13:35 UTC from 7b2ba40 (master) · wads 0.2.29. Details: build_info.json
+> built 2026-09-22 14:06 UTC from 993d970 (master) · wads 0.2.31. Details: build_info.json
 
 # index.html.md
 
@@ -333,13 +333,14 @@ Wads uses `pyproject.toml` as a single source of truth for CI configuration. Her
 
 ### Install Extras
 
-By default CI installs only your package’s core dependencies. If your test suite
-needs an extra (e.g. a heavier `create`/`dev` group), declare it so CI installs
-`.[extras]`:
+New projects default to installing the `dev` extra in CI (`.[dev]`), matching
+the `dev` extra the template declares under `[project.optional-dependencies]`
+– so test-time tooling (pytest, ruff, …) actually gets installed instead of
+silently never running. Override or opt out explicitly:
 
 ```toml
 [tool.wads.ci.install]
-extras = "dev"          # or a list, e.g. ["dev", "test"]
+extras = "dev"          # or a list, e.g. ["dev", "test"]; "" installs core deps only
 ```
 
 ### Python Versions and Testing
@@ -6634,7 +6635,7 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-09-22 13:35 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7b2ba40866eb6ee463957a4d6f1603ea9f62668b"><code>7b2ba40</code></a> on branch <code>master</code>, for **wads 0.2.29** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 14:06 UTC** from commit <a href="https://github.com/i2mint/wads/commit/993d970c24320951ce6fec56415001ceaf273269"><code>993d970</code></a> on branch <code>master</code>, for **wads 0.2.31** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -6643,9 +6644,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/7b2ba40866eb6ee463957a4d6f1603ea9f62668b"><code>7b2ba40866eb6ee463957a4d6f1603ea9f62668b</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/993d970c24320951ce6fec56415001ceaf273269"><code>993d970c24320951ce6fec56415001ceaf273269</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
-| Tags at this commit | <code>0.2.29</code>                                                                                                                                |
+| Tags at this commit | <code>0.2.31</code>                                                                                                                                |
 | Working tree        | clean                                                                                                                                              |
 | Remote              | <code>https://github.com/i2mint/wads</code>                                                                                                        |
 
@@ -6654,9 +6655,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/35733978827">35733978827</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/35736675111">35736675111</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>c91b28f903c4dc43577425aadaa4abe7239e7b3e</code> (in the history of the built commit) |
+| Event commit | <code>80683fa87bf0943b108a00e0e9658f0a419bc914</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6681,13 +6682,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.29/">0.2.29</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.31/">0.2.31</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 7b2ba40866eb6ee463957a4d6f1603ea9f62668b
+git checkout 993d970c24320951ce6fec56415001ceaf273269
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

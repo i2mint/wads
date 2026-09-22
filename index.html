@@ -609,11 +609,12 @@ wads<span class="w"> </span>ci-local<span class="w"> </span>--publish<span class
 <p>Wads uses <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as a single source of truth for CI configuration. Here’s what you can configure:</p>
 <section id="install-extras">
 <h3>Install Extras<a class="headerlink" href="#install-extras" title="Link to this heading">¶</a></h3>
-<p>By default CI installs only your package’s core dependencies. If your test suite
-needs an extra (e.g. a heavier <code class="docutils literal notranslate"><span class="pre">create</span></code>/<code class="docutils literal notranslate"><span class="pre">dev</span></code> group), declare it so CI installs
-<code class="docutils literal notranslate"><span class="pre">.[extras]</span></code>:</p>
+<p>New projects default to installing the <code class="docutils literal notranslate"><span class="pre">dev</span></code> extra in CI (<code class="docutils literal notranslate"><span class="pre">.[dev]</span></code>), matching
+the <code class="docutils literal notranslate"><span class="pre">dev</span></code> extra the template declares under <code class="docutils literal notranslate"><span class="pre">[project.optional-dependencies]</span></code>
+– so test-time tooling (pytest, ruff, …) actually gets installed instead of
+silently never running. Override or opt out explicitly:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ci.install]</span>
-<span class="n">extras</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">          </span><span class="c1"># or a list, e.g. ["dev", "test"]</span>
+<span class="n">extras</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">          </span><span class="c1"># or a list, e.g. ["dev", "test"]; "" installs core deps only</span>
 </pre></div>
 </div>
 </section>
@@ -938,7 +939,7 @@ epythet<span class="w"> </span>build
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 13:35 UTC from <a href="https://github.com/i2mint/wads/commit/7b2ba40866eb6ee463957a4d6f1603ea9f62668b">7b2ba40</a> (master) · wads 0.2.29 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 14:06 UTC from <a href="https://github.com/i2mint/wads/commit/993d970c24320951ce6fec56415001ceaf273269">993d970</a> (master) · wads 0.2.31 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1038,7 +1039,7 @@ epythet<span class="w"> </span>build
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=7cfee9dd"></script>
+</div><script src="_static/documentation_options.js?v=92d2dd33"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
