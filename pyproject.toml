@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wads"
-version = "0.2.29"
+version = "0.2.30"
 description = "Tools for packaging and publishing to pypi for those who just do not want to deal with it"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -58,20 +58,6 @@ wads-migrate = "wads.migration:main"
 wads-install-skills = "wads.install_skills:main"
 wads-secrets = "wads.secrets_cli:main"
 wads-licence-check = "wads.licence_check:main"
-
-[tool.hatch.build]
-# Without this, hatchling's sdist walk follows the .claude/skills/<name> ->
-# wads/data/skills/<name> symlinks (issue #89): .claude sorts before wads
-# alphabetically, so the real directory is marked "already seen" by the time
-# the walk reaches its canonical wads/data/skills/<name> path and is skipped
-# there -- the sdist (and the wheel built from it) end up with the skill
-# content living only under .claude/skills/, not under the documented,
-# pip-installable wads/data/skills/ path. skip-excluded-dirs stops the walk
-# from entering .claude at all, so the canonical path is never pre-empted.
-skip-excluded-dirs = true
-
-[tool.hatch.build.targets.sdist]
-exclude = [".claude", ".github", "scrap"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["wads"]
