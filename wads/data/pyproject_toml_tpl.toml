@@ -40,6 +40,18 @@ Homepage = ""
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]
 docs = ["sphinx>=6.0", "sphinx-rtd-theme>=1.0"]
 
+[tool.hatch.build]
+# If this repo ships skills at <pkg>/data/skills/<name> with a relative
+# .claude/skills/<name> symlink bridge (the canonical skill-package-setup
+# layout), hatchling's sdist walk would otherwise visit the symlinked copy
+# first (.claude sorts before <pkg>) and drop the real directory when it
+# reaches the canonical path -- see i2mint/wads#89. Harmless to leave on
+# even without that layout.
+skip-excluded-dirs = true
+
+[tool.hatch.build.targets.sdist]
+exclude = [".claude", ".github", "scrap"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py310"
