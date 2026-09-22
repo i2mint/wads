@@ -136,6 +136,14 @@ doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
 # Project name used in CI workflows (defaults to package name if not specified)
 project_name = ""
 
+[tool.wads.ci.install]
+# Extras installed in CI (`pip install -e .[extras]`), comma-separated or a
+# list. Defaults to the "dev" extra this template already declares under
+# [project.optional-dependencies], so test-time tooling (pytest, ruff, ...)
+# actually gets installed instead of silently never running (i2mint/wads#59).
+# Set to "" to install core dependencies only.
+extras = "dev"
+
 # ⚙️ EXECUTION FLOW AND COMMANDS
 # Commands executed during different CI phases
 
