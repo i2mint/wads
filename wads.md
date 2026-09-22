@@ -6636,8 +6636,10 @@ For examples, see the mk_import_root_replacer helper function.
 
 This documentation was built on **2026-09-22 13:33 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6d3023cc5a30f91a8436a4d248a07f6e7d8d2e73"><code>6d3023c</code></a> on branch <code>master</code>, for **wads 0.2.27** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.27) is behind the latest release on PyPI (0.2.28): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
@@ -6654,9 +6656,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/35733970265">35733970265</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/35733985575">35733985575</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>89b595907d7ab55f904769141d55eeab3d6355bc</code> (in the history of the built commit) |
+| Event commit | <code>23adc7257bc6c066a521cae618665b9ab30e85b3</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6681,7 +6683,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.27/">0.2.27</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.28/">0.2.28</a>, newer than the documented version (0.2.27).
 
 ## Reproduce
 
