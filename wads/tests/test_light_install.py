@@ -67,9 +67,14 @@ def light_environment():
         yield
     finally:
         sys.meta_path.remove(blocker)
-        # Re-import is left to other tests; restore originals to avoid surprises.
-        for m, mod in purged.items():
-            sys.modules.setdefault(m, mod)
+        # Put sys.modules back EXACTLY: drop the fresh wads modules the test
+        # imported, then restore the originals. `setdefault` alone kept the
+        # fresh `wads` package object, which lacks attributes for submodules
+        # imported before the purge; on Python 3.10, mock.patch resolves
+        # "wads.project_setup.x" by attribute lookup from `wads` and failed.
+        for m in [m for m in sys.modules if m.startswith("wads")]:
+            del sys.modules[m]
+        sys.modules.update(purged)
 
 
 @pytest.mark.parametrize("module", LIGHT_MODULES)
