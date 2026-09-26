@@ -166,19 +166,49 @@ runs:
             done
             if [ -n "$conflicted" ] && [ "$only_version_files" = 1 ]; then
               echo "Version file conflict with a concurrent change; keeping upstream content, replaying only the version bump in: $conflicted"
+              # The X.Y.Z on a file's first `version =` line (reads stdin).
+              first_version() {
+                grep -m1 -E '^[[:space:]]*version[[:space:]]*=' \
+                  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true
+              }
               for path in $conflicted; do
-                theirs_content=$(git show ":3:$path" 2>/dev/null || true)
-                new_version=$(printf '%s\n' "$theirs_content" \
-                  | grep -m1 -E '^[[:space:]]*version[[:space:]]*=' \
-                  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
-                git checkout --ours -- "$path"
+                new_version=$(git show ":3:$path" 2>/dev/null | first_version || true)
+                if ! git checkout --ours -- "$path" 2>/dev/null; then
+                  # Modify/delete conflict: upstream removed the file, so there
+                  # is no upstream content to keep (i2mint/wads#98).
+                  git rebase --abort || true
+                  echo "::error::'$path' was deleted or renamed on 'origin/$branch' while this run bumped it to ${new_version:-a new version}. Resolve by hand."
+                  exit 1
+                fi
                 if [ -n "$new_version" ]; then
                   case "$path" in
-                    pyproject.toml)
-                      sed -i -E "s/^version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$new_version\"/" "$path"
-                      ;;
-                    setup.cfg)
-                      sed -i -E "s/^version = [0-9]+\.[0-9]+\.[0-9]+/version = $new_version/" "$path"
+                    pyproject.toml|setup.cfg)
+                      # Rewrite only the X.Y.Z of the FIRST `version =` line --
+                      # the same line the version was read from -- keeping the
+                      # file's own spacing and quoting (i2mint/wads#98: the old
+                      # `sed` matched only `version = "X.Y.Z"` verbatim, so any
+                      # other valid spelling was a silent no-op, and it also
+                      # rewrote every other table's `version = "..."` line).
+                      # awk + mv rather than `sed -i`, whose flags differ
+                      # between GNU and BSD sed.
+                      awk -v nv="$new_version" '
+                        !done && /^[[:space:]]*version[[:space:]]*=/ \
+                              && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {
+                          $0 = substr($0, 1, RSTART - 1) nv substr($0, RSTART + RLENGTH)
+                          done = 1
+                        }
+                        { print }
+                      ' "$path" > "$path.wads-replay"
+                      mv -f "$path.wads-replay" "$path"
+                      landed=$(first_version < "$path")
+                      if [ "$landed" != "$new_version" ]; then
+                        # Pushing now would record an older version in git than
+                        # the one this run published (the i2mint/wads#83 desync),
+                        # so stop loudly instead.
+                        git rebase --abort || true
+                        echo "::error::Could not write version $new_version (just published) into '$path' on top of 'origin/$branch' (found '${landed:-no version line}'). Resolve by hand."
+                        exit 1
+                      fi
                       ;;
                     setup.py)
                       # No fixed version-field syntax to target safely; skip --
@@ -186,6 +216,8 @@ runs:
                       # skipping never loses data (unlike the old --theirs).
                       ;;
                   esac
+                else
+                  echo "::warning::No X.Y.Z version found in this run's '$path'; kept upstream's version line as is."
                 fi
                 git add -- "$path"
               done
