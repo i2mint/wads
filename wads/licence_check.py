@@ -692,7 +692,7 @@ def declared_requirements(
     ...     declared_requirements(pyproject={'project': {
     ...         'name': 'x', 'dynamic': ['dependencies']}})
     ... except DetectorError as error:
-    ...     print(str(error)[:59])
+    ...     print(str(error)[:58])
     this project lists `dependencies` in [project].dynamic, so
     """
     if pyproject is None:
@@ -948,7 +948,11 @@ class LicencePolicy:
 
     allowed: tuple[str, ...] = DFLT_ALLOWED
     forbidden: tuple[str, ...] = DFLT_FORBIDDEN
-    exceptions: Mapping[str, str] = types.MappingProxyType({})
+    # A factory, not a plain default: Python 3.11's dataclasses reject an
+    # unhashable default, and a mappingproxy is one there (i2mint/wads#100).
+    exceptions: Mapping[str, str] = dataclasses.field(
+        default_factory=lambda: types.MappingProxyType({})
+    )
     include_extras: tuple[str, ...] = ()
     unknown_is_failure: bool = True
     unclassified_is_failure: bool = False
@@ -986,7 +990,7 @@ class LicencePolicy:
         >>> try:
         ...     LicencePolicy.from_mapping({'forbiden': ['GPL']})
         ... except ValueError as error:
-        ...     print(error)
+        ...     print(error)  # doctest: +NORMALIZE_WHITESPACE
         unknown [tool.wads.licence] key 'forbiden'; known keys are: allowed, enabled,
         exceptions, forbidden, include-extras, unclassified-is-failure, unknown-is-failure
 
@@ -996,7 +1000,7 @@ class LicencePolicy:
         >>> try:
         ...     LicencePolicy.from_mapping({'allow': ['MIT']})
         ... except ValueError as error:
-        ...     print(error)
+        ...     print(error)  # doctest: +NORMALIZE_WHITESPACE
         [tool.wads.licence] key 'allow' is from the earlier table shape: rename it to
         `allowed` (it pairs with `forbidden`, where `allow` had no counterpart)
         """
