@@ -1553,3 +1553,36 @@ def test_the_readme_worked_example_is_a_superset_of_the_defaults():
     # And the resulting policy is one the tool would actually agree to run.
     checked = lc.self_check(policy)
     assert checked.uncovered_families == ()
+
+
+def test_dataclass_defaults_are_hashable_so_the_module_imports_on_py311():
+    """i2mint/wads#100: Python 3.11 rejects unhashable dataclass defaults.
+
+    ``dataclasses`` on 3.11 raises at class creation for any default whose
+    type is unhashable, so ``import wads.licence_check`` died there (a
+    ``mappingproxy`` default: hashable as a type only from 3.12, never
+    hashable over a ``dict``). CI tests 3.10 and 3.12, which both import fine,
+    so the rule is checked directly here on whatever interpreter runs it.
+    """
+    import dataclasses
+
+    offenders = []
+    for name, obj in vars(lc).items():
+        if not (isinstance(obj, type) and dataclasses.is_dataclass(obj)):
+            continue
+        for field in dataclasses.fields(obj):
+            if field.default is dataclasses.MISSING:
+                continue
+            try:
+                hash(field.default)
+            except TypeError:
+                offenders.append(f"{name}.{field.name}")
+    assert not offenders, f"unhashable dataclass defaults (break on 3.11): {offenders}"
+
+
+def test_licence_policy_default_exceptions_are_empty_and_read_only():
+    """The default-factory fix keeps the default an empty, read-only mapping."""
+    policy = lc.LicencePolicy()
+    assert dict(policy.exceptions) == {}
+    with pytest.raises(TypeError):
+        policy.exceptions["x"] = "y"

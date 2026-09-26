@@ -98,7 +98,11 @@ select = ["D100"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-testpaths = ["wads/tests"]
+# The whole package, not just wads/tests: run-tests-uv calls pytest with no
+# path, so testpaths alone decides what CI collects, and the package's own
+# doctests must be in it (i2mint/wads#56). wads/data (templates) is left out
+# by collect_ignore in the root conftest.py.
+testpaths = ["wads"]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "ELLIPSIS"]
 
 [tool.wads.ci.install]

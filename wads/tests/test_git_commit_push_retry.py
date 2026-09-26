@@ -358,6 +358,127 @@ class TestPushBackRecovery:
         assert 'version = "0.0.3"' in shown
         assert not (clone / ".git" / "rebase-merge").exists()
 
+    @pytest.mark.parametrize(
+        "filename, template",
+        [
+            ("pyproject.toml", 'version="{}"\n'),  # valid TOML, no spaces
+            ("pyproject.toml", "version = '{}'\n"),  # single-quoted literal
+            ("pyproject.toml", '  version   =   "{}"\n'),  # indented, padded
+            ("setup.cfg", "[metadata]\nversion={}\n"),
+        ],
+    )
+    def test_version_bump_replay_tolerates_version_line_formatting(
+        self, remote_and_clone, tmp_path, filename, template
+    ):
+        """i2mint/wads#98: a differently-formatted version line must still be bumped.
+
+        The replay used to rewrite the version with a ``sed`` that matched only
+        ``version = "X.Y.Z"`` (one space each side, double quotes). Any other
+        valid spelling made it a silent no-op, so git kept the concurrent
+        run's OLDER version while PyPI had this run's newer one (the #83
+        desync, with no error logged). The rewrite must keep the file's own
+        formatting and change only the version number.
+        """
+        origin, clone = remote_and_clone
+        _commit(clone, filename, template.format("0.0.4"), "**CI** bump to 0.0.4")
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, filename, template.format("0.0.3"), "**CI** bump to 0.0.3")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git("show", f"origin/{DEFAULT_BRANCH}:{filename}", cwd=clone).stdout
+        assert shown == template.format("0.0.4")
+        assert _subjects(clone, f"origin/{DEFAULT_BRANCH}")[:2] == [
+            "**CI** bump to 0.0.4",
+            "**CI** bump to 0.0.3",
+        ]
+        assert not (clone / ".git" / "rebase-merge").exists()
+
+    def test_only_the_first_version_line_is_rewritten(
+        self, remote_and_clone, tmp_path
+    ):
+        """Another table's ``version`` key (a tool's own setting) is left alone."""
+        origin, clone = remote_and_clone
+        tail = '\n[tool.other]\nversion = "9.9.9"\n'
+        _commit(
+            clone, "pyproject.toml", 'version = "0.0.4"\n' + tail, "**CI** bump"
+        )
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(
+            other,
+            "pyproject.toml",
+            'version = "0.0.3"\n' + tail + "\n[tool.added]\nx = 1\n",
+            "**CI** bump to 0.0.3, plus a merged table",
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:pyproject.toml", cwd=clone
+        ).stdout
+        assert shown == 'version = "0.0.4"\n' + tail + "\n[tool.added]\nx = 1\n"
+
+    def test_a_version_that_cannot_be_written_back_fails_loudly(
+        self, remote_and_clone, tmp_path
+    ):
+        """i2mint/wads#98: never push a replay that silently kept the old version.
+
+        Upstream switched to a dynamic version (no ``version =`` line left), so
+        there is nowhere to write the version this run published. Pushing
+        anyway would record a version in git that disagrees with PyPI; the
+        step must stop with an error that names the file and the version.
+        """
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
+        other = tmp_path / "went-dynamic"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, "pyproject.toml", 'dynamic = ["version"]\n', "go dynamic")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert "::error::" in result.stdout
+        assert "0.0.3" in result.stdout and "pyproject.toml" in result.stdout
+        assert _subjects(clone, f"origin/{DEFAULT_BRANCH}")[0] == "go dynamic"
+        assert not (clone / ".git" / "rebase-merge").exists()
+        assert not (clone / ".git" / "rebase-apply").exists()
+
+    def test_a_version_file_deleted_upstream_fails_with_a_readable_error(
+        self, remote_and_clone, tmp_path
+    ):
+        """i2mint/wads#98 (UX note): modify/delete conflicts get the step's own error.
+
+        ``git checkout --ours`` has no side to take when upstream deleted the
+        file, and used to abort the step under ``set -e`` with git's bare
+        "does not have our version", leaving a rebase in progress.
+        """
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump to 0.0.3")
+        other = tmp_path / "deleted"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _git("rm", "-q", "pyproject.toml", cwd=other)
+        _git("commit", "-m", "drop pyproject", cwd=other)
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert "::error::" in result.stdout
+        assert "pyproject.toml" in result.stdout
+        assert not (clone / ".git" / "rebase-merge").exists()
+        assert not (clone / ".git" / "rebase-apply").exists()
+
     def test_conflicting_replay_fails_cleanly(self, remote_and_clone, tmp_path):
         """A conflict outside the version files aborts rather than wedging the repo.
 
