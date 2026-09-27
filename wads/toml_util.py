@@ -19,6 +19,44 @@ except ImportError:
     tomli_w = None
 
 
+def pep639_license(license_name: str):
+    """The ``[project].license`` value for ``license_name``, PEP 639 when possible.
+
+    A name that canonicalizes to a valid SPDX expression becomes that string
+    (``license = "MIT"``). Anything else keeps the deprecated
+    ``{"text": ...}`` table, because Hatchling rejects a ``license`` string
+    that is not valid SPDX -- so this never produces an unbuildable project.
+    Needs ``packaging>=24.2`` for SPDX support and falls back to the table
+    without it.
+
+    >>> pep639_license("mit")
+    'MIT'
+    >>> pep639_license("Apache Software License")
+    'Apache-2.0'
+    >>> pep639_license("Proprietary")
+    {'text': 'Proprietary'}
+    """
+    try:
+        from packaging.licenses import (
+            InvalidLicenseExpression,
+            canonicalize_license_expression,
+        )
+    except ImportError:
+        return {"text": license_name}
+    aliases = {
+        "apache software license": "Apache-2.0",
+        "apache license 2.0": "Apache-2.0",
+        "apache 2.0": "Apache-2.0",
+        "mit license": "MIT",
+        "bsd license": "BSD-3-Clause",
+    }
+    candidate = aliases.get(str(license_name).strip().lower(), license_name)
+    try:
+        return canonicalize_license_expression(candidate)
+    except (InvalidLicenseExpression, TypeError):
+        return {"text": license_name}
+
+
 def read_pyproject_toml(pkg_dir: str) -> dict[str, Any]:
     """
     Read pyproject.toml from the specified package directory.

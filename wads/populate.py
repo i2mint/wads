@@ -227,8 +227,10 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
         if documentation_url:
             data["project"]["urls"]["Documentation"] = documentation_url
 
-    # Update license using inline table syntax
-    data["project"]["license"] = {"text": license_name}
+    # PEP 639 SPDX string when the name is valid SPDX, else the legacy table
+    from wads.toml_util import pep639_license
+
+    data["project"]["license"] = pep639_license(license_name)
 
     # Add optional fields if present
     if configs.get("keywords"):

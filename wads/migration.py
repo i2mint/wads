@@ -584,7 +584,9 @@ def migrate_setuptools_to_hatching(
     pyproject_dict["project"]["name"] = required_fields["name"]
     pyproject_dict["project"]["version"] = required_fields["version"]
     pyproject_dict["project"]["description"] = required_fields["description"]
-    pyproject_dict["project"]["license"] = {"text": required_fields["license"]}
+    from wads.toml_util import pep639_license
+
+    pyproject_dict["project"]["license"] = pep639_license(required_fields["license"])
 
     if "urls" not in pyproject_dict["project"]:
         pyproject_dict["project"]["urls"] = {}
@@ -1212,7 +1214,7 @@ def main():
         default="@master",
         help=(
             "wads ref to pin in the stub (default '@master'). "
-            "Use e.g. '@v0.1.81' to freeze."
+            "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix)."
         ),
     )
     fleet_parser.add_argument(
@@ -1492,8 +1494,9 @@ def main():
             if pin == "@master":
                 print(
                     "\nPinned to @master (floats with wads). If you need version "
-                    "stability for this repo, re-run with `--pin @vX.Y.Z` "
-                    "(latest wads tag visible via `gh release list -R i2mint/wads`).",
+                    "stability for this repo, re-run with `--pin @X.Y.Z` (tags "
+                    "have no 'v' prefix; latest via "
+                    "`gh api repos/i2mint/wads/tags --jq '.[0].name'`).",
                     file=sys.stderr,
                 )
 
