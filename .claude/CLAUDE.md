@@ -85,8 +85,9 @@ wads/
 1. **`populate my-project`** reads the template at `wads/data/pyproject_toml_tpl.toml`
 2. Loads it as TOML, merges user-provided values (name, description, author, license, etc.)
 3. Writes the resulting `pyproject.toml` with Hatchling build system
-4. Copies `wads/data/github_ci_uv_stub.yml` → `.github/workflows/ci.yml` (5-line stub
-   that calls the reusable workflow in `i2mint/wads/.github/workflows/uv-ci.yml@master`).
+4. Renders `wads/data/github_ci_uv_stub.yml` → `.github/workflows/ci.yml` (5-line stub
+   that calls the reusable workflow in `i2mint/wads/.github/workflows/uv-ci.yml@master`),
+   switching its secrets block to the named transport (see "Secrets" below).
    For repos that need to customize CI beyond `[tool.wads.ci.*]`, drop the stub and
    copy `wads/data/github_ci_uv.yml` inline instead.
 5. Creates README.md, LICENSE, .gitignore, .gitattributes, .editorconfig, package dir
@@ -101,7 +102,7 @@ consumer on their next CI run — no per-repo edit, no `wads-migrate` sweep.
 | Tradeoff | Pin strategy |
 |---|---|
 | Float with wads (default) | `@master` — convenient; bad wads merge breaks CI everywhere on next run, but never reaches PyPI (publish is gated on workflow success) |
-| Freeze | `@0.2.15` (or any later tag; no `v` prefix) — set via `wads-migrate ci-to-stub --pin @0.2.15`; the repo only picks up wads updates when re-pinned. A JSON-transport stub needs a tag whose uv-ci.yml declares `WADS_CI_SECRETS_JSON` (releases after 0.2.14); older pins need `--transport named` |
+| Freeze | `@0.2.15` (or any later tag; no `v` prefix) — set via `wads-migrate ci-to-stub --pin @0.2.15`; the repo only picks up wads updates when re-pinned. A named-transport stub (the default) works with any tag; a JSON-transport stub needs a tag whose uv-ci.yml declares `WADS_CI_SECRETS_JSON` (releases after 0.2.14) |
 
 The "CI failure ≠ broken release" property is what makes `@master` safe by
 default: a botched wads update blocks publication of all downstream packages
@@ -119,19 +120,22 @@ A reusable workflow's secret *interface* (`on.workflow_call.secrets`) must be
 static YAML and `secrets: inherit` is unreliable cross-owner, so secrets are
 handled in two decoupled layers:
 
-1. **Transport** — the modern stub passes ONE statically-declared secret,
-   `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the caller's whole
-   secrets context, double-encoded so the value is single-line (a multiline
-   secret is masked per line, and the pretty-printed `{`/`}` lines would
-   become global masks mangling every brace in the log). Any secret name a
-   repo has reaches the workflow — nothing to enumerate, nothing to fall
-   outside of. The 62-name superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`) is
-   still declared in `uv-ci.yml` but **frozen**: it exists only so old
-   named-transport stubs keep working (a test in `test_ci_secrets.py` pins the
-   YAML to `WORKFLOW_CALL_SECRETS` = JSON secret + superset). Named transport
-   remains available for minimal-secret-surface repos via
-   `wads-migrate ci-to-stub --transport named`, which warns loudly on
-   out-of-superset names (they make the workflow unstartable — issue #63).
+1. **Transport** — every stub wads *writes* (`populate`, `wads-migrate
+   ci-to-stub` on an inline workflow) passes secrets **by name**:
+   `PYPI_PASSWORD` plus the backing secret of each `[tool.wads.ci.env]` var
+   (`wads.ci_secrets.stub_with_named_transport`). Names must be in the frozen
+   62-name superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`, declared in
+   `uv-ci.yml`; a test in `test_ci_secrets.py` pins the YAML to
+   `WORKFLOW_CALL_SECRETS` = JSON secret + superset), or the workflow is
+   unstartable (issue #63), so the CLIs warn loudly on out-of-superset names.
+   The **opt-in** JSON transport (`--transport json`) passes ONE secret,
+   `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the whole secrets
+   context, double-encoded so the value is single-line (a multiline secret is
+   masked per line). Any name works, but GitHub's malicious-workflow scanner
+   holds its runs on NEW repos (`action_required`, zero jobs, no log; issues
+   #74, #88), which is why it stopped being the default. Re-rendering an
+   existing stub (`migrate_ci_to_stub(path)`, `ci-to-stub`, `ci-on-demand`,
+   `fleet-stub`) keeps the transport it already has.
 2. **Env-assignment** — *which* values become job env vars (and which are
    required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
@@ -148,7 +152,7 @@ handled in two decoupled layers:
    transport feeds it.
 
 To use a secret: `wads-secrets add VAR_NAME [SECRET_NAME]` updates pyproject
-(and, on legacy named stubs, the stub's pass-through) and can `gh secret set`
+(and, on named-transport stubs, the stub's pass-through) and can `gh secret set`
 the value. For non-sensitive values use `wads-secrets add NAME --variable`
 (repo variable; no transport, no masking) or put a literal in
 `[tool.wads.ci.env].defaults`.
@@ -306,7 +310,7 @@ Tests are in `wads/tests/` (not the top-level `tests/` directory).
 ## Common Pitfalls
 
 - The `[tool.wads.ci]` section is **not** standard TOML metadata - it's wads-specific
-- `testpaths` in the template defaults to `["tests"]` but wads itself uses `["wads/tests"]`
+- `testpaths` in the template defaults to `["tests"]`; wads itself uses `["wads"]` so CI (which runs pytest with no path) also collects the package doctests (#56). The root `conftest.py` keeps `wads/data` templates out of collection
 - The CI workflow uses `i2mint/wads/actions/*@master` - these must be on GitHub
 - System deps in `[tool.wads.ops.*]` only run in CI, not locally
 - Version bumping happens automatically in the publish job on main/master

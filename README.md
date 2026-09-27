@@ -136,26 +136,9 @@ wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variab
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]` and (b)
-runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is
-installed (value taken from `$VAR_NAME` or `--value`). Under the hood there
-are two layers: a **transport** — the stub passes your repo's whole secrets
-context to the reusable workflow as one `WADS_CI_SECRETS_JSON` secret, so any
-secret name works — and an **env policy** (`[tool.wads.ci.env]` —
-`required_envvars` / `test_envvars` / `extra_envvars` / `defaults` /
-`secret_aliases`) that decides which values become job env vars. Each declared
-name resolves against secrets first, then repository *variables* (the right
-home for non-sensitive values); committed constants can go straight into
-`[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing
-fails the build; an undeclared secret is never written to the environment.
-Note the JSON transport hands **every** secret the repo can read — including
-org-level ones — to the reusable workflow (which only exports the declared
-ones). If you want the workflow to receive *only* the names you list, use
-`wads-migrate ci-to-stub --transport named` — that mode is limited to the
-frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, and is also the
-right choice for orgs with very large shared secrets (the serialized context
-must fit in one secret value). Older stubs pass secrets by name the same way;
-regenerate with `wads-migrate ci-to-stub` to switch to the JSON transport.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub's `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
+
+Named secrets must be in the frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names. The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo's whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because GitHub's malicious-workflow scanner holds its runs on new repositories: every run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74)). Re-rendering an existing stub keeps whichever transport it already uses.
 
 ### Declare System Dependencies
 
