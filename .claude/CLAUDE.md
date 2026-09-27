@@ -135,7 +135,7 @@ handled in two decoupled layers:
    holds its runs on NEW repos (`action_required`, zero jobs, no log; issues
    #74, #88), which is why it stopped being the default. Re-rendering an
    existing stub (`migrate_ci_to_stub(path)`, `ci-to-stub`, `ci-on-demand`,
-   `fleet-stub`) keeps the transport it already has.
+   `fleet-stub`) keeps the transport it already has, with one exception: when no `--transport` is given and a named stub would pass a name outside the superset (so it could never start), the JSON transport is used instead, with a note on stderr.
 2. **Env-assignment** — *which* values become job env vars (and which are
    required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
