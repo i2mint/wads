@@ -8,8 +8,34 @@ version = "0.2.31"
 description = "Tools for packaging and publishing to pypi for those who just do not want to deal with it"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["documentation", "packaging", "publishing"]
+license = "Apache-2.0"
+keywords = [
+    "packaging",
+    "publishing",
+    "pypi",
+    "pyproject",
+    "hatchling",
+    "ci",
+    "github-actions",
+    "uv",
+    "project-template",
+    "documentation",
+]
 authors = [{ name = "Thor Whalen" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: System :: Software Distribution",
+]
 # Core (light) dependencies: enough to read config ([tool.wads.ci] /
 # package.json wads.ci), run the templating engine, and `import wads`. Kept
 # deliberately small so CI-side use stays cheap. Heavier project-creation /
@@ -22,9 +48,6 @@ dependencies = [
     "tomli>=1.0.0; python_version<'3.11'",
     "tomli-w>=0.4.0",
 ]
-
-[project.license]
-text = "Apache Software License"
 
 [project.optional-dependencies]
 # Full project-creation / publishing toolchain (heavier). Install with
@@ -46,6 +69,9 @@ all = ["wads[create,docs]"]
 
 [project.urls]
 Homepage = "https://github.com/i2mint/wads"
+Repository = "https://github.com/i2mint/wads"
+Documentation = "https://i2mint.github.io/wads/"
+Issues = "https://github.com/i2mint/wads/issues"
 
 [project.scripts]
 pack = "wads.pack:main"
