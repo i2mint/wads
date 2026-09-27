@@ -140,24 +140,34 @@ class CIConfig:
         """
         if "extras" in self.ci_config.get("install", {}):
             return {}
-        from packaging.requirements import InvalidRequirement, Requirement
+        from packaging.requirements import Requirement
         from packaging.utils import canonicalize_name
 
         own_name = canonicalize_name(self.project_name or "")
         provided = {canonicalize_name(n) for n in self.CI_PROVIDED_PACKAGES}
-        optional = self.data.get("project", {}).get("optional-dependencies", {}) or {}
+        optional = (self.data.get("project") or {}).get("optional-dependencies")
+        if not isinstance(optional, dict):
+            return {}
         missing = {}
         for extra, requirements in optional.items():
-            if extra.lower() not in self.TEST_EXTRA_NAMES:
+            if not isinstance(extra, str) or extra.lower() not in self.TEST_EXTRA_NAMES:
+                continue
+            if not isinstance(requirements, list):
                 continue
             names = []
-            for requirement in requirements or []:
-                try:
-                    name = Requirement(requirement).name
-                except InvalidRequirement:
+            for requirement in requirements:
+                if not isinstance(requirement, str):
                     continue
-                if canonicalize_name(name) not in provided | {own_name}:
-                    names.append(name)
+                try:
+                    parsed = Requirement(requirement)
+                    if parsed.marker is not None and not parsed.marker.evaluate(
+                        {"extra": extra}
+                    ):
+                        continue  # does not apply to this interpreter/platform
+                except Exception:  # invalid requirement or marker: not ours to judge
+                    continue
+                if canonicalize_name(parsed.name) not in provided | {own_name}:
+                    names.append(parsed.name)
             if names:
                 missing[extra] = names
         return missing

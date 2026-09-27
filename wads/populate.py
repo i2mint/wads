@@ -1098,7 +1098,10 @@ def _add_ci_def(
             warn_names_outside_superset,
         )
 
-        if render_stub_json_transport() in ci_def:
+        is_bundled_stub = os.path.abspath(ci_tpl_path) == os.path.abspath(
+            github_ci_uv_stub_path
+        )
+        if is_bundled_stub and render_stub_json_transport() in ci_def:
             names = ci_config.stub_secret_names() if ci_config else ["PYPI_PASSWORD"]
             warn_names_outside_superset(names)
             ci_def = stub_with_named_transport(ci_def, names)
@@ -1270,7 +1273,8 @@ def _get_org_slash_proj(repo: str) -> str:
     >>> _get_org_slash_proj('https://github.com/thorwhalen/ut/')
     'thorwhalen/ut'
     """
-    *_, org, proj_name = ensure_no_slash_suffix(repo).split("/")
+    # A URL separator, not os.sep (ensure_no_slash_suffix strips "\\" on Windows)
+    *_, org, proj_name = repo.rstrip("/").split("/")
     return f"{org}/{proj_name}"
 
 

@@ -565,9 +565,12 @@ def extract_pkg_dir_and_name(
     `pkg_spec` can be an imported package (must be a locally developped package)
     whose name and containing directory is the same):
 
-    >>> import wads
-    >>> extract_pkg_dir_and_name(wads)  # doctest: +ELLIPSIS
-    (.../wads', 'wads')
+    >>> import os, wads
+    >>> pkg_dir, pkg_name = extract_pkg_dir_and_name(wads)
+    >>> pkg_name
+    'wads'
+    >>> os.path.isfile(os.path.join(pkg_dir, pkg_name, '__init__.py'))
+    True
 
     You can also just specify the name of the package (it will be imported):
 

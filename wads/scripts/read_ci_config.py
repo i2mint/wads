@@ -132,7 +132,11 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         # Declared test tooling that CI will not install (i2mint/wads#59).
         # A warning only: installing it automatically would change what every
         # repo without an explicit `extras` setting runs.
-        for extra, packages in config.uninstalled_test_extras.items():
+        try:
+            uninstalled = config.uninstalled_test_extras
+        except Exception:  # a diagnostic must never fail the setup job
+            uninstalled = {}
+        for extra, packages in uninstalled.items():
             print(
                 f"::warning title=Test extra not installed::The '{extra}' extra "
                 f"({', '.join(packages)}) is not installed in CI, because "

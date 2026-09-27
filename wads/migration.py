@@ -931,6 +931,7 @@ def migrate_ci_to_stub(
     """
     if not pin.startswith("@"):
         raise ValueError(f"pin must start with '@', got {pin!r}")
+    auto_transport = transport is None
     if transport is None:
         transport = _existing_stub_transport(old_ci)
     if transport not in ("json", "named"):
@@ -953,8 +954,24 @@ def migrate_ci_to_stub(
         from wads.ci_secrets import stub_with_named_transport
 
         names = _stub_secret_names_for(old_ci)
-        _warn_named_transport_outside_superset(names)
-        stub = stub_with_named_transport(stub, names)
+        from wads.ci_secrets import DEFAULT_CI_SECRETS
+
+        outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
+        if auto_transport and outside:
+            # A named stub passing these could not start (issue #63). With no
+            # explicit choice, keep the JSON transport, which passes any name.
+            print(
+                f"note: using the JSON secrets transport because {outside} "
+                f"are outside the wads secrets superset, so a named stub "
+                f"passing them could not start (i2mint/wads#63). On a brand-new "
+                f"repo GitHub may hold JSON-transport runs (i2mint/wads#74); "
+                f"storing non-sensitive values as repository variables avoids "
+                f"both.",
+                file=sys.stderr,
+            )
+        else:
+            _warn_named_transport_outside_superset(names)
+            stub = stub_with_named_transport(stub, names)
     # Legacy templates carried a placeholder instead of a transport line.
     if "#SECRETS_BLOCK#" in stub:
         from wads.ci_secrets import render_stub_secrets_passthrough
@@ -986,9 +1003,11 @@ def _existing_stub_transport(old_ci) -> str:
     """The secrets transport of the stub file at ``old_ci``; ``"named"`` otherwise."""
     from wads.ci_trigger import stub_shape
 
-    if old_ci and os.path.isfile(str(old_ci)):
+    if not old_ci:
+        return "named"
+    if "\n" not in str(old_ci) and os.path.isfile(str(old_ci)):
         return stub_shape(Path(old_ci).read_text())["transport"]
-    return "named"
+    return stub_shape(str(old_ci))["transport"]  # content; "named" if not a stub
 
 
 def _stub_secret_names_for(old_ci) -> list:

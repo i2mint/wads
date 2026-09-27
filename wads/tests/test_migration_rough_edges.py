@@ -78,3 +78,17 @@ def test_pin_hints_use_bare_version_tags():
     assert not re.findall(r"@v\d", MIGRATION_SOURCE)
     assert "@vX" not in MIGRATION_SOURCE
     assert "gh release list" not in MIGRATION_SOURCE
+
+
+def test_org_slash_proj_strips_a_url_slash_even_on_windows(monkeypatch):
+    """A URL's trailing ``/`` is not an OS path separator (``\\`` on Windows)."""
+    import wads.util
+    from wads.populate import _get_org_slash_proj
+
+    monkeypatch.setattr(wads.util, "path_sep", "\\")
+    assert _get_org_slash_proj("https://github.com/thorwhalen/ut/") == "thorwhalen/ut"
+
+
+@pytest.mark.parametrize("value", [None, {"text": "MIT"}, 3])
+def test_pep639_license_passes_non_strings_through_as_a_table(value):
+    assert pep639_license(value) == {"text": value}

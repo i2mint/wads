@@ -82,3 +82,24 @@ def test_read_ci_config_is_quiet_when_nothing_is_missing(tmp_path, monkeypatch, 
     )
     assert read_and_export_ci_config(tmp_path) == 0
     assert "::warning" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "optional_deps",
+    [
+        ["dev"],  # not a table
+        {"dev": "httpx"},  # a string, not a list
+        {"dev": [1, None, {"x": 1}, "httpx"]},  # non-string entries
+        {"dev": None},
+    ],
+)
+def test_malformed_optional_dependencies_never_crash(optional_deps):
+    """A diagnostic must never be what fails the CI setup job."""
+    config = _config(optional_deps)
+    result = config.uninstalled_test_extras
+    assert result in ({}, {"dev": ["httpx"]})
+
+
+def test_marker_gated_requirements_that_do_not_apply_are_not_reported():
+    config = _config({"dev": ['httpx; python_version < "3.0"', "numpy"]})
+    assert config.uninstalled_test_extras == {"dev": ["numpy"]}

@@ -398,15 +398,11 @@ class TestPushBackRecovery:
         ]
         assert not (clone / ".git" / "rebase-merge").exists()
 
-    def test_only_the_first_version_line_is_rewritten(
-        self, remote_and_clone, tmp_path
-    ):
+    def test_only_the_first_version_line_is_rewritten(self, remote_and_clone, tmp_path):
         """Another table's ``version`` key (a tool's own setting) is left alone."""
         origin, clone = remote_and_clone
         tail = '\n[tool.other]\nversion = "9.9.9"\n'
-        _commit(
-            clone, "pyproject.toml", 'version = "0.0.4"\n' + tail, "**CI** bump"
-        )
+        _commit(clone, "pyproject.toml", 'version = "0.0.4"\n' + tail, "**CI** bump")
         other = tmp_path / "earlier-release"
         _git("clone", str(origin), str(other), cwd=tmp_path)
         _configure(other)
@@ -425,6 +421,38 @@ class TestPushBackRecovery:
             "show", f"origin/{DEFAULT_BRANCH}:pyproject.toml", cwd=clone
         ).stdout
         assert shown == 'version = "0.0.4"\n' + tail + "\n[tool.added]\nx = 1\n"
+
+    @pytest.mark.parametrize(
+        "filename, template",
+        [
+            (
+                "pyproject.toml",
+                '[tool.other]\nversion = "9.9.9"\n\n[project]\nname = "p"\n'
+                'version = "{}"\n\n[project.urls]\nHomepage = "x"\n',
+            ),
+            (
+                "setup.cfg",
+                "[bumpversion]\nversion = 9.9.9\n\n[metadata]\nversion = {}\n",
+            ),
+        ],
+    )
+    def test_the_project_version_is_bumped_even_after_another_tables_version(
+        self, remote_and_clone, tmp_path, filename, template
+    ):
+        """Only [project] (pyproject) / [metadata] (setup.cfg) holds the version."""
+        origin, clone = remote_and_clone
+        _commit(clone, filename, template.format("0.0.4"), "**CI** bump to 0.0.4")
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, filename, template.format("0.0.3"), "**CI** bump to 0.0.3")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git("show", f"origin/{DEFAULT_BRANCH}:{filename}", cwd=clone).stdout
+        assert shown == template.format("0.0.4")
 
     def test_a_version_that_cannot_be_written_back_fails_loudly(
         self, remote_and_clone, tmp_path

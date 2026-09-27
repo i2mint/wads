@@ -36,6 +36,8 @@ def pep639_license(license_name: str):
     >>> pep639_license("Proprietary")
     {'text': 'Proprietary'}
     """
+    if not isinstance(license_name, str):
+        return {"text": license_name}
     try:
         from packaging.licenses import (
             InvalidLicenseExpression,

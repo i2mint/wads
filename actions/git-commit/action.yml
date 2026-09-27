@@ -166,13 +166,37 @@ runs:
             done
             if [ -n "$conflicted" ] && [ "$only_version_files" = 1 ]; then
               echo "Version file conflict with a concurrent change; keeping upstream content, replaying only the version bump in: $conflicted"
-              # The X.Y.Z on a file's first `version =` line (reads stdin).
-              first_version() {
-                grep -m1 -E '^[[:space:]]*version[[:space:]]*=' \
-                  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true
+              # The version line lives in [project] (pyproject.toml) or
+              # [metadata] (setup.cfg), or before any table in a bare file;
+              # another table's `version` key (a tool setting) is not it.
+              version_section() {
+                case "$1" in
+                  setup.cfg) echo metadata ;;
+                  *) echo project ;;
+                esac
+              }
+              # Shared awk: the first `version =` line in that section. With
+              # nv empty it prints the line's X.Y.Z; otherwise it rewrites that
+              # X.Y.Z to nv and prints the whole file.
+              version_awk='
+                /^[[:space:]]*\[/ {
+                  seen = 1
+                  insec = ($0 ~ ("^[[:space:]]*\\[" sec "\\][[:space:]]*(#.*)?\r?$"))
+                }
+                !done && (!seen || insec) && /^[[:space:]]*version[[:space:]]*=/ \
+                      && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {
+                  done = 1
+                  if (nv == "") { print substr($0, RSTART, RLENGTH); exit }
+                  $0 = substr($0, 1, RSTART - 1) nv substr($0, RSTART + RLENGTH)
+                }
+                nv != "" { print }
+              '
+              # The project's X.Y.Z in file $1's section, read from stdin.
+              project_version() {
+                awk -v sec="$(version_section "$1")" -v nv="" "$version_awk" || true
               }
               for path in $conflicted; do
-                new_version=$(git show ":3:$path" 2>/dev/null | first_version || true)
+                new_version=$(git show ":3:$path" 2>/dev/null | project_version "$path" || true)
                 if ! git checkout --ours -- "$path" 2>/dev/null; then
                   # Modify/delete conflict: upstream removed the file, so there
                   # is no upstream content to keep (i2mint/wads#98).
@@ -183,7 +207,7 @@ runs:
                 if [ -n "$new_version" ]; then
                   case "$path" in
                     pyproject.toml|setup.cfg)
-                      # Rewrite only the X.Y.Z of the FIRST `version =` line --
+                      # Rewrite only the X.Y.Z of the project's version line --
                       # the same line the version was read from -- keeping the
                       # file's own spacing and quoting (i2mint/wads#98: the old
                       # `sed` matched only `version = "X.Y.Z"` verbatim, so any
@@ -191,16 +215,10 @@ runs:
                       # rewrote every other table's `version = "..."` line).
                       # awk + mv rather than `sed -i`, whose flags differ
                       # between GNU and BSD sed.
-                      awk -v nv="$new_version" '
-                        !done && /^[[:space:]]*version[[:space:]]*=/ \
-                              && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {
-                          $0 = substr($0, 1, RSTART - 1) nv substr($0, RSTART + RLENGTH)
-                          done = 1
-                        }
-                        { print }
-                      ' "$path" > "$path.wads-replay"
+                      awk -v sec="$(version_section "$path")" -v nv="$new_version" \
+                        "$version_awk" "$path" > "$path.wads-replay"
                       mv -f "$path.wads-replay" "$path"
-                      landed=$(first_version < "$path")
+                      landed=$(project_version "$path" < "$path")
                       if [ "$landed" != "$new_version" ]; then
                         # Pushing now would record an older version in git than
                         # the one this run published (the i2mint/wads#83 desync),

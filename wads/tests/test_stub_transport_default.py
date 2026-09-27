@@ -136,7 +136,7 @@ def test_populate_warns_about_names_a_named_stub_cannot_pass(tmp_path, capsys):
     )
     (pkg_dir / "pyproject.toml").write_text(
         '[project]\nname = "mypkg"\nversion = "0.1.0"\n'
-        "[tool.wads.ci.env]\nextra_envvars = [\"COSMO_TEST_LEVEL\"]\n"
+        '[tool.wads.ci.env]\nextra_envvars = ["COSMO_TEST_LEVEL"]\n'
     )
     populate_pkg_dir(
         str(pkg_dir),
@@ -149,3 +149,57 @@ def test_populate_warns_about_names_a_named_stub_cannot_pass(tmp_path, capsys):
     ci = (pkg_dir / ".github" / "workflows" / "ci.yml").read_text()
     assert "COSMO_TEST_LEVEL: ${{ secrets.COSMO_TEST_LEVEL }}" in ci
     assert "CANNOT START" in capsys.readouterr().err
+
+
+def test_rerendering_json_stub_content_keeps_json():
+    """``old_ci`` may be the workflow's content rather than a path."""
+    assert migrate_ci_to_stub(STUB_TEMPLATE) == STUB_TEMPLATE
+
+
+def test_auto_transport_falls_back_to_json_for_out_of_superset_secrets(
+    tmp_path, capsys
+):
+    """Converting an EXISTING inline repo must never yield a stub that cannot start.
+
+    A named stub passing a name outside the frozen superset fails at parse time
+    (issue #63). Without an explicit ``transport``, fall back to JSON, which
+    passes any name, and say so.
+    """
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nrequired_envvars = ["MY_CUSTOM_TOKEN"]\n'
+    )
+    ci = _ci_file(tmp_path, "name: CI\non: [push]\njobs:\n  t:\n    runs-on: x\n")
+    stub = migrate_ci_to_stub(str(ci))
+    assert JSON_LINE in stub
+    assert "MY_CUSTOM_TOKEN" in capsys.readouterr().err
+    # An explicit choice is still honoured (with the loud #63 warning).
+    named = migrate_ci_to_stub(str(ci), transport="named")
+    assert "MY_CUSTOM_TOKEN: ${{ secrets.MY_CUSTOM_TOKEN }}" in named
+
+
+def test_populate_leaves_a_custom_template_alone(tmp_path):
+    """Only the bundled stub is rewritten; a custom template is the user's."""
+    custom = tmp_path / "my_ci.yml"
+    custom.write_text(
+        "name: CI\njobs:\n  ci:\n    secrets:\n" + render_stub_json_transport() + "\n"
+    )
+    pkg_dir = tmp_path / "mypkg"
+    pkg_dir.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=pkg_dir, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://github.com/myorg/mypkg"],
+        cwd=pkg_dir,
+        check=True,
+    )
+    populate_pkg_dir(
+        str(pkg_dir),
+        description="Test package",
+        root_url="https://github.com/myorg",
+        author="John Doe",
+        version="1.2.3",
+        verbose=False,
+        ci_tpl_path=str(custom),
+    )
+    ci = (pkg_dir / ".github" / "workflows" / "ci.yml").read_text()
+    assert ci == custom.read_text()

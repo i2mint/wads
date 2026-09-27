@@ -25,8 +25,16 @@ pytestmark = pytest.mark.skipif(
 def collected_ids():
     """Node ids CI's pathless ``pytest --doctest-modules`` would collect."""
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", "--doctest-modules",
-         "-p", "no:cacheprovider"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "-q",
+            "--doctest-modules",
+            "-p",
+            "no:cacheprovider",
+        ],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -43,7 +51,9 @@ def test_package_doctests_are_collected(collected_ids):
 
 
 def test_test_modules_are_still_collected(collected_ids):
-    assert any(i.startswith("wads/tests/test_licence_check.py::") for i in collected_ids)
+    assert any(
+        i.startswith("wads/tests/test_licence_check.py::") for i in collected_ids
+    )
 
 
 def test_templates_under_data_are_not_collected(collected_ids):
