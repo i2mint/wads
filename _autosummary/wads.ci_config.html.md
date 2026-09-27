@@ -24,6 +24,18 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Represents CI configuration extracted from pyproject.toml.
 
+#### CI_PROVIDED_PACKAGES *= ('pytest', 'pytest-cov', 'coverage', 'ruff')*
+
+run-tests-uv installs pytest and
+pytest-cov (which pulls coverage); ruff comes from the ruff actions.
+
+* **Type:**
+  Packages CI provides without any extra
+
+#### TEST_EXTRA_NAMES *= ('dev', 'test', 'tests', 'testing', 'ci')*
+
+Extra names that conventionally hold test-time tooling (i2mint/wads#59).
+
 #### *property* build_config *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)*
 
 Get build configuration.
@@ -482,6 +494,24 @@ job loudly rather than silently choosing a mode.
 
 * **Type:**
   When CI runs
+
+#### *property* uninstalled_test_extras *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
+
+Test-looking extras CI will not install, mapped to what they would add.
+
+Non-empty only when `[tool.wads.ci.install].extras` is absent: CI then
+installs core dependencies only, so an extra named like
+[`TEST_EXTRA_NAMES`](#wads.ci_config.CIConfig.TEST_EXTRA_NAMES) whose packages go beyond
+[`CI_PROVIDED_PACKAGES`](#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES) is silently missing from the test job
+(i2mint/wads#59). Any explicit `extras` value, including `""`, is
+a decision and silences this.
+
+```pycon
+>>> config = CIConfig({'project': {'name': 'p', 'optional-dependencies': {
+...     'dev': ['pytest', 'httpx>=0.27'], 'docs': ['sphinx']}}})
+>>> config.uninstalled_test_extras
+{'dev': ['httpx']}
+```
 
 #### *property* windows_blocking *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 

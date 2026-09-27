@@ -121,9 +121,12 @@ whose name and containing directory is the same):
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
->>> import wads
->>> extract_pkg_dir_and_name(wads)
-(.../wads', 'wads')
+>>> import os, wads
+>>> pkg_dir, pkg_name = extract_pkg_dir_and_name(wads)
+>>> pkg_name
+'wads'
+>>> os.path.isfile(os.path.join(pkg_dir, pkg_name, '__init__.py'))
+True
 ```
 
 You can also just specify the name of the package (it will be imported):

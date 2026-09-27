@@ -403,6 +403,62 @@
             <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extras</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
         <span class="k">return</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
+    <span class="c1">#: Extra names that conventionally hold test-time tooling (i2mint/wads#59).</span>
+    <span class="n">TEST_EXTRA_NAMES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"dev"</span><span class="p">,</span> <span class="s2">"test"</span><span class="p">,</span> <span class="s2">"tests"</span><span class="p">,</span> <span class="s2">"testing"</span><span class="p">,</span> <span class="s2">"ci"</span><span class="p">)</span>
+    <span class="c1">#: Packages CI provides without any extra: run-tests-uv installs pytest and</span>
+    <span class="c1">#: pytest-cov (which pulls coverage); ruff comes from the ruff actions.</span>
+    <span class="n">CI_PROVIDED_PACKAGES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="s2">"pytest-cov"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">,</span> <span class="s2">"ruff"</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uninstalled_test_extras</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Test-looking extras CI will not install, mapped to what they would add.</span>
+
+<span class="sd">        Non-empty only when ``[tool.wads.ci.install].extras`` is absent: CI then</span>
+<span class="sd">        installs core dependencies only, so an extra named like</span>
+<span class="sd">        :attr:`TEST_EXTRA_NAMES` whose packages go beyond</span>
+<span class="sd">        :attr:`CI_PROVIDED_PACKAGES` is silently missing from the test job</span>
+<span class="sd">        (i2mint/wads#59). Any explicit ``extras`` value, including ``""``, is</span>
+<span class="sd">        a decision and silences this.</span>
+
+<span class="sd">        &gt;&gt;&gt; config = CIConfig({'project': {'name': 'p', 'optional-dependencies': {</span>
+<span class="sd">        ...     'dev': ['pytest', 'httpx&gt;=0.27'], 'docs': ['sphinx']}}})</span>
+<span class="sd">        &gt;&gt;&gt; config.uninstalled_test_extras</span>
+<span class="sd">        {'dev': ['httpx']}</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="s2">"extras"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{}):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">packaging.requirements</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">packaging.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">canonicalize_name</span>
+
+        <span class="n">own_name</span> <span class="o">=</span> <span class="n">canonicalize_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">provided</span> <span class="o">=</span> <span class="p">{</span><span class="n">canonicalize_name</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CI_PROVIDED_PACKAGES</span><span class="p">}</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"optional-dependencies"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">extra</span><span class="p">,</span> <span class="n">requirements</span> <span class="ow">in</span> <span class="n">optional</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">extra</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEST_EXTRA_NAMES</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requirements</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">requirement</span> <span class="ow">in</span> <span class="n">requirements</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">parsed</span> <span class="o">=</span> <span class="n">Requirement</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">parsed</span><span class="o">.</span><span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parsed</span><span class="o">.</span><span class="n">marker</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">"extra"</span><span class="p">:</span> <span class="n">extra</span><span class="p">}</span>
+                    <span class="p">):</span>
+                        <span class="k">continue</span>  <span class="c1"># does not apply to this interpreter/platform</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># invalid requirement or marker: not ours to judge</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">canonicalize_name</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provided</span> <span class="o">|</span> <span class="p">{</span><span class="n">own_name</span><span class="p">}:</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">missing</span><span class="p">[</span><span class="n">extra</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+        <span class="k">return</span> <span class="n">missing</span>
+
     <span class="c1"># ⚙️ EXECUTION FLOW AND COMMANDS</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_pre_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>

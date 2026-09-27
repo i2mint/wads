@@ -138,7 +138,7 @@ True
 
 CLI entry point for wads migration tools.
 
-### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport='json', trigger_mode=None, run_ci_marker=None)
+### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None)
 
 Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.
 
@@ -149,25 +149,29 @@ configuration continues to come from `[tool.wads.ci.*]` in
 `i2mint/wads/actions/read-ci-config` action.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used only
-    to locate a nearby pyproject.toml when `transport="named"`;
-    with the default JSON transport the stub is the same regardless of
-    what was there.
+  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
+    locate a nearby pyproject.toml, whose `[tool.wads.ci.env]` decides
+    which secrets the default named transport passes.
   * **pin** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The wads ref the stub points at. Defaults to `"@master"`
     (floats with wads). For release-sensitive repos, pin to a tag,
     e.g. `pin="@0.2.15"` (wads tags have no `v` prefix). With the
-    default JSON transport the pinned ref’s `uv-ci.yml` must declare
+    JSON transport the pinned ref’s `uv-ci.yml` must declare
     `WADS_CI_SECRETS_JSON` (releases after 0.2.14) — pinning an
     older tag produces a workflow GitHub rejects at parse time, so a
-    warning is emitted for any non-master pin. Must start with `"@"`.
-  * **transport** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"json"` (default) passes the repo’s whole secrets
-    context as one `WADS_CI_SECRETS_JSON` secret — any secret name
-    works, nothing to enumerate. `"named"` passes an explicit subset
-    (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets) for
-    repos that want a minimal secret surface; every name must then be
-    in the frozen wads superset or GitHub rejects the workflow at
-    parse time (issue #63) — out-of-superset names trigger a loud
-    warning.
+    warning is emitted for any non-master JSON pin. Must start with
+    `"@"`.
+  * **transport** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `None` (default) keeps the transport of the stub at
+    `old_ci` when there is one, and otherwise uses `"named"`, so a
+    re-render never silently changes what an existing repo runs.
+    `"named"` passes an explicit subset
+    (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
+    name must be in the frozen wads superset or GitHub rejects the
+    workflow at parse time (issue #63) — out-of-superset names trigger
+    a loud warning. `"json"` (opt-in) passes the repo’s whole secrets
+    context as one `WADS_CI_SECRETS_JSON` secret, so any secret name
+    works, but GitHub’s malicious-workflow scanner holds its runs on
+    new repositories (`action_required`, zero jobs; issues #74, #88),
+    which is why it is no longer the default.
   * **trigger_mode** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `"auto"` or `"on-demand"`. `None` (default) takes
     `[tool.wads.ci.trigger].mode` from the pyproject.toml of the repo
     holding `old_ci` (`"auto"` when there is none). On-demand stubs
@@ -186,16 +190,16 @@ configuration continues to come from `[tool.wads.ci.*]` in
 >>> stub = migrate_ci_to_stub()
 >>> 'i2mint/wads/.github/workflows/uv-ci.yml@master' in stub
 True
->>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in stub
+>>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in stub
 True
->>> pinned = migrate_ci_to_stub(pin='@0.2.15')  # warns on stderr
+>>> 'toJSON(secrets)' in stub
+False
+>>> pinned = migrate_ci_to_stub(pin='@0.2.15')
 >>> 'uv-ci.yml@0.2.15' in pinned
 True
->>> named = migrate_ci_to_stub(transport='named')
->>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in named
+>>> as_json = migrate_ci_to_stub(transport='json')
+>>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in as_json
 True
->>> 'WADS_CI_SECRETS_JSON' in named
-False
 ```
 
 ### wads.migration.migrate_ci_to_uv(old_ci, , defaults=None)

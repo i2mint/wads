@@ -130,6 +130,16 @@ gh skill install i2mint/wads wads-type-coverage --agent claude-code
 
 Source: [`wads/data/skills/wads-type-coverage`](https://github.com/i2mint/wads/tree/HEAD/wads/data/skills/wads-type-coverage) (bundled with the pip package).
 
+### `wads-dev-workflow`
+
+How to change the wads package itself (i2mint/wads) safely: install the right extras, run the test suite exactly the way CI does (package doctests included, on Python 3.10/3.11/3.12), regenerate the populate goldens after an intended output change, exercise the git-commit push-back script, and keep the reusable workflow, actions, stub template and secrets superset in sync. Use when editing wads source, actions/\*, .github/workflows/uv-ci.yml, wads/data templates or the shipped skills, when a wads test fails, when “regenerate the goldens”, “run wads tests like CI”, or “is this wads change safe to merge” comes up. Every merge to master publishes wads to PyPI and goes live for every repo whose stub floats on @master. Not for USING wads in another repo (see wads-migrate, wads-ci-health, setup-py-project).
+
+```bash
+gh skill install i2mint/wads wads-dev-workflow --agent claude-code
+```
+
+Source: [`skills/wads-dev-workflow`](https://github.com/i2mint/wads/tree/HEAD/skills/wads-dev-workflow).
+
 The bundled skills are also on disk after `pip install wads`, under the package’s `data/skills/` directory; link them into an agent without network access with `skill link-skills <that directory>`.
 
 ## Instruction files

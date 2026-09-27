@@ -4,15 +4,16 @@ Utilities for reading and writing pyproject.toml files.
 
 ### Functions
 
-| [`get_project_metadata`](#wads.toml_util.get_project_metadata)(pkg_dir)                | Get the [project] section from pyproject.toml.                       |
-|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`get_project_name`](#wads.toml_util.get_project_name)(pkg_dir)                    | Get the project name from pyproject.toml.                            |
-| [`get_project_version`](#wads.toml_util.get_project_version)(pkg_dir)                 | Get the version from pyproject.toml.                                 |
-| [`read_pyproject_toml`](#wads.toml_util.read_pyproject_toml)(pkg_dir)                 | Read pyproject.toml from the specified package directory.            |
-| [`set_project_version`](#wads.toml_util.set_project_version)(pkg_dir, version)        | Set the version in pyproject.toml.                                   |
-| [`update_project_metadata`](#wads.toml_util.update_project_metadata)(pkg_dir, \*\*kwargs) | Update project metadata in pyproject.toml.                           |
-| [`update_project_url`](#wads.toml_util.update_project_url)(pkg_dir, url[, url_key])  | Update or add a URL in the [project.urls] section of pyproject.toml. |
-| [`write_pyproject_toml`](#wads.toml_util.write_pyproject_toml)(pkg_dir, data)          | Write data to pyproject.toml in the specified package directory.     |
+| [`get_project_metadata`](#wads.toml_util.get_project_metadata)(pkg_dir)                | Get the [project] section from pyproject.toml.                           |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`get_project_name`](#wads.toml_util.get_project_name)(pkg_dir)                    | Get the project name from pyproject.toml.                                |
+| [`get_project_version`](#wads.toml_util.get_project_version)(pkg_dir)                 | Get the version from pyproject.toml.                                     |
+| [`pep639_license`](#wads.toml_util.pep639_license)(license_name)                 | The `[project].license` value for `license_name`, PEP 639 when possible. |
+| [`read_pyproject_toml`](#wads.toml_util.read_pyproject_toml)(pkg_dir)                 | Read pyproject.toml from the specified package directory.                |
+| [`set_project_version`](#wads.toml_util.set_project_version)(pkg_dir, version)        | Set the version in pyproject.toml.                                       |
+| [`update_project_metadata`](#wads.toml_util.update_project_metadata)(pkg_dir, \*\*kwargs) | Update project metadata in pyproject.toml.                               |
+| [`update_project_url`](#wads.toml_util.update_project_url)(pkg_dir, url[, url_key])  | Update or add a URL in the [project.urls] section of pyproject.toml.     |
+| [`write_pyproject_toml`](#wads.toml_util.write_pyproject_toml)(pkg_dir, data)          | Write data to pyproject.toml in the specified package directory.         |
 
 ### wads.toml_util.get_project_metadata(pkg_dir)
 
@@ -46,6 +47,26 @@ Get the version from pyproject.toml.
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 * **Returns:**
   Version string or None if not found
+
+### wads.toml_util.pep639_license(license_name)
+
+The `[project].license` value for `license_name`, PEP 639 when possible.
+
+A name that canonicalizes to a valid SPDX expression becomes that string
+(`license = "MIT"`). Anything else keeps the deprecated
+`{"text": ...}` table, because Hatchling rejects a `license` string
+that is not valid SPDX – so this never produces an unbuildable project.
+Needs `packaging>=24.2` for SPDX support and falls back to the table
+without it.
+
+```pycon
+>>> pep639_license("mit")
+'MIT'
+>>> pep639_license("Apache Software License")
+'Apache-2.0'
+>>> pep639_license("Proprietary")
+{'text': 'Proprietary'}
+```
 
 ### wads.toml_util.read_pyproject_toml(pkg_dir)
 

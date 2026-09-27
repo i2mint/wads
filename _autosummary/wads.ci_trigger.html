@@ -574,7 +574,8 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 <dt class="sig sig-object py" id="wads.ci_trigger.stub_shape">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_shape" title="Link to this definition">¶</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub, which a re-render must keep.</p>
-<p>Defaults (<code class="docutils literal notranslate"><span class="pre">&#64;master</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>) for anything that is not a stub.</p>
+<p>Defaults (<code class="docutils literal notranslate"><span class="pre">&#64;master</span></code>, <code class="docutils literal notranslate"><span class="pre">named</span></code>) for anything that is not a stub: a NEW
+stub gets the named transport (i2mint/wads#74), an existing one keeps its own.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -583,7 +584,7 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_shape</span><span class="p">(</span><span class="s2">"uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30"</span><span class="p">)</span>
 <span class="go">{'pin': '@0.2.30', 'transport': 'named'}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stub_shape</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="go">{'pin': '@master', 'transport': 'json'}</span>
+<span class="go">{'pin': '@master', 'transport': 'named'}</span>
 </pre></div>
 </div>
 </dd></dl>

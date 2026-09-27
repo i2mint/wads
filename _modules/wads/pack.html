@@ -864,9 +864,12 @@
 <span class="sd">    `pkg_spec` can be an imported package (must be a locally developped package)</span>
 <span class="sd">    whose name and containing directory is the same):</span>
 
-<span class="sd">    &gt;&gt;&gt; import wads</span>
-<span class="sd">    &gt;&gt;&gt; extract_pkg_dir_and_name(wads)  # doctest: +ELLIPSIS</span>
-<span class="sd">    (.../wads', 'wads')</span>
+<span class="sd">    &gt;&gt;&gt; import os, wads</span>
+<span class="sd">    &gt;&gt;&gt; pkg_dir, pkg_name = extract_pkg_dir_and_name(wads)</span>
+<span class="sd">    &gt;&gt;&gt; pkg_name</span>
+<span class="sd">    'wads'</span>
+<span class="sd">    &gt;&gt;&gt; os.path.isfile(os.path.join(pkg_dir, pkg_name, '__init__.py'))</span>
+<span class="sd">    True</span>
 
 <span class="sd">    You can also just specify the name of the package (it will be imported):</span>
 

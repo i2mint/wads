@@ -209,7 +209,8 @@ The `with:` inputs an existing stub file passes; `{}` if none or not a stub.
 
 The `pin` and secrets `transport` of a stub, which a re-render must keep.
 
-Defaults (`@master`, `json`) for anything that is not a stub.
+Defaults (`@master`, `named`) for anything that is not a stub: a NEW
+stub gets the named transport (i2mint/wads#74), an existing one keeps its own.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -218,7 +219,7 @@ Defaults (`@master`, `json`) for anything that is not a stub.
 >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
 {'pin': '@0.2.30', 'transport': 'named'}
 >>> stub_shape(None)
-{'pin': '@master', 'transport': 'json'}
+{'pin': '@master', 'transport': 'named'}
 ```
 
 ### wads.ci_trigger.trigger_for_workflow(ci_path)

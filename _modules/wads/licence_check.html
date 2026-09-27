@@ -1012,7 +1012,7 @@
 <span class="sd">    ...     declared_requirements(pyproject={'project': {</span>
 <span class="sd">    ...         'name': 'x', 'dynamic': ['dependencies']}})</span>
 <span class="sd">    ... except DetectorError as error:</span>
-<span class="sd">    ...     print(str(error)[:59])</span>
+<span class="sd">    ...     print(str(error)[:58])</span>
 <span class="sd">    this project lists `dependencies` in [project].dynamic, so</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1274,7 +1274,11 @@
 
     <span class="n">allowed</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_ALLOWED</span>
     <span class="n">forbidden</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_FORBIDDEN</span>
-    <span class="n">exceptions</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">MappingProxyType</span><span class="p">({})</span>
+    <span class="c1"># A factory, not a plain default: Python 3.11's dataclasses reject an</span>
+    <span class="c1"># unhashable default, and a mappingproxy is one there (i2mint/wads#100).</span>
+    <span class="n">exceptions</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">MappingProxyType</span><span class="p">({})</span>
+    <span class="p">)</span>
     <span class="n">include_extras</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
     <span class="n">unknown_is_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">unclassified_is_failure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1314,7 +1318,7 @@
 <span class="sd">        &gt;&gt;&gt; try:</span>
 <span class="sd">        ...     LicencePolicy.from_mapping({'forbiden': ['GPL']})</span>
 <span class="sd">        ... except ValueError as error:</span>
-<span class="sd">        ...     print(error)</span>
+<span class="sd">        ...     print(error)  # doctest: +NORMALIZE_WHITESPACE</span>
 <span class="sd">        unknown [tool.wads.licence] key 'forbiden'; known keys are: allowed, enabled,</span>
 <span class="sd">        exceptions, forbidden, include-extras, unclassified-is-failure, unknown-is-failure</span>
 
@@ -1324,7 +1328,7 @@
 <span class="sd">        &gt;&gt;&gt; try:</span>
 <span class="sd">        ...     LicencePolicy.from_mapping({'allow': ['MIT']})</span>
 <span class="sd">        ... except ValueError as error:</span>
-<span class="sd">        ...     print(error)</span>
+<span class="sd">        ...     print(error)  # doctest: +NORMALIZE_WHITESPACE</span>
 <span class="sd">        [tool.wads.licence] key 'allow' is from the earlier table shape: rename it to</span>
 <span class="sd">        `allowed` (it pairs with `forbidden`, where `allow` had no counterpart)</span>
 <span class="sd">        """</span>

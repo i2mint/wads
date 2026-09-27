@@ -410,6 +410,22 @@
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-defaults"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"env-aliases"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env_secret_aliases</span><span class="p">)</span>
 
+        <span class="c1"># Declared test tooling that CI will not install (i2mint/wads#59).</span>
+        <span class="c1"># A warning only: installing it automatically would change what every</span>
+        <span class="c1"># repo without an explicit `extras` setting runs.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">uninstalled</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">uninstalled_test_extras</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># a diagnostic must never fail the setup job</span>
+            <span class="n">uninstalled</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">extra</span><span class="p">,</span> <span class="n">packages</span> <span class="ow">in</span> <span class="n">uninstalled</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"::warning title=Test extra not installed::The '</span><span class="si">{</span><span class="n">extra</span><span class="si">}</span><span class="s2">' extra "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">packages</span><span class="p">)</span><span class="si">}</span><span class="s2">) is not installed in CI, because "</span>
+                <span class="sa">f</span><span class="s2">"[tool.wads.ci.install].extras is unset (CI installs core "</span>
+                <span class="sa">f</span><span class="s1">'dependencies only). Set extras = "</span><span class="si">{</span><span class="n">extra</span><span class="si">}</span><span class="s1">" to install it, '</span>
+                <span class="sa">f</span><span class="s1">'or extras = "" to keep core-only and silence this warning.'</span>
+            <span class="p">)</span>
+
         <span class="c1"># Print summary</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"[OK] CI configuration loaded successfully"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Project: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>

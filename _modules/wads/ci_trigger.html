@@ -644,15 +644,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">stub_shape</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.</span>
 
-<span class="sd">    Defaults (``@master``, ``json``) for anything that is not a stub.</span>
+<span class="sd">    Defaults (``@master``, ``named``) for anything that is not a stub: a NEW</span>
+<span class="sd">    stub gets the named transport (i2mint/wads#74), an existing one keeps its own.</span>
 
 <span class="sd">    &gt;&gt;&gt; stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")</span>
 <span class="sd">    {'pin': '@0.2.30', 'transport': 'named'}</span>
 <span class="sd">    &gt;&gt;&gt; stub_shape(None)</span>
-<span class="sd">    {'pin': '@master', 'transport': 'json'}</span>
+<span class="sd">    {'pin': '@master', 'transport': 'named'}</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"stub"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">"pin"</span><span class="p">:</span> <span class="s2">"@master"</span><span class="p">,</span> <span class="s2">"transport"</span><span class="p">:</span> <span class="s2">"json"</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"pin"</span><span class="p">:</span> <span class="s2">"@master"</span><span class="p">,</span> <span class="s2">"transport"</span><span class="p">:</span> <span class="s2">"named"</span><span class="p">}</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_stub_json_transport</span>
 
     <span class="n">match</span> <span class="o">=</span> <span class="n">_PIN_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
@@ -875,7 +876,8 @@
             <span class="n">shadow_ci</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">shadow_ci</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
-            <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">shadow_ci</span><span class="p">),</span> <span class="o">**</span><span class="n">shape</span><span class="p">)</span>
+            <span class="c1"># transport=None: keep an existing stub's, pick one for an inline workflow.</span>
+            <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">shadow_ci</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"the stub stays pinned to </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]</span><span class="si">}</span><span class="s2">. Its pre-filter works on "</span>

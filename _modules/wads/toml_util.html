@@ -298,6 +298,51 @@
     <span class="n">tomli_w</span> <span class="o">=</span> <span class="kc">None</span>
 
 
+<div class="viewcode-block" id="pep639_license">
+<a class="viewcode-back" href="../../_autosummary/wads.toml_util.html#wads.toml_util.pep639_license">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pep639_license</span><span class="p">(</span><span class="n">license_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``[project].license`` value for ``license_name``, PEP 639 when possible.</span>
+
+<span class="sd">    A name that canonicalizes to a valid SPDX expression becomes that string</span>
+<span class="sd">    (``license = "MIT"``). Anything else keeps the deprecated</span>
+<span class="sd">    ``{"text": ...}`` table, because Hatchling rejects a ``license`` string</span>
+<span class="sd">    that is not valid SPDX -- so this never produces an unbuildable project.</span>
+<span class="sd">    Needs ``packaging&gt;=24.2`` for SPDX support and falls back to the table</span>
+<span class="sd">    without it.</span>
+
+<span class="sd">    &gt;&gt;&gt; pep639_license("mit")</span>
+<span class="sd">    'MIT'</span>
+<span class="sd">    &gt;&gt;&gt; pep639_license("Apache Software License")</span>
+<span class="sd">    'Apache-2.0'</span>
+<span class="sd">    &gt;&gt;&gt; pep639_license("Proprietary")</span>
+<span class="sd">    {'text': 'Proprietary'}</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">license_name</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">license_name</span>  <span class="c1"># already a table</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">license_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">license_name</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">packaging.licenses</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">InvalidLicenseExpression</span><span class="p">,</span>
+            <span class="n">canonicalize_license_expression</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">license_name</span><span class="p">}</span>
+    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"apache software license"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+        <span class="s2">"apache license 2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+        <span class="s2">"apache 2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
+        <span class="s2">"mit license"</span><span class="p">:</span> <span class="s2">"MIT"</span><span class="p">,</span>
+        <span class="s2">"bsd license"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">license_name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">canonicalize_license_expression</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">InvalidLicenseExpression</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">license_name</span><span class="p">}</span></div>
+
+
+
 <div class="viewcode-block" id="read_pyproject_toml">
 <a class="viewcode-back" href="../../_autosummary/wads.toml_util.html#wads.toml_util.read_pyproject_toml">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_pyproject_toml</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>

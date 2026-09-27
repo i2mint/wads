@@ -389,6 +389,14 @@ machine-readable copies of this documentation.</p>
 </pre></div>
 </div>
 <p>Source: <a class="reference external" href="https://github.com/i2mint/wads/tree/HEAD/wads/data/skills/wads-type-coverage"><code class="docutils literal notranslate"><span class="pre">wads/data/skills/wads-type-coverage</span></code></a> (bundled with the pip package).</p>
+</section>
+<section id="wads-dev-workflow">
+<h3><code class="docutils literal notranslate"><span class="pre">wads-dev-workflow</span></code><a class="headerlink" href="#wads-dev-workflow" title="Link to this heading">¶</a></h3>
+<p>How to change the wads package itself (i2mint/wads) safely: install the right extras, run the test suite exactly the way CI does (package doctests included, on Python 3.10/3.11/3.12), regenerate the populate goldens after an intended output change, exercise the git-commit push-back script, and keep the reusable workflow, actions, stub template and secrets superset in sync. Use when editing wads source, actions/*, .github/workflows/uv-ci.yml, wads/data templates or the shipped skills, when a wads test fails, when “regenerate the goldens”, “run wads tests like CI”, or “is this wads change safe to merge” comes up. Every merge to master publishes wads to PyPI and goes live for every repo whose stub floats on &#64;master. Not for USING wads in another repo (see wads-migrate, wads-ci-health, setup-py-project).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gh<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>i2mint/wads<span class="w"> </span>wads-dev-workflow<span class="w"> </span>--agent<span class="w"> </span>claude-code
+</pre></div>
+</div>
+<p>Source: <a class="reference external" href="https://github.com/i2mint/wads/tree/HEAD/skills/wads-dev-workflow"><code class="docutils literal notranslate"><span class="pre">skills/wads-dev-workflow</span></code></a>.</p>
 <p>The bundled skills are also on disk after <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">wads</span></code>, under the package’s <code class="docutils literal notranslate"><span class="pre">data/skills/</span></code> directory; link them into an agent without network access with <code class="docutils literal notranslate"><span class="pre">skill</span> <span class="pre">link-skills</span> <span class="pre">&lt;that</span> <span class="pre">directory&gt;</span></code>.</p>
 </section>
 </section>
@@ -468,6 +476,7 @@ machine-readable copies of this documentation.</p>
 <li><a class="reference internal" href="#wads-skillify"><code class="docutils literal notranslate"><span class="pre">wads-skillify</span></code></a></li>
 <li><a class="reference internal" href="#wads-test-coverage"><code class="docutils literal notranslate"><span class="pre">wads-test-coverage</span></code></a></li>
 <li><a class="reference internal" href="#wads-type-coverage"><code class="docutils literal notranslate"><span class="pre">wads-type-coverage</span></code></a></li>
+<li><a class="reference internal" href="#wads-dev-workflow"><code class="docutils literal notranslate"><span class="pre">wads-dev-workflow</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#instruction-files">Instruction files</a></li>

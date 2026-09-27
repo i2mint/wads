@@ -324,6 +324,24 @@ settings in CI workflow files.</p>
 <p>Represents CI configuration extracted from pyproject.toml.</p>
 <dl class="field-list simple">
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES">
+<span class="sig-name descname"><span class="pre">CI_PROVIDED_PACKAGES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('pytest',</span> <span class="pre">'pytest-cov',</span> <span class="pre">'coverage',</span> <span class="pre">'ruff')</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES" title="Link to this definition">¶</a></dt>
+<dd><p>run-tests-uv installs pytest and
+pytest-cov (which pulls coverage); ruff comes from the ruff actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Packages CI provides without any extra</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.TEST_EXTRA_NAMES">
+<span class="sig-name descname"><span class="pre">TEST_EXTRA_NAMES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('dev',</span> <span class="pre">'test',</span> <span class="pre">'tests',</span> <span class="pre">'testing',</span> <span class="pre">'ci')</span></span><a class="headerlink" href="#wads.ci_config.CIConfig.TEST_EXTRA_NAMES" title="Link to this definition">¶</a></dt>
+<dd><p>Extra names that conventionally hold test-time tooling (i2mint/wads#59).</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.build_config">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.build_config" title="Link to this definition">¶</a></dt>
@@ -941,6 +959,24 @@ job loudly rather than silently choosing a mode.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.uninstalled_test_extras">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">uninstalled_test_extras</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.uninstalled_test_extras" title="Link to this definition">¶</a></dt>
+<dd><p>Test-looking extras CI will not install, mapped to what they would add.</p>
+<p>Non-empty only when <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.install].extras</span></code> is absent: CI then
+installs core dependencies only, so an extra named like
+<a class="reference internal" href="#wads.ci_config.CIConfig.TEST_EXTRA_NAMES" title="wads.ci_config.CIConfig.TEST_EXTRA_NAMES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">TEST_EXTRA_NAMES</span></code></a> whose packages go beyond
+<a class="reference internal" href="#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES" title="wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">CI_PROVIDED_PACKAGES</span></code></a> is silently missing from the test job
+(i2mint/wads#59). Any explicit <code class="docutils literal notranslate"><span class="pre">extras</span></code> value, including <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, is
+a decision and silences this.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s1">'project'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'p'</span><span class="p">,</span> <span class="s1">'optional-dependencies'</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">'dev'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'pytest'</span><span class="p">,</span> <span class="s1">'httpx&gt;=0.27'</span><span class="p">],</span> <span class="s1">'docs'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'sphinx'</span><span class="p">]}}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span><span class="o">.</span><span class="n">uninstalled_test_extras</span>
+<span class="go">{'dev': ['httpx']}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.windows_blocking">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">windows_blocking</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.windows_blocking" title="Link to this definition">¶</a></dt>
 <dd><p>Whether a failing Windows leg should turn the CI run red.</p>
@@ -1070,6 +1106,8 @@ workflow never carries literal placeholder lines.</p>
             <ul>
 <li><a class="reference internal" href="#">wads.ci_config</a><ul>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig"><code class="docutils literal notranslate"><span class="pre">CIConfig</span></code></a><ul>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES"><code class="docutils literal notranslate"><span class="pre">CIConfig.CI_PROVIDED_PACKAGES</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.TEST_EXTRA_NAMES"><code class="docutils literal notranslate"><span class="pre">CIConfig.TEST_EXTRA_NAMES</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.build_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_config</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.build_sdist"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_sdist</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.build_wheel"><code class="docutils literal notranslate"><span class="pre">CIConfig.build_wheel</span></code></a></li>
@@ -1134,6 +1172,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.to_pre_test_step"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_pre_test_step()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_config</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_mode"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_mode</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.uninstalled_test_extras"><code class="docutils literal notranslate"><span class="pre">CIConfig.uninstalled_test_extras</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.windows_blocking"><code class="docutils literal notranslate"><span class="pre">CIConfig.windows_blocking</span></code></a></li>
 </ul>
 </li>

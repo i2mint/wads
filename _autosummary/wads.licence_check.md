@@ -328,7 +328,7 @@ against the other shape reads as configured and is not. These are rejected
 rather than silently aliased – but rejected with the migration, not with a
 bare “unknown key”, because the person hitting this did not choose it.
 
-### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?:\\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=mappingproxy({}), include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
+### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?: \\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -761,7 +761,7 @@ module exists to stop.
 ...     declared_requirements(pyproject={'project': {
 ...         'name': 'x', 'dynamic': ['dependencies']}})
 ... except DetectorError as error:
-...     print(str(error)[:59])
+...     print(str(error)[:58])
 this project lists `dependencies` in [project].dynamic, so
 ```
 

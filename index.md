@@ -2,10 +2,56 @@
 
 # wads
 
-Modern Python project packaging and CI/CD tools for developers who want to focus on code, not configuration.
+wads creates, configures and publishes Python packages: a new project gets a Hatchling `pyproject.toml` and a five-line GitHub Actions stub that calls one shared reusable workflow, and every CI setting lives in `[tool.wads.ci]`. It also migrates legacy `setup.cfg` projects, wires CI secrets, and diagnoses CI failures.
+
+*Still typing code with your own fingers? Skip to [For carbon-based contributors]().*
 
 [![PyPI version](https://img.shields.io/pypi/v/wads.svg)](https://pypi.org/project/wads/)
 [![Python versions](https://img.shields.io/pypi/pyversions/wads.svg)](https://pypi.org/project/wads/)
+
+## For AI agents
+
+**Skills.** Twelve agent skills ship inside the package, in `wads/data/skills/`: `setup-py-project`, `wads-migrate`, `wads-repo-doctor`, `wads-ci-health`, `wads-changelog`, `wads-docs-coverage`, `wads-docstring-render`, `wads-import-time`, `wads-pypi-polish`, `wads-skillify`, `wads-test-coverage` and `wads-type-coverage`. Enable them either way:
+
+```bash
+pip install "wads[create]" && wads-install-skills   # symlinks them into ~/.claude/skills/
+gh skill install i2mint/wads wads-repo-doctor       # one skill, from GitHub
+```
+
+`wads-install-skills --list` prints the available names. In a clone of this repo, `.claude/skills/` links every skill for Claude Code, plus the maintainer skill `wads-dev-workflow` (in `skills/`), which covers changing wads itself.
+
+**Project instructions.** [`.claude/CLAUDE.md`]() explains the architecture (pyproject as the single source of truth, the reusable workflow, the two-layer secrets model), the config sections, and the conventions.
+
+**What an agent can do with wads:**
+
+- Scaffold a package with `populate`, or a whole repo with the `setup-py-project` skill.
+- Move a legacy repo to `pyproject.toml` and the CI stub with `wads-migrate`.
+- Declare CI secrets and env vars with `wads-secrets add NAME`.
+- Read or render a repo’s CI configuration from Python, as below.
+- Run the CI plan locally with `wads ci-local`, and audit dependency licences with `wads-licence-check`.
+- Diagnose a failed run with `wads-ci-debug owner/repo`.
+
+A minimal example, runnable with only the light core (`pip install wads`):
+
+```python
+from wads.ci_config import CIConfig
+from wads.migration import migrate_ci_to_stub
+
+config = CIConfig(
+    {
+        "project": {"name": "mypkg", "optional-dependencies": {"dev": ["httpx"]}},
+        "tool": {"wads": {"ci": {"testing": {"python_versions": ["3.12"]}}}},
+    }
+)
+assert config.python_versions == ["3.12"]
+assert config.project_name == "mypkg"
+# A dev extra CI would never install (no [tool.wads.ci.install].extras):
+assert config.uninstalled_test_extras == {"dev": ["httpx"]}
+
+stub = migrate_ci_to_stub()  # the ci.yml a new repo gets
+assert "uses: i2mint/wads/.github/workflows/uv-ci.yml@master" in stub
+assert "PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}" in stub
+```
 
 ## What is Wads?
 
@@ -140,26 +186,9 @@ wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variab
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]` and (b)
-runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is
-installed (value taken from `$VAR_NAME` or `--value`). Under the hood there
-are two layers: a **transport** — the stub passes your repo’s whole secrets
-context to the reusable workflow as one `WADS_CI_SECRETS_JSON` secret, so any
-secret name works — and an **env policy** (`[tool.wads.ci.env]` —
-`required_envvars` / `test_envvars` / `extra_envvars` / `defaults` /
-`secret_aliases`) that decides which values become job env vars. Each declared
-name resolves against secrets first, then repository *variables* (the right
-home for non-sensitive values); committed constants can go straight into
-`[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing
-fails the build; an undeclared secret is never written to the environment.
-Note the JSON transport hands **every** secret the repo can read — including
-org-level ones — to the reusable workflow (which only exports the declared
-ones). If you want the workflow to receive *only* the names you list, use
-`wads-migrate ci-to-stub --transport named` — that mode is limited to the
-frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, and is also the
-right choice for orgs with very large shared secrets (the serialized context
-must fit in one secret value). Older stubs pass secrets by name the same way;
-regenerate with `wads-migrate ci-to-stub` to switch to the JSON transport.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
+
+Named secrets must be in the frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names. The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo’s whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because GitHub’s malicious-workflow scanner holds its runs on new repositories: every run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74)). Re-rendering an existing stub keeps whichever transport it already uses.
 
 ### Declare System Dependencies
 
@@ -569,38 +598,14 @@ note = "On Alpine: apk add unixodbc unixodbc-dev"
 alternatives = ["iodbc"]
 ```
 
-See [docs/SYSTEM_DEPENDENCIES.md]() for comprehensive examples.
-
-## Claude Code Skills
-
-Wads ships with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for AI-assisted workflows. Install them globally so they’re available in every project:
-
-```bash
-wads-install-skills
-```
-
-This symlinks skills to `~/.claude/skills/`, so they stay in sync when wads is updated:
-
-| Command             | Description                                                                                                            |
-|---------------------|------------------------------------------------------------------------------------------------------------------------|
-| `/setup-py-project` | AI-guided Python project creation: name suggestions, PyPI/GitHub availability checking, repo creation, file population |
-| `/wads-migrate`     | Migrate projects to modern wads setup (pyproject.toml + uv CI)                                                         |
-
-**Example:**
-
-```default
-/setup-py-project "a tool for audio signal processing"
-```
-
-To list available skills without installing: `wads-install-skills --list`
-To update existing skills: `wads-install-skills --force`
+See [misc/docs/SYSTEM_DEPENDENCIES.md]() for comprehensive examples.
 
 ## Documentation
 
 - **[System Dependencies Guide]()** - `[tool.wads.ops.*]` format and examples
 - **[Migration Guide]()** - Migrate from setup.cfg to pyproject.toml
 - **[Utilities Reference]()** - CLI tools (`wads-ci-debug`, `wads-migrate`)
-- **[CLAUDE.md]()** - AI agent guide for working with this project
+- **[.claude/CLAUDE.md]()** - AI agent guide for working with this project
 
 ## Troubleshooting
 
@@ -638,20 +643,30 @@ Common issues:
 - Python version incompatibilities → Check `python_versions` in `[tool.wads.ci.testing]`
 - Test failures → Review generated fix instructions
 
-## Development
+## For carbon-based contributors
 
-### Running Tests
+Everything above is for users of wads, human or not. This part is for working on wads itself.
 
-```bash
-pytest wads/tests/
-```
-
-### Building Documentation
+**Dev setup.** The test suite scaffolds and builds packages, so it needs the `create` extra:
 
 ```bash
-pip install -e ".[docs]"
-epythet build
+uv venv && . .venv/bin/activate
+uv pip install -e ".[create,docs,skills,test]"
 ```
+
+**Run the tests the way CI does.** CI calls pytest with no path, so `testpaths = ["wads"]` collects both `wads/tests` and every doctest in the package:
+
+```bash
+python -m pytest --doctest-modules -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL' --ignore=examples --ignore=scrap
+```
+
+CI tests Python 3.10 and 3.12; run 3.11 as well before merging, because a dataclass default once broke there and nowhere else ([#100](https://github.com/i2mint/wads/issues/100)).
+
+**Build the docs** with `pip install -e ".[docs]"` and then `epythet build`.
+
+**Why it is built this way.** wads is a foundation package. Its reusable workflow and actions run from `@master` in every wads-managed repo, and every merge to `master` publishes a release to PyPI. So changes to `.github/workflows/uv-ci.yml`, `actions/*` or the stub template are fleet-wide changes: they come with tests (the push-back script, for example, is exercised against real throwaway git repos), and the populate output is pinned by golden files. [`.claude/CLAUDE.md`]() has the design rationale, and the `wads-dev-workflow` skill has the maintainer checklist.
+
+**Contributing and questions.** Open an issue or a pull request at [github.com/i2mint/wads](https://github.com/i2mint/wads/issues).
 
 ## License
 

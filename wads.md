@@ -1,4 +1,4 @@
-> built 2026-09-22 14:06 UTC from 993d970 (master) · wads 0.2.31. Details: build_info.json
+> built 2026-09-27 09:00 UTC from b87ec3d (master) · wads 0.2.31. Details: build_info.json
 
 # index.html.md
 
@@ -6,10 +6,56 @@
 
 # wads
 
-Modern Python project packaging and CI/CD tools for developers who want to focus on code, not configuration.
+wads creates, configures and publishes Python packages: a new project gets a Hatchling `pyproject.toml` and a five-line GitHub Actions stub that calls one shared reusable workflow, and every CI setting lives in `[tool.wads.ci]`. It also migrates legacy `setup.cfg` projects, wires CI secrets, and diagnoses CI failures.
+
+*Still typing code with your own fingers? Skip to [For carbon-based contributors]().*
 
 [![PyPI version](https://img.shields.io/pypi/v/wads.svg)](https://pypi.org/project/wads/)
 [![Python versions](https://img.shields.io/pypi/pyversions/wads.svg)](https://pypi.org/project/wads/)
+
+## For AI agents
+
+**Skills.** Twelve agent skills ship inside the package, in `wads/data/skills/`: `setup-py-project`, `wads-migrate`, `wads-repo-doctor`, `wads-ci-health`, `wads-changelog`, `wads-docs-coverage`, `wads-docstring-render`, `wads-import-time`, `wads-pypi-polish`, `wads-skillify`, `wads-test-coverage` and `wads-type-coverage`. Enable them either way:
+
+```bash
+pip install "wads[create]" && wads-install-skills   # symlinks them into ~/.claude/skills/
+gh skill install i2mint/wads wads-repo-doctor       # one skill, from GitHub
+```
+
+`wads-install-skills --list` prints the available names. In a clone of this repo, `.claude/skills/` links every skill for Claude Code, plus the maintainer skill `wads-dev-workflow` (in `skills/`), which covers changing wads itself.
+
+**Project instructions.** [`.claude/CLAUDE.md`]() explains the architecture (pyproject as the single source of truth, the reusable workflow, the two-layer secrets model), the config sections, and the conventions.
+
+**What an agent can do with wads:**
+
+- Scaffold a package with `populate`, or a whole repo with the `setup-py-project` skill.
+- Move a legacy repo to `pyproject.toml` and the CI stub with `wads-migrate`.
+- Declare CI secrets and env vars with `wads-secrets add NAME`.
+- Read or render a repo’s CI configuration from Python, as below.
+- Run the CI plan locally with `wads ci-local`, and audit dependency licences with `wads-licence-check`.
+- Diagnose a failed run with `wads-ci-debug owner/repo`.
+
+A minimal example, runnable with only the light core (`pip install wads`):
+
+```python
+from wads.ci_config import CIConfig
+from wads.migration import migrate_ci_to_stub
+
+config = CIConfig(
+    {
+        "project": {"name": "mypkg", "optional-dependencies": {"dev": ["httpx"]}},
+        "tool": {"wads": {"ci": {"testing": {"python_versions": ["3.12"]}}}},
+    }
+)
+assert config.python_versions == ["3.12"]
+assert config.project_name == "mypkg"
+# A dev extra CI would never install (no [tool.wads.ci.install].extras):
+assert config.uninstalled_test_extras == {"dev": ["httpx"]}
+
+stub = migrate_ci_to_stub()  # the ci.yml a new repo gets
+assert "uses: i2mint/wads/.github/workflows/uv-ci.yml@master" in stub
+assert "PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}" in stub
+```
 
 ## What is Wads?
 
@@ -144,26 +190,9 @@ wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variab
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]` and (b)
-runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is
-installed (value taken from `$VAR_NAME` or `--value`). Under the hood there
-are two layers: a **transport** — the stub passes your repo’s whole secrets
-context to the reusable workflow as one `WADS_CI_SECRETS_JSON` secret, so any
-secret name works — and an **env policy** (`[tool.wads.ci.env]` —
-`required_envvars` / `test_envvars` / `extra_envvars` / `defaults` /
-`secret_aliases`) that decides which values become job env vars. Each declared
-name resolves against secrets first, then repository *variables* (the right
-home for non-sensitive values); committed constants can go straight into
-`[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing
-fails the build; an undeclared secret is never written to the environment.
-Note the JSON transport hands **every** secret the repo can read — including
-org-level ones — to the reusable workflow (which only exports the declared
-ones). If you want the workflow to receive *only* the names you list, use
-`wads-migrate ci-to-stub --transport named` — that mode is limited to the
-frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, and is also the
-right choice for orgs with very large shared secrets (the serialized context
-must fit in one secret value). Older stubs pass secrets by name the same way;
-regenerate with `wads-migrate ci-to-stub` to switch to the JSON transport.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
+
+Named secrets must be in the frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names. The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo’s whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because GitHub’s malicious-workflow scanner holds its runs on new repositories: every run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74)). Re-rendering an existing stub keeps whichever transport it already uses.
 
 ### Declare System Dependencies
 
@@ -573,38 +602,14 @@ note = "On Alpine: apk add unixodbc unixodbc-dev"
 alternatives = ["iodbc"]
 ```
 
-See [docs/SYSTEM_DEPENDENCIES.md]() for comprehensive examples.
-
-## Claude Code Skills
-
-Wads ships with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills for AI-assisted workflows. Install them globally so they’re available in every project:
-
-```bash
-wads-install-skills
-```
-
-This symlinks skills to `~/.claude/skills/`, so they stay in sync when wads is updated:
-
-| Command             | Description                                                                                                            |
-|---------------------|------------------------------------------------------------------------------------------------------------------------|
-| `/setup-py-project` | AI-guided Python project creation: name suggestions, PyPI/GitHub availability checking, repo creation, file population |
-| `/wads-migrate`     | Migrate projects to modern wads setup (pyproject.toml + uv CI)                                                         |
-
-**Example:**
-
-```default
-/setup-py-project "a tool for audio signal processing"
-```
-
-To list available skills without installing: `wads-install-skills --list`
-To update existing skills: `wads-install-skills --force`
+See [misc/docs/SYSTEM_DEPENDENCIES.md]() for comprehensive examples.
 
 ## Documentation
 
 - **[System Dependencies Guide]()** - `[tool.wads.ops.*]` format and examples
 - **[Migration Guide]()** - Migrate from setup.cfg to pyproject.toml
 - **[Utilities Reference]()** - CLI tools (`wads-ci-debug`, `wads-migrate`)
-- **[CLAUDE.md]()** - AI agent guide for working with this project
+- **[.claude/CLAUDE.md]()** - AI agent guide for working with this project
 
 ## Troubleshooting
 
@@ -642,20 +647,30 @@ Common issues:
 - Python version incompatibilities → Check `python_versions` in `[tool.wads.ci.testing]`
 - Test failures → Review generated fix instructions
 
-## Development
+## For carbon-based contributors
 
-### Running Tests
+Everything above is for users of wads, human or not. This part is for working on wads itself.
 
-```bash
-pytest wads/tests/
-```
-
-### Building Documentation
+**Dev setup.** The test suite scaffolds and builds packages, so it needs the `create` extra:
 
 ```bash
-pip install -e ".[docs]"
-epythet build
+uv venv && . .venv/bin/activate
+uv pip install -e ".[create,docs,skills,test]"
 ```
+
+**Run the tests the way CI does.** CI calls pytest with no path, so `testpaths = ["wads"]` collects both `wads/tests` and every doctest in the package:
+
+```bash
+python -m pytest --doctest-modules -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL' --ignore=examples --ignore=scrap
+```
+
+CI tests Python 3.10 and 3.12; run 3.11 as well before merging, because a dataclass default once broke there and nowhere else ([#100](https://github.com/i2mint/wads/issues/100)).
+
+**Build the docs** with `pip install -e ".[docs]"` and then `epythet build`.
+
+**Why it is built this way.** wads is a foundation package. Its reusable workflow and actions run from `@master` in every wads-managed repo, and every merge to `master` publishes a release to PyPI. So changes to `.github/workflows/uv-ci.yml`, `actions/*` or the stub template are fleet-wide changes: they come with tests (the push-back script, for example, is exercised against real throwaway git repos), and the populate output is pinned by golden files. [`.claude/CLAUDE.md`]() has the design rationale, and the `wads-dev-workflow` skill has the maintainer checklist.
+
+**Contributing and questions.** Open an issue or a pull request at [github.com/i2mint/wads](https://github.com/i2mint/wads/issues).
 
 ## License
 
@@ -1179,6 +1194,18 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Represents CI configuration extracted from pyproject.toml.
 
+#### CI_PROVIDED_PACKAGES *= ('pytest', 'pytest-cov', 'coverage', 'ruff')*
+
+run-tests-uv installs pytest and
+pytest-cov (which pulls coverage); ruff comes from the ruff actions.
+
+* **Type:**
+  Packages CI provides without any extra
+
+#### TEST_EXTRA_NAMES *= ('dev', 'test', 'tests', 'testing', 'ci')*
+
+Extra names that conventionally hold test-time tooling (i2mint/wads#59).
+
 #### *property* build_config *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)*
 
 Get build configuration.
@@ -1638,6 +1665,24 @@ job loudly rather than silently choosing a mode.
 * **Type:**
   When CI runs
 
+#### *property* uninstalled_test_extras *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
+
+Test-looking extras CI will not install, mapped to what they would add.
+
+Non-empty only when `[tool.wads.ci.install].extras` is absent: CI then
+installs core dependencies only, so an extra named like
+[`TEST_EXTRA_NAMES`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig.TEST_EXTRA_NAMES) whose packages go beyond
+[`CI_PROVIDED_PACKAGES`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES) is silently missing from the test job
+(i2mint/wads#59). Any explicit `extras` value, including `""`, is
+a decision and silences this.
+
+```pycon
+>>> config = CIConfig({'project': {'name': 'p', 'optional-dependencies': {
+...     'dev': ['pytest', 'httpx>=0.27'], 'docs': ['sphinx']}}})
+>>> config.uninstalled_test_extras
+{'dev': ['httpx']}
+```
+
 #### *property* windows_blocking *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 Whether a failing Windows leg should turn the CI run red.
@@ -1899,7 +1944,22 @@ This module is the single source of truth for the *transport* layer of wads
 CI secrets: what the reusable workflow (`uv-ci.yml`) declares in
 `on.workflow_call.secrets` and what the caller stub passes.
 
-## Transport: one JSON secret (the modern default)
+## Transport: named by default, one JSON secret on request
+
+Every stub wads WRITES (`populate`, `wads-migrate ci-to-stub` on an inline
+workflow) passes its secrets by name: `PYPI_PASSWORD` plus the backing secret
+of each env var declared in `[tool.wads.ci.env]`. The JSON transport below
+remains available with `wads-migrate ci-to-stub --transport json`, and an
+existing stub keeps whichever transport it has when re-rendered.
+
+Why named is the default (issues #74, #88): serialising the whole `secrets`
+context into a workflow in another repository is structurally what a
+secret-exfiltration workflow looks like, and GitHub’s malicious-workflow
+scanner holds such runs on NEW repositories – `action_required`, zero jobs,
+no log, and the REST approve endpoint refuses them. It was reproduced on four
+new repositories; switching to the named transport made the next push run.
+
+### The JSON transport
 
 A GitHub *reusable* workflow’s secret interface (`on.workflow_call.secrets`)
 must be **static YAML** — it is parsed before any job runs and cannot be
@@ -1938,23 +1998,22 @@ a separate, dynamic decision driven by `[tool.wads.ci.env]` in the
 consumer’s `pyproject.toml` (see [`wads.ci_config`](_autosummary/wads.ci_config.html.md#module-wads.ci_config) and the
 `export-ci-env` action). Nothing is exported unless declared there.
 
-## The named superset (legacy transport, kept for back-compat)
+## The named superset (the named transport’s universe)
 
-Before the JSON transport, the workflow declared a generous *superset* of
-optional secret names ([`DEFAULT_CI_SECRETS`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.DEFAULT_CI_SECRETS)) and each repo’s stub passed
-a named subset. That design failed whenever a repo needed a name outside the
-superset — GitHub rejects an undeclared secret at parse time with an opaque
-`startup_failure` (issue #63).
+The workflow also declares a generous *superset* of optional secret names
+([`DEFAULT_CI_SECRETS`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.DEFAULT_CI_SECRETS)), and a named-transport stub passes a subset of
+it. A name outside the superset makes GitHub reject the workflow at parse time
+with an opaque `startup_failure` (issue #63), so `wads-migrate` and
+`wads-secrets` warn loudly about such names; a repo that needs one can use a
+repository variable (for non-sensitive values) or opt into the JSON transport.
 
-The superset is still declared by `uv-ci.yml` so that already-deployed
-named-transport stubs keep working, but it is **frozen**: new names should not
-be added — a repo that needs a new name should switch to the JSON transport
-stub (`wads-migrate ci-to-stub`), which transports everything.
+The superset is **frozen**: it is pinned to the YAML by a test, and changing
+the reusable workflow’s secret interface affects every consumer.
 
 So there are two layers:
 
-* **Transport** — the JSON secret (modern) or the frozen superset (legacy),
-  rendered into static YAML. Plumbing.
+* **Transport** — named (default) or the JSON secret (opt-in), rendered into
+  static YAML. Plumbing.
 * **Env-assignment** — pyproject-driven, exact, per-repo. The thing users tune.
 
 Keeping the names here (Python) and *rendering* them into the YAML (with a
@@ -1969,12 +2028,14 @@ GitHub’s parse-time-literal constraint.
 
 ### Functions
 
-| [`is_valid_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.is_valid_secret_name)(name)                       | Return `True` iff `name` is already a safe, valid secret name.         |
-|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
-| [`normalize_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.normalize_secret_name)(name)                      | Force `name` to a valid `UPPER_SNAKE` secret/env-var name.             |
-| [`render_stub_json_transport`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_json_transport)(\*[, indent])         | Render the caller stub's JSON-transport `secrets:` line (the default). |
-| [`render_stub_secrets_passthrough`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_secrets_passthrough)([names, indent]) | Render a caller stub's *named* `secrets:` pass-through block (legacy). |
-| [`render_workflow_call_secrets`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_workflow_call_secrets)([names, indent])    | Render the `on.workflow_call.secrets:` body for the reusable workflow. |
+| [`is_valid_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.is_valid_secret_name)(name)                       | Return `True` iff `name` is already a safe, valid secret name.           |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`normalize_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.normalize_secret_name)(name)                      | Force `name` to a valid `UPPER_SNAKE` secret/env-var name.               |
+| [`render_stub_json_transport`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_json_transport)(\*[, indent])         | Render the caller stub's JSON-transport `secrets:` line (opt-in).        |
+| [`render_stub_secrets_passthrough`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_secrets_passthrough)([names, indent]) | Render a caller stub's *named* `secrets:` pass-through block (default).  |
+| [`render_workflow_call_secrets`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_workflow_call_secrets)([names, indent])    | Render the `on.workflow_call.secrets:` body for the reusable workflow.   |
+| [`stub_with_named_transport`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.stub_with_named_transport)(stub, names)           | Swap a stub's JSON-transport region for a named `secrets:` pass-through. |
+| [`warn_names_outside_superset`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.warn_names_outside_superset)(names)               | Warn loudly for names a named-transport stub cannot legally pass.        |
 
 ### Exceptions
 
@@ -2047,7 +2108,7 @@ InvalidSecretName: ...
 
 ### wads.ci_secrets.render_stub_json_transport(, indent=6)
 
-Render the caller stub’s JSON-transport `secrets:` line (the default).
+Render the caller stub’s JSON-transport `secrets:` line (opt-in).
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -2059,7 +2120,7 @@ Render the caller stub’s JSON-transport `secrets:` line (the default).
 
 ### wads.ci_secrets.render_stub_secrets_passthrough(names=('PYPI_PASSWORD', 'TEST_PYPI_PASSWORD', 'NPM_TOKEN', 'SSH_PRIVATE_KEY', 'CODECOV_TOKEN', 'DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'PERPLEXITY_API_KEY', 'REPLICATE_API_TOKEN', 'TOGETHER_API_KEY', 'XAI_API_KEY', 'FAL_KEY', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'TAVILY_API_KEY', 'COMPOSIO_API_KEY', 'SKILLSDIRECTORY_API_KEY', 'NEWSDATA_API_KEY', 'LANGSMITH_API_KEY', 'HF_TOKEN', 'HF_WRITE_TOKEN', 'HUGGINGFACE_TOKEN', 'KAGGLE_USERNAME', 'KAGGLE_KEY', 'WANDB_API_KEY', 'PINECONE_API_KEY', 'ELEVEN_API_KEY', 'ELEVENLABS_API_KEY', 'SUNO_API_KEY', 'SPOTIFY_API_CLIENT_ID', 'SPOTIFY_API_CLIENT_SECRET', 'SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'ALPACA_API_KEY', 'ALPACA_SECRET_KEY', 'APCA_API_KEY_ID', 'APCA_API_SECRET_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GCP_SA_KEY', 'GOOGLE_APPLICATION_CREDENTIALS_JSON', 'SLACK_BOT_TOKEN', 'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL', 'TELEGRAM_BOT_TOKEN', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'SENDGRID_API_KEY', 'STRIPE_SECRET_KEY', 'DATABASE_URL', 'MONGODB_URI', 'REDIS_URL'), , indent=6)
 
-Render a caller stub’s *named* `secrets:` pass-through block (legacy).
+Render a caller stub’s *named* `secrets:` pass-through block (default).
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -2088,6 +2149,41 @@ enforces any repo-declared `required_envvars`.
     OPENAI_API_KEY:
       required: false
 ```
+
+### wads.ci_secrets.stub_with_named_transport(stub, names)
+
+Swap a stub’s JSON-transport region for a named `secrets:` pass-through.
+
+The region runs from the `# Transport:` comment down to the JSON line, so
+the result never describes a transport it does not use.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> stub = (
+...     "jobs:\n  ci:\n    uses: x\n    # Transport: whole context.\n"
+...     "    secrets:\n" + render_stub_json_transport() + "\n"
+... )
+>>> named = stub_with_named_transport(stub, ["PYPI_PASSWORD"])
+>>> named.endswith("      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n")
+True
+>>> "toJSON" in named
+False
+```
+
+### wads.ci_secrets.warn_names_outside_superset(names)
+
+Warn loudly for names a named-transport stub cannot legally pass.
+
+A caller may only pass secrets the reusable workflow declares. With
+`transport="named"` that universe is the frozen superset in
+[`wads.ci_secrets.DEFAULT_CI_SECRETS`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.DEFAULT_CI_SECRETS); a stub naming anything outside
+it produces a workflow GitHub rejects at parse time — zero jobs, an opaque
+`startup_failure` (issue #63). Returns the offending names.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 
 # _autosummary/wads.ci_trigger.html.md
@@ -2303,7 +2399,8 @@ The `with:` inputs an existing stub file passes; `{}` if none or not a stub.
 
 The `pin` and secrets `transport` of a stub, which a re-render must keep.
 
-Defaults (`@master`, `json`) for anything that is not a stub.
+Defaults (`@master`, `named`) for anything that is not a stub: a NEW
+stub gets the named transport (i2mint/wads#74), an existing one keeps its own.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2312,7 +2409,7 @@ Defaults (`@master`, `json`) for anything that is not a stub.
 >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
 {'pin': '@0.2.30', 'transport': 'named'}
 >>> stub_shape(None)
-{'pin': '@master', 'transport': 'json'}
+{'pin': '@master', 'transport': 'named'}
 ```
 
 ### wads.ci_trigger.trigger_for_workflow(ci_path)
@@ -3144,7 +3241,7 @@ against the other shape reads as configured and is not. These are rejected
 rather than silently aliased – but rejected with the migration, not with a
 bare “unknown key”, because the person hitting this did not choose it.
 
-### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?:\\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=mappingproxy({}), include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
+### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?: \\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3577,7 +3674,7 @@ module exists to stop.
 ...     declared_requirements(pyproject={'project': {
 ...         'name': 'x', 'dynamic': ['dependencies']}})
 ... except DetectorError as error:
-...     print(str(error)[:59])
+...     print(str(error)[:58])
 this project lists `dependencies` in [project].dynamic, so
 ```
 
@@ -4051,7 +4148,7 @@ True
 
 CLI entry point for wads migration tools.
 
-### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport='json', trigger_mode=None, run_ci_marker=None)
+### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None)
 
 Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.
 
@@ -4062,25 +4159,29 @@ configuration continues to come from `[tool.wads.ci.*]` in
 `i2mint/wads/actions/read-ci-config` action.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used only
-    to locate a nearby pyproject.toml when `transport="named"`;
-    with the default JSON transport the stub is the same regardless of
-    what was there.
+  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
+    locate a nearby pyproject.toml, whose `[tool.wads.ci.env]` decides
+    which secrets the default named transport passes.
   * **pin** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The wads ref the stub points at. Defaults to `"@master"`
     (floats with wads). For release-sensitive repos, pin to a tag,
     e.g. `pin="@0.2.15"` (wads tags have no `v` prefix). With the
-    default JSON transport the pinned ref’s `uv-ci.yml` must declare
+    JSON transport the pinned ref’s `uv-ci.yml` must declare
     `WADS_CI_SECRETS_JSON` (releases after 0.2.14) — pinning an
     older tag produces a workflow GitHub rejects at parse time, so a
-    warning is emitted for any non-master pin. Must start with `"@"`.
-  * **transport** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"json"` (default) passes the repo’s whole secrets
-    context as one `WADS_CI_SECRETS_JSON` secret — any secret name
-    works, nothing to enumerate. `"named"` passes an explicit subset
-    (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets) for
-    repos that want a minimal secret surface; every name must then be
-    in the frozen wads superset or GitHub rejects the workflow at
-    parse time (issue #63) — out-of-superset names trigger a loud
-    warning.
+    warning is emitted for any non-master JSON pin. Must start with
+    `"@"`.
+  * **transport** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `None` (default) keeps the transport of the stub at
+    `old_ci` when there is one, and otherwise uses `"named"`, so a
+    re-render never silently changes what an existing repo runs.
+    `"named"` passes an explicit subset
+    (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
+    name must be in the frozen wads superset or GitHub rejects the
+    workflow at parse time (issue #63) — out-of-superset names trigger
+    a loud warning. `"json"` (opt-in) passes the repo’s whole secrets
+    context as one `WADS_CI_SECRETS_JSON` secret, so any secret name
+    works, but GitHub’s malicious-workflow scanner holds its runs on
+    new repositories (`action_required`, zero jobs; issues #74, #88),
+    which is why it is no longer the default.
   * **trigger_mode** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `"auto"` or `"on-demand"`. `None` (default) takes
     `[tool.wads.ci.trigger].mode` from the pyproject.toml of the repo
     holding `old_ci` (`"auto"` when there is none). On-demand stubs
@@ -4099,16 +4200,16 @@ configuration continues to come from `[tool.wads.ci.*]` in
 >>> stub = migrate_ci_to_stub()
 >>> 'i2mint/wads/.github/workflows/uv-ci.yml@master' in stub
 True
->>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in stub
+>>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in stub
 True
->>> pinned = migrate_ci_to_stub(pin='@0.2.15')  # warns on stderr
+>>> 'toJSON(secrets)' in stub
+False
+>>> pinned = migrate_ci_to_stub(pin='@0.2.15')
 >>> 'uv-ci.yml@0.2.15' in pinned
 True
->>> named = migrate_ci_to_stub(transport='named')
->>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in named
+>>> as_json = migrate_ci_to_stub(transport='json')
+>>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in as_json
 True
->>> 'WADS_CI_SECRETS_JSON' in named
-False
 ```
 
 ### wads.migration.migrate_ci_to_uv(old_ci, , defaults=None)
@@ -4465,9 +4566,12 @@ whose name and containing directory is the same):
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
->>> import wads
->>> extract_pkg_dir_and_name(wads)
-(.../wads', 'wads')
+>>> import os, wads
+>>> pkg_dir, pkg_name = extract_pkg_dir_and_name(wads)
+>>> pkg_name
+'wads'
+>>> os.path.isfile(os.path.join(pkg_dir, pkg_name, '__init__.py'))
+True
 ```
 
 You can also just specify the name of the package (it will be imported):
@@ -5776,10 +5880,11 @@ for the model):
 1. **pyproject** `[tool.wads.ci.env]` — declares the env var (and whether it
    is required), so the reusable workflow exports it into the job environment.
 2. **transport** — the repo’s `ci.yml` stub passes secrets to the reusable
-   workflow. Modern stubs pass the whole secrets context as one
-   `WADS_CI_SECRETS_JSON` secret, so *no per-secret stub edit is needed*;
-   legacy named-transport stubs list each secret explicitly (and every listed
-   name must be in the frozen wads superset).
+   workflow. Named-transport stubs (the default for new stubs) list each
+   secret explicitly, and every listed name must be in the frozen wads
+   superset; `add` inserts the line. Stubs on the opt-in JSON transport pass
+   the whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so \*no
+   per-secret stub edit is needed\* there.
 
 `wads-secrets add` performs the needed edits in one step, and can also set
 the secret’s value on GitHub via `gh` — so a single command takes a secret
@@ -6224,15 +6329,16 @@ Utilities for reading and writing pyproject.toml files.
 
 ### Functions
 
-| [`get_project_metadata`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_metadata)(pkg_dir)                | Get the [project] section from pyproject.toml.                       |
-|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`get_project_name`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_name)(pkg_dir)                    | Get the project name from pyproject.toml.                            |
-| [`get_project_version`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_version)(pkg_dir)                 | Get the version from pyproject.toml.                                 |
-| [`read_pyproject_toml`](_autosummary/wads.toml_util.html.md#wads.toml_util.read_pyproject_toml)(pkg_dir)                 | Read pyproject.toml from the specified package directory.            |
-| [`set_project_version`](_autosummary/wads.toml_util.html.md#wads.toml_util.set_project_version)(pkg_dir, version)        | Set the version in pyproject.toml.                                   |
-| [`update_project_metadata`](_autosummary/wads.toml_util.html.md#wads.toml_util.update_project_metadata)(pkg_dir, \*\*kwargs) | Update project metadata in pyproject.toml.                           |
-| [`update_project_url`](_autosummary/wads.toml_util.html.md#wads.toml_util.update_project_url)(pkg_dir, url[, url_key])  | Update or add a URL in the [project.urls] section of pyproject.toml. |
-| [`write_pyproject_toml`](_autosummary/wads.toml_util.html.md#wads.toml_util.write_pyproject_toml)(pkg_dir, data)          | Write data to pyproject.toml in the specified package directory.     |
+| [`get_project_metadata`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_metadata)(pkg_dir)                | Get the [project] section from pyproject.toml.                           |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`get_project_name`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_name)(pkg_dir)                    | Get the project name from pyproject.toml.                                |
+| [`get_project_version`](_autosummary/wads.toml_util.html.md#wads.toml_util.get_project_version)(pkg_dir)                 | Get the version from pyproject.toml.                                     |
+| [`pep639_license`](_autosummary/wads.toml_util.html.md#wads.toml_util.pep639_license)(license_name)                 | The `[project].license` value for `license_name`, PEP 639 when possible. |
+| [`read_pyproject_toml`](_autosummary/wads.toml_util.html.md#wads.toml_util.read_pyproject_toml)(pkg_dir)                 | Read pyproject.toml from the specified package directory.                |
+| [`set_project_version`](_autosummary/wads.toml_util.html.md#wads.toml_util.set_project_version)(pkg_dir, version)        | Set the version in pyproject.toml.                                       |
+| [`update_project_metadata`](_autosummary/wads.toml_util.html.md#wads.toml_util.update_project_metadata)(pkg_dir, \*\*kwargs) | Update project metadata in pyproject.toml.                               |
+| [`update_project_url`](_autosummary/wads.toml_util.html.md#wads.toml_util.update_project_url)(pkg_dir, url[, url_key])  | Update or add a URL in the [project.urls] section of pyproject.toml.     |
+| [`write_pyproject_toml`](_autosummary/wads.toml_util.html.md#wads.toml_util.write_pyproject_toml)(pkg_dir, data)          | Write data to pyproject.toml in the specified package directory.         |
 
 ### wads.toml_util.get_project_metadata(pkg_dir)
 
@@ -6266,6 +6372,26 @@ Get the version from pyproject.toml.
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 * **Returns:**
   Version string or None if not found
+
+### wads.toml_util.pep639_license(license_name)
+
+The `[project].license` value for `license_name`, PEP 639 when possible.
+
+A name that canonicalizes to a valid SPDX expression becomes that string
+(`license = "MIT"`). Anything else keeps the deprecated
+`{"text": ...}` table, because Hatchling rejects a `license` string
+that is not valid SPDX – so this never produces an unbuildable project.
+Needs `packaging>=24.2` for SPDX support and falls back to the table
+without it.
+
+```pycon
+>>> pep639_license("mit")
+'MIT'
+>>> pep639_license("Apache Software License")
+'Apache-2.0'
+>>> pep639_license("Proprietary")
+{'text': 'Proprietary'}
+```
 
 ### wads.toml_util.read_pyproject_toml(pkg_dir)
 
@@ -6635,18 +6761,20 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-09-22 14:06 UTC** from commit <a href="https://github.com/i2mint/wads/commit/993d970c24320951ce6fec56415001ceaf273269"><code>993d970</code></a> on branch <code>master</code>, for **wads 0.2.31** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-27 09:00 UTC** from commit <a href="https://github.com/i2mint/wads/commit/b87ec3d06229d36ef93da150f16c12e9f73554e1"><code>b87ec3d</code></a> on branch <code>master</code>, for **wads 0.2.31** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.31) is behind the latest release on PyPI (0.2.32): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/993d970c24320951ce6fec56415001ceaf273269"><code>993d970c24320951ce6fec56415001ceaf273269</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/b87ec3d06229d36ef93da150f16c12e9f73554e1"><code>b87ec3d06229d36ef93da150f16c12e9f73554e1</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
-| Tags at this commit | <code>0.2.31</code>                                                                                                                                |
+| Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
 | Remote              | <code>https://github.com/i2mint/wads</code>                                                                                                        |
 
@@ -6655,9 +6783,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/35736675111">35736675111</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/36307819666">36307819666</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>80683fa87bf0943b108a00e0e9658f0a419bc914</code> (in the history of the built commit) |
+| Event commit | <code>b87ec3d06229d36ef93da150f16c12e9f73554e1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6682,13 +6810,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.31/">0.2.31</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.32/">0.2.32</a>, newer than the documented version (0.2.31).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 993d970c24320951ce6fec56415001ceaf273269
+git checkout b87ec3d06229d36ef93da150f16c12e9f73554e1
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -6829,6 +6957,16 @@ gh skill install i2mint/wads wads-type-coverage --agent claude-code
 ```
 
 Source: [`wads/data/skills/wads-type-coverage`](https://github.com/i2mint/wads/tree/HEAD/wads/data/skills/wads-type-coverage) (bundled with the pip package).
+
+### `wads-dev-workflow`
+
+How to change the wads package itself (i2mint/wads) safely: install the right extras, run the test suite exactly the way CI does (package doctests included, on Python 3.10/3.11/3.12), regenerate the populate goldens after an intended output change, exercise the git-commit push-back script, and keep the reusable workflow, actions, stub template and secrets superset in sync. Use when editing wads source, actions/\*, .github/workflows/uv-ci.yml, wads/data templates or the shipped skills, when a wads test fails, when “regenerate the goldens”, “run wads tests like CI”, or “is this wads change safe to merge” comes up. Every merge to master publishes wads to PyPI and goes live for every repo whose stub floats on @master. Not for USING wads in another repo (see wads-migrate, wads-ci-health, setup-py-project).
+
+```bash
+gh skill install i2mint/wads wads-dev-workflow --agent claude-code
+```
+
+Source: [`skills/wads-dev-workflow`](https://github.com/i2mint/wads/tree/HEAD/skills/wads-dev-workflow).
 
 The bundled skills are also on disk after `pip install wads`, under the package’s `data/skills/` directory; link them into an agent without network access with `skill link-skills <that directory>`.
 

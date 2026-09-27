@@ -504,9 +504,12 @@ whose name and containing directory is the same):</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">wads</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">wads</span><span class="p">)</span>
-<span class="go">(.../wads', 'wads')</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">wads</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">wads</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_name</span>
+<span class="go">'wads'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span><span class="p">,</span> <span class="s1">'__init__.py'</span><span class="p">))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <p>You can also just specify the name of the package (it will be imported):</p>

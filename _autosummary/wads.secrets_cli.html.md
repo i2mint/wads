@@ -8,10 +8,11 @@ for the model):
 1. **pyproject** `[tool.wads.ci.env]` — declares the env var (and whether it
    is required), so the reusable workflow exports it into the job environment.
 2. **transport** — the repo’s `ci.yml` stub passes secrets to the reusable
-   workflow. Modern stubs pass the whole secrets context as one
-   `WADS_CI_SECRETS_JSON` secret, so *no per-secret stub edit is needed*;
-   legacy named-transport stubs list each secret explicitly (and every listed
-   name must be in the frozen wads superset).
+   workflow. Named-transport stubs (the default for new stubs) list each
+   secret explicitly, and every listed name must be in the frozen wads
+   superset; `add` inserts the line. Stubs on the opt-in JSON transport pass
+   the whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so \*no
+   per-secret stub edit is needed\* there.
 
 `wads-secrets add` performs the needed edits in one step, and can also set
 the secret’s value on GitHub via `gh` — so a single command takes a secret

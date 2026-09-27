@@ -526,8 +526,10 @@
         <span class="k">if</span> <span class="n">documentation_url</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">"project"</span><span class="p">][</span><span class="s2">"urls"</span><span class="p">][</span><span class="s2">"Documentation"</span><span class="p">]</span> <span class="o">=</span> <span class="n">documentation_url</span>
 
-    <span class="c1"># Update license using inline table syntax</span>
-    <span class="n">data</span><span class="p">[</span><span class="s2">"project"</span><span class="p">][</span><span class="s2">"license"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">license_name</span><span class="p">}</span>
+    <span class="c1"># PEP 639 SPDX string when the name is valid SPDX, else the legacy table</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">pep639_license</span>
+
+    <span class="n">data</span><span class="p">[</span><span class="s2">"project"</span><span class="p">][</span><span class="s2">"license"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pep639_license</span><span class="p">(</span><span class="n">license_name</span><span class="p">)</span>
 
     <span class="c1"># Add optional fields if present</span>
     <span class="k">if</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"keywords"</span><span class="p">):</span>
@@ -1390,10 +1392,25 @@
 
             <span class="n">ci_def</span> <span class="o">=</span> <span class="n">render_minimal_env_placeholders</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
+        <span class="c1"># A new repo's stub passes its secrets by NAME: the template's JSON</span>
+        <span class="c1"># transport gets held by GitHub's malicious-workflow scanner on new</span>
+        <span class="c1"># repositories (action_required, zero jobs; i2mint/wads#74, #88).</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">render_stub_json_transport</span><span class="p">,</span>
+            <span class="n">stub_with_named_transport</span><span class="p">,</span>
+            <span class="n">warn_names_outside_superset</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">is_bundled_stub</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">ci_tpl_path</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+            <span class="n">github_ci_uv_stub_path</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_bundled_stub</span> <span class="ow">and</span> <span class="n">render_stub_json_transport</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ci_def</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">ci_config</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">()</span> <span class="k">if</span> <span class="n">ci_config</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
+            <span class="n">warn_names_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+            <span class="n">ci_def</span> <span class="o">=</span> <span class="n">stub_with_named_transport</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+
         <span class="c1"># Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo</span>
-        <span class="c1"># named transport). The current stub template passes the whole secrets</span>
-        <span class="c1"># context as one WADS_CI_SECRETS_JSON secret and has no placeholder,</span>
-        <span class="c1"># so this branch only fires for old templates.</span>
+        <span class="c1"># named transport); this branch only fires for those.</span>
         <span class="k">if</span> <span class="s2">"#SECRETS_BLOCK#"</span> <span class="ow">in</span> <span class="n">ci_def</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_stub_secrets_passthrough</span>
 
@@ -1565,7 +1582,8 @@
 <span class="sd">    &gt;&gt;&gt; _get_org_slash_proj('https://github.com/thorwhalen/ut/')</span>
 <span class="sd">    'thorwhalen/ut'</span>
 <span class="sd">    """</span>
-    <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">org</span><span class="p">,</span> <span class="n">proj_name</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="c1"># A URL separator, not os.sep (ensure_no_slash_suffix strips "\\" on Windows)</span>
+    <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">org</span><span class="p">,</span> <span class="n">proj_name</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">proj_name</span><span class="si">}</span><span class="s2">"</span>
 
 
