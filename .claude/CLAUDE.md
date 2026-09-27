@@ -302,10 +302,11 @@ wads-test-analyze results.xml
 ## Testing
 
 ```bash
-pytest wads/tests/
+uv pip install -e ".[create,docs,skills,test]"   # the suite needs the create extra
+python -m pytest --doctest-modules -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL' --ignore=examples --ignore=scrap
 ```
 
-Tests are in `wads/tests/` (not the top-level `tests/` directory).
+That is CI's exact command. With no path, `testpaths = ["wads"]` collects the tests in `wads/tests/` (not a top-level `tests/`) plus every package doctest; the root `conftest.py` keeps the `wads/data` templates out. The `-o` flag replaces the repo's `NORMALIZE_WHITESPACE`, so a wrapped doctest output needs an inline `# doctest: +NORMALIZE_WHITESPACE`. CI tests 3.10 and 3.12; run 3.11 too before merging. The maintainer skill `skills/wads-dev-workflow` (linked from `.claude/skills/`) has the full checklist: goldens, the push-back test harness, what must change together, and the dependent (`i2mint/isee`) gate.
 
 ## Common Pitfalls
 
