@@ -116,6 +116,62 @@ class CIConfig:
             items = [str(e).strip() for e in extras if str(e).strip()]
         return ",".join(items)
 
+    #: Extra names that conventionally hold test-time tooling (i2mint/wads#59).
+    TEST_EXTRA_NAMES = ("dev", "test", "tests", "testing", "ci")
+    #: Packages CI provides without any extra: run-tests-uv installs pytest and
+    #: pytest-cov (which pulls coverage); ruff comes from the ruff actions.
+    CI_PROVIDED_PACKAGES = ("pytest", "pytest-cov", "coverage", "ruff")
+
+    @property
+    def uninstalled_test_extras(self) -> dict[str, list[str]]:
+        """Test-looking extras CI will not install, mapped to what they would add.
+
+        Non-empty only when ``[tool.wads.ci.install].extras`` is absent: CI then
+        installs core dependencies only, so an extra named like
+        :attr:`TEST_EXTRA_NAMES` whose packages go beyond
+        :attr:`CI_PROVIDED_PACKAGES` is silently missing from the test job
+        (i2mint/wads#59). Any explicit ``extras`` value, including ``""``, is
+        a decision and silences this.
+
+        >>> config = CIConfig({'project': {'name': 'p', 'optional-dependencies': {
+        ...     'dev': ['pytest', 'httpx>=0.27'], 'docs': ['sphinx']}}})
+        >>> config.uninstalled_test_extras
+        {'dev': ['httpx']}
+        """
+        if "extras" in self.ci_config.get("install", {}):
+            return {}
+        from packaging.requirements import Requirement
+        from packaging.utils import canonicalize_name
+
+        own_name = canonicalize_name(self.project_name or "")
+        provided = {canonicalize_name(n) for n in self.CI_PROVIDED_PACKAGES}
+        optional = (self.data.get("project") or {}).get("optional-dependencies")
+        if not isinstance(optional, dict):
+            return {}
+        missing = {}
+        for extra, requirements in optional.items():
+            if not isinstance(extra, str) or extra.lower() not in self.TEST_EXTRA_NAMES:
+                continue
+            if not isinstance(requirements, list):
+                continue
+            names = []
+            for requirement in requirements:
+                if not isinstance(requirement, str):
+                    continue
+                try:
+                    parsed = Requirement(requirement)
+                    if parsed.marker is not None and not parsed.marker.evaluate(
+                        {"extra": extra}
+                    ):
+                        continue  # does not apply to this interpreter/platform
+                except Exception:  # invalid requirement or marker: not ours to judge
+                    continue
+                if canonicalize_name(parsed.name) not in provided | {own_name}:
+                    names.append(parsed.name)
+            if names:
+                missing[extra] = names
+        return missing
+
     # ⚙️ EXECUTION FLOW AND COMMANDS
     @property
     def commands_pre_test(self) -> list[str]:

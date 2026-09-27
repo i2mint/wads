@@ -34,13 +34,13 @@ def _make_repo(tmp_path, stub_text):
 
 @pytest.fixture
 def repo(tmp_path):
-    """A repo with the default (JSON-transport) stub."""
-    return _make_repo(tmp_path, migrate_ci_to_stub())
+    """A repo with a JSON-transport stub (opt-in since i2mint/wads#74)."""
+    return _make_repo(tmp_path, migrate_ci_to_stub(transport="json"))
 
 
 @pytest.fixture
 def named_repo(tmp_path):
-    """A repo with a legacy named-transport stub."""
+    """A repo with a named-transport stub (the default)."""
     return _make_repo(tmp_path, migrate_ci_to_stub(transport="named"))
 
 
@@ -180,6 +180,9 @@ def test_add_on_named_stub_refuses_outside_superset_edit(named_repo, capsys):
     out = capsys.readouterr().out
     assert "superset" in out and "FAIL TO START" in out and "NOT edited" in out
     assert "--variable" in out  # points at the non-sensitive-value remedy
+    # ...and at a command that really switches transport: a bare `ci-to-stub`
+    # keeps the existing stub's (named) transport.
+    assert "--transport json" in out
 
 
 def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
@@ -222,7 +225,7 @@ def test_add_variable_skips_transport_and_superset(repo, capsys):
 def test_json_stub_pinned_to_old_tag_warns(capsys):
     """Reviewer finding F2: a JSON stub pinned to a pre-JSON tag cannot start;
     migrate_ci_to_stub must warn on any non-master pin with json transport."""
-    stub = migrate_ci_to_stub(pin="@0.2.14")
+    stub = migrate_ci_to_stub(pin="@0.2.14", transport="json")
     assert "uv-ci.yml@0.2.14" in stub
     err = capsys.readouterr().err
     assert "CANNOT START" in err and "--transport named" in err

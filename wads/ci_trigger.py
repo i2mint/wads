@@ -336,15 +336,16 @@ def _assign(table, key, value):
 def stub_shape(ci_text: Optional[str]) -> dict:
     """The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.
 
-    Defaults (``@master``, ``json``) for anything that is not a stub.
+    Defaults (``@master``, ``named``) for anything that is not a stub: a NEW
+    stub gets the named transport (i2mint/wads#74), an existing one keeps its own.
 
     >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
     {'pin': '@0.2.30', 'transport': 'named'}
     >>> stub_shape(None)
-    {'pin': '@master', 'transport': 'json'}
+    {'pin': '@master', 'transport': 'named'}
     """
     if classify_ci_workflow(ci_text) != "stub":
-        return {"pin": "@master", "transport": "json"}
+        return {"pin": "@master", "transport": "named"}
     from wads.ci_secrets import render_stub_json_transport
 
     match = _PIN_RE.search(ci_text)
@@ -552,7 +553,8 @@ def flip_to_on_demand(
             shadow_ci.parent.mkdir(parents=True, exist_ok=True)
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
-            new_ci = migrate_ci_to_stub(str(shadow_ci), **shape)
+            # transport=None: keep an existing stub's, pick one for an inline workflow.
+            new_ci = migrate_ci_to_stub(str(shadow_ci), pin=shape["pin"])
             if shape["pin"] != "@master":
                 result.notes.append(
                     f"the stub stays pinned to {shape['pin']}. Its pre-filter works on "

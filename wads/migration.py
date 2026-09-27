@@ -584,7 +584,9 @@ def migrate_setuptools_to_hatching(
     pyproject_dict["project"]["name"] = required_fields["name"]
     pyproject_dict["project"]["version"] = required_fields["version"]
     pyproject_dict["project"]["description"] = required_fields["description"]
-    pyproject_dict["project"]["license"] = {"text": required_fields["license"]}
+    from wads.toml_util import pep639_license
+
+    pyproject_dict["project"]["license"] = pep639_license(required_fields["license"])
 
     if "urls" not in pyproject_dict["project"]:
         pyproject_dict["project"]["urls"] = {}
@@ -865,7 +867,7 @@ def migrate_ci_to_stub(
     old_ci: Union[str, Path] = None,
     *,
     pin: str = "@master",
-    transport: str = "json",
+    transport: Optional[str] = None,
     trigger_mode: Optional[str] = None,
     run_ci_marker: Optional[str] = None,
 ) -> str:
@@ -878,25 +880,29 @@ def migrate_ci_to_stub(
     `i2mint/wads/actions/read-ci-config` action.
 
     Args:
-        old_ci: Optional path or content of the existing CI workflow. Used only
-            to locate a nearby pyproject.toml when ``transport="named"``;
-            with the default JSON transport the stub is the same regardless of
-            what was there.
+        old_ci: Optional path or content of the existing CI workflow. Used to
+            locate a nearby pyproject.toml, whose ``[tool.wads.ci.env]`` decides
+            which secrets the default named transport passes.
         pin: The wads ref the stub points at. Defaults to ``"@master"``
             (floats with wads). For release-sensitive repos, pin to a tag,
             e.g. ``pin="@0.2.15"`` (wads tags have no ``v`` prefix). With the
-            default JSON transport the pinned ref's ``uv-ci.yml`` must declare
+            JSON transport the pinned ref's ``uv-ci.yml`` must declare
             ``WADS_CI_SECRETS_JSON`` (releases after 0.2.14) — pinning an
             older tag produces a workflow GitHub rejects at parse time, so a
-            warning is emitted for any non-master pin. Must start with ``"@"``.
-        transport: ``"json"`` (default) passes the repo's whole secrets
-            context as one ``WADS_CI_SECRETS_JSON`` secret — any secret name
-            works, nothing to enumerate. ``"named"`` passes an explicit subset
-            (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets) for
-            repos that want a minimal secret surface; every name must then be
-            in the frozen wads superset or GitHub rejects the workflow at
-            parse time (issue #63) — out-of-superset names trigger a loud
-            warning.
+            warning is emitted for any non-master JSON pin. Must start with
+            ``"@"``.
+        transport: ``None`` (default) keeps the transport of the stub at
+            ``old_ci`` when there is one, and otherwise uses ``"named"``, so a
+            re-render never silently changes what an existing repo runs.
+            ``"named"`` passes an explicit subset
+            (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
+            name must be in the frozen wads superset or GitHub rejects the
+            workflow at parse time (issue #63) — out-of-superset names trigger
+            a loud warning. ``"json"`` (opt-in) passes the repo's whole secrets
+            context as one ``WADS_CI_SECRETS_JSON`` secret, so any secret name
+            works, but GitHub's malicious-workflow scanner holds its runs on
+            new repositories (``action_required``, zero jobs; issues #74, #88),
+            which is why it is no longer the default.
         trigger_mode: ``"auto"`` or ``"on-demand"``. ``None`` (default) takes
             ``[tool.wads.ci.trigger].mode`` from the pyproject.toml of the repo
             holding ``old_ci`` (``"auto"`` when there is none). On-demand stubs
@@ -912,19 +918,22 @@ def migrate_ci_to_stub(
         >>> stub = migrate_ci_to_stub()
         >>> 'i2mint/wads/.github/workflows/uv-ci.yml@master' in stub
         True
-        >>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in stub
+        >>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in stub
         True
-        >>> pinned = migrate_ci_to_stub(pin='@0.2.15')  # warns on stderr
+        >>> 'toJSON(secrets)' in stub
+        False
+        >>> pinned = migrate_ci_to_stub(pin='@0.2.15')
         >>> 'uv-ci.yml@0.2.15' in pinned
         True
-        >>> named = migrate_ci_to_stub(transport='named')
-        >>> 'PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}' in named
+        >>> as_json = migrate_ci_to_stub(transport='json')
+        >>> 'WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}' in as_json
         True
-        >>> 'WADS_CI_SECRETS_JSON' in named
-        False
     """
     if not pin.startswith("@"):
         raise ValueError(f"pin must start with '@', got {pin!r}")
+    auto_transport = transport is None
+    if transport is None:
+        transport = _existing_stub_transport(old_ci)
     if transport not in ("json", "named"):
         raise ValueError(f"transport must be 'json' or 'named', got {transport!r}")
     if transport == "json" and pin != "@master":
@@ -942,36 +951,27 @@ def migrate_ci_to_stub(
     if pin != "@master":
         stub = stub.replace("uv-ci.yml@master", f"uv-ci.yml{pin}")
     if transport == "named":
-        from wads.ci_secrets import (
-            render_stub_json_transport,
-            render_stub_secrets_passthrough,
-        )
+        from wads.ci_secrets import stub_with_named_transport
 
         names = _stub_secret_names_for(old_ci)
-        _warn_named_transport_outside_superset(names)
-        # Swap the template's JSON-transport comment paragraph (the lines
-        # from "# Transport:" down to the JSON line) for a named-mode one,
-        # so the stub doesn't describe a transport it isn't using.
-        named_region = (
-            "    # Transport (NAMED, legacy): explicitly passes only the secrets\n"
-            "    # listed below (PYPI_PASSWORD + those declared in\n"
-            "    # [tool.wads.ci.env]). Every name must be in the frozen wads\n"
-            "    # superset (wads/ci_secrets.py) or GitHub rejects the workflow\n"
-            "    # at parse time. The default JSON transport has no such limit;\n"
-            "    # regenerate with `wads-migrate ci-to-stub` to switch.\n"
-            "    secrets:\n" + render_stub_secrets_passthrough(names) + "\n"
-        )
-        json_line = render_stub_json_transport()
-        json_region = re.compile(
-            r"^    # Transport:.*?" + re.escape(json_line) + r"\n",
-            re.DOTALL | re.MULTILINE,
-        )
-        stub, n_replaced = json_region.subn(named_region, stub)
-        if n_replaced != 1:
-            raise ValueError(
-                "stub template changed shape: could not locate the JSON "
-                "transport region to convert to named transport"
+        from wads.ci_secrets import DEFAULT_CI_SECRETS
+
+        outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
+        if auto_transport and outside:
+            # A named stub passing these could not start (issue #63). With no
+            # explicit choice, keep the JSON transport, which passes any name.
+            print(
+                f"note: using the JSON secrets transport because {outside} "
+                f"are outside the wads secrets superset, so a named stub "
+                f"passing them could not start (i2mint/wads#63). On a brand-new "
+                f"repo GitHub may hold JSON-transport runs (i2mint/wads#74); "
+                f"storing non-sensitive values as repository variables avoids "
+                f"both.",
+                file=sys.stderr,
             )
+        else:
+            _warn_named_transport_outside_superset(names)
+            stub = stub_with_named_transport(stub, names)
     # Legacy templates carried a placeholder instead of a transport line.
     if "#SECRETS_BLOCK#" in stub:
         from wads.ci_secrets import render_stub_secrets_passthrough
@@ -999,6 +999,17 @@ def migrate_ci_to_stub(
     return render_stub_inputs(stub, stub_inputs_of(old_ci))
 
 
+def _existing_stub_transport(old_ci) -> str:
+    """The secrets transport of the stub file at ``old_ci``; ``"named"`` otherwise."""
+    from wads.ci_trigger import stub_shape
+
+    if not old_ci:
+        return "named"
+    if "\n" not in str(old_ci) and os.path.isfile(str(old_ci)):
+        return stub_shape(Path(old_ci).read_text())["transport"]
+    return stub_shape(str(old_ci))["transport"]  # content; "named" if not a stub
+
+
 def _stub_secret_names_for(old_ci) -> list:
     """Secret names a *named-transport* stub should pass, from nearby pyproject.
 
@@ -1018,32 +1029,10 @@ def _stub_secret_names_for(old_ci) -> list:
 
 
 def _warn_named_transport_outside_superset(names) -> list:
-    """Warn loudly for names a named-transport stub cannot legally pass.
+    """Warn for names a named-transport stub cannot pass (see :mod:`wads.ci_secrets`)."""
+    from wads.ci_secrets import warn_names_outside_superset
 
-    A caller may only pass secrets the reusable workflow declares. With
-    ``transport="named"`` that universe is the frozen superset in
-    :data:`wads.ci_secrets.DEFAULT_CI_SECRETS`; a stub naming anything outside
-    it produces a workflow GitHub rejects at parse time — zero jobs, an opaque
-    ``startup_failure`` (issue #63). Returns the offending names.
-    """
-    from wads.ci_secrets import DEFAULT_CI_SECRETS
-
-    outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
-    for name in outside:
-        print(
-            f"warning: {name!r} is not in the wads secrets superset, so a stub "
-            f"passing it by name CANNOT START (GitHub rejects the workflow at "
-            f"parse time with `startup_failure`). Either:\n"
-            f"  - if the value is not actually sensitive, store it as a "
-            f"repository VARIABLE (`gh variable set {name}`) — declared env "
-            f"vars fall back to repo variables automatically; or\n"
-            f"  - use the default JSON transport (`wads-migrate ci-to-stub` "
-            f"without --transport named), which passes every secret; or\n"
-            f"  - keep the inline workflow (`wads-migrate ci-to-uv`, don't "
-            f"stub-ify).",
-            file=sys.stderr,
-        )
-    return outside
+    return warn_names_outside_superset(names)
 
 
 def _find_pyproject_near(old_ci) -> Path | None:
@@ -1244,7 +1233,7 @@ def main():
         default="@master",
         help=(
             "wads ref to pin in the stub (default '@master'). "
-            "Use e.g. '@v0.1.81' to freeze."
+            "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix)."
         ),
     )
     fleet_parser.add_argument(
@@ -1286,9 +1275,9 @@ def main():
             "else '@master' (floats with "
             "wads — convenient, occasional CI breakage on bad wads merges). "
             "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "
-            "default JSON transport needs a ref whose uv-ci.yml declares "
-            "WADS_CI_SECRETS_JSON (releases after 0.2.14); for older pins "
-            "use --transport named. Must start with '@'."
+            "JSON transport needs a ref whose uv-ci.yml declares "
+            "WADS_CI_SECRETS_JSON (releases after 0.2.14); the named transport "
+            "works with any pin. Must start with '@'."
         ),
     )
     stub_parser.add_argument(
@@ -1297,12 +1286,13 @@ def main():
         choices=("json", "named"),
         help=(
             "How the stub passes secrets to the reusable workflow (default: the "
-            "existing stub's, else json). 'json' "
-            "(default) serializes the repo's whole secrets context into one "
-            "WADS_CI_SECRETS_JSON secret — any secret name works. 'named' "
-            "passes an explicit subset (minimal secret surface), but every "
-            "name must be in the frozen wads superset or the workflow cannot "
-            "start."
+            "existing stub's, else named). 'named' passes PYPI_PASSWORD plus "
+            "the [tool.wads.ci.env]-declared secrets; every name must be in "
+            "the frozen wads superset or the workflow cannot start. 'json' "
+            "serializes the repo's whole secrets context into one "
+            "WADS_CI_SECRETS_JSON secret (any secret name works), but GitHub's "
+            "malicious-workflow scanner holds its runs on new repos "
+            "(action_required, zero jobs; i2mint/wads#74)."
         ),
     )
 
@@ -1494,7 +1484,9 @@ def main():
             # (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.
             shape = stub_shape(existing)
             pin = args.pin or shape["pin"]
-            transport = args.transport or shape["transport"]
+            # None lets migrate_ci_to_stub keep an existing stub's transport, or
+            # choose named for a new one (JSON if a name is outside the superset).
+            transport = args.transport
             if classify_ci_workflow(existing) == "stub":
                 try:
                     _, dropped = stub_customizations(existing)
@@ -1523,8 +1515,9 @@ def main():
             if pin == "@master":
                 print(
                     "\nPinned to @master (floats with wads). If you need version "
-                    "stability for this repo, re-run with `--pin @vX.Y.Z` "
-                    "(latest wads tag visible via `gh release list -R i2mint/wads`).",
+                    "stability for this repo, re-run with `--pin @X.Y.Z` (tags "
+                    "have no 'v' prefix; latest via "
+                    "`gh api repos/i2mint/wads/tags --jq '.[0].name'`).",
                     file=sys.stderr,
                 )
 

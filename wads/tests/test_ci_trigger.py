@@ -353,7 +353,7 @@ def test_the_stub_template_carries_each_anchor_once():
 
 def test_auto_renders_the_template_byte_for_byte():
     assert render_stub_trigger(STUB_TEMPLATE) == STUB_TEMPLATE
-    assert migrate_ci_to_stub() == STUB_TEMPLATE
+    assert migrate_ci_to_stub(transport="json") == STUB_TEMPLATE
 
 
 def test_on_demand_stub_says_nothing_runs_unless_asked():

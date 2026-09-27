@@ -227,8 +227,10 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
         if documentation_url:
             data["project"]["urls"]["Documentation"] = documentation_url
 
-    # Update license using inline table syntax
-    data["project"]["license"] = {"text": license_name}
+    # PEP 639 SPDX string when the name is valid SPDX, else the legacy table
+    from wads.toml_util import pep639_license
+
+    data["project"]["license"] = pep639_license(license_name)
 
     # Add optional fields if present
     if configs.get("keywords"):
@@ -1087,10 +1089,25 @@ def _add_ci_def(
 
             ci_def = render_minimal_env_placeholders(ci_def, name)
 
+        # A new repo's stub passes its secrets by NAME: the template's JSON
+        # transport gets held by GitHub's malicious-workflow scanner on new
+        # repositories (action_required, zero jobs; i2mint/wads#74, #88).
+        from wads.ci_secrets import (
+            render_stub_json_transport,
+            stub_with_named_transport,
+            warn_names_outside_superset,
+        )
+
+        is_bundled_stub = os.path.abspath(ci_tpl_path) == os.path.abspath(
+            github_ci_uv_stub_path
+        )
+        if is_bundled_stub and render_stub_json_transport() in ci_def:
+            names = ci_config.stub_secret_names() if ci_config else ["PYPI_PASSWORD"]
+            warn_names_outside_superset(names)
+            ci_def = stub_with_named_transport(ci_def, names)
+
         # Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo
-        # named transport). The current stub template passes the whole secrets
-        # context as one WADS_CI_SECRETS_JSON secret and has no placeholder,
-        # so this branch only fires for old templates.
+        # named transport); this branch only fires for those.
         if "#SECRETS_BLOCK#" in ci_def:
             from wads.ci_secrets import render_stub_secrets_passthrough
 
@@ -1256,7 +1273,8 @@ def _get_org_slash_proj(repo: str) -> str:
     >>> _get_org_slash_proj('https://github.com/thorwhalen/ut/')
     'thorwhalen/ut'
     """
-    *_, org, proj_name = ensure_no_slash_suffix(repo).split("/")
+    # A URL separator, not os.sep (ensure_no_slash_suffix strips "\\" on Windows)
+    *_, org, proj_name = repo.rstrip("/").split("/")
     return f"{org}/{proj_name}"
 
 
