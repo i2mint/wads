@@ -51,13 +51,23 @@ from pathlib import Path
 from wads.populate import populate_pkg_dir
 
 with tempfile.TemporaryDirectory() as d:
-    pkg = Path(d) / "mypkg"; pkg.mkdir()
-    for cmd in (["git", "init", "-q"], ["git", "config", "user.email", "t@e.com"],
-                ["git", "config", "user.name", "t"],
-                ["git", "remote", "add", "origin", "https://github.com/myorg/mypkg"]):
+    pkg = Path(d) / "mypkg"
+    pkg.mkdir()
+    for cmd in (
+        ["git", "init", "-q"],
+        ["git", "config", "user.email", "t@e.com"],
+        ["git", "config", "user.name", "t"],
+        ["git", "remote", "add", "origin", "https://github.com/myorg/mypkg"],
+    ):
         subprocess.run(cmd, cwd=pkg, check=True)
-    populate_pkg_dir(str(pkg), description="Test package", root_url="https://github.com/myorg",
-                     author="John Doe", version="1.2.3", verbose=False)
+    populate_pkg_dir(
+        str(pkg),
+        description="Test package",
+        root_url="https://github.com/myorg",
+        author="John Doe",
+        version="1.2.3",
+        verbose=False,
+    )
     for rel in ("pyproject.toml", ".github/workflows/ci.yml"):
         shutil.copy(pkg / rel, Path("wads/tests/data/golden/python_lib") / rel)
 ```
