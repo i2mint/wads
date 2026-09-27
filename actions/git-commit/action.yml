@@ -179,9 +179,9 @@ runs:
               # nv empty it prints the line's X.Y.Z; otherwise it rewrites that
               # X.Y.Z to nv and prints the whole file.
               version_awk='
-                /^[[:space:]]*\[/ {
+                /^[[:space:]]*\[[^]]*\]+[[:space:]]*([#;].*)?\r?$/ {
                   seen = 1
-                  insec = ($0 ~ ("^[[:space:]]*\\[" sec "\\][[:space:]]*(#.*)?\r?$"))
+                  insec = ($0 ~ ("^[[:space:]]*\\[[[:space:]]*" sec "[[:space:]]*\\]"))
                 }
                 !done && (!seen || insec) && /^[[:space:]]*version[[:space:]]*=/ \
                       && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {

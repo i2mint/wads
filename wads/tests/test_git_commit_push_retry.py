@@ -434,6 +434,16 @@ class TestPushBackRecovery:
                 "setup.cfg",
                 "[bumpversion]\nversion = 9.9.9\n\n[metadata]\nversion = {}\n",
             ),
+            (
+                "pyproject.toml",
+                '[[tool.a]]\nversion = "9.9.9"\n\n[ project ]  # the package\n'
+                'name = "p"\nmatrix = [\n  ["x"],\n]\nversion = "{}"\n\n'
+                '[[tool.b]]\nversion = "8.8.8"\n',
+            ),
+            (
+                "setup.cfg",
+                "[options]\nversion = 9.9.9\n\n[metadata] ; pkg\nversion = {}\n",
+            ),
         ],
     )
     def test_the_project_version_is_bumped_even_after_another_tables_version(

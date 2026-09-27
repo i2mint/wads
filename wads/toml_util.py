@@ -36,6 +36,8 @@ def pep639_license(license_name: str):
     >>> pep639_license("Proprietary")
     {'text': 'Proprietary'}
     """
+    if isinstance(license_name, dict):
+        return license_name  # already a table
     if not isinstance(license_name, str):
         return {"text": license_name}
     try:

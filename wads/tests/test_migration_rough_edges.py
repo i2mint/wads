@@ -89,6 +89,10 @@ def test_org_slash_proj_strips_a_url_slash_even_on_windows(monkeypatch):
     assert _get_org_slash_proj("https://github.com/thorwhalen/ut/") == "thorwhalen/ut"
 
 
-@pytest.mark.parametrize("value", [None, {"text": "MIT"}, 3])
+@pytest.mark.parametrize("value", [None, 3])
 def test_pep639_license_passes_non_strings_through_as_a_table(value):
     assert pep639_license(value) == {"text": value}
+
+
+def test_pep639_license_leaves_a_table_alone():
+    assert pep639_license({"text": "MIT"}) == {"text": "MIT"}

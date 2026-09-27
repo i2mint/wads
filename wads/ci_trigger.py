@@ -553,7 +553,8 @@ def flip_to_on_demand(
             shadow_ci.parent.mkdir(parents=True, exist_ok=True)
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
-            new_ci = migrate_ci_to_stub(str(shadow_ci), **shape)
+            # transport=None: keep an existing stub's, pick one for an inline workflow.
+            new_ci = migrate_ci_to_stub(str(shadow_ci), pin=shape["pin"])
             if shape["pin"] != "@master":
                 result.notes.append(
                     f"the stub stays pinned to {shape['pin']}. Its pre-filter works on "

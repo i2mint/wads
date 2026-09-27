@@ -1484,7 +1484,9 @@ def main():
             # (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.
             shape = stub_shape(existing)
             pin = args.pin or shape["pin"]
-            transport = args.transport or shape["transport"]
+            # None lets migrate_ci_to_stub keep an existing stub's transport, or
+            # choose named for a new one (JSON if a name is outside the superset).
+            transport = args.transport
             if classify_ci_workflow(existing) == "stub":
                 try:
                     _, dropped = stub_customizations(existing)

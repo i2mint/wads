@@ -203,3 +203,38 @@ def test_populate_leaves_a_custom_template_alone(tmp_path):
     )
     ci = (pkg_dir / ".github" / "workflows" / "ci.yml").read_text()
     assert ci == custom.read_text()
+
+
+def test_the_cli_falls_back_to_json_for_out_of_superset_secrets(tmp_path):
+    """`wads-migrate ci-to-stub` on an inline workflow must not write an unstartable stub."""
+    import sys
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nrequired_envvars = ["MY_CUSTOM_TOKEN"]\n'
+    )
+    from wads import github_ci_uv_path
+
+    ci = _ci_file(tmp_path, open(github_ci_uv_path).read())
+    out = tmp_path / "out.yml"
+    subprocess.run(
+        [sys.executable, "-m", "wads.migration", "ci-to-stub", str(ci), "-o", str(out)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert JSON_LINE in out.read_text()
+
+
+def test_on_demand_flip_of_an_inline_repo_never_writes_an_unstartable_stub(tmp_path):
+    from wads import github_ci_uv_path
+    from wads.ci_trigger import flip_to_on_demand
+
+    (tmp_path / ".git").mkdir()
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nrequired_envvars = ["MY_CUSTOM_TOKEN"]\n'
+    )
+    ci = _ci_file(tmp_path, open(github_ci_uv_path).read())
+    flip_to_on_demand(tmp_path)
+    assert JSON_LINE in ci.read_text()
