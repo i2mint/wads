@@ -14,7 +14,7 @@ All functions are in `wads.project_setup` and `wads.user_dirs`:
 
 ```python
 # Name checking
-from wads.project_setup import check_name_availability, check_names, is_available_on_pypi, is_available_on_github
+from wads.project_setup import check_name_availability, check_names, is_available_on_pypi, is_available_on_npm
 
 # Name candidate pools
 from wads.project_setup import list_name_candidate_files, load_name_candidates
@@ -91,20 +91,22 @@ Use your own creativity to suggest 5-8 names based on the description. Consider:
 
 If candidate pools exist, also filter pool names for relevance to the description and include good matches.
 
-**Step C — Check all candidates:**
+**Step C — Check all candidates on PyPI and npm (never GitHub):**
+Name checks use the PyPI and npm registries (HTTP 404 = free), check BOTH when the project is Python and npm. Do NOT search GitHub to check a name: it hits the search rate limit. Only when the user explicitly asks, pass `github=True` to `check_names`.
+
 ```bash
 python -c "
 from wads.project_setup import check_names
 import json
 names = ['name1', 'name2', 'name3']  # all candidates
-results = check_names(names, org='USERNAME')
+results = check_names(names, npm=True)  # PyPI always; npm=True when the project also ships to npm (it usually does here)
 for r in results:
     status = []
     if not r['valid_pep508']: status.append('INVALID')
     if r['pypi_available'] == False: status.append(f'PyPI taken: {r[\"pypi_url\"]}')
     elif r['pypi_available']: status.append('PyPI ✓')
-    if r['github_available'] == False: status.append(f'GitHub taken: {r[\"github_url\"]}')
-    elif r['github_available']: status.append('GitHub ✓')
+    if r['npm_available'] == False: status.append(f'npm taken: {r[\"npm_url\"]}')
+    elif r['npm_available']: status.append('npm ✓')
     print(f'{r[\"name\"]}: {\" | \".join(status)}')
 "
 ```
