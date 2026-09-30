@@ -302,11 +302,11 @@ a Claude skill.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.check_name_availability" title="wads.project_setup.check_name_availability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_name_availability</span></code></a>(name, *[, org])</p></td>
-<td><p>Check a package name's validity and availability on PyPI and GitHub.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.check_name_availability" title="wads.project_setup.check_name_availability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_name_availability</span></code></a>(name, *[, org, npm, ...])</p></td>
+<td><p>Check a package name's validity and availability on PyPI (and optionally npm, GitHub).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.check_names" title="wads.project_setup.check_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_names</span></code></a>(names, *[, org])</p></td>
-<td><p>Check multiple names for availability.</p></td>
+<td><p>Check multiple names for availability (kwargs: <code class="docutils literal notranslate"><span class="pre">npm</span></code>, <code class="docutils literal notranslate"><span class="pre">github</span></code>, see <code class="code docutils literal notranslate"><span class="pre">check_name_availability</span></code>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.create_github_repo" title="wads.project_setup.create_github_repo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_github_repo</span></code></a>(name, *[, org, ...])</p></td>
 <td><p>Create a GitHub repository via the <code class="docutils literal notranslate"><span class="pre">gh</span></code> CLI.</p></td>
@@ -323,25 +323,28 @@ a Claude skill.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_github" title="wads.project_setup.is_available_on_github"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_github</span></code></a>(name, *[, org])</p></td>
 <td><p>Check if a repository name is available on GitHub.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_pypi" title="wads.project_setup.is_available_on_pypi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_pypi</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_npm" title="wads.project_setup.is_available_on_npm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_npm</span></code></a>(name, *[, timeout])</p></td>
+<td><p>Check if a package name is unclaimed on the npm registry (HTTP 404 = free).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_pypi" title="wads.project_setup.is_available_on_pypi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_pypi</span></code></a>(name)</p></td>
 <td><p>Check if a package name is unclaimed on PyPI.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.list_name_candidate_files" title="wads.project_setup.list_name_candidate_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_name_candidate_files</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.list_name_candidate_files" title="wads.project_setup.list_name_candidate_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_name_candidate_files</span></code></a>()</p></td>
 <td><p>List all name candidate files in the name_candidates directory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.load_name_candidates" title="wads.project_setup.load_name_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_name_candidates</span></code></a>([filepath])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.load_name_candidates" title="wads.project_setup.load_name_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_name_candidates</span></code></a>([filepath])</p></td>
 <td><p>Load name candidates from a file or all files in the name_candidates directory.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.pypi_project_url" title="wads.project_setup.pypi_project_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_project_url</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.pypi_project_url" title="wads.project_setup.pypi_project_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_project_url</span></code></a>(name)</p></td>
 <td><p>Return the PyPI project page URL for a package name.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.repo_exists" title="wads.project_setup.repo_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_exists</span></code></a>(name, *[, org])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.repo_exists" title="wads.project_setup.repo_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_exists</span></code></a>(name, *[, org])</p></td>
 <td><p>Check if a GitHub repository exists at org/name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.setup_opsward_for_project" title="wads.project_setup.setup_opsward_for_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_opsward_for_project</span></code></a>(pkg_dir)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.setup_opsward_for_project" title="wads.project_setup.setup_opsward_for_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_opsward_for_project</span></code></a>(pkg_dir)</p></td>
 <td><p>Set up AI agent configuration using opsward, if available.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.setup_project" title="wads.project_setup.setup_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_project</span></code></a>(name, *[, description, org, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.setup_project" title="wads.project_setup.setup_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_project</span></code></a>(name, *[, description, org, ...])</p></td>
 <td><p>Orchestrate full project creation.</p></td>
 </tr>
 </tbody>
@@ -349,8 +352,11 @@ a Claude skill.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.project_setup.check_name_availability">
-<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">check_name_availability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#check_name_availability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.check_name_availability" title="Link to this definition">¶</a></dt>
-<dd><p>Check a package name’s validity and availability on PyPI and GitHub.</p>
+<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">check_name_availability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">github</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#check_name_availability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.check_name_availability" title="Link to this definition">¶</a></dt>
+<dd><p>Check a package name’s validity and availability on PyPI (and optionally npm, GitHub).</p>
+<p>PyPI is always checked. Pass <code class="docutils literal notranslate"><span class="pre">npm=True</span></code> when the project also publishes to npm.
+GitHub is checked only with <code class="docutils literal notranslate"><span class="pre">github=True</span></code> (explicit user request): GitHub
+calls are rate limited, and PyPI/npm are what decide a package name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -358,9 +364,10 @@ a Claude skill.</p>
 </dl>
 <dl class="simple">
 <dt>Returns a dict with keys:</dt><dd><p>name, valid_pep508, pypi_available, pypi_url,
-github_available, github_url</p>
+npm_available, npm_url, github_available, github_url</p>
 </dd>
 </dl>
+<p>(keys of checks that were not run are None)</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">check_name_availability</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">"valid_pep508"</span><span class="p">]</span>
 <span class="go">True</span>
@@ -370,8 +377,9 @@ github_available, github_url</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.project_setup.check_names">
-<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">check_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#check_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.check_names" title="Link to this definition">¶</a></dt>
-<dd><p>Check multiple names for availability. Returns a list of result dicts.</p>
+<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">check_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#check_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.check_names" title="Link to this definition">¶</a></dt>
+<dd><p>Check multiple names for availability (kwargs: <code class="docutils literal notranslate"><span class="pre">npm</span></code>, <code class="docutils literal notranslate"><span class="pre">github</span></code>, see
+<code class="code docutils literal notranslate"><span class="pre">check_name_availability</span></code>). Returns a list of result dicts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
@@ -465,6 +473,22 @@ Returns True if no repo exists at org/name.</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.project_setup.is_available_on_npm">
+<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">is_available_on_npm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#is_available_on_npm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.is_available_on_npm" title="Link to this definition">¶</a></dt>
+<dd><p>Check if a package name is unclaimed on the npm registry (HTTP 404 = free).</p>
+<p>Returns None when the registry could not give a definite answer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">is_available_on_npm</span><span class="p">(</span><span class="s2">"zzz-nonexistent-pkg-12345"</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -631,6 +655,7 @@ in the name_candidates directory.</p>
 <li><a class="reference internal" href="#wads.project_setup.detect_github_username"><code class="docutils literal notranslate"><span class="pre">detect_github_username()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.github_repo_url"><code class="docutils literal notranslate"><span class="pre">github_repo_url()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.is_available_on_github"><code class="docutils literal notranslate"><span class="pre">is_available_on_github()</span></code></a></li>
+<li><a class="reference internal" href="#wads.project_setup.is_available_on_npm"><code class="docutils literal notranslate"><span class="pre">is_available_on_npm()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.is_available_on_pypi"><code class="docutils literal notranslate"><span class="pre">is_available_on_pypi()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.list_name_candidate_files"><code class="docutils literal notranslate"><span class="pre">list_name_candidate_files()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.load_name_candidates"><code class="docutils literal notranslate"><span class="pre">load_name_candidates()</span></code></a></li>
@@ -649,7 +674,7 @@ in the name_candidates directory.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=92d2dd33"></script>
+</div><script src="../_static/documentation_options.js?v=b26347d8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

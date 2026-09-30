@@ -15,32 +15,39 @@ Key capabilities:
 
 ### Functions
 
-| [`check_name_availability`](#wads.project_setup.check_name_availability)(name, \*[, org])         | Check a package name's validity and availability on PyPI and GitHub.            |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`check_names`](#wads.project_setup.check_names)(names, \*[, org])                    | Check multiple names for availability.                                          |
-| [`create_github_repo`](#wads.project_setup.create_github_repo)(name, \*[, org, ...])         | Create a GitHub repository via the `gh` CLI.                                    |
-| [`create_misc_docs`](#wads.project_setup.create_misc_docs)(pkg_dir, \*[, sections])        | Create misc/docs/ directory with template markdown files.                       |
-| [`detect_github_username`](#wads.project_setup.detect_github_username)()                         | Detect the current GitHub username.                                             |
-| [`github_repo_url`](#wads.project_setup.github_repo_url)(name, \*[, org])                 | Return the GitHub repository URL for org/name.                                  |
-| [`is_available_on_github`](#wads.project_setup.is_available_on_github)(name, \*[, org])          | Check if a repository name is available on GitHub.                              |
-| [`is_available_on_pypi`](#wads.project_setup.is_available_on_pypi)(name)                       | Check if a package name is unclaimed on PyPI.                                   |
-| [`list_name_candidate_files`](#wads.project_setup.list_name_candidate_files)()                      | List all name candidate files in the name_candidates directory.                 |
-| [`load_name_candidates`](#wads.project_setup.load_name_candidates)([filepath])                 | Load name candidates from a file or all files in the name_candidates directory. |
-| [`pypi_project_url`](#wads.project_setup.pypi_project_url)(name)                           | Return the PyPI project page URL for a package name.                            |
-| [`repo_exists`](#wads.project_setup.repo_exists)(name, \*[, org])                     | Check if a GitHub repository exists at org/name.                                |
-| [`setup_opsward_for_project`](#wads.project_setup.setup_opsward_for_project)(pkg_dir)               | Set up AI agent configuration using opsward, if available.                      |
-| [`setup_project`](#wads.project_setup.setup_project)(name, \*[, description, org, ...]) | Orchestrate full project creation.                                              |
+| [`check_name_availability`](#wads.project_setup.check_name_availability)(name, \*[, org, npm, ...])   | Check a package name's validity and availability on PyPI (and optionally npm, GitHub).          |
+|-------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| [`check_names`](#wads.project_setup.check_names)(names, \*[, org])                        | Check multiple names for availability (kwargs: `npm`, `github`, see `check_name_availability`). |
+| [`create_github_repo`](#wads.project_setup.create_github_repo)(name, \*[, org, ...])             | Create a GitHub repository via the `gh` CLI.                                                    |
+| [`create_misc_docs`](#wads.project_setup.create_misc_docs)(pkg_dir, \*[, sections])            | Create misc/docs/ directory with template markdown files.                                       |
+| [`detect_github_username`](#wads.project_setup.detect_github_username)()                             | Detect the current GitHub username.                                                             |
+| [`github_repo_url`](#wads.project_setup.github_repo_url)(name, \*[, org])                     | Return the GitHub repository URL for org/name.                                                  |
+| [`is_available_on_github`](#wads.project_setup.is_available_on_github)(name, \*[, org])              | Check if a repository name is available on GitHub.                                              |
+| [`is_available_on_npm`](#wads.project_setup.is_available_on_npm)(name, \*[, timeout])             | Check if a package name is unclaimed on the npm registry (HTTP 404 = free).                     |
+| [`is_available_on_pypi`](#wads.project_setup.is_available_on_pypi)(name)                           | Check if a package name is unclaimed on PyPI.                                                   |
+| [`list_name_candidate_files`](#wads.project_setup.list_name_candidate_files)()                          | List all name candidate files in the name_candidates directory.                                 |
+| [`load_name_candidates`](#wads.project_setup.load_name_candidates)([filepath])                     | Load name candidates from a file or all files in the name_candidates directory.                 |
+| [`pypi_project_url`](#wads.project_setup.pypi_project_url)(name)                               | Return the PyPI project page URL for a package name.                                            |
+| [`repo_exists`](#wads.project_setup.repo_exists)(name, \*[, org])                         | Check if a GitHub repository exists at org/name.                                                |
+| [`setup_opsward_for_project`](#wads.project_setup.setup_opsward_for_project)(pkg_dir)                   | Set up AI agent configuration using opsward, if available.                                      |
+| [`setup_project`](#wads.project_setup.setup_project)(name, \*[, description, org, ...])     | Orchestrate full project creation.                                                              |
 
-### wads.project_setup.check_name_availability(name, , org=None)
+### wads.project_setup.check_name_availability(name, , org=None, npm=False, github=False)
 
-Check a package name’s validity and availability on PyPI and GitHub.
+Check a package name’s validity and availability on PyPI (and optionally npm, GitHub).
+
+PyPI is always checked. Pass `npm=True` when the project also publishes to npm.
+GitHub is checked only with `github=True` (explicit user request): GitHub
+calls are rate limited, and PyPI/npm are what decide a package name.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 Returns a dict with keys:
 : name, valid_pep508, pypi_available, pypi_url,
-  github_available, github_url
+  npm_available, npm_url, github_available, github_url
+
+(keys of checks that were not run are None)
 
 ```pycon
 >>> result = check_name_availability("wads")
@@ -48,9 +55,10 @@ Returns a dict with keys:
 True
 ```
 
-### wads.project_setup.check_names(names, , org=None)
+### wads.project_setup.check_names(names, , org=None, \*\*kwargs)
 
-Check multiple names for availability. Returns a list of result dicts.
+Check multiple names for availability (kwargs: `npm`, `github`, see
+`check_name_availability`). Returns a list of result dicts.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
@@ -113,6 +121,20 @@ Returns True if no repo exists at org/name.
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### wads.project_setup.is_available_on_npm(name, , timeout=10)
+
+Check if a package name is unclaimed on the npm registry (HTTP 404 = free).
+
+Returns None when the registry could not give a definite answer.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> is_available_on_npm("zzz-nonexistent-pkg-12345")
+True
+```
 
 ### wads.project_setup.is_available_on_pypi(name)
 

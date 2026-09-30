@@ -294,6 +294,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.error</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
 
@@ -311,6 +313,9 @@
 
 <span class="n">PYPI_PROJECT_URL</span> <span class="o">=</span> <span class="s2">"https://pypi.org/project/</span><span class="si">{name}</span><span class="s2">/"</span>
 <span class="n">GITHUB_REPO_URL</span> <span class="o">=</span> <span class="s2">"https://github.com/</span><span class="si">{org}</span><span class="s2">/</span><span class="si">{name}</span><span class="s2">"</span>
+<span class="n">NPM_REGISTRY_URL</span> <span class="o">=</span> <span class="s2">"https://registry.npmjs.org/</span><span class="si">{name}</span><span class="s2">"</span>
+<span class="n">NPM_PACKAGE_URL</span> <span class="o">=</span> <span class="s2">"https://www.npmjs.com/package/</span><span class="si">{name}</span><span class="s2">"</span>
+<span class="n">NPM_TIMEOUT_SEC</span> <span class="o">=</span> <span class="mi">10</span>
 
 
 <div class="viewcode-block" id="is_available_on_pypi">
@@ -376,14 +381,46 @@
 
 
 
+<div class="viewcode-block" id="is_available_on_npm">
+<a class="viewcode-back" href="../../_autosummary/wads.project_setup.html#wads.project_setup.is_available_on_npm">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_available_on_npm</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">NPM_TIMEOUT_SEC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a package name is unclaimed on the npm registry (HTTP 404 = free).</span>
+
+<span class="sd">    Returns None when the registry could not give a definite answer.</span>
+
+<span class="sd">    &gt;&gt;&gt; is_available_on_npm("zzz-nonexistent-pkg-12345")  # doctest: +SKIP</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">NPM_REGISTRY_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="mi">404</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
 <div class="viewcode-block" id="check_name_availability">
 <a class="viewcode-back" href="../../_autosummary/wads.project_setup.html#wads.project_setup.check_name_availability">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">check_name_availability</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Check a package name's validity and availability on PyPI and GitHub.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_name_availability</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">npm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">github</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check a package name's validity and availability on PyPI (and optionally npm, GitHub).</span>
+
+<span class="sd">    PyPI is always checked. Pass ``npm=True`` when the project also publishes to npm.</span>
+<span class="sd">    GitHub is checked only with ``github=True`` (explicit user request): GitHub</span>
+<span class="sd">    calls are rate limited, and PyPI/npm are what decide a package name.</span>
 
 <span class="sd">    Returns a dict with keys:</span>
 <span class="sd">        name, valid_pep508, pypi_available, pypi_url,</span>
-<span class="sd">        github_available, github_url</span>
+<span class="sd">        npm_available, npm_url, github_available, github_url</span>
+<span class="sd">    (keys of checks that were not run are None)</span>
 
 <span class="sd">    &gt;&gt;&gt; result = check_name_availability("wads")  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; result["valid_pep508"]  # doctest: +SKIP</span>
@@ -394,18 +431,24 @@
     <span class="n">pypi_avail</span> <span class="o">=</span> <span class="n">is_available_on_pypi</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">pypi_url</span> <span class="o">=</span> <span class="n">pypi_project_url</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pypi_avail</span> <span class="ow">and</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">github_avail</span> <span class="o">=</span> <span class="n">is_available_on_github</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="n">gh_url</span> <span class="o">=</span> <span class="n">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">github_avail</span> <span class="ow">and</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="k">except</span> <span class="ne">EnvironmentError</span><span class="p">:</span>
-        <span class="n">github_avail</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">gh_url</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">npm_avail</span> <span class="o">=</span> <span class="n">is_available_on_npm</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid</span> <span class="ow">and</span> <span class="n">npm</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">npm_url</span> <span class="o">=</span> <span class="n">NPM_PACKAGE_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">npm_avail</span> <span class="ow">is</span> <span class="kc">False</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">github_avail</span> <span class="o">=</span> <span class="n">gh_url</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">valid</span> <span class="ow">and</span> <span class="n">github</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">github_avail</span> <span class="o">=</span> <span class="n">is_available_on_github</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span>
+            <span class="n">gh_url</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">github_avail</span> <span class="k">else</span> <span class="n">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">EnvironmentError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="s2">"valid_pep508"</span><span class="p">:</span> <span class="n">valid</span><span class="p">,</span>
         <span class="s2">"pypi_available"</span><span class="p">:</span> <span class="n">pypi_avail</span><span class="p">,</span>
         <span class="s2">"pypi_url"</span><span class="p">:</span> <span class="n">pypi_url</span><span class="p">,</span>
+        <span class="s2">"npm_available"</span><span class="p">:</span> <span class="n">npm_avail</span><span class="p">,</span>
+        <span class="s2">"npm_url"</span><span class="p">:</span> <span class="n">npm_url</span><span class="p">,</span>
         <span class="s2">"github_available"</span><span class="p">:</span> <span class="n">github_avail</span><span class="p">,</span>
         <span class="s2">"github_url"</span><span class="p">:</span> <span class="n">gh_url</span><span class="p">,</span>
     <span class="p">}</span></div>
@@ -414,9 +457,10 @@
 
 <div class="viewcode-block" id="check_names">
 <a class="viewcode-back" href="../../_autosummary/wads.project_setup.html#wads.project_setup.check_names">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">check_names</span><span class="p">(</span><span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Check multiple names for availability. Returns a list of result dicts."""</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">check_name_availability</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span></div>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_names</span><span class="p">(</span><span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">org</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Check multiple names for availability (kwargs: ``npm``, ``github``, see</span>
+<span class="sd">    `check_name_availability`). Returns a list of result dicts."""</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">check_name_availability</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">org</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span></div>
 
 
 
@@ -826,7 +870,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=92d2dd33"></script>
+</div><script src="../../_static/documentation_options.js?v=b26347d8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
