@@ -15,6 +15,8 @@ import os
 import re
 import shutil
 import subprocess
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Iterable
 
@@ -32,6 +34,9 @@ from wads.user_dirs import (
 
 PYPI_PROJECT_URL = "https://pypi.org/project/{name}/"
 GITHUB_REPO_URL = "https://github.com/{org}/{name}"
+NPM_REGISTRY_URL = "https://registry.npmjs.org/{name}"
+NPM_PACKAGE_URL = "https://www.npmjs.com/package/{name}"
+NPM_TIMEOUT_SEC = 10
 
 
 def is_available_on_pypi(name: str) -> bool:
@@ -85,12 +90,41 @@ def is_available_on_github(name: str, *, org: str | None = None) -> bool:
     return result.returncode != 0
 
 
-def check_name_availability(name: str, *, org: str | None = None) -> dict:
-    """Check a package name's validity and availability on PyPI and GitHub.
+def is_available_on_npm(name: str, *, timeout: float = NPM_TIMEOUT_SEC) -> bool | None:
+    """Check if a package name is unclaimed on the npm registry (HTTP 404 = free).
+
+    Returns None when the registry could not give a definite answer.
+
+    >>> is_available_on_npm("zzz-nonexistent-pkg-12345")  # doctest: +SKIP
+    True
+    """
+    url = NPM_REGISTRY_URL.format(name=name)
+    try:
+        with urllib.request.urlopen(url, timeout=timeout):
+            return False
+    except urllib.error.HTTPError as e:
+        return True if e.code == 404 else None
+    except Exception:
+        return None
+
+
+def check_name_availability(
+    name: str,
+    *,
+    org: str | None = None,
+    npm: bool = False,
+    github: bool = False,
+) -> dict:
+    """Check a package name's validity and availability on PyPI (and optionally npm, GitHub).
+
+    PyPI is always checked. Pass ``npm=True`` when the project also publishes to npm.
+    GitHub is checked only with ``github=True`` (explicit user request): GitHub
+    calls are rate limited, and PyPI/npm are what decide a package name.
 
     Returns a dict with keys:
         name, valid_pep508, pypi_available, pypi_url,
-        github_available, github_url
+        npm_available, npm_url, github_available, github_url
+    (keys of checks that were not run are None)
 
     >>> result = check_name_availability("wads")  # doctest: +SKIP
     >>> result["valid_pep508"]  # doctest: +SKIP
@@ -101,26 +135,33 @@ def check_name_availability(name: str, *, org: str | None = None) -> dict:
     pypi_avail = is_available_on_pypi(name) if valid else None
     pypi_url = pypi_project_url(name) if not pypi_avail and valid else None
 
-    try:
-        github_avail = is_available_on_github(name, org=org) if valid else None
-        gh_url = github_repo_url(name, org=org) if not github_avail and valid else None
-    except EnvironmentError:
-        github_avail = None
-        gh_url = None
+    npm_avail = is_available_on_npm(name) if valid and npm else None
+    npm_url = NPM_PACKAGE_URL.format(name=name) if npm_avail is False else None
+
+    github_avail = gh_url = None
+    if valid and github:
+        try:
+            github_avail = is_available_on_github(name, org=org)
+            gh_url = None if github_avail else github_repo_url(name, org=org)
+        except EnvironmentError:
+            pass
 
     return {
         "name": name,
         "valid_pep508": valid,
         "pypi_available": pypi_avail,
         "pypi_url": pypi_url,
+        "npm_available": npm_avail,
+        "npm_url": npm_url,
         "github_available": github_avail,
         "github_url": gh_url,
     }
 
 
-def check_names(names: Iterable[str], *, org: str | None = None) -> list[dict]:
-    """Check multiple names for availability. Returns a list of result dicts."""
-    return [check_name_availability(name, org=org) for name in names]
+def check_names(names: Iterable[str], *, org: str | None = None, **kwargs) -> list[dict]:
+    """Check multiple names for availability (kwargs: ``npm``, ``github``, see
+    `check_name_availability`). Returns a list of result dicts."""
+    return [check_name_availability(name, org=org, **kwargs) for name in names]
 
 
 # ---------------------------------------------------------------------------

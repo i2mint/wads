@@ -43,7 +43,7 @@ class TestNameAvailability:
             patch("wads.project_setup.is_available_on_github", return_value=True),
             patch("wads.project_setup._resolve_org", return_value="testorg"),
         ):
-            result = check_name_availability("goodname")
+            result = check_name_availability("goodname", github=True)
 
         assert result["name"] == "goodname"
         assert result["valid_pep508"] is True
@@ -60,7 +60,7 @@ class TestNameAvailability:
             patch("wads.project_setup.is_available_on_github", return_value=True),
             patch("wads.project_setup._resolve_org", return_value="testorg"),
         ):
-            result = check_name_availability("taken")
+            result = check_name_availability("taken", github=True)
 
         assert result["pypi_available"] is False
         assert result["pypi_url"] == "https://pypi.org/project/taken/"
@@ -221,3 +221,16 @@ class TestCreateMiscDocs:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def test_check_name_availability_skips_github_by_default():
+    from wads.project_setup import check_name_availability
+
+    with (
+        patch("wads.project_setup.is_available_on_pypi", return_value=True),
+        patch("wads.project_setup.is_available_on_github") as gh,
+    ):
+        result = check_name_availability("goodname")
+    gh.assert_not_called()
+    assert result["github_available"] is None
+    assert result["npm_available"] is None
