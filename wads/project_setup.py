@@ -158,7 +158,9 @@ def check_name_availability(
     }
 
 
-def check_names(names: Iterable[str], *, org: str | None = None, **kwargs) -> list[dict]:
+def check_names(
+    names: Iterable[str], *, org: str | None = None, **kwargs
+) -> list[dict]:
     """Check multiple names for availability (kwargs: ``npm``, ``github``, see
     `check_name_availability`). Returns a list of result dicts."""
     return [check_name_availability(name, org=org, **kwargs) for name in names]
