@@ -6,9 +6,11 @@
 #
 # Publishing to npm is OPT-IN: set wads.ci.publish.enabled=true in package.json
 # and include the marker (default "[publish-npm]") in your commit message.
-# Publishing uses OIDC trusted publishing by default (configure the trusted
-# publisher for this repo + workflow filename on npmjs.com). NPM_TOKEN is only
-# needed as a fallback (e.g. the very first publish of a new package name).
+# Publishing uses npm trusted publishing (OIDC); there is no NPM_TOKEN secret.
+# On npmjs.com: package -> Settings -> Trusted Publisher -> GitHub Actions, with
+# this repo and THIS file's name (npm-ci.yml), or run
+#   npm trust github <pkg> --file npm-ci.yml --repo <owner>/<repo> --allow-publish -y
+# The package must exist on npm first: publish the very first version locally.
 #
 # On-demand CI (opt-in, mirrors [tool.wads.ci.trigger] on the Python side):
 # set wads.ci.trigger.mode="on-demand" in package.json and the reusable
@@ -34,5 +36,3 @@ jobs:
       id-token: write # npm provenance / OIDC trusted publishing
     with:
       package-dir: js
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
