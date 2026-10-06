@@ -7,8 +7,15 @@
 #       uses: i2mint/wads/.github/workflows/npm-ci-monorepo.yml@master
 #       with:
 #         package-dir: ts          # the workspace root (contains pnpm-workspace.yaml)
-#       secrets:
-#         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}   # only needed as an OIDC fallback
+#
+# npm auth: TRUSTED PUBLISHING (OIDC) ONLY — never add an NPM_TOKEN secret.
+#   On npmjs.com, each package -> Settings -> Trusted Publisher -> GitHub Actions:
+#   owner/repo of the CONSUMER repo, and the CONSUMER'S stub filename (e.g.
+#   npm-ci.yml), NOT this file: npm validates the calling workflow when the
+#   publish runs inside a workflow_call. CLI equivalent (npm >= 11.15, 2FA):
+#     npm trust github <pkg> --file <stub>.yml --repo <owner>/<repo> --allow-publish -y
+#   The package must already exist on npm (first publish: local `npm publish`).
+#   The NPM_TOKEN secret input below is kept only so old stubs still parse.
 #
 # Design (mirrors the single-package npm-ci.yml SSOT model):
 #   - ALL configuration lives in the workspace ROOT package.json under the
@@ -42,7 +49,7 @@ on:
         default: "."
     secrets:
       NPM_TOKEN:
-        description: "npm auth token. Optional; only used as an OIDC fallback."
+        description: "DEPRECATED, do not pass. npm auth token, used only if OIDC trusted publishing is not configured. See the trusted-publishing note in the header."
         required: false
 
 permissions:
@@ -204,6 +211,14 @@ jobs:
         with:
           node-version: ${{ needs.setup.outputs.publish_node }}
           registry-url: ${{ needs.setup.outputs.registry }}
+      - name: Ensure npm >= 11.5.1 (required for OIDC trusted publishing)
+        run: |
+          # Trusted publishing needs npm >= 11.5.1 (and node >= 22.14). pnpm
+          # publishes through the npm CLI, so this covers pnpm consumers too.
+          if ! node -e "const [a,b,c]=process.argv[1].split('.').map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm --version)"; then
+            npm install -g npm@^11.5.1
+          fi
+          npm --version
       - name: Install
         working-directory: ${{ inputs.package-dir }}
         run: pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
