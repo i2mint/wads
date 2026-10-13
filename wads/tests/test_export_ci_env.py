@@ -408,3 +408,22 @@ def test_malformed_non_secret_input_is_reported_verbatim(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         mod.main()
     assert '\'["A"\'' in capsys.readouterr().err
+
+
+def test_publish_job_exports_only_the_pypi_token():
+    """The publish job's export step writes PYPI_PASSWORD and nothing the repo
+    declares: no test vars and no committed defaults, so a default such as
+    BASH_ENV cannot reach the steps that hold the token (issue #112)."""
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github" / "workflows" / "uv-ci.yml").read_text()
+    )
+    (step,) = [
+        s
+        for s in workflow["jobs"]["publish"]["steps"]
+        if str(s.get("uses", "")).startswith("i2mint/wads/actions/export-ci-env@")
+    ]
+    inputs = step["with"]
+    assert inputs["always-required"] == '["PYPI_PASSWORD"]'
+    for name in ("required", "test", "extra"):
+        assert inputs[name] == "[]"
+    assert inputs["defaults"] == "{}"

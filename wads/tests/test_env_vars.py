@@ -145,3 +145,31 @@ def test_env_block_parses_back_to_the_declared_defaults(tmp_path):
         "LOG_LEVEL": "DEBUG",
         "MPLBACKEND": "Agg",
     }
+
+
+def test_env_block_quotes_values_yaml_would_reinterpret(tmp_path):
+    """Unquoted, `yes` is a bool, `#x` a comment, `a: b` a mapping and `""`
+    null: every default must reach the job as the string the repo committed."""
+    import yaml
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env.defaults]\n"
+        'FLAG = "yes"\nHASH = "#x"\nPAIR = "a: b"\nEMPTY = ""\nZERO = "010"\n'
+        'QUOTE = "say \\"hi\\""\nACCENT = "café"\nCOUNT = 3\nENABLED = true\nDAY = 2026-10-13\n'
+    )
+    block = CIConfig.from_file(pyproject).generate_env_block()
+    assert yaml.safe_load(block) == {
+        "PROJECT_NAME": "demo",
+        "FLAG": "yes",
+        "HASH": "#x",
+        "PAIR": "a: b",
+        "EMPTY": "",
+        "ZERO": "010",
+        "QUOTE": 'say "hi"',
+        "ACCENT": "café",
+        "COUNT": 3,
+        "ENABLED": True,
+        "DAY": "2026-10-13",
+    }

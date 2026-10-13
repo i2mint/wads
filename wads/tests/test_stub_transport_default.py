@@ -362,12 +362,28 @@ def test_migrate_ci_to_stub_rejects_an_unknown_transport():
         migrate_ci_to_stub(transport="inherit")
 
 
-def test_is_json_stub_reads_a_path_or_content(tmp_path):
-    from wads.migration import _is_json_stub
+def test_existing_stub_secrets_reads_a_path_or_content(tmp_path):
+    from wads.migration import _existing_stub_secrets
 
     ci = _ci_file(tmp_path, JSON_STUB)
-    assert _is_json_stub(str(ci))
-    assert _is_json_stub(JSON_STUB)
-    assert not _is_json_stub(STUB_TEMPLATE)
-    assert not _is_json_stub(None)
+    assert _existing_stub_secrets(str(ci)) == ("json", [])
+    assert _existing_stub_secrets(JSON_STUB) == ("json", [])
+    assert _existing_stub_secrets(STUB_TEMPLATE) == ("named", ["PYPI_PASSWORD"])
+    assert _existing_stub_secrets("jobs: {}\n") is None
+    assert _existing_stub_secrets(None) is None
 
+
+
+def test_an_unreadable_pyproject_keeps_a_named_stubs_secrets(tmp_path, capsys):
+    """Same guard as for a JSON stub: the declared names are unknown, so keep
+    the ones the stub passes rather than shrink it to PYPI_PASSWORD."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env]\ntest_envvars = 5\n"  # not a list
+    )
+    named = stub_with_transport(
+        STUB_TEMPLATE, names=["PYPI_PASSWORD", "OPENAI_API_KEY"]
+    )
+    ci = _ci_file(tmp_path, named)
+    assert migrate_ci_to_stub(str(ci)) == named
+    assert "could not be read" in capsys.readouterr().err

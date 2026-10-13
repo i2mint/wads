@@ -8,6 +8,7 @@ settings in CI workflow files.
 
 from typing import Any, Optional
 from pathlib import Path
+import json
 import sys
 import warnings
 import re
@@ -47,6 +48,21 @@ def render_minimal_env_placeholders(template_text: str, project_name: str) -> st
         .replace("#TEST_ENV_VARS#\n", "")
     )
 
+
+
+def _yaml_scalar(value) -> str:
+    """Render a TOML value as a YAML flow scalar with the same meaning.
+
+    JSON is a subset of YAML's flow style, so a string becomes a double-quoted
+    scalar and a bool or number keeps its type. Anything else (a TOML date,
+    say) is rendered as its string.
+
+    >>> _yaml_scalar("yes"), _yaml_scalar(True), _yaml_scalar(3)
+    ('"yes"', 'true', '3')
+    """
+    if not isinstance(value, (str, bool, int, float)):
+        value = str(value)
+    return json.dumps(value, ensure_ascii=False)
 
 class CIConfig:
     """Represents CI configuration extracted from pyproject.toml."""
@@ -623,9 +639,11 @@ class CIConfig:
         lines = [f"  PROJECT_NAME: {self.project_name}"]
 
         # Add default environment variables (literal values, not secrets —
-        # literals never become log masks, so workflow level is safe)
+        # literals never become log masks, so workflow level is safe). Each
+        # value is rendered as a YAML flow scalar, so a string such as `yes`,
+        # `#x` or `a: b` stays the string the repo committed.
         for key, value in self.env_vars_defaults.items():
-            lines.append(f"  {key}: {value}")
+            lines.append(f"  {key}: {_yaml_scalar(value)}")
 
         return "\n".join(lines)
 

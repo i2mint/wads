@@ -62,6 +62,7 @@ from wads import (
     github_ci_uv_path,
     github_ci_uv_stub_path,
 )
+from wads.scripts.export_ci_env import PUBLISH_ONLY_SECRETS
 
 
 # --------------------------------------------------------------------------------------
@@ -938,16 +939,18 @@ def migrate_ci_to_stub(
     names = _stub_secret_names_for(old_ci)
     if names is None:
         # A pyproject is there but unreadable: its declared secrets are unknown.
-        if transport is None and _is_json_stub(old_ci):
-            # Converting would silently drop them; keep what the repo runs.
+        # Re-deriving them would silently drop some; keep what the stub passes.
+        existing = _existing_stub_secrets(old_ci)
+        if existing is not None and transport in (None, existing[0]):
+            transport, names = existing
             print(
-                "note: keeping the JSON secrets transport: the repo's "
-                "pyproject.toml could not be read, so the secrets a named stub "
-                "should pass are unknown. Fix it and re-run.",
+                f"note: keeping the stub's {transport} secrets transport and "
+                f"the secrets it passes: the repo's pyproject.toml could not "
+                f"be read, so the ones [tool.wads.ci.env] declares are "
+                f"unknown. Fix it and re-run.",
                 file=sys.stderr,
             )
-            transport = "json"
-        names = ["PYPI_PASSWORD"]
+        names = names or ["PYPI_PASSWORD"]
     if transport is None:
         outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
         transport = "json" if outside else "named"
@@ -984,14 +987,6 @@ def migrate_ci_to_stub(
     if transport == "named":
         _warn_named_transport_outside_superset(names)
     stub = stub_with_transport(stub, transport=transport, names=names)
-    # Legacy templates carried a placeholder instead of a transport line.
-    if "#SECRETS_BLOCK#" in stub:
-        from wads.ci_secrets import render_stub_secrets_passthrough
-
-        stub = stub.replace(
-            "#SECRETS_BLOCK#",
-            render_stub_secrets_passthrough(names),
-        )
     # The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an
     # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
     from wads.ci_trigger import (
@@ -1030,16 +1025,31 @@ def _stub_secret_names_for(old_ci) -> "list | None":
         return None
 
 
-def _is_json_stub(old_ci) -> bool:
-    """Whether ``old_ci`` (a path or the workflow's content) is a JSON-transport stub."""
-    from wads.ci_trigger import stub_shape
+def _existing_stub_secrets(old_ci) -> "tuple[str, list] | None":
+    """``(transport, names)`` of the stub at ``old_ci`` (a path or its content).
+
+    ``names`` are the secrets a named stub passes (empty for a JSON stub).
+    ``None`` when ``old_ci`` is not a stub.
+    """
+    import yaml
+
+    from wads.ci_secrets import stub_transport
+    from wads.ci_trigger import classify_ci_workflow
 
     if not old_ci:
-        return False
+        return None
     text = str(old_ci)
     if "\n" not in text and os.path.isfile(text):
         text = Path(text).read_text()
-    return stub_shape(text)["transport"] == "json"
+    if classify_ci_workflow(text) != "stub":
+        return None
+    transport = stub_transport(text)
+    try:
+        passed = yaml.safe_load(text)["jobs"]["ci"]["secrets"]
+    except (yaml.YAMLError, KeyError, TypeError):
+        passed = None
+    names = list(passed) if transport == "named" and isinstance(passed, dict) else []
+    return transport, names
 
 
 def _warn_named_transport_outside_superset(names) -> list:
@@ -1067,8 +1077,8 @@ def _find_pyproject_near(old_ci) -> Path | None:
 _SECRET_REF_RE = re.compile(r"\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)")
 
 # Secrets the workflow handles structurally (publish auth, GitHub token); never
-# carried as repo env vars.
-_INFRA_SECRETS = frozenset({"GITHUB_TOKEN", "PYPI_PASSWORD", "TEST_PYPI_PASSWORD"})
+# carried as repo env vars. The publish ones live in export_ci_env (the SSOT).
+_INFRA_SECRETS = frozenset({"GITHUB_TOKEN", *PUBLISH_ONLY_SECRETS})
 
 
 def _iter_env_blocks(node):
