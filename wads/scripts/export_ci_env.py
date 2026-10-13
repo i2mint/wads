@@ -77,6 +77,7 @@ def is_publish_credential(env_var, secret=None) -> bool:
         for name in names
     )
 
+
 # Secrets-context keys that must never be exported as repo env vars: GitHub's
 # auto-token (the context spells it `github_token`) and the transport blob.
 _NON_EXPORTABLE = frozenset({"github_token", JSON_TRANSPORT_SECRET.lower()})
