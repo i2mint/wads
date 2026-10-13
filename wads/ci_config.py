@@ -270,20 +270,40 @@ class CIConfig:
         """Get default environment variables."""
         return self.ci_config.get("env", {}).get("defaults", {})
 
+    @property
+    def env_vars_variables(self) -> list[str]:
+        """Declared env vars backed by a repository *variable*, not a secret.
+
+        ``[tool.wads.ci.env].variables`` (written by ``wads-secrets add NAME
+        --variable``). The reusable workflow reads these from the caller's
+        ``vars`` context, so they need no secrets transport (#107).
+        """
+        variables = self.ci_config.get("env", {}).get("variables", [])
+        if not isinstance(variables, list):
+            raise ValueError(
+                "[tool.wads.ci.env].variables must be a list of env-var names, "
+                f"got {variables!r}"
+            )
+        return variables
+
     def stub_secret_names(self, *, always=("PYPI_PASSWORD",)) -> list[str]:
         """GitHub *secret* names the caller stub should pass to the reusable workflow.
 
         This is the per-repo transport list (kept small): ``PYPI_PASSWORD`` (for
         the publish job) plus the backing secret of every env var the repo
         declares in ``[tool.wads.ci.env]`` (required/test/extra), resolved
-        through ``secret_aliases``. Order-preserving, de-duplicated.
+        through ``secret_aliases``, except those listed in ``variables``, which
+        are repository variables and need no transport. Order-preserving,
+        de-duplicated.
         """
         from wads.ci_secrets import _dedupe_preserving_order
 
         aliases = self.env_secret_aliases
+        variables = set(self.env_vars_variables)
         names = list(always)
         for var in self.env_vars_all:
-            names.append(aliases.get(var, var))
+            if var not in variables:
+                names.append(aliases.get(var, var))
         return list(_dedupe_preserving_order(names))
 
     def generate_stub_secrets_block(self) -> str:

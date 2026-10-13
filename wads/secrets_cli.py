@@ -114,19 +114,39 @@ def _existing_bucket(env, var_name: str) -> "str | None":
     return None
 
 
-def add_env_var_to_pyproject(pyproject_path, var_name, secret_name, *, kind="extra"):
+def add_env_var_to_pyproject(
+    pyproject_path, var_name, secret_name, *, kind="extra", variable=False
+):
     """Add ``var_name`` to ``[tool.wads.ci.env]``; record alias if names differ.
 
+    With ``variable=True`` the name is also recorded in ``variables``, so stub
+    rendering knows it is a repository variable that needs no secrets transport
+    (#107). That record is added even when the var is already declared.
+
     Returns ``(changed, existing_bucket)``. If the var is already declared,
-    makes no change and returns ``(False, <bucket>)``.
+    the declaration is unchanged and this returns ``(False, <bucket>)``.
     """
     pyproject_path = Path(pyproject_path)
     bucket = _KINDS[kind]
     tomlkit, doc = _load_toml_doc(pyproject_path)
     env = _ci_env_table(tomlkit, doc)
 
+    marked = False
+    if env.get("variables") is not None and not isinstance(env["variables"], list):
+        raise ValueError(
+            f"{pyproject_path}: [tool.wads.ci.env].variables must be a list of "
+            f"env-var names, got {env['variables']!r}"
+        )
+    if variable and var_name not in (env.get("variables") or []):
+        if env.get("variables") is None:
+            env["variables"] = tomlkit.array()
+        env["variables"].append(var_name)
+        marked = True
+
     already = _existing_bucket(env, var_name)
     if already:
+        if marked:
+            pyproject_path.write_text(tomlkit.dumps(doc))
         return False, already
 
     arr = env.get(bucket)
@@ -160,6 +180,15 @@ def stub_transport_mode(ci_file) -> "str | None":
     if "uv-ci.yml" not in text:
         return "inline"
     return "json" if _JSON_TRANSPORT_LINE_RE.search(text) else "named"
+
+
+def _stub_passes(ci_file, secret_name) -> bool:
+    """Whether the ``ci.yml`` at *ci_file* passes ``secrets.<secret_name>``."""
+    try:
+        text = Path(ci_file).read_text()
+    except OSError:
+        return False
+    return bool(re.search(rf"secrets\.{re.escape(secret_name)}\b", text))
 
 
 def add_secret_to_stub(ci_file, secret_name):
@@ -260,7 +289,7 @@ def add(
         return 1
 
     changed, existing = add_env_var_to_pyproject(
-        pyproject, var_name, secret_name, kind=kind
+        pyproject, var_name, secret_name, kind=kind, variable=variable
     )
     # `add` configures three independent layers (pyproject declaration, ci.yml
     # transport, GitHub secret value). An already-present declaration must NOT
@@ -295,6 +324,18 @@ def add(
             )
         else:
             print("· transport: repo variables need none (vars context)")
+            if mode == "named" and _stub_passes(ci_file, secret_name):
+                # Reclassified: the stub still passes it as a secret today, and
+                # the next re-render (ci-to-stub, ci-on-demand, fleet-stub) drops
+                # that line. Make sure the variable is set before then (#107).
+                print(
+                    f"⚠ {secret_name!r} is now recorded as a repository variable, "
+                    f"but ci.yml still passes it as a secret; the next stub "
+                    f"re-render drops that line. Set the repo variable (`gh "
+                    f"variable set {secret_name}`) before re-rendering, or "
+                    f"remove it from [tool.wads.ci.env].variables to keep it a "
+                    f"secret."
+                )
     elif mode == "named" and secret_name not in DEFAULT_CI_SECRETS:
         # A named-transport stub may only pass names in the wads superset —
         # anything else makes the workflow FAIL TO START (parse-time

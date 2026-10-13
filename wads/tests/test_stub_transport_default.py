@@ -184,8 +184,12 @@ def test_converting_an_inline_workflow_file_gives_named(tmp_path):
     assert "toJSON(secrets)" not in migrate_ci_to_stub(str(ci))
 
 
-def test_populate_warns_about_names_a_named_stub_cannot_pass(tmp_path, capsys):
-    """An existing pyproject declaring an out-of-superset secret gets the #63 warning."""
+def test_populate_leaves_out_names_a_named_stub_cannot_pass(tmp_path, capsys):
+    """An out-of-superset name is left out of the stub, with a note (#63, #107).
+
+    Writing it would make the workflow unstartable; such a name can only reach
+    CI as a repository variable anyway.
+    """
     pkg_dir = tmp_path / "mypkg"
     pkg_dir.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=pkg_dir, check=True)
@@ -207,8 +211,10 @@ def test_populate_warns_about_names_a_named_stub_cannot_pass(tmp_path, capsys):
         verbose=False,
     )
     ci = (pkg_dir / ".github" / "workflows" / "ci.yml").read_text()
-    assert "COSMO_TEST_LEVEL: ${{ secrets.COSMO_TEST_LEVEL }}" in ci
-    assert "CANNOT START" in capsys.readouterr().err
+    assert "COSMO_TEST_LEVEL" not in ci
+    assert "PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}" in ci
+    err = capsys.readouterr().err
+    assert "COSMO_TEST_LEVEL" in err and "--variable" in err
 
 
 def test_rerendering_json_stub_content_converts_it_to_named():
@@ -232,10 +238,53 @@ def test_auto_transport_falls_back_to_json_for_out_of_superset_secrets(
     ci = _ci_file(tmp_path, "name: CI\non: [push]\njobs:\n  t:\n    runs-on: x\n")
     stub = migrate_ci_to_stub(str(ci))
     assert JSON_LINE in stub
-    assert "MY_CUSTOM_TOKEN" in capsys.readouterr().err
-    # An explicit choice is still honoured (with the loud #63 warning).
+    err = capsys.readouterr().err
+    assert "MY_CUSTOM_TOKEN" in err and "--variable" in err
+    # An explicit named transport leaves the name out rather than writing a
+    # line that would make the workflow unstartable (#107).
     named = migrate_ci_to_stub(str(ci), transport="named")
-    assert "MY_CUSTOM_TOKEN: ${{ secrets.MY_CUSTOM_TOKEN }}" in named
+    assert "MY_CUSTOM_TOKEN" not in named
+    assert "MY_CUSTOM_TOKEN" in capsys.readouterr().err
+
+
+def test_a_json_stub_backed_only_by_a_variable_becomes_named(tmp_path, capsys):
+    """The #107 reproduction: a declared repo variable no longer forces JSON."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nextra_envvars = ["COSMO_TEST_LEVEL"]\n'
+        'variables = ["COSMO_TEST_LEVEL"]\n'
+    )
+    ci = _ci_file(tmp_path, JSON_STUB)
+    stub = migrate_ci_to_stub(str(ci))
+    assert JSON_LINE not in stub and "COSMO_TEST_LEVEL" not in stub
+    # Recorded as a variable, it needs no note: nothing was left out.
+    assert "COSMO_TEST_LEVEL" not in capsys.readouterr().err
+
+
+def test_stub_secret_names_skip_declared_variables(tmp_path):
+    from wads.ci_config import CIConfig
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nrequired_envvars = ["HF_TOKEN"]\n'
+        'extra_envvars = ["COSMO_TEST_LEVEL"]\nvariables = ["COSMO_TEST_LEVEL"]\n'
+    )
+    cfg = CIConfig.from_file(str(tmp_path / "pyproject.toml"))
+    assert cfg.stub_secret_names() == ["PYPI_PASSWORD", "HF_TOKEN"]
+
+
+def test_adding_a_variable_records_it(tmp_path):
+    from wads.secrets_cli import add_env_var_to_pyproject
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[project]\nname = "demo"\nversion = "0.1.0"\n')
+    add_env_var_to_pyproject(pyproject, "LEVEL", "LEVEL", variable=True)
+    add_env_var_to_pyproject(pyproject, "LEVEL", "LEVEL", variable=True)  # idempotent
+    add_env_var_to_pyproject(pyproject, "OLD", "OLD")  # declared as a secret first
+    add_env_var_to_pyproject(pyproject, "OLD", "OLD", variable=True)  # then marked
+    text = pyproject.read_text()
+    assert 'variables = ["LEVEL", "OLD"]' in text
+    assert 'extra_envvars = ["LEVEL", "OLD"]' in text
 
 
 def test_populate_leaves_a_custom_template_alone(tmp_path):
