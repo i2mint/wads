@@ -1102,7 +1102,14 @@ def _iter_secret_env_refs(ci_text: str):
 
 
 def _is_infra_env_ref(var: str, secret: str) -> bool:
-    return var in _INFRA_SECRETS or secret in _INFRA_SECRETS
+    # GitHub secret names are case-insensitive, so compare upper-cased.
+    from wads.scripts.export_ci_env import is_publish_credential
+
+    return (
+        var.upper() in _INFRA_SECRETS
+        or secret.upper() in _INFRA_SECRETS
+        or is_publish_credential(var, secret)
+    )
 
 
 def dropped_infra_ci_env_vars(ci_text: str) -> dict:
@@ -1139,8 +1146,10 @@ def extract_ci_env_vars(ci_text: str) -> dict:
     Deliberately excluded:
 
     * Literal env vars (``PROJECT_NAME``, ``LOG_LEVEL: DEBUG`` …) — no secret ref.
-    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``),
-      by env-var name *or* by backing secret: ``UV_PUBLISH_TOKEN:
+    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``)
+      and any other publish credential (``TWINE_PASSWORD``, ``PYPI_API_TOKEN``
+      …, see ``wads.scripts.export_ci_env.is_publish_credential``), by env-var
+      name *or* by backing secret, in any case: ``UV_PUBLISH_TOKEN:
       ${{ secrets.PYPI_PASSWORD }}`` in a publish step is dropped, since
       carrying it would hand the PyPI token to the test jobs (issue #110).
       :func:`dropped_infra_ci_env_vars` lists what was dropped.

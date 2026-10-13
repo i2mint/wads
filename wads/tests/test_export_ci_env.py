@@ -33,7 +33,7 @@ def test_exports_only_configured_and_set():
 
 
 def test_required_missing_is_reported():
-    plan = export_ci_env(required=["PYPI_PASSWORD"], secrets={})
+    plan = export_ci_env(required=["PYPI_PASSWORD"], secrets={}, withhold_publish=False)
     assert plan.missing_required == [("PYPI_PASSWORD", "PYPI_PASSWORD")]
 
 
@@ -329,11 +329,15 @@ def test_isolated_fallback_spells_the_transport_secret_like_ci_secrets():
     assert f'JSON_TRANSPORT_SECRET = "{JSON_TRANSPORT_SECRET}"' in SCRIPT.read_text()
 
 
-def test_isolated_fallback_spells_the_publish_only_secrets_like_ci_secrets():
-    from wads.ci_secrets import PUBLISH_ONLY_SECRETS
-
-    spelled = ", ".join(f'"{name}"' for name in PUBLISH_ONLY_SECRETS)
-    assert f"PUBLISH_ONLY_SECRETS = ({spelled})" in SCRIPT.read_text()
+def test_non_wads_publish_credentials_are_withheld_too():
+    plan = export_ci_env(
+        test=["TWINE_PASSWORD", "MY_PUB"],
+        extra=["UV_PUBLISH_TOKEN"],
+        aliases={"MY_PUB": "PYPI_API_TOKEN", "UV_PUBLISH_TOKEN": "PYPI_TOKEN"},
+        secrets={"TWINE_PASSWORD": "a", "PYPI_API_TOKEN": "b", "PYPI_TOKEN": "c"},
+        warn=lambda msg: None,
+    )
+    assert plan.exported == [] and plan.missing_test == []
 
 
 # Issue #110: a repo whose pyproject already aliases the PyPI token (as the

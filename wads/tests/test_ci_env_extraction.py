@@ -154,3 +154,46 @@ def test_carry_reports_nothing_when_nothing_dropped(pyproject):
     reported = []
     carry_ci_env_into_pyproject(INLINE_UV_CI, pyproject, report_dropped=reported.append)
     assert reported == []
+
+
+# Adversarial review of the #110 fix: other publish-credential spellings, any
+# case, and the inline workflow renderer (which never runs export-ci-env).
+def test_other_publish_credential_shapes_are_not_extracted():
+    ci = """\
+jobs:
+  publish:
+    steps:
+      - run: twine upload dist/*
+        env:
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      - run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          LOWER: ${{ secrets.pypi_password }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+"""
+    assert extract_ci_env_vars(ci) == {"OPENAI_API_KEY": "OPENAI_API_KEY"}
+
+
+def test_inline_renderer_never_puts_a_publish_credential_in_test_jobs(capsys):
+    from wads.ci_config import CIConfig
+
+    cfg = CIConfig(
+        {
+            "project": {"name": "demo"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "env": {
+                            "extra_envvars": ["UV_PUBLISH_TOKEN", "OPENAI_API_KEY"],
+                            "secret_aliases": {"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},
+                        }
+                    }
+                }
+            },
+        }
+    )
+    rendered = cfg.generate_test_env_vars()
+    assert "PYPI_PASSWORD" not in rendered and "UV_PUBLISH_TOKEN" not in rendered
+    assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}" in rendered
+    assert "UV_PUBLISH_TOKEN" in capsys.readouterr().err
