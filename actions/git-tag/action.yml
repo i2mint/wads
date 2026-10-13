@@ -17,6 +17,19 @@ inputs:
     required: false
     default: "false"
 
+  push-retries:
+    description: >-
+      How many times to retry a rejected tag push. Right after the version-bump
+      push, GitHub can reject the tag with "missing necessary objects" for a
+      few hundred milliseconds (i2mint/wads#122); a short retry rides it out.
+      0 restores the historical single attempt.
+    required: false
+    default: "3"
+  push-retry-delay:
+    description: "Seconds before the first retry; each later retry waits that much longer (linear backoff)."
+    required: false
+    default: "2"
+
 runs:
   using: 'composite'
   steps:
@@ -44,14 +57,58 @@ runs:
     - name: Push Tag
       if: ${{ inputs.push == 'true' }}
       shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        TAG_MESSAGE: ${{ inputs.message }}
+        FORCE: ${{ inputs.force }}
+        PUSH_RETRIES: ${{ inputs.push-retries }}
+        PUSH_RETRY_DELAY: ${{ inputs.push-retry-delay }}
       run: |
-        set -e
+        set -eo pipefail
 
-        push_args=""
-
-        if [ "${{ inputs.force }}" = "true" ]; then
-          push_args="$push_args --force"
+        push_args=()
+        if [ "$FORCE" = "true" ]; then
+          push_args+=(--force)
         fi
+        retries="${PUSH_RETRIES:-3}"
+        delay="${PUSH_RETRY_DELAY:-2}"
+        # A non-number would make the `-gt` test below error, i.e. never true.
+        case "$retries" in ''|*[!0-9]*) echo "::warning::push-retries '$retries' is not a number; using 3"; retries=3 ;; esac
+        case "$delay" in ''|*[!0-9]*) echo "::warning::push-retry-delay '$delay' is not a number; using 2"; delay=2 ;; esac
+        local_obj=$(git rev-parse "refs/tags/$TAG")
 
-        echo "Pushing tag to remote: ${{ inputs.tag }}"
-        git push $push_args origin "${{ inputs.tag }}"
+        # Retried because the tag push can fail transiently right after the bump
+        # commit it points at was pushed: GitHub answered "missing necessary
+        # objects" ~50 ms after accepting that commit, so the release reached
+        # PyPI with no tag and the run went red (i2mint/wads#122).
+        attempt=0
+        while true; do
+          echo "Pushing tag to remote: $TAG"
+          if git push "${push_args[@]}" origin "refs/tags/$TAG"; then
+            exit 0
+          fi
+          # A push that reported failure may still have landed (or a retry
+          # raced a previous attempt): the same tag object on the remote is done.
+          # `|| true`: under errexit a failing ls-remote (the same transient
+          # window) would otherwise end the step with no retry and no restore hint.
+          remote_obj=$(git ls-remote origin "refs/tags/$TAG" 2>/dev/null | cut -f1 || true)
+          if [ -n "$remote_obj" ] && [ "$remote_obj" = "$local_obj" ]; then
+            echo "Tag $TAG is already on the remote at the same object."
+            exit 0
+          fi
+
+          attempt=$((attempt + 1))
+          if [ "$attempt" -gt "$retries" ]; then
+            commit=$(git rev-parse "refs/tags/$TAG^{commit}")
+            if [ -n "$TAG_MESSAGE" ]; then
+              restore=$(printf 'git tag -a %q %q -m %q && git push origin %q' "$TAG" "$commit" "$TAG_MESSAGE" "refs/tags/$TAG")
+            else
+              restore=$(printf 'git tag %q %q && git push origin %q' "$TAG" "$commit" "refs/tags/$TAG")
+            fi
+            echo "::error::Push of tag '$TAG' was rejected after $retries retr(y/ies). The release has no tag; restore it from a clone with: $restore"
+            exit 1
+          fi
+          wait_s=$((delay * attempt))
+          echo "Tag push rejected; retrying in ${wait_s}s ($attempt/$retries)."
+          sleep "$wait_s"
+        done
