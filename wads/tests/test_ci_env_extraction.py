@@ -92,3 +92,65 @@ def test_carry_is_idempotent(pyproject):
 
 def test_carry_noop_when_nothing_to_carry(pyproject):
     assert carry_ci_env_into_pyproject(STUB_CI, pyproject) == []
+
+
+# Issue #110: the classic inline publish step. The PyPI token is aliased to
+# uv's own env-var name; carrying it would put the token in the test jobs' env.
+PUBLISH_STEP_CI = """\
+name: Continuous Integration (uv)
+on: [push, pull_request]
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+jobs:
+  validation:
+    steps:
+      - run: pytest
+  publish:
+    steps:
+      - name: Publish to PyPI
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
+      - name: Publish to TestPyPI
+        run: uv publish --index testpypi
+        env:
+          UV_PUBLISH_TOKEN_TEST: ${{ secrets.TEST_PYPI_PASSWORD || '' }}
+      - uses: x
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+"""
+
+
+def test_publish_step_alias_is_not_extracted():
+    assert extract_ci_env_vars(PUBLISH_STEP_CI) == {"OPENAI_API_KEY": "OPENAI_API_KEY"}
+
+
+def test_carry_drops_publish_token_alias_and_reports_it(pyproject):
+    reported = []
+    added = carry_ci_env_into_pyproject(
+        PUBLISH_STEP_CI, pyproject, report_dropped=reported.append
+    )
+    assert added == ["OPENAI_API_KEY"]
+    text = pyproject.read_text()
+    assert "UV_PUBLISH_TOKEN" not in text
+    assert "PYPI_PASSWORD" not in text
+    assert "GH_TOKEN" not in text
+    assert reported == [
+        {
+            "UV_PUBLISH_TOKEN": "PYPI_PASSWORD",
+            "UV_PUBLISH_TOKEN_TEST": "TEST_PYPI_PASSWORD",
+            "GH_TOKEN": "GITHUB_TOKEN",
+        }
+    ]
+
+
+def test_carry_prints_dropped_by_default(pyproject, capsys):
+    carry_ci_env_into_pyproject(PUBLISH_STEP_CI, pyproject)
+    err = capsys.readouterr().err
+    assert "UV_PUBLISH_TOKEN (secret PYPI_PASSWORD)" in err
+
+
+def test_carry_reports_nothing_when_nothing_dropped(pyproject):
+    reported = []
+    carry_ci_env_into_pyproject(INLINE_UV_CI, pyproject, report_dropped=reported.append)
+    assert reported == []

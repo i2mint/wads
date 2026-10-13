@@ -38,9 +38,10 @@ from typing import NamedTuple
 # on its own with `python -I -S` (standard library only, no wads importable), so
 # the import fails there and the fallback applies; a test keeps the two equal.
 try:
-    from wads.ci_secrets import JSON_TRANSPORT_SECRET
+    from wads.ci_secrets import JSON_TRANSPORT_SECRET, PUBLISH_ONLY_SECRETS
 except ImportError:  # the action's isolated run
     JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
+    PUBLISH_ONLY_SECRETS = ("PYPI_PASSWORD", "TEST_PYPI_PASSWORD")
 
 # Secrets-context keys that must never be exported as repo env vars: GitHub's
 # auto-token (the context spells it `github_token`) and the transport blob.
@@ -138,6 +139,7 @@ def export_ci_env(
     aliases=None,
     secrets=None,
     vars_=None,
+    withheld=(),
     warn=lambda msg: print(msg, file=sys.stderr),
 ):
     """Compute the env assignments to write, plus any missing-required errors.
@@ -181,11 +183,42 @@ def export_ci_env(
     ['HF_TOKEN']
     >>> plan.assignments
     ['HF_TOKEN=hf_xxx']
+
+    A declared var backed by a ``withheld`` source is never exported, under
+    any name, and never fails the job (the publish token must not reach a job
+    that runs tests; issue #110):
+
+    >>> plan = export_ci_env(
+    ...     required=["PYPI_PASSWORD"],
+    ...     extra=["UV_PUBLISH_TOKEN"],
+    ...     aliases={"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},
+    ...     secrets={"PYPI_PASSWORD": "pypi-xxx"},
+    ...     withheld=["PYPI_PASSWORD"],
+    ...     warn=lambda msg: None)
+    >>> plan.exported, plan.missing_required, plan.mask_values
+    ([], [], [])
     """
     defaults = defaults or {}
     aliases = aliases or {}
     secrets = merge_transported_secrets(secrets)
     vars_ = vars_ or {}
+    withheld = {str(name).upper() for name in withheld}
+
+    def _is_withheld(var_name):
+        source_name = aliases.get(var_name, var_name)
+        if {str(var_name).upper(), str(source_name).upper()} & withheld:
+            warn(
+                f"::warning::[tool.wads.ci.env] declares {var_name!r}, backed by "
+                f"{source_name!r}, a publish-only secret; not exported to this "
+                f"job. Remove it from pyproject.toml: the publish job reads the "
+                f"token itself."
+            )
+            return True
+        return False
+
+    required = [n for n in required if not _is_withheld(n)]
+    test = [n for n in test if not _is_withheld(n)]
+    extra = [n for n in extra if not _is_withheld(n)]
 
     assignments = []
     exported = []
@@ -299,6 +332,10 @@ def main() -> int:
     secrets = _load_json_env("WADS_SECRETS_JSON", {}, redact=True)
     vars_ = _load_json_env("WADS_VARS_JSON", {}, redact=True)
 
+    # A publish credential reaches only a job that names it in always-required
+    # (the publish job). Every other job, the test jobs above all, never gets
+    # it, whatever the repo's [tool.wads.ci.env] declares.
+    withheld = [n for n in PUBLISH_ONLY_SECRETS if n not in always_required]
     plan = export_ci_env(
         required=list(required) + [n for n in always_required if n not in required],
         test=test,
@@ -307,6 +344,7 @@ def main() -> int:
         aliases=aliases,
         secrets=secrets,
         vars_=vars_,
+        withheld=withheld,
     )
 
     # Masks must be registered before any later step could echo the values.

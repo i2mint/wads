@@ -327,3 +327,52 @@ def test_isolated_fallback_spells_the_transport_secret_like_ci_secrets():
     from wads.ci_secrets import JSON_TRANSPORT_SECRET
 
     assert f'JSON_TRANSPORT_SECRET = "{JSON_TRANSPORT_SECRET}"' in SCRIPT.read_text()
+
+
+def test_isolated_fallback_spells_the_publish_only_secrets_like_ci_secrets():
+    from wads.ci_secrets import PUBLISH_ONLY_SECRETS
+
+    spelled = ", ".join(f'"{name}"' for name in PUBLISH_ONLY_SECRETS)
+    assert f"PUBLISH_ONLY_SECRETS = ({spelled})" in SCRIPT.read_text()
+
+
+# Issue #110: a repo whose pyproject already aliases the PyPI token (as the
+# inline->stub migration used to write) must not get it in a test job.
+def test_main_withholds_publish_token_from_test_jobs(tmp_path, monkeypatch, capsys):
+    from wads.scripts import export_ci_env as mod
+
+    gh_env = tmp_path / "github_env"
+    monkeypatch.setenv("GITHUB_ENV", str(gh_env))
+    monkeypatch.setenv("WADS_ENV_REQUIRED", '["TEST_PYPI_PASSWORD"]')
+    monkeypatch.setenv("WADS_ENV_TEST", '["PYPI_PASSWORD"]')
+    monkeypatch.setenv("WADS_ENV_EXTRA", '["UV_PUBLISH_TOKEN", "OPENAI_API_KEY"]')
+    monkeypatch.setenv("WADS_ENV_ALIASES", '{"UV_PUBLISH_TOKEN": "pypi_password"}')
+    monkeypatch.setenv(
+        "WADS_SECRETS_JSON",
+        json.dumps(
+            {
+                "PYPI_PASSWORD": "dummy-pypi",
+                "TEST_PYPI_PASSWORD": "dummy-testpypi",
+                "OPENAI_API_KEY": "dummy-openai",
+            }
+        ),
+    )
+    monkeypatch.delenv("WADS_ENV_ALWAYS_REQUIRED", raising=False)
+    assert mod.main() == 0  # withheld, not "missing": the job still passes
+    out, err = capsys.readouterr()
+    assert gh_env.read_text() == "OPENAI_API_KEY=dummy-openai\n"
+    assert "dummy-pypi" not in out + err and "dummy-testpypi" not in out + err
+    assert "UV_PUBLISH_TOKEN" in err and "publish-only" in err
+
+
+def test_main_publish_job_still_gets_the_token(tmp_path, monkeypatch, capsys):
+    from wads.scripts import export_ci_env as mod
+
+    gh_env = tmp_path / "github_env"
+    monkeypatch.setenv("GITHUB_ENV", str(gh_env))
+    for name in ("WADS_ENV_REQUIRED", "WADS_ENV_TEST", "WADS_ENV_EXTRA"):
+        monkeypatch.setenv(name, "[]")
+    monkeypatch.setenv("WADS_ENV_ALWAYS_REQUIRED", '["PYPI_PASSWORD"]')
+    monkeypatch.setenv("WADS_SECRETS_JSON", json.dumps({"PYPI_PASSWORD": "dummy-pypi"}))
+    assert mod.main() == 0
+    assert gh_env.read_text() == "PYPI_PASSWORD=dummy-pypi\n"

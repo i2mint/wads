@@ -86,6 +86,13 @@ JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
 # value single-line so per-line masking cannot register `{` / `}` as masks.
 JSON_TRANSPORT_EXPRESSION = "${{ toJSON(toJSON(secrets)) }}"
 
+# Publish credentials the reusable workflow reads only in its publish job. They
+# are never exported into a job that runs the repo's tests, whatever
+# [tool.wads.ci.env] declares (an alias such as UV_PUBLISH_TOKEN -> PYPI_PASSWORD
+# included; issue #110). wads/scripts/export_ci_env.py keeps a stdlib-only copy,
+# pinned equal by a test.
+PUBLISH_ONLY_SECRETS = ("PYPI_PASSWORD", "TEST_PYPI_PASSWORD")
+
 # ---------------------------------------------------------------------------
 # The superset of names a named-transport stub may pass — ADDITIVE ONLY.
 #

@@ -1084,6 +1084,51 @@ def _iter_env_blocks(node):
             yield from _iter_env_blocks(item)
 
 
+def _iter_secret_env_refs(ci_text: str):
+    """Yield ``(ENV_VAR, SECRET_NAME)`` for every secret-backed ``env:`` entry."""
+    import yaml
+
+    try:
+        data = yaml.safe_load(ci_text)
+    except yaml.YAMLError:
+        return
+    for env_map in _iter_env_blocks(data):
+        for var, value in env_map.items():
+            if not isinstance(value, str):
+                continue
+            match = _SECRET_REF_RE.search(value)
+            if match:
+                yield str(var), match.group(1)
+
+
+def _is_infra_env_ref(var: str, secret: str) -> bool:
+    return var in _INFRA_SECRETS or secret in _INFRA_SECRETS
+
+
+def dropped_infra_ci_env_vars(ci_text: str) -> dict:
+    """The ``{ENV_VAR: SECRET_NAME}`` entries :func:`extract_ci_env_vars` drops.
+
+    These are env vars backed by an infra secret (publish token, GitHub
+    token), under their own name or an alias. A migration reports them so a
+    dropped ``UV_PUBLISH_TOKEN`` is never a silent surprise (issue #110).
+
+    >>> dropped_infra_ci_env_vars('''
+    ... jobs:
+    ...   publish:
+    ...     steps:
+    ...       - run: uv publish
+    ...         env:
+    ...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
+    ... ''')
+    {'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}
+    """
+    return {
+        var: secret
+        for var, secret in _iter_secret_env_refs(ci_text)
+        if _is_infra_env_ref(var, secret)
+    }
+
+
 def extract_ci_env_vars(ci_text: str) -> dict:
     """Extract secret-backed env vars from a CI workflow's ``env:`` blocks.
 
@@ -1094,7 +1139,11 @@ def extract_ci_env_vars(ci_text: str) -> dict:
     Deliberately excluded:
 
     * Literal env vars (``PROJECT_NAME``, ``LOG_LEVEL: DEBUG`` …) — no secret ref.
-    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``).
+    * Infra secrets (``GITHUB_TOKEN``, ``PYPI_PASSWORD``, ``TEST_PYPI_PASSWORD``),
+      by env-var name *or* by backing secret: ``UV_PUBLISH_TOKEN:
+      ${{ secrets.PYPI_PASSWORD }}`` in a publish step is dropped, since
+      carrying it would hand the PyPI token to the test jobs (issue #110).
+      :func:`dropped_infra_ci_env_vars` lists what was dropped.
     * Reusable-workflow ``secrets:`` pass-through blocks — that's *transport*,
       not a signal of usage, and scanning it would re-introduce the very
       over-assignment the new model removes.
@@ -1110,30 +1159,33 @@ def extract_ci_env_vars(ci_text: str) -> dict:
     ...       - uses: x
     ...         with:
     ...           pypi-token: ${{ secrets.PYPI_PASSWORD }}
+    ...       - run: uv publish
+    ...         env:
+    ...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
     ... '''
     >>> extract_ci_env_vars(ci) == {
     ...     "OPENAI_API_KEY": "OPENAI_API_KEY", "HF_TOKEN": "HF_WRITE_TOKEN"}
     True
     """
-    import yaml
+    return {
+        var: secret
+        for var, secret in _iter_secret_env_refs(ci_text)
+        if not _is_infra_env_ref(var, secret)
+    }
 
-    try:
-        data = yaml.safe_load(ci_text)
-    except yaml.YAMLError:
-        return {}
-    out: dict = {}
-    for env_map in _iter_env_blocks(data):
-        for var, value in env_map.items():
-            if not isinstance(value, str):
-                continue
-            match = _SECRET_REF_RE.search(value)
-            if match and str(var) not in _INFRA_SECRETS:
-                out[str(var)] = match.group(1)
-    return out
+
+def _report_dropped_infra_env(dropped: dict) -> None:
+    names = ", ".join(f"{var} (secret {secret})" for var, secret in dropped.items())
+    print(
+        f"Not carried into [tool.wads.ci.env]: {names}. These are infra "
+        "secrets (publish or GitHub token) that the reusable workflow handles "
+        "itself; carrying them would expose them to the test jobs.",
+        file=sys.stderr,
+    )
 
 
 def carry_ci_env_into_pyproject(
-    ci_text, pyproject_path, *, kind: str = "extra"
+    ci_text, pyproject_path, *, kind: str = "extra", report_dropped=None
 ) -> list:
     """Merge secret-backed env vars from ``ci_text`` into ``[tool.wads.ci.env]``.
 
@@ -1144,7 +1196,14 @@ def carry_ci_env_into_pyproject(
     was nothing to carry). This is what makes ``ci-to-stub`` / ``ci-to-uv``
     *lossless*: secrets wired only in the old workflow YAML are preserved in
     ``pyproject.toml`` instead of silently dropped.
+
+    Infra-secret-backed env vars (see :func:`extract_ci_env_vars`) are the one
+    deliberate exception; ``report_dropped`` receives them as
+    ``{ENV_VAR: SECRET_NAME}`` (default: a note on stderr).
     """
+    dropped = dropped_infra_ci_env_vars(ci_text)
+    if dropped:
+        (report_dropped or _report_dropped_infra_env)(dropped)
     env_vars = extract_ci_env_vars(ci_text)
     if not env_vars:
         return []
