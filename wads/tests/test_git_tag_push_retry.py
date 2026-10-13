@@ -70,14 +70,16 @@ def tagged_clone(tmp_path, monkeypatch):
     return origin, clone
 
 
-def run_push_tag(clone: Path, tmp_path: Path, *, rejections: int, retries="3"):
+def run_push_tag(
+    clone: Path, tmp_path: Path, *, rejections: int, retries="3", delay="0"
+):
     env = {
         **os.environ,
         "TAG": TAG,
         "TAG_MESSAGE": MESSAGE,
         "FORCE": "false",
         "PUSH_RETRIES": retries,
-        "PUSH_RETRY_DELAY": "0",
+        "PUSH_RETRY_DELAY": delay,
         "REJECTIONS": str(rejections),
         "COUNTER": str(tmp_path / "pushes"),
     }
@@ -138,3 +140,20 @@ def test_a_tag_already_on_the_remote_counts_as_pushed(tagged_clone, tmp_path):
     hook.chmod(0o755)
     res = run_push_tag(clone, tmp_path, rejections=99)
     assert res.returncode == 0, res.stdout + res.stderr
+
+
+def test_a_failing_ls_remote_still_retries(tagged_clone, tmp_path):
+    """The already-there probe failing must not end the step early (review of #123)."""
+    origin, clone = tagged_clone
+    # Every upload-pack (ls-remote) fails; receive-pack (push) still works.
+    _git("config", "remote.origin.uploadpack", "false", cwd=clone)
+    res = run_push_tag(clone, tmp_path, rejections=1)
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "(1/3)" in res.stdout and _remote_tag(origin) == TAG
+
+
+def test_a_non_numeric_retry_count_falls_back_to_the_default(tagged_clone, tmp_path):
+    _, clone = tagged_clone
+    res = run_push_tag(clone, tmp_path, rejections=99, retries="abc")
+    assert res.returncode == 1 and "not a number" in res.stdout
+    assert (tmp_path / "pushes").read_text().strip() == "4"  # 1 + 3 retries
