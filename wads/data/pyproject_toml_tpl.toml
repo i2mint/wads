@@ -312,6 +312,9 @@ enabled = true
 skip_ci_marker = "[skip ci]"
 # Commit-message substring that forces the publish job (when enabled = false).
 publish_marker = "[publish]"
+# Commit-subject substring that skips ONLY the release: tests (and Pages) still
+# run, no PyPI version is used. skip_ci_marker skips publish and Pages both.
+skip_publish_marker = "[skip publish]"
 # skip_existing = false  # Skip upload if version already exists
 
 
@@ -323,6 +326,8 @@ publish_marker = "[publish]"
 [tool.wads.ci.docs]
 # Generate and publish GitHub Pages
 enabled = true
+# Commit-subject substring that skips ONLY the gh-pages push (tests and publish run)
+skip_marker = "[skip github-pages]"
 # Builder to use: "epythet", "sphinx", "mkdocs"
 builder = "epythet"
 # Paths to ignore during documentation generation

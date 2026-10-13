@@ -113,6 +113,8 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("publish-enabled", config.publish_enabled)
         _set_output("skip-ci-marker", config.publish_skip_ci_marker)
         _set_output("publish-marker", config.publish_marker)
+        _set_output("skip-publish-marker", config.publish_skip_publish_marker)
+        _set_output("skip-pages-marker", config.docs_skip_marker)
 
         # Trigger gate (consumed by every job after setup): in on-demand mode
         # a job runs only on workflow_dispatch or a commit subject carrying
