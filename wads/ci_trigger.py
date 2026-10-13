@@ -529,7 +529,14 @@ def flip_to_on_demand(
         shadow_py = shadow / "pyproject.toml"
         shadow_py.write_text(old_py)
         if kind == "inline-uv":
-            carried = carry_ci_env_into_pyproject(old_ci, shadow_py)
+            carried = carry_ci_env_into_pyproject(
+                old_ci,
+                shadow_py,
+                report_dropped=lambda dropped: result.notes.append(
+                    "not carried (infra secret, would reach the test jobs): "
+                    + ", ".join(f"{v} <- {s}" for v, s in dropped.items())
+                ),
+            )
             if carried:
                 result.notes.append(
                     "carried env var(s) from the inline workflow into "

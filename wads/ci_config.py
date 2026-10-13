@@ -645,20 +645,36 @@ class CIConfig:
         — re-emitting `${{ secrets.X || '' }}` at job level would override
         the default with '' in exactly the jobs that run tests.
 
+        Publish credentials (``UV_PUBLISH_TOKEN -> PYPI_PASSWORD`` and the
+        like; see ``wads.scripts.export_ci_env.is_publish_credential``) are
+        never rendered into a test job, with a note on stderr (issue #110).
+
         Args:
             indent: leading spaces per line (6 = entries of a job-level
                 `env:` block)
             exclude: additional names to skip (e.g. keys the target job
                 already sets literally)
         """
+        from wads.scripts.export_ci_env import is_publish_credential
+
         aliases = self.env_secret_aliases
         skip = set(exclude) | set(self.env_vars_defaults)
         pad = " " * indent
-        return "\n".join(
-            f"{pad}{var_name}: ${{{{ secrets.{aliases.get(var_name, var_name)} || '' }}}}"
-            for var_name in self.env_vars_all
-            if var_name not in skip
-        )
+        lines = []
+        for var_name in self.env_vars_all:
+            if var_name in skip:
+                continue
+            secret = aliases.get(var_name, var_name)
+            if is_publish_credential(var_name, secret):
+                print(
+                    f"Not rendering {var_name} (secret {secret}) into the test "
+                    "jobs: it is a publish credential. Remove it from "
+                    "[tool.wads.ci.env] in pyproject.toml.",
+                    file=sys.stderr,
+                )
+                continue
+            lines.append(f"{pad}{var_name}: ${{{{ secrets.{secret} || '' }}}}")
+        return "\n".join(lines)
 
     def generate_test_env_block(self) -> str:
         """

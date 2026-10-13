@@ -42,6 +42,41 @@ try:
 except ImportError:  # the action's isolated run
     JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
 
+# Publish credentials. The reusable workflow reads PYPI_PASSWORD only in its
+# publish job; no job that runs the repo's tests may get one, under any name
+# (issue #110). This module is stdlib-only, so it is the single home of the
+# rule: the migration and the inline-workflow renderer import it from here.
+PUBLISH_ONLY_SECRETS = ("PYPI_PASSWORD", "TEST_PYPI_PASSWORD")
+PUBLISH_ENV_VARS = ("UV_PUBLISH_TOKEN", "UV_PUBLISH_PASSWORD", "TWINE_PASSWORD")
+_PYPI_CREDENTIAL_WORDS = ("TOKEN", "PASSWORD", "KEY", "SECRET")
+
+
+def is_publish_credential(env_var, secret=None) -> bool:
+    """True when ``env_var`` (backed by ``secret``) carries a PyPI publish credential.
+
+    Matches the publish env-var names tools read, the wads publish secrets, and
+    any other PyPI-ish credential name, case-insensitively (GitHub secret names
+    are case-insensitive).
+
+    >>> is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")
+    True
+    >>> is_publish_credential("TWINE_PASSWORD", "WHATEVER")
+    True
+    >>> is_publish_credential("MY_TOKEN", "pypi_api_token")
+    True
+    >>> is_publish_credential("PYPI_USERNAME")
+    False
+    >>> is_publish_credential("OPENAI_API_KEY")
+    False
+    """
+    names = {str(env_var).upper(), str(secret or env_var).upper()}
+    if names & {*PUBLISH_ONLY_SECRETS, *PUBLISH_ENV_VARS}:
+        return True
+    return any(
+        "PYPI" in name and any(word in name for word in _PYPI_CREDENTIAL_WORDS)
+        for name in names
+    )
+
 # Secrets-context keys that must never be exported as repo env vars: GitHub's
 # auto-token (the context spells it `github_token`) and the transport blob.
 _NON_EXPORTABLE = frozenset({"github_token", JSON_TRANSPORT_SECRET.lower()})
@@ -138,6 +173,7 @@ def export_ci_env(
     aliases=None,
     secrets=None,
     vars_=None,
+    withhold_publish=True,
     warn=lambda msg: print(msg, file=sys.stderr),
 ):
     """Compute the env assignments to write, plus any missing-required errors.
@@ -168,8 +204,8 @@ def export_ci_env(
     A required var with no backing secret *or* variable is reported (caller
     should fail CI):
 
-    >>> export_ci_env(required=["PYPI_PASSWORD"], secrets={}).missing_required
-    [('PYPI_PASSWORD', 'PYPI_PASSWORD')]
+    >>> export_ci_env(required=["OPENAI_API_KEY"], secrets={}).missing_required
+    [('OPENAI_API_KEY', 'OPENAI_API_KEY')]
 
     Aliases let an env var read a differently-named secret:
 
@@ -181,11 +217,41 @@ def export_ci_env(
     ['HF_TOKEN']
     >>> plan.assignments
     ['HF_TOKEN=hf_xxx']
+
+    A publish credential (see :func:`is_publish_credential`) is never
+    exported, under any name, and never fails the job, unless
+    ``withhold_publish=False`` (the publish job). The token must not reach a
+    job that runs tests (issue #110):
+
+    >>> plan = export_ci_env(
+    ...     required=["PYPI_PASSWORD"],
+    ...     extra=["UV_PUBLISH_TOKEN"],
+    ...     aliases={"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},
+    ...     secrets={"PYPI_PASSWORD": "pypi-xxx"},
+    ...     warn=lambda msg: None)
+    >>> plan.exported, plan.missing_required, plan.mask_values
+    ([], [], [])
     """
     defaults = defaults or {}
     aliases = aliases or {}
     secrets = merge_transported_secrets(secrets)
     vars_ = vars_ or {}
+
+    def _is_withheld(var_name):
+        source_name = aliases.get(var_name, var_name)
+        if withhold_publish and is_publish_credential(var_name, source_name):
+            warn(
+                f"::warning::[tool.wads.ci.env] declares {var_name!r}, backed by "
+                f"{source_name!r}, a publish-only secret; not exported to this "
+                f"job. Remove it from pyproject.toml: the publish job reads the "
+                f"token itself."
+            )
+            return True
+        return False
+
+    required = [n for n in required if not _is_withheld(n)]
+    test = [n for n in test if not _is_withheld(n)]
+    extra = [n for n in extra if not _is_withheld(n)]
 
     assignments = []
     exported = []
@@ -299,6 +365,10 @@ def main() -> int:
     secrets = _load_json_env("WADS_SECRETS_JSON", {}, redact=True)
     vars_ = _load_json_env("WADS_VARS_JSON", {}, redact=True)
 
+    # A publish credential reaches only a job that names it in always-required
+    # (the publish job). Every other job, the test jobs above all, never gets
+    # it, whatever the repo's [tool.wads.ci.env] declares.
+    publish_job = any(n in PUBLISH_ONLY_SECRETS for n in always_required)
     plan = export_ci_env(
         required=list(required) + [n for n in always_required if n not in required],
         test=test,
@@ -307,6 +377,7 @@ def main() -> int:
         aliases=aliases,
         secrets=secrets,
         vars_=vars_,
+        withhold_publish=not publish_job,
     )
 
     # Masks must be registered before any later step could echo the values.
