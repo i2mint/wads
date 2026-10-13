@@ -1,4 +1,4 @@
-> built 2026-10-13 22:19 UTC from 154c4e6 (master) · wads 0.2.39. Details: build_info.json
+> built 2026-10-13 22:45 UTC from 1a675ab (master) · wads 0.2.40. Details: build_info.json
 
 # index.html.md
 
@@ -6950,16 +6950,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-13 22:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/154c4e6a80676e1d7f621607a892db56cb6576a3"><code>154c4e6</code></a> on branch <code>master</code>, for **wads 0.2.39** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 22:45 UTC** from commit <a href="https://github.com/i2mint/wads/commit/1a675abf7a8b0d2f47691506c33a173fc6c95d27"><code>1a675ab</code></a> on branch <code>master</code>, for **wads 0.2.40** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.40) is behind the latest release on PyPI (0.2.41): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/154c4e6a80676e1d7f621607a892db56cb6576a3"><code>154c4e6a80676e1d7f621607a892db56cb6576a3</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/1a675abf7a8b0d2f47691506c33a173fc6c95d27"><code>1a675abf7a8b0d2f47691506c33a173fc6c95d27</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -6970,9 +6972,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38476710178">38476710178</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38479592689">38479592689</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>154c4e6a80676e1d7f621607a892db56cb6576a3</code> (in the history of the built commit) |
+| Event commit | <code>1a675abf7a8b0d2f47691506c33a173fc6c95d27</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6997,13 +6999,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.39/">0.2.39</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.41/">0.2.41</a>, newer than the documented version (0.2.40).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 154c4e6a80676e1d7f621607a892db56cb6576a3
+git checkout 1a675abf7a8b0d2f47691506c33a173fc6c95d27
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
