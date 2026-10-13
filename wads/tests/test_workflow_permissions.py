@@ -2,8 +2,8 @@
 
 Jobs that run the repo's code (tests, lint, installs) get a read-only token
 and keep no git credentials on disk, so test code or a compromised dependency
-cannot push. Only the jobs whose job is to push (publish, Pages, metrics) may
-write, and the metrics job never installs or runs the repo's code.
+cannot push. Only the jobs whose job is to push (publish, Pages) may write,
+and the publish job does not restore the cache the test jobs write.
 """
 
 from pathlib import Path
@@ -17,9 +17,7 @@ WORKFLOWS = {
     "inline": REPO_ROOT / "wads" / "data" / "github_ci_uv.yml",
 }
 READ_ONLY_JOBS = ("setup", "validation", "windows-validation")
-WRITING_JOBS = {"publish", "github-pages", "metrics"}
-# Steps that install or run the repo's own code.
-REPO_CODE_ACTIONS = ("install-deps", "run-tests", "build-dist", "pypi-publish")
+WRITING_JOBS = {"publish", "github-pages"}
 
 
 def _jobs(path):
@@ -56,10 +54,9 @@ def test_only_pushing_jobs_can_write(which):
 
 
 @pytest.mark.parametrize("which", sorted(WORKFLOWS))
-def test_metrics_job_never_runs_repo_code(which):
-    job = _jobs(WORKFLOWS[which])["metrics"]
-    assert "validation" in job["needs"]
-    for step in job["steps"]:
-        uses = str(step.get("uses", ""))
-        assert not any(action in uses for action in REPO_CODE_ACTIONS), uses
-        assert "run" not in step, step.get("name")
+def test_publish_job_does_not_restore_the_shared_uv_cache(which):
+    steps = _jobs(WORKFLOWS[which])["publish"]["steps"]
+    uv_setups = [s for s in steps if str(s.get("uses", "")).startswith("astral-sh/setup-uv@")]
+    assert uv_setups
+    for step in uv_setups:
+        assert (step.get("with") or {}).get("enable-cache") is False

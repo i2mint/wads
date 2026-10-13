@@ -403,48 +403,8 @@ jobs:
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
 
-      # Hand any machine-readable coverage report to the metrics job (one
-      # matrix leg is enough). Nothing is uploaded unless pytest-args asked
-      # for a json/xml report.
-      - name: Upload coverage report for metrics
-        if: needs.setup.outputs.metrics-enabled == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: wads-coverage-report
-          path: |
-            coverage.json
-            .coverage.json
-            coverage.xml
-            htmlcov/coverage.json
-          if-no-files-found: ignore
-          include-hidden-files: true
-          retention-days: 1
-
-  # Code metrics (umpyre) push to a storage branch, so they need a writable
-  # token. They run in their OWN job, after validation succeeds, which
-  # installs only umpyre and its tools from PyPI and never runs the repo's
-  # code, so the test jobs above can stay read-only (#113).
-  metrics:
-    name: Code Metrics
-    needs: [setup, validation]
-    if: needs.setup.outputs.metrics-enabled == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-
-      # Pattern download: no match (no report was uploaded) is a no-op, not
-      # an error annotation on every run.
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          pattern: wads-coverage-report
-          merge-multiple: true
-
       - name: Track Code Metrics
+        if: needs.setup.outputs.metrics-enabled == 'true'
         uses: i2mint/umpyre/actions/track-metrics@master
         continue-on-error: true
         with:
@@ -569,6 +529,11 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
+        with:
+          # No shared cache here: test jobs on the default branch write it, so
+          # a poisoned entry would be restored into the job that holds the
+          # write token and the PyPI token (#113).
+          enable-cache: false
 
       - name: Set up Python
         uses: i2mint/wads/actions/setup-python-uv@master
