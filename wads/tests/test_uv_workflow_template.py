@@ -161,8 +161,9 @@ class TestUvWorkflowTemplate:
     def test_publish_job_honors_publish_gate(self, template_data):
         """Test that the publish job `if:` is gated by the publish config."""
         condition = template_data["jobs"]["publish"]["if"]
-        # Skip marker (configurable) instead of a hardcoded '[skip ci]'.
-        assert "needs.setup.outputs.skip-ci-marker" in condition
+        # Skip markers (configurable, decided once in the setup job, #62)
+        # instead of a hardcoded '[skip ci]'; `== 'false'` fails closed.
+        assert "needs.setup.outputs.skip-publish == 'false'" in condition
         # Fail-closed publish gate: only runs on an explicit 'true'.
         assert "needs.setup.outputs.publish-enabled == 'true'" in condition
         # Per-commit override to force a publish when publishing is disabled.

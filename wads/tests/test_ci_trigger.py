@@ -208,12 +208,21 @@ def _context(
         "needs.setup.outputs.trigger-mode": mode,
         "needs.setup.outputs.run-ci-marker": marker,
         "needs.setup.outputs.skip-ci-marker": "[skip ci]",
+        # the setup job's own verdict on the skip markers (#62), from its script
+        **_skip_verdicts(UV_CI, _run_extraction(UV_CI, head_commit)),
         "needs.setup.outputs.publish-enabled": "true",
         "needs.setup.outputs.publish-marker": "[publish]",
         "needs.setup.outputs.test-on-windows": "true",
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
     }
+
+
+def _skip_verdicts(workflow, subject):
+    from wads.tests.test_skip_markers import run_gates
+
+    out = run_gates(workflow, subject)
+    return {f"needs.setup.outputs.{k}": v for k, v in out.items()}
 
 
 def _job_verdicts(workflow, context):

@@ -424,6 +424,17 @@ wheel = true
 enabled = true  # Publish to PyPI on main/master
 ```
 
+Commit-subject markers narrow what a default-branch push does. They match the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count:
+
+| Marker (default) | Validation | Publish (PyPI) | GitHub Pages | Rename via |
+|---|---|---|---|---|
+| `[skip ci]` | skipped | skipped | skipped | `[tool.wads.ci.publish].skip_ci_marker` (publish and Pages) |
+| `[skip publish]` | runs | skipped | runs | `[tool.wads.ci.publish].skip_publish_marker` |
+| `[skip github-pages]` | runs | runs | skipped | `[tool.wads.ci.docs].skip_marker` |
+| `[publish]` | runs | forced when `enabled = false` | runs | `[tool.wads.ci.publish].publish_marker` |
+
+`[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
+
 ### Licence Perimeter (`wads-licence-check`)
 
 Fails the build when the **installed dependency closure** carries a licence the

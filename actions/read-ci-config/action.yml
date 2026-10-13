@@ -78,11 +78,17 @@ outputs:
     description: 'Whether the publish job should run (true/false). Defaults to true; set [tool.wads.ci.publish].enabled = false in pyproject.toml to disable. Can be overridden per-commit via publish-marker in the commit subject line.'
     value: ${{ steps.config.outputs.publish-enabled }}
   skip-ci-marker:
-    description: 'Substring that suppresses the publish job when publishing is enabled, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[skip ci]". Set via [tool.wads.ci.publish].skip_ci_marker.'
+    description: 'Substring that suppresses the publish job and the GitHub Pages job, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[skip ci]". Set via [tool.wads.ci.publish].skip_ci_marker.'
     value: ${{ steps.config.outputs.skip-ci-marker }}
   publish-marker:
     description: 'Substring that forces the publish job even when publishing is disabled, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[publish]". Set via [tool.wads.ci.publish].publish_marker.'
     value: ${{ steps.config.outputs.publish-marker }}
+  skip-publish-marker:
+    description: 'Substring that suppresses ONLY the publish job (validation and Pages still run), matched against the commit SUBJECT LINE. Defaults to "[skip publish]". Set via [tool.wads.ci.publish].skip_publish_marker.'
+    value: ${{ steps.config.outputs.skip-publish-marker }}
+  skip-pages-marker:
+    description: 'Substring that suppresses ONLY the GitHub Pages job (validation and publish still run), matched against the commit SUBJECT LINE. Defaults to "[skip github-pages]". Set via [tool.wads.ci.docs].skip_marker.'
+    value: ${{ steps.config.outputs.skip-pages-marker }}
   trigger-mode:
     description: 'When CI runs: "auto" (every push/PR, the default) or "on-demand" (nothing runs unless asked - a commit SUBJECT carrying run-ci-marker, or a manual workflow_dispatch; publishing obeys the same gate). Set via [tool.wads.ci.trigger].mode.'
     value: ${{ steps.config.outputs.trigger-mode }}

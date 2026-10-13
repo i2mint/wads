@@ -217,6 +217,8 @@ jobs:
       trigger-mode: ${{ steps.config.outputs.trigger-mode }}
       run-ci-marker: ${{ steps.config.outputs.run-ci-marker }}
       commit-subject: ${{ steps.commit.outputs.subject }}
+      skip-publish: ${{ steps.gates.outputs.skip-publish }}
+      skip-pages: ${{ steps.gates.outputs.skip-pages }}
       env-required: ${{ steps.config.outputs.env-required }}
       env-test: ${{ steps.config.outputs.env-test }}
       env-extra: ${{ steps.config.outputs.env-extra }}
@@ -282,6 +284,51 @@ jobs:
         uses: i2mint/wads/actions/read-ci-config@master
         with:
           pyproject-path: .
+
+      # ------------------------------------------------------------------
+      # SKIP MARKERS, decided once (#62). The side-effecting jobs each have a
+      # narrower marker that composes ON TOP of the skip-ci one:
+      #   skip-ci marker       ([tool.wads.ci.publish].skip_ci_marker,
+      #                         default "[skip ci]")       -> no publish, no Pages
+      #   skip-publish marker  ([tool.wads.ci.publish].skip_publish_marker,
+      #                         default "[skip publish]")  -> no PyPI release
+      #   skip-pages marker    ([tool.wads.ci.docs].skip_marker,
+      #                         default "[skip github-pages]") -> no gh-pages push
+      # Validation still runs under the narrow ones; that is their point.
+      #
+      # Why a step and not more `contains()` clauses: the markers come from
+      # read-ci-config, which installs wads from PyPI, while this workflow goes
+      # live at merge. Until the release that emits a new marker output is on
+      # PyPI the output is EMPTY, and `contains(subject, '')` is true for every
+      # subject: an unguarded clause would skip every repo's publish. Here an
+      # empty output falls back to the documented default instead, and the next
+      # marker is a one-place change.
+      #
+      # Matching mirrors GitHub's `contains()`: case-insensitive substring of
+      # the SUBJECT (never the full message; see the extraction step). The
+      # subject and markers reach bash only through env:, never spliced.
+      # ------------------------------------------------------------------
+      - name: Decide skip markers
+        id: gates
+        env:
+          SUBJECT: ${{ steps.commit.outputs.subject }}
+          SKIP_CI_MARKER: ${{ steps.config.outputs.skip-ci-marker }}
+          SKIP_PUBLISH_MARKER: ${{ steps.config.outputs.skip-publish-marker }}
+          SKIP_PAGES_MARKER: ${{ steps.config.outputs.skip-pages-marker }}
+        run: |
+          skip_ci_marker="${SKIP_CI_MARKER:-[skip ci]}"
+          skip_publish_marker="${SKIP_PUBLISH_MARKER:-[skip publish]}"
+          skip_pages_marker="${SKIP_PAGES_MARKER:-[skip github-pages]}"
+          shopt -s nocasematch
+          has() { [[ "$SUBJECT" == *"$1"* ]]; }
+          skip_publish=false
+          skip_pages=false
+          if has "$skip_ci_marker"; then skip_publish=true; skip_pages=true; fi
+          if has "$skip_publish_marker"; then skip_publish=true; fi
+          if has "$skip_pages_marker"; then skip_pages=true; fi
+          printf 'skip-publish=%s\n' "$skip_publish" >> "$GITHUB_OUTPUT"
+          printf 'skip-pages=%s\n' "$skip_pages" >> "$GITHUB_OUTPUT"
+          printf 'skip publish: %s, skip pages: %s\n' "$skip_publish" "$skip_pages"
 
   # TRIGGER GATE. Every job after `setup` carries the same clause:
   #   (trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch'
@@ -483,9 +530,11 @@ jobs:
   # Publishing job
   #
   # Gated by [tool.wads.ci.publish] in pyproject.toml (read via the setup job):
-  #   - skip-ci-marker  : when publishing is enabled, a commit SUBJECT LINE
-  #                       containing this substring skips the publish job
-  #                       (default "[skip ci]").
+  #   - skip-publish    : the setup job's verdict on the skip markers (see
+  #                       "Decide skip markers"): a SUBJECT carrying the
+  #                       skip-ci marker (default "[skip ci]") or the
+  #                       skip-publish marker (default "[skip publish]")
+  #                       skips this job; `== 'false'` fails closed.
   #   - publish-enabled : whether publishing runs at all (default true).
   #   - publish-marker  : when publishing is disabled, a commit SUBJECT LINE
   #                       containing this substring forces the publish job
@@ -513,7 +562,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(needs.setup.outputs.commit-subject, needs.setup.outputs.skip-ci-marker) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -610,7 +659,9 @@ jobs:
           message: "Release version ${{ env.VERSION }}"
           push: true
 
-  # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false)
+  # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false, or
+  # when the subject carries the skip-ci or skip-pages marker: setup's
+  # `skip-pages` verdict, see "Decide skip markers")
   # Depends on validation (not publish) so docs still publish when the publish
   # job is disabled via [tool.wads.ci.publish].enabled = false.
   #
@@ -627,7 +678,7 @@ jobs:
     permissions:
       contents: write
       pages: write
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "needs.setup.outputs.skip-pages == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
