@@ -6,6 +6,11 @@ This module provides the infrastructure for using pyproject.toml as the single
 source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.
 
+### Module Attributes
+
+| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.   |
+|-----------------------------------------------------------------------------|------------------------------------------------------------|
+
 ### Functions
 
 | [`get_ci_config_or_defaults`](#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...])   | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
@@ -91,6 +96,15 @@ Check if documentation generation is enabled.
 #### *property* docs_ignore_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get paths to ignore during documentation generation.
+
+#### *property* docs_skip_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that suppresses the GitHub Pages push only.
+
+A commit whose *subject line* contains it runs everything else but does
+not push to `gh-pages`. Defaults to `"[skip github-pages]"`. Set via
+`[tool.wads.ci.docs].skip_marker`. (The skip-ci marker,
+[`publish_skip_ci_marker`](#wads.ci_config.CIConfig.publish_skip_ci_marker), suppresses Pages too.)
 
 #### *property* env_secret_aliases *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
@@ -385,6 +399,16 @@ first line of its message) contains this marker skips the publish job.
 Defaults to `"[skip ci]"` (which GitHub also natively recognises to
 skip the whole workflow).
 
+#### *property* publish_skip_publish_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that suppresses publishing only.
+
+Narrower than [`publish_skip_ci_marker`](#wads.ci_config.CIConfig.publish_skip_ci_marker): a commit whose \*subject
+line\* contains it still runs validation (and GitHub Pages) but does not
+release to PyPI, so a docs- or comment-only change on the default branch
+is tested without burning a version number. Defaults to
+`"[skip publish]"`. Set via `[tool.wads.ci.publish].skip_publish_marker`.
+
 #### *property* pytest_args *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get pytest arguments.
@@ -531,6 +555,15 @@ Takes effect in the uv workflows (the reusable
 mirror), via the `windows-blocking` output of the read-ci-config
 action. It makes the RUN red; it does not gate publication —
 `publish` does not depend on the Windows job.
+
+### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
+
+each suppresses one side-effecting job
+and nothing else. The reusable workflow falls back to these same literals when
+read-ci-config’s wads is too old to emit them.
+
+* **Type:**
+  Narrow skip markers (i2mint/wads#62)
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 

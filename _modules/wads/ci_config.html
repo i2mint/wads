@@ -312,6 +312,25 @@
 <span class="n">TRIGGER_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"on-demand"</span><span class="p">)</span>
 <span class="n">DFLT_TRIGGER_MODE</span> <span class="o">=</span> <span class="s2">"auto"</span>
 <span class="n">DFLT_RUN_CI_MARKER</span> <span class="o">=</span> <span class="s2">"[run ci]"</span>
+<span class="c1">#: Narrow skip markers (i2mint/wads#62): each suppresses one side-effecting job</span>
+<span class="c1">#: and nothing else. The reusable workflow falls back to these same literals when</span>
+<span class="c1">#: read-ci-config's wads is too old to emit them.</span>
+<span class="n">DFLT_SKIP_PUBLISH_MARKER</span> <span class="o">=</span> <span class="s2">"[skip publish]"</span>
+<span class="n">DFLT_SKIP_PAGES_MARKER</span> <span class="o">=</span> <span class="s2">"[skip github-pages]"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_marker</span><span class="p">(</span><span class="n">table_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A commit-subject marker from *table_config*, refused unless a non-empty string.</span>
+
+<span class="sd">    A non-string (``skip_marker = false``) would otherwise reach the workflow as the</span>
+<span class="sd">    substring ``"false"`` and fire on any subject containing that word.</span>
+<span class="sd">    """</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="n">table_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">marker</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a non-empty, non-blank string; got </span><span class="si">{</span><span class="n">marker</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">marker</span>
 
 
 <div class="viewcode-block" id="render_minimal_env_placeholders">
@@ -329,7 +348,6 @@
         <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#TEST_ENV_BLOCK#</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#TEST_ENV_VARS#</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
     <span class="p">)</span></div>
-
 
 
 
@@ -351,9 +369,9 @@
     <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">ch</span> <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">isprintable</span><span class="p">()</span> <span class="k">else</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">u</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">04x</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mh">0xFFFF</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">U</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">08x</span><span class="si">}</span><span class="s2">"</span>
-        <span class="p">)</span>
+        <span class="n">ch</span>
+        <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">isprintable</span><span class="p">()</span>
+        <span class="k">else</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">u</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">04x</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mh">0xFFFF</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">U</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">08x</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="p">)</span>
 
@@ -742,6 +760,21 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_marker"</span><span class="p">,</span> <span class="s2">"[publish]"</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">publish_skip_publish_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that suppresses publishing only.</span>
+
+<span class="sd">        Narrower than :attr:`publish_skip_ci_marker`: a commit whose *subject</span>
+<span class="sd">        line* contains it still runs validation (and GitHub Pages) but does not</span>
+<span class="sd">        release to PyPI, so a docs- or comment-only change on the default branch</span>
+<span class="sd">        is tested without burning a version number. Defaults to</span>
+<span class="sd">        ``"[skip publish]"``. Set via ``[tool.wads.ci.publish].skip_publish_marker``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_marker</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish_config</span><span class="p">,</span> <span class="s2">"skip_publish_marker"</span><span class="p">,</span> <span class="n">DFLT_SKIP_PUBLISH_MARKER</span><span class="p">,</span>
+            <span class="n">table</span><span class="o">=</span><span class="s2">"[tool.wads.ci.publish]"</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="c1"># 🚦 TRIGGER (whether CI runs at all)</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">trigger_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -800,6 +833,20 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Check if documentation generation is enabled."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">docs_skip_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Commit-subject substring that suppresses the GitHub Pages push only.</span>
+
+<span class="sd">        A commit whose *subject line* contains it runs everything else but does</span>
+<span class="sd">        not push to ``gh-pages``. Defaults to ``"[skip github-pages]"``. Set via</span>
+<span class="sd">        ``[tool.wads.ci.docs].skip_marker``. (The skip-ci marker,</span>
+<span class="sd">        :attr:`publish_skip_ci_marker`, suppresses Pages too.)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_marker</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">docs_config</span><span class="p">,</span> <span class="s2">"skip_marker"</span><span class="p">,</span> <span class="n">DFLT_SKIP_PAGES_MARKER</span><span class="p">,</span>
+            <span class="n">table</span><span class="o">=</span><span class="s2">"[tool.wads.ci.docs]"</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">docs_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1340,7 +1387,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=71c619a2"></script>
+</div><script src="../../_static/documentation_options.js?v=d8866dc4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

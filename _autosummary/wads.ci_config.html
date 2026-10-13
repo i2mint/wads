@@ -291,6 +291,16 @@
 <p>This module provides the infrastructure for using pyproject.toml as the single
 source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER" title="wads.ci_config.DFLT_SKIP_PUBLISH_MARKER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></code></a></p></td>
+<td><p>each suppresses one side-effecting job and nothing else.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -424,6 +434,16 @@ pytest-cov (which pulls coverage); ruff comes from the ruff actions.</p>
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_ignore_paths">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">docs_ignore_paths</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.docs_ignore_paths" title="Link to this definition">¶</a></dt>
 <dd><p>Get paths to ignore during documentation generation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.docs_skip_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">docs_skip_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.docs_skip_marker" title="Link to this definition">¶</a></dt>
+<dd><p>Commit-subject substring that suppresses the GitHub Pages push only.</p>
+<p>A commit whose <em>subject line</em> contains it runs everything else but does
+not push to <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[skip</span> <span class="pre">github-pages]&quot;</span></code>. Set via
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.docs].skip_marker</span></code>. (The skip-ci marker,
+<a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_ci_marker" title="wads.ci_config.CIConfig.publish_skip_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">publish_skip_ci_marker</span></code></a>, suppresses Pages too.)</p>
 </dd></dl>
 
 <dl class="py property">
@@ -814,6 +834,17 @@ skip the whole workflow).</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.publish_skip_publish_marker">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">publish_skip_publish_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.publish_skip_publish_marker" title="Link to this definition">¶</a></dt>
+<dd><p>Commit-subject substring that suppresses publishing only.</p>
+<p>Narrower than <a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_ci_marker" title="wads.ci_config.CIConfig.publish_skip_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">publish_skip_ci_marker</span></code></a>: a commit whose *subject
+line* contains it still runs validation (and GitHub Pages) but does not
+release to PyPI, so a docs- or comment-only change on the default branch
+is tested without burning a version number. Defaults to
+<code class="docutils literal notranslate"><span class="pre">&quot;[skip</span> <span class="pre">publish]&quot;</span></code>. Set via <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.publish].skip_publish_marker</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.pytest_args">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pytest_args</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.pytest_args" title="Link to this definition">¶</a></dt>
 <dd><p>Get pytest arguments.</p>
@@ -996,6 +1027,19 @@ action. It makes the RUN red; it does not gate publication —
 
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.ci_config.DFLT_SKIP_PUBLISH_MARKER">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'[skip</span> <span class="pre">publish]'</span></span><a class="headerlink" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER" title="Link to this definition">¶</a></dt>
+<dd><p>each suppresses one side-effecting job
+and nothing else. The reusable workflow falls back to these same literals when
+read-ci-config’s wads is too old to emit them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Narrow skip markers (i2mint/wads#62)</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_config.get_ci_config_or_defaults">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">get_ci_config_or_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_config.html#get_ci_config_or_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.get_ci_config_or_defaults" title="Link to this definition">¶</a></dt>
@@ -1125,6 +1169,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.docs_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_config</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.docs_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_enabled</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.docs_ignore_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_ignore_paths</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.docs_skip_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.docs_skip_marker</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.env_secret_aliases"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_secret_aliases</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_all"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_all</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.env_vars_defaults"><code class="docutils literal notranslate"><span class="pre">CIConfig.env_vars_defaults</span></code></a></li>
@@ -1161,6 +1206,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.publish_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_enabled</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.publish_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_marker</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_ci_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_skip_ci_marker</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.publish_skip_publish_marker"><code class="docutils literal notranslate"><span class="pre">CIConfig.publish_skip_publish_marker</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.pytest_args"><code class="docutils literal notranslate"><span class="pre">CIConfig.pytest_args</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.python_versions"><code class="docutils literal notranslate"><span class="pre">CIConfig.python_versions</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.quality_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.quality_config</span></code></a></li>
@@ -1179,6 +1225,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.windows_blocking"><code class="docutils literal notranslate"><span class="pre">CIConfig.windows_blocking</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER"><code class="docutils literal notranslate"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
@@ -1193,7 +1240,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=71c619a2"></script>
+</div><script src="../_static/documentation_options.js?v=d8866dc4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

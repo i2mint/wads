@@ -1,4 +1,4 @@
-> built 2026-10-13 07:12 UTC from 25586fc (master) · wads 0.2.38. Details: build_info.json
+> built 2026-10-13 22:19 UTC from 154c4e6 (master) · wads 0.2.39. Details: build_info.json
 
 # index.html.md
 
@@ -433,6 +433,17 @@ wheel = true
 [tool.wads.ci.publish]
 enabled = true  # Publish to PyPI on main/master
 ```
+
+Commit-subject markers narrow what a default-branch push does. wads matches them against the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count. The one exception is `[skip ci]` itself: GitHub skips the whole run when it appears *anywhere* in the pushed commit message, body included. This also means a PR whose title carries a marker skips that job on its own squash-merge, so keep markers out of PR titles unless you mean it.
+
+| Marker (default)      | Validation          | Publish (PyPI)                | GitHub Pages   | Rename via                                                                                                                 |
+|-----------------------|---------------------|-------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------|
+| `[skip ci]`           | skipped (by GitHub) | skipped                       | skipped        | `[tool.wads.ci.publish].skip_ci_marker` (renaming it moves only the publish and Pages gates; validation keeps `[skip ci]`) |
+| `[skip publish]`      | runs                | skipped                       | runs           | `[tool.wads.ci.publish].skip_publish_marker`                                                                               |
+| `[skip github-pages]` | runs                | runs                          | skipped        | `[tool.wads.ci.docs].skip_marker`                                                                                          |
+| `[publish]`           | runs                | forced when `enabled = false` | runs           | `[tool.wads.ci.publish].publish_marker`                                                                                    |
+
+`[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
 
 ### Licence Perimeter (`wads-licence-check`)
 
@@ -1176,6 +1187,11 @@ This module provides the infrastructure for using pyproject.toml as the single
 source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.
 
+### Module Attributes
+
+| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.   |
+|-----------------------------------------------------------------------------|------------------------------------------------------------|
+
 ### Functions
 
 | [`get_ci_config_or_defaults`](_autosummary/wads.ci_config.html.md#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...])   | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
@@ -1261,6 +1277,15 @@ Check if documentation generation is enabled.
 #### *property* docs_ignore_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get paths to ignore during documentation generation.
+
+#### *property* docs_skip_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that suppresses the GitHub Pages push only.
+
+A commit whose *subject line* contains it runs everything else but does
+not push to `gh-pages`. Defaults to `"[skip github-pages]"`. Set via
+`[tool.wads.ci.docs].skip_marker`. (The skip-ci marker,
+[`publish_skip_ci_marker`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig.publish_skip_ci_marker), suppresses Pages too.)
 
 #### *property* env_secret_aliases *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
@@ -1555,6 +1580,16 @@ first line of its message) contains this marker skips the publish job.
 Defaults to `"[skip ci]"` (which GitHub also natively recognises to
 skip the whole workflow).
 
+#### *property* publish_skip_publish_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that suppresses publishing only.
+
+Narrower than [`publish_skip_ci_marker`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig.publish_skip_ci_marker): a commit whose \*subject
+line\* contains it still runs validation (and GitHub Pages) but does not
+release to PyPI, so a docs- or comment-only change on the default branch
+is tested without burning a version number. Defaults to
+`"[skip publish]"`. Set via `[tool.wads.ci.publish].skip_publish_marker`.
+
 #### *property* pytest_args *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get pytest arguments.
@@ -1701,6 +1736,15 @@ Takes effect in the uv workflows (the reusable
 mirror), via the `windows-blocking` output of the read-ci-config
 action. It makes the RUN red; it does not gate publication —
 `publish` does not depend on the Windows job.
+
+### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
+
+each suppresses one side-effecting job
+and nothing else. The reusable workflow falls back to these same literals when
+read-ci-config’s wads is too old to emit them.
+
+* **Type:**
+  Narrow skip markers (i2mint/wads#62)
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 
@@ -6906,18 +6950,16 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-13 07:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/25586fc819d038532c2d435decbfe1181e3579a3"><code>25586fc</code></a> on branch <code>master</code>, for **wads 0.2.38** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 22:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/154c4e6a80676e1d7f621607a892db56cb6576a3"><code>154c4e6</code></a> on branch <code>master</code>, for **wads 0.2.39** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.38) is behind the latest release on PyPI (0.2.39): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/25586fc819d038532c2d435decbfe1181e3579a3"><code>25586fc819d038532c2d435decbfe1181e3579a3</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/154c4e6a80676e1d7f621607a892db56cb6576a3"><code>154c4e6a80676e1d7f621607a892db56cb6576a3</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -6928,15 +6970,15 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38360977812">38360977812</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38476710178">38476710178</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>25586fc819d038532c2d435decbfe1181e3579a3</code> (in the history of the built commit) |
+| Event commit | <code>154c4e6a80676e1d7f621607a892db56cb6576a3</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.14  |
+| epythet  | 0.2.17  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -6955,14 +6997,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.39/">0.2.39</a>, newer than the documented version (0.2.38).
+Latest release: <a href="https://pypi.org/project/wads/0.2.39/">0.2.39</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 25586fc819d038532c2d435decbfe1181e3579a3
-pip install "epythet==0.2.14"
+git checkout 154c4e6a80676e1d7f621607a892db56cb6576a3
+pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 
