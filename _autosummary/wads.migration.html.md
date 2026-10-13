@@ -35,15 +35,16 @@ True
 
 ### Functions
 
-| [`analyze_manifest_in`](#wads.migration.analyze_manifest_in)(manifest_path)                | Analyze MANIFEST.in file and provide migration guidance for Hatchling.    |
-|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [`carry_ci_env_into_pyproject`](#wads.migration.carry_ci_env_into_pyproject)(ci_text, ...[, kind]) | Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.    |
-| [`extract_ci_env_vars`](#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.        |
-| [`main`](#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                 |
-| [`migrate_ci_to_stub`](#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci. |
-| [`migrate_ci_to_uv`](#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.      |
-| [`migrate_github_ci_old_to_new`](#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                          |
-| [`migrate_setuptools_to_hatching`](#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                |
+| [`analyze_manifest_in`](#wads.migration.analyze_manifest_in)(manifest_path)                | Analyze MANIFEST.in file and provide migration guidance for Hatchling.                                             |
+|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`carry_ci_env_into_pyproject`](#wads.migration.carry_ci_env_into_pyproject)(ci_text, ...[, ...])  | Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.                                             |
+| [`dropped_infra_ci_env_vars`](#wads.migration.dropped_infra_ci_env_vars)(ci_text)                | The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](#wads.migration.extract_ci_env_vars) drops. |
+| [`extract_ci_env_vars`](#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.                                                 |
+| [`main`](#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                                                          |
+| [`migrate_ci_to_stub`](#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.                                          |
+| [`migrate_ci_to_uv`](#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.                                               |
+| [`migrate_github_ci_old_to_new`](#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                                                                   |
+| [`migrate_setuptools_to_hatching`](#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                                                         |
 
 ### Exceptions
 
@@ -82,7 +83,7 @@ False
 False
 ```
 
-### wads.migration.carry_ci_env_into_pyproject(ci_text, pyproject_path, , kind='extra')
+### wads.migration.carry_ci_env_into_pyproject(ci_text, pyproject_path, , kind='extra', report_dropped=None)
 
 Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.
 
@@ -94,8 +95,35 @@ was nothing to carry). This is what makes `ci-to-stub` / `ci-to-uv`
 *lossless*: secrets wired only in the old workflow YAML are preserved in
 `pyproject.toml` instead of silently dropped.
 
+Infra-secret-backed env vars (see [`extract_ci_env_vars()`](#wads.migration.extract_ci_env_vars)) are the one
+deliberate exception; `report_dropped` receives them as
+`{ENV_VAR: SECRET_NAME}` (default: a note on stderr).
+
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.migration.dropped_infra_ci_env_vars(ci_text)
+
+The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](#wads.migration.extract_ci_env_vars) drops.
+
+These are env vars backed by an infra secret (publish token, GitHub
+token), under their own name or an alias. A migration reports them so a
+dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> dropped_infra_ci_env_vars('''
+... jobs:
+...   publish:
+...     steps:
+...       - run: uv publish
+...         env:
+...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
+... ''')
+{'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}
+```
 
 ### wads.migration.extract_ci_env_vars(ci_text)
 
@@ -108,7 +136,13 @@ per-repo signal of which secrets the tests actually consume.
 Deliberately excluded:
 
 * Literal env vars (`PROJECT_NAME`, `LOG_LEVEL: DEBUG` …) — no secret ref.
-* Infra secrets (`GITHUB_TOKEN`, `PYPI_PASSWORD`, `TEST_PYPI_PASSWORD`).
+* Infra secrets (`GITHUB_TOKEN`, `PYPI_PASSWORD`, `TEST_PYPI_PASSWORD`)
+  and any other publish credential (`TWINE_PASSWORD`, `PYPI_API_TOKEN`
+  …, see `wads.scripts.export_ci_env.is_publish_credential`), by env-var
+  name *or* by backing secret, in any case: `UV_PUBLISH_TOKEN:
+  ${{ secrets.PYPI_PASSWORD }}` in a publish step is dropped, since
+  carrying it would hand the PyPI token to the test jobs (issue #110).
+  [`dropped_infra_ci_env_vars()`](#wads.migration.dropped_infra_ci_env_vars) lists what was dropped.
 * Reusable-workflow `secrets:` pass-through blocks — that’s *transport*,
   not a signal of usage, and scanning it would re-introduce the very
   over-assignment the new model removes.
@@ -125,6 +159,9 @@ Deliberately excluded:
 ...       - uses: x
 ...         with:
 ...           pypi-token: ${{ secrets.PYPI_PASSWORD }}
+...       - run: uv publish
+...         env:
+...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
 ... '''
 >>> extract_ci_env_vars(ci) == {
 ...     "OPENAI_API_KEY": "OPENAI_API_KEY", "HF_TOKEN": "HF_WRITE_TOKEN"}

@@ -229,6 +229,10 @@ export-ci-env), and it already reaches every job from workflow level
 — re-emitting `${{ secrets.X || '' }}` at job level would override
 the default with ‘’ in exactly the jobs that run tests.
 
+Publish credentials (`UV_PUBLISH_TOKEN -> PYPI_PASSWORD` and the
+like; see `wads.scripts.export_ci_env.is_publish_credential`) are
+never rendered into a test job, with a note on stderr (issue #110).
+
 * **Parameters:**
   * **indent** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – leading spaces per line (6 = entries of a job-level
     `env:` block)

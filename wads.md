@@ -1,4 +1,4 @@
-> built 2026-10-13 01:29 UTC from 7934164 (master) · wads 0.2.34. Details: build_info.json
+> built 2026-10-13 02:27 UTC from a5197d9 (master) · wads 0.2.35. Details: build_info.json
 
 # index.html.md
 
@@ -1398,6 +1398,10 @@ committed default is authoritative (matching the reusable workflow’s
 export-ci-env), and it already reaches every job from workflow level
 — re-emitting `${{ secrets.X || '' }}` at job level would override
 the default with ‘’ in exactly the jobs that run tests.
+
+Publish credentials (`UV_PUBLISH_TOKEN -> PYPI_PASSWORD` and the
+like; see `wads.scripts.export_ci_env.is_publish_credential`) are
+never rendered into a test job, with a note on stderr (issue #110).
 
 * **Parameters:**
   * **indent** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – leading spaces per line (6 = entries of a job-level
@@ -4084,15 +4088,16 @@ True
 
 ### Functions
 
-| [`analyze_manifest_in`](_autosummary/wads.migration.html.md#wads.migration.analyze_manifest_in)(manifest_path)                | Analyze MANIFEST.in file and provide migration guidance for Hatchling.    |
-|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [`carry_ci_env_into_pyproject`](_autosummary/wads.migration.html.md#wads.migration.carry_ci_env_into_pyproject)(ci_text, ...[, kind]) | Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.    |
-| [`extract_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.        |
-| [`main`](_autosummary/wads.migration.html.md#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                 |
-| [`migrate_ci_to_stub`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci. |
-| [`migrate_ci_to_uv`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.      |
-| [`migrate_github_ci_old_to_new`](_autosummary/wads.migration.html.md#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                          |
-| [`migrate_setuptools_to_hatching`](_autosummary/wads.migration.html.md#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                |
+| [`analyze_manifest_in`](_autosummary/wads.migration.html.md#wads.migration.analyze_manifest_in)(manifest_path)                | Analyze MANIFEST.in file and provide migration guidance for Hatchling.                                             |
+|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`carry_ci_env_into_pyproject`](_autosummary/wads.migration.html.md#wads.migration.carry_ci_env_into_pyproject)(ci_text, ...[, ...])  | Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.                                             |
+| [`dropped_infra_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.dropped_infra_ci_env_vars)(ci_text)                | The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars) drops. |
+| [`extract_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.                                                 |
+| [`main`](_autosummary/wads.migration.html.md#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                                                          |
+| [`migrate_ci_to_stub`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.                                          |
+| [`migrate_ci_to_uv`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.                                               |
+| [`migrate_github_ci_old_to_new`](_autosummary/wads.migration.html.md#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                                                                   |
+| [`migrate_setuptools_to_hatching`](_autosummary/wads.migration.html.md#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                                                         |
 
 ### Exceptions
 
@@ -4131,7 +4136,7 @@ False
 False
 ```
 
-### wads.migration.carry_ci_env_into_pyproject(ci_text, pyproject_path, , kind='extra')
+### wads.migration.carry_ci_env_into_pyproject(ci_text, pyproject_path, , kind='extra', report_dropped=None)
 
 Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.
 
@@ -4143,8 +4148,35 @@ was nothing to carry). This is what makes `ci-to-stub` / `ci-to-uv`
 *lossless*: secrets wired only in the old workflow YAML are preserved in
 `pyproject.toml` instead of silently dropped.
 
+Infra-secret-backed env vars (see [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)) are the one
+deliberate exception; `report_dropped` receives them as
+`{ENV_VAR: SECRET_NAME}` (default: a note on stderr).
+
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.migration.dropped_infra_ci_env_vars(ci_text)
+
+The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars) drops.
+
+These are env vars backed by an infra secret (publish token, GitHub
+token), under their own name or an alias. A migration reports them so a
+dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> dropped_infra_ci_env_vars('''
+... jobs:
+...   publish:
+...     steps:
+...       - run: uv publish
+...         env:
+...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
+... ''')
+{'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}
+```
 
 ### wads.migration.extract_ci_env_vars(ci_text)
 
@@ -4157,7 +4189,13 @@ per-repo signal of which secrets the tests actually consume.
 Deliberately excluded:
 
 * Literal env vars (`PROJECT_NAME`, `LOG_LEVEL: DEBUG` …) — no secret ref.
-* Infra secrets (`GITHUB_TOKEN`, `PYPI_PASSWORD`, `TEST_PYPI_PASSWORD`).
+* Infra secrets (`GITHUB_TOKEN`, `PYPI_PASSWORD`, `TEST_PYPI_PASSWORD`)
+  and any other publish credential (`TWINE_PASSWORD`, `PYPI_API_TOKEN`
+  …, see `wads.scripts.export_ci_env.is_publish_credential`), by env-var
+  name *or* by backing secret, in any case: `UV_PUBLISH_TOKEN:
+  ${{ secrets.PYPI_PASSWORD }}` in a publish step is dropped, since
+  carrying it would hand the PyPI token to the test jobs (issue #110).
+  [`dropped_infra_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.dropped_infra_ci_env_vars) lists what was dropped.
 * Reusable-workflow `secrets:` pass-through blocks — that’s *transport*,
   not a signal of usage, and scanning it would re-introduce the very
   over-assignment the new model removes.
@@ -4174,6 +4212,9 @@ Deliberately excluded:
 ...       - uses: x
 ...         with:
 ...           pypi-token: ${{ secrets.PYPI_PASSWORD }}
+...       - run: uv publish
+...         env:
+...           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
 ... '''
 >>> extract_ci_env_vars(ci) == {
 ...     "OPENAI_API_KEY": "OPENAI_API_KEY", "HF_TOKEN": "HF_WRITE_TOKEN"}
@@ -5611,6 +5652,7 @@ documented form for multiline values) before being written to the job env.
 
 | [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#wads.scripts.export_ci_env.export_ci_env)(\*[, required, test, extra, ...])   | Compute the env assignments to write, plus any missing-required errors.             |
 |----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`is_publish_credential`](_autosummary/wads.scripts.export_ci_env.html.md#wads.scripts.export_ci_env.is_publish_credential)(env_var[, secret])          | True when `env_var` (backed by `secret`) carries a PyPI publish credential.         |
 | [`main`](_autosummary/wads.scripts.export_ci_env.html.md#wads.scripts.export_ci_env.main)()                                            | Read inputs from env, write assignments to `$GITHUB_ENV`, fail if required missing. |
 | [`merge_transported_secrets`](_autosummary/wads.scripts.export_ci_env.html.md#wads.scripts.export_ci_env.merge_transported_secrets)(secrets)                | Flatten the secrets mapping, expanding the `WADS_CI_SECRETS_JSON` blob.             |
 
@@ -5645,7 +5687,7 @@ Alias for field number 2
 
 Alias for field number 3
 
-### wads.scripts.export_ci_env.export_ci_env(\*, required=(), test=(), extra=(), defaults=None, aliases=None, secrets=None, vars_=None, warn=<function <lambda>>)
+### wads.scripts.export_ci_env.export_ci_env(\*, required=(), test=(), extra=(), defaults=None, aliases=None, secrets=None, vars_=None, withhold_publish=True, warn=<function <lambda>>)
 
 Compute the env assignments to write, plus any missing-required errors.
 
@@ -5678,8 +5720,8 @@ A required var with no backing secret *or* variable is reported (caller
 should fail CI):
 
 ```pycon
->>> export_ci_env(required=["PYPI_PASSWORD"], secrets={}).missing_required
-[('PYPI_PASSWORD', 'PYPI_PASSWORD')]
+>>> export_ci_env(required=["OPENAI_API_KEY"], secrets={}).missing_required
+[('OPENAI_API_KEY', 'OPENAI_API_KEY')]
 ```
 
 Aliases let an env var read a differently-named secret:
@@ -5693,6 +5735,46 @@ Aliases let an env var read a differently-named secret:
 ['HF_TOKEN']
 >>> plan.assignments
 ['HF_TOKEN=hf_xxx']
+```
+
+A publish credential (see [`is_publish_credential()`](_autosummary/wads.scripts.export_ci_env.html.md#wads.scripts.export_ci_env.is_publish_credential)) is never
+exported, under any name, and never fails the job, unless
+`withhold_publish=False` (the publish job). The token must not reach a
+job that runs tests (issue #110):
+
+```pycon
+>>> plan = export_ci_env(
+...     required=["PYPI_PASSWORD"],
+...     extra=["UV_PUBLISH_TOKEN"],
+...     aliases={"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},
+...     secrets={"PYPI_PASSWORD": "pypi-xxx"},
+...     warn=lambda msg: None)
+>>> plan.exported, plan.missing_required, plan.mask_values
+([], [], [])
+```
+
+### wads.scripts.export_ci_env.is_publish_credential(env_var, secret=None)
+
+True when `env_var` (backed by `secret`) carries a PyPI publish credential.
+
+Matches the publish env-var names tools read, the wads publish secrets, and
+any other PyPI-ish credential name, case-insensitively (GitHub secret names
+are case-insensitive).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")
+True
+>>> is_publish_credential("TWINE_PASSWORD", "WHATEVER")
+True
+>>> is_publish_credential("MY_TOKEN", "pypi_api_token")
+True
+>>> is_publish_credential("PYPI_USERNAME")
+False
+>>> is_publish_credential("OPENAI_API_KEY")
+False
 ```
 
 ### wads.scripts.export_ci_env.main()
@@ -6824,18 +6906,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-13 01:29 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7934164c3b5125691761c26836b7a98bf5f9112e"><code>7934164</code></a> on branch <code>master</code>, for **wads 0.2.34** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 02:27 UTC** from commit <a href="https://github.com/i2mint/wads/commit/a5197d93eacf7e066a0f727b4b97fa8a4185eaa6"><code>a5197d9</code></a> on branch <code>master</code>, for **wads 0.2.35** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.34) is behind the latest release on PyPI (0.2.35): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.35) is behind the latest release on PyPI (0.2.36): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/7934164c3b5125691761c26836b7a98bf5f9112e"><code>7934164c3b5125691761c26836b7a98bf5f9112e</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/a5197d93eacf7e066a0f727b4b97fa8a4185eaa6"><code>a5197d93eacf7e066a0f727b4b97fa8a4185eaa6</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -6846,9 +6928,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38332170411">38332170411</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38336794426">38336794426</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>7934164c3b5125691761c26836b7a98bf5f9112e</code> (in the history of the built commit) |
+| Event commit | <code>a5197d93eacf7e066a0f727b4b97fa8a4185eaa6</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6873,13 +6955,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.35/">0.2.35</a>, newer than the documented version (0.2.34).
+Latest release: <a href="https://pypi.org/project/wads/0.2.36/">0.2.36</a>, newer than the documented version (0.2.35).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 7934164c3b5125691761c26836b7a98bf5f9112e
+git checkout a5197d93eacf7e066a0f727b4b97fa8a4185eaa6
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -325,25 +325,28 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.analyze_manifest_in" title="wads.migration.analyze_manifest_in"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analyze_manifest_in</span></code></a>(manifest_path)</p></td>
 <td><p>Analyze MANIFEST.in file and provide migration guidance for Hatchling.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.carry_ci_env_into_pyproject" title="wads.migration.carry_ci_env_into_pyproject"><code class="xref py py-obj docutils literal notranslate"><span class="pre">carry_ci_env_into_pyproject</span></code></a>(ci_text, ...[, kind])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.carry_ci_env_into_pyproject" title="wads.migration.carry_ci_env_into_pyproject"><code class="xref py py-obj docutils literal notranslate"><span class="pre">carry_ci_env_into_pyproject</span></code></a>(ci_text, ...[, ...])</p></td>
 <td><p>Merge secret-backed env vars from <code class="docutils literal notranslate"><span class="pre">ci_text</span></code> into <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.extract_ci_env_vars" title="wads.migration.extract_ci_env_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ci_env_vars</span></code></a>(ci_text)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.dropped_infra_ci_env_vars" title="wads.migration.dropped_infra_ci_env_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dropped_infra_ci_env_vars</span></code></a>(ci_text)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">{ENV_VAR:</span> <span class="pre">SECRET_NAME}</span></code> entries <a class="reference internal" href="#wads.migration.extract_ci_env_vars" title="wads.migration.extract_ci_env_vars"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a> drops.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.extract_ci_env_vars" title="wads.migration.extract_ci_env_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ci_env_vars</span></code></a>(ci_text)</p></td>
 <td><p>Extract secret-backed env vars from a CI workflow's <code class="docutils literal notranslate"><span class="pre">env:</span></code> blocks.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.main" title="wads.migration.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.main" title="wads.migration.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
 <td><p>CLI entry point for wads migration tools.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_stub" title="wads.migration.migrate_ci_to_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_stub</span></code></a>([old_ci, pin, transport, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_stub" title="wads.migration.migrate_ci_to_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_stub</span></code></a>([old_ci, pin, transport, ...])</p></td>
 <td><p>Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_uv" title="wads.migration.migrate_ci_to_uv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_uv</span></code></a>(old_ci, *[, defaults])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_uv" title="wads.migration.migrate_ci_to_uv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_uv</span></code></a>(old_ci, *[, defaults])</p></td>
 <td><p>Migrate a CI workflow (old or 2025 format) to the uv-based template.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new" title="wads.migration.migrate_github_ci_old_to_new"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new</span></code></a>(old_ci[, defaults])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new" title="wads.migration.migrate_github_ci_old_to_new"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new</span></code></a>(old_ci[, defaults])</p></td>
 <td><p>Migrate old GitHub CI script to new 2025 format.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching" title="wads.migration.migrate_setuptools_to_hatching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching</span></code></a>(setup_cfg[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching" title="wads.migration.migrate_setuptools_to_hatching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching</span></code></a>(setup_cfg[, ...])</p></td>
 <td><p>Migrate setup.cfg to pyproject.toml format using hatching.</p></td>
 </tr>
 </tbody>
@@ -401,7 +404,7 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.migration.carry_ci_env_into_pyproject">
-<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">carry_ci_env_into_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'extra'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/migration.html#carry_ci_env_into_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.carry_ci_env_into_pyproject" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">carry_ci_env_into_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'extra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_dropped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/migration.html#carry_ci_env_into_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.carry_ci_env_into_pyproject" title="Link to this definition">¶</a></dt>
 <dd><p>Merge secret-backed env vars from <code class="docutils literal notranslate"><span class="pre">ci_text</span></code> into <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code>.</p>
 <p>Adds only env vars not already declared (in any bucket), into the <code class="docutils literal notranslate"><span class="pre">kind</span></code>
 bucket (default <code class="docutils literal notranslate"><span class="pre">extra</span></code> — available-if-set, never fails the build), and
@@ -410,11 +413,39 @@ backing secret. Returns the list of newly-added var names (<code class="docutils
 was nothing to carry). This is what makes <code class="docutils literal notranslate"><span class="pre">ci-to-stub</span></code> / <code class="docutils literal notranslate"><span class="pre">ci-to-uv</span></code>
 <em>lossless</em>: secrets wired only in the old workflow YAML are preserved in
 <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> instead of silently dropped.</p>
+<p>Infra-secret-backed env vars (see <a class="reference internal" href="#wads.migration.extract_ci_env_vars" title="wads.migration.extract_ci_env_vars"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a>) are the one
+deliberate exception; <code class="docutils literal notranslate"><span class="pre">report_dropped</span></code> receives them as
+<code class="docutils literal notranslate"><span class="pre">{ENV_VAR:</span> <span class="pre">SECRET_NAME}</span></code> (default: a note on stderr).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.dropped_infra_ci_env_vars">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">dropped_infra_ci_env_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/migration.html#dropped_infra_ci_env_vars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.dropped_infra_ci_env_vars" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">{ENV_VAR:</span> <span class="pre">SECRET_NAME}</span></code> entries <a class="reference internal" href="#wads.migration.extract_ci_env_vars" title="wads.migration.extract_ci_env_vars"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a> drops.</p>
+<p>These are env vars backed by an infra secret (publish token, GitHub
+token), under their own name or an alias. A migration reports them so a
+dropped <code class="docutils literal notranslate"><span class="pre">UV_PUBLISH_TOKEN</span></code> is never a silent surprise (issue #110).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dropped_infra_ci_env_vars</span><span class="p">(</span><span class="s1">'''</span>
+<span class="gp">... </span><span class="s1">jobs:</span>
+<span class="gp">... </span><span class="s1">  publish:</span>
+<span class="gp">... </span><span class="s1">    steps:</span>
+<span class="gp">... </span><span class="s1">      - run: uv publish</span>
+<span class="gp">... </span><span class="s1">        env:</span>
+<span class="gp">... </span><span class="s1">          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}</span>
+<span class="gp">... </span><span class="s1">'''</span><span class="p">)</span>
+<span class="go">{'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -427,7 +458,13 @@ per-repo signal of which secrets the tests actually consume.</p>
 <p>Deliberately excluded:</p>
 <ul class="simple">
 <li><p>Literal env vars (<code class="docutils literal notranslate"><span class="pre">PROJECT_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">LOG_LEVEL:</span> <span class="pre">DEBUG</span></code> …) — no secret ref.</p></li>
-<li><p>Infra secrets (<code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>, <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code>, <code class="docutils literal notranslate"><span class="pre">TEST_PYPI_PASSWORD</span></code>).</p></li>
+<li><p>Infra secrets (<code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>, <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code>, <code class="docutils literal notranslate"><span class="pre">TEST_PYPI_PASSWORD</span></code>)
+and any other publish credential (<code class="docutils literal notranslate"><span class="pre">TWINE_PASSWORD</span></code>, <code class="docutils literal notranslate"><span class="pre">PYPI_API_TOKEN</span></code>
+…, see <code class="docutils literal notranslate"><span class="pre">wads.scripts.export_ci_env.is_publish_credential</span></code>), by env-var
+name <em>or</em> by backing secret, in any case: <code class="docutils literal notranslate"><span class="pre">UV_PUBLISH_TOKEN:</span>
+<span class="pre">${{</span> <span class="pre">secrets.PYPI_PASSWORD</span> <span class="pre">}}</span></code> in a publish step is dropped, since
+carrying it would hand the PyPI token to the test jobs (issue #110).
+<a class="reference internal" href="#wads.migration.dropped_infra_ci_env_vars" title="wads.migration.dropped_infra_ci_env_vars"><code class="xref py py-func docutils literal notranslate"><span class="pre">dropped_infra_ci_env_vars()</span></code></a> lists what was dropped.</p></li>
 <li><p>Reusable-workflow <code class="docutils literal notranslate"><span class="pre">secrets:</span></code> pass-through blocks — that’s <em>transport</em>,
 not a signal of usage, and scanning it would re-introduce the very
 over-assignment the new model removes.</p></li>
@@ -443,6 +480,9 @@ over-assignment the new model removes.</p></li>
 <span class="gp">... </span><span class="s1">      - uses: x</span>
 <span class="gp">... </span><span class="s1">        with:</span>
 <span class="gp">... </span><span class="s1">          pypi-token: ${{ secrets.PYPI_PASSWORD }}</span>
+<span class="gp">... </span><span class="s1">      - run: uv publish</span>
+<span class="gp">... </span><span class="s1">        env:</span>
+<span class="gp">... </span><span class="s1">          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}</span>
 <span class="gp">... </span><span class="s1">'''</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="s2">"OPENAI_API_KEY"</span><span class="p">:</span> <span class="s2">"OPENAI_API_KEY"</span><span class="p">,</span> <span class="s2">"HF_TOKEN"</span><span class="p">:</span> <span class="s2">"HF_WRITE_TOKEN"</span><span class="p">}</span>
@@ -712,6 +752,7 @@ to generate proper configuration.</p>
 <li><a class="reference internal" href="#wads.migration.MigrationError"><code class="docutils literal notranslate"><span class="pre">MigrationError</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.analyze_manifest_in"><code class="docutils literal notranslate"><span class="pre">analyze_manifest_in()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.carry_ci_env_into_pyproject"><code class="docutils literal notranslate"><span class="pre">carry_ci_env_into_pyproject()</span></code></a></li>
+<li><a class="reference internal" href="#wads.migration.dropped_infra_ci_env_vars"><code class="docutils literal notranslate"><span class="pre">dropped_infra_ci_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.extract_ci_env_vars"><code class="docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.migrate_ci_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_stub()</span></code></a></li>
@@ -729,7 +770,7 @@ to generate proper configuration.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f300720e"></script>
+</div><script src="../_static/documentation_options.js?v=5a400668"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

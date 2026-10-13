@@ -321,6 +321,44 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># the action's isolated run</span>
     <span class="n">JSON_TRANSPORT_SECRET</span> <span class="o">=</span> <span class="s2">"WADS_CI_SECRETS_JSON"</span>
 
+<span class="c1"># Publish credentials. The reusable workflow reads PYPI_PASSWORD only in its</span>
+<span class="c1"># publish job; no job that runs the repo's tests may get one, under any name</span>
+<span class="c1"># (issue #110). This module is stdlib-only, so it is the single home of the</span>
+<span class="c1"># rule: the migration and the inline-workflow renderer import it from here.</span>
+<span class="n">PUBLISH_ONLY_SECRETS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,</span> <span class="s2">"TEST_PYPI_PASSWORD"</span><span class="p">)</span>
+<span class="n">PUBLISH_ENV_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">,</span> <span class="s2">"UV_PUBLISH_PASSWORD"</span><span class="p">,</span> <span class="s2">"TWINE_PASSWORD"</span><span class="p">)</span>
+<span class="n">_PYPI_CREDENTIAL_WORDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"TOKEN"</span><span class="p">,</span> <span class="s2">"PASSWORD"</span><span class="p">,</span> <span class="s2">"KEY"</span><span class="p">,</span> <span class="s2">"SECRET"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="is_publish_credential">
+<a class="viewcode-back" href="../../../_autosummary/wads.scripts.export_ci_env.html#wads.scripts.export_ci_env.is_publish_credential">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_publish_credential</span><span class="p">(</span><span class="n">env_var</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True when ``env_var`` (backed by ``secret``) carries a PyPI publish credential.</span>
+
+<span class="sd">    Matches the publish env-var names tools read, the wads publish secrets, and</span>
+<span class="sd">    any other PyPI-ish credential name, case-insensitively (GitHub secret names</span>
+<span class="sd">    are case-insensitive).</span>
+
+<span class="sd">    &gt;&gt;&gt; is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_publish_credential("TWINE_PASSWORD", "WHATEVER")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_publish_credential("MY_TOKEN", "pypi_api_token")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_publish_credential("PYPI_USERNAME")</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; is_publish_credential("OPENAI_API_KEY")</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">env_var</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">secret</span> <span class="ow">or</span> <span class="n">env_var</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="n">names</span> <span class="o">&amp;</span> <span class="p">{</span><span class="o">*</span><span class="n">PUBLISH_ONLY_SECRETS</span><span class="p">,</span> <span class="o">*</span><span class="n">PUBLISH_ENV_VARS</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="s2">"PYPI"</span> <span class="ow">in</span> <span class="n">name</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">word</span> <span class="ow">in</span> <span class="n">name</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">_PYPI_CREDENTIAL_WORDS</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span>
+    <span class="p">)</span></div>
+
+
 <span class="c1"># Secrets-context keys that must never be exported as repo env vars: GitHub's</span>
 <span class="c1"># auto-token (the context spells it `github_token`) and the transport blob.</span>
 <span class="n">_NON_EXPORTABLE</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"github_token"</span><span class="p">,</span> <span class="n">JSON_TRANSPORT_SECRET</span><span class="o">.</span><span class="n">lower</span><span class="p">()})</span>
@@ -425,6 +463,7 @@
     <span class="n">aliases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">secrets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">vars_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">withhold_publish</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">),</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Compute the env assignments to write, plus any missing-required errors.</span>
@@ -455,8 +494,8 @@
 <span class="sd">    A required var with no backing secret *or* variable is reported (caller</span>
 <span class="sd">    should fail CI):</span>
 
-<span class="sd">    &gt;&gt;&gt; export_ci_env(required=["PYPI_PASSWORD"], secrets={}).missing_required</span>
-<span class="sd">    [('PYPI_PASSWORD', 'PYPI_PASSWORD')]</span>
+<span class="sd">    &gt;&gt;&gt; export_ci_env(required=["OPENAI_API_KEY"], secrets={}).missing_required</span>
+<span class="sd">    [('OPENAI_API_KEY', 'OPENAI_API_KEY')]</span>
 
 <span class="sd">    Aliases let an env var read a differently-named secret:</span>
 
@@ -468,11 +507,41 @@
 <span class="sd">    ['HF_TOKEN']</span>
 <span class="sd">    &gt;&gt;&gt; plan.assignments</span>
 <span class="sd">    ['HF_TOKEN=hf_xxx']</span>
+
+<span class="sd">    A publish credential (see :func:`is_publish_credential`) is never</span>
+<span class="sd">    exported, under any name, and never fails the job, unless</span>
+<span class="sd">    ``withhold_publish=False`` (the publish job). The token must not reach a</span>
+<span class="sd">    job that runs tests (issue #110):</span>
+
+<span class="sd">    &gt;&gt;&gt; plan = export_ci_env(</span>
+<span class="sd">    ...     required=["PYPI_PASSWORD"],</span>
+<span class="sd">    ...     extra=["UV_PUBLISH_TOKEN"],</span>
+<span class="sd">    ...     aliases={"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},</span>
+<span class="sd">    ...     secrets={"PYPI_PASSWORD": "pypi-xxx"},</span>
+<span class="sd">    ...     warn=lambda msg: None)</span>
+<span class="sd">    &gt;&gt;&gt; plan.exported, plan.missing_required, plan.mask_values</span>
+<span class="sd">    ([], [], [])</span>
 <span class="sd">    """</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">aliases</span> <span class="o">=</span> <span class="n">aliases</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">secrets</span> <span class="o">=</span> <span class="n">merge_transported_secrets</span><span class="p">(</span><span class="n">secrets</span><span class="p">)</span>
     <span class="n">vars_</span> <span class="o">=</span> <span class="n">vars_</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_withheld</span><span class="p">(</span><span class="n">var_name</span><span class="p">):</span>
+        <span class="n">source_name</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">withhold_publish</span> <span class="ow">and</span> <span class="n">is_publish_credential</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">source_name</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"::warning::[tool.wads.ci.env] declares </span><span class="si">{</span><span class="n">var_name</span><span class="si">!r}</span><span class="s2">, backed by "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source_name</span><span class="si">!r}</span><span class="s2">, a publish-only secret; not exported to this "</span>
+                <span class="sa">f</span><span class="s2">"job. Remove it from pyproject.toml: the publish job reads the "</span>
+                <span class="sa">f</span><span class="s2">"token itself."</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">required</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_withheld</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">test</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_withheld</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">extra</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_withheld</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
 
     <span class="n">assignments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">exported</span> <span class="o">=</span> <span class="p">[]</span>
@@ -589,6 +658,10 @@
     <span class="n">secrets</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">"WADS_SECRETS_JSON"</span><span class="p">,</span> <span class="p">{},</span> <span class="n">redact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">vars_</span> <span class="o">=</span> <span class="n">_load_json_env</span><span class="p">(</span><span class="s2">"WADS_VARS_JSON"</span><span class="p">,</span> <span class="p">{},</span> <span class="n">redact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+    <span class="c1"># A publish credential reaches only a job that names it in always-required</span>
+    <span class="c1"># (the publish job). Every other job, the test jobs above all, never gets</span>
+    <span class="c1"># it, whatever the repo's [tool.wads.ci.env] declares.</span>
+    <span class="n">publish_job</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">PUBLISH_ONLY_SECRETS</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">always_required</span><span class="p">)</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
         <span class="n">required</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">required</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">always_required</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">required</span><span class="p">],</span>
         <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
@@ -597,6 +670,7 @@
         <span class="n">aliases</span><span class="o">=</span><span class="n">aliases</span><span class="p">,</span>
         <span class="n">secrets</span><span class="o">=</span><span class="n">secrets</span><span class="p">,</span>
         <span class="n">vars_</span><span class="o">=</span><span class="n">vars_</span><span class="p">,</span>
+        <span class="n">withhold_publish</span><span class="o">=</span><span class="ow">not</span> <span class="n">publish_job</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Masks must be registered before any later step could echo the values.</span>
@@ -664,7 +738,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=f300720e"></script>
+</div><script src="../../../_static/documentation_options.js?v=5a400668"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

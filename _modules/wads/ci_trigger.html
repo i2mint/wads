@@ -852,7 +852,14 @@
         <span class="n">shadow_py</span> <span class="o">=</span> <span class="n">shadow</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
         <span class="n">shadow_py</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">old_py</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"inline-uv"</span><span class="p">:</span>
-            <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span><span class="n">old_ci</span><span class="p">,</span> <span class="n">shadow_py</span><span class="p">)</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="n">carry_ci_env_into_pyproject</span><span class="p">(</span>
+                <span class="n">old_ci</span><span class="p">,</span>
+                <span class="n">shadow_py</span><span class="p">,</span>
+                <span class="n">report_dropped</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dropped</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">"not carried (infra secret, would reach the test jobs): "</span>
+                    <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> &lt;- </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">dropped</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="s2">"carried env var(s) from the inline workflow into "</span>
@@ -1049,7 +1056,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=f300720e"></script>
+</div><script src="../../_static/documentation_options.js?v=5a400668"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

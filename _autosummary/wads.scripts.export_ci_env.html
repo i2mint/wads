@@ -320,10 +320,13 @@ documented form for multiline values) before being written to the job env.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.export_ci_env" title="wads.scripts.export_ci_env.export_ci_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_ci_env</span></code></a>(*[, required, test, extra, ...])</p></td>
 <td><p>Compute the env assignments to write, plus any missing-required errors.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.main" title="wads.scripts.export_ci_env.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.is_publish_credential" title="wads.scripts.export_ci_env.is_publish_credential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_publish_credential</span></code></a>(env_var[, secret])</p></td>
+<td><p>True when <code class="docutils literal notranslate"><span class="pre">env_var</span></code> (backed by <code class="docutils literal notranslate"><span class="pre">secret</span></code>) carries a PyPI publish credential.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.main" title="wads.scripts.export_ci_env.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
 <td><p>Read inputs from env, write assignments to <code class="docutils literal notranslate"><span class="pre">$GITHUB_ENV</span></code>, fail if required missing.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.merge_transported_secrets" title="wads.scripts.export_ci_env.merge_transported_secrets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_transported_secrets</span></code></a>(secrets)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.scripts.export_ci_env.merge_transported_secrets" title="wads.scripts.export_ci_env.merge_transported_secrets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_transported_secrets</span></code></a>(secrets)</p></td>
 <td><p>Flatten the secrets mapping, expanding the <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> blob.</p></td>
 </tr>
 </tbody>
@@ -380,7 +383,7 @@ documented form for multiline values) before being written to the job env.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.export_ci_env">
-<span class="sig-prename descclassname"><span class="pre">wads.scripts.export_ci_env.</span></span><span class="sig-name descname"><span class="pre">export_ci_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aliases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/export_ci_env.html#export_ci_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.export_ci_env.export_ci_env" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.scripts.export_ci_env.</span></span><span class="sig-name descname"><span class="pre">export_ci_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aliases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withhold_publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/export_ci_env.html#export_ci_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.export_ci_env.export_ci_env" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the env assignments to write, plus any missing-required errors.</p>
 <p>Pure function (no I/O) so it can be unit-tested without GitHub. Each
 declared name resolves secrets-first, then falls back to the caller’s
@@ -407,8 +410,8 @@ not masked (they are not sensitive by definition).</p>
 </div>
 <p>A required var with no backing secret <em>or</em> variable is reported (caller
 should fail CI):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span><span class="o">.</span><span class="n">missing_required</span>
-<span class="go">[('PYPI_PASSWORD', 'PYPI_PASSWORD')]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">export_ci_env</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">],</span> <span class="n">secrets</span><span class="o">=</span><span class="p">{})</span><span class="o">.</span><span class="n">missing_required</span>
+<span class="go">[('OPENAI_API_KEY', 'OPENAI_API_KEY')]</span>
 </pre></div>
 </div>
 <p>Aliases let an env var read a differently-named secret:</p>
@@ -420,6 +423,46 @@ should fail CI):</p>
 <span class="go">['HF_TOKEN']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">assignments</span>
 <span class="go">['HF_TOKEN=hf_xxx']</span>
+</pre></div>
+</div>
+<p>A publish credential (see <a class="reference internal" href="#wads.scripts.export_ci_env.is_publish_credential" title="wads.scripts.export_ci_env.is_publish_credential"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_publish_credential()</span></code></a>) is never
+exported, under any name, and never fails the job, unless
+<code class="docutils literal notranslate"><span class="pre">withhold_publish=False</span></code> (the publish job). The token must not reach a
+job that runs tests (issue #110):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span> <span class="o">=</span> <span class="n">export_ci_env</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">required</span><span class="o">=</span><span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">extra</span><span class="o">=</span><span class="p">[</span><span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">aliases</span><span class="o">=</span><span class="p">{</span><span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">:</span> <span class="s2">"PYPI_PASSWORD"</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">secrets</span><span class="o">=</span><span class="p">{</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">:</span> <span class="s2">"pypi-xxx"</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">warn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">msg</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="o">.</span><span class="n">exported</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">missing_required</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">mask_values</span>
+<span class="go">([], [], [])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.scripts.export_ci_env.is_publish_credential">
+<span class="sig-prename descclassname"><span class="pre">wads.scripts.export_ci_env.</span></span><span class="sig-name descname"><span class="pre">is_publish_credential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/export_ci_env.html#is_publish_credential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.export_ci_env.is_publish_credential" title="Link to this definition">¶</a></dt>
+<dd><p>True when <code class="docutils literal notranslate"><span class="pre">env_var</span></code> (backed by <code class="docutils literal notranslate"><span class="pre">secret</span></code>) carries a PyPI publish credential.</p>
+<p>Matches the publish env-var names tools read, the wads publish secrets, and
+any other PyPI-ish credential name, case-insensitively (GitHub secret names
+are case-insensitive).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">is_publish_credential</span><span class="p">(</span><span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">,</span> <span class="s2">"PYPI_PASSWORD"</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_publish_credential</span><span class="p">(</span><span class="s2">"TWINE_PASSWORD"</span><span class="p">,</span> <span class="s2">"WHATEVER"</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_publish_credential</span><span class="p">(</span><span class="s2">"MY_TOKEN"</span><span class="p">,</span> <span class="s2">"pypi_api_token"</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_publish_credential</span><span class="p">(</span><span class="s2">"PYPI_USERNAME"</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_publish_credential</span><span class="p">(</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">)</span>
+<span class="go">False</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -525,6 +568,7 @@ works, and required-validation reports any name that failed to resolve):</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#wads.scripts.export_ci_env.export_ci_env"><code class="docutils literal notranslate"><span class="pre">export_ci_env()</span></code></a></li>
+<li><a class="reference internal" href="#wads.scripts.export_ci_env.is_publish_credential"><code class="docutils literal notranslate"><span class="pre">is_publish_credential()</span></code></a></li>
 <li><a class="reference internal" href="#wads.scripts.export_ci_env.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.scripts.export_ci_env.merge_transported_secrets"><code class="docutils literal notranslate"><span class="pre">merge_transported_secrets()</span></code></a></li>
 </ul>
@@ -538,7 +582,7 @@ works, and required-validation reports any name that failed to resolve):</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f300720e"></script>
+</div><script src="../_static/documentation_options.js?v=5a400668"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

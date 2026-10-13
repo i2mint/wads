@@ -33,6 +33,7 @@ documented form for multiline values) before being written to the job env.
 
 | [`export_ci_env`](#wads.scripts.export_ci_env.export_ci_env)(\*[, required, test, extra, ...])   | Compute the env assignments to write, plus any missing-required errors.             |
 |----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`is_publish_credential`](#wads.scripts.export_ci_env.is_publish_credential)(env_var[, secret])          | True when `env_var` (backed by `secret`) carries a PyPI publish credential.         |
 | [`main`](#wads.scripts.export_ci_env.main)()                                            | Read inputs from env, write assignments to `$GITHUB_ENV`, fail if required missing. |
 | [`merge_transported_secrets`](#wads.scripts.export_ci_env.merge_transported_secrets)(secrets)                | Flatten the secrets mapping, expanding the `WADS_CI_SECRETS_JSON` blob.             |
 
@@ -67,7 +68,7 @@ Alias for field number 2
 
 Alias for field number 3
 
-### wads.scripts.export_ci_env.export_ci_env(\*, required=(), test=(), extra=(), defaults=None, aliases=None, secrets=None, vars_=None, warn=<function <lambda>>)
+### wads.scripts.export_ci_env.export_ci_env(\*, required=(), test=(), extra=(), defaults=None, aliases=None, secrets=None, vars_=None, withhold_publish=True, warn=<function <lambda>>)
 
 Compute the env assignments to write, plus any missing-required errors.
 
@@ -100,8 +101,8 @@ A required var with no backing secret *or* variable is reported (caller
 should fail CI):
 
 ```pycon
->>> export_ci_env(required=["PYPI_PASSWORD"], secrets={}).missing_required
-[('PYPI_PASSWORD', 'PYPI_PASSWORD')]
+>>> export_ci_env(required=["OPENAI_API_KEY"], secrets={}).missing_required
+[('OPENAI_API_KEY', 'OPENAI_API_KEY')]
 ```
 
 Aliases let an env var read a differently-named secret:
@@ -115,6 +116,46 @@ Aliases let an env var read a differently-named secret:
 ['HF_TOKEN']
 >>> plan.assignments
 ['HF_TOKEN=hf_xxx']
+```
+
+A publish credential (see [`is_publish_credential()`](#wads.scripts.export_ci_env.is_publish_credential)) is never
+exported, under any name, and never fails the job, unless
+`withhold_publish=False` (the publish job). The token must not reach a
+job that runs tests (issue #110):
+
+```pycon
+>>> plan = export_ci_env(
+...     required=["PYPI_PASSWORD"],
+...     extra=["UV_PUBLISH_TOKEN"],
+...     aliases={"UV_PUBLISH_TOKEN": "PYPI_PASSWORD"},
+...     secrets={"PYPI_PASSWORD": "pypi-xxx"},
+...     warn=lambda msg: None)
+>>> plan.exported, plan.missing_required, plan.mask_values
+([], [], [])
+```
+
+### wads.scripts.export_ci_env.is_publish_credential(env_var, secret=None)
+
+True when `env_var` (backed by `secret`) carries a PyPI publish credential.
+
+Matches the publish env-var names tools read, the wads publish secrets, and
+any other PyPI-ish credential name, case-insensitively (GitHub secret names
+are case-insensitive).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")
+True
+>>> is_publish_credential("TWINE_PASSWORD", "WHATEVER")
+True
+>>> is_publish_credential("MY_TOKEN", "pypi_api_token")
+True
+>>> is_publish_credential("PYPI_USERNAME")
+False
+>>> is_publish_credential("OPENAI_API_KEY")
+False
 ```
 
 ### wads.scripts.export_ci_env.main()
