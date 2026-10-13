@@ -6,73 +6,68 @@ CI secrets: what the reusable workflow (``uv-ci.yml``) declares in
 
 Transport: named by default, one JSON secret on request
 -------------------------------------------------------
-Every stub wads WRITES (``populate``, ``wads-migrate ci-to-stub`` on an inline
-workflow) passes its secrets by name: ``PYPI_PASSWORD`` plus the backing secret
-of each env var declared in ``[tool.wads.ci.env]``. The JSON transport below
-remains available with ``wads-migrate ci-to-stub --transport json``, and an
-existing stub keeps whichever transport it has when re-rendered.
-
-Why named is the default (issues #74, #88): serialising the whole ``secrets``
-context into a workflow in another repository is structurally what a
-secret-exfiltration workflow looks like, and GitHub's malicious-workflow
-scanner holds such runs on NEW repositories -- ``action_required``, zero jobs,
-no log, and the REST approve endpoint refuses them. It was reproduced on four
-new repositories; switching to the named transport made the next push run.
-
-The JSON transport
-^^^^^^^^^^^^^^^^^^
 A GitHub *reusable* workflow's secret interface (``on.workflow_call.secrets``)
 must be **static YAML** — it is parsed before any job runs and cannot be
 parametrized from ``pyproject.toml``. ``secrets: inherit`` is documented to
 work only when caller and callee share an org/enterprise, so it is unusable
 for personal-account repos calling an ``i2mint``-owned workflow.
 
-The static-interface constraint is satisfied with a single statically-declared
-secret, :data:`JSON_TRANSPORT_SECRET` (``WADS_CI_SECRETS_JSON``), whose value
-is the caller's whole ``secrets`` context serialized by the stub::
+**Named (the default).** The workflow declares a *superset* of optional
+secret names (:data:`DEFAULT_CI_SECRETS`), and each repo's stub passes, by
+name, only ``PYPI_PASSWORD`` plus the backing secret of each env var its
+``[tool.wads.ci.env]`` declares::
+
+    secrets:
+      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+The called workflow receives those secrets and nothing else, each masked by
+GitHub on its own. The bundled stub template is named; ``populate`` and every
+re-render (``wads-migrate ci-to-stub``, ``ci-on-demand``, ``fleet-stub``)
+write a named stub, converting a JSON one, unless ``--transport json`` is
+asked for.
+
+A name outside the superset makes GitHub reject the workflow at parse time
+with an opaque ``startup_failure`` (issue #63). The superset therefore grows
+**additively**: adding a ``required: false`` name never breaks an existing
+stub (removing one can). ``wads-secrets add`` and ``wads-migrate`` warn about
+out-of-superset names, and a re-render with no explicit transport falls back
+to JSON for such a repo rather than write a stub that cannot start.
+
+**JSON (opt-in).** ``wads-migrate ci-to-stub --transport json`` passes one
+statically-declared secret, :data:`JSON_TRANSPORT_SECRET`
+(``WADS_CI_SECRETS_JSON``), whose value is the caller's whole ``secrets``
+context::
 
     secrets:
       WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
 
-(The documented context-availability table allows the ``secrets`` context in
-``jobs.<job_id>.secrets.<id>``, so this expression is legal in the caller.)
-With this, *any* secret name a repo has reaches the reusable workflow — there
-is no fixed name list to be "outside of", which eliminates the parse-time
-``startup_failure`` class of issue #63 entirely.
-
-Two details, both verified empirically (see issue #63):
+Any secret name then reaches the workflow — but so does every secret the repo
+can read, org-level ones included, and serialising the whole ``secrets``
+context into a workflow in another repository is structurally what a
+secret-exfiltration workflow looks like. GitHub's malicious-workflow scanner
+holds such runs (``action_required``, zero jobs, no log, and the REST approve
+endpoint refuses them; issues #74, #88, #101). It was seen first on new
+repositories and later on an existing one; switching to named made the next
+push run every time. Two details of the JSON form, verified empirically
+(issue #63):
 
 * **Double encoding** (``toJSON(toJSON(...))``) makes the transported value a
   *single-line* JSON string. A multiline secret is masked per line, and the
   pretty-printed form's ``{`` / ``}`` lines would become global masks that
-  mangle every brace in the job log. Single-line ⇒ only the whole blob is
-  masked.
-* **Re-masking**: individual values extracted from the blob are *not*
-  automatically masked in the callee, so the ``export-ci-env`` action emits
+  mangle every brace in the job log.
+* **Re-masking**: values extracted from the blob are *not* automatically
+  masked in the callee, so the ``export-ci-env`` action emits
   ``::add-mask::`` for each secret-sourced value before exporting it.
-
-*Which* secrets actually land in the job env (and which are required) remains
-a separate, dynamic decision driven by ``[tool.wads.ci.env]`` in the
-consumer's ``pyproject.toml`` (see :mod:`wads.ci_config` and the
-``export-ci-env`` action). Nothing is exported unless declared there.
-
-The named superset (the named transport's universe)
-----------------------------------------------------
-The workflow also declares a generous *superset* of optional secret names
-(:data:`DEFAULT_CI_SECRETS`), and a named-transport stub passes a subset of
-it. A name outside the superset makes GitHub reject the workflow at parse time
-with an opaque ``startup_failure`` (issue #63), so ``wads-migrate`` and
-``wads-secrets`` warn loudly about such names; a repo that needs one can use a
-repository variable (for non-sensitive values) or opt into the JSON transport.
-
-The superset is **frozen**: it is pinned to the YAML by a test, and changing
-the reusable workflow's secret interface affects every consumer.
 
 So there are two layers:
 
 * **Transport** — named (default) or the JSON secret (opt-in), rendered into
   static YAML. Plumbing.
-* **Env-assignment** — pyproject-driven, exact, per-repo. The thing users tune.
+* **Env-assignment** — pyproject-driven, exact, per-repo: *which* transported
+  secrets land in the job env, and which are required (see
+  :mod:`wads.ci_config` and the ``export-ci-env`` action). Nothing is exported
+  unless declared there. The thing users tune.
 
 Keeping the names here (Python) and *rendering* them into the YAML (with a
 test pinning the YAML to this module) gives a single SSOT while respecting
@@ -82,8 +77,9 @@ GitHub's parse-time-literal constraint.
 import re
 import sys as _sys
 
-# The single statically-declared secret through which a stub transports the
-# caller's whole `secrets` context (double-encoded JSON; see module docstring).
+# The single statically-declared secret through which an opt-in JSON-transport
+# stub passes the caller's whole `secrets` context (double-encoded JSON; see
+# the module docstring).
 JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
 
 # The caller-side expression for the JSON transport. Double toJSON keeps the
@@ -91,14 +87,13 @@ JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
 JSON_TRANSPORT_EXPRESSION = "${{ toJSON(toJSON(secrets)) }}"
 
 # ---------------------------------------------------------------------------
-# The legacy named superset — FROZEN.
+# The superset of names a named-transport stub may pass — ADDITIVE ONLY.
 #
 # Grouped only for human readability; the public value is the flat, de-duped,
-# order-preserving tuple ``DEFAULT_CI_SECRETS`` built below. It exists so that
-# named-transport stubs deployed before the JSON transport keep working; do
-# not widen it — a repo needing a name outside it should regenerate its stub
-# (`wads-migrate ci-to-stub`), which transports every secret via
-# JSON_TRANSPORT_SECRET.
+# order-preserving tuple ``DEFAULT_CI_SECRETS`` built below. Adding a name is
+# safe for every existing stub (uv-ci.yml declares each one `required: false`);
+# removing one breaks any stub that passes it. After adding, regenerate the
+# uv-ci.yml block from render_workflow_call_secrets() (a test pins them equal).
 # ---------------------------------------------------------------------------
 
 _PUBLISHING = (
@@ -215,10 +210,10 @@ def _dedupe_preserving_order(names):
 DEFAULT_CI_SECRETS = tuple(
     _dedupe_preserving_order(name for group in _GROUPS for name in group)
 )
-"""Ordered, de-duplicated legacy superset of named CI secrets (frozen)."""
+"""Ordered, de-duplicated superset of names a named-transport stub may pass (additive)."""
 
 WORKFLOW_CALL_SECRETS = (JSON_TRANSPORT_SECRET, *DEFAULT_CI_SECRETS)
-"""Every secret ``uv-ci.yml`` declares: the JSON transport + the legacy superset."""
+"""Every secret ``uv-ci.yml`` declares: the opt-in JSON transport secret + the superset."""
 
 
 # ---------------------------------------------------------------------------
@@ -340,7 +335,7 @@ def render_workflow_call_secrets(
 def render_stub_secrets_passthrough(
     names=DEFAULT_CI_SECRETS, *, indent: int = 6
 ) -> str:
-    """Render a caller stub's *named* ``secrets:`` pass-through block (default).
+    """Render a caller stub's *named* ``secrets:`` pass-through block (the default).
 
     >>> print(render_stub_secrets_passthrough(["PYPI_PASSWORD", "NPM_TOKEN"]))
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -360,65 +355,128 @@ def render_stub_json_transport(*, indent: int = 6) -> str:
     return f"{pad}{JSON_TRANSPORT_SECRET}: {JSON_TRANSPORT_EXPRESSION}"
 
 
-# The comment + `secrets:` block a named-transport stub carries in place of the
-# template's JSON-transport region.
+# The comment + `secrets:` header of each transport. The bundled stub template
+# carries NAMED_TRANSPORT_COMMENT verbatim (a test pins it), and
+# stub_with_transport swaps one region for the other.
 NAMED_TRANSPORT_COMMENT = """\
-    # Transport (NAMED, the default): passes only the secrets listed below --
-    # PYPI_PASSWORD plus the backing secret of each env var declared in
-    # [tool.wads.ci.env] (`wads-secrets add VAR_NAME` updates both). Every
-    # name must be in the frozen wads superset (wads/ci_secrets.py) or GitHub
-    # rejects the workflow at parse time.
+    # Transport (named): passes ONLY the secrets listed below — PYPI_PASSWORD
+    # (for the publish job) plus the secret behind each env var declared in
+    # [tool.wads.ci.env]. `wads-secrets add VAR_NAME` declares a var and adds
+    # its secret here. Every listed name must be declared by the reusable
+    # workflow (the superset in wads/ci_secrets.py) or GitHub rejects this
+    # workflow at parse time; a missing name is a one-line addition there.
+    # (Cross-owner `secrets: inherit` does not propagate secrets, so it
+    # cannot replace this list.)
     #
-    # The opt-in JSON transport (`wads-migrate ci-to-stub --transport json`)
-    # passes every secret without a list, but GitHub's malicious-workflow
-    # scanner holds runs that use it on new repositories: `action_required`,
-    # zero jobs, no log (i2mint/wads#74).
+    # Opt-in alternative: `wads-migrate ci-to-stub --transport json` passes
+    # this repo's WHOLE secrets context — every secret it can read, including
+    # org-level ones — as one WADS_CI_SECRETS_JSON secret. GitHub's
+    # malicious-workflow scanner may hold runs that do that: `action_required`,
+    # zero jobs, no log (i2mint/wads#74, #101).
     #
-    # *Which* of these become job env vars -- and which are required -- is
-    # driven by [tool.wads.ci.env] in pyproject.toml. Non-sensitive values
-    # don't need a secret: use [tool.wads.ci.env].defaults or a repository
-    # *variable* (`gh variable set NAME`).
+    # *Which* of these become job env vars — and which are required — is
+    # driven entirely by [tool.wads.ci.env] in pyproject.toml; nothing is
+    # exported unless declared there. Non-sensitive values don't need a secret:
+    # use [tool.wads.ci.env].defaults (committed literals) or a repository
+    # *variable* (`gh variable set NAME`) — declared names fall back to
+    # repo variables automatically.
     secrets:
 """
 
+JSON_TRANSPORT_COMMENT = """\
+    # Transport (JSON, opt-in): this repo's whole `secrets` context, serialized
+    # into the one secret the reusable workflow declares. Double-encoded
+    # (toJSON twice) so the value is a single line — a multiline secret would
+    # register its `{` and `}` lines as global log masks. Any secret name
+    # works, but EVERY secret this repo can read (org-level ones included)
+    # reaches the called workflow, and GitHub's malicious-workflow scanner may
+    # hold the runs: `action_required`, zero jobs, no log (i2mint/wads#74,
+    # #101). `wads-migrate ci-to-stub` (no --transport) writes the default
+    # named transport instead.
+    #
+    # *Which* secrets become job env vars — and which are required — is
+    # driven entirely by [tool.wads.ci.env] in pyproject.toml; nothing is
+    # exported unless declared there.
+    secrets:
+"""
 
-def stub_with_named_transport(stub: str, names) -> str:
-    r"""Swap a stub's JSON-transport region for a named ``secrets:`` pass-through.
+# A stub's transport region: an optional `# Transport` comment, the `secrets:`
+# header of the `ci` job, and its entries (lines indented deeper than it).
+_TRANSPORT_REGION_RE = re.compile(
+    r"(?:^    # Transport\b.*?)?^    secrets:[ \t]*\n(?:^      [^\n]*\n?)*",
+    re.DOTALL | re.MULTILINE,
+)
 
-    The region runs from the ``# Transport:`` comment down to the JSON line, so
-    the result never describes a transport it does not use.
 
-    >>> stub = (
+def stub_transport(stub: str) -> str:
+    """The secrets transport of a stub's content: ``"json"`` or ``"named"``.
+
+    >>> stub_transport("    secrets:\\n" + render_stub_json_transport() + "\\n")
+    'json'
+    >>> stub_transport("    secrets:\\n      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\\n")
+    'named'
+    """
+    return "json" if f"{JSON_TRANSPORT_SECRET}:" in stub else "named"
+
+
+def stub_with_transport(
+    stub: str, *, transport: str = "named", names=("PYPI_PASSWORD",)
+) -> str:
+    r"""Rewrite a stub's secrets region to the given transport.
+
+    Works on a stub of either transport, so it converts JSON to named, named
+    to JSON, and re-lists a named stub's names; the explanatory comment above
+    ``secrets:`` is replaced too, so a stub never describes a transport it does
+    not use. ``names`` is used by the named transport only.
+
+    >>> json_stub = (
     ...     "jobs:\n  ci:\n    uses: x\n    # Transport: whole context.\n"
     ...     "    secrets:\n" + render_stub_json_transport() + "\n"
     ... )
-    >>> named = stub_with_named_transport(stub, ["PYPI_PASSWORD"])
-    >>> named.endswith("      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n")
+    >>> named = stub_with_transport(json_stub, names=["PYPI_PASSWORD", "HF_TOKEN"])
+    >>> named.endswith("      HF_TOKEN: ${{ secrets.HF_TOKEN }}\n")
     True
-    >>> "toJSON" in named
-    False
+    >>> "toJSON" in named, stub_transport(named)
+    (False, 'named')
+    >>> back = stub_with_transport(named, transport="json")
+    >>> stub_transport(back), "HF_TOKEN" in back
+    ('json', False)
+    >>> stub_with_transport(back, names=["PYPI_PASSWORD"]) == stub_with_transport(
+    ...     json_stub, names=["PYPI_PASSWORD"])
+    True
     """
-    json_region = re.compile(
-        r"^    # Transport:.*?" + re.escape(render_stub_json_transport()) + r"\n",
-        re.DOTALL | re.MULTILINE,
+    if transport == "named":
+        region = NAMED_TRANSPORT_COMMENT + render_stub_secrets_passthrough(names)
+    elif transport == "json":
+        region = JSON_TRANSPORT_COMMENT + render_stub_json_transport()
+    else:
+        raise ValueError(f"transport must be 'json' or 'named', got {transport!r}")
+    new_stub, n_replaced = _TRANSPORT_REGION_RE.subn(
+        lambda _: region + "\n", stub, count=1
     )
-    named_region = (
-        NAMED_TRANSPORT_COMMENT + render_stub_secrets_passthrough(names) + "\n"
-    )
-    new_stub, n_replaced = json_region.subn(lambda _: named_region, stub)
     if n_replaced != 1:
         raise ValueError(
-            "stub template changed shape: could not locate the JSON "
-            "transport region to convert to named transport"
+            "not a wads CI stub: found no `secrets:` block under the `ci` job"
         )
     return new_stub
+
+
+def stub_with_named_transport(stub: str, names) -> str:
+    r"""Rewrite a stub's secrets region to the named transport, passing ``names``.
+
+    >>> stub = "jobs:\n  ci:\n    secrets:\n" + render_stub_json_transport() + "\n"
+    >>> stub_with_named_transport(stub, ["PYPI_PASSWORD"]).endswith(
+    ...     "      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n")
+    True
+    """
+    return stub_with_transport(stub, transport="named", names=names)
 
 
 def warn_names_outside_superset(names) -> list:
     """Warn loudly for names a named-transport stub cannot legally pass.
 
     A caller may only pass secrets the reusable workflow declares. With
-    ``transport="named"`` that universe is the frozen superset in
+    ``transport="named"`` that universe is the superset in
     :data:`wads.ci_secrets.DEFAULT_CI_SECRETS`; a stub naming anything outside
     it produces a workflow GitHub rejects at parse time — zero jobs, an opaque
     ``startup_failure`` (issue #63). Returns the offending names.
@@ -432,9 +490,12 @@ def warn_names_outside_superset(names) -> list:
             f"  - if the value is not actually sensitive, store it as a "
             f"repository VARIABLE (`gh variable set {name}`) — declared env "
             f"vars fall back to repo variables automatically; or\n"
+            f"  - add {name!r} to the superset in wads (wads/ci_secrets.py; "
+            f"additions are safe for every stub) and use a wads release "
+            f"carrying it; or\n"
             f"  - opt into the JSON transport (`wads-migrate ci-to-stub "
             f"--transport json`), which passes every secret (but GitHub may "
-            f"hold its runs on a new repo, i2mint/wads#74); or\n"
+            f"hold its runs, i2mint/wads#74, #101); or\n"
             f"  - keep the inline workflow (`wads-migrate ci-to-uv`, don't "
             f"stub-ify).",
             file=_sys.stderr,

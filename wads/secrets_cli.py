@@ -7,7 +7,7 @@ for the model):
    is required), so the reusable workflow exports it into the job environment.
 2. **transport** — the repo's ``ci.yml`` stub passes secrets to the reusable
    workflow. Named-transport stubs (the default for new stubs) list each
-   secret explicitly, and every listed name must be in the frozen wads
+   secret explicitly, and every listed name must be in the wads
    superset; ``add`` inserts the line. Stubs on the opt-in JSON transport pass
    the whole secrets context as one ``WADS_CI_SECRETS_JSON`` secret, so *no
    per-secret stub edit is needed* there.
@@ -180,7 +180,8 @@ def add_secret_to_stub(ci_file, secret_name):
     if _JSON_TRANSPORT_LINE_RE.search(text):
         return False, (
             "stub uses the JSON transport — every repo secret is passed "
-            "automatically; nothing to edit"
+            "automatically; nothing to edit (GitHub may hold JSON-transport "
+            "runs; `wads-migrate ci-to-stub` switches to named, i2mint/wads#101)"
         )
     if re.search(rf"secrets\.{re.escape(secret_name)}\b", text):
         return False, "already passed in ci.yml"
@@ -295,7 +296,7 @@ def add(
         else:
             print("· transport: repo variables need none (vars context)")
     elif mode == "named" and secret_name not in DEFAULT_CI_SECRETS:
-        # A named-transport stub may only pass names in the frozen superset —
+        # A named-transport stub may only pass names in the wads superset —
         # anything else makes the workflow FAIL TO START (parse-time
         # startup_failure, issue #63). Refuse the edit that would cause it.
         print(
@@ -303,11 +304,13 @@ def add(
             f"(wads/ci_secrets.py), and this repo's stub passes secrets by "
             f"name — passing this one would make the workflow FAIL TO START, "
             f"so ci.yml was NOT edited (declared in pyproject only). Either "
-            f"regenerate the stub with the JSON transport "
-            f"(`wads-migrate ci-to-stub --transport json`), which passes every "
-            f"secret (GitHub may hold its runs on a brand-new repo, "
-            f"i2mint/wads#74); or, if the value is not sensitive, use "
-            f"`wads-secrets add {var_name} --variable` instead."
+            f"add the name to the superset in wads (additions are safe for "
+            f"every stub) and re-run this once a wads release carries it; or, "
+            f"if the value is not sensitive, use `wads-secrets add {var_name} "
+            f"--variable` instead; or regenerate the stub with the JSON "
+            f"transport (`wads-migrate ci-to-stub --transport json`), which "
+            f"passes every secret but whose runs GitHub may hold "
+            f"(i2mint/wads#74, #101)."
         )
     else:
         stub_changed, reason = add_secret_to_stub(ci_file, secret_name)

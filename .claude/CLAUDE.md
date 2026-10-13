@@ -120,11 +120,12 @@ A reusable workflow's secret *interface* (`on.workflow_call.secrets`) must be
 static YAML and `secrets: inherit` is unreliable cross-owner, so secrets are
 handled in two decoupled layers:
 
-1. **Transport** — every stub wads *writes* (`populate`, `wads-migrate
-   ci-to-stub` on an inline workflow) passes secrets **by name**:
-   `PYPI_PASSWORD` plus the backing secret of each `[tool.wads.ci.env]` var
-   (`wads.ci_secrets.stub_with_named_transport`). Names must be in the frozen
-   62-name superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`, declared in
+1. **Transport** — the stub template is named, and every stub wads *writes*
+   (`populate`, and every re-render: `ci-to-stub`, `ci-on-demand`,
+   `fleet-stub`) passes secrets **by name**: `PYPI_PASSWORD` plus the backing
+   secret of each `[tool.wads.ci.env]` var (`wads.ci_secrets.stub_with_transport`
+   rewrites a stub's secrets region either way). Names must be in the additive
+   superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`, declared in
    `uv-ci.yml`; a test in `test_ci_secrets.py` pins the YAML to
    `WORKFLOW_CALL_SECRETS` = JSON secret + superset), or the workflow is
    unstartable (issue #63), so the CLIs warn loudly on out-of-superset names.
@@ -132,15 +133,16 @@ handled in two decoupled layers:
    `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}` — the whole secrets
    context, double-encoded so the value is single-line (a multiline secret is
    masked per line). Any name works, but GitHub's malicious-workflow scanner
-   holds its runs on NEW repos (`action_required`, zero jobs, no log; issues
-   #74, #88), which is why it stopped being the default. Re-rendering an
-   existing stub (`migrate_ci_to_stub(path)`, `ci-to-stub`, `ci-on-demand`,
-   `fleet-stub`) keeps the transport it already has, with one exception: when no `--transport` is given and a named stub would pass a name outside the superset (so it could never start), the JSON transport is used instead, with a note on stderr.
+   holds its runs (`action_required`, zero jobs, no log; issues #74, #88,
+   #101 — new repos first, then an existing one), which is why it is not the
+   default. A re-render with no `--transport` converts a JSON stub to named,
+   with one exception: when a named stub would pass a name outside the superset (so it could never start), the JSON transport is used instead, with a note on stderr.
 2. **Env-assignment** — *which* values become job env vars (and which are
    required) is driven entirely by `[tool.wads.ci.env]` (`required_envvars`,
    `test_envvars`, `extra_envvars`, `defaults`, and `secret_aliases` for
-   ENV_VAR≠SECRET_NAME). The `export-ci-env` action (`wads/scripts/export_ci_env.py`)
-   reads these via `read-ci-config` outputs plus `toJSON(secrets)` /
+   ENV_VAR≠SECRET_NAME). The `export-ci-env` action runs
+   `wads/scripts/export_ci_env.py` from its own checkout with `python -I -S`
+   (stdlib only; nothing is pip-installed in that step), reads these via `read-ci-config` outputs plus `toJSON(secrets)` /
    `toJSON(vars)`, resolves each declared name **secrets-first then repo
    variables** (the `vars` context resolves to the caller's repo in a reusable
    workflow — the right home for non-sensitive values like a test level),

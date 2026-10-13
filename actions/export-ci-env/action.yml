@@ -60,31 +60,15 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: Install wads (for CI env utilities)
-      shell: bash
-      # On master (the production path): install the latest published wads
-      # (floor is a version that exists, NOT the one that first shipped this
-      # module — pinning a not-yet-published version would make `pip install`
-      # fail during the publish-lag window after a wads merge). The run step
-      # below no-ops if the installed wads is too old, so it is safe across
-      # that window.
-      #
-      # On any other ref (github.action_ref = the ref this action was
-      # `uses:`-referenced at): install wads from git at that same ref, so a
-      # wads feature branch can be end-to-end tested — workflow, action, and
-      # Python code in lockstep — before anything is published.
-      env:
-        WADS_ACTION_REF: ${{ github.action_ref }}
-        WADS_ACTION_REPO: ${{ github.action_repository || 'i2mint/wads' }}
-      run: |
-        if [ -n "$WADS_ACTION_REF" ] && [ "$WADS_ACTION_REF" != "master" ]; then
-          python -m pip install --quiet "git+https://github.com/${WADS_ACTION_REPO}@${WADS_ACTION_REF}"
-        else
-          python -m pip install --quiet --upgrade 'wads>=0.1.48'
-        fi
-
     - name: Export configured environment
       shell: bash
+      # The script runs straight from this action's own files: the runner
+      # fetches the whole i2mint/wads repository at the ref this action was
+      # `uses:`-referenced at, so workflow, action and script are always the
+      # same version (a wads branch can be tested end to end without
+      # publishing anything). `python -I -S` ignores site-packages, the user
+      # site and PYTHONPATH: the script needs only the standard library, so
+      # no installed package is imported in this step.
       env:
         WADS_ENV_REQUIRED: ${{ inputs.required }}
         WADS_ENV_TEST: ${{ inputs.test }}
@@ -94,9 +78,4 @@ runs:
         WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
         WADS_VARS_JSON: ${{ inputs.vars-json }}
         WADS_ENV_ALWAYS_REQUIRED: ${{ inputs.always-required }}
-      run: |
-        if python -c "import wads.scripts.export_ci_env" 2>/dev/null; then
-          python -m wads.scripts.export_ci_env
-        else
-          echo "::notice::installed wads lacks export_ci_env (pre-0.1.100); skipping env export until wads publishes."
-        fi
+      run: python -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"

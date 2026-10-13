@@ -118,7 +118,7 @@ def _on_demand_header(run_ci_marker: str) -> str:
 # only in a squash-merged PR body therefore costs one short setup job, nothing
 # else. This file is rendered from pyproject.toml: after changing
 # [tool.wads.ci.trigger], re-render it with `wads-migrate ci-to-stub` (which
-# keeps this stub's pin, secrets transport and `with:` inputs).
+# keeps this stub's pin and `with:` inputs).
 on:
   push:
   workflow_dispatch:
@@ -334,10 +334,11 @@ def _assign(table, key, value):
 
 
 def stub_shape(ci_text: Optional[str]) -> dict:
-    """The ``pin`` and secrets ``transport`` of a stub, which a re-render must keep.
+    """The ``pin`` (which a re-render keeps) and secrets ``transport`` of a stub.
 
-    Defaults (``@master``, ``named``) for anything that is not a stub: a NEW
-    stub gets the named transport (i2mint/wads#74), an existing one keeps its own.
+    Defaults (``@master``, ``named``) for anything that is not a stub. A
+    re-render writes the named transport whatever this reports
+    (i2mint/wads#74, #101); see :func:`wads.migration.migrate_ci_to_stub`.
 
     >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
     {'pin': '@0.2.30', 'transport': 'named'}
@@ -346,12 +347,12 @@ def stub_shape(ci_text: Optional[str]) -> dict:
     """
     if classify_ci_workflow(ci_text) != "stub":
         return {"pin": "@master", "transport": "named"}
-    from wads.ci_secrets import render_stub_json_transport
+    from wads.ci_secrets import stub_transport
 
     match = _PIN_RE.search(ci_text)
     return {
         "pin": match.group(1) if match else "@master",
-        "transport": "json" if render_stub_json_transport() in ci_text else "named",
+        "transport": stub_transport(ci_text),
     }
 
 
@@ -469,8 +470,9 @@ def flip_to_on_demand(
 ) -> FlipResult:
     """Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.
 
-    - a **stub** ``ci.yml`` is re-rendered keeping its pin, secrets transport and
-      ``with:`` inputs, or **refused** if it holds anything else a re-render would drop
+    - a **stub** ``ci.yml`` is re-rendered keeping its pin and ``with:`` inputs
+      (secrets move to the named transport, as ``wads-migrate ci-to-stub``
+      does), or **refused** if it holds anything else a re-render would drop
       (extra jobs, custom triggers);
     - an **inline uv** workflow becomes the stub, carrying its secret-backed env vars
       into ``[tool.wads.ci.env]`` first (as ``wads-migrate ci-to-stub`` does);
@@ -553,7 +555,7 @@ def flip_to_on_demand(
             shadow_ci.parent.mkdir(parents=True, exist_ok=True)
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
-            # transport=None: keep an existing stub's, pick one for an inline workflow.
+            # transport=None: named, converting a JSON stub (see migrate_ci_to_stub).
             new_ci = migrate_ci_to_stub(str(shadow_ci), pin=shape["pin"])
             if shape["pin"] != "@master":
                 result.notes.append(

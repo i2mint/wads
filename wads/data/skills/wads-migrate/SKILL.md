@@ -136,9 +136,9 @@ git push                               # the pushed commit carries the on-demand
 wads ci-local                          # what CI would have run: lint, tests, build
 ```
 
-What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin and secrets transport; **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.
+What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin (a JSON-transport stub becomes named, i2mint/wads#101); **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.
 
-`ci-to-stub` and `fleet-stub` read `[tool.wads.ci.trigger]`, so a refresh sweep never reverts an on-demand repo. `ci-to-stub` keeps the existing stub's pin, secrets transport and `with:` inputs unless `--pin`/`--transport` are given, and warns about anything else it drops. The flip instead refuses a stub with other customizations (extra jobs, custom triggers), or a pyproject layout tomlkit cannot edit safely, and prints the hand edit. A manual `workflow_dispatch` on the default branch releases, like a `[run ci]` push; the `[publish]` marker needs `[run ci]` in the same subject. To go back: set `mode = "auto"`, then `wads-migrate ci-to-stub`.
+`ci-to-stub` and `fleet-stub` read `[tool.wads.ci.trigger]`, so a refresh sweep never reverts an on-demand repo. `ci-to-stub` keeps the existing stub's pin and `with:` inputs unless `--pin` is given, writes the named secrets transport (converting a JSON stub) unless `--transport json` is given or a declared name is outside the superset, and warns about anything else it drops. The flip instead refuses a stub with other customizations (extra jobs, custom triggers), or a pyproject layout tomlkit cannot edit safely, and prints the hand edit. A manual `workflow_dispatch` on the default branch releases, like a `[run ci]` push; the `[publish]` marker needs `[run ci]` in the same subject. To go back: set `mode = "auto"`, then `wads-migrate ci-to-stub`.
 
 `wads ci-local --publish` is the local release path for on-demand repos: format, bump version with isee (as CI), build, `uv publish`, commit, tag, push. It refuses on a dirty tree, off the default branch, behind origin, or without a token (`$PYPI_PASSWORD` → `$UV_PUBLISH_TOKEN` → `~/.pypirc`). `wads ci-local --dry-run` prints the plan.
 
@@ -260,9 +260,10 @@ Secrets reach a stub repo's CI through two coordinated layers:
    (`wads-migrate ci-to-stub --transport json`) serializes the whole `secrets`
    context into the one declared secret
    `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}`, so any name works,
-   but GitHub's malicious-workflow scanner holds its runs on NEW repos: every
-   run ends `action_required` with zero jobs and no log (wads#74, #88). Re-
-   rendering an existing stub keeps its transport. Either way, explicit
+   but GitHub's malicious-workflow scanner holds its runs: the run ends
+   `action_required` with zero jobs and no log (wads#74, #88, #101 — new repos
+   first, then an existing one). Re-rendering a stub (`ci-to-stub`,
+   `ci-on-demand`, `fleet-stub`) converts a JSON stub to named. Either way, explicit
    pass-through is used, NOT `secrets: inherit` (unreliable across GitHub
    accounts).
 2. **Env-assignment** — `[tool.wads.ci.env]` (`required_envvars`,
@@ -277,9 +278,9 @@ in one step — the recommended way. `wads-secrets list` shows what's configured
 `wads-secrets superset` prints the names a *named*-transport stub may pass
 (irrelevant on the opt-in JSON transport). For a named-transport repo needing
 a name outside the superset: use `--variable` if the value isn't sensitive,
-PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits all repos), or regenerate
-with the JSON transport (`wads-migrate ci-to-stub --transport json`) on a repo
-whose runs GitHub already accepts.
+PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (additions are safe for every stub and
+benefit all repos), or regenerate with the JSON transport (`wads-migrate
+ci-to-stub --transport json`) knowing GitHub may hold its runs.
 
 Publishing runs only on the repo's **default branch**, when validation passes,
 when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.
