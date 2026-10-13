@@ -25,6 +25,9 @@
 #     the push is to the default branch AND the head commit message contains the
 #     publish marker (default "[publish-npm]" — deliberately distinct from any
 #     Python publish trigger).
+#   - Publish isolation (#114): a credential-free `pack` job installs, builds
+#     and packs; only `publish` can mint the OIDC token, and it runs no repo
+#     code (`npm publish <tarball> --ignore-scripts`).
 #   - Publishing uses npm OIDC trusted publishing by default (no long-lived
 #     token; see "npm auth" above).
 #   - A pre-publish "version already on registry?" guard makes the job
@@ -61,9 +64,11 @@ on:
         description: "DEPRECATED, do not pass. npm auth token, used only if OIDC trusted publishing is not configured. See the trusted-publishing note in the header."
         required: false
 
+# Read-only by default; only the `publish` job adds id-token: write (#114).
+# The validate and pack jobs run the repo's code and must not be able to mint
+# an OIDC token, which npm trusted publishing would accept.
 permissions:
   contents: read
-  id-token: write # for npm provenance / OIDC trusted publishing
 
 jobs:
   setup:
@@ -223,15 +228,25 @@ jobs:
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.build_command }}
 
-  publish:
-    name: Publish to npm
+  # PUBLISH ISOLATION (#114). Publishing is split in two jobs:
+  #   pack    - installs, builds and packs the package (running its lifecycle
+  #             scripts) with NO publish credential: no id-token, no npm token.
+  #   publish - holds the credential (OIDC id-token; the deprecated NPM_TOKEN
+  #             fallback) and runs NO repo code: no checkout, no install, and
+  #             `npm publish <tarball> --ignore-scripts`.
+  # Before, `npm publish` ran prepack/prepublishOnly/prepare and every
+  # dependency's install script in the job that could mint the OIDC token.
+  # Both jobs carry the same opt-in gate: enabled in package.json AND push to
+  # default branch AND marker present, AND (in on-demand mode) the same push
+  # also carries run_ci_marker — publish never fires from a workflow_dispatch
+  # (it only runs on `push`, unlike the Python side's single validate+publish
+  # job), so the trigger gate here only needs the marker branch.
+  pack:
+    name: Pack for npm
     needs: [setup, validate]
     runs-on: ubuntu-latest
-    # Opt-in: enabled in package.json AND push to default branch AND marker
-    # present, AND (in on-demand mode) the same push also carries
-    # run_ci_marker — publish never fires from a workflow_dispatch (this job
-    # only runs on `push`, unlike the Python side's single validate+publish
-    # job), so the trigger gate here only needs the marker branch.
+    permissions:
+      contents: read
     if: >-
       needs.setup.outputs.publish_enabled == 'true' &&
       github.event_name == 'push' &&
@@ -241,6 +256,8 @@ jobs:
        contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker))
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Setup pnpm
         if: needs.setup.outputs.package_manager == 'pnpm'
         uses: pnpm/action-setup@v4
@@ -249,20 +266,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.publish_node }}
-          registry-url: ${{ needs.setup.outputs.registry }}
-      - name: Ensure npm >= 11.5.1 (required for OIDC trusted publishing)
-        run: |
-          # Trusted publishing needs npm >= 11.5.1 and node >= 22.14. pnpm < 11
-          # publishes through the npm CLI, so this covers it; pnpm >= 11 does
-          # OIDC natively (pnpm/pnpm#9812).
-          if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=14)?0:1)"; then
-            echo "::error::npm trusted publishing needs Node >= 22.14 (got $(node --version)). Raise wads.ci.publishNode (default 24)."
-            exit 1
-          fi
-          if ! node -e "const [a,b,c]=process.argv[1].split('.').map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm --version)"; then
-            npm install -g npm@^11.5.1
-          fi
-          npm --version
       - name: Install
         working-directory: ${{ inputs.package-dir }}
         run: |
@@ -274,27 +277,81 @@ jobs:
       - name: Build
         working-directory: ${{ inputs.package-dir }}
         run: ${{ needs.setup.outputs.build_command }}
-      - name: Check version not already published
-        id: check
+      - name: Pack
         working-directory: ${{ inputs.package-dir }}
         run: |
-          NAME=$(node -p "require('./package.json').name")
-          VER=$(node -p "require('./package.json').version")
-          if npm view "$NAME@$VER" version >/dev/null 2>&1; then
-            echo "Version $NAME@$VER already published; skipping."
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          # pnpm pack rewrites `workspace:`/`catalog:` specifiers; npm pack
+          # is the npm path. Either way the tarball is what gets published.
+          DEST="$RUNNER_TEMP/npm-pack"
+          mkdir -p "$DEST"
+          if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
+            pnpm pack --pack-destination "$DEST"
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            npm pack --pack-destination "$DEST"
           fi
-      - name: Publish
-        if: steps.check.outputs.exists == 'false'
-        working-directory: ${{ inputs.package-dir }}
+          (cd "$DEST" && ls -- *.tgz > publish-order.txt && cat publish-order.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: ${{ runner.temp }}/npm-pack
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish to npm
+    needs: [setup, pack]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm OIDC trusted publishing + provenance; THIS job only
+    if: >-
+      needs.setup.outputs.publish_enabled == 'true' &&
+      github.event_name == 'push' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      contains(needs.setup.outputs.commit_subject, needs.setup.outputs.publish_marker) &&
+      (needs.setup.outputs.trigger_mode != 'on-demand' ||
+       contains(needs.setup.outputs.commit_subject, needs.setup.outputs.run_ci_marker))
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.publish_node }}
+          registry-url: ${{ needs.setup.outputs.registry }}
+      - name: Ensure npm >= 11.5.1 (required for OIDC trusted publishing)
         run: |
-          PROV=""
-          if [ "${{ needs.setup.outputs.provenance }}" = "true" ]; then
-            PROV="--provenance"
+          # Trusted publishing needs npm >= 11.5.1 and node >= 22.14.
+          if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=14)?0:1)"; then
+            echo "::error::npm trusted publishing needs Node >= 22.14 (got $(node --version)). Raise wads.ci.publishNode (default 24)."
+            exit 1
           fi
-          npm publish $PROV --access ${{ needs.setup.outputs.access }}
+          if ! node -e "const [a,b,c]=process.argv[1].split('.').map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm --version)"; then
+            npm install -g npm@^11.5.1
+          fi
+          npm --version
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: ${{ runner.temp }}/npm-pack
+      - name: Publish tarballs (no scripts run)
+        working-directory: ${{ runner.temp }}/npm-pack
         env:
           # Omitted/empty under OIDC trusted publishing; used only as a fallback.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PROVENANCE: ${{ needs.setup.outputs.provenance }}
+          ACCESS: ${{ needs.setup.outputs.access }}
+        run: |
+          PROV=""
+          if [ "$PROVENANCE" = "true" ]; then PROV="--provenance"; fi
+          while IFS= read -r TGZ; do
+            [ -n "$TGZ" ] || continue
+            # Name and version come from the tarball itself (read as JSON;
+            # nothing from the package is executed).
+            tar -xzOf "$TGZ" package/package.json > manifest.json
+            NAME=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).name")
+            VER=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version")
+            # Idempotent: skip a version already on the registry (no 403 on re-run).
+            if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+              echo "Version $NAME@$VER already published; skipping."
+              continue
+            fi
+            npm publish "./$TGZ" --ignore-scripts $PROV --access "$ACCESS"
+          done < publish-order.txt
