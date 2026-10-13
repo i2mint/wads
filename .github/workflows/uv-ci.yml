@@ -553,9 +553,8 @@ jobs:
           always-required: '["PYPI_PASSWORD"]'
 
       # env.PYPI_PASSWORD is written by the resolve step above (it resolves
-      # the token from either transport); the direct secrets reference keeps
-      # old named-transport stubs working even while an older published wads
-      # (one without always-required support) is what the step installed.
+      # the token from either transport); the direct secrets reference is a
+      # belt-and-braces path for named-transport stubs.
       - name: Publish to PyPI
         uses: i2mint/wads/actions/pypi-publish-uv@master
         with:

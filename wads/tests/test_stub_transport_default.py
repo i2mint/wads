@@ -312,3 +312,41 @@ def test_on_demand_flip_of_a_json_stub_converts_it_to_named(tmp_path):
     text = ci.read_text()
     assert "toJSON" not in text
     assert PYPI_LINE in text
+
+
+_HEAD = "jobs:\n  ci:\n    uses: i2mint/wads/.github/workflows/uv-ci.yml@master\n"
+
+
+@pytest.mark.parametrize(
+    "stub",
+    [
+        # A comment above `with:` (not above `secrets:`) keeps the inputs.
+        _HEAD
+        + "    # a note\n    with:\n      project-name: foo\n    secrets:\n"
+        + render_stub_json_transport()
+        + "\n",
+        # Blank and comment lines between entries are part of the block.
+        _HEAD
+        + "    secrets:\n      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n\n"
+        + "    # hand note\n      HF_TOKEN: ${{ secrets.HF_TOKEN }}\n",
+        # No trailing newline.
+        _HEAD + "    secrets:\n" + render_stub_json_transport(),
+    ],
+)
+def test_stub_with_transport_handles_hand_edited_stubs(stub):
+    out = stub_with_transport(stub, names=["PYPI_PASSWORD"])
+    job = yaml.safe_load(out)["jobs"]["ci"]
+    assert job["secrets"] == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
+    if "project-name" in stub:
+        assert job["with"] == {"project-name": "foo"}
+
+
+def test_an_unreadable_pyproject_keeps_a_json_stub(tmp_path, capsys):
+    """Converting would silently drop the secrets the repo declares."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env]\ntest_envvars = 5\n"  # not a list
+    )
+    ci = _ci_file(tmp_path, JSON_STUB)
+    assert migrate_ci_to_stub(str(ci)) == JSON_STUB
+    assert "could not be read" in capsys.readouterr().err

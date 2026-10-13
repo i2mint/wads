@@ -64,11 +64,11 @@ runs:
       shell: bash
       # The script runs straight from this action's own files: the runner
       # fetches the whole i2mint/wads repository at the ref this action was
-      # `uses:`-referenced at, so workflow, action and script are always the
-      # same version (a wads branch can be tested end to end without
-      # publishing anything). `python -I -S` ignores site-packages, the user
-      # site and PYTHONPATH: the script needs only the standard library, so
-      # no installed package is imported in this step.
+      # `uses:`-referenced at, so action and script are always the same
+      # version, and nothing is installed from PyPI. `python -I -S` ignores
+      # site-packages, the user site and PYTHONPATH: the script needs only
+      # the standard library. `-I` also ignores PYTHONUTF8, so `-X utf8` keeps
+      # UTF-8 I/O for non-ASCII values on Windows runners.
       env:
         WADS_ENV_REQUIRED: ${{ inputs.required }}
         WADS_ENV_TEST: ${{ inputs.test }}
@@ -78,4 +78,4 @@ runs:
         WADS_SECRETS_JSON: ${{ inputs.secrets-json }}
         WADS_VARS_JSON: ${{ inputs.vars-json }}
         WADS_ENV_ALWAYS_REQUIRED: ${{ inputs.always-required }}
-      run: python -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"
+      run: python -I -S -X utf8 "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"

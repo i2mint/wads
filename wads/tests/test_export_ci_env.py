@@ -278,7 +278,7 @@ def test_action_runs_the_script_from_its_own_checkout_without_pip():
     assert not any("pip install" in run for run in runs)
     (run,) = [run for run in runs if "export_ci_env" in run]
     assert run.strip() == (
-        'python -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"'
+        'python -I -S -X utf8 "$GITHUB_ACTION_PATH/../../wads/scripts/export_ci_env.py"'
     )
     relative = ACTION_DIR / ".." / ".." / "wads" / "scripts" / "export_ci_env.py"
     assert relative.resolve() == SCRIPT
@@ -310,7 +310,7 @@ def test_script_runs_isolated_on_the_standard_library(tmp_path):
         "sys.exit(code)\n"
     )
     proc = subprocess.run(
-        [sys.executable, "-I", "-S", "-c", runner],
+        [sys.executable, "-I", "-S", "-X", "utf8", "-c", runner],
         cwd=tmp_path,
         env=env,
         capture_output=True,

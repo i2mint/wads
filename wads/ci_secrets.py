@@ -392,7 +392,8 @@ JSON_TRANSPORT_COMMENT = """\
     # reaches the called workflow, and GitHub's malicious-workflow scanner may
     # hold the runs: `action_required`, zero jobs, no log (i2mint/wads#74,
     # #101). `wads-migrate ci-to-stub` (no --transport) writes the default
-    # named transport instead.
+    # named transport instead, when every name [tool.wads.ci.env] declares
+    # is in the wads superset.
     #
     # *Which* secrets become job env vars — and which are required — is
     # driven entirely by [tool.wads.ci.env] in pyproject.toml; nothing is
@@ -400,11 +401,15 @@ JSON_TRANSPORT_COMMENT = """\
     secrets:
 """
 
-# A stub's transport region: an optional `# Transport` comment, the `secrets:`
-# header of the `ci` job, and its entries (lines indented deeper than it).
+# A stub's transport region: the comment lines directly above the `ci` job's
+# `secrets:` header, the header, and its entries (lines indented deeper than it,
+# with any blank or comment lines between them).
 _TRANSPORT_REGION_RE = re.compile(
-    r"(?:^    # Transport\b.*?)?^    secrets:[ \t]*\n(?:^      [^\n]*\n?)*",
-    re.DOTALL | re.MULTILINE,
+    r"(?:^    #[^\n]*\n)*"
+    r"^    secrets:[ \t]*\n"
+    r"(?:^      [^\n]*(?:\n|\Z)"
+    r"|^[ \t]*(?:#[^\n]*)?\n(?=(?:[ \t]*(?:#[^\n]*)?\n)*      ))*",
+    re.MULTILINE,
 )
 
 
@@ -425,9 +430,11 @@ def stub_with_transport(
     r"""Rewrite a stub's secrets region to the given transport.
 
     Works on a stub of either transport, so it converts JSON to named, named
-    to JSON, and re-lists a named stub's names; the explanatory comment above
-    ``secrets:`` is replaced too, so a stub never describes a transport it does
-    not use. ``names`` is used by the named transport only.
+    to JSON, and re-lists a named stub's names; the comment lines directly
+    above ``secrets:`` are replaced too, so a stub never describes a transport
+    it does not use. ``names`` is used by the named transport only. A stub
+    whose ``ci`` job has no ``secrets:`` mapping block (``secrets: inherit``,
+    say) raises ``ValueError``.
 
     >>> json_stub = (
     ...     "jobs:\n  ci:\n    uses: x\n    # Transport: whole context.\n"
@@ -491,8 +498,8 @@ def warn_names_outside_superset(names) -> list:
             f"repository VARIABLE (`gh variable set {name}`) — declared env "
             f"vars fall back to repo variables automatically; or\n"
             f"  - add {name!r} to the superset in wads (wads/ci_secrets.py; "
-            f"additions are safe for every stub) and use a wads release "
-            f"carrying it; or\n"
+            f"additions are safe for every stub); it reaches `@master` "
+            f"stubs at merge and pinned stubs from the next tag; or\n"
             f"  - opt into the JSON transport (`wads-migrate ci-to-stub "
             f"--transport json`), which passes every secret (but GitHub may "
             f"hold its runs, i2mint/wads#74, #101); or\n"
