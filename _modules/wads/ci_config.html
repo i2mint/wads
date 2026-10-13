@@ -287,6 +287,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -328,6 +330,32 @@
         <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"#TEST_ENV_VARS#</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
     <span class="p">)</span></div>
 
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_yaml_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render a TOML value as a YAML flow scalar with the same meaning.</span>
+
+<span class="sd">    JSON is a subset of YAML's flow style, so a string becomes a double-quoted</span>
+<span class="sd">    scalar and a bool or finite number keeps its type. Anything else (a TOML</span>
+<span class="sd">    date, ``inf``, ``nan``) is rendered as its string. Characters YAML forbids</span>
+<span class="sd">    raw or folds to a space (DEL, C1 controls, line separators) are escaped.</span>
+
+<span class="sd">    &gt;&gt;&gt; _yaml_scalar("yes"), _yaml_scalar(True), _yaml_scalar(3)</span>
+<span class="sd">    ('"yes"', 'true', '3')</span>
+<span class="sd">    &gt;&gt;&gt; _yaml_scalar("a\\x7fb")</span>
+<span class="sd">    '"a\\\\u007fb"'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">ch</span> <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">isprintable</span><span class="p">()</span> <span class="k">else</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">u</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">04x</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mh">0xFFFF</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\\</span><span class="s2">U</span><span class="si">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="si">:</span><span class="s2">08x</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="CIConfig">
@@ -936,9 +964,11 @@
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"  PROJECT_NAME: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
 
         <span class="c1"># Add default environment variables (literal values, not secrets —</span>
-        <span class="c1"># literals never become log masks, so workflow level is safe)</span>
+        <span class="c1"># literals never become log masks, so workflow level is safe). Each</span>
+        <span class="c1"># value is rendered as a YAML flow scalar, so a string such as `yes`,</span>
+        <span class="c1"># `#x` or `a: b` stays the string the repo committed.</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_yaml_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
@@ -1310,7 +1340,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=d3b1e8e5"></script>
+</div><script src="../../_static/documentation_options.js?v=71c619a2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
