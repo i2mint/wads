@@ -284,9 +284,13 @@ jobs:
           # is the npm path. Either way the tarball is what gets published.
           DEST="$RUNNER_TEMP/npm-pack"
           mkdir -p "$DEST"
+          # prepublishOnly runs here, since publish uses --ignore-scripts;
+          # prepack/prepare/postpack run as part of pack itself.
           if [ "${{ needs.setup.outputs.package_manager }}" = "pnpm" ]; then
+            pnpm run --if-present prepublishOnly
             pnpm pack --pack-destination "$DEST"
           else
+            npm run prepublishOnly --if-present
             npm pack --pack-destination "$DEST"
           fi
           (cd "$DEST" && ls -- *.tgz > publish-order.txt && cat publish-order.txt)
@@ -324,7 +328,9 @@ jobs:
             exit 1
           fi
           if ! node -e "const [a,b,c]=process.argv[1].split('.').map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm --version)"; then
-            npm install -g npm@^11.5.1
+            # Exact pin, from the public registry, no scripts: this job can mint
+            # the OIDC token.
+            npm install -g npm@11.5.1 --ignore-scripts --registry=https://registry.npmjs.org/
           fi
           npm --version
       - uses: actions/download-artifact@v4
@@ -332,26 +338,63 @@ jobs:
           name: npm-package
           path: ${{ runner.temp }}/npm-pack
       - name: Publish tarballs (no scripts run)
-        working-directory: ${{ runner.temp }}/npm-pack
         env:
           # Omitted/empty under OIDC trusted publishing; used only as a fallback.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PROVENANCE: ${{ needs.setup.outputs.provenance }}
           ACCESS: ${{ needs.setup.outputs.access }}
+          REGISTRY: ${{ needs.setup.outputs.registry }}
+          # The artifact was made by the pack job, which ran the repo's code, so
+          # nothing in it is trusted beyond the tarballs' bytes. This check reads
+          # a tarball's package.json as data and refuses a name npm would parse
+          # as an option, and any publishConfig key that would change where or
+          # how npm sends the credential (proxy, registry, TLS, auth...): npm
+          # applies a tarball's publishConfig as config (#114 review).
+          MANIFEST_CHECK: |
+            const [file, registry] = process.argv.slice(1);
+            const m = JSON.parse(require('fs').readFileSync(file, 'utf8'));
+            const fail = (msg) => { console.error('::error::' + msg); process.exit(1); };
+            const NAME = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/;
+            if (typeof m.name !== 'string' || !NAME.test(m.name)) fail('invalid package name in tarball: ' + JSON.stringify(m.name));
+            if (typeof m.version !== 'string' || !/^\d+\.\d+\.\d+([-+][0-9A-Za-z.+-]*)?$/.test(m.version)) fail('invalid version in tarball: ' + JSON.stringify(m.version));
+            const SAFE = new Set(['access', 'tag', 'provenance', 'directory', 'linkDirectory', 'executableFiles',
+              'main', 'module', 'types', 'typings', 'exports', 'bin', 'browser', 'typesVersions', 'imports']);
+            const strip = (u) => String(u).replace(/\/+$/, '');
+            for (const key of Object.keys(m.publishConfig || {})) {
+              if (key === 'registry' && strip(m.publishConfig.registry) === strip(registry)) continue;
+              if (!SAFE.has(key)) fail(m.name + ': publishConfig.' + key + ' is not allowed in CI publishing');
+            }
+            console.log(m.name + ' ' + m.version);
         run: |
+          ART="$RUNNER_TEMP/npm-pack"
+          # The artifact must hold exactly publish-order.txt and the tarballs it
+          # lists, each a plain file name: no .npmrc, package.json, paths, options.
+          mapfile -t TGZS < "$ART/publish-order.txt"
+          [ "${#TGZS[@]}" -gt 0 ] || { echo "::error::nothing to publish"; exit 1; }
+          for f in "${TGZS[@]}"; do
+            if ! [[ "$f" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]*\.tgz$ ]] || [ ! -f "$ART/$f" ]; then
+              echo "::error::unexpected entry in publish-order.txt"; exit 1
+            fi
+          done
+          EXPECTED=$(printf '%s\n' publish-order.txt "${TGZS[@]}" | sort)
+          ACTUAL=$(cd "$ART" && ls -A | sort)
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::the npm-pack artifact holds files besides the listed tarballs"; exit 1
+          fi
           PROV=""
           if [ "$PROVENANCE" = "true" ]; then PROV="--provenance"; fi
-          while IFS= read -r TGZ; do
-            [ -n "$TGZ" ] || continue
-            # Name and version come from the tarball itself (read as JSON;
-            # nothing from the package is executed).
-            tar -xzOf "$TGZ" package/package.json > manifest.json
-            NAME=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).name")
-            VER=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version")
-            # Idempotent: skip a version already on the registry (no 403 on re-run).
-            if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+          # npm runs in an empty directory, so no project config is picked up.
+          WORK=$(mktemp -d)
+          cd "$WORK"
+          for f in "${TGZS[@]}"; do
+            tar -xzOf "$ART/$f" package/package.json > manifest.json
+            read -r NAME VER < <(node -e "$MANIFEST_CHECK" manifest.json "$REGISTRY")
+            [ -n "$VER" ] || exit 1
+            # Idempotent: skip a version already on the registry (no 403 on
+            # re-run, no auto-bump), as before.
+            if npm view -- "$NAME@$VER" version >/dev/null 2>&1; then
               echo "Version $NAME@$VER already published; skipping."
               continue
             fi
-            npm publish "./$TGZ" --ignore-scripts $PROV --access "$ACCESS"
-          done < publish-order.txt
+            npm publish "$ART/$f" --ignore-scripts $PROV --access "$ACCESS"
+          done

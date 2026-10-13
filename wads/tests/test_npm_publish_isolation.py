@@ -51,3 +51,17 @@ def test_pack_and_publish_share_the_opt_in_gate(name):
     jobs = _workflow(name)["jobs"]
     assert jobs["pack"]["if"] == jobs["publish"]["if"]
     assert "id-token" not in (jobs["pack"].get("permissions") or {})
+
+
+def _publish_step(name):
+    steps = _workflow(name)["jobs"]["publish"]["steps"]
+    return next(s for s in steps if s.get("name", "").startswith("Publish tarballs"))
+
+
+def test_both_workflows_publish_through_the_same_hardened_step():
+    single, mono = (_publish_step(name) for name in NPM_WORKFLOWS)
+    assert single == mono
+    run = single["run"]
+    assert 'npm view -- "$NAME@$VER"' in run  # a name can't become an option
+    assert 'cd "$WORK"' in run  # npm never runs inside the artifact directory
+    assert "publishConfig" in single["env"]["MANIFEST_CHECK"]
