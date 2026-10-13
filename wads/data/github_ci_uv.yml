@@ -18,6 +18,10 @@ jobs:
   # First job: Read configuration from pyproject.toml
   setup:
     name: Read Configuration
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       project-name: ${{ steps.config.outputs.project-name }}
@@ -91,6 +95,9 @@ jobs:
           printf 'commit subject: %s\n' "$subject"
 
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -124,6 +131,10 @@ jobs:
   # Second job: Validation using the config
   validation:
     name: Validation
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: ubuntu-latest
@@ -143,6 +154,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -224,6 +238,10 @@ jobs:
   # Optional Windows testing (if enabled in config)
   windows-validation:
     name: Windows Tests
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: windows-latest
@@ -246,6 +264,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -316,6 +337,11 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
+        with:
+          # No shared cache here: test jobs on the default branch write it, so
+          # a poisoned entry would be restored into the job that holds the
+          # write token and the PyPI token (#113).
+          enable-cache: false
 
       - name: Set up Python
         uses: i2mint/wads/actions/setup-python-uv@master
