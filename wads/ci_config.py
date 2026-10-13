@@ -50,7 +50,6 @@ def render_minimal_env_placeholders(template_text: str, project_name: str) -> st
     )
 
 
-
 def _yaml_scalar(value) -> str:
     """Render a TOML value as a YAML flow scalar with the same meaning.
 
@@ -69,9 +68,9 @@ def _yaml_scalar(value) -> str:
     elif not isinstance(value, (str, bool, int, float)):
         value = str(value)
     return "".join(
-        ch if ch.isprintable() else (
-            f"\\u{ord(ch):04x}" if ord(ch) <= 0xFFFF else f"\\U{ord(ch):08x}"
-        )
+        ch
+        if ch.isprintable()
+        else (f"\\u{ord(ch):04x}" if ord(ch) <= 0xFFFF else f"\\U{ord(ch):08x}")
         for ch in json.dumps(value, ensure_ascii=False)
     )
 
