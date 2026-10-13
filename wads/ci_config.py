@@ -40,6 +40,20 @@ DFLT_SKIP_PUBLISH_MARKER = "[skip publish]"
 DFLT_SKIP_PAGES_MARKER = "[skip github-pages]"
 
 
+def _marker(table_config: dict, key: str, default: str, *, table: str) -> str:
+    """A commit-subject marker from *table_config*, refused unless a non-empty string.
+
+    A non-string (``skip_marker = false``) would otherwise reach the workflow as the
+    substring ``"false"`` and fire on any subject containing that word.
+    """
+    marker = table_config.get(key, default)
+    if not isinstance(marker, str) or not marker.strip():
+        raise ValueError(
+            f"{table}.{key} must be a non-empty, non-blank string; got {marker!r}"
+        )
+    return marker
+
+
 def render_minimal_env_placeholders(template_text: str, project_name: str) -> str:
     """Render the inline template's env placeholders without a [tool.wads.ci]
     config: workflow-level env gets PROJECT_NAME only, and the test-job
@@ -454,7 +468,10 @@ class CIConfig:
         is tested without burning a version number. Defaults to
         ``"[skip publish]"``. Set via ``[tool.wads.ci.publish].skip_publish_marker``.
         """
-        return self.publish_config.get("skip_publish_marker", DFLT_SKIP_PUBLISH_MARKER)
+        return _marker(
+            self.publish_config, "skip_publish_marker", DFLT_SKIP_PUBLISH_MARKER,
+            table="[tool.wads.ci.publish]",
+        )
 
     # 🚦 TRIGGER (whether CI runs at all)
     @property
@@ -524,7 +541,10 @@ class CIConfig:
         ``[tool.wads.ci.docs].skip_marker``. (The skip-ci marker,
         :attr:`publish_skip_ci_marker`, suppresses Pages too.)
         """
-        return self.docs_config.get("skip_marker", DFLT_SKIP_PAGES_MARKER)
+        return _marker(
+            self.docs_config, "skip_marker", DFLT_SKIP_PAGES_MARKER,
+            table="[tool.wads.ci.docs]",
+        )
 
     @property
     def docs_builder(self) -> str:

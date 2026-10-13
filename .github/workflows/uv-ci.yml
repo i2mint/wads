@@ -310,6 +310,7 @@ jobs:
       # ------------------------------------------------------------------
       - name: Decide skip markers
         id: gates
+        shell: bash  # `shopt` and `[[ ]]`: never run this under sh
         env:
           SUBJECT: ${{ steps.commit.outputs.subject }}
           SKIP_CI_MARKER: ${{ steps.config.outputs.skip-ci-marker }}

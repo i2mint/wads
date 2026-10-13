@@ -424,11 +424,11 @@ wheel = true
 enabled = true  # Publish to PyPI on main/master
 ```
 
-Commit-subject markers narrow what a default-branch push does. They match the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count:
+Commit-subject markers narrow what a default-branch push does. wads matches them against the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count. The one exception is `[skip ci]` itself: GitHub skips the whole run when it appears *anywhere* in the pushed commit message, body included. This also means a PR whose title carries a marker skips that job on its own squash-merge, so keep markers out of PR titles unless you mean it.
 
 | Marker (default) | Validation | Publish (PyPI) | GitHub Pages | Rename via |
 |---|---|---|---|---|
-| `[skip ci]` | skipped | skipped | skipped | `[tool.wads.ci.publish].skip_ci_marker` (publish and Pages) |
+| `[skip ci]` | skipped (by GitHub) | skipped | skipped | `[tool.wads.ci.publish].skip_ci_marker` (renaming it moves only the publish and Pages gates; validation keeps `[skip ci]`) |
 | `[skip publish]` | runs | skipped | runs | `[tool.wads.ci.publish].skip_publish_marker` |
 | `[skip github-pages]` | runs | runs | skipped | `[tool.wads.ci.docs].skip_marker` |
 | `[publish]` | runs | forced when `enabled = false` | runs | `[tool.wads.ci.publish].publish_marker` |

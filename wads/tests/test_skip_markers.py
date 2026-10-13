@@ -232,3 +232,25 @@ def test_config_defaults_and_overrides():
     )
     assert custom.publish_skip_publish_marker == "[no release]"
     assert custom.docs_skip_marker == "[no docs]"
+
+
+@WORKFLOWS
+def test_the_step_runs_under_bash_after_the_config_it_reads(workflow):
+    steps = yaml.safe_load(workflow.read_text())["jobs"]["setup"]["steps"]
+    ids = [s.get("id") for s in steps]
+    assert ids.index("commit") < ids.index("gates")
+    assert ids.index("config") < ids.index("gates")
+    assert _gates_step(workflow)["shell"] == "bash"
+
+
+@pytest.mark.parametrize("bad", [False, 0, "", "   ", ["[x]"]])
+def test_a_marker_that_is_not_a_non_empty_string_is_refused(bad):
+    for section, key, prop in (
+        ("publish", "skip_publish_marker", "publish_skip_publish_marker"),
+        ("docs", "skip_marker", "docs_skip_marker"),
+    ):
+        config = CIConfig(
+            {"project": {"name": "x"}, "tool": {"wads": {"ci": {section: {key: bad}}}}}
+        )
+        with pytest.raises(ValueError, match=key):
+            getattr(config, prop)
