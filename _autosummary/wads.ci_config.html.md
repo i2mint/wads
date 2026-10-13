@@ -140,6 +140,14 @@ Get required environment variable names (CI fails if not in secrets).
 
 Get test environment variable names (CI warns if not in secrets).
 
+#### *property* env_vars_variables *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Declared env vars backed by a repository *variable*, not a secret.
+
+`[tool.wads.ci.env].variables` (written by `wads-secrets add NAME
+--variable`). The reusable workflow reads these from the caller’s
+`vars` context, so they need no secrets transport (#107).
+
 #### *property* exclude_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get test paths to exclude.
@@ -437,7 +445,9 @@ GitHub *secret* names the caller stub should pass to the reusable workflow.
 This is the per-repo transport list (kept small): `PYPI_PASSWORD` (for
 the publish job) plus the backing secret of every env var the repo
 declares in `[tool.wads.ci.env]` (required/test/extra), resolved
-through `secret_aliases`. Order-preserving, de-duplicated.
+through `secret_aliases`, except those listed in `variables`, which
+are repository variables and need no transport. Order-preserving,
+de-duplicated.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

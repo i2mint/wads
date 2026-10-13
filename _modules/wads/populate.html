@@ -1401,13 +1401,12 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">is_bundled_stub</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">named_transport_names</span><span class="p">,</span>
                 <span class="n">stub_with_named_transport</span><span class="p">,</span>
-                <span class="n">warn_names_outside_superset</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">names</span> <span class="o">=</span> <span class="n">ci_config</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">()</span> <span class="k">if</span> <span class="n">ci_config</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
-            <span class="n">warn_names_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-            <span class="n">ci_def</span> <span class="o">=</span> <span class="n">stub_with_named_transport</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+            <span class="n">ci_def</span> <span class="o">=</span> <span class="n">stub_with_named_transport</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">named_transport_names</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
 
         <span class="c1"># Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo</span>
         <span class="c1"># named transport); this branch only fires for those.</span>
@@ -1814,7 +1813,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=f01b3998"></script>
+</div><script src="../../_static/documentation_options.js?v=595b4dfe"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

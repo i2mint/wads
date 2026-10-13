@@ -557,6 +557,22 @@
 <span class="w">        </span><span class="sd">"""Get default environment variables."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"defaults"</span><span class="p">,</span> <span class="p">{})</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_vars_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Declared env vars backed by a repository *variable*, not a secret.</span>
+
+<span class="sd">        ``[tool.wads.ci.env].variables`` (written by ``wads-secrets add NAME</span>
+<span class="sd">        --variable``). The reusable workflow reads these from the caller's</span>
+<span class="sd">        ``vars`` context, so they need no secrets transport (#107).</span>
+<span class="sd">        """</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"variables"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"[tool.wads.ci.env].variables must be a list of env-var names, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">variables</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">variables</span>
+
 <div class="viewcode-block" id="CIConfig.stub_secret_names">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.stub_secret_names">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stub_secret_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="p">(</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,))</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -565,14 +581,18 @@
 <span class="sd">        This is the per-repo transport list (kept small): ``PYPI_PASSWORD`` (for</span>
 <span class="sd">        the publish job) plus the backing secret of every env var the repo</span>
 <span class="sd">        declares in ``[tool.wads.ci.env]`` (required/test/extra), resolved</span>
-<span class="sd">        through ``secret_aliases``. Order-preserving, de-duplicated.</span>
+<span class="sd">        through ``secret_aliases``, except those listed in ``variables``, which</span>
+<span class="sd">        are repository variables and need no transport. Order-preserving,</span>
+<span class="sd">        de-duplicated.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">_dedupe_preserving_order</span>
 
         <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_secret_aliases</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_vars_variables</span><span class="p">)</span>
         <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">always</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span><span class="p">:</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_dedupe_preserving_order</span><span class="p">(</span><span class="n">names</span><span class="p">))</span></div>
 
 
@@ -1391,7 +1411,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=f01b3998"></script>
+</div><script src="../../_static/documentation_options.js?v=595b4dfe"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

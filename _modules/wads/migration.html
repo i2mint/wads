@@ -1195,8 +1195,10 @@
 <span class="sd">            and says so on stderr. ``"named"`` passes an explicit subset</span>
 <span class="sd">            (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every</span>
 <span class="sd">            name must be in the wads superset or GitHub rejects the workflow</span>
-<span class="sd">            at parse time (issue #63) — out-of-superset names trigger a loud</span>
-<span class="sd">            warning. ``"json"`` (opt-in) passes the repo's whole secrets</span>
+<span class="sd">            at parse time (issue #63), so out-of-superset names are left out</span>
+<span class="sd">            of the stub with a note (#107). Names recorded in</span>
+<span class="sd">            ``[tool.wads.ci.env].variables`` are repository variables and are</span>
+<span class="sd">            never passed. ``"json"`` (opt-in) passes the repo's whole secrets</span>
 <span class="sd">            context as one ``WADS_CI_SECRETS_JSON`` secret, so any secret name</span>
 <span class="sd">            works, but every secret the repo can read reaches the called</span>
 <span class="sd">            workflow and GitHub's malicious-workflow scanner may hold its runs</span>
@@ -1230,7 +1232,11 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pin</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"@"</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"pin must start with '@', got </span><span class="si">{</span><span class="n">pin</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CI_SECRETS</span><span class="p">,</span> <span class="n">stub_with_transport</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">DEFAULT_CI_SECRETS</span><span class="p">,</span>
+        <span class="n">named_transport_names</span><span class="p">,</span>
+        <span class="n">stub_with_transport</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">names</span> <span class="o">=</span> <span class="n">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1248,20 +1254,22 @@
             <span class="p">)</span>
         <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">([</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">names</span> <span class="ow">or</span> <span class="p">())]))</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Names recorded in [tool.wads.ci.env].variables are already excluded:</span>
+        <span class="c1"># repository variables need no transport (#107). What is left outside</span>
+        <span class="c1"># the superset is a secret a named stub cannot pass (#63), so with no</span>
+        <span class="c1"># explicit choice, the JSON transport, which passes any name.</span>
         <span class="n">outside</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DEFAULT_CI_SECRETS</span><span class="p">]</span>
         <span class="n">transport</span> <span class="o">=</span> <span class="s2">"json"</span> <span class="k">if</span> <span class="n">outside</span> <span class="k">else</span> <span class="s2">"named"</span>
         <span class="k">if</span> <span class="n">outside</span><span class="p">:</span>
-            <span class="c1"># A named stub passing these could not start (issue #63); with no</span>
-            <span class="c1"># explicit choice, the JSON transport, which passes any name.</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"note: using the JSON secrets transport because </span><span class="si">{</span><span class="n">outside</span><span class="si">}</span><span class="s2"> "</span>
                 <span class="sa">f</span><span class="s2">"are outside the wads secrets superset, so a named stub "</span>
-                <span class="sa">f</span><span class="s2">"passing them could not start (i2mint/wads#63). GitHub may "</span>
-                <span class="sa">f</span><span class="s2">"hold JSON-transport runs (action_required, zero jobs; "</span>
-                <span class="sa">f</span><span class="s2">"i2mint/wads#74, #101): add the names to the superset in "</span>
-                <span class="sa">f</span><span class="s2">"wads/ci_secrets.py to get a named stub. (A name that only "</span>
-                <span class="sa">f</span><span class="s2">"backs a repository variable still counts here; see "</span>
-                <span class="sa">f</span><span class="s2">"i2mint/wads#107.)"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"could not pass them (i2mint/wads#63). GitHub may hold "</span>
+                <span class="sa">f</span><span class="s2">"JSON-transport runs (action_required, zero jobs; "</span>
+                <span class="sa">f</span><span class="s2">"i2mint/wads#74, #101). For a name that is not sensitive, "</span>
+                <span class="sa">f</span><span class="s2">"`wads-secrets add NAME --variable` records it as a repository "</span>
+                <span class="sa">f</span><span class="s2">"variable, which needs no transport; for a real secret, add it "</span>
+                <span class="sa">f</span><span class="s2">"to the superset in wads/ci_secrets.py. Then re-run."</span><span class="p">,</span>
                 <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
             <span class="p">)</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"json"</span><span class="p">,</span> <span class="s2">"named"</span><span class="p">):</span>
@@ -1281,7 +1289,7 @@
     <span class="k">if</span> <span class="n">pin</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
         <span class="n">stub</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"uv-ci.yml@master"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"uv-ci.yml</span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="o">==</span> <span class="s2">"named"</span><span class="p">:</span>
-        <span class="n">_warn_named_transport_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">named_transport_names</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">stub_with_transport</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
     <span class="c1"># The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an</span>
     <span class="c1"># on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.</span>
@@ -1364,13 +1372,6 @@
             <span class="s2">"and re-run."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">transport</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">passed</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_warn_named_transport_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Warn for names a named-transport stub cannot pass (see :mod:`wads.ci_secrets`)."""</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn_names_outside_superset</span>
-
-    <span class="k">return</span> <span class="n">warn_names_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_pyproject_near</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1991,7 +1992,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=f01b3998"></script>
+</div><script src="../../_static/documentation_options.js?v=595b4dfe"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

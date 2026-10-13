@@ -34,9 +34,12 @@ asked for.
 A name outside the superset makes GitHub reject the workflow at parse time
 with an opaque `startup_failure` (issue #63). The superset therefore grows
 **additively**: adding a `required: false` name never breaks an existing
-stub (removing one can). `wads-secrets add` and `wads-migrate` warn about
-out-of-superset names, and a re-render with no explicit transport falls back
-to JSON for such a repo rather than write a stub that cannot start.
+stub (removing one can). A named stub never passes an out-of-superset name: it
+is left out with a note ([`named_transport_names()`](#wads.ci_secrets.named_transport_names), #107), and a
+re-render with no explicit transport falls back to JSON for such a repo
+rather than drop a real secret. A name recorded in
+`[tool.wads.ci.env].variables` (`wads-secrets add NAME --variable`) is a
+repository variable, needs no transport, and never triggers either.
 
 **JSON (opt-in).** `wads-migrate ci-to-stub --transport json` passes one
 statically-declared secret, `JSON_TRANSPORT_SECRET`
@@ -89,6 +92,7 @@ GitHub’s parse-time-literal constraint.
 
 | [`is_valid_secret_name`](#wads.ci_secrets.is_valid_secret_name)(name)                        | Return `True` iff `name` is already a safe, valid secret name.              |
 |----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`named_transport_names`](#wads.ci_secrets.named_transport_names)(names)                      | The `names` a named-transport stub can pass; the rest are left out, loudly. |
 | [`normalize_secret_name`](#wads.ci_secrets.normalize_secret_name)(name)                       | Force `name` to a valid `UPPER_SNAKE` secret/env-var name.                  |
 | [`render_stub_json_transport`](#wads.ci_secrets.render_stub_json_transport)(\*[, indent])          | Render the caller stub's JSON-transport `secrets:` line (opt-in).           |
 | [`render_stub_secrets_passthrough`](#wads.ci_secrets.render_stub_secrets_passthrough)([names, indent])  | Render a caller stub's *named* `secrets:` pass-through block (the default). |
@@ -134,6 +138,27 @@ True
 False
 >>> is_valid_secret_name("GITHUB_TOKEN")
 False
+```
+
+### wads.ci_secrets.named_transport_names(names)
+
+The `names` a named-transport stub can pass; the rest are left out, loudly.
+
+A named stub may only pass names in the superset
+([`DEFAULT_CI_SECRETS`](#wads.ci_secrets.DEFAULT_CI_SECRETS)): one more line and GitHub rejects the whole
+workflow at parse time (issue #63). So a name outside it is *left out* of
+the stub rather than written there. It can then reach CI only as a
+repository variable (declared env vars fall back to `vars`). A note on
+stderr lists what was left out and how to pass it (#107). Names recorded
+in `[tool.wads.ci.env].variables` never get here: they are not secrets.
+Order-preserving.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+```pycon
+>>> named_transport_names(["PYPI_PASSWORD", "HF_TOKEN"])
+['PYPI_PASSWORD', 'HF_TOKEN']
 ```
 
 ### wads.ci_secrets.normalize_secret_name(name)

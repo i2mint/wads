@@ -64,12 +64,16 @@ Configure a CI value: declare it in pyproject, transport it, set its value.
     need no transport at all: the reusable workflow reads the caller’s
     `vars` context directly and declared env vars fall back to it.
 
-### wads.secrets_cli.add_env_var_to_pyproject(pyproject_path, var_name, secret_name, , kind='extra')
+### wads.secrets_cli.add_env_var_to_pyproject(pyproject_path, var_name, secret_name, , kind='extra', variable=False)
 
 Add `var_name` to `[tool.wads.ci.env]`; record alias if names differ.
 
+With `variable=True` the name is also recorded in `variables`, so stub
+rendering knows it is a repository variable that needs no secrets transport
+(#107). That record is added even when the var is already declared.
+
 Returns `(changed, existing_bucket)`. If the var is already declared,
-makes no change and returns `(False, <bucket>)`.
+the declaration is unchanged and this returns `(False, <bucket>)`.
 
 ### wads.secrets_cli.add_secret_to_stub(ci_file, secret_name)
 

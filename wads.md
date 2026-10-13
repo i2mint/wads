@@ -1,4 +1,4 @@
-> built 2026-10-13 22:45 UTC from 1a675ab (master) · wads 0.2.40. Details: build_info.json
+> built 2026-10-13 23:46 UTC from 076245d (master) · wads 0.2.41. Details: build_info.json
 
 # index.html.md
 
@@ -190,7 +190,7 @@ wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variab
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. With `--variable`, the name is also recorded in `[tool.wads.ci.env].variables`, so stub rendering never counts it as a secret to transport. A named stub leaves out any name outside the wads secrets superset, with a note, instead of writing a line that would make the workflow unstartable. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
 
 Named secrets must be in the superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names, and the superset grows additively (adding a name never breaks a stub). The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo’s whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because it hands every secret the repo can read to the called workflow, and GitHub’s malicious-workflow scanner holds its runs: the run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74), [#101](https://github.com/i2mint/wads/issues/101)). Re-rendering a stub (`wads-migrate ci-to-stub`, `ci-on-demand`, `fleet-stub`) writes the named transport, converting a JSON stub, unless `--transport json` is given or a declared name is outside the superset.
 
@@ -1321,6 +1321,14 @@ Get required environment variable names (CI fails if not in secrets).
 
 Get test environment variable names (CI warns if not in secrets).
 
+#### *property* env_vars_variables *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Declared env vars backed by a repository *variable*, not a secret.
+
+`[tool.wads.ci.env].variables` (written by `wads-secrets add NAME
+--variable`). The reusable workflow reads these from the caller’s
+`vars` context, so they need no secrets transport (#107).
+
 #### *property* exclude_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 Get test paths to exclude.
@@ -1618,7 +1626,9 @@ GitHub *secret* names the caller stub should pass to the reusable workflow.
 This is the per-repo transport list (kept small): `PYPI_PASSWORD` (for
 the publish job) plus the backing secret of every env var the repo
 declares in `[tool.wads.ci.env]` (required/test/extra), resolved
-through `secret_aliases`. Order-preserving, de-duplicated.
+through `secret_aliases`, except those listed in `variables`, which
+are repository variables and need no transport. Order-preserving,
+de-duplicated.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
@@ -2020,9 +2030,12 @@ asked for.
 A name outside the superset makes GitHub reject the workflow at parse time
 with an opaque `startup_failure` (issue #63). The superset therefore grows
 **additively**: adding a `required: false` name never breaks an existing
-stub (removing one can). `wads-secrets add` and `wads-migrate` warn about
-out-of-superset names, and a re-render with no explicit transport falls back
-to JSON for such a repo rather than write a stub that cannot start.
+stub (removing one can). A named stub never passes an out-of-superset name: it
+is left out with a note ([`named_transport_names()`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.named_transport_names), #107), and a
+re-render with no explicit transport falls back to JSON for such a repo
+rather than drop a real secret. A name recorded in
+`[tool.wads.ci.env].variables` (`wads-secrets add NAME --variable`) is a
+repository variable, needs no transport, and never triggers either.
 
 **JSON (opt-in).** `wads-migrate ci-to-stub --transport json` passes one
 statically-declared secret, `JSON_TRANSPORT_SECRET`
@@ -2075,6 +2088,7 @@ GitHub’s parse-time-literal constraint.
 
 | [`is_valid_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.is_valid_secret_name)(name)                        | Return `True` iff `name` is already a safe, valid secret name.              |
 |----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`named_transport_names`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.named_transport_names)(names)                      | The `names` a named-transport stub can pass; the rest are left out, loudly. |
 | [`normalize_secret_name`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.normalize_secret_name)(name)                       | Force `name` to a valid `UPPER_SNAKE` secret/env-var name.                  |
 | [`render_stub_json_transport`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_json_transport)(\*[, indent])          | Render the caller stub's JSON-transport `secrets:` line (opt-in).           |
 | [`render_stub_secrets_passthrough`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.render_stub_secrets_passthrough)([names, indent])  | Render a caller stub's *named* `secrets:` pass-through block (the default). |
@@ -2120,6 +2134,27 @@ True
 False
 >>> is_valid_secret_name("GITHUB_TOKEN")
 False
+```
+
+### wads.ci_secrets.named_transport_names(names)
+
+The `names` a named-transport stub can pass; the rest are left out, loudly.
+
+A named stub may only pass names in the superset
+([`DEFAULT_CI_SECRETS`](_autosummary/wads.ci_secrets.html.md#wads.ci_secrets.DEFAULT_CI_SECRETS)): one more line and GitHub rejects the whole
+workflow at parse time (issue #63). So a name outside it is *left out* of
+the stub rather than written there. It can then reach CI only as a
+repository variable (declared env vars fall back to `vars`). A note on
+stderr lists what was left out and how to pass it (#107). Names recorded
+in `[tool.wads.ci.env].variables` never get here: they are not secrets.
+Order-preserving.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+```pycon
+>>> named_transport_names(["PYPI_PASSWORD", "HF_TOKEN"])
+['PYPI_PASSWORD', 'HF_TOKEN']
 ```
 
 ### wads.ci_secrets.normalize_secret_name(name)
@@ -4301,8 +4336,10 @@ configuration continues to come from `[tool.wads.ci.*]` in
     and says so on stderr. `"named"` passes an explicit subset
     (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
     name must be in the wads superset or GitHub rejects the workflow
-    at parse time (issue #63) — out-of-superset names trigger a loud
-    warning. `"json"` (opt-in) passes the repo’s whole secrets
+    at parse time (issue #63), so out-of-superset names are left out
+    of the stub with a note (#107). Names recorded in
+    `[tool.wads.ci.env].variables` are repository variables and are
+    never passed. `"json"` (opt-in) passes the repo’s whole secrets
     context as one `WADS_CI_SECRETS_JSON` secret, so any secret name
     works, but every secret the repo can read reaches the called
     workflow and GitHub’s malicious-workflow scanner may hold its runs
@@ -6125,12 +6162,16 @@ Configure a CI value: declare it in pyproject, transport it, set its value.
     need no transport at all: the reusable workflow reads the caller’s
     `vars` context directly and declared env vars fall back to it.
 
-### wads.secrets_cli.add_env_var_to_pyproject(pyproject_path, var_name, secret_name, , kind='extra')
+### wads.secrets_cli.add_env_var_to_pyproject(pyproject_path, var_name, secret_name, , kind='extra', variable=False)
 
 Add `var_name` to `[tool.wads.ci.env]`; record alias if names differ.
 
+With `variable=True` the name is also recorded in `variables`, so stub
+rendering knows it is a repository variable that needs no secrets transport
+(#107). That record is added even when the var is already declared.
+
 Returns `(changed, existing_bucket)`. If the var is already declared,
-makes no change and returns `(False, <bucket>)`.
+the declaration is unchanged and this returns `(False, <bucket>)`.
 
 ### wads.secrets_cli.add_secret_to_stub(ci_file, secret_name)
 
@@ -6950,18 +6991,16 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-13 22:45 UTC** from commit <a href="https://github.com/i2mint/wads/commit/1a675abf7a8b0d2f47691506c33a173fc6c95d27"><code>1a675ab</code></a> on branch <code>master</code>, for **wads 0.2.40** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 23:46 UTC** from commit <a href="https://github.com/i2mint/wads/commit/076245dc4895c6a6a941c41f9305218e273ede56"><code>076245d</code></a> on branch <code>master</code>, for **wads 0.2.41** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.40) is behind the latest release on PyPI (0.2.41): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/1a675abf7a8b0d2f47691506c33a173fc6c95d27"><code>1a675abf7a8b0d2f47691506c33a173fc6c95d27</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/076245dc4895c6a6a941c41f9305218e273ede56"><code>076245dc4895c6a6a941c41f9305218e273ede56</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -6972,9 +7011,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38479592689">38479592689</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38486016203">38486016203</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>1a675abf7a8b0d2f47691506c33a173fc6c95d27</code> (in the history of the built commit) |
+| Event commit | <code>076245dc4895c6a6a941c41f9305218e273ede56</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6999,13 +7038,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.41/">0.2.41</a>, newer than the documented version (0.2.40).
+Latest release: <a href="https://pypi.org/project/wads/0.2.41/">0.2.41</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 1a675abf7a8b0d2f47691506c33a173fc6c95d27
+git checkout 076245dc4895c6a6a941c41f9305218e273ede56
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

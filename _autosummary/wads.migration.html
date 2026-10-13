@@ -532,8 +532,10 @@ the JSON transport (a named stub passing them could not start)
 and says so on stderr. <code class="docutils literal notranslate"><span class="pre">&quot;named&quot;</span></code> passes an explicit subset
 (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
 name must be in the wads superset or GitHub rejects the workflow
-at parse time (issue #63) — out-of-superset names trigger a loud
-warning. <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code> (opt-in) passes the repo’s whole secrets
+at parse time (issue #63), so out-of-superset names are left out
+of the stub with a note (#107). Names recorded in
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env].variables</span></code> are repository variables and are
+never passed. <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code> (opt-in) passes the repo’s whole secrets
 context as one <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> secret, so any secret name
 works, but every secret the repo can read reaches the called
 workflow and GitHub’s malicious-workflow scanner may hold its runs
@@ -770,7 +772,7 @@ to generate proper configuration.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f01b3998"></script>
+</div><script src="../_static/documentation_options.js?v=595b4dfe"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

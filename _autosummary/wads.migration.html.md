@@ -204,8 +204,10 @@ configuration continues to come from `[tool.wads.ci.*]` in
     and says so on stderr. `"named"` passes an explicit subset
     (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
     name must be in the wads superset or GitHub rejects the workflow
-    at parse time (issue #63) — out-of-superset names trigger a loud
-    warning. `"json"` (opt-in) passes the repo’s whole secrets
+    at parse time (issue #63), so out-of-superset names are left out
+    of the stub with a note (#107). Names recorded in
+    `[tool.wads.ci.env].variables` are repository variables and are
+    never passed. `"json"` (opt-in) passes the repo’s whole secrets
     context as one `WADS_CI_SECRETS_JSON` secret, so any secret name
     works, but every secret the repo can read reaches the called
     workflow and GitHub’s malicious-workflow scanner may hold its runs
