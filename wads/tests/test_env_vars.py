@@ -127,3 +127,62 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("✅ ALL TESTS PASSED!")
     print("=" * 70)
+
+
+def test_env_block_parses_back_to_the_declared_defaults(tmp_path):
+    """The workflow-level env block of the inline template is valid YAML whose
+    values are the committed defaults."""
+    import yaml
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\ndefaults = {LOG_LEVEL = "DEBUG", MPLBACKEND = "Agg"}\n'
+    )
+    block = CIConfig.from_file(pyproject).generate_env_block()
+    assert yaml.safe_load(block) == {
+        "PROJECT_NAME": "demo",
+        "LOG_LEVEL": "DEBUG",
+        "MPLBACKEND": "Agg",
+    }
+
+
+def test_env_block_quotes_values_yaml_would_reinterpret(tmp_path):
+    """Unquoted, `yes` is a bool, `#x` a comment, `a: b` a mapping and `""`
+    null: every default must reach the job as the string the repo committed."""
+    import yaml
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env.defaults]\n"
+        'FLAG = "yes"\nHASH = "#x"\nPAIR = "a: b"\nEMPTY = ""\nZERO = "010"\n'
+        'QUOTE = "say \\"hi\\""\nACCENT = "café"\nCOUNT = 3\nENABLED = true\nDAY = 2026-10-13\n'
+    )
+    block = CIConfig.from_file(pyproject).generate_env_block()
+    assert yaml.safe_load(block) == {
+        "PROJECT_NAME": "demo",
+        "FLAG": "yes",
+        "HASH": "#x",
+        "PAIR": "a: b",
+        "EMPTY": "",
+        "ZERO": "010",
+        "QUOTE": 'say "hi"',
+        "ACCENT": "café",
+        "COUNT": 3,
+        "ENABLED": True,
+        "DAY": "2026-10-13",
+    }
+
+
+def test_env_block_escapes_characters_yaml_forbids_or_folds(tmp_path):
+    """DEL, C1 controls and line/paragraph separators must not make the
+    workflow unparseable or be folded to a space; inf and nan keep their text."""
+    import yaml
+
+    from wads.ci_config import _yaml_scalar
+
+    for value in ("a\x7fb", "a\x85b", "a b", "a\x9fb", "a￾b", "😀"):
+        assert yaml.safe_load(f"K: {_yaml_scalar(value)}") == {"K": value}
+    assert _yaml_scalar(float("inf")) == '"inf"'
+    assert _yaml_scalar(float("nan")) == '"nan"'

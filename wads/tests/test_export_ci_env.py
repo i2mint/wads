@@ -380,3 +380,50 @@ def test_main_publish_job_still_gets_the_token(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("WADS_SECRETS_JSON", json.dumps({"PYPI_PASSWORD": "dummy-pypi"}))
     assert mod.main() == 0
     assert gh_env.read_text() == "PYPI_PASSWORD=dummy-pypi\n"
+
+
+def test_main_without_github_env_writes_nothing_and_says_so(monkeypatch, capsys):
+    from wads.scripts import export_ci_env as mod
+
+    monkeypatch.delenv("GITHUB_ENV", raising=False)
+    monkeypatch.setenv("WADS_ENV_EXTRA", '["OPENAI_API_KEY"]')
+    monkeypatch.setenv("WADS_SECRETS_JSON", '{"OPENAI_API_KEY": "sk-x"}')
+    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_TEST", "WADS_ENV_ALWAYS_REQUIRED",
+                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+        monkeypatch.delenv(unset, raising=False)
+
+    assert mod.main() == 0
+    captured = capsys.readouterr()
+    assert "GITHUB_ENV not set" in captured.err
+    assert "::add-mask::sk-x" in captured.out
+
+
+def test_malformed_non_secret_input_is_reported_verbatim(monkeypatch, capsys):
+    """Config inputs carry no secrets, so their raw value helps the user fix it."""
+    import pytest
+
+    from wads.scripts import export_ci_env as mod
+
+    monkeypatch.setenv("WADS_ENV_REQUIRED", '["A"')
+    with pytest.raises(SystemExit):
+        mod.main()
+    assert '\'["A"\'' in capsys.readouterr().err
+
+
+def test_publish_job_exports_only_the_pypi_token():
+    """The publish job's export step writes PYPI_PASSWORD and nothing the repo
+    declares: no test vars and no committed defaults, so a default such as
+    BASH_ENV cannot reach the steps that hold the token (issue #112)."""
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github" / "workflows" / "uv-ci.yml").read_text()
+    )
+    (step,) = [
+        s
+        for s in workflow["jobs"]["publish"]["steps"]
+        if str(s.get("uses", "")).startswith("i2mint/wads/actions/export-ci-env@")
+    ]
+    inputs = step["with"]
+    assert inputs["always-required"] == '["PYPI_PASSWORD"]'
+    for name in ("required", "test", "extra"):
+        assert inputs[name] == "[]"
+    assert inputs["defaults"] == "{}"

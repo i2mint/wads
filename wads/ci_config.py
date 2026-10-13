@@ -8,6 +8,8 @@ settings in CI workflow files.
 
 from typing import Any, Optional
 from pathlib import Path
+import json
+import math
 import sys
 import warnings
 import re
@@ -45,6 +47,32 @@ def render_minimal_env_placeholders(template_text: str, project_name: str) -> st
         template_text.replace("#ENV_BLOCK#", f"  PROJECT_NAME: {project_name}")
         .replace("#TEST_ENV_BLOCK#\n", "")
         .replace("#TEST_ENV_VARS#\n", "")
+    )
+
+
+
+def _yaml_scalar(value) -> str:
+    """Render a TOML value as a YAML flow scalar with the same meaning.
+
+    JSON is a subset of YAML's flow style, so a string becomes a double-quoted
+    scalar and a bool or finite number keeps its type. Anything else (a TOML
+    date, ``inf``, ``nan``) is rendered as its string. Characters YAML forbids
+    raw or folds to a space (DEL, C1 controls, line separators) are escaped.
+
+    >>> _yaml_scalar("yes"), _yaml_scalar(True), _yaml_scalar(3)
+    ('"yes"', 'true', '3')
+    >>> _yaml_scalar("a\\x7fb")
+    '"a\\\\u007fb"'
+    """
+    if isinstance(value, float) and not math.isfinite(value):
+        value = str(value)
+    elif not isinstance(value, (str, bool, int, float)):
+        value = str(value)
+    return "".join(
+        ch if ch.isprintable() else (
+            f"\\u{ord(ch):04x}" if ord(ch) <= 0xFFFF else f"\\U{ord(ch):08x}"
+        )
+        for ch in json.dumps(value, ensure_ascii=False)
     )
 
 
@@ -623,9 +651,11 @@ class CIConfig:
         lines = [f"  PROJECT_NAME: {self.project_name}"]
 
         # Add default environment variables (literal values, not secrets —
-        # literals never become log masks, so workflow level is safe)
+        # literals never become log masks, so workflow level is safe). Each
+        # value is rendered as a YAML flow scalar, so a string such as `yes`,
+        # `#x` or `a: b` stays the string the repo committed.
         for key, value in self.env_vars_defaults.items():
-            lines.append(f"  {key}: {value}")
+            lines.append(f"  {key}: {_yaml_scalar(value)}")
 
         return "\n".join(lines)
 
