@@ -479,6 +479,42 @@ def stub_with_named_transport(stub: str, names) -> str:
     return stub_with_transport(stub, transport="named", names=names)
 
 
+def named_transport_names(names) -> list:
+    """The ``names`` a named-transport stub can pass; the rest are left out, loudly.
+
+    A named stub may only pass names in the superset
+    (:data:`DEFAULT_CI_SECRETS`): one more line and GitHub rejects the whole
+    workflow at parse time (issue #63). So a name outside it is *left out* of
+    the stub rather than written there. It can then reach CI only as a
+    repository variable (declared env vars fall back to ``vars``). A note on
+    stderr lists what was left out and how to pass it (#107). Names recorded
+    in ``[tool.wads.ci.env].variables`` never get here: they are not secrets.
+    Order-preserving.
+
+    >>> named_transport_names(["PYPI_PASSWORD", "HF_TOKEN"])
+    ['PYPI_PASSWORD', 'HF_TOKEN']
+    """
+    passable = [n for n in names if n in DEFAULT_CI_SECRETS]
+    left_out = [n for n in names if n not in DEFAULT_CI_SECRETS]
+    if left_out:
+        print(
+            f"note: the stub does not pass {left_out}: they are outside the wads "
+            f"secrets superset, and a named stub passing them could not start "
+            f"(i2mint/wads#63). They reach CI only as repository variables. "
+            f"For each one:\n"
+            f"  - not sensitive: `wads-secrets add NAME --variable` (sets the "
+            f"repo variable and records it in [tool.wads.ci.env].variables, "
+            f"which silences this note); or\n"
+            f"  - a real secret: add it to the superset in wads "
+            f"(wads/ci_secrets.py; additions are safe for every stub), or "
+            f"opt into the JSON transport (`wads-migrate ci-to-stub "
+            f"--transport json`, whose runs GitHub may hold: i2mint/wads#74, "
+            f"#101).",
+            file=_sys.stderr,
+        )
+    return passable
+
+
 def warn_names_outside_superset(names) -> list:
     """Warn loudly for names a named-transport stub cannot legally pass.
 

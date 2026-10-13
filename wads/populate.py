@@ -1098,13 +1098,12 @@ def _add_ci_def(
         )
         if is_bundled_stub:
             from wads.ci_secrets import (
+                named_transport_names,
                 stub_with_named_transport,
-                warn_names_outside_superset,
             )
 
             names = ci_config.stub_secret_names() if ci_config else ["PYPI_PASSWORD"]
-            warn_names_outside_superset(names)
-            ci_def = stub_with_named_transport(ci_def, names)
+            ci_def = stub_with_named_transport(ci_def, named_transport_names(names))
 
         # Legacy templates carried a #SECRETS_BLOCK# placeholder (per-repo
         # named transport); this branch only fires for those.

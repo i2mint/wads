@@ -234,8 +234,12 @@ def test_json_stub_pinned_to_old_tag_warns(capsys):
     assert "CANNOT START" not in capsys.readouterr().err
 
 
-def test_named_stub_warns_outside_superset_names(tmp_path, capsys):
-    """Named-mode generation warns per out-of-superset name (issue #63)."""
+def test_named_stub_leaves_out_and_notes_outside_superset_names(tmp_path, capsys):
+    """Named-mode generation leaves out-of-superset names out, with a note.
+
+    Writing them made the workflow unstartable (issue #63); now they are noted
+    and reach CI only as repository variables (#107).
+    """
     (tmp_path / "pyproject.toml").write_text(
         PYPROJECT.replace("extra_envvars = []", 'extra_envvars = ["COSMO_TEST_LEVEL"]')
     )
@@ -245,8 +249,8 @@ def test_named_stub_warns_outside_superset_names(tmp_path, capsys):
     ci.write_text("name: x\n")
     stub = migrate_ci_to_stub(str(ci), transport="named")
     err = capsys.readouterr().err
-    assert "COSMO_TEST_LEVEL" in err and "startup_failure" in err
-    assert "COSMO_TEST_LEVEL: ${{ secrets.COSMO_TEST_LEVEL }}" in stub
+    assert "COSMO_TEST_LEVEL" in err and "--variable" in err
+    assert "COSMO_TEST_LEVEL" not in stub
 
 
 def test_repo_from_git_parses_urls(tmp_path, monkeypatch):

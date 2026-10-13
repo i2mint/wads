@@ -114,19 +114,34 @@ def _existing_bucket(env, var_name: str) -> "str | None":
     return None
 
 
-def add_env_var_to_pyproject(pyproject_path, var_name, secret_name, *, kind="extra"):
+def add_env_var_to_pyproject(
+    pyproject_path, var_name, secret_name, *, kind="extra", variable=False
+):
     """Add ``var_name`` to ``[tool.wads.ci.env]``; record alias if names differ.
 
+    With ``variable=True`` the name is also recorded in ``variables``, so stub
+    rendering knows it is a repository variable that needs no secrets transport
+    (#107). That record is added even when the var is already declared.
+
     Returns ``(changed, existing_bucket)``. If the var is already declared,
-    makes no change and returns ``(False, <bucket>)``.
+    the declaration is unchanged and this returns ``(False, <bucket>)``.
     """
     pyproject_path = Path(pyproject_path)
     bucket = _KINDS[kind]
     tomlkit, doc = _load_toml_doc(pyproject_path)
     env = _ci_env_table(tomlkit, doc)
 
+    marked = False
+    if variable and var_name not in (env.get("variables") or []):
+        if env.get("variables") is None:
+            env["variables"] = tomlkit.array()
+        env["variables"].append(var_name)
+        marked = True
+
     already = _existing_bucket(env, var_name)
     if already:
+        if marked:
+            pyproject_path.write_text(tomlkit.dumps(doc))
         return False, already
 
     arr = env.get(bucket)
@@ -260,7 +275,7 @@ def add(
         return 1
 
     changed, existing = add_env_var_to_pyproject(
-        pyproject, var_name, secret_name, kind=kind
+        pyproject, var_name, secret_name, kind=kind, variable=variable
     )
     # `add` configures three independent layers (pyproject declaration, ci.yml
     # transport, GitHub secret value). An already-present declaration must NOT

@@ -934,7 +934,11 @@ def migrate_ci_to_stub(
     """
     if not pin.startswith("@"):
         raise ValueError(f"pin must start with '@', got {pin!r}")
-    from wads.ci_secrets import DEFAULT_CI_SECRETS, stub_with_transport
+    from wads.ci_secrets import (
+        DEFAULT_CI_SECRETS,
+        named_transport_names,
+        stub_with_transport,
+    )
 
     names = _stub_secret_names_for(old_ci)
     if names is None:
@@ -952,20 +956,22 @@ def migrate_ci_to_stub(
             )
         names = list(dict.fromkeys(["PYPI_PASSWORD", *(names or ())]))
     if transport is None:
+        # Names recorded in [tool.wads.ci.env].variables are already excluded:
+        # repository variables need no transport (#107). What is left outside
+        # the superset is a secret a named stub cannot pass (#63), so with no
+        # explicit choice, the JSON transport, which passes any name.
         outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
         transport = "json" if outside else "named"
         if outside:
-            # A named stub passing these could not start (issue #63); with no
-            # explicit choice, the JSON transport, which passes any name.
             print(
                 f"note: using the JSON secrets transport because {outside} "
                 f"are outside the wads secrets superset, so a named stub "
-                f"passing them could not start (i2mint/wads#63). GitHub may "
-                f"hold JSON-transport runs (action_required, zero jobs; "
-                f"i2mint/wads#74, #101): add the names to the superset in "
-                f"wads/ci_secrets.py to get a named stub. (A name that only "
-                f"backs a repository variable still counts here; see "
-                f"i2mint/wads#107.)",
+                f"could not pass them (i2mint/wads#63). GitHub may hold "
+                f"JSON-transport runs (action_required, zero jobs; "
+                f"i2mint/wads#74, #101). For a name that is not sensitive, "
+                f"`wads-secrets add NAME --variable` records it as a repository "
+                f"variable, which needs no transport; for a real secret, add it "
+                f"to the superset in wads/ci_secrets.py. Then re-run.",
                 file=sys.stderr,
             )
     if transport not in ("json", "named"):
@@ -985,7 +991,7 @@ def migrate_ci_to_stub(
     if pin != "@master":
         stub = stub.replace("uv-ci.yml@master", f"uv-ci.yml{pin}")
     if transport == "named":
-        _warn_named_transport_outside_superset(names)
+        names = named_transport_names(names)
     stub = stub_with_transport(stub, transport=transport, names=names)
     # The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an
     # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
@@ -1067,13 +1073,6 @@ def _existing_stub_secrets(old_ci) -> "tuple[str, list] | None":
             "and re-run."
         )
     return transport, list(passed)
-
-
-def _warn_named_transport_outside_superset(names) -> list:
-    """Warn for names a named-transport stub cannot pass (see :mod:`wads.ci_secrets`)."""
-    from wads.ci_secrets import warn_names_outside_superset
-
-    return warn_names_outside_superset(names)
 
 
 def _find_pyproject_near(old_ci) -> Path | None:
