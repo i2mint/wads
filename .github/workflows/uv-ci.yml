@@ -435,11 +435,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Pattern download: no match (no report was uploaded) is a no-op, not
+      # an error annotation on every run.
       - name: Download coverage report
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: wads-coverage-report
+          pattern: wads-coverage-report
+          merge-multiple: true
 
       - name: Track Code Metrics
         uses: i2mint/umpyre/actions/track-metrics@master
