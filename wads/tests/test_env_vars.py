@@ -127,3 +127,21 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("✅ ALL TESTS PASSED!")
     print("=" * 70)
+
+
+def test_env_block_parses_back_to_the_declared_defaults(tmp_path):
+    """The workflow-level env block of the inline template is valid YAML whose
+    values are the committed defaults."""
+    import yaml
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\ndefaults = {LOG_LEVEL = "DEBUG", MPLBACKEND = "Agg"}\n'
+    )
+    block = CIConfig.from_file(pyproject).generate_env_block()
+    assert yaml.safe_load(block) == {
+        "PROJECT_NAME": "demo",
+        "LOG_LEVEL": "DEBUG",
+        "MPLBACKEND": "Agg",
+    }

@@ -350,3 +350,24 @@ def test_an_unreadable_pyproject_keeps_a_json_stub(tmp_path, capsys):
     ci = _ci_file(tmp_path, JSON_STUB)
     assert migrate_ci_to_stub(str(ci)) == JSON_STUB
     assert "could not be read" in capsys.readouterr().err
+
+
+def test_stub_with_transport_rejects_an_unknown_transport():
+    with pytest.raises(ValueError, match="transport must be"):
+        stub_with_transport(STUB_TEMPLATE, transport="inherit")
+
+
+def test_migrate_ci_to_stub_rejects_an_unknown_transport():
+    with pytest.raises(ValueError, match="transport must be"):
+        migrate_ci_to_stub(transport="inherit")
+
+
+def test_is_json_stub_reads_a_path_or_content(tmp_path):
+    from wads.migration import _is_json_stub
+
+    ci = _ci_file(tmp_path, JSON_STUB)
+    assert _is_json_stub(str(ci))
+    assert _is_json_stub(JSON_STUB)
+    assert not _is_json_stub(STUB_TEMPLATE)
+    assert not _is_json_stub(None)
+
