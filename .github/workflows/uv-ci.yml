@@ -184,6 +184,10 @@ jobs:
   # First job: Read configuration from pyproject.toml
   setup:
     name: Read Configuration
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       project-name: ${{ steps.config.outputs.project-name }}
@@ -263,6 +267,9 @@ jobs:
           printf 'commit subject: %s\n' "$subject"
 
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -296,6 +303,10 @@ jobs:
   # Second job: Validation using the config
   validation:
     name: Validation
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: ubuntu-latest
@@ -305,6 +316,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -389,8 +403,45 @@ jobs:
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
 
+      # Hand any machine-readable coverage report to the metrics job (one
+      # matrix leg is enough). Nothing is uploaded unless pytest-args asked
+      # for a json/xml report.
+      - name: Upload coverage report for metrics
+        if: needs.setup.outputs.metrics-enabled == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: wads-coverage-report
+          path: |
+            coverage.json
+            .coverage.json
+            coverage.xml
+            htmlcov/coverage.json
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 1
+
+  # Code metrics (umpyre) push to a storage branch, so they need a writable
+  # token. They run in their OWN job, after validation succeeds, which
+  # installs only umpyre and its tools from PyPI and never runs the repo's
+  # code, so the test jobs above can stay read-only (#113).
+  metrics:
+    name: Code Metrics
+    needs: [setup, validation]
+    if: needs.setup.outputs.metrics-enabled == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: wads-coverage-report
+
       - name: Track Code Metrics
-        if: needs.setup.outputs.metrics-enabled == 'true'
         uses: i2mint/umpyre/actions/track-metrics@master
         continue-on-error: true
         with:
@@ -403,6 +454,10 @@ jobs:
   # Optional Windows testing (if enabled in config)
   windows-validation:
     name: Windows Tests
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
     if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
     needs: setup
     runs-on: windows-latest
@@ -420,6 +475,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
