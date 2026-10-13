@@ -346,3 +346,39 @@ def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
         "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", str(stub_ci)
     )
     assert "--variable" in capsys.readouterr().out
+
+
+def test_reclassifying_a_passed_secret_as_a_variable_says_what_happens(
+    named_repo, capsys
+):
+    """The stub still passes it today; the next re-render drops it (#107 review)."""
+    pp = named_repo / "pyproject.toml"
+    ci = named_repo / ".github" / "workflows" / "ci.yml"
+    add("HF_TOKEN", kind="required", github=False, pyproject=str(pp), ci_file=str(ci))
+    assert "secrets.HF_TOKEN" in ci.read_text()
+    capsys.readouterr()
+    add(
+        "HF_TOKEN",
+        kind="required",
+        github=False,
+        variable=True,
+        pyproject=str(pp),
+        ci_file=str(ci),
+    )
+    out = capsys.readouterr().out
+    assert "still passes it as a secret" in out
+    assert 'variables = ["HF_TOKEN"]' in pp.read_text()
+
+
+def test_a_variables_value_that_is_not_a_list_is_refused(tmp_path):
+    pp = tmp_path / "pyproject.toml"
+    pp.write_text(
+        '[project]\nname = "d"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nvariables = "A"\n'
+    )
+    with pytest.raises(ValueError, match="must be a list"):
+        add_env_var_to_pyproject(pp, "A", "A", variable=True)
+    from wads.ci_config import CIConfig
+
+    with pytest.raises(ValueError, match="must be a list"):
+        CIConfig.from_file(str(pp)).stub_secret_names()

@@ -278,7 +278,13 @@ class CIConfig:
         --variable``). The reusable workflow reads these from the caller's
         ``vars`` context, so they need no secrets transport (#107).
         """
-        return self.ci_config.get("env", {}).get("variables", [])
+        variables = self.ci_config.get("env", {}).get("variables", [])
+        if not isinstance(variables, list):
+            raise ValueError(
+                "[tool.wads.ci.env].variables must be a list of env-var names, "
+                f"got {variables!r}"
+            )
+        return variables
 
     def stub_secret_names(self, *, always=("PYPI_PASSWORD",)) -> list[str]:
         """GitHub *secret* names the caller stub should pass to the reusable workflow.

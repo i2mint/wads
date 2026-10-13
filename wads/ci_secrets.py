@@ -30,9 +30,12 @@ asked for.
 A name outside the superset makes GitHub reject the workflow at parse time
 with an opaque ``startup_failure`` (issue #63). The superset therefore grows
 **additively**: adding a ``required: false`` name never breaks an existing
-stub (removing one can). ``wads-secrets add`` and ``wads-migrate`` warn about
-out-of-superset names, and a re-render with no explicit transport falls back
-to JSON for such a repo rather than write a stub that cannot start.
+stub (removing one can). A named stub never passes an out-of-superset name: it
+is left out with a note (:func:`named_transport_names`, #107), and a
+re-render with no explicit transport falls back to JSON for such a repo
+rather than drop a real secret. A name recorded in
+``[tool.wads.ci.env].variables`` (``wads-secrets add NAME --variable``) is a
+repository variable, needs no transport, and never triggers either.
 
 **JSON (opt-in).** ``wads-migrate ci-to-stub --transport json`` passes one
 statically-declared secret, :data:`JSON_TRANSPORT_SECRET`
@@ -506,8 +509,8 @@ def named_transport_names(names) -> list:
             f"repo variable and records it in [tool.wads.ci.env].variables, "
             f"which silences this note); or\n"
             f"  - a real secret: add it to the superset in wads "
-            f"(wads/ci_secrets.py; additions are safe for every stub), or "
-            f"opt into the JSON transport (`wads-migrate ci-to-stub "
+            f"(wads/ci_secrets.py; additions are safe for every stub; if it "
+            f"is already there, upgrade wads), or opt into the JSON transport (`wads-migrate ci-to-stub "
             f"--transport json`, whose runs GitHub may hold: i2mint/wads#74, "
             f"#101).",
             file=_sys.stderr,
