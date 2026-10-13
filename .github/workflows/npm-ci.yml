@@ -395,9 +395,11 @@ jobs:
           WORK=$(mktemp -d)
           cd "$WORK"
           for f in "${TGZS[@]}"; do
-            # A plain npm tarball: every member under package/, exactly one
-            # package/package.json (npm strips the first path component of
-            # every member, so anything else could shadow the manifest).
+            # Defense in depth only (GNU tar can stop listing early); the real
+            # guard is MANIFEST_CHECK, which reads the manifest with npm's own
+            # pacote. A plain npm tarball: every member under package/, one
+            # root package.json (npm strips the first path component of every
+            # member, so anything else could shadow the manifest).
             MEMBERS=$(tar -tzf "$ART/$f")
             if printf '%s\n' "$MEMBERS" | grep -qv '^package/' \
                || [ "$(printf '%s\n' "$MEMBERS" | grep -cE '^package(/+\.?)*/+package\.json$')" != 1 ] \
