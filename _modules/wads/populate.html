@@ -1392,19 +1392,19 @@
 
             <span class="n">ci_def</span> <span class="o">=</span> <span class="n">render_minimal_env_placeholders</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-        <span class="c1"># A new repo's stub passes its secrets by NAME: the template's JSON</span>
-        <span class="c1"># transport gets held by GitHub's malicious-workflow scanner on new</span>
-        <span class="c1"># repositories (action_required, zero jobs; i2mint/wads#74, #88).</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-            <span class="n">render_stub_json_transport</span><span class="p">,</span>
-            <span class="n">stub_with_named_transport</span><span class="p">,</span>
-            <span class="n">warn_names_outside_superset</span><span class="p">,</span>
-        <span class="p">)</span>
-
+        <span class="c1"># A new repo's stub passes its secrets by NAME (the template's default):</span>
+        <span class="c1"># PYPI_PASSWORD plus the secrets [tool.wads.ci.env] declares. The JSON</span>
+        <span class="c1"># transport gets held by GitHub's malicious-workflow scanner</span>
+        <span class="c1"># (action_required, zero jobs; i2mint/wads#74, #88, #101).</span>
         <span class="n">is_bundled_stub</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">ci_tpl_path</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
             <span class="n">github_ci_uv_stub_path</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_bundled_stub</span> <span class="ow">and</span> <span class="n">render_stub_json_transport</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ci_def</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_bundled_stub</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">stub_with_named_transport</span><span class="p">,</span>
+                <span class="n">warn_names_outside_superset</span><span class="p">,</span>
+            <span class="p">)</span>
+
             <span class="n">names</span> <span class="o">=</span> <span class="n">ci_config</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">()</span> <span class="k">if</span> <span class="n">ci_config</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
             <span class="n">warn_names_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
             <span class="n">ci_def</span> <span class="o">=</span> <span class="n">stub_with_named_transport</span><span class="p">(</span><span class="n">ci_def</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
@@ -1814,7 +1814,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=1b2333be"></script>
+</div><script src="../../_static/documentation_options.js?v=f300720e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

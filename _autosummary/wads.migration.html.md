@@ -160,18 +160,20 @@ configuration continues to come from `[tool.wads.ci.*]` in
     older tag produces a workflow GitHub rejects at parse time, so a
     warning is emitted for any non-master JSON pin. Must start with
     `"@"`.
-  * **transport** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `None` (default) keeps the transport of the stub at
-    `old_ci` when there is one, and otherwise uses `"named"`, so a
-    re-render never silently changes what an existing repo runs.
-    `"named"` passes an explicit subset
+  * **transport** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `None` (default) writes the named transport — converting
+    a JSON-transport stub at `old_ci` — unless the repo declares
+    secret names outside the wads superset, in which case it writes
+    the JSON transport (a named stub passing them could not start)
+    and says so on stderr. `"named"` passes an explicit subset
     (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every
-    name must be in the frozen wads superset or GitHub rejects the
-    workflow at parse time (issue #63) — out-of-superset names trigger
-    a loud warning. `"json"` (opt-in) passes the repo’s whole secrets
+    name must be in the wads superset or GitHub rejects the workflow
+    at parse time (issue #63) — out-of-superset names trigger a loud
+    warning. `"json"` (opt-in) passes the repo’s whole secrets
     context as one `WADS_CI_SECRETS_JSON` secret, so any secret name
-    works, but GitHub’s malicious-workflow scanner holds its runs on
-    new repositories (`action_required`, zero jobs; issues #74, #88),
-    which is why it is no longer the default.
+    works, but every secret the repo can read reaches the called
+    workflow and GitHub’s malicious-workflow scanner may hold its runs
+    (`action_required`, zero jobs; issues #74, #88, #101), which is
+    why it is not the default.
   * **trigger_mode** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – `"auto"` or `"on-demand"`. `None` (default) takes
     `[tool.wads.ci.trigger].mode` from the pyproject.toml of the repo
     holding `old_ci` (`"auto"` when there is none). On-demand stubs

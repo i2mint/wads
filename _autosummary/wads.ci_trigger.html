@@ -347,7 +347,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs an existing stub file passes; <code class="docutils literal notranslate"><span class="pre">{}</span></code> if none or not a stub.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_shape" title="wads.ci_trigger.stub_shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_shape</span></code></a>(ci_text)</p></td>
-<td><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub, which a re-render must keep.</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> (which a re-render keeps) and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.trigger_for_workflow" title="wads.ci_trigger.trigger_for_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger_for_workflow</span></code></a>(ci_path)</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">run_ci_marker)</span></code> declared by the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>.</p></td>
@@ -377,7 +377,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.ci_trigger.FlipResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">FlipResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unchanged'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">changes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#FlipResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.FlipResult" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>What <a class="reference internal" href="#wads.ci_trigger.flip_to_on_demand" title="wads.ci_trigger.flip_to_on_demand"><code class="xref py py-func docutils literal notranslate"><span class="pre">flip_to_on_demand()</span></code></a> changed or, on a dry run, would change.</p>
 <p><code class="docutils literal notranslate"><span class="pre">status</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;changed&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;unchanged&quot;</span></code> (already on-demand) or <code class="docutils literal notranslate"><span class="pre">&quot;refused&quot;</span></code>
 (nothing written; <code class="docutils literal notranslate"><span class="pre">notes</span></code> says why). <code class="docutils literal notranslate"><span class="pre">changes</span></code> maps a repo-relative path to its
@@ -390,7 +390,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <dd><p>Unified diff of every change.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -403,7 +403,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <dd><p>Classify a <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code>: <code class="docutils literal notranslate"><span class="pre">'missing'</span></code>, <code class="docutils literal notranslate"><span class="pre">'stub'</span></code>, <code class="docutils literal notranslate"><span class="pre">'inline-uv'</span></code> or <code class="docutils literal notranslate"><span class="pre">'other'</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classify_ci_workflow</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -424,7 +424,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <dd><p>Commit exactly <code class="docutils literal notranslate"><span class="pre">paths</span></code> and return the new commit’s short sha.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -434,8 +434,9 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">flip_to_on_demand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">python_versions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('3.12',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_on_windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.github/workflows/ci.yml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#flip_to_on_demand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.flip_to_on_demand" title="Link to this definition">¶</a></dt>
 <dd><p>Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.</p>
 <ul class="simple">
-<li><p>a <strong>stub</strong> <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> is re-rendered keeping its pin, secrets transport and
-<code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs, or <strong>refused</strong> if it holds anything else a re-render would drop
+<li><p>a <strong>stub</strong> <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> is re-rendered keeping its pin and <code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs
+(secrets move to the named transport, as <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code>
+does), or <strong>refused</strong> if it holds anything else a re-render would drop
 (extra jobs, custom triggers);</p></li>
 <li><p>an <strong>inline uv</strong> workflow becomes the stub, carrying its secret-backed env vars
 into <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> first (as <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code> does);</p></li>
@@ -457,7 +458,7 @@ written, because it would ignore the setting and keep running on every push.</p>
 <dd><p>Add a <code class="docutils literal notranslate"><span class="pre">with:</span></code> block (the reusable workflow’s inputs) under the stub’s <code class="docutils literal notranslate"><span class="pre">uses:</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -471,7 +472,7 @@ with push + <code class="docutils literal notranslate"><span class="pre">workflo
 adds the pre-filter <code class="docutils literal notranslate"><span class="pre">if:</span></code> to the <code class="docutils literal notranslate"><span class="pre">ci</span></code> job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -484,7 +485,7 @@ adds the pre-filter <code class="docutils literal notranslate"><span class="pre"
 so an enclosing project’s pyproject is never mistaken for this repo’s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -496,7 +497,7 @@ so an enclosing project’s pyproject is never mistaken for this repo’s.</p>
 <p><code class="docutils literal notranslate"><span class="pre">0</span></code> changed or already on-demand, <code class="docutils literal notranslate"><span class="pre">2</span></code> refused (nothing written).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -511,7 +512,7 @@ Comments and layout survive (tomlkit), and a key already holding its target valu
 is not touched, so applying this twice returns the first result unchanged.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -525,7 +526,7 @@ re-render; <code class="docutils literal notranslate"><span class="pre">dropped<
 Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLError</span></code> when the text does not parse.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]</span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_customizations</span><span class="p">(</span>
@@ -545,7 +546,7 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 <dd><p>The on-demand stub’s job-level pre-filter, as a workflow expression.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"[run ci]"</span><span class="p">)</span>
@@ -565,7 +566,7 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">with:</span></code> inputs an existing stub file passes; <code class="docutils literal notranslate"><span class="pre">{}</span></code> if none or not a stub.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -573,12 +574,13 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_trigger.stub_shape">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_shape" title="Link to this definition">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub, which a re-render must keep.</p>
-<p>Defaults (<code class="docutils literal notranslate"><span class="pre">&#64;master</span></code>, <code class="docutils literal notranslate"><span class="pre">named</span></code>) for anything that is not a stub: a NEW
-stub gets the named transport (i2mint/wads#74), an existing one keeps its own.</p>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">pin</span></code> (which a re-render keeps) and secrets <code class="docutils literal notranslate"><span class="pre">transport</span></code> of a stub.</p>
+<p>Defaults (<code class="docutils literal notranslate"><span class="pre">&#64;master</span></code>, <code class="docutils literal notranslate"><span class="pre">named</span></code>) for anything that is not a stub. A
+re-render writes the named transport whatever this reports
+(i2mint/wads#74, #101); see <a class="reference internal" href="wads.migration.html#wads.migration.migrate_ci_to_stub" title="wads.migration.migrate_ci_to_stub"><code class="xref py py-func docutils literal notranslate"><span class="pre">wads.migration.migrate_ci_to_stub()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_shape</span><span class="p">(</span><span class="s2">"uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30"</span><span class="p">)</span>
@@ -598,7 +600,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
 <code class="docutils literal notranslate"><span class="pre">on-demand</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -610,7 +612,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
 <p>The flip only governs <code class="docutils literal notranslate"><span class="pre">workflow</span></code>; these keep running and are worth knowing about.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -621,7 +623,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
 <dd><p>Which of <code class="docutils literal notranslate"><span class="pre">paths</span></code> have uncommitted changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span> <span class="pre">--porcelain</span></code> lines).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -632,7 +634,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
 <dd><p>Validate a (mode, marker) pair with the same rules the CI setup job applies.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_trigger</span><span class="p">(</span><span class="s2">"on-demand"</span><span class="p">,</span> <span class="s2">"[run ci]"</span><span class="p">)</span>
@@ -730,7 +732,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=1b2333be"></script>
+</div><script src="../_static/documentation_options.js?v=f300720e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

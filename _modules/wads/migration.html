@@ -1187,18 +1187,20 @@
 <span class="sd">            older tag produces a workflow GitHub rejects at parse time, so a</span>
 <span class="sd">            warning is emitted for any non-master JSON pin. Must start with</span>
 <span class="sd">            ``"@"``.</span>
-<span class="sd">        transport: ``None`` (default) keeps the transport of the stub at</span>
-<span class="sd">            ``old_ci`` when there is one, and otherwise uses ``"named"``, so a</span>
-<span class="sd">            re-render never silently changes what an existing repo runs.</span>
-<span class="sd">            ``"named"`` passes an explicit subset</span>
+<span class="sd">        transport: ``None`` (default) writes the named transport — converting</span>
+<span class="sd">            a JSON-transport stub at ``old_ci`` — unless the repo declares</span>
+<span class="sd">            secret names outside the wads superset, in which case it writes</span>
+<span class="sd">            the JSON transport (a named stub passing them could not start)</span>
+<span class="sd">            and says so on stderr. ``"named"`` passes an explicit subset</span>
 <span class="sd">            (PYPI_PASSWORD + the [tool.wads.ci.env]-declared secrets); every</span>
-<span class="sd">            name must be in the frozen wads superset or GitHub rejects the</span>
-<span class="sd">            workflow at parse time (issue #63) — out-of-superset names trigger</span>
-<span class="sd">            a loud warning. ``"json"`` (opt-in) passes the repo's whole secrets</span>
+<span class="sd">            name must be in the wads superset or GitHub rejects the workflow</span>
+<span class="sd">            at parse time (issue #63) — out-of-superset names trigger a loud</span>
+<span class="sd">            warning. ``"json"`` (opt-in) passes the repo's whole secrets</span>
 <span class="sd">            context as one ``WADS_CI_SECRETS_JSON`` secret, so any secret name</span>
-<span class="sd">            works, but GitHub's malicious-workflow scanner holds its runs on</span>
-<span class="sd">            new repositories (``action_required``, zero jobs; issues #74, #88),</span>
-<span class="sd">            which is why it is no longer the default.</span>
+<span class="sd">            works, but every secret the repo can read reaches the called</span>
+<span class="sd">            workflow and GitHub's malicious-workflow scanner may hold its runs</span>
+<span class="sd">            (``action_required``, zero jobs; issues #74, #88, #101), which is</span>
+<span class="sd">            why it is not the default.</span>
 <span class="sd">        trigger_mode: ``"auto"`` or ``"on-demand"``. ``None`` (default) takes</span>
 <span class="sd">            ``[tool.wads.ci.trigger].mode`` from the pyproject.toml of the repo</span>
 <span class="sd">            holding ``old_ci`` (``"auto"`` when there is none). On-demand stubs</span>
@@ -1227,9 +1229,38 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pin</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"@"</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"pin must start with '@', got </span><span class="si">{</span><span class="n">pin</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="n">auto_transport</span> <span class="o">=</span> <span class="n">transport</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CI_SECRETS</span><span class="p">,</span> <span class="n">stub_with_transport</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># A pyproject is there but unreadable: its declared secrets are unknown.</span>
+        <span class="k">if</span> <span class="n">transport</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_is_json_stub</span><span class="p">(</span><span class="n">old_ci</span><span class="p">):</span>
+            <span class="c1"># Converting would silently drop them; keep what the repo runs.</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">"note: keeping the JSON secrets transport: the repo's "</span>
+                <span class="s2">"pyproject.toml could not be read, so the secrets a named stub "</span>
+                <span class="s2">"should pass are unknown. Fix it and re-run."</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">transport</span> <span class="o">=</span> <span class="s2">"json"</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">transport</span> <span class="o">=</span> <span class="n">_existing_stub_transport</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+        <span class="n">outside</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DEFAULT_CI_SECRETS</span><span class="p">]</span>
+        <span class="n">transport</span> <span class="o">=</span> <span class="s2">"json"</span> <span class="k">if</span> <span class="n">outside</span> <span class="k">else</span> <span class="s2">"named"</span>
+        <span class="k">if</span> <span class="n">outside</span><span class="p">:</span>
+            <span class="c1"># A named stub passing these could not start (issue #63); with no</span>
+            <span class="c1"># explicit choice, the JSON transport, which passes any name.</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"note: using the JSON secrets transport because </span><span class="si">{</span><span class="n">outside</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"are outside the wads secrets superset, so a named stub "</span>
+                <span class="sa">f</span><span class="s2">"passing them could not start (i2mint/wads#63). GitHub may "</span>
+                <span class="sa">f</span><span class="s2">"hold JSON-transport runs (action_required, zero jobs; "</span>
+                <span class="sa">f</span><span class="s2">"i2mint/wads#74, #101): add the names to the superset in "</span>
+                <span class="sa">f</span><span class="s2">"wads/ci_secrets.py to get a named stub. (A name that only "</span>
+                <span class="sa">f</span><span class="s2">"backs a repository variable still counts here; see "</span>
+                <span class="sa">f</span><span class="s2">"i2mint/wads#107.)"</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"json"</span><span class="p">,</span> <span class="s2">"named"</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"transport must be 'json' or 'named', got </span><span class="si">{</span><span class="n">transport</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="o">==</span> <span class="s2">"json"</span> <span class="ow">and</span> <span class="n">pin</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
@@ -1247,34 +1278,15 @@
     <span class="k">if</span> <span class="n">pin</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
         <span class="n">stub</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"uv-ci.yml@master"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"uv-ci.yml</span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">transport</span> <span class="o">==</span> <span class="s2">"named"</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">stub_with_named_transport</span>
-
-        <span class="n">names</span> <span class="o">=</span> <span class="n">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CI_SECRETS</span>
-
-        <span class="n">outside</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DEFAULT_CI_SECRETS</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">auto_transport</span> <span class="ow">and</span> <span class="n">outside</span><span class="p">:</span>
-            <span class="c1"># A named stub passing these could not start (issue #63). With no</span>
-            <span class="c1"># explicit choice, keep the JSON transport, which passes any name.</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"note: using the JSON secrets transport because </span><span class="si">{</span><span class="n">outside</span><span class="si">}</span><span class="s2"> "</span>
-                <span class="sa">f</span><span class="s2">"are outside the wads secrets superset, so a named stub "</span>
-                <span class="sa">f</span><span class="s2">"passing them could not start (i2mint/wads#63). On a brand-new "</span>
-                <span class="sa">f</span><span class="s2">"repo GitHub may hold JSON-transport runs (i2mint/wads#74); "</span>
-                <span class="sa">f</span><span class="s2">"storing non-sensitive values as repository variables avoids "</span>
-                <span class="sa">f</span><span class="s2">"both."</span><span class="p">,</span>
-                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_warn_named_transport_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
-            <span class="n">stub</span> <span class="o">=</span> <span class="n">stub_with_named_transport</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+        <span class="n">_warn_named_transport_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">stub</span> <span class="o">=</span> <span class="n">stub_with_transport</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
     <span class="c1"># Legacy templates carried a placeholder instead of a transport line.</span>
     <span class="k">if</span> <span class="s2">"#SECRETS_BLOCK#"</span> <span class="ow">in</span> <span class="n">stub</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_secrets</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_stub_secrets_passthrough</span>
 
         <span class="n">stub</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
             <span class="s2">"#SECRETS_BLOCK#"</span><span class="p">,</span>
-            <span class="n">render_stub_secrets_passthrough</span><span class="p">(</span><span class="n">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)),</span>
+            <span class="n">render_stub_secrets_passthrough</span><span class="p">(</span><span class="n">names</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="c1"># The trigger comes from the repo's [tool.wads.ci.trigger], so re-rendering an</span>
     <span class="c1"># on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.</span>
@@ -1296,33 +1308,35 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_existing_stub_transport</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The secrets transport of the stub file at ``old_ci``; ``"named"`` otherwise."""</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stub_shape</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">old_ci</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"named"</span>
-    <span class="k">if</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())[</span><span class="s2">"transport"</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">stub_shape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))[</span><span class="s2">"transport"</span><span class="p">]</span>  <span class="c1"># content; "named" if not a stub</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_stub_secret_names_for</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"list | None"</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Secret names a *named-transport* stub should pass, from nearby pyproject.</span>
 
 <span class="sd">    Looks for a ``pyproject.toml`` next to ``old_ci`` (or in its repo root) and</span>
 <span class="sd">    uses its ``[tool.wads.ci.env]`` to decide which secrets to transport. Falls</span>
-<span class="sd">    back to publish-only (``PYPI_PASSWORD``) when no config is available.</span>
+<span class="sd">    back to publish-only (``PYPI_PASSWORD``) when there is no pyproject, and</span>
+<span class="sd">    returns ``None`` when there is one that cannot be read.</span>
 <span class="sd">    """</span>
     <span class="n">pyproject</span> <span class="o">=</span> <span class="n">_find_pyproject_near</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+    <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
 
-            <span class="k">return</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pyproject</span><span class="p">))</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">pass</span>
-    <span class="k">return</span> <span class="p">[</span><span class="s2">"PYPI_PASSWORD"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pyproject</span><span class="p">))</span><span class="o">.</span><span class="n">stub_secret_names</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_json_stub</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``old_ci`` (a path or the workflow's content) is a JSON-transport stub."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stub_shape</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">old_ci</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">text</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">text</span><span class="p">)[</span><span class="s2">"transport"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"json"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_warn_named_transport_outside_superset</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
@@ -1590,14 +1604,15 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s2">"json"</span><span class="p">,</span> <span class="s2">"named"</span><span class="p">),</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"How the stub passes secrets to the reusable workflow (default: the "</span>
-            <span class="s2">"existing stub's, else named). 'named' passes PYPI_PASSWORD plus "</span>
+            <span class="s2">"How the stub passes secrets to the reusable workflow (default: "</span>
+            <span class="s2">"named, converting a JSON stub; JSON only when a declared name is "</span>
+            <span class="s2">"outside the wads superset). 'named' passes PYPI_PASSWORD plus "</span>
             <span class="s2">"the [tool.wads.ci.env]-declared secrets; every name must be in "</span>
-            <span class="s2">"the frozen wads superset or the workflow cannot start. 'json' "</span>
+            <span class="s2">"the wads superset or the workflow cannot start. 'json' "</span>
             <span class="s2">"serializes the repo's whole secrets context into one "</span>
             <span class="s2">"WADS_CI_SECRETS_JSON secret (any secret name works), but GitHub's "</span>
-            <span class="s2">"malicious-workflow scanner holds its runs on new repos "</span>
-            <span class="s2">"(action_required, zero jobs; i2mint/wads#74)."</span>
+            <span class="s2">"malicious-workflow scanner may hold its runs "</span>
+            <span class="s2">"(action_required, zero jobs; i2mint/wads#74, #101)."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -1789,8 +1804,8 @@
             <span class="c1"># (e.g. after changing [tool.wads.ci.trigger]) never silently unpins it.</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
             <span class="n">pin</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pin</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">]</span>
-            <span class="c1"># None lets migrate_ci_to_stub keep an existing stub's transport, or</span>
-            <span class="c1"># choose named for a new one (JSON if a name is outside the superset).</span>
+            <span class="c1"># None lets migrate_ci_to_stub choose: named, converting a JSON stub</span>
+            <span class="c1"># (JSON only if a declared name is outside the superset).</span>
             <span class="n">transport</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">transport</span>
             <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"stub"</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -1878,7 +1893,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=1b2333be"></script>
+</div><script src="../../_static/documentation_options.js?v=f300720e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

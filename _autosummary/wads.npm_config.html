@@ -365,7 +365,7 @@ with both a pyproject.toml and a package.json can use one marker convention.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_config.</span></span><span class="sig-name descname"><span class="pre">NpmCIConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_json_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_config.html#NpmCIConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_config.NpmCIConfig" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Typed accessors over a <code class="docutils literal notranslate"><span class="pre">package.json</span></code> <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> configuration block.</p>
 <dl class="field-list simple">
 </dl>
@@ -386,14 +386,14 @@ with both a pyproject.toml and a package.json can use one marker convention.</p>
 <dd><p>True if the package.json declares a <code class="docutils literal notranslate"><span class="pre">wads.ci</span></code> block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.package_manager">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">package_manager</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.package_manager" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">package_manager</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.package_manager" title="Link to this definition">¶</a></dt>
 <dd><p>The package manager driving install/build (<code class="docutils literal notranslate"><span class="pre">&quot;npm&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;pnpm&quot;</span></code>).</p>
 <p>Returns the explicit <code class="docutils literal notranslate"><span class="pre">wads.ci.packageManager</span></code> if set, else the default
 (<code class="docutils literal notranslate"><span class="pre">&quot;npm&quot;</span></code>). Note the CI workflow additionally <em>auto-detects</em> pnpm from a
@@ -403,7 +403,7 @@ the declared value.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.run_ci_marker">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run_ci_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.run_ci_marker" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">run_ci_marker</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.run_ci_marker" title="Link to this definition">¶</a></dt>
 <dd><p>Commit-subject substring that runs CI in <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> mode.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code> (same default as the Python side). Must be a
 non-empty single line: an empty marker would match every subject and
@@ -412,7 +412,7 @@ silently turn on-demand back into auto.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.npm_config.NpmCIConfig.trigger_mode">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.trigger_mode" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.npm_config.NpmCIConfig.trigger_mode" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> means nothing runs unless the commit <em>subject line</em>
 contains <a class="reference internal" href="#wads.npm_config.NpmCIConfig.run_ci_marker" title="wads.npm_config.NpmCIConfig.run_ci_marker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">run_ci_marker</span></code></a>, or the run is a manual
@@ -523,7 +523,7 @@ contains <a class="reference internal" href="#wads.npm_config.NpmCIConfig.run_ci
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=1b2333be"></script>
+</div><script src="../_static/documentation_options.js?v=f300720e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -38,7 +38,7 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.      |
 | [`stub_if_expression`](#wads.ci_trigger.stub_if_expression)([run_ci_marker])             | The on-demand stub's job-level pre-filter, as a workflow expression.            |
 | [`stub_inputs_of`](#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.    |
-| [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` and secrets `transport` of a stub, which a re-render must keep.       |
+| [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.          |
 | [`trigger_for_workflow`](#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.             |
 | [`unasked_workflows`](#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron). |
 | [`uncommitted`](#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).     |
@@ -95,8 +95,9 @@ Commit exactly `paths` and return the new commit’s short sha.
 
 Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.
 
-- a **stub** `ci.yml` is re-rendered keeping its pin, secrets transport and
-  `with:` inputs, or **refused** if it holds anything else a re-render would drop
+- a **stub** `ci.yml` is re-rendered keeping its pin and `with:` inputs
+  (secrets move to the named transport, as `wads-migrate ci-to-stub`
+  does), or **refused** if it holds anything else a re-render would drop
   (extra jobs, custom triggers);
 - an **inline uv** workflow becomes the stub, carrying its secret-backed env vars
   into `[tool.wads.ci.env]` first (as `wads-migrate ci-to-stub` does);
@@ -207,10 +208,11 @@ The `with:` inputs an existing stub file passes; `{}` if none or not a stub.
 
 ### wads.ci_trigger.stub_shape(ci_text)
 
-The `pin` and secrets `transport` of a stub, which a re-render must keep.
+The `pin` (which a re-render keeps) and secrets `transport` of a stub.
 
-Defaults (`@master`, `named`) for anything that is not a stub: a NEW
-stub gets the named transport (i2mint/wads#74), an existing one keeps its own.
+Defaults (`@master`, `named`) for anything that is not a stub. A
+re-render writes the named transport whatever this reports
+(i2mint/wads#74, #101); see [`wads.migration.migrate_ci_to_stub()`](wads.migration.html.md#wads.migration.migrate_ci_to_stub).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

@@ -290,8 +290,8 @@
 <p>Export the pyproject-declared CI environment to <code class="docutils literal notranslate"><span class="pre">$GITHUB_ENV</span></code>.</p>
 <p>This is the run-time half of wads’ two-layer secret model (see
 <a class="reference internal" href="wads.ci_secrets.html#module-wads.ci_secrets" title="wads.ci_secrets"><code class="xref py py-mod docutils literal notranslate"><span class="pre">wads.ci_secrets</span></code></a>). The reusable workflow receives the caller’s secrets
-either as named pass-throughs (legacy stubs) or as one double-encoded JSON
-blob under <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> (modern stubs); this script decides which
+either as named pass-throughs (the default stub) or as one double-encoded JSON
+blob under <code class="docutils literal notranslate"><span class="pre">WADS_CI_SECRETS_JSON</span></code> (opt-in JSON stubs); this script decides which
 values actually become job environment variables, driven entirely by
 <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> in the consumer’s <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (read via the
 <code class="docutils literal notranslate"><span class="pre">read-ci-config</span></code> action):</p>
@@ -342,37 +342,37 @@ documented form for multiline values) before being written to the job env.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.scripts.export_ci_env.</span></span><span class="sig-name descname"><span class="pre">ExportPlan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">assignments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_required</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/export_ci_env.html#ExportPlan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
 <p>What <a class="reference internal" href="#wads.scripts.export_ci_env.export_ci_env" title="wads.scripts.export_ci_env.export_ci_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_ci_env()</span></code></a> decided, ready for <a class="reference internal" href="#wads.scripts.export_ci_env.main" title="wads.scripts.export_ci_env.main"><code class="xref py py-func docutils literal notranslate"><span class="pre">main()</span></code></a> to apply.</p>
 <dl class="field-list simple">
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan.assignments">
-<span class="sig-name descname"><span class="pre">assignments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.assignments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">assignments</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.assignments" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan.exported">
-<span class="sig-name descname"><span class="pre">exported</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.exported" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">exported</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.exported" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan.mask_values">
-<span class="sig-name descname"><span class="pre">mask_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.mask_values" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mask_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.mask_values" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 4</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan.missing_required">
-<span class="sig-name descname"><span class="pre">missing_required</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.missing_required" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">missing_required</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.missing_required" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 2</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="wads.scripts.export_ci_env.ExportPlan.missing_test">
-<span class="sig-name descname"><span class="pre">missing_test</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.missing_test" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">missing_test</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.scripts.export_ci_env.ExportPlan.missing_test" title="Link to this definition">¶</a></dt>
 <dd><p>Alias for field number 3</p>
 </dd></dl>
 
@@ -430,7 +430,7 @@ should fail CI):</p>
 <dd><p>Read inputs from env, write assignments to <code class="docutils literal notranslate"><span class="pre">$GITHUB_ENV</span></code>, fail if required missing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -538,7 +538,7 @@ works, and required-validation reports any name that failed to resolve):</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=1b2333be"></script>
+</div><script src="../_static/documentation_options.js?v=f300720e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

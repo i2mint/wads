@@ -9,7 +9,7 @@ for the model):
    is required), so the reusable workflow exports it into the job environment.
 2. **transport** — the repo’s `ci.yml` stub passes secrets to the reusable
    workflow. Named-transport stubs (the default for new stubs) list each
-   secret explicitly, and every listed name must be in the frozen wads
+   secret explicitly, and every listed name must be in the wads
    superset; `add` inserts the line. Stubs on the opt-in JSON transport pass
    the whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so \*no
    per-secret stub edit is needed\* there.

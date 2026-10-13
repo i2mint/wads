@@ -4,8 +4,8 @@ Export the pyproject-declared CI environment to `$GITHUB_ENV`.
 
 This is the run-time half of wads’ two-layer secret model (see
 [`wads.ci_secrets`](wads.ci_secrets.md#module-wads.ci_secrets)). The reusable workflow receives the caller’s secrets
-either as named pass-throughs (legacy stubs) or as one double-encoded JSON
-blob under `WADS_CI_SECRETS_JSON` (modern stubs); this script decides which
+either as named pass-throughs (the default stub) or as one double-encoded JSON
+blob under `WADS_CI_SECRETS_JSON` (opt-in JSON stubs); this script decides which
 values actually become job environment variables, driven entirely by
 `[tool.wads.ci.env]` in the consumer’s `pyproject.toml` (read via the
 `read-ci-config` action):
