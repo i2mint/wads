@@ -469,7 +469,9 @@ class CIConfig:
         ``"[skip publish]"``. Set via ``[tool.wads.ci.publish].skip_publish_marker``.
         """
         return _marker(
-            self.publish_config, "skip_publish_marker", DFLT_SKIP_PUBLISH_MARKER,
+            self.publish_config,
+            "skip_publish_marker",
+            DFLT_SKIP_PUBLISH_MARKER,
             table="[tool.wads.ci.publish]",
         )
 
@@ -542,7 +544,9 @@ class CIConfig:
         :attr:`publish_skip_ci_marker`, suppresses Pages too.)
         """
         return _marker(
-            self.docs_config, "skip_marker", DFLT_SKIP_PAGES_MARKER,
+            self.docs_config,
+            "skip_marker",
+            DFLT_SKIP_PAGES_MARKER,
             table="[tool.wads.ci.docs]",
         )
 
