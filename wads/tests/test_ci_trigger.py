@@ -12,8 +12,8 @@ Three things are pinned here:
    subset of the GitHub expression language those conditions use, and fails loudly on
    anything else (including a context name the conditions reference but the test did
    not provide, which is how a typo'd output name would show up).
-3. **The flip.** One command, idempotent, dry-run safe, keeps a stub's pin and secrets
-   transport, and refuses workflows that would ignore the setting.
+3. **The flip.** One command, idempotent, dry-run safe, keeps a stub's pin (its secrets
+   move to the named transport), and refuses workflows that would ignore the setting.
 """
 
 import re
@@ -353,7 +353,7 @@ def test_the_stub_template_carries_each_anchor_once():
 
 def test_auto_renders_the_template_byte_for_byte():
     assert render_stub_trigger(STUB_TEMPLATE) == STUB_TEMPLATE
-    assert migrate_ci_to_stub(transport="json") == STUB_TEMPLATE
+    assert migrate_ci_to_stub() == STUB_TEMPLATE
 
 
 def test_on_demand_stub_says_nothing_runs_unless_asked():
@@ -364,7 +364,7 @@ def test_on_demand_stub_says_nothing_runs_unless_asked():
     assert set(stub[True]) == {"push", "workflow_dispatch"}, "no pull_request trigger"
     assert stub["jobs"]["ci"]["if"] == stub_if_expression(MARKER)
     assert stub["jobs"]["ci"]["uses"] == "i2mint/wads/.github/workflows/uv-ci.yml@master"
-    assert "WADS_CI_SECRETS_JSON" in stub["jobs"]["ci"]["secrets"]
+    assert stub["jobs"]["ci"]["secrets"] == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
 
 
 @bash_required

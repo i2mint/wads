@@ -3,8 +3,8 @@
 
 This is the run-time half of wads' two-layer secret model (see
 :mod:`wads.ci_secrets`). The reusable workflow receives the caller's secrets
-either as named pass-throughs (legacy stubs) or as one double-encoded JSON
-blob under ``WADS_CI_SECRETS_JSON`` (modern stubs); this script decides which
+either as named pass-throughs (the default stub) or as one double-encoded JSON
+blob under ``WADS_CI_SECRETS_JSON`` (opt-in JSON stubs); this script decides which
 values actually become job environment variables, driven entirely by
 ``[tool.wads.ci.env]`` in the consumer's ``pyproject.toml`` (read via the
 ``read-ci-config`` action):
@@ -34,12 +34,12 @@ import os
 import sys
 from typing import NamedTuple
 
-# The blob key is a wads-wide constant; keep this script importable standalone
-# (it is executed via `python -m` from a pip-installed wads) but don't crash if
-# the import graph ever changes — the name is stable.
+# The blob key is a wads-wide constant. The export-ci-env action runs this file
+# on its own with `python -I -S` (standard library only, no wads importable), so
+# the import fails there and the fallback applies; a test keeps the two equal.
 try:
     from wads.ci_secrets import JSON_TRANSPORT_SECRET
-except ImportError:  # pragma: no cover - belt and braces for exotic installs
+except ImportError:  # the action's isolated run
     JSON_TRANSPORT_SECRET = "WADS_CI_SECRETS_JSON"
 
 # Secrets-context keys that must never be exported as repo env vars: GitHub's

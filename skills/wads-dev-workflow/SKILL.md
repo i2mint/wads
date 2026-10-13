@@ -81,8 +81,9 @@ with tempfile.TemporaryDirectory() as d:
 ## Things that move together
 
 - **Reusable workflow vs inline template**: `.github/workflows/uv-ci.yml` and `wads/data/github_ci_uv.yml` mirror each other; change both.
-- **Secrets interface**: `on.workflow_call.secrets` in `uv-ci.yml` is pinned to `wads.ci_secrets.WORKFLOW_CALL_SECRETS` by `test_ci_secrets.py`; the named superset is frozen.
-- **Stub template** `wads/data/github_ci_uv_stub.yml` keeps the JSON-transport region because `stub_with_named_transport` rewrites it; new stubs are rendered with the named transport (issue #74).
+- **Secrets interface**: `on.workflow_call.secrets` in `uv-ci.yml` is pinned to `wads.ci_secrets.WORKFLOW_CALL_SECRETS` by `test_ci_secrets.py`; the named superset grows additively (adding a `required: false` name is safe; removing one breaks stubs that pass it).
+- **Stub template** `wads/data/github_ci_uv_stub.yml` is the named stub and carries `wads.ci_secrets.NAMED_TRANSPORT_COMMENT` verbatim; `stub_with_transport` rewrites that region to either transport (issues #74, #101). The populate golden equals the template byte for byte.
+- **`export-ci-env`** runs `wads/scripts/export_ci_env.py` from the action's own checkout with `python -I -S`: keep that script standard-library only.
 - **A new `read-ci-config` output** is empty until a wads release carrying it reaches PyPI (the action `pip install`s wads), while `uv-ci.yml@master` changes go live at merge. Guard new `if:` clauses against an empty output.
 
 ## Before merging

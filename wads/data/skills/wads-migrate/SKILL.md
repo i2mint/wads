@@ -30,7 +30,7 @@ as an escape valve for repos that need to customize CI beyond `[tool.wads.ci.*]`
 | Con | Mitigation |
 |---|---|
 | Bad wads merge breaks CI everywhere on next run | Wads's own CI runs the reusable workflow first — canary catches obvious breaks. **Crucially: broken CI ≠ broken release.** Publish is gated on workflow success, so a bad wads change blocks publication for downstream consumers until wads is fixed, but never ships a broken artifact. This is what makes floating `@master` safe by default. |
-| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @0.2.15` writes the stub with a tag pin instead of `@master` (i2mint tags are bare versions — **no `v` prefix**; `@v0.2.15` would reference a nonexistent ref). A default (named-transport) stub works with any tag; an opt-in JSON-transport stub needs a tag from a release **after 0.2.14** — older tags don't declare `WADS_CI_SECRETS_JSON` and the workflow is rejected at parse time (the CLI warns loudly if you try). The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
+| Floating `@master` means consumers can't pin a known-good wads state | `wads-migrate ci-to-stub --pin @0.2.15` writes the stub with a tag pin instead of `@master` (i2mint tags are bare versions — **no `v` prefix**; `@v0.2.15` would reference a nonexistent ref). A default (named-transport) stub works with any tag whose `uv-ci.yml` declares every name it passes (the superset only grows, so older tags may lack a newer name); an opt-in JSON-transport stub needs a tag from a release **after 0.2.14** — older tags don't declare `WADS_CI_SECRETS_JSON` and the workflow is rejected at parse time (the CLI warns loudly if you try). The pinned repo only picks up wads updates when explicitly re-pinned. Use for release-sensitive repos. |
 | A secret your tests need isn't reaching CI | Run `wads-secrets add VAR_NAME` (see "Secrets" below). It declares the var in `[tool.wads.ci.env]` and, on the default *named* transport, adds the stub's pass-through line — refusing names outside the wads superset (`wads.ci_secrets.DEFAULT_CI_SECRETS`), since passing one would make the workflow fail to start. A stub on the opt-in JSON transport needs no stub edit (every repo secret is passed automatically). |
 | Secrets must reach a reusable workflow owned by a different account | The stub passes secrets **explicitly** (NOT `secrets: inherit`, which is unreliable cross-owner). The default is the *named* transport: the stub lists each name, generated from `[tool.wads.ci.env]` at migrate time and extended by `wads-secrets add`. The opt-in JSON transport (`--transport json`) serializes the whole `secrets` context into the one declared secret `WADS_CI_SECRETS_JSON`, but GitHub's malicious-workflow scanner holds its runs on new repos (`action_required`, zero jobs, no log; wads#74). |
 
@@ -136,9 +136,9 @@ git push                               # the pushed commit carries the on-demand
 wads ci-local                          # what CI would have run: lint, tests, build
 ```
 
-What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin and secrets transport; **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.
+What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin (a JSON-transport stub becomes named, i2mint/wads#101); **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.
 
-`ci-to-stub` and `fleet-stub` read `[tool.wads.ci.trigger]`, so a refresh sweep never reverts an on-demand repo. `ci-to-stub` keeps the existing stub's pin, secrets transport and `with:` inputs unless `--pin`/`--transport` are given, and warns about anything else it drops. The flip instead refuses a stub with other customizations (extra jobs, custom triggers), or a pyproject layout tomlkit cannot edit safely, and prints the hand edit. A manual `workflow_dispatch` on the default branch releases, like a `[run ci]` push; the `[publish]` marker needs `[run ci]` in the same subject. To go back: set `mode = "auto"`, then `wads-migrate ci-to-stub`.
+`ci-to-stub` and `fleet-stub` read `[tool.wads.ci.trigger]`, so a refresh sweep never reverts an on-demand repo. `ci-to-stub` keeps the existing stub's pin and `with:` inputs unless `--pin` is given, writes the named secrets transport (converting a JSON stub) unless `--transport json` is given or a declared name is outside the superset, and warns about anything else it drops. The flip instead refuses a stub with other customizations (extra jobs, custom triggers), or a pyproject layout tomlkit cannot edit safely, and prints the hand edit. A manual `workflow_dispatch` on the default branch releases, like a `[run ci]` push; the `[publish]` marker needs `[run ci]` in the same subject. To go back: set `mode = "auto"`, then `wads-migrate ci-to-stub`.
 
 `wads ci-local --publish` is the local release path for on-demand repos: format, bump version with isee (as CI), build, `uv publish`, commit, tag, push. It refuses on a dirty tree, off the default branch, behind origin, or without a token (`$PYPI_PASSWORD` → `$UV_PUBLISH_TOKEN` → `~/.pypirc`). `wads ci-local --dry-run` prints the plan.
 
@@ -260,9 +260,10 @@ Secrets reach a stub repo's CI through two coordinated layers:
    (`wads-migrate ci-to-stub --transport json`) serializes the whole `secrets`
    context into the one declared secret
    `WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}`, so any name works,
-   but GitHub's malicious-workflow scanner holds its runs on NEW repos: every
-   run ends `action_required` with zero jobs and no log (wads#74, #88). Re-
-   rendering an existing stub keeps its transport. Either way, explicit
+   but GitHub's malicious-workflow scanner holds its runs: the run ends
+   `action_required` with zero jobs and no log (wads#74, #88, #101 — new repos
+   first, then an existing one). Re-rendering a stub (`ci-to-stub`,
+   `ci-on-demand`, `fleet-stub`) converts a JSON stub to named. Either way, explicit
    pass-through is used, NOT `secrets: inherit` (unreliable across GitHub
    accounts).
 2. **Env-assignment** — `[tool.wads.ci.env]` (`required_envvars`,
@@ -277,9 +278,9 @@ in one step — the recommended way. `wads-secrets list` shows what's configured
 `wads-secrets superset` prints the names a *named*-transport stub may pass
 (irrelevant on the opt-in JSON transport). For a named-transport repo needing
 a name outside the superset: use `--variable` if the value isn't sensitive,
-PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (benefits all repos), or regenerate
-with the JSON transport (`wads-migrate ci-to-stub --transport json`) on a repo
-whose runs GitHub already accepts.
+PR `wads.ci_secrets.DEFAULT_CI_SECRETS` (additions are safe for every stub and
+benefit all repos), or regenerate with the JSON transport (`wads-migrate
+ci-to-stub --transport json`) knowing GitHub may hold its runs.
 
 Publishing runs only on the repo's **default branch**, when validation passes,
 when the commit isn't `[skip ci]`, and when `[tool.wads.ci.publish].enabled`.

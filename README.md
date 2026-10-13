@@ -184,7 +184,7 @@ wads-secrets list                           # show what's configured
 
 `wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub's `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
 
-Named secrets must be in the frozen superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names. The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo's whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because GitHub's malicious-workflow scanner holds its runs on new repositories: every run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74)). Re-rendering an existing stub keeps whichever transport it already uses.
+Named secrets must be in the superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names, and the superset grows additively (adding a name never breaks a stub). The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo's whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because it hands every secret the repo can read to the called workflow, and GitHub's malicious-workflow scanner holds its runs: the run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74), [#101](https://github.com/i2mint/wads/issues/101)). Re-rendering a stub (`wads-migrate ci-to-stub`, `ci-on-demand`, `fleet-stub`) writes the named transport, converting a JSON stub, unless `--transport json` is given or a declared name is outside the superset.
 
 ### Declare System Dependencies
 
@@ -327,7 +327,7 @@ Worth knowing before you flip:
 - **Only the pushed head commit's subject counts,** not earlier commits in the same push.
 - **On-demand stubs drop the `pull_request` trigger.** A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.
 
-Flip a repo in one idempotent command. It sets on-demand, `python_versions = ["3.12"]` and `test_on_windows = false`, and re-renders the stub, keeping its pin and secrets transport:
+Flip a repo in one idempotent command. It sets on-demand, `python_versions = ["3.12"]` and `test_on_windows = false`, and re-renders the stub, keeping its pin (its secrets move to the named transport):
 
 ```bash
 wads-migrate ci-on-demand --dry-run   # show the diff, write nothing
