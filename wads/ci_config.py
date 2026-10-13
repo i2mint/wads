@@ -9,6 +9,7 @@ settings in CI workflow files.
 from typing import Any, Optional
 from pathlib import Path
 import json
+import math
 import sys
 import warnings
 import re
@@ -54,15 +55,26 @@ def _yaml_scalar(value) -> str:
     """Render a TOML value as a YAML flow scalar with the same meaning.
 
     JSON is a subset of YAML's flow style, so a string becomes a double-quoted
-    scalar and a bool or number keeps its type. Anything else (a TOML date,
-    say) is rendered as its string.
+    scalar and a bool or finite number keeps its type. Anything else (a TOML
+    date, ``inf``, ``nan``) is rendered as its string. Characters YAML forbids
+    raw or folds to a space (DEL, C1 controls, line separators) are escaped.
 
     >>> _yaml_scalar("yes"), _yaml_scalar(True), _yaml_scalar(3)
     ('"yes"', 'true', '3')
+    >>> _yaml_scalar("a\\x7fb")
+    '"a\\\\u007fb"'
     """
-    if not isinstance(value, (str, bool, int, float)):
+    if isinstance(value, float) and not math.isfinite(value):
         value = str(value)
-    return json.dumps(value, ensure_ascii=False)
+    elif not isinstance(value, (str, bool, int, float)):
+        value = str(value)
+    return "".join(
+        ch if ch.isprintable() else (
+            f"\\u{ord(ch):04x}" if ord(ch) <= 0xFFFF else f"\\U{ord(ch):08x}"
+        )
+        for ch in json.dumps(value, ensure_ascii=False)
+    )
+
 
 class CIConfig:
     """Represents CI configuration extracted from pyproject.toml."""

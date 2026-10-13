@@ -173,3 +173,16 @@ def test_env_block_quotes_values_yaml_would_reinterpret(tmp_path):
         "ENABLED": True,
         "DAY": "2026-10-13",
     }
+
+
+def test_env_block_escapes_characters_yaml_forbids_or_folds(tmp_path):
+    """DEL, C1 controls and line/paragraph separators must not make the
+    workflow unparseable or be folded to a space; inf and nan keep their text."""
+    import yaml
+
+    from wads.ci_config import _yaml_scalar
+
+    for value in ("a\x7fb", "a\x85b", "a b", "a\x9fb", "a￾b", "😀"):
+        assert yaml.safe_load(f"K: {_yaml_scalar(value)}") == {"K": value}
+    assert _yaml_scalar(float("inf")) == '"inf"'
+    assert _yaml_scalar(float("nan")) == '"nan"'

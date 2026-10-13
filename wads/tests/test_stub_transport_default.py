@@ -387,3 +387,40 @@ def test_an_unreadable_pyproject_keeps_a_named_stubs_secrets(tmp_path, capsys):
     ci = _ci_file(tmp_path, named)
     assert migrate_ci_to_stub(str(ci)) == named
     assert "could not be read" in capsys.readouterr().err
+
+
+def test_an_unreadable_pyproject_restores_pypi_password_on_a_named_stub(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env]\ntest_envvars = 5\n"
+    )
+    ci = _ci_file(tmp_path, stub_with_transport(STUB_TEMPLATE, names=["HF_TOKEN"]))
+    assert list(_secrets_of(migrate_ci_to_stub(str(ci)))) == [
+        "PYPI_PASSWORD",
+        "HF_TOKEN",
+    ]
+
+
+@pytest.mark.parametrize(
+    "secrets_block",
+    [
+        "    secrets:\n      HF_TOKEN: ${{ secrets.HF_WRITE_TOKEN }}\n",
+        "    secrets: inherit\n",
+    ],
+)
+def test_an_unreadable_pyproject_refuses_a_stub_it_cannot_reproduce(
+    tmp_path, secrets_block
+):
+    """An aliased pass-through or `inherit` cannot be re-derived from names
+    alone; with the declared secrets unknown, refuse instead of narrowing."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.wads.ci.env]\ntest_envvars = 5\n"
+    )
+    stub = (
+        "jobs:\n  ci:\n    uses: i2mint/wads/.github/workflows/uv-ci.yml@master\n"
+        + secrets_block
+    )
+    ci = _ci_file(tmp_path, stub)
+    with pytest.raises(ValueError, match="could not be read"):
+        migrate_ci_to_stub(str(ci))

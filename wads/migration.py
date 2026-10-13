@@ -950,7 +950,7 @@ def migrate_ci_to_stub(
                 f"unknown. Fix it and re-run.",
                 file=sys.stderr,
             )
-        names = names or ["PYPI_PASSWORD"]
+        names = list(dict.fromkeys(["PYPI_PASSWORD", *(names or ())]))
     if transport is None:
         outside = [n for n in names if n not in DEFAULT_CI_SECRETS]
         transport = "json" if outside else "named"
@@ -1029,7 +1029,9 @@ def _existing_stub_secrets(old_ci) -> "tuple[str, list] | None":
     """``(transport, names)`` of the stub at ``old_ci`` (a path or its content).
 
     ``names`` are the secrets a named stub passes (empty for a JSON stub).
-    ``None`` when ``old_ci`` is not a stub.
+    ``None`` when ``old_ci`` is not a stub. A named stub whose secrets are not
+    plain ``NAME: ${{ secrets.NAME }}`` pass-throughs (an alias, ``inherit``)
+    raises ``ValueError``: names alone cannot reproduce it.
     """
     import yaml
 
@@ -1044,12 +1046,27 @@ def _existing_stub_secrets(old_ci) -> "tuple[str, list] | None":
     if classify_ci_workflow(text) != "stub":
         return None
     transport = stub_transport(text)
+    if transport == "json":
+        return transport, []
     try:
-        passed = yaml.safe_load(text)["jobs"]["ci"]["secrets"]
-    except (yaml.YAMLError, KeyError, TypeError):
+        jobs = yaml.safe_load(text)["jobs"].values()
+        passed = next(
+            job.get("secrets") for job in jobs if "uv-ci.yml" in str(job.get("uses"))
+        )
+    except (yaml.YAMLError, KeyError, TypeError, AttributeError, StopIteration):
         passed = None
-    names = list(passed) if transport == "named" and isinstance(passed, dict) else []
-    return transport, names
+    plain = isinstance(passed, dict) and all(
+        re.fullmatch(rf"\$\{{\{{\s*secrets\.{re.escape(str(k))}\s*\}}\}}", str(v))
+        for k, v in passed.items()
+    )
+    if not plain:
+        raise ValueError(
+            "the repo's pyproject.toml could not be read, and this stub's "
+            "secrets are not plain `NAME: ${{ secrets.NAME }}` pass-throughs, "
+            "so re-rendering it would change what it passes. Fix pyproject.toml "
+            "and re-run."
+        )
+    return transport, list(passed)
 
 
 def _warn_named_transport_outside_superset(names) -> list:
