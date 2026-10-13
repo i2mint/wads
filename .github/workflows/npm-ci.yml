@@ -351,10 +351,17 @@ jobs:
           # how npm sends the credential (proxy, registry, TLS, auth...): npm
           # applies a tarball's publishConfig as config (#114 review).
           MANIFEST_CHECK: |
-            const [file, registry] = process.argv.slice(1);
-            const m = JSON.parse(require('fs').readFileSync(file, 'utf8'));
+            // Read the manifest with npm's OWN reader (pacote), so the check
+            // sees exactly what `npm publish` will use, whatever the tarball's
+            // layout (#114 review: npm takes the last */package.json member).
+            const path = require('path');
+            const { execFileSync } = require('child_process');
+            const npmRoot = execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim();
+            const pacote = require(path.join(npmRoot, 'npm', 'node_modules', 'pacote'));
+            const [tgz, registry] = process.argv.slice(1);
             const fail = (msg) => { console.error('::error::' + msg); process.exit(1); };
-            const NAME = /^(@[a-z0-9~-][a-z0-9._~-]*\/)?[a-z0-9~-][a-z0-9._~-]*$/;
+            pacote.manifest('file:' + path.resolve(tgz), { fullMetadata: true }).then((m) => {
+            const NAME = /^(@[A-Za-z0-9~-][A-Za-z0-9._~-]*\/)?[A-Za-z0-9~-][A-Za-z0-9._~-]*$/;
             if (typeof m.name !== 'string' || !NAME.test(m.name)) fail('invalid package name in tarball: ' + JSON.stringify(m.name));
             if (typeof m.version !== 'string' || !/^\d+\.\d+\.\d+([-+][0-9A-Za-z.+-]*)?$/.test(m.version)) fail('invalid version in tarball: ' + JSON.stringify(m.version));
             const SAFE = new Set(['access', 'tag', 'provenance', 'directory', 'linkDirectory', 'executableFiles',
@@ -365,6 +372,7 @@ jobs:
               if (!SAFE.has(key)) fail(m.name + ': publishConfig.' + key + ' is not allowed in CI publishing');
             }
             console.log(m.name + ' ' + m.version);
+            }, (err) => fail('cannot read the manifest of ' + tgz + ': ' + err.message));
         run: |
           ART="$RUNNER_TEMP/npm-pack"
           # The artifact must hold exactly publish-order.txt and the tarballs it
@@ -372,7 +380,7 @@ jobs:
           mapfile -t TGZS < "$ART/publish-order.txt"
           [ "${#TGZS[@]}" -gt 0 ] || { echo "::error::nothing to publish"; exit 1; }
           for f in "${TGZS[@]}"; do
-            if ! [[ "$f" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]*\.tgz$ ]] || [ ! -f "$ART/$f" ]; then
+            if ! [[ "$f" =~ ^[A-Za-z0-9_][A-Za-z0-9._+-]*\.tgz$ ]] || [ ! -f "$ART/$f" ]; then
               echo "::error::unexpected entry in publish-order.txt"; exit 1
             fi
           done
@@ -387,8 +395,16 @@ jobs:
           WORK=$(mktemp -d)
           cd "$WORK"
           for f in "${TGZS[@]}"; do
-            tar -xzOf "$ART/$f" package/package.json > manifest.json
-            read -r NAME VER < <(node -e "$MANIFEST_CHECK" manifest.json "$REGISTRY")
+            # A plain npm tarball: every member under package/, exactly one
+            # package/package.json (npm strips the first path component of
+            # every member, so anything else could shadow the manifest).
+            MEMBERS=$(tar -tzf "$ART/$f")
+            if printf '%s\n' "$MEMBERS" | grep -qv '^package/' \
+               || [ "$(printf '%s\n' "$MEMBERS" | grep -cE '^package(/+\.?)*/+package\.json$')" != 1 ] \
+               || ! printf '%s\n' "$MEMBERS" | grep -qx 'package/package.json'; then
+              echo "::error::$f is not a plain npm tarball"; exit 1
+            fi
+            read -r NAME VER < <(node -e "$MANIFEST_CHECK" "$ART/$f" "$REGISTRY")
             [ -n "$VER" ] || exit 1
             # Idempotent: skip a version already on the registry (no 403 on
             # re-run, no auto-bump), as before.
