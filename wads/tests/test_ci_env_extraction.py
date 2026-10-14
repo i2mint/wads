@@ -261,4 +261,27 @@ def test_a_variable_honours_its_alias_in_the_vars_context():
     assert cfg.generate_test_env_vars() == (
         "      LEVEL: ${{ vars.COSMO_TEST_LEVEL || '' }}"
     )
-    assert "LEVEL: ${{ vars.LEVEL || '' }}" in cfg.generate_env_vars_yaml()
+    assert "LEVEL: ${{ vars.COSMO_TEST_LEVEL || '' }}" in cfg.generate_env_vars_yaml()
+
+
+def test_a_publish_credential_is_withheld_even_as_a_variable(capsys):
+    from wads.ci_config import CIConfig
+
+    cfg = CIConfig(
+        {
+            "project": {"name": "demo"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "env": {
+                            "extra_envvars": ["UV_PUBLISH_TOKEN", "LEVEL"],
+                            "variables": ["UV_PUBLISH_TOKEN", "LEVEL"],
+                        }
+                    }
+                }
+            },
+        }
+    )
+    rendered = cfg.generate_test_env_vars()
+    assert "UV_PUBLISH_TOKEN" not in rendered
+    assert "LEVEL: ${{ vars.LEVEL || '' }}" in rendered

@@ -341,6 +341,12 @@ def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "--variable" in out and "ci-to-uv" in out
 
+    # An aliased name keeps its alias: the remedy names both (#127 review).
+    m._maybe_set_github_value(
+        "org/demo", "HF_WRITE_TOKEN", "HF_TOKEN", "abc", str(inline_ci)
+    )
+    assert "wads-secrets add HF_TOKEN HF_WRITE_TOKEN --variable" in capsys.readouterr().out
+
     stub_ci = tmp_path / "stub.yml"
     stub_ci.write_text(migrate_ci_to_stub())
     m._maybe_set_github_value(

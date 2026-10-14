@@ -771,9 +771,6 @@ class CIConfig:
             if var_name in skip:
                 continue
             secret = aliases.get(var_name, var_name)
-            if var_name in variables:
-                lines.append(f"{pad}{var_name}: ${{{{ vars.{secret} || '' }}}}")
-                continue
             if is_publish_credential(var_name, secret):
                 print(
                     f"Not rendering {var_name} (secret {secret}) into the test "
@@ -782,7 +779,8 @@ class CIConfig:
                     file=sys.stderr,
                 )
                 continue
-            lines.append(f"{pad}{var_name}: ${{{{ secrets.{secret} || '' }}}}")
+            context = "vars" if var_name in variables else "secrets"
+            lines.append(f"{pad}{var_name}: ${{{{ {context}.{secret} || '' }}}}")
         return "\n".join(lines)
 
     def generate_test_env_block(self) -> str:
@@ -813,9 +811,11 @@ class CIConfig:
         # Names in [tool.wads.ci.env].variables are repository variables, read
         # from the vars context (#127).
         variables = set(self.env_vars_variables)
+        aliases = self.env_secret_aliases
         for var_name in self.env_vars_all:
             context = "vars" if var_name in variables else "secrets"
-            lines.append(f"  {var_name}: ${{{{ {context}.{var_name} || '' }}}}")
+            source = aliases.get(var_name, var_name) if context == "vars" else var_name
+            lines.append(f"  {var_name}: ${{{{ {context}.{source} || '' }}}}")
 
         return "\n".join(lines) if lines else "  # No additional env vars configured"
 

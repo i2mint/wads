@@ -207,7 +207,8 @@ pytest collection will fail during import.
 
 **For inline-CI repos**: add the var name to `[tool.wads.ci.env.test_envvars]`
 in pyproject.toml, then `wads-migrate ci-to-uv` to re-render the workflow —
-secret-backed vars are wired as `${{ secrets.X || '' }}` into the `env:` of the
+secret-backed vars are wired as `${{ secrets.X || '' }}` (names in
+`[tool.wads.ci.env].variables` as `${{ vars.X || '' }}`) into the `env:` of the
 jobs that run tests, never at workflow level (a workflow-level secret is in
 scope for the config job, and GitHub then refuses to emit any job output
 containing its value — a short value silently blanks `python-versions` and
@@ -236,8 +237,10 @@ Do NOT hand-edit job-level `env:` blocks in ci.yml. Declare via
 **Not actually sensitive?** A value that is just configuration — a test level,
 a flag, a region — belongs in a repository **variable**, not a secret:
 `wads-secrets add VAR_NAME --variable`. Declared env names fall back to the
-`vars` context automatically on stub repos (inline workflows have no vars
-fallback — use a committed literal in `[tool.wads.ci.env].defaults` there).
+`vars` context automatically on stub repos; an inline workflow reads a name
+listed in `[tool.wads.ci.env].variables` as `${{ vars.X || '' }}` once
+re-rendered with `wads-migrate ci-to-uv` (a committed literal in
+`[tool.wads.ci.env].defaults` also works there).
 Storing such values as secrets has real costs: GitHub masks every occurrence
 of a secret's value in the logs of each job that receives it, so a short value
 garbles logs — and on inline workflows rendered before the issue-#61 fix, it
