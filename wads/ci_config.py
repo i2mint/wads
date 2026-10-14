@@ -737,7 +737,11 @@ class CIConfig:
         One `VAR: ${{ secrets.NAME || '' }}` line per name declared in
         required_envvars / test_envvars / extra_envvars, honoring
         [tool.wads.ci.env.secret_aliases] (env-var name -> backing secret
-        name). An unset secret renders as an empty string. Returns '' when
+        name). A name listed in [tool.wads.ci.env].variables is a repository
+        *variable*, so it renders `VAR: ${{ vars.NAME || '' }}` instead: an
+        inline workflow reads the vars context directly, and reading it from
+        a secret of that name would leave it silently empty (#127). An unset
+        secret or variable renders as an empty string. Returns '' when
         nothing is left to emit.
 
         Names also present in [tool.wads.ci.env].defaults are skipped: the
@@ -759,6 +763,7 @@ class CIConfig:
         from wads.scripts.export_ci_env import is_publish_credential
 
         aliases = self.env_secret_aliases
+        variables = set(self.env_vars_variables)
         skip = set(exclude) | set(self.env_vars_defaults)
         pad = " " * indent
         lines = []
@@ -774,7 +779,8 @@ class CIConfig:
                     file=sys.stderr,
                 )
                 continue
-            lines.append(f"{pad}{var_name}: ${{{{ secrets.{secret} || '' }}}}")
+            context = "vars" if var_name in variables else "secrets"
+            lines.append(f"{pad}{var_name}: ${{{{ {context}.{secret} || '' }}}}")
         return "\n".join(lines)
 
     def generate_test_env_block(self) -> str:
@@ -802,10 +808,14 @@ class CIConfig:
 
         # Add env vars that come from secrets (using conditional syntax)
         # These are set conditionally only if the secret exists
-        all_secret_vars = self.env_vars_all
-        for var_name in all_secret_vars:
-            # Use GitHub's conditional syntax to only set if secret exists
-            lines.append(f"  {var_name}: ${{{{ secrets.{var_name} || '' }}}}")
+        # Names in [tool.wads.ci.env].variables are repository variables, read
+        # from the vars context (#127).
+        variables = set(self.env_vars_variables)
+        aliases = self.env_secret_aliases
+        for var_name in self.env_vars_all:
+            context = "vars" if var_name in variables else "secrets"
+            source = aliases.get(var_name, var_name) if context == "vars" else var_name
+            lines.append(f"  {var_name}: ${{{{ {context}.{source} || '' }}}}")
 
         return "\n".join(lines) if lines else "  # No additional env vars configured"
 

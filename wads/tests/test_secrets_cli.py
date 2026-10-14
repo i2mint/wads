@@ -186,8 +186,8 @@ def test_add_on_named_stub_refuses_outside_superset_edit(named_repo, capsys):
 
 
 def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
-    """--variable on an inline workflow must warn: inline env blocks read
-    secrets only, so a repo variable would silently never arrive."""
+    """--variable on an inline workflow must warn: the variable arrives only
+    once the workflow is re-rendered to read the vars context (#127)."""
     tmp = _make_repo(tmp_path, "name: CI\non: [push]\njobs: {}\n")
     rc = add(
         "COSMO_TEST_LEVEL",
@@ -199,7 +199,8 @@ def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
     )
     assert rc == 0
     out = capsys.readouterr().out
-    assert "inline workflow" in out and "defaults" in out
+    assert "inline workflow" in out and "ci-to-uv" in out
+    assert "${{ vars.COSMO_TEST_LEVEL }}" in out
 
 
 def test_add_variable_skips_transport_and_superset(repo, capsys):
@@ -325,8 +326,8 @@ def test_mask_hazard_warning_fires_without_gh(monkeypatch, capsys):
 
 
 def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
-    """--variable is a dead end on inline repos (no vars fallback), so the
-    remedy there must be a committed default, not --variable."""
+    """On an inline repo --variable works only with a re-render that makes the
+    workflow read the vars context (#127), so the remedy there says both."""
     import wads.secrets_cli as m
 
     monkeypatch.setattr(m, "_gh_available", lambda: True)
@@ -338,7 +339,13 @@ def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
         "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", str(inline_ci)
     )
     out = capsys.readouterr().out
-    assert "defaults" in out and "--variable" not in out
+    assert "--variable" in out and "ci-to-uv" in out
+
+    # An aliased name keeps its alias: the remedy names both (#127 review).
+    m._maybe_set_github_value(
+        "org/demo", "HF_WRITE_TOKEN", "HF_TOKEN", "abc", str(inline_ci)
+    )
+    assert "wads-secrets add HF_TOKEN HF_WRITE_TOKEN --variable" in capsys.readouterr().out
 
     stub_ci = tmp_path / "stub.yml"
     stub_ci.write_text(migrate_ci_to_stub())

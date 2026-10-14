@@ -5,6 +5,8 @@ env vars declared only in the old workflow YAML into `[tool.wads.ci.env]`, so a
 migration never silently drops secrets the tests rely on.
 """
 
+import sys
+
 import pytest
 
 from wads.migration import carry_ci_env_into_pyproject, extract_ci_env_vars
@@ -197,3 +199,89 @@ def test_inline_renderer_never_puts_a_publish_credential_in_test_jobs(capsys):
     assert "PYPI_PASSWORD" not in rendered and "UV_PUBLISH_TOKEN" not in rendered
     assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}" in rendered
     assert "UV_PUBLISH_TOKEN" in capsys.readouterr().err
+
+
+# Issue #127: a name carried from ``${{ vars.X }}`` lands in
+# [tool.wads.ci.env].variables; the inline renderer must read it from the vars
+# context, not from a secret of that name (which does not exist, so it was
+# silently empty in CI).
+INLINE_VARS_CI = """\
+name: CI
+on: push
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    env:
+      COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - run: pytest
+"""
+
+
+def test_ci_to_uv_renders_a_variable_from_the_vars_context(tmp_path, monkeypatch):
+    from wads.migration import main
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.0.1"\n'
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    ci = workflows / "ci.yml"
+    ci.write_text(INLINE_VARS_CI)
+    monkeypatch.setattr(
+        sys, "argv", ["wads-migrate", "ci-to-uv", str(ci), "-o", str(ci)]
+    )
+    main()
+    rendered = ci.read_text()
+    assert "COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL || '' }}" in rendered
+    assert "secrets.COSMO_TEST_LEVEL" not in rendered
+    assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}" in rendered
+
+
+def test_a_variable_honours_its_alias_in_the_vars_context():
+    from wads.ci_config import CIConfig
+
+    cfg = CIConfig(
+        {
+            "project": {"name": "demo"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "env": {
+                            "extra_envvars": ["LEVEL"],
+                            "variables": ["LEVEL"],
+                            "secret_aliases": {"LEVEL": "COSMO_TEST_LEVEL"},
+                        }
+                    }
+                }
+            },
+        }
+    )
+    assert cfg.generate_test_env_vars() == (
+        "      LEVEL: ${{ vars.COSMO_TEST_LEVEL || '' }}"
+    )
+    assert "LEVEL: ${{ vars.COSMO_TEST_LEVEL || '' }}" in cfg.generate_env_vars_yaml()
+
+
+def test_a_publish_credential_is_withheld_even_as_a_variable(capsys):
+    from wads.ci_config import CIConfig
+
+    cfg = CIConfig(
+        {
+            "project": {"name": "demo"},
+            "tool": {
+                "wads": {
+                    "ci": {
+                        "env": {
+                            "extra_envvars": ["UV_PUBLISH_TOKEN", "LEVEL"],
+                            "variables": ["UV_PUBLISH_TOKEN", "LEVEL"],
+                        }
+                    }
+                }
+            },
+        }
+    )
+    rendered = cfg.generate_test_env_vars()
+    assert "UV_PUBLISH_TOKEN" not in rendered
+    assert "LEVEL: ${{ vars.LEVEL || '' }}" in rendered

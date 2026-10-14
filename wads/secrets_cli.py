@@ -170,8 +170,9 @@ def stub_transport_mode(ci_file) -> "str | None":
     """Classify the repo's ``ci.yml``: ``'json'``, ``'named'``, ``'inline'``, or ``None``.
 
     ``'inline'`` means a workflow that does not call the reusable uv-ci (it
-    reads repo secrets directly and has no transport layer — and no
-    repo-variable fallback either). ``None`` means no ci.yml at all.
+    reads repo secrets directly and has no transport layer; it reads a repo
+    variable only for a name in ``[tool.wads.ci.env].variables``, once
+    re-rendered with ``ci-to-uv``, #127). ``None`` means no ci.yml at all.
     """
     ci_file = Path(ci_file)
     if not ci_file.is_file():
@@ -317,10 +318,11 @@ def add(
         if mode == "inline":
             print(
                 "⚠ transport: this repo uses an inline workflow, which reads "
-                "secrets directly and has NO repo-variable fallback — a repo "
-                "variable will not reach its CI env. Use a committed literal "
-                "in [tool.wads.ci.env].defaults, or migrate to the stub "
-                "(`wads-migrate ci-to-stub`)."
+                "the vars context only once it is rendered from pyproject: "
+                "re-render it (`wads-migrate ci-to-uv`) so it reads "
+                f"${{{{ vars.{secret_name} }}}}, or migrate to the stub "
+                "(`wads-migrate ci-to-stub`). Until then the variable does not "
+                "reach its CI env."
             )
         else:
             print("· transport: repo variables need none (vars context)")
@@ -365,27 +367,35 @@ def add(
     return 0
 
 
-def _warn_if_mask_hazard(value, var_name, ci_file, *, variable=False):
+def _warn_if_mask_hazard(value, var_name, ci_file, *, variable=False, secret_name=None):
     """Warn when a short SECRET value is about to be configured (issue #61).
 
     GitHub registers every secret value as a log mask in each job that
     receives it, so a short value garbles logs — and on inline workflows
     rendered before the issue-#61 template fix, it can blank the setup job's
     outputs and silently empty the test matrix. The remedy differs by CI
-    shape: repo variables never reach an inline workflow's env, so there the
-    advice is a committed literal in [tool.wads.ci.env].defaults.
+    shape: a stub reads repository variables through the reusable workflow;
+    an inline workflow reads them once re-rendered from pyproject (#127).
     """
     if variable or not value or len(value) >= _MASK_HAZARD_VALUE_LEN:
         return
+    # An aliased name keeps its alias, so the command must name both (#127 review).
+    names = (
+        f"{var_name} {secret_name}"
+        if secret_name and secret_name != var_name
+        else var_name
+    )
     if stub_transport_mode(ci_file) == "inline":
         remedy = (
-            f"put it in [tool.wads.ci.env].defaults as a committed literal "
-            f"(repo variables don't reach inline CI) and re-render with "
-            f"`wads-migrate ci-to-uv`"
+            f"prefer a repository variable, then re-render the inline "
+            f"workflow so it reads it from the vars context:\n"
+            f"    wads-secrets add {names} --variable && wads-migrate ci-to-uv "
+            f"<ci.yml> -o <ci.yml>\n  (or a committed literal in "
+            f"[tool.wads.ci.env].defaults)"
         )
     else:
         remedy = (
-            f"prefer a repository variable:\n    wads-secrets add {var_name} --variable"
+            f"prefer a repository variable:\n    wads-secrets add {names} --variable"
         )
     print(
         f"⚠ value: this is a short secret value ({len(value)} chars). GitHub "
@@ -406,7 +416,9 @@ def _maybe_set_github_value(
         value = os.environ.get(var_name) or os.environ.get(secret_name)
     # Warn as soon as we hold a hazardous value — even when `gh` is absent
     # and the user will run the `gh secret set` line by hand.
-    _warn_if_mask_hazard(value, var_name, ci_file, variable=variable)
+    _warn_if_mask_hazard(
+        value, var_name, ci_file, variable=variable, secret_name=secret_name
+    )
     if not _gh_available():
         print(
             f"· github: `gh` not found; set it manually:\n"
