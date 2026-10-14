@@ -317,10 +317,11 @@ def add(
         if mode == "inline":
             print(
                 "⚠ transport: this repo uses an inline workflow, which reads "
-                "secrets directly and has NO repo-variable fallback — a repo "
-                "variable will not reach its CI env. Use a committed literal "
-                "in [tool.wads.ci.env].defaults, or migrate to the stub "
-                "(`wads-migrate ci-to-stub`)."
+                "the vars context only once it is rendered from pyproject: "
+                "re-render it (`wads-migrate ci-to-uv`) so it reads "
+                f"${{{{ vars.{secret_name} }}}}, or migrate to the stub "
+                "(`wads-migrate ci-to-stub`). Until then the variable does not "
+                "reach its CI env."
             )
         else:
             print("· transport: repo variables need none (vars context)")
@@ -372,16 +373,18 @@ def _warn_if_mask_hazard(value, var_name, ci_file, *, variable=False):
     receives it, so a short value garbles logs — and on inline workflows
     rendered before the issue-#61 template fix, it can blank the setup job's
     outputs and silently empty the test matrix. The remedy differs by CI
-    shape: repo variables never reach an inline workflow's env, so there the
-    advice is a committed literal in [tool.wads.ci.env].defaults.
+    shape: a stub reads repository variables through the reusable workflow;
+    an inline workflow reads them once re-rendered from pyproject (#127).
     """
     if variable or not value or len(value) >= _MASK_HAZARD_VALUE_LEN:
         return
     if stub_transport_mode(ci_file) == "inline":
         remedy = (
-            f"put it in [tool.wads.ci.env].defaults as a committed literal "
-            f"(repo variables don't reach inline CI) and re-render with "
-            f"`wads-migrate ci-to-uv`"
+            f"prefer a repository variable, then re-render the inline "
+            f"workflow so it reads it from the vars context:\n"
+            f"    wads-secrets add {var_name} --variable && wads-migrate ci-to-uv "
+            f"<ci.yml> -o <ci.yml>\n  (or a committed literal in "
+            f"[tool.wads.ci.env].defaults)"
         )
     else:
         remedy = (

@@ -186,8 +186,8 @@ def test_add_on_named_stub_refuses_outside_superset_edit(named_repo, capsys):
 
 
 def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
-    """--variable on an inline workflow must warn: inline env blocks read
-    secrets only, so a repo variable would silently never arrive."""
+    """--variable on an inline workflow must warn: the variable arrives only
+    once the workflow is re-rendered to read the vars context (#127)."""
     tmp = _make_repo(tmp_path, "name: CI\non: [push]\njobs: {}\n")
     rc = add(
         "COSMO_TEST_LEVEL",
@@ -199,7 +199,8 @@ def test_add_variable_on_inline_workflow_warns(tmp_path, capsys):
     )
     assert rc == 0
     out = capsys.readouterr().out
-    assert "inline workflow" in out and "defaults" in out
+    assert "inline workflow" in out and "ci-to-uv" in out
+    assert "${{ vars.COSMO_TEST_LEVEL }}" in out
 
 
 def test_add_variable_skips_transport_and_superset(repo, capsys):
