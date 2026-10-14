@@ -144,5 +144,15 @@ def test_content_without_a_directory_keeps_the_template():
 def test_project_dir_can_be_given_explicitly(tmp_path):
     (tmp_path / "my_proj").mkdir()
     (tmp_path / "my_proj" / "__init__.py").write_text("")
-    out = tomllib.loads(migrate_setuptools_to_hatching(_SETUP_CFG, project_dir=tmp_path))
+    out = tomllib.loads(
+        migrate_setuptools_to_hatching(_SETUP_CFG, project_dir=tmp_path)
+    )
+    assert out["tool"]["pytest"]["ini_options"]["testpaths"] == ["my_proj"]
+
+
+def test_a_path_object_gets_the_same_default_project_dir(tmp_path):
+    (tmp_path / "my_proj").mkdir()
+    (tmp_path / "my_proj" / "__init__.py").write_text("")
+    (tmp_path / "setup.cfg").write_text(_SETUP_CFG)
+    out = tomllib.loads(migrate_setuptools_to_hatching(tmp_path / "setup.cfg"))
     assert out["tool"]["pytest"]["ini_options"]["testpaths"] == ["my_proj"]

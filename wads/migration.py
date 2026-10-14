@@ -663,7 +663,11 @@ def migrate_setuptools_to_hatching(
                     name, target = script.split("=", 1)
                     pyproject_dict["project"]["scripts"][name.strip()] = target.strip()
 
-    if project_dir is None and isinstance(setup_cfg, str) and os.path.isfile(setup_cfg):
+    if (
+        project_dir is None
+        and isinstance(setup_cfg, (str, os.PathLike))
+        and os.path.isfile(setup_cfg)
+    ):
         project_dir = Path(setup_cfg).resolve().parent
     testpaths = _testpaths_without_tests_dir(project_dir, required_fields["name"])
     if testpaths is not None:
