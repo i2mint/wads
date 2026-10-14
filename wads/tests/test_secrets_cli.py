@@ -326,8 +326,8 @@ def test_mask_hazard_warning_fires_without_gh(monkeypatch, capsys):
 
 
 def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
-    """--variable is a dead end on inline repos (no vars fallback), so the
-    remedy there must be a committed default, not --variable."""
+    """On an inline repo --variable works only with a re-render that makes the
+    workflow read the vars context (#127), so the remedy there says both."""
     import wads.secrets_cli as m
 
     monkeypatch.setattr(m, "_gh_available", lambda: True)
@@ -339,7 +339,7 @@ def test_mask_hazard_advice_matches_ci_shape(tmp_path, monkeypatch, capsys):
         "org/demo", "COSMO_TEST_LEVEL", "COSMO_TEST_LEVEL", "3", str(inline_ci)
     )
     out = capsys.readouterr().out
-    assert "defaults" in out and "--variable" not in out
+    assert "--variable" in out and "ci-to-uv" in out
 
     stub_ci = tmp_path / "stub.yml"
     stub_ci.write_text(migrate_ci_to_stub())
