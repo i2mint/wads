@@ -1,4 +1,4 @@
-> built 2026-10-14 02:20 UTC from 3561cbf (master) · wads 0.2.43. Details: build_info.json
+> built 2026-10-14 05:17 UTC from 17c8385 (master) · wads 0.2.44. Details: build_info.json
 
 # index.html.md
 
@@ -4463,7 +4463,7 @@ to generate proper configuration.
 >>> pass
 ```
 
-### wads.migration.migrate_setuptools_to_hatching(setup_cfg, defaults=None, , rules=None)
+### wads.migration.migrate_setuptools_to_hatching(setup_cfg, defaults=None, , rules=None, project_dir=None)
 
 Migrate setup.cfg to pyproject.toml format using hatching.
 
@@ -4471,6 +4471,10 @@ Migrate setup.cfg to pyproject.toml format using hatching.
   * **setup_cfg** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values to use for missing required fields
   * **rules** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Custom transformation rules (defaults to setup_cfg_to_pyproject_toml_rules)
+  * **project_dir** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
+    `tests/` there, they point at the package so CI collects its doctests
+    and nothing else. Defaults to the directory of *setup_cfg* when it is a
+    file path; `None` keeps the template’s `["tests"]`.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 * **Returns:**
@@ -7026,16 +7030,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-14 02:20 UTC** from commit <a href="https://github.com/i2mint/wads/commit/3561cbf7f51efaebce4ba4b43343ef2660e2cb7a"><code>3561cbf</code></a> on branch <code>master</code>, for **wads 0.2.43** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 05:17 UTC** from commit <a href="https://github.com/i2mint/wads/commit/17c838541179d93bc03f45f65f104fcc222bc368"><code>17c8385</code></a> on branch <code>master</code>, for **wads 0.2.44** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.44) is behind the latest release on PyPI (0.2.45): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/3561cbf7f51efaebce4ba4b43343ef2660e2cb7a"><code>3561cbf7f51efaebce4ba4b43343ef2660e2cb7a</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/17c838541179d93bc03f45f65f104fcc222bc368"><code>17c838541179d93bc03f45f65f104fcc222bc368</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7046,9 +7052,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38500234545">38500234545</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38515565741">38515565741</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>3561cbf7f51efaebce4ba4b43343ef2660e2cb7a</code> (in the history of the built commit) |
+| Event commit | <code>17c838541179d93bc03f45f65f104fcc222bc368</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7073,13 +7079,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.43/">0.2.43</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.45/">0.2.45</a>, newer than the documented version (0.2.44).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 3561cbf7f51efaebce4ba4b43343ef2660e2cb7a
+git checkout 17c838541179d93bc03f45f65f104fcc222bc368
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

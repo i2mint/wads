@@ -327,7 +327,7 @@ to generate proper configuration.
 >>> pass
 ```
 
-### wads.migration.migrate_setuptools_to_hatching(setup_cfg, defaults=None, , rules=None)
+### wads.migration.migrate_setuptools_to_hatching(setup_cfg, defaults=None, , rules=None, project_dir=None)
 
 Migrate setup.cfg to pyproject.toml format using hatching.
 
@@ -335,6 +335,10 @@ Migrate setup.cfg to pyproject.toml format using hatching.
   * **setup_cfg** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values to use for missing required fields
   * **rules** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Custom transformation rules (defaults to setup_cfg_to_pyproject_toml_rules)
+  * **project_dir** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
+    `tests/` there, they point at the package so CI collects its doctests
+    and nothing else. Defaults to the directory of *setup_cfg* when it is a
+    file path; `None` keeps the template’s `["tests"]`.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 * **Returns:**
