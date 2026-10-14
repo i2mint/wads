@@ -511,3 +511,49 @@ def test_an_inline_workflows_variable_is_carried_and_needs_no_transport(
     assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}" in stub
     assert "COSMO_TEST_LEVEL" not in stub, "a variable was passed as a secret"
     assert "COSMO_TEST_LEVEL" not in capsys.readouterr().err  # nothing left out
+
+
+# Found by the adversarial review of #126.
+
+
+def _carry(tmp_path, ci_text, pyproject_text='[project]\nname = "demo"\nversion = "0.1.0"\n'):
+    from wads.migration import carry_ci_env_into_pyproject
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(pyproject_text)
+    return carry_ci_env_into_pyproject(ci_text, pyproject), pyproject.read_text()
+
+
+def test_a_name_a_secret_backs_elsewhere_is_not_recorded_as_a_variable(tmp_path):
+    ci = (
+        "jobs:\n"
+        "  a:\n    env:\n      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}\n"
+        "  b:\n    env:\n      OPENAI_API_KEY: ${{ vars.OPENAI_API_KEY }}\n"
+    )
+    added, text = _carry(tmp_path, ci)
+    assert added == ["OPENAI_API_KEY"]
+    assert "variables" not in text, "the secret would drop out of the stub's transport"
+
+
+def test_a_variable_with_a_secret_fallback_is_a_secret(tmp_path):
+    added, text = _carry(tmp_path, "env:\n  TOK: ${{ vars.TOK || secrets.TOK }}\n")
+    assert added == ["TOK"]
+    assert "variables" not in text
+
+
+def test_recording_an_already_declared_name_as_a_variable_is_reported(tmp_path):
+    """fleet-stub stages pyproject.toml only when something was carried."""
+    added, text = _carry(
+        tmp_path,
+        "env:\n  COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}\n",
+        '[project]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.env]\nrequired_envvars = ["COSMO_TEST_LEVEL"]\n',
+    )
+    assert added == ["COSMO_TEST_LEVEL"]
+    assert 'variables = ["COSMO_TEST_LEVEL"]' in text
+
+
+def test_github_dot_vars_is_not_a_repository_variable(tmp_path):
+    from wads.migration import extract_ci_variable_env_vars
+
+    assert extract_ci_variable_env_vars("env:\n  X: ${{ github.vars.X }}\n") == {}

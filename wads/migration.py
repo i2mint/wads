@@ -1092,9 +1092,10 @@ def _find_pyproject_near(old_ci) -> Path | None:
 
 # Reference to a GitHub secret inside a workflow expression, e.g.
 # ``${{ secrets.OPENAI_API_KEY }}`` or ``${{ secrets.HF_WRITE_TOKEN || '' }}``.
-_SECRET_REF_RE = re.compile(r"\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)")
+# Anywhere in the expression, so ``${{ vars.X || secrets.X }}`` reads a secret too.
+_SECRET_REF_RE = re.compile(r"\$\{\{[^}]*?(?<![\w.])secrets\.([A-Za-z_][A-Za-z0-9_]*)")
 # Reference to a repository variable, e.g. ``${{ vars.COSMO_TEST_LEVEL }}`` (#125).
-_VAR_REF_RE = re.compile(r"\$\{\{\s*vars\.([A-Za-z_][A-Za-z0-9_]*)")
+_VAR_REF_RE = re.compile(r"\$\{\{[^}]*?(?<![\w.])vars\.([A-Za-z_][A-Za-z0-9_]*)")
 
 # Secrets the workflow handles structurally (publish auth, GitHub token); never
 # carried as repo env vars. The publish ones live in export_ci_env (the SSOT).
@@ -1231,21 +1232,26 @@ def extract_ci_variable_env_vars(ci_text: str) -> dict:
     """``{ENV_VAR: VARIABLE_NAME}`` for ``env:`` entries read from ``${{ vars.X }}``.
 
     The repository-variable counterpart of :func:`extract_ci_env_vars` (#125).
-    An entry that also reads a secret (``${{ secrets.X || vars.X }}``) counts
-    as a secret there, not here. Infra names are dropped as there.
+    An entry that also reads a secret (``${{ secrets.X || vars.X }}``, either
+    order) counts as a secret there, not here, and so does a name that any
+    other ``env:`` block reads from a secret: recording it as a variable would
+    take the secret out of the stub's transport. Infra names are dropped as
+    there.
 
     >>> extract_ci_variable_env_vars('''
     ... env:
     ...   COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}
     ...   LEVEL: ${{ vars.OTHER_LEVEL || '1' }}
     ...   BOTH: ${{ secrets.BOTH || vars.BOTH }}
+    ...   EITHER: ${{ vars.EITHER || secrets.EITHER }}
     ... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}
     True
     """
+    secret_backed = {var for var, _ in _iter_secret_env_refs(ci_text)}
     return {
         var: name
         for var, name in _iter_variable_env_refs(ci_text)
-        if not _is_infra_env_ref(var, name)
+        if var not in secret_backed and not _is_infra_env_ref(var, name)
     }
 
 
@@ -1296,10 +1302,13 @@ def carry_ci_env_into_pyproject(
 
     added = []
     for var, source, variable in to_carry:
+        before = Path(pyproject_path).read_text()
         changed, _ = add_env_var_to_pyproject(
             pyproject_path, var, source, kind=kind, variable=variable
         )
-        if changed:
+        # An already-declared name newly recorded as a variable is a change too:
+        # the caller must commit pyproject.toml for it.
+        if changed or (variable and Path(pyproject_path).read_text() != before):
             added.append(var)
     return added
 
