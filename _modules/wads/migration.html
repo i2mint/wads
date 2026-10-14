@@ -1389,7 +1389,10 @@
 
 <span class="c1"># Reference to a GitHub secret inside a workflow expression, e.g.</span>
 <span class="c1"># ``${{ secrets.OPENAI_API_KEY }}`` or ``${{ secrets.HF_WRITE_TOKEN || '' }}``.</span>
-<span class="n">_SECRET_REF_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)"</span><span class="p">)</span>
+<span class="c1"># Anywhere in the expression, so ``${{ vars.X || secrets.X }}`` reads a secret too.</span>
+<span class="n">_SECRET_REF_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\$\{\{[^}]*?(?&lt;![\w.])secrets\.([A-Za-z_][A-Za-z0-9_]*)"</span><span class="p">)</span>
+<span class="c1"># Reference to a repository variable, e.g. ``${{ vars.COSMO_TEST_LEVEL }}`` (#125).</span>
+<span class="n">_VAR_REF_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\$\{\{[^}]*?(?&lt;![\w.])vars\.([A-Za-z_][A-Za-z0-9_]*)"</span><span class="p">)</span>
 
 <span class="c1"># Secrets the workflow handles structurally (publish auth, GitHub token); never</span>
 <span class="c1"># carried as repo env vars. The publish ones live in export_ci_env (the SSOT).</span>
@@ -1411,6 +1414,23 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_iter_secret_env_refs</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Yield ``(ENV_VAR, SECRET_NAME)`` for every secret-backed ``env:`` entry."""</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_iter_env_entries</span><span class="p">(</span><span class="n">ci_text</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_SECRET_REF_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">var</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_variable_env_refs</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Yield ``(ENV_VAR, VARIABLE_NAME)`` for every ``env:`` entry read from a</span>
+<span class="sd">    repository variable and no secret (one that reads both is a secret)."""</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_iter_env_entries</span><span class="p">(</span><span class="n">ci_text</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_VAR_REF_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_SECRET_REF_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">var</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_env_entries</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Yield ``(ENV_VAR, value)`` for every string value of every ``env:`` block."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -1419,11 +1439,8 @@
         <span class="k">return</span>
     <span class="k">for</span> <span class="n">env_map</span> <span class="ow">in</span> <span class="n">_iter_env_blocks</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">env_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">_SECRET_REF_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="nb">str</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="nb">str</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="n">value</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_infra_env_ref</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">secret</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1514,6 +1531,36 @@
 
 
 
+<div class="viewcode-block" id="extract_ci_variable_env_vars">
+<a class="viewcode-back" href="../../_autosummary/wads.migration.html#wads.migration.extract_ci_variable_env_vars">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_ci_variable_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``{ENV_VAR: VARIABLE_NAME}`` for ``env:`` entries read from ``${{ vars.X }}``.</span>
+
+<span class="sd">    The repository-variable counterpart of :func:`extract_ci_env_vars` (#125).</span>
+<span class="sd">    An entry that also reads a secret (``${{ secrets.X || vars.X }}``, either</span>
+<span class="sd">    order) counts as a secret there, not here, and so does a name that any</span>
+<span class="sd">    other ``env:`` block reads from a secret: recording it as a variable would</span>
+<span class="sd">    take the secret out of the stub's transport. Infra names are dropped as</span>
+<span class="sd">    there.</span>
+
+<span class="sd">    &gt;&gt;&gt; extract_ci_variable_env_vars('''</span>
+<span class="sd">    ... env:</span>
+<span class="sd">    ...   COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}</span>
+<span class="sd">    ...   LEVEL: ${{ vars.OTHER_LEVEL || '1' }}</span>
+<span class="sd">    ...   BOTH: ${{ secrets.BOTH || vars.BOTH }}</span>
+<span class="sd">    ...   EITHER: ${{ vars.EITHER || secrets.EITHER }}</span>
+<span class="sd">    ... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">secret_backed</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_iter_secret_env_refs</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">var</span><span class="p">:</span> <span class="n">name</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_iter_variable_env_refs</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">secret_backed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_infra_env_ref</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="p">}</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_report_dropped_infra_env</span><span class="p">(</span><span class="n">dropped</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">names</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> (secret </span><span class="si">{</span><span class="n">secret</span><span class="si">}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">secret</span> <span class="ow">in</span> <span class="n">dropped</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span>
@@ -1539,6 +1586,10 @@
 <span class="sd">    *lossless*: secrets wired only in the old workflow YAML are preserved in</span>
 <span class="sd">    ``pyproject.toml`` instead of silently dropped.</span>
 
+<span class="sd">    Env vars read from a repository variable (``${{ vars.X }}``) are carried</span>
+<span class="sd">    the same way and also recorded in ``[tool.wads.ci.env].variables``, so stub</span>
+<span class="sd">    rendering knows they need no secrets transport (#125, see #107).</span>
+
 <span class="sd">    Infra-secret-backed env vars (see :func:`extract_ci_env_vars`) are the one</span>
 <span class="sd">    deliberate exception; ``report_dropped`` receives them as</span>
 <span class="sd">    ``{ENV_VAR: SECRET_NAME}`` (default: a note on stderr).</span>
@@ -1546,15 +1597,26 @@
     <span class="n">dropped</span> <span class="o">=</span> <span class="n">dropped_infra_ci_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
         <span class="p">(</span><span class="n">report_dropped</span> <span class="ow">or</span> <span class="n">_report_dropped_infra_env</span><span class="p">)(</span><span class="n">dropped</span><span class="p">)</span>
-    <span class="n">env_vars</span> <span class="o">=</span> <span class="n">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">env_vars</span><span class="p">:</span>
+    <span class="n">to_carry</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="o">*</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">extract_ci_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span>
+        <span class="o">*</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">extract_ci_variable_env_vars</span><span class="p">(</span><span class="n">ci_text</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">to_carry</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.secrets_cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_env_var_to_pyproject</span>
 
     <span class="n">added</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">secret</span> <span class="ow">in</span> <span class="n">env_vars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">changed</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_env_var_to_pyproject</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">secret</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">to_carry</span><span class="p">:</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+        <span class="n">changed</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_env_var_to_pyproject</span><span class="p">(</span>
+            <span class="n">pyproject_path</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span>
+        <span class="p">)</span>
+        <span class="c1"># An already-declared name newly recorded as a variable is a change too:</span>
+        <span class="c1"># the caller must commit pyproject.toml for it.</span>
+        <span class="k">if</span> <span class="n">changed</span> <span class="ow">or</span> <span class="p">(</span><span class="n">variable</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="o">!=</span> <span class="n">before</span><span class="p">):</span>
             <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">added</span></div>
 
@@ -1992,7 +2054,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=595b4dfe"></script>
+</div><script src="../../_static/documentation_options.js?v=79ead715"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

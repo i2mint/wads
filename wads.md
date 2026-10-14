@@ -1,4 +1,4 @@
-> built 2026-10-13 23:46 UTC from 076245d (master) · wads 0.2.41. Details: build_info.json
+> built 2026-10-14 01:24 UTC from 25e3f81 (master) · wads 0.2.42. Details: build_info.json
 
 # index.html.md
 
@@ -4172,6 +4172,7 @@ True
 | [`carry_ci_env_into_pyproject`](_autosummary/wads.migration.html.md#wads.migration.carry_ci_env_into_pyproject)(ci_text, ...[, ...])  | Merge secret-backed env vars from `ci_text` into `[tool.wads.ci.env]`.                                             |
 | [`dropped_infra_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.dropped_infra_ci_env_vars)(ci_text)                | The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars) drops. |
 | [`extract_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.                                                 |
+| [`extract_ci_variable_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_variable_env_vars)(ci_text)             | `{ENV_VAR: VARIABLE_NAME}` for `env:` entries read from `${{ vars.X }}`.                                           |
 | [`main`](_autosummary/wads.migration.html.md#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                                                          |
 | [`migrate_ci_to_stub`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.                                          |
 | [`migrate_ci_to_uv`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.                                               |
@@ -4226,6 +4227,10 @@ backing secret. Returns the list of newly-added var names (`[]` if there
 was nothing to carry). This is what makes `ci-to-stub` / `ci-to-uv`
 *lossless*: secrets wired only in the old workflow YAML are preserved in
 `pyproject.toml` instead of silently dropped.
+
+Env vars read from a repository variable (`${{ vars.X }}`) are carried
+the same way and also recorded in `[tool.wads.ci.env].variables`, so stub
+rendering knows they need no secrets transport (#125, see #107).
 
 Infra-secret-backed env vars (see [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)) are the one
 deliberate exception; `report_dropped` receives them as
@@ -4302,6 +4307,31 @@ True
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.migration.extract_ci_variable_env_vars(ci_text)
+
+`{ENV_VAR: VARIABLE_NAME}` for `env:` entries read from `${{ vars.X }}`.
+
+The repository-variable counterpart of [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars) (#125).
+An entry that also reads a secret (`${{ secrets.X || vars.X }}`, either
+order) counts as a secret there, not here, and so does a name that any
+other `env:` block reads from a secret: recording it as a variable would
+take the secret out of the stub’s transport. Infra names are dropped as
+there.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> extract_ci_variable_env_vars('''
+... env:
+...   COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}
+...   LEVEL: ${{ vars.OTHER_LEVEL || '1' }}
+...   BOTH: ${{ secrets.BOTH || vars.BOTH }}
+...   EITHER: ${{ vars.EITHER || secrets.EITHER }}
+... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}
+True
+```
 
 ### wads.migration.main()
 
@@ -6991,7 +7021,7 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-13 23:46 UTC** from commit <a href="https://github.com/i2mint/wads/commit/076245dc4895c6a6a941c41f9305218e273ede56"><code>076245d</code></a> on branch <code>master</code>, for **wads 0.2.41** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 01:24 UTC** from commit <a href="https://github.com/i2mint/wads/commit/25e3f8102b1208367a424d1fde037b84e3b2baed"><code>25e3f81</code></a> on branch <code>master</code>, for **wads 0.2.42** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -7000,7 +7030,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/076245dc4895c6a6a941c41f9305218e273ede56"><code>076245dc4895c6a6a941c41f9305218e273ede56</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/25e3f8102b1208367a424d1fde037b84e3b2baed"><code>25e3f8102b1208367a424d1fde037b84e3b2baed</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7011,9 +7041,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38486016203">38486016203</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38495327112">38495327112</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>076245dc4895c6a6a941c41f9305218e273ede56</code> (in the history of the built commit) |
+| Event commit | <code>25e3f8102b1208367a424d1fde037b84e3b2baed</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7038,13 +7068,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.41/">0.2.41</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.42/">0.2.42</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 076245dc4895c6a6a941c41f9305218e273ede56
+git checkout 25e3f8102b1208367a424d1fde037b84e3b2baed
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
