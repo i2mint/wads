@@ -96,3 +96,53 @@ def test_pep639_license_passes_non_strings_through_as_a_table(value):
 
 def test_pep639_license_leaves_a_table_alone():
     assert pep639_license({"text": "MIT"}) == {"text": "MIT"}
+
+
+# Item 3: no tests/ dir -> testpaths point at the package, not at a missing "tests".
+
+_SETUP_CFG = """[metadata]
+name = my-proj
+version = 0.1.0
+description = My project
+url = https://github.com/user/my-proj
+license = MIT
+"""
+
+
+def _testpaths(tmp_path, *dirs, **kwargs):
+    for d in dirs:
+        (tmp_path / d).mkdir(parents=True)
+        if not d.endswith("tests"):
+            (tmp_path / d / "__init__.py").write_text("")
+    cfg = tmp_path / "setup.cfg"
+    cfg.write_text(_SETUP_CFG)
+    out = migrate_setuptools_to_hatching(str(cfg), **kwargs)
+    return tomllib.loads(out)["tool"]["pytest"]["ini_options"]["testpaths"]
+
+
+def test_no_tests_dir_points_testpaths_at_the_package(tmp_path):
+    assert _testpaths(tmp_path, "my_proj") == ["my_proj"]
+
+
+def test_src_layout_package_is_found(tmp_path):
+    assert _testpaths(tmp_path, "src/my_proj") == ["src/my_proj"]
+
+
+def test_an_existing_tests_dir_keeps_the_template(tmp_path):
+    assert _testpaths(tmp_path, "my_proj", "tests") == ["tests"]
+
+
+def test_no_package_dir_found_keeps_the_template(tmp_path):
+    assert _testpaths(tmp_path) == ["tests"]
+
+
+def test_content_without_a_directory_keeps_the_template():
+    out = tomllib.loads(migrate_setuptools_to_hatching(_SETUP_CFG))
+    assert out["tool"]["pytest"]["ini_options"]["testpaths"] == ["tests"]
+
+
+def test_project_dir_can_be_given_explicitly(tmp_path):
+    (tmp_path / "my_proj").mkdir()
+    (tmp_path / "my_proj" / "__init__.py").write_text("")
+    out = tomllib.loads(migrate_setuptools_to_hatching(_SETUP_CFG, project_dir=tmp_path))
+    assert out["tool"]["pytest"]["ini_options"]["testpaths"] == ["my_proj"]

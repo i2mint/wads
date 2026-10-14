@@ -489,11 +489,44 @@ def _apply_rules_to_extract_values(cfg: dict, rules: dict) -> dict:
     return result
 
 
+def _testpaths_without_tests_dir(
+    project_dir: Optional[Union[str, Path]], name: str
+) -> Optional[list]:
+    """The ``testpaths`` to write when *project_dir* has no ``tests/``, else ``None``.
+
+    The template's ``["tests"]`` names a directory that a doctest-only repo does not
+    have, and pytest then silently collects from the rootdir instead -- importing
+    ``docsrc/conf.py`` and anything else lying around (i2mint/wads#52). Pointing at the
+    package collects exactly its doctests, which that fallback was already collecting,
+    so this narrows collection and never widens it. ``None`` (keep the template) when
+    the directory is unknown, ``tests/`` exists, or no package directory is found.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp()); (d / 'my_pkg').mkdir()
+    >>> _ = (d / 'my_pkg' / '__init__.py').write_text('')
+    >>> _testpaths_without_tests_dir(d, 'my-pkg')
+    ['my_pkg']
+    >>> (d / 'tests').mkdir(); _testpaths_without_tests_dir(d, 'my-pkg') is None
+    True
+    """
+    if project_dir is None:
+        return None
+    root = Path(project_dir)
+    if (root / "tests").is_dir():
+        return None
+    import_name = name.replace("-", "_").replace(".", "_")
+    for candidate in (Path(import_name), Path("src") / import_name):
+        if (root / candidate / "__init__.py").is_file():
+            return [candidate.as_posix()]
+    return None
+
+
 def migrate_setuptools_to_hatching(
     setup_cfg: Union[str, Mapping],
     defaults: Optional[dict] = None,
     *,
     rules: Optional[dict] = None,
+    project_dir: Optional[Union[str, Path]] = None,
 ) -> str:
     """
     Migrate setup.cfg to pyproject.toml format using hatching.
@@ -502,6 +535,10 @@ def migrate_setuptools_to_hatching(
         setup_cfg: Either a file path, file content string, or dict of setup.cfg
         defaults: Default values to use for missing required fields
         rules: Custom transformation rules (defaults to setup_cfg_to_pyproject_toml_rules)
+        project_dir: The project directory, consulted only to pick ``testpaths``: with no
+            ``tests/`` there, they point at the package so CI collects its doctests
+            and nothing else. Defaults to the directory of *setup_cfg* when it is a
+            file path; ``None`` keeps the template's ``["tests"]``.
 
     Returns:
         String content of the generated pyproject.toml
@@ -625,6 +662,13 @@ def migrate_setuptools_to_hatching(
                 if "=" in script:
                     name, target = script.split("=", 1)
                     pyproject_dict["project"]["scripts"][name.strip()] = target.strip()
+
+    if project_dir is None and isinstance(setup_cfg, str) and os.path.isfile(setup_cfg):
+        project_dir = Path(setup_cfg).resolve().parent
+    testpaths = _testpaths_without_tests_dir(project_dir, required_fields["name"])
+    if testpaths is not None:
+        ini = pyproject_dict.setdefault("tool", {}).setdefault("pytest", {})
+        ini.setdefault("ini_options", {})["testpaths"] = testpaths
 
     # Convert back to TOML string
     from io import BytesIO
