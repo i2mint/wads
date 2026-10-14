@@ -1093,6 +1093,8 @@ def _find_pyproject_near(old_ci) -> Path | None:
 # Reference to a GitHub secret inside a workflow expression, e.g.
 # ``${{ secrets.OPENAI_API_KEY }}`` or ``${{ secrets.HF_WRITE_TOKEN || '' }}``.
 _SECRET_REF_RE = re.compile(r"\$\{\{\s*secrets\.([A-Za-z_][A-Za-z0-9_]*)")
+# Reference to a repository variable, e.g. ``${{ vars.COSMO_TEST_LEVEL }}`` (#125).
+_VAR_REF_RE = re.compile(r"\$\{\{\s*vars\.([A-Za-z_][A-Za-z0-9_]*)")
 
 # Secrets the workflow handles structurally (publish auth, GitHub token); never
 # carried as repo env vars. The publish ones live in export_ci_env (the SSOT).
@@ -1114,6 +1116,23 @@ def _iter_env_blocks(node):
 
 def _iter_secret_env_refs(ci_text: str):
     """Yield ``(ENV_VAR, SECRET_NAME)`` for every secret-backed ``env:`` entry."""
+    for var, value in _iter_env_entries(ci_text):
+        match = _SECRET_REF_RE.search(value)
+        if match:
+            yield var, match.group(1)
+
+
+def _iter_variable_env_refs(ci_text: str):
+    """Yield ``(ENV_VAR, VARIABLE_NAME)`` for every ``env:`` entry read from a
+    repository variable and no secret (one that reads both is a secret)."""
+    for var, value in _iter_env_entries(ci_text):
+        match = _VAR_REF_RE.search(value)
+        if match and not _SECRET_REF_RE.search(value):
+            yield var, match.group(1)
+
+
+def _iter_env_entries(ci_text: str):
+    """Yield ``(ENV_VAR, value)`` for every string value of every ``env:`` block."""
     import yaml
 
     try:
@@ -1122,11 +1141,8 @@ def _iter_secret_env_refs(ci_text: str):
         return
     for env_map in _iter_env_blocks(data):
         for var, value in env_map.items():
-            if not isinstance(value, str):
-                continue
-            match = _SECRET_REF_RE.search(value)
-            if match:
-                yield str(var), match.group(1)
+            if isinstance(value, str):
+                yield str(var), value
 
 
 def _is_infra_env_ref(var: str, secret: str) -> bool:
@@ -1211,6 +1227,28 @@ def extract_ci_env_vars(ci_text: str) -> dict:
     }
 
 
+def extract_ci_variable_env_vars(ci_text: str) -> dict:
+    """``{ENV_VAR: VARIABLE_NAME}`` for ``env:`` entries read from ``${{ vars.X }}``.
+
+    The repository-variable counterpart of :func:`extract_ci_env_vars` (#125).
+    An entry that also reads a secret (``${{ secrets.X || vars.X }}``) counts
+    as a secret there, not here. Infra names are dropped as there.
+
+    >>> extract_ci_variable_env_vars('''
+    ... env:
+    ...   COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}
+    ...   LEVEL: ${{ vars.OTHER_LEVEL || '1' }}
+    ...   BOTH: ${{ secrets.BOTH || vars.BOTH }}
+    ... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}
+    True
+    """
+    return {
+        var: name
+        for var, name in _iter_variable_env_refs(ci_text)
+        if not _is_infra_env_ref(var, name)
+    }
+
+
 def _report_dropped_infra_env(dropped: dict) -> None:
     names = ", ".join(f"{var} (secret {secret})" for var, secret in dropped.items())
     print(
@@ -1234,6 +1272,10 @@ def carry_ci_env_into_pyproject(
     *lossless*: secrets wired only in the old workflow YAML are preserved in
     ``pyproject.toml`` instead of silently dropped.
 
+    Env vars read from a repository variable (``${{ vars.X }}``) are carried
+    the same way and also recorded in ``[tool.wads.ci.env].variables``, so stub
+    rendering knows they need no secrets transport (#125, see #107).
+
     Infra-secret-backed env vars (see :func:`extract_ci_env_vars`) are the one
     deliberate exception; ``report_dropped`` receives them as
     ``{ENV_VAR: SECRET_NAME}`` (default: a note on stderr).
@@ -1241,14 +1283,22 @@ def carry_ci_env_into_pyproject(
     dropped = dropped_infra_ci_env_vars(ci_text)
     if dropped:
         (report_dropped or _report_dropped_infra_env)(dropped)
-    env_vars = extract_ci_env_vars(ci_text)
-    if not env_vars:
+    to_carry = [
+        *((var, src, False) for var, src in extract_ci_env_vars(ci_text).items()),
+        *(
+            (var, src, True)
+            for var, src in extract_ci_variable_env_vars(ci_text).items()
+        ),
+    ]
+    if not to_carry:
         return []
     from wads.secrets_cli import add_env_var_to_pyproject
 
     added = []
-    for var, secret in env_vars.items():
-        changed, _ = add_env_var_to_pyproject(pyproject_path, var, secret, kind=kind)
+    for var, source, variable in to_carry:
+        changed, _ = add_env_var_to_pyproject(
+            pyproject_path, var, source, kind=kind, variable=variable
+        )
         if changed:
             added.append(var)
     return added

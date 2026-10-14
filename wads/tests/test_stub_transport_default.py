@@ -473,3 +473,41 @@ def test_an_unreadable_pyproject_refuses_a_stub_it_cannot_reproduce(
     ci = _ci_file(tmp_path, stub)
     with pytest.raises(ValueError, match="could not be read"):
         migrate_ci_to_stub(str(ci))
+
+
+INLINE_WITH_A_VARIABLE = """\
+name: Continuous Integration (uv)
+on: [push, pull_request]
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  COSMO_TEST_LEVEL: ${{ vars.COSMO_TEST_LEVEL }}
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - run: uv run pytest
+"""
+
+
+def test_an_inline_workflows_variable_is_carried_and_needs_no_transport(
+    tmp_path, capsys
+):
+    """#125: a ``vars.`` reference was neither declared nor recorded, so the
+    stub fell back to JSON or dropped the variable from CI."""
+    from wads.migration import carry_ci_env_into_pyproject
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[project]\nname = "demo"\nversion = "0.1.0"\n')
+    ci = _ci_file(tmp_path, INLINE_WITH_A_VARIABLE)
+
+    added = carry_ci_env_into_pyproject(ci.read_text(), pyproject)
+    assert added == ["OPENAI_API_KEY", "COSMO_TEST_LEVEL"]
+    text = pyproject.read_text()
+    assert 'extra_envvars = ["OPENAI_API_KEY", "COSMO_TEST_LEVEL"]' in text
+    assert 'variables = ["COSMO_TEST_LEVEL"]' in text
+
+    stub = migrate_ci_to_stub(str(ci))  # no transport: the default choice
+    assert JSON_LINE not in stub, "a repository variable forced the JSON transport"
+    assert "OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}" in stub
+    assert "COSMO_TEST_LEVEL" not in stub, "a variable was passed as a secret"
+    assert "COSMO_TEST_LEVEL" not in capsys.readouterr().err  # nothing left out
