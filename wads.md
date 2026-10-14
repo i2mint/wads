@@ -1,4 +1,4 @@
-> built 2026-10-14 01:24 UTC from 25e3f81 (master) · wads 0.2.42. Details: build_info.json
+> built 2026-10-14 02:20 UTC from 3561cbf (master) · wads 0.2.43. Details: build_info.json
 
 # index.html.md
 
@@ -1423,7 +1423,11 @@ Generate job-level env entry lines for secret-backed vars.
 One `VAR: ${{ secrets.NAME || '' }}` line per name declared in
 required_envvars / test_envvars / extra_envvars, honoring
 [tool.wads.ci.env.secret_aliases] (env-var name -> backing secret
-name). An unset secret renders as an empty string. Returns ‘’ when
+name). A name listed in [tool.wads.ci.env].variables is a repository
+*variable*, so it renders `VAR: ${{ vars.NAME || '' }}` instead: an
+inline workflow reads the vars context directly, and reading it from
+a secret of that name would leave it silently empty (#127). An unset
+secret or variable renders as an empty string. Returns ‘’ when
 nothing is left to emit.
 
 Names also present in [tool.wads.ci.env].defaults are skipped: the
@@ -6230,8 +6234,9 @@ Set a secret (or, with `variable=True`, a repo variable) via `gh`.
 Classify the repo’s `ci.yml`: `'json'`, `'named'`, `'inline'`, or `None`.
 
 `'inline'` means a workflow that does not call the reusable uv-ci (it
-reads repo secrets directly and has no transport layer — and no
-repo-variable fallback either). `None` means no ci.yml at all.
+reads repo secrets directly and has no transport layer; it reads a repo
+variable only for a name in `[tool.wads.ci.env].variables`, once
+re-rendered with `ci-to-uv`, #127). `None` means no ci.yml at all.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
@@ -7021,7 +7026,7 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-14 01:24 UTC** from commit <a href="https://github.com/i2mint/wads/commit/25e3f8102b1208367a424d1fde037b84e3b2baed"><code>25e3f81</code></a> on branch <code>master</code>, for **wads 0.2.42** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 02:20 UTC** from commit <a href="https://github.com/i2mint/wads/commit/3561cbf7f51efaebce4ba4b43343ef2660e2cb7a"><code>3561cbf</code></a> on branch <code>master</code>, for **wads 0.2.43** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -7030,7 +7035,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/25e3f8102b1208367a424d1fde037b84e3b2baed"><code>25e3f8102b1208367a424d1fde037b84e3b2baed</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/3561cbf7f51efaebce4ba4b43343ef2660e2cb7a"><code>3561cbf7f51efaebce4ba4b43343ef2660e2cb7a</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7041,9 +7046,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38495327112">38495327112</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38500234545">38500234545</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>25e3f8102b1208367a424d1fde037b84e3b2baed</code> (in the history of the built commit) |
+| Event commit | <code>3561cbf7f51efaebce4ba4b43343ef2660e2cb7a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7068,13 +7073,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.42/">0.2.42</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.43/">0.2.43</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 25e3f8102b1208367a424d1fde037b84e3b2baed
+git checkout 3561cbf7f51efaebce4ba4b43343ef2660e2cb7a
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

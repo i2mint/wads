@@ -102,8 +102,9 @@ Set a secret (or, with `variable=True`, a repo variable) via `gh`.
 Classify the repo’s `ci.yml`: `'json'`, `'named'`, `'inline'`, or `None`.
 
 `'inline'` means a workflow that does not call the reusable uv-ci (it
-reads repo secrets directly and has no transport layer — and no
-repo-variable fallback either). `None` means no ci.yml at all.
+reads repo secrets directly and has no transport layer; it reads a repo
+variable only for a name in `[tool.wads.ci.env].variables`, once
+re-rendered with `ci-to-uv`, #127). `None` means no ci.yml at all.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)

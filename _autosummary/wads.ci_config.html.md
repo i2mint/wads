@@ -242,7 +242,11 @@ Generate job-level env entry lines for secret-backed vars.
 One `VAR: ${{ secrets.NAME || '' }}` line per name declared in
 required_envvars / test_envvars / extra_envvars, honoring
 [tool.wads.ci.env.secret_aliases] (env-var name -> backing secret
-name). An unset secret renders as an empty string. Returns ‘’ when
+name). A name listed in [tool.wads.ci.env].variables is a repository
+*variable*, so it renders `VAR: ${{ vars.NAME || '' }}` instead: an
+inline workflow reads the vars context directly, and reading it from
+a secret of that name would leave it silently empty (#127). An unset
+secret or variable renders as an empty string. Returns ‘’ when
 nothing is left to emit.
 
 Names also present in [tool.wads.ci.env].defaults are skipped: the

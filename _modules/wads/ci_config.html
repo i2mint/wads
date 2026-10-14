@@ -1053,7 +1053,11 @@
 <span class="sd">        One `VAR: ${{ secrets.NAME || '' }}` line per name declared in</span>
 <span class="sd">        required_envvars / test_envvars / extra_envvars, honoring</span>
 <span class="sd">        [tool.wads.ci.env.secret_aliases] (env-var name -&gt; backing secret</span>
-<span class="sd">        name). An unset secret renders as an empty string. Returns '' when</span>
+<span class="sd">        name). A name listed in [tool.wads.ci.env].variables is a repository</span>
+<span class="sd">        *variable*, so it renders `VAR: ${{ vars.NAME || '' }}` instead: an</span>
+<span class="sd">        inline workflow reads the vars context directly, and reading it from</span>
+<span class="sd">        a secret of that name would leave it silently empty (#127). An unset</span>
+<span class="sd">        secret or variable renders as an empty string. Returns '' when</span>
 <span class="sd">        nothing is left to emit.</span>
 
 <span class="sd">        Names also present in [tool.wads.ci.env].defaults are skipped: the</span>
@@ -1075,6 +1079,7 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.export_ci_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_publish_credential</span>
 
         <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_secret_aliases</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_vars_variables</span><span class="p">)</span>
         <span class="n">skip</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">)</span>
         <span class="n">pad</span> <span class="o">=</span> <span class="s2">" "</span> <span class="o">*</span> <span class="n">indent</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1090,7 +1095,8 @@
                     <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pad</span><span class="si">}{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">secret</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="s2">"vars"</span> <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">variables</span> <span class="k">else</span> <span class="s2">"secrets"</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pad</span><span class="si">}{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">secret</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 
@@ -1124,10 +1130,14 @@
 
         <span class="c1"># Add env vars that come from secrets (using conditional syntax)</span>
         <span class="c1"># These are set conditionally only if the secret exists</span>
-        <span class="n">all_secret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span>
-        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">all_secret_vars</span><span class="p">:</span>
-            <span class="c1"># Use GitHub's conditional syntax to only set if secret exists</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> secrets.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="c1"># Names in [tool.wads.ci.env].variables are repository variables, read</span>
+        <span class="c1"># from the vars context (#127).</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_vars_variables</span><span class="p">)</span>
+        <span class="n">aliases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_secret_aliases</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_vars_all</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="s2">"vars"</span> <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">variables</span> <span class="k">else</span> <span class="s2">"secrets"</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="s2">"vars"</span> <span class="k">else</span> <span class="n">var_name</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">: $</span><span class="se">{{{{</span><span class="s2"> </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> || '' </span><span class="se">}}}}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">"  # No additional env vars configured"</span></div>
 
@@ -1411,7 +1421,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=79ead715"></script>
+</div><script src="../../_static/documentation_options.js?v=d0aaa373"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

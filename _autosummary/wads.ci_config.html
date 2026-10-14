@@ -626,7 +626,11 @@ invalid).</p>
 <p>One <code class="code docutils literal notranslate"><span class="pre">VAR:</span> <span class="pre">${{</span> <span class="pre">secrets.NAME</span> <span class="pre">||</span> <span class="pre">''</span> <span class="pre">}}</span></code> line per name declared in
 required_envvars / test_envvars / extra_envvars, honoring
 [tool.wads.ci.env.secret_aliases] (env-var name -&gt; backing secret
-name). An unset secret renders as an empty string. Returns ‘’ when
+name). A name listed in [tool.wads.ci.env].variables is a repository
+<em>variable</em>, so it renders <code class="code docutils literal notranslate"><span class="pre">VAR:</span> <span class="pre">${{</span> <span class="pre">vars.NAME</span> <span class="pre">||</span> <span class="pre">''</span> <span class="pre">}}</span></code> instead: an
+inline workflow reads the vars context directly, and reading it from
+a secret of that name would leave it silently empty (#127). An unset
+secret or variable renders as an empty string. Returns ‘’ when
 nothing is left to emit.</p>
 <p>Names also present in [tool.wads.ci.env].defaults are skipped: the
 committed default is authoritative (matching the reusable workflow’s
@@ -1252,7 +1256,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=79ead715"></script>
+</div><script src="../_static/documentation_options.js?v=d0aaa373"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
