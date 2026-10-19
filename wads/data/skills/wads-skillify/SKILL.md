@@ -81,6 +81,14 @@ skills minimum**:
 This skill decides *that* and *how many*; **skill-build** decides *what goes in
 them*. Don't draft skill bodies here.
 
+**Also as a subagent?** For each skill that exists or is proposed, ask whether it
+should also run in its own context: it does bulky or read-heavy work (a sweep, a
+scan, long command output), needs a tool restriction or a cheaper model, or a
+hand-written agent already duplicates it. If so, the skill declares the twin in
+its frontmatter (`metadata: subagent: true`) and opsward renders and checks it
+(`opsward generate --write`, `opsward maintain`); delegate the decision and the
+edit to **opsward-subagents**. Guideline skills stay inline only.
+
 ## Step 2 — layout, distribution & spec → defer to skill-package-setup
 
 The policy in one paragraph (skill-package-setup is authoritative): real skill
@@ -143,6 +151,8 @@ pip install PKG        # where skills ship in {pkg}/data/skills (+ skill link-sk
 - **skill-enable** — ship skills via `pip` (`{pkg}/data/skills/` wiring).
 - **skill-docs** — README/skills documentation.
 - **skill-sync** — keep skill content in sync with code.
+- **opsward-subagents** — decide which skills should also run as subagents and
+  generate the twins (in the `opsward` package).
 
 ## Closing checklist
 
@@ -153,3 +163,5 @@ pip install PKG        # where skills ship in {pkg}/data/skills (+ skill link-sk
       symlinks that resolve; one real non-hidden location, no duplicates).
 - [ ] Skills load in a fresh Claude Code session (a new top-level `.claude/skills/`
       entry needs a session restart to appear).
+- [ ] Each skill has a recorded "also a subagent?" decision; declared twins are
+      generated and `opsward maintain` reports no `subagent_twin` finding.
