@@ -106,7 +106,7 @@ the (text) file contents, read lazily on access.
 ['a.txt']
 ```
 
-### *class* wads.templating.GenerationResult(added=<factory>, skipped=<factory>, errored=<factory>)
+### *class* wads.templating.GenerationResult(added=list(), skipped=list(), errored=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -139,13 +139,13 @@ Actions) and `${...}` (shell).
 
 Legacy `#TOKEN#` substitution used by the older CI templates.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> apply_placeholders("name=#NAME#", {"#NAME#": "wads"})
 'name=wads'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.templating.generate(target_dir, artifacts, context, , overwrite=(), on_add=None, on_skip=None, on_error=None)
 
@@ -169,10 +169,10 @@ Extra keyword arguments override the defaults (e.g. `undefined`).
 
 Render `content` as a Jinja2 template with wads delimiters.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> render("v<< major >>.<< minor >>", {"major": 1, "minor": 2})
 'v1.2'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

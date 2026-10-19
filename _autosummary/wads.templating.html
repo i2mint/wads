@@ -13,6 +13,7 @@
         <title>wads.templating - wads</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -448,7 +449,7 @@ the (text) file contents, read lazily on access.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.templating.GenerationResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">GenerationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">added</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errored</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/templating.html#GenerationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.GenerationResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">GenerationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">added</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errored</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/templating.html#GenerationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.GenerationResult" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Outcome of <a class="reference internal" href="#wads.templating.generate" title="wads.templating.generate"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate()</span></code></a>.</p>
 <dl class="field-list simple">
@@ -487,15 +488,15 @@ Actions) and <code class="docutils literal notranslate"><span class="pre">${...}
 <dt class="sig sig-object py" id="wads.templating.apply_placeholders">
 <span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">apply_placeholders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/templating.html#apply_placeholders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.apply_placeholders" title="Link to this definition">¶</a></dt>
 <dd><p>Legacy <code class="docutils literal notranslate"><span class="pre">#TOKEN#</span></code> substitution used by the older CI templates.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apply_placeholders</span><span class="p">(</span><span class="s2">"name=#NAME#"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"#NAME#"</span><span class="p">:</span> <span class="s2">"wads"</span><span class="p">})</span>
+<span class="go">'name=wads'</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apply_placeholders</span><span class="p">(</span><span class="s2">"name=#NAME#"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"#NAME#"</span><span class="p">:</span> <span class="s2">"wads"</span><span class="p">})</span>
-<span class="go">'name=wads'</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -524,15 +525,15 @@ returned <a class="reference internal" href="#wads.templating.GenerationResult" 
 <dt class="sig sig-object py" id="wads.templating.render">
 <span class="sig-prename descclassname"><span class="pre">wads.templating.</span></span><span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/templating.html#render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.templating.render" title="Link to this definition">¶</a></dt>
 <dd><p>Render <code class="docutils literal notranslate"><span class="pre">content</span></code> as a Jinja2 template with wads delimiters.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"major"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"minor"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">'v1.2'</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"v&lt;&lt; major &gt;&gt;.&lt;&lt; minor &gt;&gt;"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"major"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"minor"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
-<span class="go">'v1.2'</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -614,7 +615,7 @@ returned <a class="reference internal" href="#wads.templating.GenerationResult" 
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=3889e2c3"></script>
+</div><script src="../_static/documentation_options.js?v=91c996a5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

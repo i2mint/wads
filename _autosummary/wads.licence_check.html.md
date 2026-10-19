@@ -328,7 +328,7 @@ against the other shape reads as configured and is not. These are rejected
 rather than silently aliased – but rejected with the migration, not with a
 bare “unknown key”, because the person hitting this did not choose it.
 
-### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?: \\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
+### *class* wads.licence_check.LicencePolicy(allowed=('\\\\bMIT\\\\b', '\\\\bBSD\\\\b', '\\\\b0BSD\\\\b', '\\\\bApache[- ]?2', '\\\\bApache Software License\\\\b', '\\\\bISC\\\\b', '\\\\bPython Software Foundation\\\\b', '\\\\bPSF\\\\b', '\\\\bHPND\\\\b', '\\\\bUnlicense\\\\b', '\\\\bCC0\\\\b', '\\\\bZlib\\\\b', '\\\\bBoost Software License\\\\b', '\\\\bBSL[- ]?1\\\\.0\\\\b'), forbidden=('\\\\bAGPL', '\\\\bAffero\\\\b', '\\\\bGPL(?![\\\\w.+-]\*\\\\s+with\\\\b)', '\\\\bGNU General Public\\\\b', '\\\\bLGPL', '\\\\bLesser General Public\\\\b', '\\\\bLibrary General Public\\\\b', '\\\\bNethack General Public\\\\b', '\\\\bEUPL\\\\b', '\\\\bBusiness Source\\\\b', '\\\\bBUSL\\\\b', '\\\\bSSPL\\\\b', '\\\\bElastic[- ]?(2\\\\.0|License|v2)\\\\b', '(?: \\\\b|-)(?:open)?rail(?:-m)?\\\\b', '\\\\bCC[- ]BY[- ]NC\\\\b', '\\\\bNon[- ]?Commercial\\\\b', '\\\\bProprietary\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -349,14 +349,14 @@ calls `typing-extensions`. Getting this wrong is invisible: the
 exception simply never applies and the report keeps flagging a name
 somebody believes they already adjudicated.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> LicencePolicy(exceptions={'Ruamel.YAML': 'audited'}).exception_for(
 ...     'ruamel-yaml')
 'audited'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 #### *classmethod* from_mapping(config,)
 
@@ -371,9 +371,6 @@ Value TYPES are checked too, and for the same reason the key names are:
 `allowed = "MIT"` used to become the three regexes `M`, `I`, `T`
 without a word, and an `exceptions` array-of-tables used to collapse
 into `{'dependency': 'reason'}`. Both read as configured. Neither was.
-
-* **Return type:**
-  [`LicencePolicy`](#wads.licence_check.LicencePolicy)
 
 ```pycon
 >>> policy = LicencePolicy.from_mapping(
@@ -416,6 +413,9 @@ migration rather than with a bare “unknown key”:
 `allowed` (it pairs with `forbidden`, where `allow` had no counterpart)
 ```
 
+* **Return type:**
+  [`LicencePolicy`](#wads.licence_check.LicencePolicy)
+
 #### *classmethod* from_pyproject(pkg_dir='.', , , pyproject=None)
 
 The policy declared in `[tool.wads.licence]`, or the defaults.
@@ -447,9 +447,6 @@ the whole string as one blob gets that backwards – `marisa-trie`
 declares `MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)` and was failed on
 the option nobody has to take:
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> LicencePolicy().permissive_option('MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)')
 'MIT AND (BSD-2-Clause'
@@ -462,6 +459,9 @@ declaration stands as it is:
 >>> LicencePolicy().permissive_option('LGPL-2.1-only OR MPL-1.1')
 ''
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### *class* wads.licence_check.LicenceReport(policy, declared, verdicts, canaries=(), uncovered_families=(), pkg_dir='.')
 
@@ -522,7 +522,7 @@ The pair of readers [`check()`](#wads.licence_check.check) walks the closure wit
 
 Alias for field number 0
 
-#### read_requires *: [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str)], [list](https://docs.python.org/3/builtins/stdtypes.html#list) | [None](https://docs.python.org/3/builtins/constants.html#None)]*
+#### read_requires *: [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str)], [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[list](https://docs.python.org/3/builtins/stdtypes.html#list)]]*
 
 Alias for field number 1
 
@@ -622,9 +622,6 @@ By default the walk skips requirements gated on `extra == "..."`, because
 a bare install does not take them. `include_extras=('*',)` takes all of
 them; a tuple of names takes those.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
-
 ```pycon
 >>> tree = {
 ...     'citeget': ['html2text', 'requests', 'pytest; extra == "test"'],
@@ -649,6 +646,9 @@ An uninstalled name simply ends that branch – it is still reported by
 [`walk_closure()`](#wads.licence_check.walk_closure) is the same walk, and additionally says which members
 are reachable only through an environment-marker-gated requirement.
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
 ### wads.licence_check.declare(dist_name, /, \*, read_metadata=<function metadata>)
 
 The DECLARATION, in order of precision – never the licence document.
@@ -657,9 +657,6 @@ The DECLARATION, in order of precision – never the licence document.
 something with `.get` / `.get_all`, which is what both
 [`importlib.metadata.metadata()`](https://docs.python.org/3/library/importlib.metadata.html#importlib.metadata.metadata) and a parsed `METADATA` email message
 give you.
-
-* **Return type:**
-  [`Declaration`](#wads.licence_check.Declaration)
 
 ```pycon
 >>> from email import message_from_string
@@ -693,6 +690,9 @@ copyleft:
 'Copyright (c) 2005-2024, NumPy Developers.'
 ```
 
+* **Return type:**
+  [`Declaration`](#wads.licence_check.Declaration)
+
 ### wads.licence_check.declared_dependencies(pkg_dir='.', , , include_extras=(), pyproject=None)
 
 Every distribution the project DECLARES, read from `pyproject.toml`.
@@ -702,9 +702,6 @@ forgotten in a hand-written list is a dependency the perimeter never looks
 at, and the perimeter reads as green either way.
 
 [`declared_requirements()`](#wads.licence_check.declared_requirements) without the version specifiers and markers.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
 
 ```pycon
 >>> declared_dependencies(pyproject={'project': {
@@ -718,6 +715,9 @@ at, and the perimeter reads as green either way.
 ... }})
 ('html2text', 'pytest')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
 
 ### wads.licence_check.declared_licence(dist_name, /, \*, read_metadata=<function metadata>)
 
@@ -748,9 +748,6 @@ function cannot see (`setup.py`, `requirements.txt`), and reporting
 “declared: 0 … PERIMETER HOLDS” over it is the confident-green failure this
 module exists to stop.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
-
 ```pycon
 >>> declared_requirements(pyproject={'project': {
 ...     'dependencies': ['html2text', 'requests>=2'],
@@ -765,6 +762,9 @@ module exists to stop.
 this project lists `dependencies` in [project].dynamic, so
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
 ### wads.licence_check.has_environment_marker(requirement,)
 
 Whether a requirement is gated on an ENVIRONMENT marker, not just an extra.
@@ -777,9 +777,6 @@ distribution is the same confident-green failure as reading the wrong
 environment altogether. Telling the two apart is what lets one be a note and
 the other a failure.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> has_environment_marker('tomli>=1.0.0; python_version < "3.11"')
 True
@@ -788,6 +785,9 @@ False
 >>> has_environment_marker('requests>=2')
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.licence_check.main(argv=None)
 
@@ -800,13 +800,13 @@ Console-script entry point. Returns the process exit code.
 
 PEP 503 normalisation, so `ruamel.yaml` and `ruamel-yaml` are one name.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> normalise('Ruamel.YAML')
 'ruamel-yaml'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.licence_check.read_pyproject(pkg_dir='.')
 
@@ -819,9 +819,6 @@ Parse `pyproject.toml` from a directory (or a direct path to the file).
 
 Metadata readers that see the distributions installed on `search_path`.
 
-* **Return type:**
-  [`MetadataReaders`](#wads.licence_check.MetadataReaders)
-
 ```pycon
 >>> import sys
 >>> readers = readers_for(sys.path)
@@ -829,12 +826,12 @@ Metadata readers that see the distributions installed on `search_path`.
 'wads'
 ```
 
+* **Return type:**
+  [`MetadataReaders`](#wads.licence_check.MetadataReaders)
+
 ### wads.licence_check.requirement_extra(requirement)
 
 The extra a requirement is conditional on, or `''` if it is a hard one.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> requirement_extra('anthropic; extra == "vision"')
@@ -843,17 +840,20 @@ The extra a requirement is conditional on, or `''` if it is a hard one.
 ''
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.licence_check.requirement_name(requirement)
 
 The distribution name out of a `Requires-Dist` / requirement string.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> requirement_name('uvicorn[standard]>=0.20; python_version >= "3.9"')
 'uvicorn'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.licence_check.search_path_of(python_executable,)
 
@@ -884,9 +884,6 @@ of a family’s nine spellings is never a stance, it is the bug. A family
 nobody covers is reported rather than assumed – see
 `LicenceReport.uncovered_families`, which puts it in every run’s output
 so “we do not gate on GPL here” is a visible fact rather than an inference.
-
-* **Return type:**
-  [`SelfCheck`](#wads.licence_check.SelfCheck)
 
 ```pycon
 >>> checked = self_check(LicencePolicy())
@@ -936,15 +933,15 @@ And so does one broad enough to flag everything:
 over-broad, and it names what it wrongly flagged: True
 ```
 
+* **Return type:**
+  [`SelfCheck`](#wads.licence_check.SelfCheck)
+
 ### wads.licence_check.verdict(name, /, \*, policy, read_metadata=<function metadata>, conditional=False)
 
 Judge one distribution against `policy`.
 
 An adjudicated exception wins over everything, including a forbidden match:
 that is what recording one *means*, and the reason travels with it.
-
-* **Return type:**
-  [`Verdict`](#wads.licence_check.Verdict)
 
 ```pycon
 >>> from email import message_from_string
@@ -991,12 +988,12 @@ which applies to which file, so it becomes a question rather than a failure:
 'unclassified'
 ```
 
+* **Return type:**
+  [`Verdict`](#wads.licence_check.Verdict)
+
 ### wads.licence_check.walk_closure(requirements, /, \*, read_requires=<function requires>, include_extras=())
 
 The closure of `requirements` (raw requirement strings), marked up.
-
-* **Return type:**
-  [`ClosureWalk`](#wads.licence_check.ClosureWalk)
 
 ```pycon
 >>> tree = {'app': ['requests', 'tomli; python_version < "3.11"'],
@@ -1007,3 +1004,6 @@ The closure of `requirements` (raw requirement strings), marked up.
 >>> sorted(walk.conditional)
 ['tomli']
 ```
+
+* **Return type:**
+  [`ClosureWalk`](#wads.licence_check.ClosureWalk)

@@ -13,6 +13,7 @@
         <title>wads.pack - wads</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -460,7 +461,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>commit_message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Your commit message</p></li>
 <li><p><strong>work_tree</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The relative or absolute path of the working directory. Defaults to ‘.’.</p></li>
-<li><p><strong>git_dir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span>) – The relative or absolute path of the git directory. If None, it will be taken to be “{work_tree}/.git/”. Defaults to None.</p></li>
+<li><p><strong>git_dir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The relative or absolute path of the git directory. If None, it will be taken to be “{work_tree}/.git/”. Defaults to None.</p></li>
 <li><p><strong>auto_choose_default_action</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Set to True if you don’t want to be prompted and automatically select the default action. Defaults to False.</p></li>
 <li><p><strong>bypass_docstring_validation</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Set to True if you don’t want to check if a docstring exists for every module, class and function. Defaults to False.</p></li>
 <li><p><strong>bypass_tests</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Set to True if you don’t want to run doctests and other tests. Defaults to False.</p></li>
@@ -479,15 +480,15 @@
 <p>Routes through <a class="reference internal" href="#wads.pack.http_get_json" title="wads.pack.http_get_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">http_get_json()</span></code></a>, so it works whether or not the optional
 <code class="docutils literal notranslate"><span class="pre">requests</span></code> dependency is installed (urllib fallback), and returns <code class="docutils literal notranslate"><span class="pre">None</span></code>
 when the package isn’t on PyPI instead of raising.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">current_pypi_version</span><span class="p">(</span><span class="s1">'wads'</span><span class="p">)</span>
 <span class="go">'0.1.19'</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -499,11 +500,6 @@ Optionally validates the pkg_dir is actually one (has a pkg_name/__init__.py fil
 or a module/package name string.</p>
 <p><code class="code docutils literal notranslate"><span class="pre">pkg_spec</span></code> can be an imported package (must be a locally developped package)
 whose name and containing directory is the same):</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">wads</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">pkg_name</span> <span class="o">=</span> <span class="n">extract_pkg_dir_and_name</span><span class="p">(</span><span class="n">wads</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_name</span>
@@ -522,32 +518,32 @@ whose name and containing directory is the same):</p>
 <span class="go">('/home/user/projects/wads', 'wads')</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.pack.folders_that_have_init_py_files">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">folders_that_have_init_py_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#folders_that_have_init_py_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.folders_that_have_init_py_files" title="Link to this definition">¶</a></dt>
 <dd><p>Get a list of folders in the package directory that have an __init__.py file.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="s1">'/home/user/projects/wads'</span><span class="p">)</span>
+<span class="go">['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">folders_that_have_init_py_files</span><span class="p">(</span><span class="s1">'/home/user/projects/wads'</span><span class="p">)</span>
-<span class="go">['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.pack.get_module_path">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">get_module_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#get_module_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.get_module_path" title="Link to this definition">¶</a></dt>
 <dd><p>Get the path to the directory containing the module’s code file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_module_path</span><span class="p">(</span><span class="n">os</span><span class="p">)</span>
 <span class="go">'/usr/lib/python3.8'</span>
@@ -560,6 +556,11 @@ whose name and containing directory is the same):</p>
 </pre></div>
 </div>
 <p>Read more: <a class="reference external" href="https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632">https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -644,7 +645,7 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <dd><p>Make ah http request to url and get json, and return as python dict</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -665,11 +666,6 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <dt class="sig sig-object py" id="wads.pack.postprocess_ini_section_items">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">postprocess_ini_section_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#postprocess_ini_section_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.postprocess_ini_section_items" title="Link to this definition">¶</a></dt>
 <dd><p>Transform newline-separated string values into actual list of strings (assuming that intent)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section_from_ini</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'wads'</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="s1">'keywords'</span><span class="p">:</span> <span class="s1">'</span><span class="se">\n\t</span><span class="s1">packaging</span><span class="se">\n\t</span><span class="s1">publishing'</span>
@@ -679,17 +675,17 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <span class="go">{'name': 'wads', 'keywords': ['packaging', 'publishing']}</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.pack.preprocess_ini_section_items">
 <span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">preprocess_ini_section_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#preprocess_ini_section_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.preprocess_ini_section_items" title="Link to this definition">¶</a></dt>
 <dd><p>Transform list values into newline-separated strings, in view of writing the value to a ini formatted section</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'wads'</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="s1">'keywords'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'documentation'</span><span class="p">,</span> <span class="s1">'packaging'</span><span class="p">,</span> <span class="s1">'publishing'</span><span class="p">]</span>
@@ -702,11 +698,16 @@ Runs in a sequence: increment_configs_version, update_setup_cfg, run_setup, twin
 <span class="go">    publishing</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.pack.process_missing_module_docstrings">
-<span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">process_missing_module_docstrings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'input'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docstr_template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&quot;&quot;&quot;\\n{user_input}\\n&quot;&quot;&quot;\\n'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#process_missing_module_docstrings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.process_missing_module_docstrings" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.pack.</span></span><span class="sig-name descname"><span class="pre">process_missing_module_docstrings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'input'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docstr_template</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&quot;&quot;&quot;\n{user_input}\n&quot;&quot;&quot;\n'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/pack.html#process_missing_module_docstrings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.pack.process_missing_module_docstrings" title="Link to this definition">¶</a></dt>
 <dd><p>Goes through modules of package, sees which ones don’t have docstrings,
 and gives you the option to write one.</p>
 <p>The function will go through all .py files (except those mentioned in exceptions),
@@ -875,7 +876,7 @@ Another option is to print the error message, log it, or issue a warning.</p></l
 <dd class="field-odd"><p><strong>package</strong> – Name of the package</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A version (string) or None if there was an exception (usually means there</p>
@@ -976,7 +977,7 @@ Another option is to print the error message, log it, or issue a warning.</p></l
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=3889e2c3"></script>
+</div><script src="../_static/documentation_options.js?v=91c996a5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

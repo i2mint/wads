@@ -40,9 +40,6 @@ PyPI is always checked. Pass `npm=True` when the project also publishes to npm.
 GitHub is checked only with `github=True` (explicit user request): GitHub
 calls are rate limited, and PyPI/npm are what decide a package name.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 Returns a dict with keys:
 : name, valid_pep508, pypi_available, pypi_url,
   npm_available, npm_url, github_available, github_url
@@ -54,6 +51,9 @@ Returns a dict with keys:
 >>> result["valid_pep508"]
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.project_setup.check_names(names, , org=None, \*\*kwargs)
 
@@ -128,13 +128,13 @@ Check if a package name is unclaimed on the npm registry (HTTP 404 = free).
 
 Returns None when the registry could not give a definite answer.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> is_available_on_npm("zzz-nonexistent-pkg-12345")
 True
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### wads.project_setup.is_available_on_pypi(name)
 
@@ -142,15 +142,15 @@ Check if a package name is unclaimed on PyPI.
 
 Returns True if the name is available (no package exists with that name).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_available_on_pypi("wads")
 False
 >>> is_available_on_pypi("zzz_nonexistent_pkg_12345")
 True
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.project_setup.list_name_candidate_files()
 

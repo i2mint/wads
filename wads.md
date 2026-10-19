@@ -1,4 +1,4 @@
-> built 2026-10-14 05:17 UTC from 17c8385 (master) · wads 0.2.44. Details: build_info.json
+> built 2026-10-19 11:21 UTC from a2a67f6 (master) · wads 0.2.45. Details: build_info.json
 
 # index.html.md
 
@@ -1863,13 +1863,13 @@ can ever spend or publish.
 | [`RunResult`](_autosummary/wads.ci_local.html.md#wads.ci_local.RunResult)(returncode[, stdout])               | What a runner reports back: the exit code, and stdout when it was captured.     |
 | [`Step`](_autosummary/wads.ci_local.html.md#wads.ci_local.Step)(name[, argv, check, description, ...])   | One thing CI would do: a command (`argv`) or an in-process `check`.             |
 
-### *class* wads.ci_local.CILocalReport(project, publish, trigger_mode, python_versions, outcomes=<factory>, notes=<factory>, values=<factory>)
+### *class* wads.ci_local.CILocalReport(project, publish, trigger_mode, python_versions, outcomes=list(), notes=list(), values=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The outcome of a `wads ci-local` run, rendered the way CI would summarise it.
 
-#### *property* failure *: [Step](_autosummary/wads.ci_local.html.md#wads.ci_local.Step) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+#### *property* failure *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[Step](_autosummary/wads.ci_local.html.md#wads.ci_local.Step)]*
 
 The blocking step that failed, if any.
 
@@ -1911,15 +1911,15 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))
 ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
  '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',
  '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_local.render_plan(steps)
 
@@ -1969,9 +1969,6 @@ Refuses outward side effects (upload, push) while pytest is running.
 
 `uv build` selection flags for `[tool.wads.ci.build]`.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> uv_build_args()
 []
@@ -1981,12 +1978,12 @@ Refuses outward side effects (upload, push) while pytest is running.
 ['--sdist']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.ci_local.venv_python(venv, , platform='posix')
 
 Path of the interpreter inside a venv directory.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> venv_python("v", platform="posix")
@@ -1994,6 +1991,9 @@ Path of the interpreter inside a venv directory.
 >>> venv_python("v", platform="nt")
 'v/Scripts/python.exe'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/wads.ci_secrets.html.md
@@ -2128,9 +2128,6 @@ the opt-in JSON transport secret + the superset.
 
 Return `True` iff `name` is already a safe, valid secret name.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_valid_secret_name("OPENAI_API_KEY")
 True
@@ -2139,6 +2136,9 @@ False
 >>> is_valid_secret_name("GITHUB_TOKEN")
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.ci_secrets.named_transport_names(names)
 
@@ -2153,13 +2153,13 @@ stderr lists what was left out and how to pass it (#107). Names recorded
 in `[tool.wads.ci.env].variables` never get here: they are not secrets.
 Order-preserving.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
-
 ```pycon
 >>> named_transport_names(["PYPI_PASSWORD", "HF_TOKEN"])
 ['PYPI_PASSWORD', 'HF_TOKEN']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ### wads.ci_secrets.normalize_secret_name(name)
 
@@ -2168,9 +2168,6 @@ Force `name` to a valid `UPPER_SNAKE` secret/env-var name.
 Hyphens, dots and spaces become underscores; the result is upper-cased.
 Inputs that look like a *value* rather than a *name* are rejected, to guard
 against accidentally committing a secret value.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> normalize_secret_name("my-api.key")
@@ -2192,30 +2189,33 @@ Traceback (most recent call last):
 InvalidSecretName: ...
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.render_stub_json_transport(, indent=6)
 
 Render the caller stub’s JSON-transport `secrets:` line (opt-in).
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> print(render_stub_json_transport())
       WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.render_stub_secrets_passthrough(names=('PYPI_PASSWORD', 'TEST_PYPI_PASSWORD', 'NPM_TOKEN', 'SSH_PRIVATE_KEY', 'CODECOV_TOKEN', 'DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'PERPLEXITY_API_KEY', 'REPLICATE_API_TOKEN', 'TOGETHER_API_KEY', 'XAI_API_KEY', 'FAL_KEY', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'TAVILY_API_KEY', 'COMPOSIO_API_KEY', 'SKILLSDIRECTORY_API_KEY', 'NEWSDATA_API_KEY', 'LANGSMITH_API_KEY', 'HF_TOKEN', 'HF_WRITE_TOKEN', 'HUGGINGFACE_TOKEN', 'KAGGLE_USERNAME', 'KAGGLE_KEY', 'WANDB_API_KEY', 'PINECONE_API_KEY', 'ELEVEN_API_KEY', 'ELEVENLABS_API_KEY', 'SUNO_API_KEY', 'SPOTIFY_API_CLIENT_ID', 'SPOTIFY_API_CLIENT_SECRET', 'SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'ALPACA_API_KEY', 'ALPACA_SECRET_KEY', 'APCA_API_KEY_ID', 'APCA_API_SECRET_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GCP_SA_KEY', 'GOOGLE_APPLICATION_CREDENTIALS_JSON', 'SLACK_BOT_TOKEN', 'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL', 'TELEGRAM_BOT_TOKEN', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'SENDGRID_API_KEY', 'STRIPE_SECRET_KEY', 'DATABASE_URL', 'MONGODB_URI', 'REDIS_URL'), , indent=6)
 
 Render a caller stub’s *named* `secrets:` pass-through block (the default).
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> print(render_stub_secrets_passthrough(["PYPI_PASSWORD", "NPM_TOKEN"]))
       PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.render_workflow_call_secrets(names=('WADS_CI_SECRETS_JSON', 'PYPI_PASSWORD', 'TEST_PYPI_PASSWORD', 'NPM_TOKEN', 'SSH_PRIVATE_KEY', 'CODECOV_TOKEN', 'DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'PERPLEXITY_API_KEY', 'REPLICATE_API_TOKEN', 'TOGETHER_API_KEY', 'XAI_API_KEY', 'FAL_KEY', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'TAVILY_API_KEY', 'COMPOSIO_API_KEY', 'SKILLSDIRECTORY_API_KEY', 'NEWSDATA_API_KEY', 'LANGSMITH_API_KEY', 'HF_TOKEN', 'HF_WRITE_TOKEN', 'HUGGINGFACE_TOKEN', 'KAGGLE_USERNAME', 'KAGGLE_KEY', 'WANDB_API_KEY', 'PINECONE_API_KEY', 'ELEVEN_API_KEY', 'ELEVENLABS_API_KEY', 'SUNO_API_KEY', 'SPOTIFY_API_CLIENT_ID', 'SPOTIFY_API_CLIENT_SECRET', 'SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'ALPACA_API_KEY', 'ALPACA_SECRET_KEY', 'APCA_API_KEY_ID', 'APCA_API_SECRET_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GCP_SA_KEY', 'GOOGLE_APPLICATION_CREDENTIALS_JSON', 'SLACK_BOT_TOKEN', 'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL', 'TELEGRAM_BOT_TOKEN', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'SENDGRID_API_KEY', 'STRIPE_SECRET_KEY', 'DATABASE_URL', 'MONGODB_URI', 'REDIS_URL'), , indent=4)
 
@@ -2225,9 +2225,6 @@ Every secret is declared `required: false` — the publish job enforces
 `PYPI_PASSWORD` at run time with a clear message, and the export action
 enforces any repo-declared `required_envvars`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> print(render_workflow_call_secrets(["PYPI_PASSWORD", "OPENAI_API_KEY"]))
     PYPI_PASSWORD:
@@ -2236,12 +2233,12 @@ enforces any repo-declared `required_envvars`.
       required: false
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.stub_transport(stub)
 
 The secrets transport of a stub’s content: `"json"` or `"named"`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub_transport("    secrets:\n" + render_stub_json_transport() + "\n")
@@ -2250,12 +2247,12 @@ The secrets transport of a stub’s content: `"json"` or `"named"`.
 'named'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.stub_with_named_transport(stub, names)
 
 Rewrite a stub’s secrets region to the named transport, passing `names`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub = "jobs:\n  ci:\n    secrets:\n" + render_stub_json_transport() + "\n"
@@ -2263,6 +2260,9 @@ Rewrite a stub’s secrets region to the named transport, passing `names`.
 ...     "      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n")
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.stub_with_transport(stub, , transport='named', names=('PYPI_PASSWORD',))
 
@@ -2274,9 +2274,6 @@ above `secrets:` are replaced too, so a stub never describes a transport
 it does not use. `names` is used by the named transport only. A stub
 whose `ci` job has no `secrets:` mapping block (`secrets: inherit`,
 say) raises `ValueError`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> json_stub = (
@@ -2295,6 +2292,9 @@ True
 ...     json_stub, names=["PYPI_PASSWORD"])
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.warn_names_outside_superset(names)
 
@@ -2363,7 +2363,7 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`FlipResult`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.FlipResult)(repo[, status, changes, notes])   | What [`flip_to_on_demand()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.flip_to_on_demand) changed or, on a dry run, would change.   |
 |-----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 
-### *class* wads.ci_trigger.FlipResult(repo, status='unchanged', changes=<factory>, notes=<factory>)
+### *class* wads.ci_trigger.FlipResult(repo, status='unchanged', changes=dict(), notes=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2384,9 +2384,6 @@ Unified diff of every change.
 
 Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> classify_ci_workflow(None)
 'missing'
@@ -2397,6 +2394,9 @@ Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.
 >>> classify_ci_workflow("uses: actions/setup-python@v5")
 'other'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_trigger.commit_paths(repo, paths, , message)
 
@@ -2481,9 +2481,6 @@ Split what a stub holds beyond the template into `(with_inputs, dropped)`.
 re-render; `dropped` names everything else a re-render would silently lose.
 Raises `yaml.YAMLError` when the text does not parse.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
-
 ```pycon
 >>> stub_customizations(
 ...     "on: [push, pull_request]\njobs:\n  ci:\n    uses: x\n"
@@ -2494,12 +2491,12 @@ Raises `yaml.YAMLError` when the text does not parse.
 ['`on: ["push"]`', 'job `lint`']
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
+
 ### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]')
 
 The on-demand stub’s job-level pre-filter, as a workflow expression.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub_if_expression("[run ci]")
@@ -2512,6 +2509,9 @@ A quote in the marker is doubled, which is how workflow expressions escape it:
 >>> stub_if_expression("it's")
 "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_trigger.stub_inputs_of(ci_path)
 
@@ -2528,15 +2528,15 @@ Defaults (`@master`, `named`) for anything that is not a stub. A
 re-render writes the named transport whatever this reports
 (i2mint/wads#74, #101); see [`wads.migration.migrate_ci_to_stub()`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_stub).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
 {'pin': '@0.2.30', 'transport': 'named'}
 >>> stub_shape(None)
 {'pin': '@master', 'transport': 'named'}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.ci_trigger.trigger_for_workflow(ci_path)
 
@@ -2569,9 +2569,6 @@ Which of `paths` have uncommitted changes (`git status --porcelain` lines).
 
 Validate a (mode, marker) pair with the same rules the CI setup job applies.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> validate_trigger("on-demand", "[run ci]")
 ('on-demand', '[run ci]')
@@ -2580,6 +2577,9 @@ Traceback (most recent call last):
   ...
 ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 
 # _autosummary/wads.config_comparison.html.md
@@ -3367,7 +3367,7 @@ against the other shape reads as configured and is not. These are rejected
 rather than silently aliased – but rejected with the migration, not with a
 bare “unknown key”, because the person hitting this did not choose it.
 
-### *class* wads.licence_check.LicencePolicy(allowed=('\\\\\\\\bMIT\\\\\\\\b', '\\\\\\\\bBSD\\\\\\\\b', '\\\\\\\\b0BSD\\\\\\\\b', '\\\\\\\\bApache[- ]?2', '\\\\\\\\bApache Software License\\\\\\\\b', '\\\\\\\\bISC\\\\\\\\b', '\\\\\\\\bPython Software Foundation\\\\\\\\b', '\\\\\\\\bPSF\\\\\\\\b', '\\\\\\\\bHPND\\\\\\\\b', '\\\\\\\\bUnlicense\\\\\\\\b', '\\\\\\\\bCC0\\\\\\\\b', '\\\\\\\\bZlib\\\\\\\\b', '\\\\\\\\bBoost Software License\\\\\\\\b', '\\\\\\\\bBSL[- ]?1\\\\\\\\.0\\\\\\\\b'), forbidden=('\\\\\\\\bAGPL', '\\\\\\\\bAffero\\\\\\\\b', '\\\\\\\\bGPL(?![\\\\\\\\w.+-]\*\\\\\\\\s+with\\\\\\\\b)', '\\\\\\\\bGNU General Public\\\\\\\\b', '\\\\\\\\bLGPL', '\\\\\\\\bLesser General Public\\\\\\\\b', '\\\\\\\\bLibrary General Public\\\\\\\\b', '\\\\\\\\bNethack General Public\\\\\\\\b', '\\\\\\\\bEUPL\\\\\\\\b', '\\\\\\\\bBusiness Source\\\\\\\\b', '\\\\\\\\bBUSL\\\\\\\\b', '\\\\\\\\bSSPL\\\\\\\\b', '\\\\\\\\bElastic[- ]?(2\\\\\\\\.0|License|v2)\\\\\\\\b', '(?: \\\\\\\\b|-)(?:open)?rail(?:-m)?\\\\\\\\b', '\\\\\\\\bCC[- ]BY[- ]NC\\\\\\\\b', '\\\\\\\\bNon[- ]?Commercial\\\\\\\\b', '\\\\\\\\bProprietary\\\\\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
+### *class* wads.licence_check.LicencePolicy(allowed=('\\\\bMIT\\\\b', '\\\\bBSD\\\\b', '\\\\b0BSD\\\\b', '\\\\bApache[- ]?2', '\\\\bApache Software License\\\\b', '\\\\bISC\\\\b', '\\\\bPython Software Foundation\\\\b', '\\\\bPSF\\\\b', '\\\\bHPND\\\\b', '\\\\bUnlicense\\\\b', '\\\\bCC0\\\\b', '\\\\bZlib\\\\b', '\\\\bBoost Software License\\\\b', '\\\\bBSL[- ]?1\\\\.0\\\\b'), forbidden=('\\\\bAGPL', '\\\\bAffero\\\\b', '\\\\bGPL(?![\\\\w.+-]\*\\\\s+with\\\\b)', '\\\\bGNU General Public\\\\b', '\\\\bLGPL', '\\\\bLesser General Public\\\\b', '\\\\bLibrary General Public\\\\b', '\\\\bNethack General Public\\\\b', '\\\\bEUPL\\\\b', '\\\\bBusiness Source\\\\b', '\\\\bBUSL\\\\b', '\\\\bSSPL\\\\b', '\\\\bElastic[- ]?(2\\\\.0|License|v2)\\\\b', '(?: \\\\b|-)(?:open)?rail(?:-m)?\\\\b', '\\\\bCC[- ]BY[- ]NC\\\\b', '\\\\bNon[- ]?Commercial\\\\b', '\\\\bProprietary\\\\b'), exceptions=<factory>, include_extras=(), unknown_is_failure=True, unclassified_is_failure=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3388,14 +3388,14 @@ calls `typing-extensions`. Getting this wrong is invisible: the
 exception simply never applies and the report keeps flagging a name
 somebody believes they already adjudicated.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> LicencePolicy(exceptions={'Ruamel.YAML': 'audited'}).exception_for(
 ...     'ruamel-yaml')
 'audited'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 #### *classmethod* from_mapping(config,)
 
@@ -3410,9 +3410,6 @@ Value TYPES are checked too, and for the same reason the key names are:
 `allowed = "MIT"` used to become the three regexes `M`, `I`, `T`
 without a word, and an `exceptions` array-of-tables used to collapse
 into `{'dependency': 'reason'}`. Both read as configured. Neither was.
-
-* **Return type:**
-  [`LicencePolicy`](_autosummary/wads.licence_check.html.md#wads.licence_check.LicencePolicy)
 
 ```pycon
 >>> policy = LicencePolicy.from_mapping(
@@ -3455,6 +3452,9 @@ migration rather than with a bare “unknown key”:
 `allowed` (it pairs with `forbidden`, where `allow` had no counterpart)
 ```
 
+* **Return type:**
+  [`LicencePolicy`](_autosummary/wads.licence_check.html.md#wads.licence_check.LicencePolicy)
+
 #### *classmethod* from_pyproject(pkg_dir='.', , , pyproject=None)
 
 The policy declared in `[tool.wads.licence]`, or the defaults.
@@ -3486,9 +3486,6 @@ the whole string as one blob gets that backwards – `marisa-trie`
 declares `MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)` and was failed on
 the option nobody has to take:
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> LicencePolicy().permissive_option('MIT AND (BSD-2-Clause OR LGPL-2.1-or-later)')
 'MIT AND (BSD-2-Clause'
@@ -3501,6 +3498,9 @@ declaration stands as it is:
 >>> LicencePolicy().permissive_option('LGPL-2.1-only OR MPL-1.1')
 ''
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### *class* wads.licence_check.LicenceReport(policy, declared, verdicts, canaries=(), uncovered_families=(), pkg_dir='.')
 
@@ -3561,7 +3561,7 @@ The pair of readers [`check()`](_autosummary/wads.licence_check.html.md#wads.lic
 
 Alias for field number 0
 
-#### read_requires *: [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str)], [list](https://docs.python.org/3/builtins/stdtypes.html#list) | [None](https://docs.python.org/3/builtins/constants.html#None)]*
+#### read_requires *: [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str)], [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[list](https://docs.python.org/3/builtins/stdtypes.html#list)]]*
 
 Alias for field number 1
 
@@ -3661,9 +3661,6 @@ By default the walk skips requirements gated on `extra == "..."`, because
 a bare install does not take them. `include_extras=('*',)` takes all of
 them; a tuple of names takes those.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
-
 ```pycon
 >>> tree = {
 ...     'citeget': ['html2text', 'requests', 'pytest; extra == "test"'],
@@ -3688,6 +3685,9 @@ An uninstalled name simply ends that branch – it is still reported by
 [`walk_closure()`](_autosummary/wads.licence_check.html.md#wads.licence_check.walk_closure) is the same walk, and additionally says which members
 are reachable only through an environment-marker-gated requirement.
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
 ### wads.licence_check.declare(dist_name, /, \*, read_metadata=<function metadata>)
 
 The DECLARATION, in order of precision – never the licence document.
@@ -3696,9 +3696,6 @@ The DECLARATION, in order of precision – never the licence document.
 something with `.get` / `.get_all`, which is what both
 [`importlib.metadata.metadata()`](https://docs.python.org/3/library/importlib.metadata.html#importlib.metadata.metadata) and a parsed `METADATA` email message
 give you.
-
-* **Return type:**
-  [`Declaration`](_autosummary/wads.licence_check.html.md#wads.licence_check.Declaration)
 
 ```pycon
 >>> from email import message_from_string
@@ -3732,6 +3729,9 @@ copyleft:
 'Copyright (c) 2005-2024, NumPy Developers.'
 ```
 
+* **Return type:**
+  [`Declaration`](_autosummary/wads.licence_check.html.md#wads.licence_check.Declaration)
+
 ### wads.licence_check.declared_dependencies(pkg_dir='.', , , include_extras=(), pyproject=None)
 
 Every distribution the project DECLARES, read from `pyproject.toml`.
@@ -3741,9 +3741,6 @@ forgotten in a hand-written list is a dependency the perimeter never looks
 at, and the perimeter reads as green either way.
 
 [`declared_requirements()`](_autosummary/wads.licence_check.html.md#wads.licence_check.declared_requirements) without the version specifiers and markers.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
 
 ```pycon
 >>> declared_dependencies(pyproject={'project': {
@@ -3757,6 +3754,9 @@ at, and the perimeter reads as green either way.
 ... }})
 ('html2text', 'pytest')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
 
 ### wads.licence_check.declared_licence(dist_name, /, \*, read_metadata=<function metadata>)
 
@@ -3787,9 +3787,6 @@ function cannot see (`setup.py`, `requirements.txt`), and reporting
 “declared: 0 … PERIMETER HOLDS” over it is the confident-green failure this
 module exists to stop.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
-
 ```pycon
 >>> declared_requirements(pyproject={'project': {
 ...     'dependencies': ['html2text', 'requests>=2'],
@@ -3804,6 +3801,9 @@ module exists to stop.
 this project lists `dependencies` in [project].dynamic, so
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
 ### wads.licence_check.has_environment_marker(requirement,)
 
 Whether a requirement is gated on an ENVIRONMENT marker, not just an extra.
@@ -3816,9 +3816,6 @@ distribution is the same confident-green failure as reading the wrong
 environment altogether. Telling the two apart is what lets one be a note and
 the other a failure.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> has_environment_marker('tomli>=1.0.0; python_version < "3.11"')
 True
@@ -3827,6 +3824,9 @@ False
 >>> has_environment_marker('requests>=2')
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.licence_check.main(argv=None)
 
@@ -3839,13 +3839,13 @@ Console-script entry point. Returns the process exit code.
 
 PEP 503 normalisation, so `ruamel.yaml` and `ruamel-yaml` are one name.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> normalise('Ruamel.YAML')
 'ruamel-yaml'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.licence_check.read_pyproject(pkg_dir='.')
 
@@ -3858,9 +3858,6 @@ Parse `pyproject.toml` from a directory (or a direct path to the file).
 
 Metadata readers that see the distributions installed on `search_path`.
 
-* **Return type:**
-  [`MetadataReaders`](_autosummary/wads.licence_check.html.md#wads.licence_check.MetadataReaders)
-
 ```pycon
 >>> import sys
 >>> readers = readers_for(sys.path)
@@ -3868,12 +3865,12 @@ Metadata readers that see the distributions installed on `search_path`.
 'wads'
 ```
 
+* **Return type:**
+  [`MetadataReaders`](_autosummary/wads.licence_check.html.md#wads.licence_check.MetadataReaders)
+
 ### wads.licence_check.requirement_extra(requirement)
 
 The extra a requirement is conditional on, or `''` if it is a hard one.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> requirement_extra('anthropic; extra == "vision"')
@@ -3882,17 +3879,20 @@ The extra a requirement is conditional on, or `''` if it is a hard one.
 ''
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.licence_check.requirement_name(requirement)
 
 The distribution name out of a `Requires-Dist` / requirement string.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> requirement_name('uvicorn[standard]>=0.20; python_version >= "3.9"')
 'uvicorn'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.licence_check.search_path_of(python_executable,)
 
@@ -3923,9 +3923,6 @@ of a family’s nine spellings is never a stance, it is the bug. A family
 nobody covers is reported rather than assumed – see
 `LicenceReport.uncovered_families`, which puts it in every run’s output
 so “we do not gate on GPL here” is a visible fact rather than an inference.
-
-* **Return type:**
-  [`SelfCheck`](_autosummary/wads.licence_check.html.md#wads.licence_check.SelfCheck)
 
 ```pycon
 >>> checked = self_check(LicencePolicy())
@@ -3975,15 +3972,15 @@ And so does one broad enough to flag everything:
 over-broad, and it names what it wrongly flagged: True
 ```
 
+* **Return type:**
+  [`SelfCheck`](_autosummary/wads.licence_check.html.md#wads.licence_check.SelfCheck)
+
 ### wads.licence_check.verdict(name, /, \*, policy, read_metadata=<function metadata>, conditional=False)
 
 Judge one distribution against `policy`.
 
 An adjudicated exception wins over everything, including a forbidden match:
 that is what recording one *means*, and the reason travels with it.
-
-* **Return type:**
-  [`Verdict`](_autosummary/wads.licence_check.html.md#wads.licence_check.Verdict)
 
 ```pycon
 >>> from email import message_from_string
@@ -4030,12 +4027,12 @@ which applies to which file, so it becomes a question rather than a failure:
 'unclassified'
 ```
 
+* **Return type:**
+  [`Verdict`](_autosummary/wads.licence_check.html.md#wads.licence_check.Verdict)
+
 ### wads.licence_check.walk_closure(requirements, /, \*, read_requires=<function requires>, include_extras=())
 
 The closure of `requirements` (raw requirement strings), marked up.
-
-* **Return type:**
-  [`ClosureWalk`](_autosummary/wads.licence_check.html.md#wads.licence_check.ClosureWalk)
 
 ```pycon
 >>> tree = {'app': ['requests', 'tomli; python_version < "3.11"'],
@@ -4046,6 +4043,9 @@ The closure of `requirements` (raw requirement strings), marked up.
 >>> sorted(walk.conditional)
 ['tomli']
 ```
+
+* **Return type:**
+  [`ClosureWalk`](_autosummary/wads.licence_check.html.md#wads.licence_check.ClosureWalk)
 
 
 # _autosummary/wads.licensing.html.md
@@ -4199,7 +4199,7 @@ Raised when migration cannot be completed due to missing or unmapped data.
 Analyze MANIFEST.in file and provide migration guidance for Hatchling.
 
 * **Parameters:**
-  **manifest_path** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to MANIFEST.in file
+  **manifest_path** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to MANIFEST.in file
 * **Returns:**
   - exists: bool - whether file exists
   - needs_migration: bool - whether migration is needed
@@ -4251,9 +4251,6 @@ These are env vars backed by an infra secret (publish token, GitHub
 token), under their own name or an alias. A migration reports them so a
 dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> dropped_infra_ci_env_vars('''
 ... jobs:
@@ -4265,6 +4262,9 @@ dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
 ... ''')
 {'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.migration.extract_ci_env_vars(ci_text)
 
@@ -4323,9 +4323,6 @@ other `env:` block reads from a secret: recording it as a variable would
 take the secret out of the stub’s transport. Infra names are dropped as
 there.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> extract_ci_variable_env_vars('''
 ... env:
@@ -4336,6 +4333,9 @@ there.
 ... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.migration.main()
 
@@ -4352,7 +4352,7 @@ configuration continues to come from `[tool.wads.ci.*]` in
 `i2mint/wads/actions/read-ci-config` action.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
     locate a nearby pyproject.toml, whose `[tool.wads.ci.env]` decides
     which secrets the default named transport passes.
   * **pin** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The wads ref the stub points at. Defaults to `"@master"`
@@ -4418,7 +4418,7 @@ Since the uv template reads all configuration from pyproject.toml
 replace the workflow file with the uv template.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to the existing CI workflow file, or its content as a string.
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to the existing CI workflow file, or its content as a string.
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Optional dict with ‘project_name’ if it cannot be extracted
     from the old CI file.
 * **Returns:**
@@ -4439,7 +4439,7 @@ True
 Migrate old GitHub CI script to new 2025 format.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to old CI file or its content as string
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to old CI file or its content as string
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values for missing fields (e.g., {‘project_name’: ‘myproject’})
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -4468,10 +4468,10 @@ to generate proper configuration.
 Migrate setup.cfg to pyproject.toml format using hatching.
 
 * **Parameters:**
-  * **setup_cfg** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
+  * **setup_cfg** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values to use for missing required fields
   * **rules** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Custom transformation rules (defaults to setup_cfg_to_pyproject_toml_rules)
-  * **project_dir** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
+  * **project_dir** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
     `tests/` there, they point at the package so CI collects its doctests
     and nothing else. Defaults to the directory of *setup_cfg* when it is a
     file path; `None` keeps the template’s `["tests"]`.
@@ -4744,13 +4744,13 @@ Routes through [`http_get_json()`](_autosummary/wads.pack.html.md#wads.pack.http
 `requests` dependency is installed (urllib fallback), and returns `None`
 when the package isn’t on PyPI instead of raising.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> current_pypi_version('wads')
 '0.1.19'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### wads.pack.extract_pkg_dir_and_name(pkg_spec, , validate=True)
 
@@ -4762,9 +4762,6 @@ or a module/package name string.
 
 `pkg_spec` can be an imported package (must be a locally developped package)
 whose name and containing directory is the same):
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> import os, wads
@@ -4789,24 +4786,24 @@ Or you can specify the path to the package directory explicitly:
 ('/home/user/projects/wads', 'wads')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.pack.folders_that_have_init_py_files(pkg_dir)
 
 Get a list of folders in the package directory that have an \_\_init_\_.py file.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> folders_that_have_init_py_files('/home/user/projects/wads')
 ['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.pack.get_module_path(module)
 
 Get the path to the directory containing the module’s code file.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> import os
@@ -4821,6 +4818,9 @@ Get the path to the directory containing the module’s code file.
 ```
 
 Read more: [https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632](https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632)
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.pack.get_name_from_configs(pkg_dir, , assert_exists=True, validate_name=True)
 
@@ -4894,9 +4894,6 @@ Entry point of the `pack` console script.
 
 Transform newline-separated string values into actual list of strings (assuming that intent)
 
-* **Return type:**
-  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
-
 ```pycon
 >>> section_from_ini = {
 ...     'name': 'wads',
@@ -4907,12 +4904,12 @@ Transform newline-separated string values into actual list of strings (assuming 
 {'name': 'wads', 'keywords': ['packaging', 'publishing']}
 ```
 
+* **Return type:**
+  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
+
 ### wads.pack.preprocess_ini_section_items(items)
 
 Transform list values into newline-separated strings, in view of writing the value to a ini formatted section
-
-* **Return type:**
-  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
 
 ```pycon
 >>> section = {
@@ -4927,7 +4924,10 @@ keywords =
     publishing
 ```
 
-### wads.pack.process_missing_module_docstrings(, pkg_dir, action='input', exceptions=(), docstr_template='"""\\\\n{user_input}\\\\n"""\\\\n')
+* **Return type:**
+  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
+
+### wads.pack.process_missing_module_docstrings(, pkg_dir, action='input', exceptions=(), docstr_template='"""\\n{user_input}\\n"""\\n')
 
 Goes through modules of package, sees which ones don’t have docstrings,
 and gives you the option to write one.
@@ -5301,9 +5301,6 @@ Apply one frontend profile component to an existing project directory.
 `subdir` and `package_manager` default to the selected profile’s
 defaults. Returns the [`wads.templating.GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult).
 
-* **Return type:**
-  [`GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult)
-
 ```pycon
 >>> import tempfile
 >>> d = tempfile.mkdtemp()
@@ -5312,6 +5309,9 @@ defaults. Returns the [`wads.templating.GenerationResult`](_autosummary/wads.tem
 ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
  'ts/src/index.ts', 'ts/tsconfig.json']
 ```
+
+* **Return type:**
+  [`GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult)
 
 ### wads.profiles.apply_npm_overlay(pkg_dir, , project_name, description='', license=None, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', overwrite=(), on_add=None, on_skip=None)
 
@@ -5421,9 +5421,6 @@ PyPI is always checked. Pass `npm=True` when the project also publishes to npm.
 GitHub is checked only with `github=True` (explicit user request): GitHub
 calls are rate limited, and PyPI/npm are what decide a package name.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 Returns a dict with keys:
 : name, valid_pep508, pypi_available, pypi_url,
   npm_available, npm_url, github_available, github_url
@@ -5435,6 +5432,9 @@ Returns a dict with keys:
 >>> result["valid_pep508"]
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.project_setup.check_names(names, , org=None, \*\*kwargs)
 
@@ -5509,13 +5509,13 @@ Check if a package name is unclaimed on the npm registry (HTTP 404 = free).
 
 Returns None when the registry could not give a definite answer.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> is_available_on_npm("zzz-nonexistent-pkg-12345")
 True
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### wads.project_setup.is_available_on_pypi(name)
 
@@ -5523,15 +5523,15 @@ Check if a package name is unclaimed on PyPI.
 
 Returns True if the name is available (no package exists with that name).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_available_on_pypi("wads")
 False
 >>> is_available_on_pypi("zzz_nonexistent_pkg_12345")
 True
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.project_setup.list_name_candidate_files()
 
@@ -5880,9 +5880,6 @@ Matches the publish env-var names tools read, the wads publish secrets, and
 any other PyPI-ish credential name, case-insensitively (GitHub secret names
 are case-insensitive).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")
 True
@@ -5895,6 +5892,9 @@ False
 >>> is_publish_credential("OPENAI_API_KEY")
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.scripts.export_ci_env.main()
 
@@ -6518,7 +6518,7 @@ the (text) file contents, read lazily on access.
 ['a.txt']
 ```
 
-### *class* wads.templating.GenerationResult(added=<factory>, skipped=<factory>, errored=<factory>)
+### *class* wads.templating.GenerationResult(added=list(), skipped=list(), errored=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -6551,13 +6551,13 @@ Actions) and `${...}` (shell).
 
 Legacy `#TOKEN#` substitution used by the older CI templates.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> apply_placeholders("name=#NAME#", {"#NAME#": "wads"})
 'name=wads'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.templating.generate(target_dir, artifacts, context, , overwrite=(), on_add=None, on_skip=None, on_error=None)
 
@@ -6581,13 +6581,13 @@ Extra keyword arguments override the defaults (e.g. `undefined`).
 
 Render `content` as a Jinja2 template with wads delimiters.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> render("v<< major >>.<< minor >>", {"major": 1, "minor": 2})
 'v1.2'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/wads.toml_util.html.md
@@ -6780,14 +6780,14 @@ Read user preferences from preferences.toml.
 
 Returns an empty dict if the file doesn’t exist.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> prefs = read_user_preferences()
 >>> isinstance(prefs, dict)
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.user_dirs.user_preferences_path()
 
@@ -7030,18 +7030,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-14 05:17 UTC** from commit <a href="https://github.com/i2mint/wads/commit/17c838541179d93bc03f45f65f104fcc222bc368"><code>17c8385</code></a> on branch <code>master</code>, for **wads 0.2.44** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 11:21 UTC** from commit <a href="https://github.com/i2mint/wads/commit/a2a67f658c2be7111b725e14f34ae0a98718ac12"><code>a2a67f6</code></a> on branch <code>master</code>, for **wads 0.2.45** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.44) is behind the latest release on PyPI (0.2.45): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.45) is behind the latest release on PyPI (0.2.46): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/17c838541179d93bc03f45f65f104fcc222bc368"><code>17c838541179d93bc03f45f65f104fcc222bc368</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/a2a67f658c2be7111b725e14f34ae0a98718ac12"><code>a2a67f658c2be7111b725e14f34ae0a98718ac12</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7052,9 +7052,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/38515565741">38515565741</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/39243753104">39243753104</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>17c838541179d93bc03f45f65f104fcc222bc368</code> (in the history of the built commit) |
+| Event commit | <code>a2a67f658c2be7111b725e14f34ae0a98718ac12</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7079,13 +7079,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.45/">0.2.45</a>, newer than the documented version (0.2.44).
+Latest release: <a href="https://pypi.org/project/wads/0.2.46/">0.2.46</a>, newer than the documented version (0.2.45).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 17c838541179d93bc03f45f65f104fcc222bc368
+git checkout a2a67f658c2be7111b725e14f34ae0a98718ac12
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

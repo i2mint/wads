@@ -128,9 +128,6 @@ the opt-in JSON transport secret + the superset.
 
 Return `True` iff `name` is already a safe, valid secret name.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_valid_secret_name("OPENAI_API_KEY")
 True
@@ -139,6 +136,9 @@ False
 >>> is_valid_secret_name("GITHUB_TOKEN")
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.ci_secrets.named_transport_names(names)
 
@@ -153,13 +153,13 @@ stderr lists what was left out and how to pass it (#107). Names recorded
 in `[tool.wads.ci.env].variables` never get here: they are not secrets.
 Order-preserving.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
-
 ```pycon
 >>> named_transport_names(["PYPI_PASSWORD", "HF_TOKEN"])
 ['PYPI_PASSWORD', 'HF_TOKEN']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ### wads.ci_secrets.normalize_secret_name(name)
 
@@ -168,9 +168,6 @@ Force `name` to a valid `UPPER_SNAKE` secret/env-var name.
 Hyphens, dots and spaces become underscores; the result is upper-cased.
 Inputs that look like a *value* rather than a *name* are rejected, to guard
 against accidentally committing a secret value.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> normalize_secret_name("my-api.key")
@@ -192,30 +189,33 @@ Traceback (most recent call last):
 InvalidSecretName: ...
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.render_stub_json_transport(, indent=6)
 
 Render the caller stub’s JSON-transport `secrets:` line (opt-in).
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> print(render_stub_json_transport())
       WADS_CI_SECRETS_JSON: ${{ toJSON(toJSON(secrets)) }}
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.render_stub_secrets_passthrough(names=('PYPI_PASSWORD', 'TEST_PYPI_PASSWORD', 'NPM_TOKEN', 'SSH_PRIVATE_KEY', 'CODECOV_TOKEN', 'DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'PERPLEXITY_API_KEY', 'REPLICATE_API_TOKEN', 'TOGETHER_API_KEY', 'XAI_API_KEY', 'FAL_KEY', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'TAVILY_API_KEY', 'COMPOSIO_API_KEY', 'SKILLSDIRECTORY_API_KEY', 'NEWSDATA_API_KEY', 'LANGSMITH_API_KEY', 'HF_TOKEN', 'HF_WRITE_TOKEN', 'HUGGINGFACE_TOKEN', 'KAGGLE_USERNAME', 'KAGGLE_KEY', 'WANDB_API_KEY', 'PINECONE_API_KEY', 'ELEVEN_API_KEY', 'ELEVENLABS_API_KEY', 'SUNO_API_KEY', 'SPOTIFY_API_CLIENT_ID', 'SPOTIFY_API_CLIENT_SECRET', 'SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'ALPACA_API_KEY', 'ALPACA_SECRET_KEY', 'APCA_API_KEY_ID', 'APCA_API_SECRET_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GCP_SA_KEY', 'GOOGLE_APPLICATION_CREDENTIALS_JSON', 'SLACK_BOT_TOKEN', 'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL', 'TELEGRAM_BOT_TOKEN', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'SENDGRID_API_KEY', 'STRIPE_SECRET_KEY', 'DATABASE_URL', 'MONGODB_URI', 'REDIS_URL'), , indent=6)
 
 Render a caller stub’s *named* `secrets:` pass-through block (the default).
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> print(render_stub_secrets_passthrough(["PYPI_PASSWORD", "NPM_TOKEN"]))
       PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.render_workflow_call_secrets(names=('WADS_CI_SECRETS_JSON', 'PYPI_PASSWORD', 'TEST_PYPI_PASSWORD', 'NPM_TOKEN', 'SSH_PRIVATE_KEY', 'CODECOV_TOKEN', 'DOCKERHUB_USERNAME', 'DOCKERHUB_TOKEN', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY', 'COHERE_API_KEY', 'PERPLEXITY_API_KEY', 'REPLICATE_API_TOKEN', 'TOGETHER_API_KEY', 'XAI_API_KEY', 'FAL_KEY', 'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'TAVILY_API_KEY', 'COMPOSIO_API_KEY', 'SKILLSDIRECTORY_API_KEY', 'NEWSDATA_API_KEY', 'LANGSMITH_API_KEY', 'HF_TOKEN', 'HF_WRITE_TOKEN', 'HUGGINGFACE_TOKEN', 'KAGGLE_USERNAME', 'KAGGLE_KEY', 'WANDB_API_KEY', 'PINECONE_API_KEY', 'ELEVEN_API_KEY', 'ELEVENLABS_API_KEY', 'SUNO_API_KEY', 'SPOTIFY_API_CLIENT_ID', 'SPOTIFY_API_CLIENT_SECRET', 'SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'ALPACA_API_KEY', 'ALPACA_SECRET_KEY', 'APCA_API_KEY_ID', 'APCA_API_SECRET_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GCP_SA_KEY', 'GOOGLE_APPLICATION_CREDENTIALS_JSON', 'SLACK_BOT_TOKEN', 'SLACK_WEBHOOK_URL', 'DISCORD_WEBHOOK_URL', 'TELEGRAM_BOT_TOKEN', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'SENDGRID_API_KEY', 'STRIPE_SECRET_KEY', 'DATABASE_URL', 'MONGODB_URI', 'REDIS_URL'), , indent=4)
 
@@ -225,9 +225,6 @@ Every secret is declared `required: false` — the publish job enforces
 `PYPI_PASSWORD` at run time with a clear message, and the export action
 enforces any repo-declared `required_envvars`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> print(render_workflow_call_secrets(["PYPI_PASSWORD", "OPENAI_API_KEY"]))
     PYPI_PASSWORD:
@@ -236,12 +233,12 @@ enforces any repo-declared `required_envvars`.
       required: false
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.stub_transport(stub)
 
 The secrets transport of a stub’s content: `"json"` or `"named"`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub_transport("    secrets:\n" + render_stub_json_transport() + "\n")
@@ -250,12 +247,12 @@ The secrets transport of a stub’s content: `"json"` or `"named"`.
 'named'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### wads.ci_secrets.stub_with_named_transport(stub, names)
 
 Rewrite a stub’s secrets region to the named transport, passing `names`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub = "jobs:\n  ci:\n    secrets:\n" + render_stub_json_transport() + "\n"
@@ -263,6 +260,9 @@ Rewrite a stub’s secrets region to the named transport, passing `names`.
 ...     "      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}\n")
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.stub_with_transport(stub, , transport='named', names=('PYPI_PASSWORD',))
 
@@ -274,9 +274,6 @@ above `secrets:` are replaced too, so a stub never describes a transport
 it does not use. `names` is used by the named transport only. A stub
 whose `ci` job has no `secrets:` mapping block (`secrets: inherit`,
 say) raises `ValueError`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> json_stub = (
@@ -295,6 +292,9 @@ True
 ...     json_stub, names=["PYPI_PASSWORD"])
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_secrets.warn_names_outside_superset(names)
 

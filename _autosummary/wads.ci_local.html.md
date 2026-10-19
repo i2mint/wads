@@ -55,13 +55,13 @@ can ever spend or publish.
 | [`RunResult`](#wads.ci_local.RunResult)(returncode[, stdout])               | What a runner reports back: the exit code, and stdout when it was captured.     |
 | [`Step`](#wads.ci_local.Step)(name[, argv, check, description, ...])   | One thing CI would do: a command (`argv`) or an in-process `check`.             |
 
-### *class* wads.ci_local.CILocalReport(project, publish, trigger_mode, python_versions, outcomes=<factory>, notes=<factory>, values=<factory>)
+### *class* wads.ci_local.CILocalReport(project, publish, trigger_mode, python_versions, outcomes=list(), notes=list(), values=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The outcome of a `wads ci-local` run, rendered the way CI would summarise it.
 
-#### *property* failure *: [Step](#wads.ci_local.Step) | [None](https://docs.python.org/3/builtins/constants.html#None)*
+#### *property* failure *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[Step](#wads.ci_local.Step)]*
 
 The blocking step that failed, if any.
 
@@ -103,15 +103,15 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))
 ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
  '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',
  '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_local.render_plan(steps)
 
@@ -161,9 +161,6 @@ Refuses outward side effects (upload, push) while pytest is running.
 
 `uv build` selection flags for `[tool.wads.ci.build]`.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> uv_build_args()
 []
@@ -173,12 +170,12 @@ Refuses outward side effects (upload, push) while pytest is running.
 ['--sdist']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.ci_local.venv_python(venv, , platform='posix')
 
 Path of the interpreter inside a venv directory.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> venv_python("v", platform="posix")
@@ -186,3 +183,6 @@ Path of the interpreter inside a venv directory.
 >>> venv_python("v", platform="nt")
 'v/Scripts/python.exe'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

@@ -13,6 +13,7 @@
         <title>wads.profiles - wads</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
@@ -390,11 +391,6 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <dd><p>Apply one frontend profile component to an existing project directory.</p>
 <p><code class="docutils literal notranslate"><span class="pre">subdir</span></code> and <code class="docutils literal notranslate"><span class="pre">package_manager</span></code> default to the selected profile’s
 defaults. Returns the <a class="reference internal" href="wads.templating.html#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">wads.templating.GenerationResult</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="wads.templating.html#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenerationResult</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">apply_frontend</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="s2">"ts"</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="s2">"widget"</span><span class="p">)</span>
@@ -403,6 +399,11 @@ defaults. Returns the <a class="reference internal" href="wads.templating.html#w
 <span class="go"> 'ts/src/index.ts', 'ts/tsconfig.json']</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="wads.templating.html#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenerationResult</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -573,7 +574,7 @@ the name is known.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=3889e2c3"></script>
+</div><script src="../_static/documentation_options.js?v=91c996a5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

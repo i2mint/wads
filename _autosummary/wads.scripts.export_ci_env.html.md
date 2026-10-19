@@ -142,9 +142,6 @@ Matches the publish env-var names tools read, the wads publish secrets, and
 any other PyPI-ish credential name, case-insensitively (GitHub secret names
 are case-insensitive).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_publish_credential("UV_PUBLISH_TOKEN", "PYPI_PASSWORD")
 True
@@ -157,6 +154,9 @@ False
 >>> is_publish_credential("OPENAI_API_KEY")
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### wads.scripts.export_ci_env.main()
 

@@ -49,7 +49,7 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`FlipResult`](#wads.ci_trigger.FlipResult)(repo[, status, changes, notes])   | What [`flip_to_on_demand()`](#wads.ci_trigger.flip_to_on_demand) changed or, on a dry run, would change.   |
 |-----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 
-### *class* wads.ci_trigger.FlipResult(repo, status='unchanged', changes=<factory>, notes=<factory>)
+### *class* wads.ci_trigger.FlipResult(repo, status='unchanged', changes=dict(), notes=list())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -70,9 +70,6 @@ Unified diff of every change.
 
 Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> classify_ci_workflow(None)
 'missing'
@@ -83,6 +80,9 @@ Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.
 >>> classify_ci_workflow("uses: actions/setup-python@v5")
 'other'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_trigger.commit_paths(repo, paths, , message)
 
@@ -167,9 +167,6 @@ Split what a stub holds beyond the template into `(with_inputs, dropped)`.
 re-render; `dropped` names everything else a re-render would silently lose.
 Raises `yaml.YAMLError` when the text does not parse.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
-
 ```pycon
 >>> stub_customizations(
 ...     "on: [push, pull_request]\njobs:\n  ci:\n    uses: x\n"
@@ -180,12 +177,12 @@ Raises `yaml.YAMLError` when the text does not parse.
 ['`on: ["push"]`', 'job `lint`']
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
+
 ### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]')
 
 The on-demand stub’s job-level pre-filter, as a workflow expression.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stub_if_expression("[run ci]")
@@ -198,6 +195,9 @@ A quote in the marker is doubled, which is how workflow expressions escape it:
 >>> stub_if_expression("it's")
 "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_trigger.stub_inputs_of(ci_path)
 
@@ -214,15 +214,15 @@ Defaults (`@master`, `named`) for anything that is not a stub. A
 re-render writes the named transport whatever this reports
 (i2mint/wads#74, #101); see [`wads.migration.migrate_ci_to_stub()`](wads.migration.html.md#wads.migration.migrate_ci_to_stub).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> stub_shape("uses: i2mint/wads/.github/workflows/uv-ci.yml@0.2.30")
 {'pin': '@0.2.30', 'transport': 'named'}
 >>> stub_shape(None)
 {'pin': '@master', 'transport': 'named'}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.ci_trigger.trigger_for_workflow(ci_path)
 
@@ -255,9 +255,6 @@ Which of `paths` have uncommitted changes (`git status --porcelain` lines).
 
 Validate a (mode, marker) pair with the same rules the CI setup job applies.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> validate_trigger("on-demand", "[run ci]")
 ('on-demand', '[run ci]')
@@ -266,3 +263,6 @@ Traceback (most recent call last):
   ...
 ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

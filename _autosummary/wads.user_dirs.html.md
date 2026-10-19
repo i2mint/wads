@@ -56,14 +56,14 @@ Read user preferences from preferences.toml.
 
 Returns an empty dict if the file doesn’t exist.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> prefs = read_user_preferences()
 >>> isinstance(prefs, dict)
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.user_dirs.user_preferences_path()
 

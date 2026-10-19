@@ -69,9 +69,6 @@ Apply one frontend profile component to an existing project directory.
 `subdir` and `package_manager` default to the selected profile’s
 defaults. Returns the [`wads.templating.GenerationResult`](wads.templating.html.md#wads.templating.GenerationResult).
 
-* **Return type:**
-  [`GenerationResult`](wads.templating.html.md#wads.templating.GenerationResult)
-
 ```pycon
 >>> import tempfile
 >>> d = tempfile.mkdtemp()
@@ -80,6 +77,9 @@ defaults. Returns the [`wads.templating.GenerationResult`](wads.templating.html.
 ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
  'ts/src/index.ts', 'ts/tsconfig.json']
 ```
+
+* **Return type:**
+  [`GenerationResult`](wads.templating.html.md#wads.templating.GenerationResult)
 
 ### wads.profiles.apply_npm_overlay(pkg_dir, , project_name, description='', license=None, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', overwrite=(), on_add=None, on_skip=None)
 

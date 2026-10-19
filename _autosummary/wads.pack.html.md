@@ -98,13 +98,13 @@ Routes through [`http_get_json()`](#wads.pack.http_get_json), so it works whethe
 `requests` dependency is installed (urllib fallback), and returns `None`
 when the package isn’t on PyPI instead of raising.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> current_pypi_version('wads')
 '0.1.19'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### wads.pack.extract_pkg_dir_and_name(pkg_spec, , validate=True)
 
@@ -116,9 +116,6 @@ or a module/package name string.
 
 `pkg_spec` can be an imported package (must be a locally developped package)
 whose name and containing directory is the same):
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> import os, wads
@@ -143,24 +140,24 @@ Or you can specify the path to the package directory explicitly:
 ('/home/user/projects/wads', 'wads')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.pack.folders_that_have_init_py_files(pkg_dir)
 
 Get a list of folders in the package directory that have an \_\_init_\_.py file.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> folders_that_have_init_py_files('/home/user/projects/wads')
 ['wads', 'wads/util', 'wads/pack', 'wads/docs_gen']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### wads.pack.get_module_path(module)
 
 Get the path to the directory containing the module’s code file.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> import os
@@ -175,6 +172,9 @@ Get the path to the directory containing the module’s code file.
 ```
 
 Read more: [https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632](https://github.com/i2mint/wads/discussions/7#discussioncomment-9761632)
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.pack.get_name_from_configs(pkg_dir, , assert_exists=True, validate_name=True)
 
@@ -248,9 +248,6 @@ Entry point of the `pack` console script.
 
 Transform newline-separated string values into actual list of strings (assuming that intent)
 
-* **Return type:**
-  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
-
 ```pycon
 >>> section_from_ini = {
 ...     'name': 'wads',
@@ -261,12 +258,12 @@ Transform newline-separated string values into actual list of strings (assuming 
 {'name': 'wads', 'keywords': ['packaging', 'publishing']}
 ```
 
+* **Return type:**
+  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
+
 ### wads.pack.preprocess_ini_section_items(items)
 
 Transform list values into newline-separated strings, in view of writing the value to a ini formatted section
-
-* **Return type:**
-  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
 
 ```pycon
 >>> section = {
@@ -281,7 +278,10 @@ keywords =
     publishing
 ```
 
-### wads.pack.process_missing_module_docstrings(, pkg_dir, action='input', exceptions=(), docstr_template='"""\\\\n{user_input}\\\\n"""\\\\n')
+* **Return type:**
+  [`Generator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Generator)
+
+### wads.pack.process_missing_module_docstrings(, pkg_dir, action='input', exceptions=(), docstr_template='"""\\n{user_input}\\n"""\\n')
 
 Goes through modules of package, sees which ones don’t have docstrings,
 and gives you the option to write one.

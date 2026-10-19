@@ -63,7 +63,7 @@ Raised when migration cannot be completed due to missing or unmapped data.
 Analyze MANIFEST.in file and provide migration guidance for Hatchling.
 
 * **Parameters:**
-  **manifest_path** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to MANIFEST.in file
+  **manifest_path** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to MANIFEST.in file
 * **Returns:**
   - exists: bool - whether file exists
   - needs_migration: bool - whether migration is needed
@@ -115,9 +115,6 @@ These are env vars backed by an infra secret (publish token, GitHub
 token), under their own name or an alias. A migration reports them so a
 dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> dropped_infra_ci_env_vars('''
 ... jobs:
@@ -129,6 +126,9 @@ dropped `UV_PUBLISH_TOKEN` is never a silent surprise (issue #110).
 ... ''')
 {'UV_PUBLISH_TOKEN': 'PYPI_PASSWORD'}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.migration.extract_ci_env_vars(ci_text)
 
@@ -187,9 +187,6 @@ other `env:` block reads from a secret: recording it as a variable would
 take the secret out of the stub’s transport. Infra names are dropped as
 there.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> extract_ci_variable_env_vars('''
 ... env:
@@ -200,6 +197,9 @@ there.
 ... ''') == {"COSMO_TEST_LEVEL": "COSMO_TEST_LEVEL", "LEVEL": "OTHER_LEVEL"}
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.migration.main()
 
@@ -216,7 +216,7 @@ configuration continues to come from `[tool.wads.ci.*]` in
 `i2mint/wads/actions/read-ci-config` action.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Optional path or content of the existing CI workflow. Used to
     locate a nearby pyproject.toml, whose `[tool.wads.ci.env]` decides
     which secrets the default named transport passes.
   * **pin** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The wads ref the stub points at. Defaults to `"@master"`
@@ -282,7 +282,7 @@ Since the uv template reads all configuration from pyproject.toml
 replace the workflow file with the uv template.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to the existing CI workflow file, or its content as a string.
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to the existing CI workflow file, or its content as a string.
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Optional dict with ‘project_name’ if it cannot be extracted
     from the old CI file.
 * **Returns:**
@@ -303,7 +303,7 @@ True
 Migrate old GitHub CI script to new 2025 format.
 
 * **Parameters:**
-  * **old_ci** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to old CI file or its content as string
+  * **old_ci** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Path to old CI file or its content as string
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values for missing fields (e.g., {‘project_name’: ‘myproject’})
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -332,10 +332,10 @@ to generate proper configuration.
 Migrate setup.cfg to pyproject.toml format using hatching.
 
 * **Parameters:**
-  * **setup_cfg** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
+  * **setup_cfg** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]) – Either a file path, file content string, or dict of setup.cfg
   * **defaults** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Default values to use for missing required fields
   * **rules** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]) – Custom transformation rules (defaults to setup_cfg_to_pyproject_toml_rules)
-  * **project_dir** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
+  * **project_dir** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`None`](https://docs.python.org/3/builtins/constants.html#None)]) – The project directory, consulted only to pick `testpaths`: with no
     `tests/` there, they point at the package so CI collects its doctests
     and nothing else. Defaults to the directory of *setup_cfg* when it is a
     file path; `None` keeps the template’s `["tests"]`.
