@@ -303,6 +303,31 @@ def audit_files(repo, rep):
                 f"missing {name} (wads templates ship one)",
                 "wads-repo-doctor (inline)",
             )
+    gitignore = repo / ".gitignore"
+    if gitignore.is_file():
+        bad = _docs_ignore_lines(gitignore.read_text(errors="replace"))
+        rep.facts["gitignore_ignores_docs"] = bad
+        if bad:
+            rep.add(
+                "LOW",
+                "scaffolding",
+                f".gitignore ignores the whole root docs/ ({', '.join(bad)}); "
+                "hand-written docs are silently dropped. Delete the line, "
+                "keep docs/_build/",
+                "wads-repo-doctor (inline)",
+            )
+
+
+def _docs_ignore_lines(text):
+    """Lines of a .gitignore that ignore the whole root ``docs/`` directory."""
+    return [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() in _DOCS_IGNORE_PATTERNS
+    ]
+
+
+_DOCS_IGNORE_PATTERNS = frozenset({"docs/*", "docs/", "/docs", "/docs/", "/docs/*", "docs"})
 
 
 # --- CI workflows -----------------------------------------------------------
