@@ -327,7 +327,9 @@ def _docs_ignore_lines(text):
     ]
 
 
-_DOCS_IGNORE_PATTERNS = frozenset({"docs/*", "docs/", "/docs", "/docs/", "/docs/*", "docs"})
+_DOCS_IGNORE_PATTERNS = frozenset(
+    {"docs/*", "docs/", "/docs", "/docs/", "/docs/*", "docs"}
+)
 
 
 # --- CI workflows -----------------------------------------------------------
