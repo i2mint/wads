@@ -6,7 +6,7 @@
 <link rel="alternate" type="text/markdown" href="repo_audit.html.md">
 <link rel="describedby" href="../../llms.txt" type="text/markdown"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
 
-    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>wads.repo_audit - wads</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
@@ -586,6 +586,31 @@
                 <span class="sa">f</span><span class="s2">"missing </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (wads templates ship one)"</span><span class="p">,</span>
                 <span class="s2">"wads-repo-doctor (inline)"</span><span class="p">,</span>
             <span class="p">)</span>
+    <span class="n">gitignore</span> <span class="o">=</span> <span class="n">repo</span> <span class="o">/</span> <span class="s2">".gitignore"</span>
+    <span class="k">if</span> <span class="n">gitignore</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="n">_docs_ignore_lines</span><span class="p">(</span><span class="n">gitignore</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
+        <span class="n">rep</span><span class="o">.</span><span class="n">facts</span><span class="p">[</span><span class="s2">"gitignore_ignores_docs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">bad</span>
+        <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+            <span class="n">rep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"LOW"</span><span class="p">,</span>
+                <span class="s2">"scaffolding"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">".gitignore ignores the whole root docs/ (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2">); "</span>
+                <span class="s2">"hand-written docs are silently dropped. Delete the line, "</span>
+                <span class="s2">"keep docs/_build/"</span><span class="p">,</span>
+                <span class="s2">"wads-repo-doctor (inline)"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_docs_ignore_lines</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Lines of a .gitignore that ignore the whole root ``docs/`` directory."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="n">_DOCS_IGNORE_PATTERNS</span>
+    <span class="p">]</span>
+
+
+<span class="n">_DOCS_IGNORE_PATTERNS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"docs/*"</span><span class="p">,</span> <span class="s2">"docs/"</span><span class="p">,</span> <span class="s2">"/docs"</span><span class="p">,</span> <span class="s2">"/docs/"</span><span class="p">,</span> <span class="s2">"/docs/*"</span><span class="p">,</span> <span class="s2">"docs"</span><span class="p">})</span>
 
 
 <span class="c1"># --- CI workflows -----------------------------------------------------------</span>
@@ -1231,7 +1256,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=91c996a5"></script>
+</div><script src="../../_static/documentation_options.js?v=b1780c4e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
