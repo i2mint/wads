@@ -305,7 +305,7 @@ wads-test-analyze results.xml
 
 ```bash
 uv pip install -e ".[create,docs,skills,test]"   # the suite needs the create extra
-python -m pytest --doctest-modules -o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL' --ignore=examples --ignore=scrap
+python -m pytest --doctest-modules --ignore=examples --ignore=scrap
 ```
 
 That is CI's exact command. With no path, `testpaths = ["wads"]` collects the tests in `wads/tests/` (not a top-level `tests/`) plus every package doctest; the root `conftest.py` keeps the `wads/data` templates out. CI passes `-o doctest_optionflags=...` (default `ELLIPSIS IGNORE_EXCEPTION_DETAIL`, from `wads/scripts/pytest_doctest_flags.py`) only when the repo's pytest config does not set it; wads sets its own, so its CI and plain `pytest` agree. CI tests 3.10 and 3.12; run 3.11 too before merging. The maintainer skill `skills/wads-dev-workflow` (linked from `.claude/skills/`) has the full checklist: goldens, the push-back test harness, what must change together, and the dependent (`i2mint/isee`) gate.
