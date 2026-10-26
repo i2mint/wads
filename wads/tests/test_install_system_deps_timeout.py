@@ -176,7 +176,6 @@ def test_action_runs_installer_script_from_its_own_checkout():
         [
             sys.executable,
             "-I",
-            "-S",
             str(root / "wads" / "install_system_deps.py"),
             "--help",
         ],
