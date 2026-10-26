@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
-from wads.ci_config import CIConfig
+from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
@@ -769,9 +769,6 @@ def render_plan(steps: Sequence[Step]) -> str:
     return "\n".join(lines)
 
 
-LEVELS = ("validate", "deploy")
-
-
 def ci_local(
     repo: str = ".",
     *,
@@ -788,9 +785,13 @@ def ci_local(
     choice as CI's on-demand ladder (``deploy`` is ``--publish``).
     """
     if level is not None:
-        if level not in LEVELS:
-            raise SystemExit(f"--level must be one of {LEVELS}, got {level!r}")
-        publish = publish or level == "deploy"
+        if level not in TRIGGER_LEVELS:
+            raise SystemExit(f"--level must be one of {TRIGGER_LEVELS}, got {level!r}")
+        if publish and level != "deploy":
+            raise SystemExit(
+                "--publish is --level deploy; it contradicts --level validate"
+            )
+        publish = level == "deploy"
     if dry_run:
         print(render_plan(plan_ci_local(repo, publish=publish)))
         return None

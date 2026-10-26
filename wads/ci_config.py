@@ -38,6 +38,8 @@ DFLT_RUN_CI_MARKER = "[run ci]"
 #: (the run-ci marker also releases); ``false`` makes it validate only.
 DFLT_DEPLOY_MARKER = "[run deploy]"
 DFLT_RUN_CI_PUBLISHES = True
+#: The levels a manual run (or ``wads ci-local --level``) can ask for.
+TRIGGER_LEVELS = ("validate", "deploy")
 #: Narrow skip markers (i2mint/wads#62): each suppresses one side-effecting job
 #: and nothing else. The reusable workflow falls back to these same literals when
 #: read-ci-config's wads is too old to emit them.
@@ -550,7 +552,9 @@ class CIConfig:
         Must be a non-empty single line: an empty marker would match every
         subject and silently turn on-demand back into auto.
         """
-        return _single_line_marker(self.trigger_config, "run_ci_marker", DFLT_RUN_CI_MARKER)
+        return _single_line_marker(
+            self.trigger_config, "run_ci_marker", DFLT_RUN_CI_MARKER
+        )
 
     @property
     def deploy_marker(self) -> str:
@@ -562,10 +566,16 @@ class CIConfig:
         >>> CIConfig({}).deploy_marker
         '[run deploy]'
         """
-        marker = _single_line_marker(self.trigger_config, "deploy_marker", DFLT_DEPLOY_MARKER)
-        if marker == self.run_ci_marker:
+        marker = _single_line_marker(
+            self.trigger_config, "deploy_marker", DFLT_DEPLOY_MARKER
+        )
+        run_ci, deploy = self.run_ci_marker.lower(), marker.lower()
+        if run_ci in deploy or deploy in run_ci:
             raise ValueError(
-                "[tool.wads.ci.trigger].run_ci_marker and deploy_marker must differ"
+                "[tool.wads.ci.trigger].run_ci_marker and deploy_marker must differ, "
+                "and neither may contain the other (matching is case-insensitive "
+                "substring, so the overlap would deploy on the wrong marker): "
+                f"got {self.run_ci_marker!r} and {marker!r}"
             )
         return marker
 

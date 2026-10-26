@@ -106,10 +106,24 @@ def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
         "build",
     ]
     by_name = {step.name: step for step in steps}
-    assert by_name["format check (ruff)"].argv == ("uvx", "ruff", "format", "--check", ".")
-    assert not by_name["format check (ruff)"].blocking, "CI reformats; it never fails on it"
+    assert by_name["format check (ruff)"].argv == (
+        "uvx",
+        "ruff",
+        "format",
+        "--check",
+        ".",
+    )
+    assert not by_name["format check (ruff)"].blocking, (
+        "CI reformats; it never fails on it"
+    )
     assert by_name["lint (ruff)"].argv == ("uvx", "ruff", "check", "pkg")
-    assert by_name["python 3.12: venv"].argv == ("uv", "venv", "<<workdir>>/py3.12", "--python", "3.12")
+    assert by_name["python 3.12: venv"].argv == (
+        "uv",
+        "venv",
+        "<<workdir>>/py3.12",
+        "--python",
+        "3.12",
+    )
     assert by_name["python 3.12: install"].argv[-2:] == ("-e", ".")
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
@@ -147,24 +161,38 @@ def test_extras_are_installed_editable_like_ci():
 
 def test_the_on_demand_matrix_plans_a_single_python():
     steps = plan_ci_local(".", config=_config(testing={"python_versions": ["3.12"]}))
-    assert [s.name for s in steps if s.name.endswith(": tests")] == ["python 3.12: tests"]
+    assert [s.name for s in steps if s.name.endswith(": tests")] == [
+        "python 3.12: tests"
+    ]
 
 
 def test_config_toggles_add_and_remove_steps():
     config = _config(
-        quality={"ruff": {"enabled": False}, "black": {"enabled": True}, "mypy": {"enabled": True}},
+        quality={
+            "ruff": {"enabled": False},
+            "black": {"enabled": True},
+            "mypy": {"enabled": True},
+        },
         testing={"enabled": False, "python_versions": ["3.11", "3.12"]},
         build={"sdist": False},
         env={"required_envvars": ["API_KEY"]},
     )
     names = _names(plan_ci_local(".", config=config))
-    assert names == ["required env vars", "format check (black)", "type check (mypy)", "build"]
+    assert names == [
+        "required env vars",
+        "format check (black)",
+        "type check (mypy)",
+        "build",
+    ]
     build = plan_ci_local(".", config=config)[-1]
     assert build.argv[-1] == "--wheel"
 
 
 def test_the_licence_gate_runs_once_on_the_first_python():
-    data = {"project": {"name": "pkg"}, "tool": {"wads": {"licence": {"enabled": True}}}}
+    data = {
+        "project": {"name": "pkg"},
+        "tool": {"wads": {"licence": {"enabled": True}}},
+    }
     names = _names(plan_ci_local(".", config=CIConfig(data)))
     assert [n for n in names if "licence" in n] == ["python 3.10: licence perimeter"]
 
@@ -193,7 +221,9 @@ def test_publish_plan_refuses_first_then_releases_like_the_publish_job():
     by_name = {step.name: step for step in steps}
     assert by_name["upload to PyPI"].side_effect == UPLOADS
     assert by_name["upload to PyPI"].env == (("UV_PUBLISH_TOKEN", "<<pypi_token>>"),)
-    assert {by_name["push branch"].side_effect, by_name["push tag"].side_effect} == {PUSHES}
+    assert {by_name["push branch"].side_effect, by_name["push tag"].side_effect} == {
+        PUSHES
+    }
     assert names.count("build") == 1
 
 
@@ -221,7 +251,10 @@ def test_run_tests_action_takes_its_doctest_flags_from_the_shared_script():
 @pytest.mark.parametrize(
     "name, text",
     [
-        ("pyproject.toml", '[tool.pytest.ini_options]\ndoctest_optionflags = ["ELLIPSIS"]\n'),
+        (
+            "pyproject.toml",
+            '[tool.pytest.ini_options]\ndoctest_optionflags = ["ELLIPSIS"]\n',
+        ),
         ("pytest.ini", "[pytest]\ndoctest_optionflags = ELLIPSIS\n"),
         ("tox.ini", "[pytest]\ndoctest_optionflags=ELLIPSIS\n"),
         ("setup.cfg", "[tool:pytest]\ndoctest_optionflags = ELLIPSIS\n"),
@@ -235,7 +268,9 @@ def test_repo_doctest_flags_win_over_the_ci_default(tmp_path, name, text):
 
 
 def test_ci_default_doctest_flags_apply_when_the_repo_sets_none(tmp_path):
-    (tmp_path / "pyproject.toml").write_text("[tool.pytest.ini_options]\ntestpaths = []\n")
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.pytest.ini_options]\ntestpaths = []\n"
+    )
     argv = pytest_argv(_config(), repo=tmp_path)
     assert f"doctest_optionflags={DOCTEST_OPTIONFLAGS}" in argv
 
@@ -310,7 +345,9 @@ def test_required_env_is_checked_and_defaults_are_exported(repo):
     report = run_ci_local(repo, runner=runner, environ={}, out=io.StringIO())
     assert report.failure.name == "required env vars" and runner.calls == []
 
-    report = run_ci_local(repo, runner=runner, environ={"API_KEY": "k"}, out=io.StringIO())
+    report = run_ci_local(
+        repo, runner=runner, environ={"API_KEY": "k"}, out=io.StringIO()
+    )
     assert report.ok
     assert all(call["env"]["LOG_LEVEL"] == "INFO" for call in runner.calls)
 
@@ -328,7 +365,9 @@ def _git_state(*, status="", origin_head="origin/master", branch="master", behin
 
 
 def _assert_nothing_changed(runner):
-    assert not [c for c in runner.calls if c["side_effect"] in (WRITES, UPLOADS, PUSHES)]
+    assert not [
+        c for c in runner.calls if c["side_effect"] in (WRITES, UPLOADS, PUSHES)
+    ]
     assert not runner.ran("uvx"), "refusal happens before lint, tests or the bump"
 
 
@@ -343,7 +382,9 @@ def _assert_nothing_changed(runner):
 def test_publish_refuses_before_changing_anything(repo, state, reason):
     runner = FakeRunner(*_git_state(**state))
     out = io.StringIO()
-    report = run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
+    report = run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
     assert not report.ok
     assert reason in out.getvalue()
     assert "REFUSED to publish" in out.getvalue()
@@ -365,21 +406,34 @@ def test_publish_releases_like_the_publish_job(repo):
         ([*VERSION_TOOL, "gen-semver"], RunResult(0, "Installed 3\n0.2.1\n")),
     )
     out = io.StringIO()
-    report = run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
+    report = run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
     assert report.ok, out.getvalue()
     upload = next(c for c in runner.calls if c["side_effect"] == UPLOADS)
-    assert upload["argv"][:2] == ["uv", "publish"] and upload["argv"][2].endswith("/dist/*")
+    assert upload["argv"][:2] == ["uv", "publish"] and upload["argv"][2].endswith(
+        "/dist/*"
+    )
     assert upload["env"]["UV_PUBLISH_TOKEN"] == TOKEN
     others = [c for c in runner.calls if c is not upload]
-    assert not any(
-        TOKEN in c["env"].values() for c in others
-    ), "only the upload step may see the PyPI token"
+    assert not any(TOKEN in c["env"].values() for c in others), (
+        "only the upload step may see the PyPI token"
+    )
     assert "PYPI_PASSWORD" not in upload["env"]
     argvs = runner.argvs()
     assert [*VERSION_TOOL, "update-pyproject-toml", "--version=0.2.1"] in argvs
-    assert ["git", "commit", "--all", "-m", "**CI** Formatted code + Updated version to 0.2.1 [skip ci]"] in argvs
+    assert [
+        "git",
+        "commit",
+        "--all",
+        "-m",
+        "**CI** Formatted code + Updated version to 0.2.1 [skip ci]",
+    ] in argvs
     assert ["git", "tag", "-a", "0.2.1", "-m", "Release version 0.2.1"] in argvs
-    assert argvs[-2:] == [["git", "push", "origin", "master"], ["git", "push", "origin", "0.2.1"]]
+    assert argvs[-2:] == [
+        ["git", "push", "origin", "master"],
+        ["git", "push", "origin", "0.2.1"],
+    ]
     rendered = out.getvalue()
     assert "Released 0.2.1" in rendered and "PyPI token from $PYPI_PASSWORD" in rendered
     assert TOKEN not in rendered, "the token is never printed"
@@ -387,7 +441,13 @@ def test_publish_releases_like_the_publish_job(repo):
 
 def test_a_bad_version_stops_before_any_write(repo):
     runner = FakeRunner(*_git_state(), (list(VERSION_TOOL), RunResult(0, "oops\n")))
-    report = run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=io.StringIO())
+    report = run_ci_local(
+        repo,
+        publish=True,
+        runner=runner,
+        environ={"PYPI_PASSWORD": TOKEN},
+        out=io.StringIO(),
+    )
     assert report.failure.name == "bump version"
     assert not [c for c in runner.calls if c["side_effect"] in (UPLOADS, PUSHES)]
 
@@ -399,7 +459,9 @@ def test_a_failure_after_the_upload_says_how_to_finish(repo):
         (["git", "push", "origin", "master"], RunResult(1)),
     )
     out = io.StringIO()
-    run_ci_local(repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out)
+    run_ci_local(
+        repo, publish=True, runner=runner, environ={"PYPI_PASSWORD": TOKEN}, out=out
+    )
     assert "AFTER the upload: PyPI has 0.2.1" in out.getvalue()
     advice = out.getvalue().split("Finish by hand, in order:")[1]
     assert "  git push origin master\n  git push origin 0.2.1" in advice
@@ -417,13 +479,20 @@ def test_the_version_tool_brings_pip():
 def test_token_precedence(isolated_home):
     pypirc = isolated_home / ".pypirc"
     pypirc.write_text("[pypi]\nusername = __token__\npassword = pypi-from-file\n")
-    assert resolve_pypi_token(environ={"PYPI_PASSWORD": "a", "UV_PUBLISH_TOKEN": "b"}) == ("a", "$PYPI_PASSWORD")
-    assert resolve_pypi_token(environ={"UV_PUBLISH_TOKEN": "b"}) == ("b", "$UV_PUBLISH_TOKEN")
+    assert resolve_pypi_token(
+        environ={"PYPI_PASSWORD": "a", "UV_PUBLISH_TOKEN": "b"}
+    ) == ("a", "$PYPI_PASSWORD")
+    assert resolve_pypi_token(environ={"UV_PUBLISH_TOKEN": "b"}) == (
+        "b",
+        "$UV_PUBLISH_TOKEN",
+    )
     assert resolve_pypi_token(environ={}) == ("pypi-from-file", f"{pypirc} [pypi]")
 
 
 def test_a_pypirc_password_that_is_not_a_token_is_not_used(isolated_home):
-    (isolated_home / ".pypirc").write_text("[pypi]\nusername = bob\npassword = hunter2\n")
+    (isolated_home / ".pypirc").write_text(
+        "[pypi]\nusername = bob\npassword = hunter2\n"
+    )
     assert resolve_pypi_token(environ={}) == (None, "")
 
 
@@ -457,7 +526,9 @@ def test_the_wads_console_script_dispatches_ci_local(repo, capsys):
     cw = pytest.importorskip("cw")
     from wads.__main__ import _dispatch_funcs
 
-    code = cw.dispatch(_dispatch_funcs, ["ci-local", "--dry-run", "--repo", str(repo)], prog="wads")
+    code = cw.dispatch(
+        _dispatch_funcs, ["ci-local", "--dry-run", "--repo", str(repo)], prog="wads"
+    )
     assert code == 0
     assert "wads ci-local plan" in capsys.readouterr().out
 
@@ -510,3 +581,14 @@ def test_a_failure_before_the_upload_says_nothing_went_up(repo):
     )
     assert "Nothing was uploaded." in out.getvalue()
     assert "git checkout -- ." in out.getvalue()
+
+
+def test_level_validate_contradicts_publish_and_deploy_is_publish(capsys):
+    from wads.ci_local import ci_local
+
+    with pytest.raises(SystemExit, match="contradicts"):
+        ci_local(".", publish=True, level="validate", dry_run=True)
+    with pytest.raises(SystemExit, match="--level must be"):
+        ci_local(".", level="bogus", dry_run=True)
+    ci_local(".", level="deploy", dry_run=True)
+    assert "upload to PyPI" in capsys.readouterr().out

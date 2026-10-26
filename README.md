@@ -322,8 +322,10 @@ A marker quoted only in a squash-merged PR body does not count. The stub's zero-
 
 Worth knowing before you flip:
 
-- **A manual run on the default branch releases** when publishing is enabled, exactly like a `[run ci]` push. To test without releasing, run it on another branch, or use `wads ci-local`.
-- **The `[publish]` marker needs `[run ci]` in the same subject.** This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **The levels form a ladder**: `[run ci]` validates (lint, tests, build) and, while `run_ci_publishes = true` (the default), also releases from the default branch; `[run deploy]` (`deploy_marker`) validates then publishes / builds Pages, whatever `run_ci_publishes` says. Set `run_ci_publishes = false` to make `[run ci]` validate only: a cheap "did the tests pass?" that cannot ship. Publish and Pages `need:` validation, so a release never happens without it passing.
+- **A manual run** takes a `level` input: `config` (default, as `run_ci_publishes` says: with the default it releases on the default branch), `validate`, or `deploy`. `wads ci-local --level validate|deploy` is the local equivalent.
+- **The `[publish]` marker needs `[run ci]` or `[run deploy]` in the same subject.** This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **Re-render after upgrading.** A stub rendered before `deploy_marker` existed has no `[run deploy]` in its pre-filter, so that marker silently runs nothing until `wads-migrate ci-to-stub` re-renders it.
 - **Only the pushed head commit's subject counts,** not earlier commits in the same push.
 - **On-demand stubs drop the `pull_request` trigger.** A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.
 

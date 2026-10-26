@@ -343,8 +343,9 @@ jobs:
       #                                what wads always did), also deploy
       #   deploy_marker  [run deploy] -> validate, then publish / Pages
       #   workflow_dispatch         -> validate, plus deploy when the `level`
-      #                                input says deploy (an old stub with no
-      #                                such input follows run_ci_publishes)
+      #                                input says deploy; `config` (the stub's
+      #                                default) or no input follows
+      #                                run_ci_publishes
       # mode "auto" validates and deploys on every push, as before.
       # Publish and Pages `need:` validation, so a release can never happen
       # without it passing. Empty marker/mode outputs (a read-ci-config from a
@@ -381,7 +382,7 @@ jobs:
               case "$LEVEL_INPUT" in
                 deploy) deploy=true ;;
                 validate) deploy=false ;;
-                *) deploy=$publishes ;;
+                *) deploy=$publishes ;;  # config, or no input (an older stub)
               esac
             elif has "$deploy_marker"; then
               validate=true

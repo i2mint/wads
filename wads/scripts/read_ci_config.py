@@ -123,7 +123,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("run-ci-marker", config.run_ci_marker)
         # The deploy rung of the on-demand ladder (i2mint/wads#131).
         _set_output("deploy-marker", config.deploy_marker)
-        _set_output("run-ci-publishes", str(config.run_ci_publishes).lower())
+        _set_output("run-ci-publishes", config.run_ci_publishes)
 
         # Environment-variable policy (consumed by the export-ci-env action).
         # These decide which secrets are written into the job environment and

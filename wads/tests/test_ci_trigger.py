@@ -91,8 +91,9 @@ def _format(fmt, *args):
 
 _FUNCTIONS = {
     # GitHub's contains() on strings is a case-insensitive substring test.
-    "contains": lambda haystack, needle: _as_text(needle).lower()
-    in _as_text(haystack).lower(),
+    "contains": lambda haystack, needle: (
+        _as_text(needle).lower() in _as_text(haystack).lower()
+    ),
     "format": _format,
 }
 
@@ -114,7 +115,7 @@ class _Evaluator:
     def parse(self):
         value = self._or()
         if self.pos != len(self.tokens):
-            raise ValueError(f"trailing tokens: {self.tokens[self.pos:]}")
+            raise ValueError(f"trailing tokens: {self.tokens[self.pos :]}")
         return value
 
     def _or(self):
@@ -169,7 +170,9 @@ class _Evaluator:
             if value in ("true", "false"):
                 return value == "true"
             if value not in self.context:
-                raise KeyError(f"condition references {value!r}, absent from the context")
+                raise KeyError(
+                    f"condition references {value!r}, absent from the context"
+                )
             return self.context[value]
         raise ValueError(f"unexpected token {value!r}")
 
@@ -202,11 +205,12 @@ def _context(
     deploy_marker=DEPLOY,
     run_ci_publishes="true",
     level="",
+    workflow=UV_CI,
 ):
     head_commit = message if event == "push" else ""
-    subject = _run_extraction(UV_CI, head_commit)
+    subject = _run_extraction(workflow, head_commit)
     verdicts = run_level_step(
-        UV_CI,
+        workflow,
         event=event,
         subject=subject,
         mode=mode,
@@ -226,7 +230,7 @@ def _context(
         "needs.setup.outputs.run-ci-marker": marker,
         "needs.setup.outputs.skip-ci-marker": "[skip ci]",
         # the setup job's own verdict on the skip markers (#62), from its script
-        **_skip_verdicts(UV_CI, subject),
+        **_skip_verdicts(workflow, subject),
         "needs.setup.outputs.publish-enabled": "true",
         "needs.setup.outputs.publish-marker": "[publish]",
         "needs.setup.outputs.test-on-windows": "true",
@@ -236,7 +240,15 @@ def _context(
 
 
 def run_level_step(
-    workflow, *, event, subject, mode, run_ci_marker, deploy_marker, run_ci_publishes, level
+    workflow,
+    *,
+    event,
+    subject,
+    mode,
+    run_ci_marker,
+    deploy_marker,
+    run_ci_publishes,
+    level,
 ):
     """Run the workflow's own "Decide trigger level" step; return its outputs."""
     import os
@@ -374,9 +386,9 @@ def test_the_run_marker_matches_case_insensitively_like_github():
     assert _job_verdicts(UV_CI, context)["validation"]
 
 
-def _ladder(message, **kwargs):
-    """The job verdicts of the real workflow for a push, as {job: ran}."""
-    return _job_verdicts(UV_CI, _context(message, **kwargs))
+def _ladder(message, *, workflow=UV_CI, **kwargs):
+    """The job verdicts of the real workflow for a run, as {job: ran}."""
+    return _job_verdicts(workflow, _context(message, workflow=workflow, **kwargs))
 
 
 @bash_required
@@ -390,13 +402,15 @@ def test_both_workflows_ship_the_same_level_step():
 
 
 @bash_required
-def test_ladder_default_run_ci_still_validates_and_releases():
-    assert all(_ladder(f"Fix {MARKER}").values())
+@WORKFLOWS
+def test_ladder_default_run_ci_still_validates_and_releases(workflow):
+    assert all(_ladder(f"Fix {MARKER}", workflow=workflow).values())
 
 
 @bash_required
-def test_ladder_run_ci_validates_only_when_it_does_not_publish():
-    verdicts = _ladder(f"Fix {MARKER}", run_ci_publishes="false")
+@WORKFLOWS
+def test_ladder_run_ci_validates_only_when_it_does_not_publish(workflow):
+    verdicts = _ladder(f"Fix {MARKER}", run_ci_publishes="false", workflow=workflow)
     assert verdicts == {
         "validation": True,
         "windows-validation": True,
@@ -406,14 +420,20 @@ def test_ladder_run_ci_validates_only_when_it_does_not_publish():
 
 
 @bash_required
+@WORKFLOWS
 @pytest.mark.parametrize("publishes", ["true", "false"])
-def test_ladder_deploy_marker_alone_validates_then_deploys(publishes):
-    assert all(_ladder(f"Ship it {DEPLOY}", run_ci_publishes=publishes).values())
+def test_ladder_deploy_marker_alone_validates_then_deploys(workflow, publishes):
+    verdicts = _ladder(
+        f"Ship it {DEPLOY}", run_ci_publishes=publishes, workflow=workflow
+    )
+    assert all(verdicts.values())
 
 
 @bash_required
 def test_ladder_deploy_marker_in_a_squashed_body_runs_nothing():
-    verdicts = _ladder(f"Docs (#1)\n\nUse {DEPLOY} to ship.\n", run_ci_publishes="false")
+    verdicts = _ladder(
+        f"Docs (#1)\n\nUse {DEPLOY} to ship.\n", run_ci_publishes="false"
+    )
     assert not any(verdicts.values())
 
 
@@ -427,17 +447,26 @@ def test_ladder_deploy_marker_in_the_stub_pre_filter():
 
 
 @bash_required
+@WORKFLOWS
 @pytest.mark.parametrize(
     "level, publishes, deploys",
     [
         ("validate", "true", False),
         ("deploy", "false", True),
+        ("config", "true", True),
+        ("config", "false", False),
         ("", "true", True),  # an old stub with no `level` input: as before
         ("", "false", False),
     ],
 )
-def test_ladder_manual_run_asks_for_a_level(level, publishes, deploys):
-    verdicts = _ladder("", event="workflow_dispatch", level=level, run_ci_publishes=publishes)
+def test_ladder_manual_run_asks_for_a_level(workflow, level, publishes, deploys):
+    verdicts = _ladder(
+        "",
+        event="workflow_dispatch",
+        level=level,
+        run_ci_publishes=publishes,
+        workflow=workflow,
+    )
     assert verdicts["validation"] and verdicts["windows-validation"]
     assert verdicts["publish"] is deploys and verdicts["github-pages"] is deploys
 
@@ -453,16 +482,36 @@ def test_ladder_does_not_touch_auto_mode():
     assert all(_ladder("Plain", mode="auto", run_ci_publishes="false").values())
 
 
-def test_stub_declares_the_level_input_defaulting_to_what_a_run_does():
-    def level(publishes):
-        stub = yaml.safe_load(
-            render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=publishes)
+def test_stub_level_input_defaults_to_config_so_pyproject_stays_the_source():
+    texts = {
+        publishes: render_stub_trigger(
+            STUB_TEMPLATE, mode="on-demand", run_ci_publishes=publishes
         )
-        return stub[True]["workflow_dispatch"]["inputs"]["level"]
+        for publishes in (True, False)
+    }
+    level = yaml.safe_load(texts[True])[True]["workflow_dispatch"]["inputs"]["level"]
+    assert level["default"] == "config"
+    assert level["options"] == ["config", "validate", "deploy"]
+    # the stub's `on:` does not depend on the setting: no re-render when it changes
+    on = lambda text: text[text.index("\non:") :]
+    assert on(texts[True]) == on(texts[False])
 
-    assert level(True)["default"] == "deploy"
-    assert level(False)["default"] == "validate"
-    assert level(False)["options"] == ["validate", "deploy"]
+
+def test_the_gated_jobs_read_the_same_verdicts_in_both_workflows():
+    jobs = lambda path: yaml.safe_load(path.read_text())["jobs"]
+    for name in GATED_JOBS:
+        assert jobs(UV_CI)[name]["if"] == jobs(INLINE)[name]["if"]
+
+
+@pytest.mark.parametrize(
+    "hand_edit",
+    ["inputs: null", "inputs: {level: null}", "inputs: {level: {options: [a]}}"],
+)
+def test_a_hand_edited_dispatch_block_is_a_customization_not_a_crash(hand_edit):
+    from wads.ci_trigger import stub_customizations
+
+    text = f"on:\n  push:\n  workflow_dispatch:\n    {hand_edit}\njobs:\n  ci:\n    uses: x\n"
+    assert any("on:" in item for item in stub_customizations(text)[1])
 
 
 def test_a_rendered_on_demand_stub_has_no_customizations_to_drop():
@@ -478,6 +527,10 @@ def test_deploy_marker_must_differ_and_run_ci_publishes_must_be_boolean():
 
     with pytest.raises(ValueError, match="must differ"):
         config(deploy_marker="[run ci]").deploy_marker
+    with pytest.raises(ValueError, match="neither may contain"):
+        config(run_ci_marker="run ci", deploy_marker="[run ci now]").deploy_marker
+    with pytest.raises(ValueError, match="neither may contain"):
+        config(run_ci_marker="[ci]", deploy_marker="[CI]").deploy_marker
     with pytest.raises(ValueError, match="boolean"):
         config(run_ci_publishes="no").run_ci_publishes
     with pytest.raises(ValueError, match="deploy_marker"):
@@ -492,9 +545,12 @@ def test_setup_job_exports_the_trigger_outputs(workflow):
     action_outputs = yaml.safe_load(READ_CI_CONFIG_ACTION.read_text())["outputs"]
     assert outputs["validate"] == "${{ steps.level.outputs.validate }}"
     assert outputs["deploy"] == "${{ steps.level.outputs.deploy }}"
-    assert {"trigger-mode", "run-ci-marker", "deploy-marker", "run-ci-publishes"} <= set(
-        action_outputs
-    )
+    assert {
+        "trigger-mode",
+        "run-ci-marker",
+        "deploy-marker",
+        "run-ci-publishes",
+    } <= set(action_outputs)
 
 
 def test_read_ci_config_writes_the_trigger_outputs(tmp_path, monkeypatch):
@@ -534,8 +590,12 @@ def test_on_demand_stub_says_nothing_runs_unless_asked():
     stub = yaml.safe_load(text)
     assert set(stub[True]) == {"push", "workflow_dispatch"}, "no pull_request trigger"
     assert stub["jobs"]["ci"]["if"] == stub_if_expression(MARKER)
-    assert stub["jobs"]["ci"]["uses"] == "i2mint/wads/.github/workflows/uv-ci.yml@master"
-    assert stub["jobs"]["ci"]["secrets"] == {"PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"}
+    assert (
+        stub["jobs"]["ci"]["uses"] == "i2mint/wads/.github/workflows/uv-ci.yml@master"
+    )
+    assert stub["jobs"]["ci"]["secrets"] == {
+        "PYPI_PASSWORD": "${{ secrets.PYPI_PASSWORD }}"
+    }
 
 
 @bash_required
@@ -571,7 +631,9 @@ def _write_repo(root, *, pyproject, ci=None):
     return root / ".github" / "workflows" / "ci.yml"
 
 
-ON_DEMAND_PYPROJECT = '[project]\nname = "x"\n\n[tool.wads.ci.trigger]\nmode = "on-demand"\n'
+ON_DEMAND_PYPROJECT = (
+    '[project]\nname = "x"\n\n[tool.wads.ci.trigger]\nmode = "on-demand"\n'
+)
 
 
 def test_rerendering_an_on_demand_repo_keeps_it_on_demand(tmp_path):
@@ -649,7 +711,9 @@ def test_flip_keeps_a_stub_pin_and_named_transport(tmp_path, capsys):
     named = migrate_ci_to_stub(pin="@0.2.30", transport="named")
     _write_repo(tmp_path, pyproject=COMMENTED_PYPROJECT, ci=named)
     result = flip_to_on_demand(tmp_path)
-    job = yaml.safe_load((tmp_path / ".github/workflows/ci.yml").read_text())["jobs"]["ci"]
+    job = yaml.safe_load((tmp_path / ".github/workflows/ci.yml").read_text())["jobs"][
+        "ci"
+    ]
     assert job["uses"].endswith("@0.2.30")
     assert "WADS_CI_SECRETS_JSON" not in job["secrets"]
     assert job["if"] == stub_if_expression(MARKER)
@@ -694,7 +758,9 @@ def test_flip_without_a_workflow_changes_pyproject_only(tmp_path):
 def test_flip_names_other_workflows_that_still_run_unasked(tmp_path):
     _stub_repo(tmp_path)
     workflows = tmp_path / ".github" / "workflows"
-    (workflows / "nightly.yml").write_text("on:\n  schedule:\n    - cron: '0 0 * * *'\njobs: {}\n")
+    (workflows / "nightly.yml").write_text(
+        "on:\n  schedule:\n    - cron: '0 0 * * *'\njobs: {}\n"
+    )
     (workflows / "manual.yml").write_text("on: workflow_dispatch\njobs: {}\n")
     notes = flip_to_on_demand(tmp_path, dry_run=True).notes
     assert any("nightly.yml (schedule)" in note for note in notes)

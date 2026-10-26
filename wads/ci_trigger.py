@@ -46,6 +46,7 @@ from wads.ci_config import (
     DFLT_RUN_CI_MARKER,
     DFLT_RUN_CI_PUBLISHES,
     DFLT_TRIGGER_MODE,
+    TRIGGER_LEVELS,
     tomllib,
 )
 
@@ -63,24 +64,36 @@ CI_JOB_ANCHOR = "  ci:\n    uses: "
 ASKED_EVENTS = frozenset({"workflow_dispatch", "workflow_call", "repository_dispatch"})
 
 # What a stub may hold that a re-render reproduces (anything else would be dropped).
-_TEMPLATE_TRIGGERS = (["push", "pull_request"], {"push": None, "workflow_dispatch": None})
-_LEVELS = ("validate", "deploy")
+_TEMPLATE_TRIGGERS = (
+    ["push", "pull_request"],
+    {"push": None, "workflow_dispatch": None},
+)
+# The dispatch ``level`` input: "config" (the default) follows pyproject's
+# run_ci_publishes at run time, so changing that key never needs a re-render.
+DISPATCH_LEVEL_OPTIONS = ["config", *TRIGGER_LEVELS]
 
 
 def _is_template_trigger(triggers) -> bool:
     """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""
     if triggers in _TEMPLATE_TRIGGERS:
         return True
-    if not (isinstance(triggers, dict) and set(triggers) == {"push", "workflow_dispatch"}):
+    if not (
+        isinstance(triggers, dict) and set(triggers) == {"push", "workflow_dispatch"}
+    ):
         return False
     dispatch = triggers["workflow_dispatch"]
+    inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
+    level = inputs.get("level") if isinstance(inputs, dict) else None
     return (
         triggers["push"] is None
-        and isinstance(dispatch, dict)
+        and isinstance(inputs, dict)
         and set(dispatch) == {"inputs"}
-        and set(dispatch["inputs"]) == {"level"}
-        and dispatch["inputs"]["level"].get("options") == list(_LEVELS)
+        and set(inputs) == {"level"}
+        and isinstance(level, dict)
+        and level.get("options") == DISPATCH_LEVEL_OPTIONS
     )
+
+
 _STUB_JOB_KEYS = ("uses", "permissions", "secrets", "if", "with")
 _STUB_IF_PREFIX = (
     "github.event_name == 'workflow_dispatch' || "
@@ -121,9 +134,10 @@ def _on_demand_header(
     run_ci_marker: str, deploy_marker: str, run_ci_publishes: bool
 ) -> str:
     run_ci_effect = (
-        "validates and, on the DEFAULT branch, releases" if run_ci_publishes else "validates only"
+        "validates and, on the DEFAULT branch, releases"
+        if run_ci_publishes
+        else "validates only"
     )
-    default_level = "deploy" if run_ci_publishes else "validate"
     return f"""\
 # --- ON-DEMAND CI: NOTHING RUNS UNLESS ASKED ---------------------------------
 # pyproject.toml sets [tool.wads.ci.trigger] mode = "on-demand". A push does
@@ -131,7 +145,8 @@ def _on_demand_header(
 #   - the commit SUBJECT (its first line) contains {run_ci_marker}  ({run_ci_effect})
 #       git commit -m "Fix the parser {run_ci_marker}"
 #   - or the subject contains {deploy_marker}: validate, then publish / Pages
-#   - or it is started by hand, which is always allowed, and asks for a level:
+#   - or it is started by hand, which is always allowed; `level` defaults to
+#     "config" (what the first line above says) and can ask for either rung:
 #       gh workflow run ci.yml --ref <branch> -f level=validate|deploy
 # Publish and Pages `need:` validation, so a release never happens without
 # it passing, and they run only on the DEFAULT branch. Only the pushed HEAD
@@ -152,10 +167,10 @@ on:
   workflow_dispatch:
     inputs:
       level:
-        description: "validate = lint, tests, build; deploy = also publish / Pages"
+        description: "config = as pyproject says; validate = lint, tests, build; deploy = also publish / Pages"
         type: choice
-        options: [validate, deploy]
-        default: {default_level}
+        options: [config, validate, deploy]
+        default: config
 """
 
 
