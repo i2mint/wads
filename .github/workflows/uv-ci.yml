@@ -299,7 +299,7 @@ jobs:
       # Validation still runs under the narrow ones; that is their point.
       #
       # Why a step and not more `contains()` clauses: the markers come from
-      # read-ci-config, which installs wads from PyPI, while this workflow goes
+      # read-ci-config, whose ref a caller can pin to an older action, while this workflow goes
       # live at merge. Until the release that emits a new marker output is on
       # PyPI the output is EMPTY, and `contains(subject, '')` is true for every
       # subject: an unguarded clause would skip every repo's publish. Here an
@@ -610,7 +610,7 @@ jobs:
   #   - deploy          : in on-demand mode, publish also needs the deploy verdict
   #                       of the TRIGGER GATE above `validation`.
   # The publish-enabled check uses `== 'true'` (fail-closed): if an older wads
-  # without these outputs is installed by read-ci-config, publishing is skipped
+  # without these outputs is behind read-ci-config, publishing is skipped
   # rather than run unintentionally.
   #
   # SUBJECT, not message: both markers are matched against the setup job's

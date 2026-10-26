@@ -57,7 +57,7 @@ from functools import partial
 # NOTE: `cw` is imported lazily, inside the two functions that need it, and NOT
 # here. `wads/__init__.py` imports `wads.populate`, which imports this module, so
 # anything imported at this level is imported by `import wads` -- including by
-# `python -m wads.scripts.read_ci_config`, which the reusable CI workflow runs
+# `wads/scripts/read_ci_config.py`, which the reusable CI workflow runs
 # against a bare checkout before any of this project's dependencies exist. A
 # module-level CLI import there is a bootstrap dependency nobody declared, and it
 # also contradicts the core dependency list's stated aim of keeping `import wads`

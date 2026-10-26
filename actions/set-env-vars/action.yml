@@ -18,18 +18,13 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: Install wads (for CI config utilities)
-      shell: bash
-      run: |
-        python -m pip install --quiet 'wads>=0.1.48'
-
     - name: Set Environment Variables
       shell: bash
       env:
         # Pass all secrets as JSON (GitHub Actions automatic behavior)
         SECRETS_CONTEXT: ${{ toJson(secrets) }}
       run: |
-        python3 -m wads.scripts.set_env_vars "${{ inputs.pyproject-path }}"
+        python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/set_env_vars.py" "${{ inputs.pyproject-path }}"
 
     - name: Validate Environment
       shell: bash
