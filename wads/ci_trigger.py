@@ -95,10 +95,6 @@ def _is_template_trigger(triggers) -> bool:
 
 
 _STUB_JOB_KEYS = ("uses", "permissions", "secrets", "if", "with")
-_STUB_IF_PREFIX = (
-    "github.event_name == 'workflow_dispatch' || "
-    "contains(github.event.head_commit.message, '"
-)
 _USES_LINE = re.compile(
     r"^    uses: i2mint/wads/\.github/workflows/uv-ci\.yml@\S+\n", re.MULTILINE
 )
@@ -128,6 +124,76 @@ def stub_if_expression(
         for marker in (run_ci_marker, deploy_marker)
     ]
     return " || ".join(clauses)
+
+
+_STUB_CONTAINS = r"contains\(github\.event\.head_commit\.message, '((?:[^']|'')*)'\)"
+_STUB_MARKER_RE = re.compile(_STUB_CONTAINS)
+_STUB_IF_RE = re.compile(
+    r"github\.event_name == 'workflow_dispatch'(?: \|\| " + _STUB_CONTAINS + ")+"
+)
+#: The step name that, in an inline workflow, decides the level from the markers.
+_TRIGGER_LEVEL_STEP = "Decide trigger level"
+#: Output of the first-generation gate (#86), which knew ``run_ci_marker`` alone.
+_FIRST_GATE_OUTPUT = "trigger-mode"
+
+
+def parse_stub_if(condition: str) -> Optional[list[str]]:
+    """The markers a stub's pre-filter ``if:`` tests, or ``None`` if it is not that shape.
+
+    The inverse of :func:`stub_if_expression`; ``condition`` is the decoded YAML scalar.
+
+    >>> parse_stub_if(stub_if_expression("it's", "[go]"))
+    ["it's", '[go]']
+    >>> parse_stub_if(stub_if_expression("a", "b") + " && github.actor == 'me'") is None
+    True
+    """
+    if not _STUB_IF_RE.fullmatch(condition):
+        return None
+    # json.dumps writes non-BMP characters as surrogate pairs, which YAML leaves split
+    return [
+        m.replace("''", "'").encode("utf-16", "surrogatepass").decode("utf-16")
+        for m in _STUB_MARKER_RE.findall(condition)
+    ]
+
+
+def stub_markers(text: str) -> list[str]:
+    """The markers the pre-filter of the stub ``text`` tests; ``[]`` if it has none.
+
+    >>> stub = "jobs:\\n  ci:\\n    if: " + json.dumps(stub_if_expression('[say "hi"]', "[go]"))
+    >>> stub_markers(stub)
+    ['[say "hi"]', '[go]']
+    >>> stub_markers("on: [push, pull_request]")
+    []
+    """
+    import yaml
+
+    try:
+        doc = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return []
+    jobs = doc.get("jobs") if isinstance(doc, dict) else None
+    job = jobs.get("ci") if isinstance(jobs, dict) else None
+    condition = job.get("if") if isinstance(job, dict) else None
+    return (parse_stub_if(condition) if isinstance(condition, str) else None) or []
+
+
+def inline_trigger_gate(text: str) -> str:
+    """Which trigger gate an inline workflow copy has: ``"level"``, ``"markers"`` or ``"none"``.
+
+    ``"level"`` is the current gate (``wads/data/github_ci_uv.yml``). ``"markers"`` is the
+    first one, which honours ``run_ci_marker`` but not ``deploy_marker`` or
+    ``run_ci_publishes``. ``"none"`` ignores ``[tool.wads.ci.trigger]`` altogether.
+
+    >>> inline_trigger_gate("- name: Decide trigger level")
+    'level'
+    >>> inline_trigger_gate("trigger-mode: ${{ x }}")
+    'markers'
+    >>> inline_trigger_gate("name: Continuous Integration (uv)")
+    'none'
+    """
+    if _TRIGGER_LEVEL_STEP in text:
+        return "level"
+    return "markers" if _FIRST_GATE_OUTPUT in text else "none"
 
 
 def _on_demand_header(
@@ -465,7 +531,7 @@ def stub_customizations(text: str) -> tuple[dict, list]:
     job = jobs.get("ci") or {}
     dropped += [f"`jobs.ci.{key}`" for key in job if key not in _STUB_JOB_KEYS]
     condition = job.get("if")
-    if condition is not None and not str(condition).startswith(_STUB_IF_PREFIX):
+    if condition is not None and parse_stub_if(str(condition)) is None:
         dropped.append("`jobs.ci.if`")
     inputs = job.get("with") or {}
     if not isinstance(inputs, dict) or any(
