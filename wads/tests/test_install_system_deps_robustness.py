@@ -11,6 +11,7 @@ from wads.install_system_deps import (
     DFLT_INSTALL_TIMEOUT,
     SLOW_DEP_INSTALL_TIMEOUTS,
     _run_shell,
+    install_dependency,
     install_system_dependencies,
     with_apt_lock_timeout,
 )
@@ -27,6 +28,32 @@ def test_timeout_kills_grandchildren(tmp_path):
     assert not marker.exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX")
+def test_interrupt_kills_the_group(tmp_path, monkeypatch):
+    marker = tmp_path / "survivor"
+
+    def interrupted(self, timeout=None):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(subprocess.Popen, "communicate", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        _run_shell(f"(sleep 2; touch {marker}) & sleep 30", timeout=5)
+    time.sleep(2.5)
+    assert not marker.exists()
+
+
+def test_install_dependency_runs_the_apt_flagged_command(monkeypatch):
+    seen = []
+
+    def fake(cmd, *, timeout):
+        seen.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr("wads.install_system_deps._run_shell", fake)
+    install_dependency("x", "sudo apt-get install -y x", apt_lock_timeout=7)
+    assert seen == ["sudo apt-get -o DPkg::Lock::Timeout=7 install -y x"]
+
+
 @pytest.mark.parametrize(
     "cmd, expected",
     [
@@ -39,6 +66,11 @@ def test_timeout_kills_grandchildren(tmp_path):
             "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y x",
             "sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=9 install -y x",
         ),
+        (
+            "apt-get update\nsudo -u root apt-get install x",
+            "apt-get -o DPkg::Lock::Timeout=9 update\nsudo -u root apt-get -o DPkg::Lock::Timeout=9 install x",
+        ),
+        ("(env A=1 apt-get update)", "(env A=1 apt-get -o DPkg::Lock::Timeout=9 update)"),
         ("dpkg -s apt-get", "dpkg -s apt-get"),
         ("brew install apt", "brew install apt"),
         (
@@ -57,7 +89,7 @@ def test_apt_lock_timeout_disabled():
 
 @pytest.mark.parametrize(
     "kwargs",
-    [{"default_install_retries": -1}, {"default_install_timeout": 0}],
+    [{"default_install_retries": -1}, {"default_install_timeout": 0}, {"apt_lock_timeout": -1}],
 )
 def test_invalid_defaults_fail_before_any_work(tmp_path, capsys, kwargs):
     with pytest.raises(ValueError):

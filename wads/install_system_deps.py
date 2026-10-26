@@ -58,6 +58,8 @@ DFLT_INSTALL_TIMEOUT = 300
 SLOW_DEP_INSTALL_TIMEOUTS = {"ffmpeg": 900}
 #: Seconds apt waits for the dpkg lock before giving up (``-o DPkg::Lock::Timeout``).
 DFLT_APT_LOCK_TIMEOUT = 120
+#: Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.
+DFLT_KILL_GRACE = 5
 DFLT_CHECK_TIMEOUT = 10
 # Extra attempts per failed install command, and the wait before the first retry
 # (doubled for each further one). Transient mirror failures are the common cause.
@@ -132,8 +134,10 @@ def check_if_installed(
 
 
 _APT_CALL_RE = re.compile(
-    r"(?P<head>(?:^|&&|\|\||[;|])\s*(?:sudo\s+(?:-\S+\s+)*)?(?:\w+=\S*\s+)*)"
-    r"(?P<apt>apt-get|apt)(?=\s)"
+    r"(?P<head>(?:^|&&|\|\||[;|(])\s*"
+    r"(?:(?:sudo|env|time|nice)\s+(?:(?:-[uUgG]|--user|--group)\s+\S+\s+|-\S+\s+)*|\w+=\S*\s+)*)"
+    r"(?P<apt>apt-get|apt)(?=\s)",
+    re.MULTILINE,
 )
 
 
@@ -145,33 +149,54 @@ def with_apt_lock_timeout(cmd: str, seconds: Optional[float]) -> str:
     >>> with_apt_lock_timeout("apt install -y apt-utils", None)
     'apt install -y apt-utils'
     """
-    if not seconds or "DPkg::Lock::Timeout" in cmd:
+    if not seconds or "dpkg::lock::timeout" in cmd.lower():
         return cmd
     return _APT_CALL_RE.sub(
-        lambda m: f"{m['head']}{m['apt']} -o DPkg::Lock::Timeout={seconds:g}", cmd
+        lambda m: f"{m['head']}{m['apt']} -o DPkg::Lock::Timeout={int(seconds)}", cmd
     )
 
 
-def _run_shell(cmd: str, *, timeout: float) -> subprocess.CompletedProcess:
-    """Run a shell command with output streaming; on timeout kill its whole process tree.
+def _kill_group(proc: subprocess.Popen, *, grace: float) -> None:
+    """Stop ``proc`` and, on POSIX, everything in its session.
+
+    SIGTERM first (``sudo`` relays it to a root-owned child it cannot be SIGKILLed
+    through), SIGKILL after ``grace`` seconds.
+    """
+    if os.name != "posix":
+        proc.kill()
+    else:
+        for sig, wait in ((signal.SIGTERM, grace), (signal.SIGKILL, None)):
+            try:
+                os.killpg(proc.pid, sig)
+            except ProcessLookupError:
+                break
+            try:
+                proc.wait(timeout=wait)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+    proc.wait()
+
+
+def _run_shell(
+    cmd: str, *, timeout: float, kill_grace: float = DFLT_KILL_GRACE
+) -> subprocess.CompletedProcess:
+    """Run a shell command with output streaming; on timeout or interrupt kill its process tree.
 
     ``subprocess.run(shell=True, timeout=...)`` kills only the shell, leaving e.g. a
     ``sudo apt-get`` child holding the dpkg lock, which would make every retry fail.
-    On POSIX the command gets its own session so the whole group can be killed.
+    On POSIX the command gets its own session so the whole group can be signalled
+    (on Windows only the shell is killed).
     """
-    posix = os.name == "posix"
-    with subprocess.Popen(cmd, shell=True, start_new_session=posix) as proc:
+    with subprocess.Popen(
+        cmd, shell=True, start_new_session=os.name == "posix"
+    ) as proc:
         try:
             proc.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            if posix:
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            else:
-                proc.kill()
-            proc.wait()
+        except (
+            BaseException
+        ):  # TimeoutExpired, or Ctrl-C: the child no longer shares our tty group
+            _kill_group(proc, grace=kill_grace)
             raise
         return subprocess.CompletedProcess(cmd, proc.returncode)
 
@@ -292,6 +317,8 @@ def install_system_dependencies(
     Returns:
         (installed_count, skipped_count, failed_count)
     """
+    if apt_lock_timeout is not None and apt_lock_timeout < 0:
+        raise ValueError(f"apt_lock_timeout must be >= 0, got {apt_lock_timeout}")
     # Fail before any output rather than at the first dependency
     if default_install_retries < 0:
         raise ValueError(
@@ -364,13 +391,17 @@ def install_system_dependencies(
             return default
         return declared
 
+    def fallback_timeout_for(dep_name):
+        if default_install_timeout is not None:
+            return default_install_timeout
+        return SLOW_DEP_INSTALL_TIMEOUTS.get(dep_name, DFLT_INSTALL_TIMEOUT)
+
     def timeout_for(dep_name, dep_config):
         return setting_for(
             dep_name,
             dep_config,
             "install_timeout",
-            default_install_timeout
-            or SLOW_DEP_INSTALL_TIMEOUTS.get(dep_name, DFLT_INSTALL_TIMEOUT),
+            fallback_timeout_for(dep_name),
             lambda v: isinstance(v, (int, float)) and v > 0,
         )
 
