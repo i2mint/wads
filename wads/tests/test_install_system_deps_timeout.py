@@ -160,3 +160,15 @@ def test_cli_install_timeout_flag(tmp_path, monkeypatch, declared):
 
     assert excinfo.value.code == 0
     assert recorder.timeouts == {declared}
+
+
+def test_action_runs_installer_from_its_own_checkout():
+    """The action must not resolve wads from PyPI: a fix merged to the ref the workflow
+    was called at (e.g. #152) would be shadowed by a stale or not-yet-propagated wheel."""
+    from pathlib import Path
+
+    text = (
+        Path(__file__).parents[2] / "actions" / "install-system-deps" / "action.yml"
+    ).read_text()
+    assert "pip install --quiet wads" not in text
+    assert 'PYTHONPATH="$GITHUB_ACTION_PATH/../.."' in text

@@ -14,7 +14,7 @@ inputs:
     required: false
     default: 'false'
   install-timeout:
-    description: 'Per-command install timeout in seconds for dependencies that declare no install_timeout of their own. Empty keeps the installer default (300).'
+    description: 'Per-command install timeout in seconds for dependencies that declare no install_timeout of their own. Empty keeps the installer default (300; 900 for ffmpeg).'
     required: false
     default: ''
 
@@ -30,12 +30,6 @@ runs:
           echo "Python < 3.11, installing tomli"
           python3 -m pip install --quiet tomli
         fi
-    
-    - name: Install wads
-      shell: bash
-      run: |
-        echo "Installing wads package..."
-        python3 -m pip install --quiet wads
     
     - name: Install System Dependencies from pyproject.toml
       shell: bash
@@ -53,14 +47,15 @@ runs:
           ARGS="$ARGS --skip-check"
         fi
 
-        # Only appended when set, so the flag is never passed to a wads release
-        # that predates it (the "Install wads" step above pulls from PyPI).
+        # Only appended when set (an empty value would break the flag).
         if [ -n "${{ inputs.install-timeout }}" ]; then
           ARGS="$ARGS --install-timeout ${{ inputs.install-timeout }}"
         fi
 
-        # Run the installer script
-        python3 -m wads.install_system_deps $ARGS
+        # Run the installer from this action's own checkout (stdlib-only module), not a
+        # PyPI wheel: the code must match the ref the workflow was called at, or a fix
+        # merged here is silently shadowed by whichever wads release pip resolves.
+        PYTHONPATH="$GITHUB_ACTION_PATH/../.." python3 -m wads.install_system_deps $ARGS
 
         EXIT_CODE=$?
         echo "::endgroup::"
