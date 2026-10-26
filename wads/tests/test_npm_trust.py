@@ -756,16 +756,42 @@ def test_calls_from_a_member_directory_resolve_from_the_workspace_root(
     assert got == expected
 
 
-def test_flags_are_read_per_manager(tmp_path):
-    from wads.npm_trust import MANAGER_FLAGS, publish_calls
+def test_flags_are_read_per_manager():
+    from wads.npm_trust import publish_calls
 
-    # npm's -w names a member (takes a value); pnpm's -w is the root (takes none)
-    assert "-w" in MANAGER_FLAGS["npm"].filter and "-w" not in MANAGER_FLAGS["npm"].root
-    assert "-w" in MANAGER_FLAGS["pnpm"].root and "-w" not in MANAGER_FLAGS["pnpm"].value
-    (call,) = publish_calls("pnpm --workspace publish")
+    (call,) = publish_calls("pnpm -w publish")  # pnpm: the root, no value
     assert call.workspace_root and not call.filters
-    (call,) = publish_calls("npm publish -w a")
+    (call,) = publish_calls("pnpm --workspace publish")  # pnpm: no value either
+    assert not call.workspace_root and not call.filters
+    (call,) = publish_calls("npm publish -w a")  # npm: names a member
     assert call.filters == ("a",) and not call.workspace_root
+    (call,) = publish_calls("npm -C packages/a publish")  # npm: -C is --prefix
+    assert call.directory == "packages/a"
+
+
+def test_an_unknown_flag_before_publish_is_reported_not_dropped():
+    from wads.npm_trust import publish_calls
+
+    (call,) = publish_calls("npm --bogus x publish")
+    assert "unrecognised" in call.problem
+
+
+@pytest.mark.parametrize(
+    "script, expected",
+    [
+        ("npm publish --workspaces", ["a", "b"]),
+        ("npm publish --workspaces --include-workspace-root", ["pubroot", "a", "b"]),
+        ("pnpm -r publish --include-workspace-root", ["pubroot", "a", "b"]),
+    ],
+)
+def test_include_workspace_root_covers_a_public_root(tmp_path, script, expected):
+    _write(
+        tmp_path / "package.json", {"name": "pubroot", "workspaces": ["packages/*"]}
+    )
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == expected
 
 
 def test_select_is_shared_by_workspace_globs_and_filters():

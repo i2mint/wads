@@ -77,33 +77,37 @@ class ManagerFlags:
 
     Each manager reads the same spelling differently (pnpm's ``-w`` is the workspace
     root and takes no value, npm's ``-w`` names a member and takes one), so the flags
-    are per manager, never shared sets.
+    are per manager, never shared sets. Only ``filter`` and ``directory`` flags take a
+    value; every other flag is read as a switch.
     """
 
-    value: frozenset = frozenset()  # flags that consume the next token
-    filter: frozenset = frozenset()  # of ``value``: select workspace members
-    directory: frozenset = frozenset()  # of ``value``: run in another directory
-    recursive: frozenset = frozenset()  # no value: every workspace member
-    root: frozenset = frozenset()  # no value: the workspace root
+    filter: frozenset = frozenset()  # take a value: select workspace members
+    directory: frozenset = frozenset()  # take a value: run in another directory
+    recursive: frozenset = frozenset()  # switch: every workspace member
+    root: frozenset = frozenset()  # switch: the workspace root
+    with_root: frozenset = frozenset()  # switch: a whole-workspace call covers the root
+
+    @property
+    def value(self) -> frozenset:
+        """Flags that consume the next token."""
+        return self.filter | self.directory
 
 
 MANAGER_FLAGS = {
     "npm": ManagerFlags(
-        value=frozenset({"-w", "--workspace", "--prefix"}),
         filter=frozenset({"-w", "--workspace"}),
-        directory=frozenset({"--prefix"}),
+        directory=frozenset({"--prefix", "-C"}),
         recursive=frozenset({"-ws", "--workspaces"}),
+        with_root=frozenset({"--include-workspace-root"}),
     ),
     "pnpm": ManagerFlags(
-        value=frozenset({"--filter", "-F", "--dir", "-C"}),
         filter=frozenset({"--filter", "-F"}),
         directory=frozenset({"--dir", "-C"}),
         recursive=frozenset({"-r", "--recursive"}),
-        root=frozenset({"-w", "--workspace-root", "--workspace"}),
+        root=frozenset({"-w", "--workspace-root"}),
+        with_root=frozenset({"--include-workspace-root"}),
     ),
-    "yarn": ManagerFlags(
-        value=frozenset({"--cwd"}), directory=frozenset({"--cwd"})
-    ),
+    "yarn": ManagerFlags(directory=frozenset({"--cwd"})),
 }
 _SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "time"}
 #: Prefix of a selector that subtracts its matches (pnpm ``--filter '!x'``).
@@ -249,6 +253,7 @@ def _split_flags(tokens: list[str], cwd: str) -> dict:
         index += 1
     found["recursive"] = bool(found["flags"] & table.recursive)
     found["workspace_root"] = bool(found["flags"] & table.root)
+    found["include_root"] = bool(found["flags"] & table.with_root)
     return found
 
 
@@ -313,16 +318,14 @@ def _wrapped_calls(
         if inner[:1] == ["--"]:  # `pnpm -r exec -- npm publish`
             inner = inner[1:]
         everything, problem = outer["recursive"], outer["problem"]
-        include_root = False
-    whole = dict(
-        everything=True,
-        filters=tuple(outer["filters"]),
-        include_root=include_root,
+        include_root = outer["include_root"]
+    whole = PublishCall(
+        cwd, True, tuple(outer["filters"]), include_root=include_root, script=script
     )
     if script:
-        return [PublishCall(cwd, script=script, **whole)]
+        return [whole]
     if not inner and problem:  # a command we cannot follow, but must not drop
-        return [PublishCall(cwd, problem=problem, **whole)]
+        return [replace(whole, problem=problem)]
     if not inner or depth >= _MAX_SCRIPT_DEPTH:
         return []
     calls = publish_calls(
@@ -369,7 +372,15 @@ def _npm_call(
                 parsed["recursive"],
                 tuple(filters),
                 workspace_root=parsed["workspace_root"],
+                include_root=parsed["include_root"],
                 problem=parsed["problem"],
+            )
+        ]
+    if "publish" in positional[1:] and sub not in ("run", "run-script"):
+        # a flag we do not know took the real subcommand's place: never drop the call
+        return [
+            PublishCall(
+                where, problem=f"unrecognised {tokens[0]} flag before publish"
             )
         ]
     script = (
