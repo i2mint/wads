@@ -124,6 +124,16 @@ _NON_PUBLISH_SUBCOMMANDS = {
     "info",
     "exec",
     "dlx",
+    "remove",
+    "rm",
+    "uninstall",
+    "un",
+    "update",
+    "up",
+    "upgrade",
+    "search",
+    "why",
+    "link",
 }
 #: Release tools that publish the package in their directory (and are not an
 #: ``npm publish`` call we can read): ``release-it``, ``semantic-release``.
@@ -399,6 +409,8 @@ def _npm_call(
         return [
             PublishCall(where, problem=f"unrecognised {tokens[0]} flag before publish")
         ]
+    if sub in _RELEASE_TOOLS and not isinstance(scripts.get(sub), str):
+        return [PublishCall(where)]  # `yarn release-it`: the tool run directly
     script = (
         positional[1] if sub in ("run", "run-script") and len(positional) > 1 else sub
     )
@@ -435,7 +447,9 @@ def publish_calls(
             ):
                 tokens = tokens[1:]  # leading `if`/`then`/... and VAR=value assignments
             if tokens and tokens[0] in ("npx", "pnpx", "bunx"):
-                tokens = tokens[1:]
+                tokens = [t for t in tokens[1:] if t != "-y" and t != "--yes"]
+                if tokens:  # `npx semantic-release@24`: the version is not the tool
+                    tokens[0] = re.sub(r"(?<=.)@[^/@]*$", "", tokens[0])
             if not tokens:
                 continue
             command = tokens[0]
@@ -596,14 +610,14 @@ def _runs_publish(manifest: dict, script: str) -> bool:
     return isinstance(text, str) and bool(publish_calls(text, scripts))
 
 
-def _cwd_relative(selectors: Sequence[str], cwd: str, base: "Path | str") -> list[str]:
+def _cwd_relative(selectors: Sequence[str], cwd: str, base: str) -> list[str]:
     """Selectors with ``./``/``../`` paths re-based from the call's cwd to ``base``.
 
     pnpm and npm read a path selector relative to the directory they run in, while
     :func:`packages_of` matches from the workspace root ``base``; both are repo-relative.
 
     >>> _cwd_relative(["./a", "!../b", "pkg-*", "packages/c"], "ws/sub", "ws")
-    ['sub/a', '!b', 'pkg-*', 'packages/c']
+    ['./sub/a', '!./b', 'pkg-*', 'packages/c']
     """
     result = []
     for selector in selectors:
@@ -612,7 +626,8 @@ def _cwd_relative(selectors: Sequence[str], cwd: str, base: "Path | str") -> lis
         if body.startswith(("./", "../")) or body in (".", ".."):
             repo_path = posixpath.normpath(posixpath.join(cwd, body))
             body = posixpath.relpath(repo_path, str(base) or ".")
-            body = "." if body == "." else body
+            if not body.startswith(".."):
+                body = "./" + body if body != "." else body  # keep it a path selector
         result.append(sign + body)
     return result
 

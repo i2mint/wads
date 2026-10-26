@@ -836,3 +836,38 @@ def test_a_yarn_foreach_script_that_runs_a_release_tool_yields_rows(tmp_path):
     )
     _workflow(tmp_path, "y.yml", {"run": "yarn workspaces foreach -A run ship"})
     assert _names(tmp_path) == [("a", "y.yml", "")]
+
+
+@pytest.mark.parametrize("flt", ["./tools-*", "./tools-x"])
+def test_a_one_segment_path_selector_stays_a_path_at_the_workspace_root(tmp_path, flt):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'tools-*'\n  - 'other'\n")
+    for d, name in (("tools-x", "@x/tx"), ("tools-y", "@x/ty"), ("other", "@x/o")):
+        _write(tmp_path / d / "package.json", {"name": name})
+    _workflow(tmp_path, "p.yml", {"run": f"pnpm --filter '{flt}' publish"})
+    got = [n for n, _, _ in _names(tmp_path)]
+    assert got == (["@x/tx", "@x/ty"] if flt == "./tools-*" else ["@x/tx"])
+    _workflow(tmp_path, "p.yml", {"run": "pnpm -r --filter '!./tools-*' publish"})
+    assert [n for n, _, _ in _names(tmp_path)] == ["@x/o"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "npx semantic-release@24",
+        "npx -y release-it@17 --ci",
+        "yarn release-it",
+        "pnpm release-it",
+        "pnpm exec release-it",
+    ],
+)
+def test_release_tools_are_found_however_they_are_invoked(command):
+    assert len(publish_calls(command)) == 1
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["semantic-release -d", "npx release-it --dry-run", "npm uninstall publish", "yarn remove publish"],
+)
+def test_dry_runs_and_removals_are_not_publishes(command):
+    assert publish_calls(command) == []
