@@ -69,20 +69,48 @@ _FOREACH_VALUE_FLAGS = {
     "--jobs",
     "--worktree",
 }
-_VALUE_FLAGS = {"--filter", "-F", "--dir", "-C", "--prefix", "--workspace", "-w"}
-_FILTER_FLAGS = {"--filter", "-F", "--workspace", "-w"}
-#: Flags that look like value flags of another manager but take no value in this one
-#: (pnpm's ``-w`` selects the workspace root; npm's ``-w <ws>`` selects a member).
-_NO_VALUE_FLAGS = {"pnpm": {"-w"}}
-_DIR_FLAGS = {"--dir", "-C", "--prefix"}
+
+
+@dataclass(frozen=True)
+class ManagerFlags:
+    """The flags of one package manager that change what a publish call covers.
+
+    Each manager reads the same spelling differently (pnpm's ``-w`` is the workspace
+    root and takes no value, npm's ``-w`` names a member and takes one), so the flags
+    are per manager, never shared sets.
+    """
+
+    value: frozenset = frozenset()  # flags that consume the next token
+    filter: frozenset = frozenset()  # of ``value``: select workspace members
+    directory: frozenset = frozenset()  # of ``value``: run in another directory
+    recursive: frozenset = frozenset()  # no value: every workspace member
+    root: frozenset = frozenset()  # no value: the workspace root
+
+
+MANAGER_FLAGS = {
+    "npm": ManagerFlags(
+        value=frozenset({"-w", "--workspace", "--prefix"}),
+        filter=frozenset({"-w", "--workspace"}),
+        directory=frozenset({"--prefix"}),
+        recursive=frozenset({"-ws", "--workspaces"}),
+    ),
+    "pnpm": ManagerFlags(
+        value=frozenset({"--filter", "-F", "--dir", "-C"}),
+        filter=frozenset({"--filter", "-F"}),
+        directory=frozenset({"--dir", "-C"}),
+        recursive=frozenset({"-r", "--recursive"}),
+        root=frozenset({"-w", "--workspace-root", "--workspace"}),
+    ),
+    "yarn": ManagerFlags(
+        value=frozenset({"--cwd"}), directory=frozenset({"--cwd"})
+    ),
+}
 _SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "time"}
-_RECURSIVE_FLAGS = {"-r", "--recursive", "--workspaces", "-ws"}
 #: Prefix of a selector that subtracts its matches (pnpm ``--filter '!x'``).
 _EXCLUDE = "!"
 #: Selector syntax we cannot evaluate (``...[origin/main]``, ``{dir}``): never guess a set.
 _UNRESOLVABLE_SELECTOR_RE = re.compile(r"[\[\]{}]")
 _MAX_SCRIPT_DEPTH = 5
-_MANAGERS = {"npm", "pnpm", "yarn"}
 _PRUNED_DIRS = {"node_modules", ".git"}
 
 
@@ -174,6 +202,9 @@ class PublishCall:
     directory: str = "."
     everything: bool = False  # -r / --workspaces / changesets: every workspace member
     filters: tuple = ()  # --filter / --workspace selectors
+    workspace_root: bool = False  # pnpm -w: the workspace root, wherever the call runs
+    include_root: bool = False  # a "whole workspace" call also covers a public root
+    script: str = ""  # members that define this script and whose script publishes
     wads_caller: bool = False  # a call of wads' own npm-ci*.yml reusable workflow
     problem: str = ""  # the call publishes something we cannot name
 
@@ -187,6 +218,7 @@ def _tokens(segment: str) -> list[str]:
 
 def _split_flags(tokens: list[str], cwd: str) -> dict:
     """Flags, filters, ``-C`` directory and positionals (with their index) of a pm call."""
+    table = MANAGER_FLAGS[tokens[0]]
     found = {
         "flags": set(),
         "filters": [],
@@ -200,31 +232,34 @@ def _split_flags(tokens: list[str], cwd: str) -> dict:
         name, _, inline = token.partition("=")
         if token.startswith("-"):
             found["flags"].add(name)
-            takes_value = name in _VALUE_FLAGS and name not in _NO_VALUE_FLAGS.get(
-                tokens[0], ()
-            )
+            takes_value = name in table.value
             if takes_value and not inline and index + 1 < len(tokens):
                 index += 1
                 inline = tokens[index]
-            if takes_value and name in _FILTER_FLAGS and inline:
+            if name in table.filter and inline:
                 found["filters"].append(inline)
                 if _UNRESOLVABLE_SELECTOR_RE.search(inline):
                     found["problem"] = (
                         f"{tokens[0]} selector {inline!r} is unresolvable"
                     )
-            if name in _DIR_FLAGS and inline:
+            if name in table.directory and inline:
                 found["where"] = posixpath.normpath(posixpath.join(cwd, inline))
         else:
             found["positional"].append((index, token))
         index += 1
+    found["recursive"] = bool(found["flags"] & table.recursive)
+    found["workspace_root"] = bool(found["flags"] & table.root)
     return found
 
 
-def _foreach_command(tokens: list[str]) -> Optional[tuple[list[str], list[str], str]]:
-    """``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``.
+def _foreach_command(
+    tokens: list[str],
+) -> Optional[tuple[list[str], list[str], str, str]]:
+    """``(command, filters, problem, script)`` of ``yarn workspaces foreach [flags] CMD``.
 
     A ``yarn run SCRIPT`` / ``yarn SCRIPT`` command runs in the members that define the
-    script, which we do not read: it is reported as a problem, never as an empty set.
+    script: ``command`` is empty and ``script`` names it, for :func:`packages_of` to
+    resolve against each member's ``scripts``.
     """
     rest = tokens[tokens.index("foreach") + 1 :]
     filters, problem, at = [], "", 0
@@ -246,11 +281,11 @@ def _foreach_command(tokens: list[str]) -> Optional[tuple[list[str], list[str], 
         command = [t for t in command[1:] if t != "--"]
     if not command:
         return None
-    if command[0] not in _MANAGERS:
+    script = ""
+    if command[0] not in MANAGER_FLAGS:
         script = command[1] if command[0] == "run" and len(command) > 1 else command[0]
-        problem = problem or f"yarn foreach runs script {script!r} in each member"
         command = []
-    return command, filters, problem
+    return command, filters, problem, script
 
 
 def _wrapped_calls(
@@ -261,13 +296,14 @@ def _wrapped_calls(
     The outer ``-r`` / ``--filter`` / ``-C`` apply to the wrapped command. ``None`` when
     ``tokens`` wrap nothing.
     """
+    script = ""
     if "foreach" in tokens:
         wrapped = _foreach_command(tokens)
         if wrapped is None:
             return None
-        inner, filters, problem = wrapped
-        outer = {"flags": set(), "filters": filters, "where": cwd}
-        everything = True
+        inner, filters, problem, script = wrapped
+        outer = {"filters": filters, "where": cwd}
+        everything, include_root = True, True  # foreach -A covers a public root too
     else:
         outer = _split_flags(tokens, cwd)
         positional = outer["positional"]
@@ -276,9 +312,17 @@ def _wrapped_calls(
         inner = tokens[positional[0][0] + 1 :]
         if inner[:1] == ["--"]:  # `pnpm -r exec -- npm publish`
             inner = inner[1:]
-        everything, problem = bool(outer["flags"] & _RECURSIVE_FLAGS), outer["problem"]
+        everything, problem = outer["recursive"], outer["problem"]
+        include_root = False
+    whole = dict(
+        everything=True,
+        filters=tuple(outer["filters"]),
+        include_root=include_root,
+    )
+    if script:
+        return [PublishCall(cwd, script=script, **whole)]
     if not inner and problem:  # a command we cannot follow, but must not drop
-        return [PublishCall(cwd, True, tuple(outer["filters"]), problem=problem)]
+        return [PublishCall(cwd, problem=problem, **whole)]
     if not inner or depth >= _MAX_SCRIPT_DEPTH:
         return []
     calls = publish_calls(
@@ -290,6 +334,7 @@ def _wrapped_calls(
             everything=c.everything or everything,
             filters=c.filters or tuple(outer["filters"]),
             problem=c.problem or problem,
+            include_root=c.include_root or include_root,
         )
         for c in calls
     ]
@@ -321,8 +366,9 @@ def _npm_call(
         return [
             PublishCall(
                 where,
-                bool(flags & _RECURSIVE_FLAGS),
+                parsed["recursive"],
                 tuple(filters),
+                workspace_root=parsed["workspace_root"],
                 problem=parsed["problem"],
             )
         ]
@@ -440,22 +486,59 @@ def glob_dirs(
     return [d for d in directories if regex.match(d.relative_to(root).as_posix() + "/")]
 
 
+def select(items, patterns: Sequence[str], matches: Callable, *, default_all: bool):
+    """Items picked by ``patterns``, where a ``!`` prefix subtracts its matches.
+
+    With no inclusive pattern the result is every item (``default_all``) or none, minus
+    the exclusions: ``pnpm --filter '!b'`` means "all but b", a workspace list of only
+    ``!x`` globs means "no members".
+
+    >>> select("abc", ["a", "!b"], str.__eq__, default_all=True)
+    ['a']
+    >>> select("abc", ["!b"], str.__eq__, default_all=True)
+    ['a', 'c']
+    >>> select("abc", ["!b"], str.__eq__, default_all=False)
+    []
+    """
+    included = [p for p in patterns if not p.startswith(_EXCLUDE)]
+    excluded = [p[len(_EXCLUDE) :] for p in patterns if p.startswith(_EXCLUDE)]
+    return [
+        item
+        for item in items
+        if (any(matches(item, p) for p in included) if included else default_all)
+        and not any(matches(item, p) for p in excluded)
+    ]
+
+
 def workspace_manifests(root: Path) -> list[tuple[Path, dict]]:
     """``(directory, package.json)`` of ``root`` itself and its workspace members."""
     patterns = workspace_globs(root)
-    walked = _all_dirs(root) if patterns else []
-    skipped = {
-        d
-        for p in patterns
-        if p.startswith(_EXCLUDE)
-        for d in glob_dirs(root, p[1:], directories=walked)
-    }
-    directories = [root]
-    for pattern in (p for p in patterns if not p.startswith(_EXCLUDE)):
-        directories += [
-            d for d in glob_dirs(root, pattern, directories=walked) if d not in skipped
-        ]
-    return [(d, _load_json(d / "package.json")) for d in directories]
+    members = select(
+        _all_dirs(root) if patterns else [],
+        patterns,
+        lambda d, pattern: bool(
+            _glob_regex(pattern).match(d.relative_to(root).as_posix() + "/")
+        ),
+        default_all=False,
+    )
+    return [(d, _load_json(d / "package.json")) for d in [root, *members]]
+
+
+def workspace_root_of(repo: Path, directory: str) -> Path:
+    """The nearest directory from ``directory`` up to ``repo`` that declares workspaces.
+
+    Falls back to ``directory`` itself (a package that is no workspace's member).
+    """
+    here = (repo / directory).resolve()
+    top = repo.resolve()
+    if top not in (here, *here.parents):  # `cd ..` out of the repo: not ours to search
+        return repo / directory
+    for candidate in [here, *here.parents]:
+        if workspace_globs(candidate):
+            return candidate
+        if candidate == top:
+            break
+    return repo / directory
 
 
 def _selected(
@@ -476,8 +559,18 @@ def _selected(
     return False
 
 
+def _runs_publish(manifest: dict, script: str) -> bool:
+    """Whether the member defines ``script`` and that script publishes."""
+    scripts = manifest.get("scripts") or {}
+    text = scripts.get(script)
+    return isinstance(text, str) and bool(publish_calls(text, scripts))
+
+
 def packages_of(root: Path, call: PublishCall) -> list[str]:
-    """Names of the non-private packages ``call`` publishes from ``root``.
+    """Names of the non-private packages ``call`` publishes in the repo at ``root``.
+
+    Filters, ``-r`` and ``-w`` are evaluated from the workspace root above
+    ``call.directory`` (as the package managers do), not from ``call.directory``.
 
     >>> import tempfile
     >>> with tempfile.TemporaryDirectory() as d:
@@ -485,23 +578,31 @@ def packages_of(root: Path, call: PublishCall) -> list[str]:
     ...     packages_of(Path(d), PublishCall())
     ['solo']
     """
-    members = workspace_manifests(root)
-    included = [f for f in call.filters if not f.startswith(_EXCLUDE)]
-    excluded = [f[len(_EXCLUDE) :] for f in call.filters if f.startswith(_EXCLUDE)]
-    if call.filters:
-        # only exclusions: subtract from the full set rather than match nothing
-        chosen = [
-            m
-            for d, m in members
-            if (not included or _selected(root, d, m, included))
-            and not _selected(root, d, m, excluded)
-        ]
-    elif call.everything:
-        chosen = [m for _, m in members]
+    here = root / call.directory
+    whole = call.everything or bool(call.filters) or bool(call.script)
+    if not (whole or call.workspace_root):
+        chosen = [(here, _load_json(here / "package.json"))]
     else:
-        chosen = [members[0][1]]
+        base = workspace_root_of(root, call.directory)
+        members = workspace_manifests(base)
+        if call.workspace_root and not whole:
+            chosen = members[:1]
+        else:
+            chosen = select(
+                members,
+                call.filters,
+                lambda member, selector: _selected(
+                    base, member[0], member[1], [selector]
+                ),
+                default_all=True,
+            )
+            explicit = any(not f.startswith(_EXCLUDE) for f in call.filters)
+            if not (explicit or call.include_root) and len(members) > 1:
+                chosen = [m for m in chosen if m[0] != base]  # pnpm -r skips the root
+    if call.script:
+        chosen = [m for m in chosen if _runs_publish(m[1], call.script)]
     names = []
-    for manifest in chosen:
+    for _, manifest in chosen:
         name = manifest.get("name")
         if name and not manifest.get("private") and name not in names:
             names.append(name)
@@ -629,7 +730,7 @@ def discover(
                 if "${{" in call.directory:
                     names = [f"<{call.directory}>"]
                 else:
-                    names = packages_of(root / call.directory, call)
+                    names = packages_of(root, call)
                 disabled = call.wads_caller and not _wads_publishing_enabled(
                     root / call.directory
                 )

@@ -590,8 +590,6 @@ def test_pnpm_w_takes_no_value_and_publishes_the_root(tmp_path, script):
 @pytest.mark.parametrize(
     "script",
     [
-        "yarn workspaces foreach -A run release",
-        "yarn workspaces foreach -A -j 4 release",
         "pnpm -r publish --filter '!...[origin/main]'",
         "pnpm -r publish --filter '!{packages/b}'",
     ],
@@ -684,3 +682,95 @@ def test_publishing_enabled_must_be_literally_true_and_junk_cannot_crash(tmp_pat
         )
         (row,) = survey(discover(tmp_path, repo=SLUG), check_npm=False)
         assert "publishing disabled" in row.status
+
+
+def _script_members(tmp_path):
+    """Members a, b define ``release`` (a publishes, b only builds); c has none."""
+    _members_repo(tmp_path)
+    for name, scripts in {
+        "a": {"release": "npm publish"},
+        "b": {"release": "tsc"},
+        "ab": {"release": "pnpm publish --dry-run"},
+    }.items():
+        _write(
+            tmp_path / "packages" / name / "package.json",
+            {"name": name, "scripts": scripts},
+        )
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        "yarn workspaces foreach -A run release",
+        "yarn workspaces foreach -A -j 4 release",
+    ],
+)
+def test_yarn_foreach_script_is_resolved_from_each_members_scripts(tmp_path, script):
+    _script_members(tmp_path)
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == ["a"]
+
+
+@pytest.mark.parametrize(
+    "script, expected",
+    [
+        ("pnpm -r publish", ["a", "b"]),
+        ("npm publish --workspaces", ["a", "b"]),
+        ("changeset publish", ["a", "b"]),
+        ("pnpm -r exec npm publish", ["a", "b"]),
+        ("pnpm publish --filter '!b'", ["a"]),
+        # yarn foreach -A (and an explicit selector) do include a public root
+        ("yarn workspaces foreach -A exec npm publish", ["pubroot", "a", "b"]),
+        ("pnpm -r publish --filter pubroot", ["pubroot"]),
+    ],
+)
+def test_whole_workspace_calls_skip_a_public_root_except_yarn_foreach(
+    tmp_path, script, expected
+):
+    _write(
+        tmp_path / "package.json",
+        {"name": "pubroot", "workspaces": ["packages/*"]},
+    )
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == expected
+
+
+@pytest.mark.parametrize(
+    "script, expected",
+    [
+        ("cd packages/a && pnpm -w publish", ["root"]),
+        ("pnpm -C packages/a -w publish", ["root"]),
+        ("cd packages/a && pnpm publish --filter '!b'", ["a", "ab", "c"]),
+        ("cd packages/a && pnpm -r publish", ["a", "ab", "b", "c"]),
+        ("cd packages/a && npm publish", ["a"]),
+    ],
+)
+def test_calls_from_a_member_directory_resolve_from_the_workspace_root(
+    tmp_path, script, expected
+):
+    _members_repo(tmp_path, root={"name": "root", "workspaces": ["packages/*"]})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    got = [n for n, *_ in _names(tmp_path)]
+    assert got == expected
+
+
+def test_flags_are_read_per_manager(tmp_path):
+    from wads.npm_trust import MANAGER_FLAGS, publish_calls
+
+    # npm's -w names a member (takes a value); pnpm's -w is the root (takes none)
+    assert "-w" in MANAGER_FLAGS["npm"].filter and "-w" not in MANAGER_FLAGS["npm"].root
+    assert "-w" in MANAGER_FLAGS["pnpm"].root and "-w" not in MANAGER_FLAGS["pnpm"].value
+    (call,) = publish_calls("pnpm --workspace publish")
+    assert call.workspace_root and not call.filters
+    (call,) = publish_calls("npm publish -w a")
+    assert call.filters == ("a",) and not call.workspace_root
+
+
+def test_select_is_shared_by_workspace_globs_and_filters():
+    from wads.npm_trust import select
+
+    same = lambda a, b: a == b
+    assert select(["a", "b"], ["!a"], same, default_all=True) == ["b"]
+    assert select(["a", "b"], ["!a"], same, default_all=False) == []
