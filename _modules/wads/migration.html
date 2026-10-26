@@ -1347,15 +1347,13 @@
         <span class="n">render_stub_inputs</span><span class="p">,</span>
         <span class="n">render_stub_trigger</span><span class="p">,</span>
         <span class="n">stub_inputs_of</span><span class="p">,</span>
-        <span class="n">trigger_for_workflow</span><span class="p">,</span>
+        <span class="n">trigger_settings_for_workflow</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">declared_mode</span><span class="p">,</span> <span class="n">declared_marker</span> <span class="o">=</span> <span class="n">trigger_for_workflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
-    <span class="n">stub</span> <span class="o">=</span> <span class="n">render_stub_trigger</span><span class="p">(</span>
-        <span class="n">stub</span><span class="p">,</span>
-        <span class="n">mode</span><span class="o">=</span><span class="n">trigger_mode</span> <span class="ow">or</span> <span class="n">declared_mode</span><span class="p">,</span>
-        <span class="n">run_ci_marker</span><span class="o">=</span><span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">declared_marker</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">declared</span> <span class="o">=</span> <span class="n">trigger_settings_for_workflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="n">declared</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="n">trigger_mode</span> <span class="ow">or</span> <span class="n">declared</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span>
+    <span class="n">declared</span><span class="p">[</span><span class="s2">"run_ci_marker"</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">declared</span><span class="p">[</span><span class="s2">"run_ci_marker"</span><span class="p">]</span>
+    <span class="n">stub</span> <span class="o">=</span> <span class="n">render_stub_trigger</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="o">**</span><span class="n">declared</span><span class="p">)</span>
     <span class="c1"># Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.</span>
     <span class="k">return</span> <span class="n">render_stub_inputs</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">stub_inputs_of</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))</span></div>
 
@@ -2104,7 +2102,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=18387828"></script>
+</div><script src="../../_static/documentation_options.js?v=ba4f896f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

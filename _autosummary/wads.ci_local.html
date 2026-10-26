@@ -323,7 +323,7 @@ can ever spend or publish.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.ci_local" title="wads.ci_local.ci_local"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ci_local</span></code></a>([repo, publish, dry_run])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.ci_local" title="wads.ci_local.ci_local"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ci_local</span></code></a>([repo, publish, dry_run, level])</p></td>
 <td><p>Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.plan_ci_local" title="wads.ci_local.plan_ci_local"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plan_ci_local</span></code></a>([repo, publish, config, platform])</p></td>
@@ -409,12 +409,13 @@ an error message, or <code class="docutils literal notranslate"><span class="pre
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_local.ci_local">
-<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.ci_local" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.ci_local" title="Link to this definition">¶</a></dt>
 <dd><p>Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.</p>
 <p>Lint, tests (a fresh uv venv per configured Python) and build. With –publish, the
 publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
 refusing on a dirty tree, off the default branch, or without PyPI credentials. With
-–dry-run, print the plan and run nothing.</p>
+–dry-run, print the plan and run nothing. <code class="docutils literal notranslate"><span class="pre">--level</span> <span class="pre">validate|deploy</span></code> names the same
+choice as CI’s on-demand ladder (<code class="docutils literal notranslate"><span class="pre">deploy</span></code> is <code class="docutils literal notranslate"><span class="pre">--publish</span></code>).</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -623,7 +624,7 @@ sets them (<code class="docutils literal notranslate"><span class="pre">repo=Non
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=18387828"></script>
+</div><script src="../_static/documentation_options.js?v=ba4f896f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

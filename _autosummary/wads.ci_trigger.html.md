@@ -8,15 +8,20 @@ a repo to on-demand in one idempotent command.
 - `"auto"` (the default): every push and pull request, as wads always has. The stub
   renders byte-identical to `wads/data/github_ci_uv_stub.yml`.
 - `"on-demand"`: **nothing runs unless asked** – the commit subject carries
-  `run_ci_marker` (default `"[run ci]"`), or someone starts a `workflow_dispatch`.
+  `run_ci_marker` (default `"[run ci]"`) or `deploy_marker` (default
+  `"[run deploy]"`), or someone starts a `workflow_dispatch`. The levels form a
+  ladder: `run_ci_marker` validates (lint, tests, build) and, while
+  `run_ci_publishes` is true (the default, wads’ historical behaviour), also
+  deploys; with `run_ci_publishes = false` only `deploy_marker` (or a manual run
+  with `level=deploy`) runs the publish / Pages jobs, which `need:` validation.
 
 Two gates, because workflow expressions cannot split a string:
 
 1. The stub’s job-level `if:` is a zero-cost pre-filter. An ordinary push schedules
-   no runner at all, but the pre-filter can only ask whether the marker is *anywhere*
+   no runner at all, but the pre-filter can only ask whether a marker is *anywhere*
    in the commit message.
-2. The reusable workflow’s setup job extracts the subject line, and every other job
-   gates on the marker being in *that* (the TRIGGER GATE note in
+2. The reusable workflow’s setup job extracts the subject line and decides the level
+   from the markers in *that*; every other job gates on the verdict (the TRIGGER GATE note in
    `.github/workflows/uv-ci.yml`). A marker quoted only in a squash-merged PR body
    passes gate 1, costs one setup job, and runs nothing else.
 
@@ -26,23 +31,24 @@ copy of the repo first, so a dry run and a real run take the same path.
 
 ### Functions
 
-| [`classify_ci_workflow`](#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.         |
-|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`commit_paths`](#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                   |
-| [`flip_to_on_demand`](#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.        |
-| [`render_stub_inputs`](#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.  |
-| [`render_stub_trigger`](#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                      |
-| [`repo_pyproject_for`](#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.       |
-| [`run_ci_on_demand`](#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                   |
-| [`set_on_demand_in_pyproject`](#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.               |
-| [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.      |
-| [`stub_if_expression`](#wads.ci_trigger.stub_if_expression)([run_ci_marker])             | The on-demand stub's job-level pre-filter, as a workflow expression.            |
-| [`stub_inputs_of`](#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.    |
-| [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.          |
-| [`trigger_for_workflow`](#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.             |
-| [`unasked_workflows`](#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron). |
-| [`uncommitted`](#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).     |
-| [`validate_trigger`](#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.    |
+| [`classify_ci_workflow`](#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.                                                                                           |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`commit_paths`](#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                                                                                                     |
+| [`flip_to_on_demand`](#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
+| [`render_stub_inputs`](#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
+| [`render_stub_trigger`](#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
+| [`repo_pyproject_for`](#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
+| [`run_ci_on_demand`](#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                                                                                                     |
+| [`set_on_demand_in_pyproject`](#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.                                                                                                 |
+| [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
+| [`stub_if_expression`](#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
+| [`stub_inputs_of`](#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
+| [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
+| [`trigger_for_workflow`](#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
+| [`trigger_settings_for_workflow`](#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](#wads.ci_trigger.render_stub_trigger) keyword arguments. |
+| [`unasked_workflows`](#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron).                                                                                   |
+| [`uncommitted`](#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).                                                                                       |
+| [`validate_trigger`](#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.                                                                                      |
 
 ### Classes
 
@@ -117,13 +123,14 @@ Add a `with:` block (the reusable workflow’s inputs) under the stub’s `uses:
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### wads.ci_trigger.render_stub_trigger(stub, , mode='auto', run_ci_marker='[run ci]')
+### wads.ci_trigger.render_stub_trigger(stub, , mode='auto', run_ci_marker='[run ci]', deploy_marker='[run deploy]', run_ci_publishes=True)
 
 Render the caller stub for a trigger mode.
 
 `"auto"` returns `stub` unchanged. `"on-demand"` replaces the push/PR trigger
-with push + `workflow_dispatch`, puts the plain-language explanation above it, and
-adds the pre-filter `if:` to the `ci` job.
+with push + `workflow_dispatch` (with its `level` input), puts the
+plain-language explanation above it, and adds the pre-filter `if:` to the `ci`
+job.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -180,20 +187,20 @@ Raises `yaml.YAMLError` when the text does not parse.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
 
-### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]')
+### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]', deploy_marker='[run deploy]')
 
 The on-demand stub’s job-level pre-filter, as a workflow expression.
 
 ```pycon
->>> stub_if_expression("[run ci]")
-"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"
+>>> stub_if_expression("[run ci]", "[run deploy]")
+"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]') || contains(github.event.head_commit.message, '[run deploy]')"
 ```
 
-A quote in the marker is doubled, which is how workflow expressions escape it:
+A quote in a marker is doubled, which is how workflow expressions escape it:
 
 ```pycon
->>> stub_if_expression("it's")
-"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"
+>>> stub_if_expression("it's", "x")
+"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s') || contains(github.event.head_commit.message, 'x')"
 ```
 
 * **Return type:**
@@ -228,12 +235,20 @@ re-render writes the named transport whatever this reports
 
 The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.trigger_settings_for_workflow(ci_path)
+
+The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as
+[`render_stub_trigger()`](#wads.ci_trigger.render_stub_trigger) keyword arguments.
+
 Defaults when there is no such file or no pyproject. An invalid trigger table
 raises: a stub must never silently render `auto` for a repo that asked for
 `on-demand`.
 
 * **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.ci_trigger.unasked_workflows(repo, , workflow='.github/workflows/ci.yml')
 

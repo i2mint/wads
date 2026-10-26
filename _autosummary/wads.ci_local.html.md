@@ -37,7 +37,7 @@ can ever spend or publish.
 
 ### Functions
 
-| [`ci_local`](#wads.ci_local.ci_local)([repo, publish, dry_run])               | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
+| [`ci_local`](#wads.ci_local.ci_local)([repo, publish, dry_run, level])        | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
 | [`pytest_argv`](#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
@@ -83,14 +83,15 @@ failure is reported without stopping the run. `capture` names the context value 
 receives the command’s last stdout line. A `check` takes the run context and returns
 an error message, or `None` when it passes.
 
-### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False)
+### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False, level=None)
 
 Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.
 
 Lint, tests (a fresh uv venv per configured Python) and build. With –publish, the
 publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
 refusing on a dirty tree, off the default branch, or without PyPI credentials. With
-–dry-run, print the plan and run nothing.
+–dry-run, print the plan and run nothing. `--level validate|deploy` names the same
+choice as CI’s on-demand ladder (`deploy` is `--publish`).
 
 ### wads.ci_local.plan_ci_local(repo='.', , publish=False, config=None, platform='posix')
 

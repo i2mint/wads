@@ -287,15 +287,20 @@
 <span class="sd">- ``"auto"`` (the default): every push and pull request, as wads always has. The stub</span>
 <span class="sd">  renders byte-identical to ``wads/data/github_ci_uv_stub.yml``.</span>
 <span class="sd">- ``"on-demand"``: **nothing runs unless asked** -- the commit subject carries</span>
-<span class="sd">  ``run_ci_marker`` (default ``"[run ci]"``), or someone starts a ``workflow_dispatch``.</span>
+<span class="sd">  ``run_ci_marker`` (default ``"[run ci]"``) or ``deploy_marker`` (default</span>
+<span class="sd">  ``"[run deploy]"``), or someone starts a ``workflow_dispatch``. The levels form a</span>
+<span class="sd">  ladder: ``run_ci_marker`` validates (lint, tests, build) and, while</span>
+<span class="sd">  ``run_ci_publishes`` is true (the default, wads' historical behaviour), also</span>
+<span class="sd">  deploys; with ``run_ci_publishes = false`` only ``deploy_marker`` (or a manual run</span>
+<span class="sd">  with ``level=deploy``) runs the publish / Pages jobs, which ``need:`` validation.</span>
 
 <span class="sd">Two gates, because workflow expressions cannot split a string:</span>
 
 <span class="sd">1. The stub's job-level ``if:`` is a zero-cost pre-filter. An ordinary push schedules</span>
-<span class="sd">   no runner at all, but the pre-filter can only ask whether the marker is *anywhere*</span>
+<span class="sd">   no runner at all, but the pre-filter can only ask whether a marker is *anywhere*</span>
 <span class="sd">   in the commit message.</span>
-<span class="sd">2. The reusable workflow's setup job extracts the subject line, and every other job</span>
-<span class="sd">   gates on the marker being in *that* (the TRIGGER GATE note in</span>
+<span class="sd">2. The reusable workflow's setup job extracts the subject line and decides the level</span>
+<span class="sd">   from the markers in *that*; every other job gates on the verdict (the TRIGGER GATE note in</span>
 <span class="sd">   ``.github/workflows/uv-ci.yml``). A marker quoted only in a squash-merged PR body</span>
 <span class="sd">   passes gate 1, costs one setup job, and runs nothing else.</span>
 
@@ -318,8 +323,11 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CIConfig</span><span class="p">,</span>
+    <span class="n">DFLT_DEPLOY_MARKER</span><span class="p">,</span>
     <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">,</span>
+    <span class="n">DFLT_RUN_CI_PUBLISHES</span><span class="p">,</span>
     <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span>
+    <span class="n">TRIGGER_LEVELS</span><span class="p">,</span>
     <span class="n">tomllib</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -341,6 +349,32 @@
     <span class="p">[</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"pull_request"</span><span class="p">],</span>
     <span class="p">{</span><span class="s2">"push"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"workflow_dispatch"</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
 <span class="p">)</span>
+<span class="c1"># The dispatch ``level`` input: "config" (the default) follows pyproject's</span>
+<span class="c1"># run_ci_publishes at run time, so changing that key never needs a re-render.</span>
+<span class="n">DISPATCH_LEVEL_OPTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"config"</span><span class="p">,</span> <span class="o">*</span><span class="n">TRIGGER_LEVELS</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""</span>
+    <span class="k">if</span> <span class="n">triggers</span> <span class="ow">in</span> <span class="n">_TEMPLATE_TRIGGERS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"workflow_dispatch"</span><span class="p">}</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">dispatch</span> <span class="o">=</span> <span class="n">triggers</span><span class="p">[</span><span class="s2">"workflow_dispatch"</span><span class="p">]</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">dispatch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"inputs"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dispatch</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">dispatch</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"inputs"</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"level"</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span> <span class="o">==</span> <span class="n">DISPATCH_LEVEL_OPTIONS</span>
+    <span class="p">)</span>
+
+
 <span class="n">_STUB_JOB_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">"permissions"</span><span class="p">,</span> <span class="s2">"secrets"</span><span class="p">,</span> <span class="s2">"if"</span><span class="p">,</span> <span class="s2">"with"</span><span class="p">)</span>
 <span class="n">_STUB_IF_PREFIX</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"github.event_name == 'workflow_dispatch' || "</span>
@@ -359,45 +393,54 @@
 
 <div class="viewcode-block" id="stub_if_expression">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.stub_if_expression">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stub_if_expression</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_if_expression</span><span class="p">(</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_DEPLOY_MARKER</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The on-demand stub's job-level pre-filter, as a workflow expression.</span>
 
-<span class="sd">    &gt;&gt;&gt; stub_if_expression("[run ci]")</span>
-<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"</span>
+<span class="sd">    &gt;&gt;&gt; stub_if_expression("[run ci]", "[run deploy]")</span>
+<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]') || contains(github.event.head_commit.message, '[run deploy]')"</span>
 
-<span class="sd">    A quote in the marker is doubled, which is how workflow expressions escape it:</span>
+<span class="sd">    A quote in a marker is doubled, which is how workflow expressions escape it:</span>
 
-<span class="sd">    &gt;&gt;&gt; stub_if_expression("it's")</span>
-<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"</span>
+<span class="sd">    &gt;&gt;&gt; stub_if_expression("it's", "x")</span>
+<span class="sd">    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s') || contains(github.event.head_commit.message, 'x')"</span>
 <span class="sd">    """</span>
-    <span class="n">literal</span> <span class="o">=</span> <span class="n">run_ci_marker</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span> <span class="s2">"''"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="s2">"github.event_name == 'workflow_dispatch' || "</span>
-        <span class="sa">f</span><span class="s2">"contains(github.event.head_commit.message, '</span><span class="si">{</span><span class="n">literal</span><span class="si">}</span><span class="s2">')"</span>
-    <span class="p">)</span></div>
+    <span class="n">clauses</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"github.event_name == 'workflow_dispatch'"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"contains(github.event.head_commit.message, '</span><span class="si">{</span><span class="n">marker</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="mi">39</span><span class="p">),</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">')"</span>
+        <span class="k">for</span> <span class="n">marker</span> <span class="ow">in</span> <span class="p">(</span><span class="n">run_ci_marker</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="s2">" || "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clauses</span><span class="p">)</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_on_demand_header</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_demand_header</span><span class="p">(</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">run_ci_publishes</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">run_ci_effect</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"validates and, on the DEFAULT branch, releases"</span>
+        <span class="k">if</span> <span class="n">run_ci_publishes</span>
+        <span class="k">else</span> <span class="s2">"validates only"</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"""</span><span class="se">\</span>
 <span class="s2"># --- ON-DEMAND CI: NOTHING RUNS UNLESS ASKED ---------------------------------</span>
 <span class="s2"># pyproject.toml sets [tool.wads.ci.trigger] mode = "on-demand". A push does</span>
 <span class="s2"># NOT run tests, build, publish or docs. CI runs only when:</span>
-<span class="s2">#   - the commit SUBJECT (its first line) contains </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span>
+<span class="s2">#   - the commit SUBJECT (its first line) contains </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">run_ci_effect</span><span class="si">}</span><span class="s2">)</span>
 <span class="s2">#       git commit -m "Fix the parser </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2">"</span>
-<span class="s2">#   - or it is started by hand, which is always allowed:</span>
-<span class="s2">#       gh workflow run ci.yml --ref &lt;branch&gt;    (or Actions tab &gt; Run workflow)</span>
-<span class="s2"># Publishing obeys the same gate, so a manual run on the DEFAULT branch releases</span>
-<span class="s2"># (when publishing is enabled), exactly like a </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2"> push: to only test,</span>
-<span class="s2"># run it on another branch, or run `wads ci-local`. The publish marker needs</span>
-<span class="s2"># </span><span class="si">{</span><span class="n">run_ci_marker</span><span class="si">}</span><span class="s2"> in the same subject, and only the pushed HEAD commit's subject</span>
-<span class="s2"># counts. To do locally what CI would have done:</span>
-<span class="s2">#   wads ci-local              # lint, tests, build</span>
-<span class="s2">#   wads ci-local --publish    # + version bump, PyPI upload, tag, push</span>
+<span class="s2">#   - or the subject contains </span><span class="si">{</span><span class="n">deploy_marker</span><span class="si">}</span><span class="s2">: validate, then publish / Pages</span>
+<span class="s2">#   - or it is started by hand, which is always allowed; `level` defaults to</span>
+<span class="s2">#     "config" (what the first line above says) and can ask for either rung:</span>
+<span class="s2">#       gh workflow run ci.yml --ref &lt;branch&gt; -f level=validate|deploy</span>
+<span class="s2"># Publish and Pages `need:` validation, so a release never happens without</span>
+<span class="s2"># it passing, and they run only on the DEFAULT branch. Only the pushed HEAD</span>
+<span class="s2"># commit's subject counts. To do locally what CI would have done:</span>
+<span class="s2">#   wads ci-local                    # lint, tests, build</span>
+<span class="s2">#   wads ci-local --level deploy     # + version bump, PyPI upload, tag, push</span>
 <span class="s2">#</span>
 <span class="s2"># The job-level `if:` below is a zero-cost pre-filter: an ordinary push</span>
 <span class="s2"># schedules no runner at all. Workflow expressions cannot split out the first</span>
-<span class="s2"># line, so it matches the marker anywhere in the message, and the reusable</span>
+<span class="s2"># line, so it matches the markers anywhere in the message, and the reusable</span>
 <span class="s2"># workflow re-checks the extracted SUBJECT before any job runs. A marker quoted</span>
 <span class="s2"># only in a squash-merged PR body therefore costs one short setup job, nothing</span>
 <span class="s2"># else. This file is rendered from pyproject.toml: after changing</span>
@@ -406,7 +449,32 @@
 <span class="s2">on:</span>
 <span class="s2">  push:</span>
 <span class="s2">  workflow_dispatch:</span>
+<span class="s2">    inputs:</span>
+<span class="s2">      level:</span>
+<span class="s2">        description: "config = as pyproject says; validate = lint, tests, build; deploy = also publish / Pages"</span>
+<span class="s2">        type: choice</span>
+<span class="s2">        options: [config, validate, deploy]</span>
+<span class="s2">        default: config</span>
 <span class="s2">"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_trigger_config</span><span class="p">(</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">deploy_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_DEPLOY_MARKER</span><span class="p">,</span>
+    <span class="n">run_ci_publishes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_PUBLISHES</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A CIConfig holding these trigger settings, validated by reading each back."""</span>
+    <span class="n">trigger</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"mode"</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
+        <span class="s2">"run_ci_marker"</span><span class="p">:</span> <span class="n">run_ci_marker</span><span class="p">,</span>
+        <span class="s2">"deploy_marker"</span><span class="p">:</span> <span class="n">deploy_marker</span><span class="p">,</span>
+        <span class="s2">"run_ci_publishes"</span><span class="p">:</span> <span class="n">run_ci_publishes</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"trigger"</span><span class="p">:</span> <span class="n">trigger</span><span class="p">}}}})</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">deploy_marker</span>  <span class="c1"># noqa: B018</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">run_ci_publishes</span>  <span class="c1"># noqa: B018</span>
+    <span class="k">return</span> <span class="n">config</span>
 
 
 <div class="viewcode-block" id="validate_trigger">
@@ -421,8 +489,7 @@
 <span class="sd">      ...</span>
 <span class="sd">    ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'</span>
 <span class="sd">    """</span>
-    <span class="n">trigger</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span> <span class="s2">"run_ci_marker"</span><span class="p">:</span> <span class="n">run_ci_marker</span><span class="p">}</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"trigger"</span><span class="p">:</span> <span class="n">trigger</span><span class="p">}}}})</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">_trigger_config</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span></div>
 
 
@@ -434,15 +501,18 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span>
     <span class="n">run_ci_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_MARKER</span><span class="p">,</span>
+    <span class="n">deploy_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_DEPLOY_MARKER</span><span class="p">,</span>
+    <span class="n">run_ci_publishes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">DFLT_RUN_CI_PUBLISHES</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render the caller stub for a trigger mode.</span>
 
 <span class="sd">    ``"auto"`` returns ``stub`` unchanged. ``"on-demand"`` replaces the push/PR trigger</span>
-<span class="sd">    with push + ``workflow_dispatch``, puts the plain-language explanation above it, and</span>
-<span class="sd">    adds the pre-filter ``if:`` to the ``ci`` job.</span>
+<span class="sd">    with push + ``workflow_dispatch`` (with its ``level`` input), puts the</span>
+<span class="sd">    plain-language explanation above it, and adds the pre-filter ``if:`` to the ``ci``</span>
+<span class="sd">    job.</span>
 <span class="sd">    """</span>
-    <span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span> <span class="o">=</span> <span class="n">validate_trigger</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">_trigger_config</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">run_ci_marker</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">,</span> <span class="n">run_ci_publishes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">stub</span>
     <span class="k">for</span> <span class="n">anchor</span> <span class="ow">in</span> <span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">CI_JOB_ANCHOR</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">stub</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
@@ -450,11 +520,11 @@
                 <span class="sa">f</span><span class="s2">"stub template changed shape: expected exactly one </span><span class="si">{</span><span class="n">anchor</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
     <span class="n">gated_job</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"  ci:</span><span class="se">\n</span><span class="s2">    if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stub_if_expression</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">))</span><span class="si">}</span><span class="se">\n</span><span class="s2">    uses: "</span>
+        <span class="s2">"  ci:</span><span class="se">\n</span><span class="s2">    if: "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stub_if_expression</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">,</span><span class="w"> </span><span class="n">deploy_marker</span><span class="p">))</span><span class="si">}</span><span class="se">\n</span><span class="s2">    uses: "</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">_on_demand_header</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-        <span class="n">CI_JOB_ANCHOR</span><span class="p">,</span> <span class="n">gated_job</span>
-    <span class="p">)</span></div>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">_on_demand_header</span><span class="p">(</span><span class="n">run_ci_marker</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">,</span> <span class="n">run_ci_publishes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">CI_JOB_ANCHOR</span><span class="p">,</span> <span class="n">gated_job</span><span class="p">)</span></div>
 
 
 
@@ -479,20 +549,33 @@
 
 
 
-<div class="viewcode-block" id="trigger_for_workflow">
-<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.trigger_for_workflow">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">trigger_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The ``(mode, run_ci_marker)`` declared by the repo holding ``ci_path``.</span>
+<div class="viewcode-block" id="trigger_settings_for_workflow">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.trigger_settings_for_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_settings_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``[tool.wads.ci.trigger]`` settings of the repo holding ``ci_path``, as</span>
+<span class="sd">    :func:`render_stub_trigger` keyword arguments.</span>
 
 <span class="sd">    Defaults when there is no such file or no pyproject. An invalid trigger table</span>
 <span class="sd">    raises: a stub must never silently render ``auto`` for a repo that asked for</span>
 <span class="sd">    ``on-demand``.</span>
 <span class="sd">    """</span>
     <span class="n">pyproject</span> <span class="o">=</span> <span class="n">repo_pyproject_for</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">DFLT_TRIGGER_MODE</span><span class="p">,</span> <span class="n">DFLT_RUN_CI_MARKER</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span></div>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({})</span> <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"mode"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span>
+        <span class="s2">"run_ci_marker"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span><span class="p">,</span>
+        <span class="s2">"deploy_marker"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">deploy_marker</span><span class="p">,</span>
+        <span class="s2">"run_ci_publishes"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_publishes</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="trigger_for_workflow">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.trigger_for_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The ``(mode, run_ci_marker)`` declared by the repo holding ``ci_path``."""</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">trigger_settings_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"run_ci_marker"</span><span class="p">]</span></div>
 
 
 
@@ -691,7 +774,7 @@
         <span class="sa">f</span><span class="s2">"top-level `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">doc</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"on"</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"jobs"</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="n">triggers</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on"</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># PyYAML reads a bare `on:` as True</span>
-    <span class="k">if</span> <span class="n">triggers</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_TEMPLATE_TRIGGERS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">):</span>
         <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`on: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span><span class="si">}</span><span class="s2">`"</span><span class="p">)</span>
     <span class="n">jobs</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">dropped</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"job `</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">jobs</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"ci"</span><span class="p">]</span>
@@ -1058,7 +1141,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=18387828"></script>
+</div><script src="../../_static/documentation_options.js?v=ba4f896f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

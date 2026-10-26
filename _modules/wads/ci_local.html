@@ -327,7 +327,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRIGGER_LEVELS</span><span class="p">,</span> <span class="n">CIConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.pytest_doctest_flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">doctest_optionflags_arg</span>
 
 <span class="c1"># Mirrors of values the CI actions hardcode. Tests pin each against its source</span>
@@ -1085,14 +1085,29 @@
 
 <div class="viewcode-block" id="ci_local">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.ci_local">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ci_local</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.</span>
 
 <span class="sd">    Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the</span>
 <span class="sd">    publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,</span>
 <span class="sd">    refusing on a dirty tree, off the default branch, or without PyPI credentials. With</span>
-<span class="sd">    --dry-run, print the plan and run nothing.</span>
+<span class="sd">    --dry-run, print the plan and run nothing. ``--level validate|deploy`` names the same</span>
+<span class="sd">    choice as CI's on-demand ladder (``deploy`` is ``--publish``).</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRIGGER_LEVELS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--level must be one of </span><span class="si">{</span><span class="n">TRIGGER_LEVELS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">publish</span> <span class="ow">and</span> <span class="n">level</span> <span class="o">!=</span> <span class="s2">"deploy"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
+                <span class="s2">"--publish is --level deploy; it contradicts --level validate"</span>
+            <span class="p">)</span>
+        <span class="n">publish</span> <span class="o">=</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"deploy"</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">render_plan</span><span class="p">(</span><span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">)))</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -1128,7 +1143,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=18387828"></script>
+</div><script src="../../_static/documentation_options.js?v=ba4f896f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

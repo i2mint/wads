@@ -8,8 +8,10 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.   |
-|-----------------------------------------------------------------------------|------------------------------------------------------------|
+| [`DFLT_DEPLOY_MARKER`](#wads.ci_config.DFLT_DEPLOY_MARKER)       | validation, then the publish / Pages jobs.                        |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------|
+| [`TRIGGER_LEVELS`](#wads.ci_config.TRIGGER_LEVELS)           | The levels a manual run (or `wads ci-local --level`) can ask for. |
+| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER) | each suppresses one side-effecting job and nothing else.          |
 
 ### Functions
 
@@ -80,6 +82,18 @@ Check if coverage is enabled.
 #### *property* coverage_threshold *: [int](https://docs.python.org/3/builtins/functions.html#int)*
 
 Get minimum coverage threshold (0 = no enforcement).
+
+#### *property* deploy_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that validates **and** deploys in `"on-demand"` mode.
+
+Defaults to `"[run deploy]"`. Same rules as [`run_ci_marker`](#wads.ci_config.CIConfig.run_ci_marker) (subject
+line only, non-empty, single line) and it must differ from it.
+
+```pycon
+>>> CIConfig({}).deploy_marker
+'[run deploy]'
+```
 
 #### *property* docs_builder *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
@@ -442,6 +456,20 @@ commit message only (a squash-merge folds the PR body into the rest).
 Must be a non-empty single line: an empty marker would match every
 subject and silently turn on-demand back into auto.
 
+#### *property* run_ci_publishes *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether the run-ci marker also releases (the default, as wads always did).
+
+`false` opts in to the ladder: `run_ci_marker` validates only and
+`deploy_marker` (or a manual run with `level=deploy`) ships.
+
+```pycon
+>>> CIConfig({}).run_ci_publishes
+True
+>>> CIConfig({"tool": {"wads": {"ci": {"trigger": {"run_ci_publishes": False}}}}}).run_ci_publishes
+False
+```
+
 #### stub_secret_names(, always=('PYPI_PASSWORD',))
 
 GitHub *secret* names the caller stub should pass to the reusable workflow.
@@ -570,6 +598,15 @@ mirror), via the `windows-blocking` output of the read-ci-config
 action. It makes the RUN red; it does not gate publication —
 `publish` does not depend on the Windows job.
 
+### wads.ci_config.DFLT_DEPLOY_MARKER *= '[run deploy]'*
+
+validation, then the
+publish / Pages jobs. `run_ci_publishes` keeps today’s behaviour by default
+(the run-ci marker also releases); `false` makes it validate only.
+
+* **Type:**
+  The deploy rung of the on-demand ladder (i2mint/wads#131)
+
 ### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
 
 each suppresses one side-effecting job
@@ -578,6 +615,10 @@ read-ci-config’s wads is too old to emit them.
 
 * **Type:**
   Narrow skip markers (i2mint/wads#62)
+
+### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
+
+The levels a manual run (or `wads ci-local --level`) can ask for.
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 

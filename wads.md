@@ -1,4 +1,4 @@
-> built 2026-10-26 09:32 UTC from 8797386 (master) · wads 0.2.47. Details: build_info.json
+> built 2026-10-26 10:05 UTC from 7187cc1 (master) · wads 0.2.48. Details: build_info.json
 
 # index.html.md
 
@@ -332,8 +332,10 @@ A marker quoted only in a squash-merged PR body does not count. The stub’s zer
 
 Worth knowing before you flip:
 
-- **A manual run on the default branch releases** when publishing is enabled, exactly like a `[run ci]` push. To test without releasing, run it on another branch, or use `wads ci-local`.
-- **The `[publish]` marker needs `[run ci]` in the same subject.** This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **The levels form a ladder**: `[run ci]` validates (lint, tests, build) and, while `run_ci_publishes = true` (the default), also releases from the default branch; `[run deploy]` (`deploy_marker`) validates then publishes / builds Pages, whatever `run_ci_publishes` says. Set `run_ci_publishes = false` to make `[run ci]` validate only: a cheap “did the tests pass?” that cannot ship. Publish and Pages `need:` validation, so a release never happens without it passing.
+- **A manual run** takes a `level` input: `config` (default, as `run_ci_publishes` says: with the default it releases on the default branch), `validate`, or `deploy`. `wads ci-local --level validate|deploy` is the local equivalent.
+- **The `[publish]` marker needs `[run ci]` or `[run deploy]` in the same subject** (and, with `run_ci_publishes = false`, `[run deploy]`: the publish job also needs the deploy verdict). This applies to repos with publishing disabled, where `[publish]` forces a release.
+- **Re-render after upgrading.** A stub rendered before `deploy_marker` existed has no `[run deploy]` in its pre-filter, so that marker silently runs nothing until `wads-migrate ci-to-stub` re-renders it.
 - **Only the pushed head commit’s subject counts,** not earlier commits in the same push.
 - **On-demand stubs drop the `pull_request` trigger.** A branch-protection rule that requires CI status checks will block PRs until those checks are removed from the rule.
 
@@ -1189,8 +1191,10 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.   |
-|-----------------------------------------------------------------------------|------------------------------------------------------------|
+| [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)       | validation, then the publish / Pages jobs.                        |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------|
+| [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)           | The levels a manual run (or `wads ci-local --level`) can ask for. |
+| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER) | each suppresses one side-effecting job and nothing else.          |
 
 ### Functions
 
@@ -1261,6 +1265,18 @@ Check if coverage is enabled.
 #### *property* coverage_threshold *: [int](https://docs.python.org/3/builtins/functions.html#int)*
 
 Get minimum coverage threshold (0 = no enforcement).
+
+#### *property* deploy_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+
+Commit-subject substring that validates **and** deploys in `"on-demand"` mode.
+
+Defaults to `"[run deploy]"`. Same rules as [`run_ci_marker`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig.run_ci_marker) (subject
+line only, non-empty, single line) and it must differ from it.
+
+```pycon
+>>> CIConfig({}).deploy_marker
+'[run deploy]'
+```
 
 #### *property* docs_builder *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
@@ -1623,6 +1639,20 @@ commit message only (a squash-merge folds the PR body into the rest).
 Must be a non-empty single line: an empty marker would match every
 subject and silently turn on-demand back into auto.
 
+#### *property* run_ci_publishes *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether the run-ci marker also releases (the default, as wads always did).
+
+`false` opts in to the ladder: `run_ci_marker` validates only and
+`deploy_marker` (or a manual run with `level=deploy`) ships.
+
+```pycon
+>>> CIConfig({}).run_ci_publishes
+True
+>>> CIConfig({"tool": {"wads": {"ci": {"trigger": {"run_ci_publishes": False}}}}}).run_ci_publishes
+False
+```
+
 #### stub_secret_names(, always=('PYPI_PASSWORD',))
 
 GitHub *secret* names the caller stub should pass to the reusable workflow.
@@ -1751,6 +1781,15 @@ mirror), via the `windows-blocking` output of the read-ci-config
 action. It makes the RUN red; it does not gate publication —
 `publish` does not depend on the Windows job.
 
+### wads.ci_config.DFLT_DEPLOY_MARKER *= '[run deploy]'*
+
+validation, then the
+publish / Pages jobs. `run_ci_publishes` keeps today’s behaviour by default
+(the run-ci marker also releases); `false` makes it validate only.
+
+* **Type:**
+  The deploy rung of the on-demand ladder (i2mint/wads#131)
+
 ### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
 
 each suppresses one side-effecting job
@@ -1759,6 +1798,10 @@ read-ci-config’s wads is too old to emit them.
 
 * **Type:**
   Narrow skip markers (i2mint/wads#62)
+
+### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
+
+The levels a manual run (or `wads ci-local --level`) can ask for.
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 
@@ -1845,7 +1888,7 @@ can ever spend or publish.
 
 ### Functions
 
-| [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run])               | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
+| [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run, level])        | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
 | [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
@@ -1891,14 +1934,15 @@ failure is reported without stopping the run. `capture` names the context value 
 receives the command’s last stdout line. A `check` takes the run context and returns
 an error message, or `None` when it passes.
 
-### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False)
+### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False, level=None)
 
 Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.
 
 Lint, tests (a fresh uv venv per configured Python) and build. With –publish, the
 publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
 refusing on a dirty tree, off the default branch, or without PyPI credentials. With
-–dry-run, print the plan and run nothing.
+–dry-run, print the plan and run nothing. `--level validate|deploy` names the same
+choice as CI’s on-demand ladder (`deploy` is `--publish`).
 
 ### wads.ci_local.plan_ci_local(repo='.', , publish=False, config=None, platform='posix')
 
@@ -2325,15 +2369,20 @@ a repo to on-demand in one idempotent command.
 - `"auto"` (the default): every push and pull request, as wads always has. The stub
   renders byte-identical to `wads/data/github_ci_uv_stub.yml`.
 - `"on-demand"`: **nothing runs unless asked** – the commit subject carries
-  `run_ci_marker` (default `"[run ci]"`), or someone starts a `workflow_dispatch`.
+  `run_ci_marker` (default `"[run ci]"`) or `deploy_marker` (default
+  `"[run deploy]"`), or someone starts a `workflow_dispatch`. The levels form a
+  ladder: `run_ci_marker` validates (lint, tests, build) and, while
+  `run_ci_publishes` is true (the default, wads’ historical behaviour), also
+  deploys; with `run_ci_publishes = false` only `deploy_marker` (or a manual run
+  with `level=deploy`) runs the publish / Pages jobs, which `need:` validation.
 
 Two gates, because workflow expressions cannot split a string:
 
 1. The stub’s job-level `if:` is a zero-cost pre-filter. An ordinary push schedules
-   no runner at all, but the pre-filter can only ask whether the marker is *anywhere*
+   no runner at all, but the pre-filter can only ask whether a marker is *anywhere*
    in the commit message.
-2. The reusable workflow’s setup job extracts the subject line, and every other job
-   gates on the marker being in *that* (the TRIGGER GATE note in
+2. The reusable workflow’s setup job extracts the subject line and decides the level
+   from the markers in *that*; every other job gates on the verdict (the TRIGGER GATE note in
    `.github/workflows/uv-ci.yml`). A marker quoted only in a squash-merged PR body
    passes gate 1, costs one setup job, and runs nothing else.
 
@@ -2343,23 +2392,24 @@ copy of the repo first, so a dry run and a real run take the same path.
 
 ### Functions
 
-| [`classify_ci_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.         |
-|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`commit_paths`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                   |
-| [`flip_to_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.        |
-| [`render_stub_inputs`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.  |
-| [`render_stub_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                      |
-| [`repo_pyproject_for`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.       |
-| [`run_ci_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                   |
-| [`set_on_demand_in_pyproject`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.               |
-| [`stub_customizations`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.      |
-| [`stub_if_expression`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_if_expression)([run_ci_marker])             | The on-demand stub's job-level pre-filter, as a workflow expression.            |
-| [`stub_inputs_of`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.    |
-| [`stub_shape`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.          |
-| [`trigger_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.             |
-| [`unasked_workflows`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron). |
-| [`uncommitted`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).     |
-| [`validate_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.    |
+| [`classify_ci_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.                                                                                           |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`commit_paths`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                                                                                                     |
+| [`flip_to_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
+| [`render_stub_inputs`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
+| [`render_stub_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
+| [`repo_pyproject_for`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
+| [`run_ci_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                                                                                                     |
+| [`set_on_demand_in_pyproject`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.                                                                                                 |
+| [`stub_customizations`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
+| [`stub_if_expression`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
+| [`stub_inputs_of`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
+| [`stub_shape`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
+| [`trigger_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
+| [`trigger_settings_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger) keyword arguments. |
+| [`unasked_workflows`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron).                                                                                   |
+| [`uncommitted`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).                                                                                       |
+| [`validate_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.                                                                                      |
 
 ### Classes
 
@@ -2434,13 +2484,14 @@ Add a `with:` block (the reusable workflow’s inputs) under the stub’s `uses:
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### wads.ci_trigger.render_stub_trigger(stub, , mode='auto', run_ci_marker='[run ci]')
+### wads.ci_trigger.render_stub_trigger(stub, , mode='auto', run_ci_marker='[run ci]', deploy_marker='[run deploy]', run_ci_publishes=True)
 
 Render the caller stub for a trigger mode.
 
 `"auto"` returns `stub` unchanged. `"on-demand"` replaces the push/PR trigger
-with push + `workflow_dispatch`, puts the plain-language explanation above it, and
-adds the pre-filter `if:` to the `ci` job.
+with push + `workflow_dispatch` (with its `level` input), puts the
+plain-language explanation above it, and adds the pre-filter `if:` to the `ci`
+job.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -2497,20 +2548,20 @@ Raises `yaml.YAMLError` when the text does not parse.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
 
-### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]')
+### wads.ci_trigger.stub_if_expression(run_ci_marker='[run ci]', deploy_marker='[run deploy]')
 
 The on-demand stub’s job-level pre-filter, as a workflow expression.
 
 ```pycon
->>> stub_if_expression("[run ci]")
-"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"
+>>> stub_if_expression("[run ci]", "[run deploy]")
+"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]') || contains(github.event.head_commit.message, '[run deploy]')"
 ```
 
-A quote in the marker is doubled, which is how workflow expressions escape it:
+A quote in a marker is doubled, which is how workflow expressions escape it:
 
 ```pycon
->>> stub_if_expression("it's")
-"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"
+>>> stub_if_expression("it's", "x")
+"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s') || contains(github.event.head_commit.message, 'x')"
 ```
 
 * **Return type:**
@@ -2545,12 +2596,20 @@ re-render writes the named transport whatever this reports
 
 The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.trigger_settings_for_workflow(ci_path)
+
+The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as
+[`render_stub_trigger()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger) keyword arguments.
+
 Defaults when there is no such file or no pyproject. An invalid trigger table
 raises: a stub must never silently render `auto` for a repo that asked for
 `on-demand`.
 
 * **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.ci_trigger.unasked_workflows(repo, , workflow='.github/workflows/ci.yml')
 
@@ -7099,18 +7158,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 09:32 UTC** from commit <a href="https://github.com/i2mint/wads/commit/8797386f519dec878a75db33bc932c901aadb8ac"><code>8797386</code></a> on branch <code>master</code>, for **wads 0.2.47** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 10:05 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7187cc1ff3ea7dd3ab6399bf1b64563016bcf570"><code>7187cc1</code></a> on branch <code>master</code>, for **wads 0.2.48** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.47) is behind the latest release on PyPI (0.2.48): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.48) is behind the latest release on PyPI (0.2.49): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/8797386f519dec878a75db33bc932c901aadb8ac"><code>8797386f519dec878a75db33bc932c901aadb8ac</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/7187cc1ff3ea7dd3ab6399bf1b64563016bcf570"><code>7187cc1ff3ea7dd3ab6399bf1b64563016bcf570</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7121,9 +7180,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40299965409">40299965409</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40304218338">40304218338</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>8797386f519dec878a75db33bc932c901aadb8ac</code> (in the history of the built commit) |
+| Event commit | <code>7187cc1ff3ea7dd3ab6399bf1b64563016bcf570</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7148,13 +7207,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.48/">0.2.48</a>, newer than the documented version (0.2.47).
+Latest release: <a href="https://pypi.org/project/wads/0.2.49/">0.2.49</a>, newer than the documented version (0.2.48).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 8797386f519dec878a75db33bc932c901aadb8ac
+git checkout 7187cc1ff3ea7dd3ab6399bf1b64563016bcf570
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

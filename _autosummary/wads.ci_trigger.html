@@ -296,15 +296,20 @@ a repo to on-demand in one idempotent command.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default): every push and pull request, as wads always has. The stub
 renders byte-identical to <code class="docutils literal notranslate"><span class="pre">wads/data/github_ci_uv_stub.yml</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>: <strong>nothing runs unless asked</strong> – the commit subject carries
-<code class="docutils literal notranslate"><span class="pre">run_ci_marker</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code>), or someone starts a <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">run_ci_marker</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">ci]&quot;</span></code>) or <code class="docutils literal notranslate"><span class="pre">deploy_marker</span></code> (default
+<code class="docutils literal notranslate"><span class="pre">&quot;[run</span> <span class="pre">deploy]&quot;</span></code>), or someone starts a <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>. The levels form a
+ladder: <code class="docutils literal notranslate"><span class="pre">run_ci_marker</span></code> validates (lint, tests, build) and, while
+<code class="docutils literal notranslate"><span class="pre">run_ci_publishes</span></code> is true (the default, wads’ historical behaviour), also
+deploys; with <code class="docutils literal notranslate"><span class="pre">run_ci_publishes</span> <span class="pre">=</span> <span class="pre">false</span></code> only <code class="docutils literal notranslate"><span class="pre">deploy_marker</span></code> (or a manual run
+with <code class="docutils literal notranslate"><span class="pre">level=deploy</span></code>) runs the publish / Pages jobs, which <code class="docutils literal notranslate"><span class="pre">need:</span></code> validation.</p></li>
 </ul>
 <p>Two gates, because workflow expressions cannot split a string:</p>
 <ol class="arabic simple">
 <li><p>The stub’s job-level <code class="docutils literal notranslate"><span class="pre">if:</span></code> is a zero-cost pre-filter. An ordinary push schedules
-no runner at all, but the pre-filter can only ask whether the marker is <em>anywhere</em>
+no runner at all, but the pre-filter can only ask whether a marker is <em>anywhere</em>
 in the commit message.</p></li>
-<li><p>The reusable workflow’s setup job extracts the subject line, and every other job
-gates on the marker being in <em>that</em> (the TRIGGER GATE note in
+<li><p>The reusable workflow’s setup job extracts the subject line and decides the level
+from the markers in <em>that</em>; every other job gates on the verdict (the TRIGGER GATE note in
 <code class="docutils literal notranslate"><span class="pre">.github/workflows/uv-ci.yml</span></code>). A marker quoted only in a squash-merged PR body
 passes gate 1, costs one setup job, and runs nothing else.</p></li>
 </ol>
@@ -342,7 +347,7 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_customizations" title="wads.ci_trigger.stub_customizations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_customizations</span></code></a>(text)</p></td>
 <td><p>Split what a stub holds beyond the template into <code class="docutils literal notranslate"><span class="pre">(with_inputs,</span> <span class="pre">dropped)</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_if_expression" title="wads.ci_trigger.stub_if_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_if_expression</span></code></a>([run_ci_marker])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_if_expression" title="wads.ci_trigger.stub_if_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_if_expression</span></code></a>([run_ci_marker, ...])</p></td>
 <td><p>The on-demand stub's job-level pre-filter, as a workflow expression.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.stub_inputs_of" title="wads.ci_trigger.stub_inputs_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stub_inputs_of</span></code></a>(ci_path)</p></td>
@@ -354,13 +359,16 @@ copy of the repo first, so a dry run and a real run take the same path.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.trigger_for_workflow" title="wads.ci_trigger.trigger_for_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger_for_workflow</span></code></a>(ci_path)</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">run_ci_marker)</span></code> declared by the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.unasked_workflows" title="wads.ci_trigger.unasked_workflows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unasked_workflows</span></code></a>(repo, *[, workflow])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.trigger_settings_for_workflow" title="wads.ci_trigger.trigger_settings_for_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trigger_settings_for_workflow</span></code></a>(ci_path)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code> settings of the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>, as <a class="reference internal" href="#wads.ci_trigger.render_stub_trigger" title="wads.ci_trigger.render_stub_trigger"><code class="xref py py-func docutils literal notranslate"><span class="pre">render_stub_trigger()</span></code></a> keyword arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.unasked_workflows" title="wads.ci_trigger.unasked_workflows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unasked_workflows</span></code></a>(repo, *[, workflow])</p></td>
 <td><p>Other workflow files in <code class="docutils literal notranslate"><span class="pre">repo</span></code> that run without anyone asking (push, PR, cron).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.uncommitted" title="wads.ci_trigger.uncommitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncommitted</span></code></a>(repo, paths)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.uncommitted" title="wads.ci_trigger.uncommitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncommitted</span></code></a>(repo, paths)</p></td>
 <td><p>Which of <code class="docutils literal notranslate"><span class="pre">paths</span></code> have uncommitted changes (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span> <span class="pre">--porcelain</span></code> lines).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_trigger.validate_trigger" title="wads.ci_trigger.validate_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_trigger</span></code></a>(mode, run_ci_marker)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_trigger.validate_trigger" title="wads.ci_trigger.validate_trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_trigger</span></code></a>(mode, run_ci_marker)</p></td>
 <td><p>Validate a (mode, marker) pair with the same rules the CI setup job applies.</p></td>
 </tr>
 </tbody>
@@ -467,11 +475,12 @@ written, because it would ignore the setting and keep running on every push.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_trigger.render_stub_trigger">
-<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">render_stub_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stub</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#render_stub_trigger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.render_stub_trigger" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">render_stub_trigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stub</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deploy_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">deploy]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_ci_publishes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#render_stub_trigger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.render_stub_trigger" title="Link to this definition">¶</a></dt>
 <dd><p>Render the caller stub for a trigger mode.</p>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> returns <code class="docutils literal notranslate"><span class="pre">stub</span></code> unchanged. <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code> replaces the push/PR trigger
-with push + <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>, puts the plain-language explanation above it, and
-adds the pre-filter <code class="docutils literal notranslate"><span class="pre">if:</span></code> to the <code class="docutils literal notranslate"><span class="pre">ci</span></code> job.</p>
+with push + <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code> (with its <code class="docutils literal notranslate"><span class="pre">level</span></code> input), puts the
+plain-language explanation above it, and adds the pre-filter <code class="docutils literal notranslate"><span class="pre">if:</span></code> to the <code class="docutils literal notranslate"><span class="pre">ci</span></code>
+job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
@@ -544,15 +553,15 @@ Raises <code class="docutils literal notranslate"><span class="pre">yaml.YAMLErr
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_trigger.stub_if_expression">
-<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_if_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_if_expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_if_expression" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">stub_if_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_ci_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">ci]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deploy_marker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[run</span> <span class="pre">deploy]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#stub_if_expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.stub_if_expression" title="Link to this definition">¶</a></dt>
 <dd><p>The on-demand stub’s job-level pre-filter, as a workflow expression.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"[run ci]"</span><span class="p">)</span>
-<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"[run ci]"</span><span class="p">,</span> <span class="s2">"[run deploy]"</span><span class="p">)</span>
+<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]') || contains(github.event.head_commit.message, '[run deploy]')"</span>
 </pre></div>
 </div>
-<p>A quote in the marker is doubled, which is how workflow expressions escape it:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"it's"</span><span class="p">)</span>
-<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"</span>
+<p>A quote in a marker is doubled, which is how workflow expressions escape it:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stub_if_expression</span><span class="p">(</span><span class="s2">"it's"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span>
+<span class="go">"github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s') || contains(github.event.head_commit.message, 'x')"</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -597,12 +606,24 @@ re-render writes the named transport whatever this reports
 <dt class="sig sig-object py" id="wads.ci_trigger.trigger_for_workflow">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">trigger_for_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#trigger_for_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.trigger_for_workflow" title="Link to this definition">¶</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">(mode,</span> <span class="pre">run_ci_marker)</span></code> declared by the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_trigger.trigger_settings_for_workflow">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_trigger.</span></span><span class="sig-name descname"><span class="pre">trigger_settings_for_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_trigger.html#trigger_settings_for_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_trigger.trigger_settings_for_workflow" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code> settings of the repo holding <code class="docutils literal notranslate"><span class="pre">ci_path</span></code>, as
+<a class="reference internal" href="#wads.ci_trigger.render_stub_trigger" title="wads.ci_trigger.render_stub_trigger"><code class="xref py py-func docutils literal notranslate"><span class="pre">render_stub_trigger()</span></code></a> keyword arguments.</p>
 <p>Defaults when there is no such file or no pyproject. An invalid trigger table
 raises: a stub must never silently render <code class="docutils literal notranslate"><span class="pre">auto</span></code> for a repo that asked for
 <code class="docutils literal notranslate"><span class="pre">on-demand</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -720,6 +741,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
 <li><a class="reference internal" href="#wads.ci_trigger.stub_inputs_of"><code class="docutils literal notranslate"><span class="pre">stub_inputs_of()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_trigger.stub_shape"><code class="docutils literal notranslate"><span class="pre">stub_shape()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_trigger.trigger_for_workflow"><code class="docutils literal notranslate"><span class="pre">trigger_for_workflow()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_trigger.trigger_settings_for_workflow"><code class="docutils literal notranslate"><span class="pre">trigger_settings_for_workflow()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_trigger.unasked_workflows"><code class="docutils literal notranslate"><span class="pre">unasked_workflows()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_trigger.uncommitted"><code class="docutils literal notranslate"><span class="pre">uncommitted()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_trigger.validate_trigger"><code class="docutils literal notranslate"><span class="pre">validate_trigger()</span></code></a></li>
@@ -734,7 +756,7 @@ raises: a stub must never silently render <code class="docutils literal notransl
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=18387828"></script>
+</div><script src="../_static/documentation_options.js?v=ba4f896f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
