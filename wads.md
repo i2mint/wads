@@ -1,4 +1,4 @@
-> built 2026-10-26 15:24 UTC from 966e939 (master) · wads 0.2.55. Details: build_info.json
+> built 2026-10-26 18:41 UTC from 5d635c6 (master) · wads 0.2.56. Details: build_info.json
 
 # index.html.md
 
@@ -3094,16 +3094,38 @@ sets the fallback. Worst case for a command that always fails is
 `(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
 `apt-get update` is not repeated when only the following install flaked.
 
+### Module Attributes
+
+| [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).   |
+|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                              |
+| [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                      |
+
 ### Functions
 
-| [`check_if_installed`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.check_if_installed)(dep_name, check_cmds[, ...])   | Check if dependency is already installed using check commands.   |
-|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
-| [`detect_platform`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.detect_platform)()                                 | Detect the current platform.                                     |
-| [`find_pyproject`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.find_pyproject)(path)                              | Find pyproject.toml file from path (file or directory).          |
-| [`install_dependency`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_dependency)(dep_name, install_cmds[, ...]) | Install a dependency using install commands.                     |
-| [`install_system_dependencies`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_system_dependencies)([...])                | Install system dependencies from pyproject.toml.                 |
-| [`main`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.main)()                                            | CLI entry point.                                                 |
-| [`read_system_deps`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.            |
+| [`check_if_installed`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.check_if_installed)(dep_name, check_cmds[, ...])   | Check if dependency is already installed using check commands.                  |
+|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`detect_platform`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.detect_platform)()                                 | Detect the current platform.                                                    |
+| [`find_pyproject`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.find_pyproject)(path)                              | Find pyproject.toml file from path (file or directory).                         |
+| [`install_dependency`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_dependency)(dep_name, install_cmds[, ...]) | Install a dependency using install commands.                                    |
+| [`install_system_dependencies`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_system_dependencies)([...])                | Install system dependencies from pyproject.toml.                                |
+| [`main`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
+| [`read_system_deps`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.                           |
+| [`with_apt_lock_timeout`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.with_apt_lock_timeout)(cmd, seconds)               | `cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock. |
+
+### wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT *= 120*
+
+Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).
+
+### wads.install_system_deps.DFLT_KILL_GRACE *= 5*
+
+Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.
+
+### wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS *= {'ffmpeg': 900}*
+
+Dependencies with a big dependency tree get a longer ceiling than the global default
+(a cold-cache `apt-get install ffmpeg` outlasts 300s). A declaration or an explicit
+`default_install_timeout` still wins.
 
 ### wads.install_system_deps.check_if_installed(dep_name, check_cmds, timeout=10)
 
@@ -3132,7 +3154,7 @@ Find pyproject.toml file from path (file or directory).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300, , retries=2, backoff=5, sleep=None)
+### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300, , retries=2, backoff=5, sleep=None, apt_lock_timeout=120)
 
 Install a dependency using install commands.
 
@@ -3143,12 +3165,13 @@ Install a dependency using install commands.
   * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts for a command that fails or times out
   * **backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Seconds before the first retry; doubles for each further one
   * **sleep** – Wait function (default `time.sleep`; injectable for tests)
+  * **apt_lock_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds each apt call waits for the dpkg lock (`None`: no flag)
 * **Returns:**
   bool, error_message: Optional[str])
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=300, default_install_retries=2)
+### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=None, default_install_retries=2, apt_lock_timeout=120)
 
 Install system dependencies from pyproject.toml.
 
@@ -3157,8 +3180,11 @@ Install system dependencies from pyproject.toml.
   * **platform** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Platform to install for (linux/macos/windows), auto-detect if None
   * **skip_check** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip checking if dependencies are already installed
   * **verbose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Print detailed progress
-  * **default_install_timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Per-command install timeout (seconds) for
-    dependencies that declare no `install_timeout` of their own.
+  * **default_install_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Per-command install timeout (seconds) for
+    dependencies that declare no `install_timeout` of their own. `None`:
+    [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS) for known-slow ones, else
+    `DFLT_INSTALL_TIMEOUT`.
+  * **apt_lock_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds each apt call waits for the dpkg lock (`None`: no flag).
   * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
     dependencies that declare no `install_retries` of their own.
 * **Return type:**
@@ -3176,6 +3202,20 @@ Read [tool.wads.ops.\*] sections from pyproject.toml.
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### wads.install_system_deps.with_apt_lock_timeout(cmd, seconds)
+
+`cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock.
+
+```pycon
+>>> with_apt_lock_timeout("sudo apt-get update && sudo apt-get install -y ffmpeg", 60)
+'sudo apt-get -o DPkg::Lock::Timeout=60 update && sudo apt-get -o DPkg::Lock::Timeout=60 install -y ffmpeg'
+>>> with_apt_lock_timeout("apt install -y apt-utils", None)
+'apt install -y apt-utils'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/wads.licence_check.html.md
@@ -7634,18 +7674,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 15:24 UTC** from commit <a href="https://github.com/i2mint/wads/commit/966e939d927fc27ada968e5b6387010aab2a6e2c"><code>966e939</code></a> on branch <code>master</code>, for **wads 0.2.55** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 18:41 UTC** from commit <a href="https://github.com/i2mint/wads/commit/5d635c634764f0f622ce7c292d516f3d008ccdc4"><code>5d635c6</code></a> on branch <code>master</code>, for **wads 0.2.56** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.55) is behind the latest release on PyPI (0.2.56): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.56) is behind the latest release on PyPI (0.2.57): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/966e939d927fc27ada968e5b6387010aab2a6e2c"><code>966e939d927fc27ada968e5b6387010aab2a6e2c</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/5d635c634764f0f622ce7c292d516f3d008ccdc4"><code>5d635c634764f0f622ce7c292d516f3d008ccdc4</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7656,9 +7696,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40348634922">40348634922</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40379410803">40379410803</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>966e939d927fc27ada968e5b6387010aab2a6e2c</code> (in the history of the built commit) |
+| Event commit | <code>5d635c634764f0f622ce7c292d516f3d008ccdc4</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7683,13 +7723,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.56/">0.2.56</a>, newer than the documented version (0.2.55).
+Latest release: <a href="https://pypi.org/project/wads/0.2.57/">0.2.57</a>, newer than the documented version (0.2.56).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 966e939d927fc27ada968e5b6387010aab2a6e2c
+git checkout 5d635c634764f0f622ce7c292d516f3d008ccdc4
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -312,6 +312,22 @@ declare <code class="docutils literal notranslate"><span class="pre">install_ret
 sets the fallback. Worst case for a command that always fails is
 <code class="docutils literal notranslate"><span class="pre">(retries</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">install_timeout</span></code> plus the backoff waits. Commands are retried one at a time, so a successful
 <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">update</span></code> is not repeated when only the following install flaked.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS" title="wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a></p></td>
+<td><p>Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> outlasts 300s).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT" title="wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_APT_LOCK_TIMEOUT</span></code></a></p></td>
+<td><p>Seconds apt waits for the dpkg lock before giving up (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">DPkg::Lock::Timeout</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.DFLT_KILL_GRACE" title="wads.install_system_deps.DFLT_KILL_GRACE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_KILL_GRACE</span></code></a></p></td>
+<td><p>Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -337,9 +353,32 @@ sets the fallback. Worst case for a command that always fails is
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.read_system_deps" title="wads.install_system_deps.read_system_deps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_system_deps</span></code></a>(pyproject_path)</p></td>
 <td><p>Read [tool.wads.ops.*] sections from pyproject.toml.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout" title="wads.install_system_deps.with_apt_lock_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_apt_lock_timeout</span></code></a>(cmd, seconds)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">DFLT_APT_LOCK_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">120</span></span><a class="headerlink" href="#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT" title="Link to this definition">¶</a></dt>
+<dd><p>Seconds apt waits for the dpkg lock before giving up (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">DPkg::Lock::Timeout</span></code>).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.DFLT_KILL_GRACE">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">DFLT_KILL_GRACE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#wads.install_system_deps.DFLT_KILL_GRACE" title="Link to this definition">¶</a></dt>
+<dd><p>Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ffmpeg':</span> <span class="pre">900}</span></span><a class="headerlink" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS" title="Link to this definition">¶</a></dt>
+<dd><p>Dependencies with a big dependency tree get a longer ceiling than the global default
+(a cold-cache <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> outlasts 300s). A declaration or an explicit
+<code class="docutils literal notranslate"><span class="pre">default_install_timeout</span></code> still wins.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.install_system_deps.check_if_installed">
 <span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">check_if_installed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dep_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_cmds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#check_if_installed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.check_if_installed" title="Link to this definition">¶</a></dt>
@@ -385,7 +424,7 @@ sets the fallback. Worst case for a command that always fails is
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.install_system_deps.install_dependency">
-<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">install_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dep_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_cmds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sleep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#install_dependency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.install_dependency" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">install_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dep_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_cmds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sleep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apt_lock_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#install_dependency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.install_dependency" title="Link to this definition">¶</a></dt>
 <dd><p>Install a dependency using install commands.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -396,6 +435,7 @@ sets the fallback. Worst case for a command that always fails is
 <li><p><strong>retries</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Extra attempts for a command that fails or times out</p></li>
 <li><p><strong>backoff</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – Seconds before the first retry; doubles for each further one</p></li>
 <li><p><strong>sleep</strong> – Wait function (default <code class="docutils literal notranslate"><span class="pre">time.sleep</span></code>; injectable for tests)</p></li>
+<li><p><strong>apt_lock_timeout</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Seconds each apt call waits for the dpkg lock (<code class="docutils literal notranslate"><span class="pre">None</span></code>: no flag)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -409,7 +449,7 @@ sets the fallback. Worst case for a command that always fails is
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.install_system_deps.install_system_dependencies">
-<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">install_system_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_install_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_install_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#install_system_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.install_system_dependencies" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">install_system_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_install_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_install_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apt_lock_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#install_system_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.install_system_dependencies" title="Link to this definition">¶</a></dt>
 <dd><p>Install system dependencies from pyproject.toml.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -418,8 +458,11 @@ sets the fallback. Worst case for a command that always fails is
 <li><p><strong>platform</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – Platform to install for (linux/macos/windows), auto-detect if None</p></li>
 <li><p><strong>skip_check</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Skip checking if dependencies are already installed</p></li>
 <li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Print detailed progress</p></li>
-<li><p><strong>default_install_timeout</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – Per-command install timeout (seconds) for
-dependencies that declare no <code class="docutils literal notranslate"><span class="pre">install_timeout</span></code> of their own.</p></li>
+<li><p><strong>default_install_timeout</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Per-command install timeout (seconds) for
+dependencies that declare no <code class="docutils literal notranslate"><span class="pre">install_timeout</span></code> of their own. <code class="docutils literal notranslate"><span class="pre">None</span></code>:
+<a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS" title="wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a> for known-slow ones, else
+<code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_INSTALL_TIMEOUT</span></code>.</p></li>
+<li><p><strong>apt_lock_timeout</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – Seconds each apt call waits for the dpkg lock (<code class="docutils literal notranslate"><span class="pre">None</span></code>: no flag).</p></li>
 <li><p><strong>default_install_retries</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Retries per failed install command for
 dependencies that declare no <code class="docutils literal notranslate"><span class="pre">install_retries</span></code> of their own.</p></li>
 </ul>
@@ -446,6 +489,23 @@ dependencies that declare no <code class="docutils literal notranslate"><span cl
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.install_system_deps.with_apt_lock_timeout">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">with_apt_lock_timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#with_apt_lock_timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.with_apt_lock_timeout" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">with_apt_lock_timeout</span><span class="p">(</span><span class="s2">"sudo apt-get update &amp;&amp; sudo apt-get install -y ffmpeg"</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="go">'sudo apt-get -o DPkg::Lock::Timeout=60 update &amp;&amp; sudo apt-get -o DPkg::Lock::Timeout=60 install -y ffmpeg'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">with_apt_lock_timeout</span><span class="p">(</span><span class="s2">"apt install -y apt-utils"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="go">'apt install -y apt-utils'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -504,6 +564,9 @@ dependencies that declare no <code class="docutils literal notranslate"><span cl
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">wads.install_system_deps</a><ul>
+<li><a class="reference internal" href="#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DFLT_APT_LOCK_TIMEOUT</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.DFLT_KILL_GRACE"><code class="docutils literal notranslate"><span class="pre">DFLT_KILL_GRACE</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.check_if_installed"><code class="docutils literal notranslate"><span class="pre">check_if_installed()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.detect_platform"><code class="docutils literal notranslate"><span class="pre">detect_platform()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.find_pyproject"><code class="docutils literal notranslate"><span class="pre">find_pyproject()</span></code></a></li>
@@ -511,6 +574,7 @@ dependencies that declare no <code class="docutils literal notranslate"><span cl
 <li><a class="reference internal" href="#wads.install_system_deps.install_system_dependencies"><code class="docutils literal notranslate"><span class="pre">install_system_dependencies()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.read_system_deps"><code class="docutils literal notranslate"><span class="pre">read_system_deps()</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout"><code class="docutils literal notranslate"><span class="pre">with_apt_lock_timeout()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -522,7 +586,7 @@ dependencies that declare no <code class="docutils literal notranslate"><span cl
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=35b112bc"></script>
+</div><script src="../_static/documentation_options.js?v=15008857"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

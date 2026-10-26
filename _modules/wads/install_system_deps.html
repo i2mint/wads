@@ -309,7 +309,10 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">platform_module</span>
@@ -332,6 +335,14 @@
 <span class="c1"># (package managers fetch over the network); check commands are local and fast.</span>
 <span class="c1"># Both are overridable — see `install_system_dependencies` and the CLI.</span>
 <span class="n">DFLT_INSTALL_TIMEOUT</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="c1">#: Dependencies with a big dependency tree get a longer ceiling than the global default</span>
+<span class="c1">#: (a cold-cache ``apt-get install ffmpeg`` outlasts 300s). A declaration or an explicit</span>
+<span class="c1">#: ``default_install_timeout`` still wins.</span>
+<span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ffmpeg"</span><span class="p">:</span> <span class="mi">900</span><span class="p">}</span>
+<span class="c1">#: Seconds apt waits for the dpkg lock before giving up (``-o DPkg::Lock::Timeout``).</span>
+<span class="n">DFLT_APT_LOCK_TIMEOUT</span> <span class="o">=</span> <span class="mi">120</span>
+<span class="c1">#: Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.</span>
+<span class="n">DFLT_KILL_GRACE</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">DFLT_CHECK_TIMEOUT</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="c1"># Extra attempts per failed install command, and the wait before the first retry</span>
 <span class="c1"># (doubled for each further one). Transient mirror failures are the common cause.</span>
@@ -417,6 +428,92 @@
 
 
 
+<span class="n">_APT_CALL_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?P&lt;head&gt;(?:^|&amp;&amp;|\|\||[;|(])\s*"</span>
+    <span class="sa">r</span><span class="s2">"(?:(?:sudo|env|time|nice)\s+(?:(?:-[uUgG]|--user|--group)\s+\S+\s+|-\S+\s+)*|\w+=\S*\s+)*)"</span>
+    <span class="sa">r</span><span class="s2">"(?P&lt;apt&gt;apt-get|apt)(?=\s)"</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="with_apt_lock_timeout">
+<a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.with_apt_lock_timeout">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">with_apt_lock_timeout</span><span class="p">(</span><span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``cmd`` with every ``apt``/``apt-get`` call told to wait ``seconds`` for the dpkg lock.</span>
+
+<span class="sd">    &gt;&gt;&gt; with_apt_lock_timeout("sudo apt-get update &amp;&amp; sudo apt-get install -y ffmpeg", 60)</span>
+<span class="sd">    'sudo apt-get -o DPkg::Lock::Timeout=60 update &amp;&amp; sudo apt-get -o DPkg::Lock::Timeout=60 install -y ffmpeg'</span>
+<span class="sd">    &gt;&gt;&gt; with_apt_lock_timeout("apt install -y apt-utils", None)</span>
+<span class="sd">    'apt install -y apt-utils'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">seconds</span> <span class="ow">or</span> <span class="s2">"dpkg::lock::timeout"</span> <span class="ow">in</span> <span class="n">cmd</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">cmd</span>
+    <span class="k">return</span> <span class="n">_APT_CALL_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s1">'head'</span><span class="p">]</span><span class="si">}{</span><span class="n">m</span><span class="p">[</span><span class="s1">'apt'</span><span class="p">]</span><span class="si">}</span><span class="s2"> -o DPkg::Lock::Timeout=</span><span class="si">{</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">cmd</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_group_alive</span><span class="p">(</span><span class="n">pgid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">pgid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ProcessLookupError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">):</span>
+        <span class="c1"># macOS reports EPERM for a group that holds only zombies; for root-owned</span>
+        <span class="c1"># members we could not signal them anyway</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_kill_group</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">grace</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Stop ``proc`` and, on POSIX, everything in its session.</span>
+
+<span class="sd">    SIGTERM first (``sudo`` relays it to a root-owned child that cannot be SIGKILLed</span>
+<span class="sd">    through), then SIGKILL for whatever is still in the group after ``grace`` seconds.</span>
+<span class="sd">    The shell exiting early proves nothing about its descendants, so the wait is on the</span>
+<span class="sd">    group, not on ``proc``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"posix"</span><span class="p">:</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ProcessLookupError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">grace</span>
+        <span class="k">while</span> <span class="n">_group_alive</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">deadline</span><span class="p">:</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>  <span class="c1"># reap the shell so it does not linger as a zombie in the group</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ProcessLookupError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">):</span>
+            <span class="k">pass</span>
+    <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_shell</span><span class="p">(</span>
+    <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">kill_grace</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_KILL_GRACE</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CompletedProcess</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run a shell command with output streaming; on timeout or interrupt kill its process tree.</span>
+
+<span class="sd">    ``subprocess.run(shell=True, timeout=...)`` kills only the shell, leaving e.g. a</span>
+<span class="sd">    ``sudo apt-get`` child holding the dpkg lock, which would make every retry fail.</span>
+<span class="sd">    On POSIX the command gets its own session so the whole group can be signalled</span>
+<span class="sd">    (on Windows only the shell is killed).</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+        <span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">start_new_session</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"posix"</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+            <span class="ne">BaseException</span>
+        <span class="p">):</span>  <span class="c1"># TimeoutExpired, or Ctrl-C: the child no longer shares our tty group</span>
+            <span class="n">_kill_group</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">grace</span><span class="o">=</span><span class="n">kill_grace</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CompletedProcess</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_with_retries</span><span class="p">(</span>
     <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -437,12 +534,7 @@
             <span class="p">)</span>
             <span class="p">(</span><span class="n">sleep</span> <span class="ow">or</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">)(</span><span class="n">wait</span><span class="p">)</span>  <span class="c1"># looked up late so tests can patch it</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">cmd</span><span class="p">,</span>
-                <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Show output in real-time</span>
-                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_run_shell</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
             <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span>
@@ -465,6 +557,7 @@
     <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
     <span class="n">backoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_BACKOFF</span><span class="p">,</span>
     <span class="n">sleep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">apt_lock_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_APT_LOCK_TIMEOUT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install a dependency using install commands.</span>
@@ -476,6 +569,7 @@
 <span class="sd">        retries: Extra attempts for a command that fails or times out</span>
 <span class="sd">        backoff: Seconds before the first retry; doubles for each further one</span>
 <span class="sd">        sleep: Wait function (default ``time.sleep``; injectable for tests)</span>
+<span class="sd">        apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag)</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (success: bool, error_message: Optional[str])</span>
@@ -494,6 +588,7 @@
 
     <span class="c1"># Execute install commands (AND logic - all must succeed)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">commands</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">with_apt_lock_timeout</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">apt_lock_timeout</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -517,8 +612,9 @@
     <span class="n">skip_check</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">default_install_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">,</span>
+    <span class="n">default_install_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">default_install_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
+    <span class="n">apt_lock_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_APT_LOCK_TIMEOUT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install system dependencies from pyproject.toml.</span>
@@ -529,13 +625,28 @@
 <span class="sd">        skip_check: Skip checking if dependencies are already installed</span>
 <span class="sd">        verbose: Print detailed progress</span>
 <span class="sd">        default_install_timeout: Per-command install timeout (seconds) for</span>
-<span class="sd">            dependencies that declare no ``install_timeout`` of their own.</span>
+<span class="sd">            dependencies that declare no ``install_timeout`` of their own. ``None``:</span>
+<span class="sd">            :data:`SLOW_DEP_INSTALL_TIMEOUTS` for known-slow ones, else</span>
+<span class="sd">            :data:`DFLT_INSTALL_TIMEOUT`.</span>
+<span class="sd">        apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).</span>
 <span class="sd">        default_install_retries: Retries per failed install command for</span>
 <span class="sd">            dependencies that declare no ``install_retries`` of their own.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (installed_count, skipped_count, failed_count)</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">apt_lock_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">apt_lock_timeout</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"apt_lock_timeout must be &gt;= 0, got </span><span class="si">{</span><span class="n">apt_lock_timeout</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="c1"># Fail before any output rather than at the first dependency</span>
+    <span class="k">if</span> <span class="n">default_install_retries</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"default_install_retries must be &gt;= 0, got </span><span class="si">{</span><span class="n">default_install_retries</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_install_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">default_install_timeout</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"default_install_timeout must be &gt; 0, got </span><span class="si">{</span><span class="n">default_install_timeout</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
     <span class="c1"># Find pyproject.toml</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">pyproject</span> <span class="o">=</span> <span class="n">find_pyproject</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
@@ -598,12 +709,17 @@
             <span class="k">return</span> <span class="n">default</span>
         <span class="k">return</span> <span class="n">declared</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">fallback_timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">default_install_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default_install_timeout</span>
+        <span class="k">return</span> <span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">setting_for</span><span class="p">(</span>
             <span class="n">dep_name</span><span class="p">,</span>
             <span class="n">dep_config</span><span class="p">,</span>
             <span class="s2">"install_timeout"</span><span class="p">,</span>
-            <span class="n">default_install_timeout</span><span class="p">,</span>
+            <span class="n">fallback_timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">),</span>
             <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -664,6 +780,7 @@
             <span class="n">install_cmds</span><span class="p">,</span>
             <span class="n">install_timeout</span><span class="p">,</span>
             <span class="n">retries</span><span class="o">=</span><span class="n">retries_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">),</span>
+            <span class="n">apt_lock_timeout</span><span class="o">=</span><span class="n">apt_lock_timeout</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
@@ -695,6 +812,14 @@
 
     <span class="k">return</span> <span class="n">installed_count</span><span class="p">,</span> <span class="n">skipped_count</span><span class="p">,</span> <span class="n">failed_count</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_positive_float</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""argparse type: a float &gt; 0."""</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"must be &gt; 0, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_non_negative_int</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -742,12 +867,13 @@
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">"--install-timeout"</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">_positive_float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">metavar</span><span class="o">=</span><span class="s2">"SECONDS"</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Per-command install timeout for dependencies that declare no "</span>
-            <span class="sa">f</span><span class="s2">"install_timeout of their own (default: </span><span class="si">{</span><span class="n">DFLT_INSTALL_TIMEOUT</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="sa">f</span><span class="s2">"install_timeout of their own (default: </span><span class="si">{</span><span class="n">DFLT_INSTALL_TIMEOUT</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span><span class="p">)</span><span class="si">}</span><span class="s2"> get longer)"</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -809,7 +935,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=35b112bc"></script>
+</div><script src="../../_static/documentation_options.js?v=15008857"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

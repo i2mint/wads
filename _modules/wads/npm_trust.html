@@ -679,9 +679,7 @@
     <span class="k">if</span> <span class="s2">"publish"</span> <span class="ow">in</span> <span class="n">positional</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="ow">and</span> <span class="n">sub</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"run"</span><span class="p">,</span> <span class="s2">"run-script"</span><span class="p">):</span>
         <span class="c1"># a flag we do not know took the real subcommand's place: never drop the call</span>
         <span class="k">return</span> <span class="p">[</span>
-            <span class="n">PublishCall</span><span class="p">(</span>
-                <span class="n">where</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="sa">f</span><span class="s2">"unrecognised </span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> flag before publish"</span>
-            <span class="p">)</span>
+            <span class="n">PublishCall</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="sa">f</span><span class="s2">"unrecognised </span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> flag before publish"</span><span class="p">)</span>
         <span class="p">]</span>
     <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">positional</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"run"</span><span class="p">,</span> <span class="s2">"run-script"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">positional</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">sub</span>
@@ -1448,7 +1446,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=35b112bc"></script>
+</div><script src="../../_static/documentation_options.js?v=15008857"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
