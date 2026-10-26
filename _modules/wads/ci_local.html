@@ -232,6 +232,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
@@ -327,10 +328,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.pytest_doctest_flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">doctest_optionflags_arg</span>
 
 <span class="c1"># Mirrors of values the CI actions hardcode. Tests pin each against its source</span>
 <span class="c1"># (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.</span>
-<span class="n">DOCTEST_OPTIONFLAGS</span> <span class="o">=</span> <span class="s2">"ELLIPSIS IGNORE_EXCEPTION_DETAIL"</span>
 <span class="n">RELEASE_COMMIT_MESSAGE</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"**CI** Formatted code + Updated version to &lt;&lt;version&gt;&gt; [skip ci]"</span>
 <span class="p">)</span>
@@ -448,8 +449,11 @@
 
 <div class="viewcode-block" id="pytest_argv">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.pytest_argv">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The pytest arguments ``actions/run-tests-uv`` builds, in its order.</span>
+
+<span class="sd">    The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config</span>
+<span class="sd">    sets them (``repo=None``: not checked, defaults passed).</span>
 
 <span class="sd">    &gt;&gt;&gt; pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE</span>
 <span class="sd">    ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',</span>
@@ -459,7 +463,9 @@
     <span class="n">argv</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">:</span>
         <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--cov=</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"--cov-report=term-missing"</span><span class="p">]</span>
-    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--doctest-modules"</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"doctest_optionflags=</span><span class="si">{</span><span class="n">DOCTEST_OPTIONFLAGS</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--doctest-modules"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">flags_arg</span> <span class="o">:=</span> <span class="n">doctest_optionflags_arg</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">)):</span>
+        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-o"</span><span class="p">,</span> <span class="n">flags_arg</span><span class="p">]</span>
     <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--ignore=</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     <span class="c1"># The action joins pytest_args with spaces and `eval`s the result.</span>
     <span class="n">argv</span> <span class="o">+=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">))</span>
@@ -519,7 +525,7 @@
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">:</span>
         <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_required_env_step</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">))</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_quality_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_release_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="n">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">steps</span></div>
 
@@ -566,7 +572,7 @@
     <span class="k">return</span> <span class="n">steps</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">licence_enabled</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">".[</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">install_extras</span><span class="si">}</span><span class="s2">]"</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">install_extras</span> <span class="k">else</span> <span class="s2">"."</span>
@@ -604,7 +610,10 @@
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: install pytest"</span><span class="p">,</span>
                     <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"--python"</span><span class="p">,</span> <span class="n">python</span><span class="p">,</span> <span class="o">*</span><span class="n">runner_deps</span><span class="p">),</span>
                 <span class="p">),</span>
-                <span class="n">Step</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: tests"</span><span class="p">,</span> <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">))),</span>
+                <span class="n">Step</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: tests"</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)),</span>
+                <span class="p">),</span>
             <span class="p">]</span>
     <span class="k">return</span> <span class="n">steps</span>
 
@@ -1119,7 +1128,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=b1780c4e"></script>
+</div><script src="../../_static/documentation_options.js?v=18387828"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

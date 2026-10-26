@@ -1,4 +1,4 @@
-> built 2026-10-20 10:41 UTC from f35c6f7 (master) · wads 0.2.46. Details: build_info.json
+> built 2026-10-26 09:32 UTC from 8797386 (master) · wads 0.2.47. Details: build_info.json
 
 # index.html.md
 
@@ -1848,7 +1848,7 @@ can ever spend or publish.
 | [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run])               | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
-| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config)                              | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
+| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
 | [`render_plan`](_autosummary/wads.ci_local.html.md#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
@@ -1907,9 +1907,12 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Step`](_autosummary/wads.ci_local.html.md#wads.ci_local.Step)]
 
-### wads.ci_local.pytest_argv(config)
+### wads.ci_local.pytest_argv(config, , repo=None)
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
+
+The default `doctest_optionflags` are passed unless `repo`’s own pytest config
+sets them (`repo=None`: not checked, defaults passed).
 
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))
@@ -5952,13 +5955,14 @@ Available scripts:
 
 ### Modules
 
-| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)           | Build Python Distribution Packages                             |
-|------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
-| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)       | Install Dependencies                                           |
-| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)   | Read CI Configuration and Export to GitHub Actions             |
-| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)       | Set Environment Variables from GitHub Secrets                  |
-| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env) | CI Environment Validation Script                               |
-| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)     | Export the pyproject-declared CI environment to `$GITHUB_ENV`. |
+| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)                     | Build Python Distribution Packages                                            |
+|----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)                 | Install Dependencies                                                          |
+| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                            |
+| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                 |
+| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                              |
+| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                |
+| [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any. |
 
 
 # _autosummary/wads.scripts.install_deps.html.md
@@ -6008,6 +6012,71 @@ Install packages from PyPI.
 ### wads.scripts.install_deps.main()
 
 Main entry point.
+
+
+# _autosummary/wads.scripts.pytest_doctest_flags.html.md
+
+# wads.scripts.pytest_doctest_flags
+
+Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.
+
+CI used to pass `-o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL'`
+unconditionally, which overrides the repo’s own pytest configuration (the wads
+template ships `["NORMALIZE_WHITESPACE", "ELLIPSIS"]`), so doctests could pass
+locally and fail in CI or the reverse. This script is the single source of the
+default flags and of the rule: pass the default only when the repo’s pytest config
+(`pytest.ini`, `pyproject.toml`, `tox.ini` or `setup.cfg`) does not set
+`doctest_optionflags`. Prints the argument (`doctest_optionflags=...`) or
+nothing; stdlib only. Used by
+`actions/run-tests-uv` and, via `DOCTEST_OPTIONFLAGS`, by `wads ci-local` (which imports the functions).
+
+### Functions
+
+| [`doctest_optionflags_arg`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg)([repo])       | The `-o` value to pass, or `''` when `repo`'s own pytest config wins.               |
+|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| `main`([argv])                                                                         |                                                                                     |
+| [`repo_sets_doctest_optionflags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags)([repo]) | Whether the pytest config file pytest itself would pick sets `doctest_optionflags`. |
+
+### wads.scripts.pytest_doctest_flags.doctest_optionflags_arg(repo=None)
+
+The `-o` value to pass, or `''` when `repo`’s own pytest config wins.
+
+`repo=None` means “do not look”: the default flags are returned.
+
+```pycon
+>>> doctest_optionflags_arg()
+'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags(repo='.')
+
+Whether the pytest config file pytest itself would pick sets `doctest_optionflags`.
+
+Mirrors pytest’s precedence (`pytest.ini`, `pyproject.toml`, `tox.ini`,
+`setup.cfg`; the last three only with their pytest section), stdlib only so it
+runs under any CI interpreter.
+
+```pycon
+>>> import tempfile
+>>> def check(**files):
+...     with tempfile.TemporaryDirectory() as d:
+...         for name, text in files.items():
+...             Path(d, name.replace("_", ".", 1) if name.startswith("pytest_") else name).write_text(text)
+...         return repo_sets_doctest_optionflags(d)
+>>> check()
+False
+>>> py = '[tool.pytest.ini_options]\ndoctest_optionflags = ["ELLIPSIS"]\n'
+>>> check(**{"pyproject.toml": py})
+True
+>>> check(**{"pyproject.toml": "[tool.pytest.ini_options]\nx = 1\n", "setup.cfg": "[tool:pytest]\ndoctest_optionflags = ELLIPSIS\n"})
+False
+```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 
 # _autosummary/wads.scripts.read_ci_config.html.md
@@ -7030,16 +7099,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-20 10:41 UTC** from commit <a href="https://github.com/i2mint/wads/commit/f35c6f7acf51e5505d2b085fad9295b94c3d81b0"><code>f35c6f7</code></a> on branch <code>master</code>, for **wads 0.2.46** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 09:32 UTC** from commit <a href="https://github.com/i2mint/wads/commit/8797386f519dec878a75db33bc932c901aadb8ac"><code>8797386</code></a> on branch <code>master</code>, for **wads 0.2.47** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.47) is behind the latest release on PyPI (0.2.48): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/f35c6f7acf51e5505d2b085fad9295b94c3d81b0"><code>f35c6f7acf51e5505d2b085fad9295b94c3d81b0</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/8797386f519dec878a75db33bc932c901aadb8ac"><code>8797386f519dec878a75db33bc932c901aadb8ac</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7050,15 +7121,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/39409413559">39409413559</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40299965409">40299965409</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>f35c6f7acf51e5505d2b085fad9295b94c3d81b0</code> (in the history of the built commit) |
+| Event commit | <code>8797386f519dec878a75db33bc932c901aadb8ac</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.19  |
+| epythet  | 0.2.22  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -7077,14 +7148,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.46/">0.2.46</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.48/">0.2.48</a>, newer than the documented version (0.2.47).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout f35c6f7acf51e5505d2b085fad9295b94c3d81b0
-pip install "epythet==0.2.19"
+git checkout 8797386f519dec878a75db33bc932c901aadb8ac
+pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

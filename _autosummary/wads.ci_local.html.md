@@ -40,7 +40,7 @@ can ever spend or publish.
 | [`ci_local`](#wads.ci_local.ci_local)([repo, publish, dry_run])               | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
-| [`pytest_argv`](#wads.ci_local.pytest_argv)(config)                              | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
+| [`pytest_argv`](#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
 | [`render_plan`](#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
@@ -99,9 +99,12 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Step`](#wads.ci_local.Step)]
 
-### wads.ci_local.pytest_argv(config)
+### wads.ci_local.pytest_argv(config, , repo=None)
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
+
+The default `doctest_optionflags` are passed unless `repo`’s own pytest config
+sets them (`repo=None`: not checked, defaults passed).
 
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))
