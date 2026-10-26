@@ -60,7 +60,7 @@ def test_declared_install_timeout_is_honoured(tmp_path, monkeypatch):
     """An ``install_timeout`` under [tool.wads.ops.<dep>] reaches subprocess.run."""
     _write_pyproject(tmp_path, extra_dep_lines="install_timeout = 600")
     recorder = _RunRecorder()
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", recorder)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", recorder)
 
     installed, skipped, failed = install_system_dependencies(
         str(tmp_path), platform="linux", skip_check=True, verbose=False
@@ -76,7 +76,7 @@ def test_undeclared_install_timeout_keeps_the_default(tmp_path, monkeypatch):
     """With no declaration, the timeout stays at today's default (300s)."""
     _write_pyproject(tmp_path)
     recorder = _RunRecorder()
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", recorder)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", recorder)
 
     install_system_dependencies(
         str(tmp_path), platform="linux", skip_check=True, verbose=False
@@ -92,7 +92,7 @@ def test_default_install_timeout_argument_overrides_the_constant(
     """``default_install_timeout`` applies to deps that declare no timeout."""
     _write_pyproject(tmp_path)
     recorder = _RunRecorder()
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", recorder)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", recorder)
 
     install_system_dependencies(
         str(tmp_path),
@@ -109,7 +109,7 @@ def test_declared_timeout_wins_over_default_install_timeout(tmp_path, monkeypatc
     """A per-dep declaration beats the caller-wide default."""
     _write_pyproject(tmp_path, extra_dep_lines="install_timeout = 42")
     recorder = _RunRecorder()
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", recorder)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", recorder)
 
     install_system_dependencies(
         str(tmp_path),
@@ -140,7 +140,7 @@ def test_cli_install_timeout_flag(tmp_path, monkeypatch, declared):
 
     _write_pyproject(tmp_path)
     recorder = _RunRecorder()
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", recorder)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", recorder)
     monkeypatch.setattr(
         "sys.argv",
         [

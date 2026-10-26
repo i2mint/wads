@@ -41,7 +41,7 @@ def waits():
 
 def _install(monkeypatch, waits, outcomes, cmds, **kw):
     flaky = _Flaky(outcomes)
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", flaky)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", flaky)
     result = install_dependency("d", cmds, sleep=waits.append, **kw)
     return result, flaky
 
@@ -117,7 +117,7 @@ def _write_pyproject(tmp_path, extra=""):
 def test_retries_resolution(tmp_path, monkeypatch, extra, kwargs, expected_calls):
     _write_pyproject(tmp_path, extra)
     flaky = _Flaky({"flaky": [1]})
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", flaky)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", flaky)
     monkeypatch.setattr("wads.install_system_deps.time.sleep", lambda s: None)
     _, _, failed = install_system_dependencies(
         str(tmp_path), platform="linux", skip_check=True, verbose=False, **kwargs
@@ -131,7 +131,7 @@ def test_cli_install_retries_flag(tmp_path, monkeypatch):
 
     _write_pyproject(tmp_path)
     flaky = _Flaky({"flaky": [1]})
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", flaky)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", flaky)
     monkeypatch.setattr("wads.install_system_deps.time.sleep", lambda s: None)
     monkeypatch.setattr(
         "sys.argv",
@@ -145,7 +145,7 @@ def test_cli_install_retries_flag(tmp_path, monkeypatch):
 
 def test_negative_retries_is_rejected_not_silently_skipped(monkeypatch, waits):
     flaky = _Flaky({})
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", flaky)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", flaky)
     with pytest.raises(ValueError):
         install_dependency("d", ["x"], retries=-1)
     assert flaky.calls == []
@@ -164,6 +164,6 @@ def test_unexpected_exception_is_retried_and_reported(monkeypatch, waits):
     def boom(cmd, **kw):
         raise OSError("no shell")
 
-    monkeypatch.setattr("wads.install_system_deps.subprocess.run", boom)
+    monkeypatch.setattr("wads.install_system_deps._run_shell", boom)
     ok, err = install_dependency("d", ["x"], sleep=waits.append, retries=1)
     assert not ok and err == "no shell" and waits == [5]
