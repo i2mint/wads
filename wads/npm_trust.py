@@ -39,6 +39,7 @@ import posixpath
 import re
 import shlex
 import subprocess
+import sys
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Callable, Optional, Sequence
@@ -63,6 +64,7 @@ _DIR_FLAGS = {"--dir", "-C", "--prefix"}
 _SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "time"}
 _RECURSIVE_FLAGS = {"-r", "--recursive", "--workspaces", "-ws"}
 _MAX_SCRIPT_DEPTH = 5
+_MANAGERS = {"npm", "pnpm", "yarn"}
 _PRUNED_DIRS = {"node_modules", ".git"}
 
 
@@ -155,6 +157,7 @@ class PublishCall:
     everything: bool = False  # -r / --workspaces / changesets: every workspace member
     filters: tuple = ()  # --filter / --workspace selectors
     wads_caller: bool = False  # a call of wads' own npm-ci*.yml reusable workflow
+    problem: str = ""  # the call publishes something we cannot name
 
 
 def _tokens(segment: str) -> list[str]:
@@ -164,52 +167,92 @@ def _tokens(segment: str) -> list[str]:
         return segment.split()
 
 
-def _wrapped_command(tokens: list[str]) -> Optional[tuple[list[str], bool]]:
-    """``(command, everything)`` when a package-manager call wraps another command.
+def _split_flags(tokens: list[str], cwd: str) -> dict:
+    """Flags, filters, ``-C`` directory and positionals (with their index) of a pm call."""
+    found = {"flags": set(), "filters": [], "where": cwd, "positional": []}
+    index = 1
+    while index < len(tokens):
+        token = tokens[index]
+        name, _, inline = token.partition("=")
+        if token.startswith("-"):
+            found["flags"].add(name)
+            if name in _VALUE_FLAGS and not inline and index + 1 < len(tokens):
+                index += 1
+                inline = tokens[index]
+            if name in _FILTER_FLAGS and inline:
+                found["filters"].append(inline)
+            if name in _DIR_FLAGS and inline:
+                found["where"] = posixpath.normpath(posixpath.join(cwd, inline))
+        else:
+            found["positional"].append((index, token))
+        index += 1
+    return found
 
-    ``pnpm -r exec CMD`` and ``yarn workspaces foreach ... CMD`` run ``CMD`` in every
-    workspace member (``everything``); ``npm exec CMD`` in just the current one.
+
+def _foreach_command(tokens: list[str]) -> Optional[tuple[list[str], list[str], str]]:
+    """``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``."""
+    rest = tokens[tokens.index("foreach") + 1 :]
+    start = next((i for i, t in enumerate(rest) if t in _MANAGERS), None)
+    if start is None:
+        return None
+    filters, problem = [], ""
+    for at, token in enumerate(rest[:start]):
+        name, _, inline = token.partition("=")
+        if name in ("--include", "--from"):
+            filters.append(inline or (rest[at + 1] if at + 1 < start else ""))
+        elif name in ("--exclude", "--since", "--from-since"):
+            problem = f"yarn foreach {name} selects an unresolvable set"
+    return rest[start:], filters, problem
+
+
+def _wrapped_calls(
+    tokens: list[str], cwd: str, scripts: dict, depth: int
+) -> Optional[list[PublishCall]]:
+    """Publish calls of ``pnpm -r exec CMD`` / ``yarn workspaces foreach ... CMD``.
+
+    The outer ``-r`` / ``--filter`` / ``-C`` apply to the wrapped command. ``None`` when
+    ``tokens`` wrap nothing.
     """
-    managers = {"npm", "pnpm", "yarn"}
     if "foreach" in tokens:
-        rest = tokens[tokens.index("foreach") + 1 :]
-        start = next((i for i, t in enumerate(rest) if t in managers), None)
-        return (rest[start:], True) if start is not None else None
-    sub_at = next(
-        (i for i, t in enumerate(tokens[1:], 1) if not t.startswith("-")), None
+        wrapped = _foreach_command(tokens)
+        if wrapped is None:
+            return None
+        inner, filters, problem = wrapped
+        outer = {"flags": set(), "filters": filters, "where": cwd}
+        everything = True
+    else:
+        outer = _split_flags(tokens, cwd)
+        positional = outer["positional"]
+        if not positional or positional[0][1] != "exec":
+            return None
+        inner = tokens[positional[0][0] + 1 :]
+        everything, problem = bool(outer["flags"] & _RECURSIVE_FLAGS), ""
+    if not inner or depth >= _MAX_SCRIPT_DEPTH:
+        return []
+    calls = publish_calls(
+        shlex.join(inner), scripts, directory=outer["where"], _depth=depth + 1
     )
-    if sub_at is not None and tokens[sub_at] == "exec":
-        return tokens[sub_at + 1 :], bool(set(tokens[:sub_at]) & _RECURSIVE_FLAGS)
-    return None
+    return [
+        replace(
+            c,
+            everything=c.everything or everything,
+            filters=c.filters or tuple(outer["filters"]),
+            problem=c.problem or problem,
+        )
+        for c in calls
+    ]
 
 
 def _npm_call(
     tokens: list[str], cwd: str, scripts: dict, depth: int
 ) -> list[PublishCall]:
     """``npm|pnpm|yarn [flags] <sub> ...``: a publish, or a script that may run one."""
-    wrapped = _wrapped_command(tokens)
-    if wrapped is not None and depth < _MAX_SCRIPT_DEPTH:
-        inner, everything = wrapped
-        calls = publish_calls(
-            shlex.join(inner), scripts, directory=cwd, _depth=depth + 1
-        )
-        return [replace(c, everything=c.everything or everything) for c in calls]
-    flags, positional, filters, index, where = set(), [], [], 1, cwd
-    while index < len(tokens):
-        token = tokens[index]
-        name, _, inline = token.partition("=")
-        if token.startswith("-"):
-            flags.add(name)
-            if name in _VALUE_FLAGS and not inline and index + 1 < len(tokens):
-                index += 1
-                inline = tokens[index]
-            if name in _FILTER_FLAGS and inline:
-                filters.append(inline)
-            if name in _DIR_FLAGS and inline:
-                where = posixpath.normpath(posixpath.join(cwd, inline))
-        else:
-            positional.append(token)
-        index += 1
+    wrapped = _wrapped_calls(tokens, cwd, scripts, depth)
+    if wrapped is not None:
+        return wrapped
+    parsed = _split_flags(tokens, cwd)
+    flags, filters, where = parsed["flags"], parsed["filters"], parsed["where"]
+    positional = [token for _, token in parsed["positional"]]
     if "--dry-run" in flags or not positional:
         return []
     sub = positional[0]
@@ -237,8 +280,8 @@ def publish_calls(
 ) -> list[PublishCall]:
     """The publish commands in a shell script text, following ``cd`` and package scripts.
 
-    >>> publish_calls("pnpm -r publish --access public")
-    [PublishCall(directory='.', everything=True, filters=(), wads_caller=False)]
+    >>> publish_calls("pnpm -r publish --access public")[0].everything
+    True
     >>> publish_calls("cd packages/a && npm publish")[0].directory
     'packages/a'
     >>> publish_calls("npm publish --dry-run\\n# npm publish\\necho npm publish")
@@ -318,7 +361,9 @@ def glob_dirs(root: Path, pattern: str) -> list[Path]:
     regex = _glob_regex(pattern)
     found = []
     for current, names, _ in os.walk(root):
-        names[:] = sorted(n for n in names if n not in _PRUNED_DIRS)
+        names[:] = sorted(
+            n for n in names if n not in _PRUNED_DIRS and not n.startswith(".")
+        )
         relative = Path(current).relative_to(root).as_posix()
         if relative != "." and regex.match(relative + "/"):
             found.append(Path(current))
@@ -338,12 +383,15 @@ def workspace_manifests(root: Path) -> list[tuple[Path, dict]]:
 def _selected(
     root: Path, directory: Path, manifest: dict, selectors: Sequence[str]
 ) -> bool:
-    """Whether a ``--filter`` selector (a name glob or a ``./path``) picks this member."""
+    """Whether a selector (a name glob, or a path / path glob) picks this member."""
+    relative = directory.relative_to(root).as_posix()
     for selector in selectors:
         selector = selector.removeprefix("...").removesuffix("...")
-        if selector.startswith((".", "/")):
+        if selector == relative:  # `npm -w packages/a`: the workspace directory itself
+            return True
+        if "/" in selector and not selector.startswith("@") or selector.startswith("."):
             wanted = posixpath.normpath(selector)
-            if directory.relative_to(root).as_posix() == wanted.removeprefix("./"):
+            if _glob_regex(wanted).match(relative + "/"):
                 return True
         elif fnmatch.fnmatch(str(manifest.get("name")), selector):
             return True
@@ -409,9 +457,8 @@ def job_calls(job: dict, scripts: dict) -> list[PublishCall]:
             package = str((step.get("with") or {}).get("package") or ".")
             if package.endswith("package.json"):
                 package = posixpath.dirname(package) or "."
-            calls.append(
-                PublishCall(posixpath.normpath(posixpath.join(directory, package)))
-            )
+            # `defaults.run.working-directory` only applies to `run` steps
+            calls.append(PublishCall(posixpath.normpath(package)))
         elif str(step.get("uses", "")).startswith("changesets/action"):
             command = (step.get("with") or {}).get("publish")
             if command:
@@ -450,13 +497,11 @@ def check_publisher(publisher: Publisher) -> Publisher:
 
 
 def _wads_publishing_enabled(directory: Path) -> bool:
-    """``wads.ci.publish.enabled`` of the ``package.json`` a wads npm-ci caller points at."""
-    from wads.npm_config import NpmCIConfig
-
-    try:
-        return NpmCIConfig.from_file(directory / "package.json").publish_enabled
-    except (OSError, ValueError):
-        return False
+    """Whether ``wads.ci.publish.enabled`` is literally ``true`` (as the workflow requires)."""
+    node = _load_json(directory / "package.json")
+    for key in ("wads", "ci", "publish"):
+        node = node.get(key) if isinstance(node, dict) else None
+    return isinstance(node, dict) and node.get("enabled") is True
 
 
 def discover(
@@ -483,6 +528,18 @@ def discover(
             if not isinstance(job, dict):
                 continue
             for call in job_calls(job, scripts):
+                if call.problem:
+                    problem = Publisher(
+                        "<unknown packages>",
+                        slug,
+                        workflow.name,
+                        _environment(job),
+                        call.problem,
+                    )
+                    found.setdefault(
+                        (problem.package, workflow.name, problem.environment), problem
+                    )
+                    continue
                 if "${{" in call.directory:
                     names = [f"<{call.directory}>"]
                 else:
@@ -729,12 +786,14 @@ def run_npm_trust(
     fmt: str = "table",
     run: Run = subprocess_run,
     out: Callable[[str], None] = print,
+    err: Optional[Callable[[str], None]] = None,
 ):
     """:func:`npm_trust` with injectable ``run`` (npm/git) and ``out`` (printing)."""
     if apply and dry_run:
         raise SystemExit("--apply and --dry-run contradict each other")
     if fmt not in FORMATS:
         raise SystemExit(f"--fmt must be one of {FORMATS}, got {fmt!r}")
+    note = err or (lambda message: print(message, file=sys.stderr))
     publishers = discover(repo, repo=github_repo, run=run)
     if not publishers:
         out(f"No npm publishing workflow found under {Path(repo) / WORKFLOWS_DIR}")
@@ -742,7 +801,7 @@ def run_npm_trust(
     rows = survey(publishers, run=run, check_npm=not offline)
     out(render_rows(rows, fmt))
     for package, workflows in shared_packages(publishers).items():
-        out(
+        note(
             f"warning: {package} is published by {', '.join(workflows)}; npm may keep "
             "only one Trusted Publisher per package, so attach the one you ship from"
         )
@@ -750,8 +809,8 @@ def run_npm_trust(
         todo = [
             r for r in rows if r.actionable or (offline and not r.publisher.problem)
         ]
-        out(f"\nWould run for {len(todo)} of {len(rows)} (use --apply to run):")
-        out("\n".join("  " + " ".join(trust_command(r.publisher)) for r in todo))
+        note(f"\nWould run for {len(todo)} of {len(rows)} (use --apply to run):")
+        note("\n".join("  " + " ".join(trust_command(r.publisher)) for r in todo))
         return None
     problems = preflight(run=run)
     if problems:

@@ -238,8 +238,11 @@ def test_the_command_is_a_dry_run_unless_asked_to_apply(tmp_path):
     _write(tmp_path / "package.json", {"name": "p"})
     _workflow(tmp_path, "release.yml", {"run": "npm publish"})
     npm, lines = FakeNpm(on_npm={"p"}), []
-    run_npm_trust(str(tmp_path), github_repo=SLUG, run=npm, out=lines.append)
-    assert any("Would run" in line for line in lines)
+    notes = []
+    run_npm_trust(
+        str(tmp_path), github_repo=SLUG, run=npm, out=lines.append, err=notes.append
+    )
+    assert any("Would run" in line for line in notes)
     assert npm.attached == []
     run_npm_trust(
         str(tmp_path), github_repo=SLUG, dry_run=True, run=npm, out=lines.append
@@ -365,10 +368,17 @@ def test_the_dry_run_lists_only_the_commands_apply_would_run(tmp_path):
     _write(tmp_path / "package.json", {"name": "new"})
     _workflow(tmp_path, "release.yml", {"run": "npm publish"})
     lines = []
-    run_npm_trust(str(tmp_path), github_repo=SLUG, run=FakeNpm(), out=lines.append)
+    notes = []
+    run_npm_trust(
+        str(tmp_path),
+        github_repo=SLUG,
+        run=FakeNpm(),
+        out=lines.append,
+        err=notes.append,
+    )
     assert "first-publish-needed" in lines[0]
-    assert "Would run for 0 of 1" in "\n".join(lines)
-    assert not any("npm trust github" in line for line in lines)
+    assert "Would run for 0 of 1" in "\n".join(notes)
+    assert not any("npm trust github" in line for line in lines + notes)
 
 
 def test_publish_calls_follow_scripts_and_changesets():
@@ -490,8 +500,117 @@ def test_a_package_published_by_two_workflows_is_warned_about(tmp_path):
     _workflow(tmp_path, "a.yml", {"run": "npm publish"})
     _workflow(tmp_path, "b.yml", {"run": "npm publish"})
     assert shared_packages(discover(tmp_path, repo=SLUG)) == {"dup": ["a.yml", "b.yml"]}
-    lines = []
-    run_npm_trust(str(tmp_path), github_repo=SLUG, offline=True, out=lines.append)
-    assert any(
-        line.startswith("warning: dup is published by a.yml, b.yml") for line in lines
+    lines, notes = [], []
+    run_npm_trust(
+        str(tmp_path),
+        github_repo=SLUG,
+        offline=True,
+        out=lines.append,
+        err=notes.append,
     )
+    assert any(n.startswith("warning: dup is published by a.yml, b.yml") for n in notes)
+    assert not any("warning" in line or "Would run" in line for line in lines)
+
+
+def test_outer_flags_carry_into_wrapped_commands(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n")
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(
+        tmp_path, "one.yml", {"run": "pnpm --filter ./packages/a -r exec npm publish"}
+    )
+    _workflow(
+        tmp_path, "two.yml", {"run": "pnpm -r --filter=./packages/b exec npm publish"}
+    )
+    _workflow(tmp_path, "three.yml", {"run": "pnpm -C packages/a exec npm publish"})
+    assert _names(tmp_path) == [
+        ("a", "one.yml", ""),
+        ("a", "three.yml", ""),
+        ("b", "two.yml", ""),
+    ]
+
+
+def test_yarn_foreach_selectors(tmp_path):
+    _write(
+        tmp_path / "package.json",
+        {"name": "root", "private": True, "workspaces": ["packages/*"]},
+    )
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(
+        tmp_path, "inc.yml", {"run": "yarn workspaces foreach --include a npm publish"}
+    )
+    _workflow(
+        tmp_path, "exc.yml", {"run": "yarn workspaces foreach --exclude a npm publish"}
+    )
+    rows = survey(discover(tmp_path, repo=SLUG), check_npm=False)
+    by_workflow = {r.publisher.workflow: r for r in rows}
+    assert (
+        by_workflow["inc.yml"].publisher.package == "a"
+        and by_workflow["inc.yml"].status == "unknown"
+    )
+    assert "unresolvable" in by_workflow["exc.yml"].status
+
+
+def test_js_devtools_ignores_run_step_defaults_and_path_selectors_match(tmp_path):
+    import yaml
+
+    _write(tmp_path / "js" / "package.json", {"name": "js-pkg"})
+    _write(
+        tmp_path / ".github" / "workflows" / "pub.yml",
+        yaml.safe_dump(
+            {
+                "on": "push",
+                "jobs": {
+                    "j": {
+                        "defaults": {"run": {"working-directory": "js"}},
+                        "steps": [
+                            {
+                                "uses": "JS-DevTools/npm-publish@v3",
+                                "with": {"package": "js/package.json"},
+                            }
+                        ],
+                    }
+                },
+            }
+        ),
+    )
+    assert _names(tmp_path) == [("js-pkg", "pub.yml", "")]
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'js'\n")
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _workflow(
+        tmp_path,
+        "sel.yml",
+        {"run": "npm publish -w js"},
+        {"run": "pnpm --filter 'js/*' publish"},
+    )
+    assert ("js-pkg", "sel.yml", "") in _names(tmp_path)
+
+
+def test_publishing_enabled_must_be_literally_true_and_junk_cannot_crash(tmp_path):
+    import yaml
+
+    for value in ("false", "yes", None):
+        _write(
+            tmp_path / "js" / "package.json",
+            {
+                "name": "p",
+                "wads": {
+                    "ci": {"publish": value if value is None else {"enabled": value}}
+                },
+            },
+        )
+        _write(
+            tmp_path / ".github" / "workflows" / "npm-ci.yml",
+            yaml.safe_dump(
+                {
+                    "on": "push",
+                    "jobs": {
+                        "c": {"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"}
+                    },
+                }
+            ),
+        )
+        (row,) = survey(discover(tmp_path, repo=SLUG), check_npm=False)
+        assert "publishing disabled" in row.status
