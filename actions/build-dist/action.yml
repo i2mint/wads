@@ -59,7 +59,7 @@ runs:
             build_args="$build_args --no-wheel"
           fi
 
-          python3 -m wads.scripts.build_dist $build_args
+          python3 "$GITHUB_ACTION_PATH/../../wads/scripts/build_dist.py" $build_args
         fi
 
         echo "Built distributions:"

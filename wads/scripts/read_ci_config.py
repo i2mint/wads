@@ -19,6 +19,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # also under `-m`
+from _checkout_import import load_wads_module  # noqa: E402
+
 
 def _set_output(name: str, value):
     """Set GitHub Actions output."""
@@ -64,7 +67,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        from wads.ci_config import read_ci_config
+        read_ci_config = load_wads_module("ci_config").read_ci_config
 
         # Read configuration
         config = read_ci_config(pyproject_path)

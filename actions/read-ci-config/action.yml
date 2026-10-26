@@ -125,13 +125,8 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: Install wads (for CI config utilities)
-      shell: bash
-      run: |
-        python -m pip install --quiet 'wads>=0.1.48'
-
     - name: Read CI Configuration
       id: config
       shell: bash
       run: |
-        python3 -m wads.scripts.read_ci_config "${{ inputs.pyproject-path }}"
+        python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/read_ci_config.py" "${{ inputs.pyproject-path }}"

@@ -119,8 +119,8 @@ class TestActionDefinitions:
 
             # Should reference the Python script
             assert (
-                'wads.scripts' in content
-            ), f"{action_name} should reference wads.scripts"
+                'wads/scripts/' in content
+            ), f"{action_name} should run its script from the action checkout"
             assert (
                 script_name in content
             ), f"{action_name} should reference {script_name}"

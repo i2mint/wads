@@ -19,6 +19,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # also under `-m`
+from _checkout_import import load_wads_module  # noqa: E402
+
 # Reserved env vars that should not be set from secrets
 RESERVED_VARS = {
     "GITHUB_TOKEN",
@@ -65,7 +68,7 @@ def set_environment_variables(pyproject_path: str | Path = ".") -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        from wads.ci_config import CIConfig
+        CIConfig = load_wads_module("ci_config").CIConfig
 
         # Read CI configuration
         config = CIConfig.from_file(pyproject_path)
