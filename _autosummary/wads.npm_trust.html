@@ -365,7 +365,7 @@ continue past per-package failures, and verify with <code class="docutils litera
 <td><p>Find the npm packages <code class="docutils literal notranslate"><span class="pre">repo</span></code> publishes and attach Trusted Publishers (dry run by default).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.packages_of" title="wads.npm_trust.packages_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">packages_of</span></code></a>(root, call)</p></td>
-<td><p>Names of the non-private packages <code class="docutils literal notranslate"><span class="pre">call</span></code> publishes from <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p></td>
+<td><p>Names of the non-private packages <code class="docutils literal notranslate"><span class="pre">call</span></code> publishes in the repo at <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.preflight" title="wads.npm_trust.preflight"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preflight</span></code></a>(*[, run])</p></td>
 <td><p>Problems that would make every attach fail: no npm, not logged in.</p></td>
@@ -382,26 +382,32 @@ continue past per-package failures, and verify with <code class="docutils litera
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.run_npm_trust" title="wads.npm_trust.run_npm_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_npm_trust</span></code></a>([repo, apply, dry_run, ...])</p></td>
 <td><p><a class="reference internal" href="#wads.npm_trust.npm_trust" title="wads.npm_trust.npm_trust"><code class="xref py py-func docutils literal notranslate"><span class="pre">npm_trust()</span></code></a> with injectable <code class="docutils literal notranslate"><span class="pre">run</span></code> (npm/git) and <code class="docutils literal notranslate"><span class="pre">out</span></code> (printing).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.shared_packages" title="wads.npm_trust.shared_packages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_packages</span></code></a>(publishers)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.select" title="wads.npm_trust.select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select</span></code></a>(items, patterns, matches, *, default_all)</p></td>
+<td><p>Items picked by <code class="docutils literal notranslate"><span class="pre">patterns</span></code>, where a <code class="docutils literal notranslate"><span class="pre">!</span></code> prefix subtracts its matches.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.shared_packages" title="wads.npm_trust.shared_packages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_packages</span></code></a>(publishers)</p></td>
 <td><p>Packages that more than one workflow publishes, with those workflows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.subprocess_run" title="wads.npm_trust.subprocess_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_run</span></code></a>(argv)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.subprocess_run" title="wads.npm_trust.subprocess_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_run</span></code></a>(argv)</p></td>
 <td><p>The default <code class="docutils literal notranslate"><span class="pre">run</span></code>: captured, no stdin, time-limited; a missing tool is rc 127.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.survey" title="wads.npm_trust.survey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">survey</span></code></a>(publishers, *[, run, check_npm])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.survey" title="wads.npm_trust.survey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">survey</span></code></a>(publishers, *[, run, check_npm])</p></td>
 <td><p><a class="reference internal" href="#wads.npm_trust.Row" title="wads.npm_trust.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a> per publisher, asking npm once per package unless <code class="docutils literal notranslate"><span class="pre">check_npm=False</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.trust_command" title="wads.npm_trust.trust_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_command</span></code></a>(publisher)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.trust_command" title="wads.npm_trust.trust_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_command</span></code></a>(publisher)</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">github</span></code> call that attaches this publisher.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.trust_listing" title="wads.npm_trust.trust_listing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_listing</span></code></a>(package, *[, run])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.trust_listing" title="wads.npm_trust.trust_listing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_listing</span></code></a>(package, *[, run])</p></td>
 <td><p>The text of <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">list</span> <span class="pre">&lt;package&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it cannot be read.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_globs" title="wads.npm_trust.workspace_globs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_globs</span></code></a>(root)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_globs" title="wads.npm_trust.workspace_globs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_globs</span></code></a>(root)</p></td>
 <td><p>The workspace patterns of the package at <code class="docutils literal notranslate"><span class="pre">root</span></code> (npm/yarn <code class="docutils literal notranslate"><span class="pre">workspaces</span></code> or pnpm).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_manifests" title="wads.npm_trust.workspace_manifests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_manifests</span></code></a>(root)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_manifests" title="wads.npm_trust.workspace_manifests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_manifests</span></code></a>(root)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(directory,</span> <span class="pre">package.json)</span></code> of <code class="docutils literal notranslate"><span class="pre">root</span></code> itself and its workspace members.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_root_of" title="wads.npm_trust.workspace_root_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_root_of</span></code></a>(repo, directory)</p></td>
+<td><p>The nearest directory from <code class="docutils literal notranslate"><span class="pre">directory</span></code> up to <code class="docutils literal notranslate"><span class="pre">repo</span></code> that declares workspaces.</p></td>
 </tr>
 </tbody>
 </table>
@@ -410,16 +416,19 @@ continue past per-package failures, and verify with <code class="docutils litera
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.Outcome" title="wads.npm_trust.Outcome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Outcome</span></code></a>(row, action[, detail, verified])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.ManagerFlags" title="wads.npm_trust.ManagerFlags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ManagerFlags</span></code></a>([filter, directory, recursive, ...])</p></td>
+<td><p>The flags of one package manager that change what a publish call covers.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.Outcome" title="wads.npm_trust.Outcome"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Outcome</span></code></a>(row, action[, detail, verified])</p></td>
 <td><p>What <a class="reference internal" href="#wads.npm_trust.apply_trust" title="wads.npm_trust.apply_trust"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_trust()</span></code></a> did for one row.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.PublishCall" title="wads.npm_trust.PublishCall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishCall</span></code></a>([directory, everything, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.PublishCall" title="wads.npm_trust.PublishCall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishCall</span></code></a>([directory, everything, ...])</p></td>
 <td><p>One publish command: where it runs and which workspace members it covers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.Publisher" title="wads.npm_trust.Publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Publisher</span></code></a>(package, repo, workflow[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.Publisher" title="wads.npm_trust.Publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Publisher</span></code></a>(package, repo, workflow[, ...])</p></td>
 <td><p>One package that one workflow job publishes: what <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">github</span></code> needs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.Row" title="wads.npm_trust.Row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Row</span></code></a>(publisher[, on_npm, trusted])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.Row" title="wads.npm_trust.Row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Row</span></code></a>(publisher[, on_npm, trusted])</p></td>
 <td><p>A <a class="reference internal" href="#wads.npm_trust.Publisher" title="wads.npm_trust.Publisher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Publisher</span></code></a> plus what npm says about it (<code class="docutils literal notranslate"><span class="pre">on_npm</span></code> None = unknown).</p></td>
 </tr>
 </tbody>
@@ -429,6 +438,25 @@ continue past per-package failures, and verify with <code class="docutils litera
 <dt class="sig sig-object py" id="wads.npm_trust.CALL_TIMEOUT">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">CALL_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">60</span></span><a class="headerlink" href="#wads.npm_trust.CALL_TIMEOUT" title="Link to this definition">¶</a></dt>
 <dd><p>Seconds one npm/git call may take (npm may wait on an OTP or a web login).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.npm_trust.ManagerFlags">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">ManagerFlags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#ManagerFlags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.ManagerFlags" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The flags of one package manager that change what a publish call covers.</p>
+<p>Each manager reads the same spelling differently (pnpm’s <code class="docutils literal notranslate"><span class="pre">-w</span></code> is the workspace
+root and takes no value, npm’s <code class="docutils literal notranslate"><span class="pre">-w</span></code> names a member and takes one), so the flags
+are per manager, never shared sets. Only <code class="docutils literal notranslate"><span class="pre">filter</span></code> and <code class="docutils literal notranslate"><span class="pre">directory</span></code> flags take a
+value; every other flag is read as a switch.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.npm_trust.ManagerFlags.value">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><span class="pre">frozenset</span></a></span><a class="headerlink" href="#wads.npm_trust.ManagerFlags.value" title="Link to this definition">¶</a></dt>
+<dd><p>Flags that consume the next token.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -442,7 +470,7 @@ continue past per-package failures, and verify with <code class="docutils litera
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.npm_trust.PublishCall">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">PublishCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">everything</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wads_caller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#PublishCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.PublishCall" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">PublishCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">everything</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workspace_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wads_caller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#PublishCall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.PublishCall" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One publish command: where it runs and which workspace members it covers.</p>
 <dl class="field-list simple">
@@ -607,7 +635,9 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.npm_trust.packages_of">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">packages_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#packages_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.packages_of" title="Link to this definition">¶</a></dt>
-<dd><p>Names of the non-private packages <code class="docutils literal notranslate"><span class="pre">call</span></code> publishes from <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
+<dd><p>Names of the non-private packages <code class="docutils literal notranslate"><span class="pre">call</span></code> publishes in the repo at <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
+<p>Filters, <code class="docutils literal notranslate"><span class="pre">-r</span></code> and <code class="docutils literal notranslate"><span class="pre">-w</span></code> are evaluated from the workspace root above
+<code class="docutils literal notranslate"><span class="pre">call.directory</span></code> (as the package managers do), not from <code class="docutils literal notranslate"><span class="pre">call.directory</span></code>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"package.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'{"name": "solo"}'</span><span class="p">)</span>
@@ -669,6 +699,25 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
 <dt class="sig sig-object py" id="wads.npm_trust.run_npm_trust">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">run_npm_trust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">github_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'table'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_run&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">print&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#run_npm_trust"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.run_npm_trust" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#wads.npm_trust.npm_trust" title="wads.npm_trust.npm_trust"><code class="xref py py-func docutils literal notranslate"><span class="pre">npm_trust()</span></code></a> with injectable <code class="docutils literal notranslate"><span class="pre">run</span></code> (npm/git) and <code class="docutils literal notranslate"><span class="pre">out</span></code> (printing).</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.npm_trust.select">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patterns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matches</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_all</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.select" title="Link to this definition">¶</a></dt>
+<dd><p>Items picked by <code class="docutils literal notranslate"><span class="pre">patterns</span></code>, where a <code class="docutils literal notranslate"><span class="pre">!</span></code> prefix subtracts its matches.</p>
+<p>With no inclusive pattern the result is every item (<code class="docutils literal notranslate"><span class="pre">default_all</span></code>) or none, minus
+the exclusions: <code class="docutils literal notranslate"><span class="pre">pnpm</span> <span class="pre">--filter</span> <span class="pre">'!b'</span></code> means “all but b”, a workspace list of only
+<code class="docutils literal notranslate"><span class="pre">!x</span></code> globs means “no members”.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">select</span><span class="p">(</span><span class="s2">"abc"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"!b"</span><span class="p">],</span> <span class="nb">str</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">,</span> <span class="n">default_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">['a']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">select</span><span class="p">(</span><span class="s2">"abc"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"!b"</span><span class="p">],</span> <span class="nb">str</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">,</span> <span class="n">default_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">['a', 'c']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">select</span><span class="p">(</span><span class="s2">"abc"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"!b"</span><span class="p">],</span> <span class="nb">str</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">,</span> <span class="n">default_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -750,6 +799,18 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.npm_trust.workspace_root_of">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">workspace_root_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#workspace_root_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.workspace_root_of" title="Link to this definition">¶</a></dt>
+<dd><p>The nearest directory from <code class="docutils literal notranslate"><span class="pre">directory</span></code> up to <code class="docutils literal notranslate"><span class="pre">repo</span></code> that declares workspaces.</p>
+<p>Falls back to <code class="docutils literal notranslate"><span class="pre">directory</span></code> itself (a package that is no workspace’s member).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -805,6 +866,10 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
             <ul>
 <li><a class="reference internal" href="#">wads.npm_trust</a><ul>
 <li><a class="reference internal" href="#wads.npm_trust.CALL_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">CALL_TIMEOUT</span></code></a></li>
+<li><a class="reference internal" href="#wads.npm_trust.ManagerFlags"><code class="docutils literal notranslate"><span class="pre">ManagerFlags</span></code></a><ul>
+<li><a class="reference internal" href="#wads.npm_trust.ManagerFlags.value"><code class="docutils literal notranslate"><span class="pre">ManagerFlags.value</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#wads.npm_trust.Outcome"><code class="docutils literal notranslate"><span class="pre">Outcome</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.PublishCall"><code class="docutils literal notranslate"><span class="pre">PublishCall</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.Publisher"><code class="docutils literal notranslate"><span class="pre">Publisher</span></code></a></li>
@@ -827,6 +892,7 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
 <li><a class="reference internal" href="#wads.npm_trust.publish_calls"><code class="docutils literal notranslate"><span class="pre">publish_calls()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.render_rows"><code class="docutils literal notranslate"><span class="pre">render_rows()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.run_npm_trust"><code class="docutils literal notranslate"><span class="pre">run_npm_trust()</span></code></a></li>
+<li><a class="reference internal" href="#wads.npm_trust.select"><code class="docutils literal notranslate"><span class="pre">select()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.shared_packages"><code class="docutils literal notranslate"><span class="pre">shared_packages()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.subprocess_run"><code class="docutils literal notranslate"><span class="pre">subprocess_run()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.survey"><code class="docutils literal notranslate"><span class="pre">survey()</span></code></a></li>
@@ -834,6 +900,7 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
 <li><a class="reference internal" href="#wads.npm_trust.trust_listing"><code class="docutils literal notranslate"><span class="pre">trust_listing()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.workspace_globs"><code class="docutils literal notranslate"><span class="pre">workspace_globs()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.workspace_manifests"><code class="docutils literal notranslate"><span class="pre">workspace_manifests()</span></code></a></li>
+<li><a class="reference internal" href="#wads.npm_trust.workspace_root_of"><code class="docutils literal notranslate"><span class="pre">workspace_root_of()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -845,7 +912,7 @@ npm lookups; <code class="docutils literal notranslate"><span class="pre">--gith
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=9cf166da"></script>
+</div><script src="../_static/documentation_options.js?v=35b112bc"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

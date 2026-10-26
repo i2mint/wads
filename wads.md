@@ -1,4 +1,4 @@
-> built 2026-10-26 15:12 UTC from 52a3b70 (master) · wads 0.2.54. Details: build_info.json
+> built 2026-10-26 15:24 UTC from 966e939 (master) · wads 0.2.55. Details: build_info.json
 
 # index.html.md
 
@@ -4840,12 +4840,13 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`is_on_npm`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
 | [`job_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
 | [`npm_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust)([repo, apply, dry_run, ...])             | Find the npm packages `repo` publishes and attach Trusted Publishers (dry run by default).                                |
-| [`packages_of`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.packages_of)(root, call)                            | Names of the non-private packages `call` publishes from `root`.                                                           |
+| [`packages_of`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.packages_of)(root, call)                            | Names of the non-private packages `call` publishes in the repo at `root`.                                                 |
 | [`preflight`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.preflight)(\*[, run])                               | Problems that would make every attach fail: no npm, not logged in.                                                        |
 | [`publish_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.publish_calls)(text[, scripts, directory, \_depth]) | The publish commands in a shell script text, following `cd` and package scripts.                                          |
 | [`render_rows`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.render_rows)(rows[, fmt])                           | Rows as an aligned `table`, `tsv` (the fleet rollout's format) or `json`.                                                 |
 | `row_fields`(row)                                                                                   |                                                                                                                           |
 | [`run_npm_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.run_npm_trust)([repo, apply, dry_run, ...])         | [`npm_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust) with injectable `run` (npm/git) and `out` (printing).        |
+| [`select`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.select)(items, patterns, matches, \*, default_all)  | Items picked by `patterns`, where a `!` prefix subtracts its matches.                                                     |
 | [`shared_packages`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.shared_packages)(publishers)                        | Packages that more than one workflow publishes, with those workflows.                                                     |
 | [`subprocess_run`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.subprocess_run)(argv)                               | The default `run`: captured, no stdin, time-limited; a missing tool is rc 127.                                            |
 | [`survey`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.survey)(publishers, \*[, run, check_npm])           | [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row) per publisher, asking npm once per package unless `check_npm=False`. |
@@ -4853,18 +4854,35 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`trust_listing`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.trust_listing)(package, \*[, run])                  | The text of `npm trust list <package>`, or `None` when it cannot be read.                                                 |
 | [`workspace_globs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_globs)(root)                              | The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).                                          |
 | [`workspace_manifests`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_manifests)(root)                          | `(directory, package.json)` of `root` itself and its workspace members.                                                   |
+| [`workspace_root_of`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_root_of)(repo, directory)                 | The nearest directory from `directory` up to `repo` that declares workspaces.                                             |
 
 ### Classes
 
-| [`Outcome`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Outcome)(row, action[, detail, verified])   | What [`apply_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust) did for one row.                                |
-|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| [`PublishCall`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.PublishCall)([directory, everything, ...])  | One publish command: where it runs and which workspace members it covers.                                           |
-| [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher)(package, repo, workflow[, ...])  | One package that one workflow job publishes: what `npm trust github` needs.                                         |
-| [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row)(publisher[, on_npm, trusted])          | A [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher) plus what npm says about it (`on_npm` None = unknown). |
+| [`ManagerFlags`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.ManagerFlags)([filter, directory, recursive, ...])   | The flags of one package manager that change what a publish call covers.                                            |
+|------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| [`Outcome`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Outcome)(row, action[, detail, verified])            | What [`apply_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust) did for one row.                                |
+| [`PublishCall`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.PublishCall)([directory, everything, ...])           | One publish command: where it runs and which workspace members it covers.                                           |
+| [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher)(package, repo, workflow[, ...])           | One package that one workflow job publishes: what `npm trust github` needs.                                         |
+| [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row)(publisher[, on_npm, trusted])                   | A [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher) plus what npm says about it (`on_npm` None = unknown). |
 
 ### wads.npm_trust.CALL_TIMEOUT *= 60*
 
 Seconds one npm/git call may take (npm may wait on an OTP or a web login).
+
+### *class* wads.npm_trust.ManagerFlags(filter=frozenset({}), directory=frozenset({}), recursive=frozenset({}), root=frozenset({}), with_root=frozenset({}))
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The flags of one package manager that change what a publish call covers.
+
+Each manager reads the same spelling differently (pnpm’s `-w` is the workspace
+root and takes no value, npm’s `-w` names a member and takes one), so the flags
+are per manager, never shared sets. Only `filter` and `directory` flags take a
+value; every other flag is read as a switch.
+
+#### *property* value *: [frozenset](https://docs.python.org/3/builtins/stdtypes.html#frozenset)*
+
+Flags that consume the next token.
 
 ### *class* wads.npm_trust.Outcome(row, action, detail='', verified=None)
 
@@ -4872,7 +4890,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 What [`apply_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust) did for one row.
 
-### *class* wads.npm_trust.PublishCall(directory='.', everything=False, filters=(), wads_caller=False, problem='')
+### *class* wads.npm_trust.PublishCall(directory='.', everything=False, filters=(), workspace_root=False, include_root=False, script='', wads_caller=False, problem='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4997,7 +5015,10 @@ npm lookups; `--github-repo owner/name` overrides the origin remote.
 
 ### wads.npm_trust.packages_of(root, call)
 
-Names of the non-private packages `call` publishes from `root`.
+Names of the non-private packages `call` publishes in the repo at `root`.
+
+Filters, `-r` and `-w` are evaluated from the workspace root above
+`call.directory` (as the package managers do), not from `call.directory`.
 
 ```pycon
 >>> import tempfile
@@ -5045,6 +5066,23 @@ Rows as an aligned `table`, `tsv` (the fleet rollout’s format) or `json`.
 ### wads.npm_trust.run_npm_trust(repo='.', \*, apply=False, dry_run=False, github_repo=None, offline=False, fmt='table', run=<function subprocess_run>, out=<built-in function print>, err=None)
 
 [`npm_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust) with injectable `run` (npm/git) and `out` (printing).
+
+### wads.npm_trust.select(items, patterns, matches, , default_all)
+
+Items picked by `patterns`, where a `!` prefix subtracts its matches.
+
+With no inclusive pattern the result is every item (`default_all`) or none, minus
+the exclusions: `pnpm --filter '!b'` means “all but b”, a workspace list of only
+`!x` globs means “no members”.
+
+```pycon
+>>> select("abc", ["a", "!b"], str.__eq__, default_all=True)
+['a']
+>>> select("abc", ["!b"], str.__eq__, default_all=True)
+['a', 'c']
+>>> select("abc", ["!b"], str.__eq__, default_all=False)
+[]
+```
 
 ### wads.npm_trust.shared_packages(publishers)
 
@@ -5094,6 +5132,15 @@ The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
+
+### wads.npm_trust.workspace_root_of(repo, directory)
+
+The nearest directory from `directory` up to `repo` that declares workspaces.
+
+Falls back to `directory` itself (a package that is no workspace’s member).
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 
 # _autosummary/wads.pack.html.md
@@ -7587,18 +7634,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 15:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/52a3b7056a86acf73cfccf5f39462b1b3b514aa4"><code>52a3b70</code></a> on branch <code>master</code>, for **wads 0.2.54** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 15:24 UTC** from commit <a href="https://github.com/i2mint/wads/commit/966e939d927fc27ada968e5b6387010aab2a6e2c"><code>966e939</code></a> on branch <code>master</code>, for **wads 0.2.55** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.54) is behind the latest release on PyPI (0.2.55): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.55) is behind the latest release on PyPI (0.2.56): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/52a3b7056a86acf73cfccf5f39462b1b3b514aa4"><code>52a3b7056a86acf73cfccf5f39462b1b3b514aa4</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/966e939d927fc27ada968e5b6387010aab2a6e2c"><code>966e939d927fc27ada968e5b6387010aab2a6e2c</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7609,9 +7656,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40346527994">40346527994</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40348634922">40348634922</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>52a3b7056a86acf73cfccf5f39462b1b3b514aa4</code> (in the history of the built commit) |
+| Event commit | <code>966e939d927fc27ada968e5b6387010aab2a6e2c</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7636,13 +7683,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.55/">0.2.55</a>, newer than the documented version (0.2.54).
+Latest release: <a href="https://pypi.org/project/wads/0.2.56/">0.2.56</a>, newer than the documented version (0.2.55).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 52a3b7056a86acf73cfccf5f39462b1b3b514aa4
+git checkout 966e939d927fc27ada968e5b6387010aab2a6e2c
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
