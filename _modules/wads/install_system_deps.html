@@ -297,11 +297,21 @@
 
 <span class="sd">The CLI's ``--install-timeout`` sets the fallback for dependencies that declare</span>
 <span class="sd">none; a declaration always wins over it.</span>
+
+<span class="sd">A failed or timed-out install command is retried with exponential backoff</span>
+<span class="sd">(:data:`DFLT_INSTALL_RETRIES` extra attempts, :data:`DFLT_INSTALL_BACKOFF` seconds</span>
+<span class="sd">before the first retry, doubling), because the usual cause on a hosted runner is a</span>
+<span class="sd">transient apt mirror timeout that a raised ceiling does not cure. A dependency may</span>
+<span class="sd">declare ``install_retries`` (``0`` disables retrying); the CLI's ``--install-retries``</span>
+<span class="sd">sets the fallback. Worst case for a command that always fails is</span>
+<span class="sd">``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful</span>
+<span class="sd">``apt-get update`` is not repeated when only the following install flaked.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">platform_module</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
@@ -323,6 +333,10 @@
 <span class="c1"># Both are overridable — see `install_system_dependencies` and the CLI.</span>
 <span class="n">DFLT_INSTALL_TIMEOUT</span> <span class="o">=</span> <span class="mi">300</span>
 <span class="n">DFLT_CHECK_TIMEOUT</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># Extra attempts per failed install command, and the wait before the first retry</span>
+<span class="c1"># (doubled for each further one). Transient mirror failures are the common cause.</span>
+<span class="n">DFLT_INSTALL_RETRIES</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">DFLT_INSTALL_BACKOFF</span> <span class="o">=</span> <span class="mi">5</span>
 
 
 <div class="viewcode-block" id="find_pyproject">
@@ -403,10 +417,54 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_with_retries</span><span class="p">(</span>
+    <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">backoff</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">sleep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run one shell command, retrying failures; return an error message or None."""</span>
+    <span class="k">if</span> <span class="n">retries</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"retries must be &gt;= 0, got </span><span class="si">{</span><span class="n">retries</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attempt</span><span class="p">:</span>
+            <span class="n">wait</span> <span class="o">=</span> <span class="n">backoff</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  Retry </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">retries</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">s (previous attempt: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+            <span class="p">(</span><span class="n">sleep</span> <span class="ow">or</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">)(</span><span class="n">wait</span><span class="p">)</span>  <span class="c1"># looked up late so tests can patch it</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span>
+                <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Show output in real-time</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
+            <span class="c1"># Name the command: a multi-command install (e.g. an apt update</span>
+            <span class="c1"># followed by an apt install) is otherwise indistinguishable in the log.</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Timeout after </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s running: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">error</span>
+
+
 <div class="viewcode-block" id="install_dependency">
 <a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.install_dependency">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">install_dependency</span><span class="p">(</span>
-    <span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">install_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_TIMEOUT</span>
+    <span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">install_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
+    <span class="n">backoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_BACKOFF</span><span class="p">,</span>
+    <span class="n">sleep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install a dependency using install commands.</span>
@@ -415,6 +473,9 @@
 <span class="sd">        dep_name: Name of dependency</span>
 <span class="sd">        install_cmds: Command(s) to install (string or list)</span>
 <span class="sd">        timeout: Timeout in seconds for each command</span>
+<span class="sd">        retries: Extra attempts for a command that fails or times out</span>
+<span class="sd">        backoff: Seconds before the first retry; doubles for each further one</span>
+<span class="sd">        sleep: Wait function (default ``time.sleep``; injectable for tests)</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (success: bool, error_message: Optional[str])</span>
@@ -438,23 +499,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Command: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">cmd</span><span class="p">,</span>
-                <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Show output in real-time</span>
-                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Exit code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span>
-
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-            <span class="c1"># Name the command: a multi-command install (e.g. an apt update</span>
-            <span class="c1"># followed by an apt install) is otherwise indistinguishable in the log.</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Timeout after </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s running: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">"</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">_run_with_retries</span><span class="p">(</span>
+            <span class="n">cmd</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">retries</span><span class="p">,</span> <span class="n">backoff</span><span class="o">=</span><span class="n">backoff</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="n">sleep</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">error</span>
 
     <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span></div>
 
@@ -469,6 +518,7 @@
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">default_install_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">,</span>
+    <span class="n">default_install_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install system dependencies from pyproject.toml.</span>
@@ -480,6 +530,8 @@
 <span class="sd">        verbose: Print detailed progress</span>
 <span class="sd">        default_install_timeout: Per-command install timeout (seconds) for</span>
 <span class="sd">            dependencies that declare no ``install_timeout`` of their own.</span>
+<span class="sd">        default_install_retries: Retries per failed install command for</span>
+<span class="sd">            dependencies that declare no ``install_retries`` of their own.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (installed_count, skipped_count, failed_count)</span>
@@ -526,28 +578,43 @@
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2"> system dependencies</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Per-command install timeout declared by a dep, else the default.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setting_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">is_valid</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""A dep's own ``key`` if valid, else ``default``.</span>
 
-<span class="sd">        A non-numeric or non-positive `install_timeout` is reported and ignored</span>
-<span class="sd">        rather than raised: a typo in pyproject.toml should not take down the</span>
-<span class="sd">        whole install step, it should degrade to the default ceiling.</span>
+<span class="sd">        An invalid value is reported and ignored rather than raised: a typo in</span>
+<span class="sd">        pyproject.toml should not take down the whole install step, it should</span>
+<span class="sd">        degrade to the default.</span>
 <span class="sd">        """</span>
-        <span class="n">declared</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install_timeout"</span><span class="p">)</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">declared</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">default_install_timeout</span>
-        <span class="n">is_valid_number</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">declared</span><span class="p">,</span> <span class="nb">bool</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_number</span> <span class="ow">or</span> <span class="n">declared</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">(</span><span class="n">declared</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Warning: ignoring invalid install_timeout=</span><span class="si">{</span><span class="n">declared</span><span class="si">!r}</span><span class="s2"> for "</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">; using </span><span class="si">{</span><span class="n">default_install_timeout</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Warning: ignoring invalid </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">declared</span><span class="si">!r}</span><span class="s2"> for "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">; using </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="k">return</span> <span class="n">default_install_timeout</span>
+            <span class="k">return</span> <span class="n">default</span>
         <span class="k">return</span> <span class="n">declared</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">setting_for</span><span class="p">(</span>
+            <span class="n">dep_name</span><span class="p">,</span>
+            <span class="n">dep_config</span><span class="p">,</span>
+            <span class="s2">"install_timeout"</span><span class="p">,</span>
+            <span class="n">default_install_timeout</span><span class="p">,</span>
+            <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">retries_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">setting_for</span><span class="p">(</span>
+            <span class="n">dep_name</span><span class="p">,</span>
+            <span class="n">dep_config</span><span class="p">,</span>
+            <span class="s2">"install_retries"</span><span class="p">,</span>
+            <span class="n">default_install_retries</span><span class="p">,</span>
+            <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="c1"># Process each dependency</span>
     <span class="n">installed_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -592,7 +659,12 @@
                 <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">... (timeout: </span><span class="si">{</span><span class="n">install_timeout</span><span class="si">}</span><span class="s2">s per command)"</span>
             <span class="p">)</span>
 
-        <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install_dependency</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">install_cmds</span><span class="p">,</span> <span class="n">install_timeout</span><span class="p">)</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install_dependency</span><span class="p">(</span>
+            <span class="n">dep_name</span><span class="p">,</span>
+            <span class="n">install_cmds</span><span class="p">,</span>
+            <span class="n">install_timeout</span><span class="p">,</span>
+            <span class="n">retries</span><span class="o">=</span><span class="n">retries_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">),</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -623,6 +695,14 @@
 
     <span class="k">return</span> <span class="n">installed_count</span><span class="p">,</span> <span class="n">skipped_count</span><span class="p">,</span> <span class="n">failed_count</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_non_negative_int</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""argparse type: an int &gt;= 0."""</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"must be &gt;= 0, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
 
 
 <div class="viewcode-block" id="main">
@@ -671,6 +751,18 @@
         <span class="p">),</span>
     <span class="p">)</span>
 
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--install-retries"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">_non_negative_int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">"N"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Retries (with exponential backoff) of a failed install command, for "</span>
+            <span class="s2">"dependencies that declare no install_retries of their own "</span>
+            <span class="sa">f</span><span class="s2">"(default: </span><span class="si">{</span><span class="n">DFLT_INSTALL_RETRIES</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="n">installed</span><span class="p">,</span> <span class="n">skipped</span><span class="p">,</span> <span class="n">failed</span> <span class="o">=</span> <span class="n">install_system_dependencies</span><span class="p">(</span>
@@ -679,6 +771,7 @@
         <span class="n">skip_check</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">skip_check</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">quiet</span><span class="p">,</span>
         <span class="n">default_install_timeout</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">install_timeout</span><span class="p">,</span>
+        <span class="n">default_install_retries</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">install_retries</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Exit with error if any failed</span>
@@ -716,7 +809,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=74d2276a"></script>
+</div><script src="../../_static/documentation_options.js?v=9cf166da"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -1,4 +1,4 @@
-> built 2026-10-26 14:52 UTC from 03c4ca6 (master) · wads 0.2.53. Details: build_info.json
+> built 2026-10-26 15:12 UTC from 52a3b70 (master) · wads 0.2.54. Details: build_info.json
 
 # index.html.md
 
@@ -3085,6 +3085,15 @@ install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
 The CLI’s `--install-timeout` sets the fallback for dependencies that declare
 none; a declaration always wins over it.
 
+A failed or timed-out install command is retried with exponential backoff
+(`DFLT_INSTALL_RETRIES` extra attempts, `DFLT_INSTALL_BACKOFF` seconds
+before the first retry, doubling), because the usual cause on a hosted runner is a
+transient apt mirror timeout that a raised ceiling does not cure. A dependency may
+declare `install_retries` (`0` disables retrying); the CLI’s `--install-retries`
+sets the fallback. Worst case for a command that always fails is
+`(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
+`apt-get update` is not repeated when only the following install flaked.
+
 ### Functions
 
 | [`check_if_installed`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.check_if_installed)(dep_name, check_cmds[, ...])   | Check if dependency is already installed using check commands.   |
@@ -3123,7 +3132,7 @@ Find pyproject.toml file from path (file or directory).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300)
+### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300, , retries=2, backoff=5, sleep=None)
 
 Install a dependency using install commands.
 
@@ -3131,12 +3140,15 @@ Install a dependency using install commands.
   * **dep_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Name of dependency
   * **install_cmds** (`any`) – Command(s) to install (string or list)
   * **timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Timeout in seconds for each command
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts for a command that fails or times out
+  * **backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Seconds before the first retry; doubles for each further one
+  * **sleep** – Wait function (default `time.sleep`; injectable for tests)
 * **Returns:**
   bool, error_message: Optional[str])
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=300)
+### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=300, default_install_retries=2)
 
 Install system dependencies from pyproject.toml.
 
@@ -3147,6 +3159,8 @@ Install system dependencies from pyproject.toml.
   * **verbose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Print detailed progress
   * **default_install_timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Per-command install timeout (seconds) for
     dependencies that declare no `install_timeout` of their own.
+  * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
+    dependencies that declare no `install_retries` of their own.
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
 * **Returns:**
@@ -7573,18 +7587,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 14:52 UTC** from commit <a href="https://github.com/i2mint/wads/commit/03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b"><code>03c4ca6</code></a> on branch <code>master</code>, for **wads 0.2.53** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 15:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/52a3b7056a86acf73cfccf5f39462b1b3b514aa4"><code>52a3b70</code></a> on branch <code>master</code>, for **wads 0.2.54** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.53) is behind the latest release on PyPI (0.2.54): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.54) is behind the latest release on PyPI (0.2.55): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b"><code>03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/52a3b7056a86acf73cfccf5f39462b1b3b514aa4"><code>52a3b7056a86acf73cfccf5f39462b1b3b514aa4</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7595,9 +7609,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40343169991">40343169991</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40346527994">40346527994</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b</code> (in the history of the built commit) |
+| Event commit | <code>52a3b7056a86acf73cfccf5f39462b1b3b514aa4</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7622,13 +7636,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.54/">0.2.54</a>, newer than the documented version (0.2.53).
+Latest release: <a href="https://pypi.org/project/wads/0.2.55/">0.2.55</a>, newer than the documented version (0.2.54).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b
+git checkout 52a3b7056a86acf73cfccf5f39462b1b3b514aa4
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

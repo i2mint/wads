@@ -19,6 +19,15 @@ install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
 The CLI’s `--install-timeout` sets the fallback for dependencies that declare
 none; a declaration always wins over it.
 
+A failed or timed-out install command is retried with exponential backoff
+(`DFLT_INSTALL_RETRIES` extra attempts, `DFLT_INSTALL_BACKOFF` seconds
+before the first retry, doubling), because the usual cause on a hosted runner is a
+transient apt mirror timeout that a raised ceiling does not cure. A dependency may
+declare `install_retries` (`0` disables retrying); the CLI’s `--install-retries`
+sets the fallback. Worst case for a command that always fails is
+`(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
+`apt-get update` is not repeated when only the following install flaked.
+
 ### Functions
 
 | [`check_if_installed`](#wads.install_system_deps.check_if_installed)(dep_name, check_cmds[, ...])   | Check if dependency is already installed using check commands.   |
@@ -57,7 +66,7 @@ Find pyproject.toml file from path (file or directory).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300)
+### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300, , retries=2, backoff=5, sleep=None)
 
 Install a dependency using install commands.
 
@@ -65,12 +74,15 @@ Install a dependency using install commands.
   * **dep_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Name of dependency
   * **install_cmds** (`any`) – Command(s) to install (string or list)
   * **timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Timeout in seconds for each command
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts for a command that fails or times out
+  * **backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Seconds before the first retry; doubles for each further one
+  * **sleep** – Wait function (default `time.sleep`; injectable for tests)
 * **Returns:**
   bool, error_message: Optional[str])
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=300)
+### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=300, default_install_retries=2)
 
 Install system dependencies from pyproject.toml.
 
@@ -81,6 +93,8 @@ Install system dependencies from pyproject.toml.
   * **verbose** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Print detailed progress
   * **default_install_timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Per-command install timeout (seconds) for
     dependencies that declare no `install_timeout` of their own.
+  * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
+    dependencies that declare no `install_retries` of their own.
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
 * **Returns:**
