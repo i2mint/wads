@@ -550,7 +550,77 @@ def test_yarn_foreach_selectors(tmp_path):
         by_workflow["inc.yml"].publisher.package == "a"
         and by_workflow["inc.yml"].status == "unknown"
     )
-    assert "unresolvable" in by_workflow["exc.yml"].status
+    assert by_workflow["exc.yml"].publisher.package == "b"
+
+
+def _members_repo(tmp_path, *, root=None):
+    _write(
+        tmp_path / "package.json",
+        root or {"name": "root", "private": True, "workspaces": ["packages/*"]},
+    )
+    for name in ("a", "ab", "b", "c"):
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+
+
+@pytest.mark.parametrize(
+    "script, expected",
+    [
+        ("pnpm -r publish --filter '!b'", ["a", "ab", "c"]),
+        ("pnpm publish --filter '!b' --filter '!c'", ["a", "ab"]),
+        ("pnpm -r publish --filter 'a*' --filter '!ab'", ["a"]),
+        ("pnpm -r exec -- npm publish", ["a", "ab", "b", "c"]),
+        ("yarn workspaces foreach -A exec npm publish", ["a", "ab", "b", "c"]),
+    ],
+)
+def test_exclusion_filters_subtract_and_exec_dashdash_is_followed(
+    tmp_path, script, expected
+):
+    _members_repo(tmp_path)
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == expected
+
+
+@pytest.mark.parametrize("script", ["pnpm -w publish", "pnpm publish -w"])
+def test_pnpm_w_takes_no_value_and_publishes_the_root(tmp_path, script):
+    _members_repo(tmp_path, root={"name": "root", "workspaces": ["packages/*"]})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == ["root"]
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        "yarn workspaces foreach -A run release",
+        "yarn workspaces foreach -A -j 4 release",
+        "pnpm -r publish --filter '!...[origin/main]'",
+        "pnpm -r publish --filter '!{packages/b}'",
+    ],
+)
+def test_what_we_cannot_resolve_is_reported_not_dropped_or_overclaimed(
+    tmp_path, script
+):
+    _members_repo(tmp_path)
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    (row,) = survey(discover(tmp_path, repo=SLUG), check_npm=False)
+    assert row.publisher.problem
+
+
+def test_workspace_exclusion_globs_walk_the_tree_once(tmp_path, monkeypatch):
+    import os
+
+    _write(
+        tmp_path / "package.json",
+        {"name": "r", "private": True, "workspaces": ["packages/*", "!packages/x"]},
+    )
+    for name in "abx":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    calls = []
+    real = os.walk
+    monkeypatch.setattr(os, "walk", lambda *a, **k: calls.append(a) or real(*a, **k))
+    from wads.npm_trust import workspace_manifests
+
+    assert [m["name"] for _, m in workspace_manifests(tmp_path)[1:]] == ["a", "b"]
+    assert len(calls) == 1
 
 
 def test_js_devtools_ignores_run_step_defaults_and_path_selectors_match(tmp_path):

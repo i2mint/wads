@@ -58,11 +58,29 @@ _SPLIT_RE = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
 _NPM_NAME_RE = re.compile(r"^(@[a-z0-9~][a-z0-9._~-]*/)?[a-z0-9~][a-z0-9._~-]*$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _WORKFLOW_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.ya?ml$")
+#: ``yarn workspaces foreach`` flags that take a value (so it is not mistaken for the command).
+_FOREACH_VALUE_FLAGS = {
+    "--include",
+    "--exclude",
+    "--from",
+    "--since",
+    "--from-since",
+    "-j",
+    "--jobs",
+    "--worktree",
+}
 _VALUE_FLAGS = {"--filter", "-F", "--dir", "-C", "--prefix", "--workspace", "-w"}
 _FILTER_FLAGS = {"--filter", "-F", "--workspace", "-w"}
+#: Flags that look like value flags of another manager but take no value in this one
+#: (pnpm's ``-w`` selects the workspace root; npm's ``-w <ws>`` selects a member).
+_NO_VALUE_FLAGS = {"pnpm": {"-w"}}
 _DIR_FLAGS = {"--dir", "-C", "--prefix"}
 _SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "time"}
 _RECURSIVE_FLAGS = {"-r", "--recursive", "--workspaces", "-ws"}
+#: Prefix of a selector that subtracts its matches (pnpm ``--filter '!x'``).
+_EXCLUDE = "!"
+#: Selector syntax we cannot evaluate (``...[origin/main]``, ``{dir}``): never guess a set.
+_UNRESOLVABLE_SELECTOR_RE = re.compile(r"[\[\]{}]")
 _MAX_SCRIPT_DEPTH = 5
 _MANAGERS = {"npm", "pnpm", "yarn"}
 _PRUNED_DIRS = {"node_modules", ".git"}
@@ -169,18 +187,31 @@ def _tokens(segment: str) -> list[str]:
 
 def _split_flags(tokens: list[str], cwd: str) -> dict:
     """Flags, filters, ``-C`` directory and positionals (with their index) of a pm call."""
-    found = {"flags": set(), "filters": [], "where": cwd, "positional": []}
+    found = {
+        "flags": set(),
+        "filters": [],
+        "where": cwd,
+        "positional": [],
+        "problem": "",
+    }
     index = 1
     while index < len(tokens):
         token = tokens[index]
         name, _, inline = token.partition("=")
         if token.startswith("-"):
             found["flags"].add(name)
-            if name in _VALUE_FLAGS and not inline and index + 1 < len(tokens):
+            takes_value = name in _VALUE_FLAGS and name not in _NO_VALUE_FLAGS.get(
+                tokens[0], ()
+            )
+            if takes_value and not inline and index + 1 < len(tokens):
                 index += 1
                 inline = tokens[index]
-            if name in _FILTER_FLAGS and inline:
+            if takes_value and name in _FILTER_FLAGS and inline:
                 found["filters"].append(inline)
+                if _UNRESOLVABLE_SELECTOR_RE.search(inline):
+                    found["problem"] = (
+                        f"{tokens[0]} selector {inline!r} is unresolvable"
+                    )
             if name in _DIR_FLAGS and inline:
                 found["where"] = posixpath.normpath(posixpath.join(cwd, inline))
         else:
@@ -190,19 +221,36 @@ def _split_flags(tokens: list[str], cwd: str) -> dict:
 
 
 def _foreach_command(tokens: list[str]) -> Optional[tuple[list[str], list[str], str]]:
-    """``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``."""
+    """``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``.
+
+    A ``yarn run SCRIPT`` / ``yarn SCRIPT`` command runs in the members that define the
+    script, which we do not read: it is reported as a problem, never as an empty set.
+    """
     rest = tokens[tokens.index("foreach") + 1 :]
-    start = next((i for i, t in enumerate(rest) if t in _MANAGERS), None)
-    if start is None:
-        return None
-    filters, problem = [], ""
-    for at, token in enumerate(rest[:start]):
-        name, _, inline = token.partition("=")
+    filters, problem, at = [], "", 0
+    while at < len(rest) and rest[at].startswith("-"):
+        name, _, inline = rest[at].partition("=")
+        value = inline
+        if name in _FOREACH_VALUE_FLAGS and not inline and at + 1 < len(rest):
+            at += 1
+            value = rest[at]
         if name in ("--include", "--from"):
-            filters.append(inline or (rest[at + 1] if at + 1 < start else ""))
-        elif name in ("--exclude", "--since", "--from-since"):
+            filters.append(value)
+        elif name == "--exclude":
+            filters.append(_EXCLUDE + value)
+        elif name in ("--since", "--from-since"):
             problem = f"yarn foreach {name} selects an unresolvable set"
-    return rest[start:], filters, problem
+        at += 1
+    command = rest[at:]
+    if command[:1] == ["exec"]:  # `foreach exec [--] npm publish`
+        command = [t for t in command[1:] if t != "--"]
+    if not command:
+        return None
+    if command[0] not in _MANAGERS:
+        script = command[1] if command[0] == "run" and len(command) > 1 else command[0]
+        problem = problem or f"yarn foreach runs script {script!r} in each member"
+        command = []
+    return command, filters, problem
 
 
 def _wrapped_calls(
@@ -226,7 +274,11 @@ def _wrapped_calls(
         if not positional or positional[0][1] != "exec":
             return None
         inner = tokens[positional[0][0] + 1 :]
-        everything, problem = bool(outer["flags"] & _RECURSIVE_FLAGS), ""
+        if inner[:1] == ["--"]:  # `pnpm -r exec -- npm publish`
+            inner = inner[1:]
+        everything, problem = bool(outer["flags"] & _RECURSIVE_FLAGS), outer["problem"]
+    if not inner and problem:  # a command we cannot follow, but must not drop
+        return [PublishCall(cwd, True, tuple(outer["filters"]), problem=problem)]
     if not inner or depth >= _MAX_SCRIPT_DEPTH:
         return []
     calls = publish_calls(
@@ -266,7 +318,14 @@ def _npm_call(
             where = posixpath.normpath(
                 posixpath.join(where, target)
             )  # `npm publish ./dir`
-        return [PublishCall(where, bool(flags & _RECURSIVE_FLAGS), tuple(filters))]
+        return [
+            PublishCall(
+                where,
+                bool(flags & _RECURSIVE_FLAGS),
+                tuple(filters),
+                problem=parsed["problem"],
+            )
+        ]
     script = (
         positional[1] if sub in ("run", "run-script") and len(positional) > 1 else sub
     )
@@ -356,27 +415,46 @@ def _glob_regex(pattern: str) -> "re.Pattern":
     return re.compile("^" + "".join(parts) + "$")
 
 
-def glob_dirs(root: Path, pattern: str) -> list[Path]:
-    """Directories under ``root`` matching a workspace glob, never entering ``node_modules``."""
-    regex = _glob_regex(pattern)
+def _all_dirs(root: Path) -> list[Path]:
+    """Every directory under ``root`` (not ``root``), never entering ``node_modules``."""
     found = []
     for current, names, _ in os.walk(root):
         names[:] = sorted(
             n for n in names if n not in _PRUNED_DIRS and not n.startswith(".")
         )
-        relative = Path(current).relative_to(root).as_posix()
-        if relative != "." and regex.match(relative + "/"):
+        if Path(current) != root:
             found.append(Path(current))
     return found
+
+
+def glob_dirs(
+    root: Path, pattern: str, *, directories: Optional[Sequence[Path]] = None
+) -> list[Path]:
+    """Directories under ``root`` matching a workspace glob, never entering ``node_modules``.
+
+    ``directories`` (from a previous walk) spares walking the tree again for each pattern.
+    """
+    regex = _glob_regex(pattern)
+    if directories is None:
+        directories = _all_dirs(root)
+    return [d for d in directories if regex.match(d.relative_to(root).as_posix() + "/")]
 
 
 def workspace_manifests(root: Path) -> list[tuple[Path, dict]]:
     """``(directory, package.json)`` of ``root`` itself and its workspace members."""
     patterns = workspace_globs(root)
-    skipped = {d for p in patterns if p.startswith("!") for d in glob_dirs(root, p[1:])}
+    walked = _all_dirs(root) if patterns else []
+    skipped = {
+        d
+        for p in patterns
+        if p.startswith(_EXCLUDE)
+        for d in glob_dirs(root, p[1:], directories=walked)
+    }
     directories = [root]
-    for pattern in (p for p in patterns if not p.startswith("!")):
-        directories += [d for d in glob_dirs(root, pattern) if d not in skipped]
+    for pattern in (p for p in patterns if not p.startswith(_EXCLUDE)):
+        directories += [
+            d for d in glob_dirs(root, pattern, directories=walked) if d not in skipped
+        ]
     return [(d, _load_json(d / "package.json")) for d in directories]
 
 
@@ -408,8 +486,16 @@ def packages_of(root: Path, call: PublishCall) -> list[str]:
     ['solo']
     """
     members = workspace_manifests(root)
+    included = [f for f in call.filters if not f.startswith(_EXCLUDE)]
+    excluded = [f[len(_EXCLUDE) :] for f in call.filters if f.startswith(_EXCLUDE)]
     if call.filters:
-        chosen = [m for d, m in members if _selected(root, d, m, call.filters)]
+        # only exclusions: subtract from the full set rather than match nothing
+        chosen = [
+            m
+            for d, m in members
+            if (not included or _selected(root, d, m, included))
+            and not _selected(root, d, m, excluded)
+        ]
     elif call.everything:
         chosen = [m for _, m in members]
     else:
