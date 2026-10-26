@@ -86,9 +86,7 @@ def test_undeclared_install_timeout_keeps_the_default(tmp_path, monkeypatch):
     assert DFLT_INSTALL_TIMEOUT == 300
 
 
-def test_default_install_timeout_argument_overrides_the_constant(
-    tmp_path, monkeypatch
-):
+def test_default_install_timeout_argument_overrides_the_constant(tmp_path, monkeypatch):
     """``default_install_timeout`` applies to deps that declare no timeout."""
     _write_pyproject(tmp_path)
     recorder = _RunRecorder()
@@ -160,3 +158,27 @@ def test_cli_install_timeout_flag(tmp_path, monkeypatch, declared):
 
     assert excinfo.value.code == 0
     assert recorder.timeouts == {declared}
+
+
+def test_action_runs_installer_script_from_its_own_checkout():
+    """The action must not resolve wads from PyPI (a stale wheel shadowed #153 in mixing),
+    and the script it runs must start on a bare interpreter (no wads/__init__ imports)."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    text = (root / "actions" / "install-system-deps" / "action.yml").read_text()
+    assert "pip install --quiet wads" not in text
+    assert "$GITHUB_ACTION_PATH/../../wads/install_system_deps.py" in text
+    # -I: the `wads` package is not importable, so the script must be self-contained
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            str(root / "wads" / "install_system_deps.py"),
+            "--help",
+        ],
+        capture_output=True,
+    )
+    assert result.returncode == 0, result.stderr
