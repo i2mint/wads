@@ -78,6 +78,7 @@ install_timeout = 900
 | `note` | Optional | Additional information (e.g., Alpine instructions) |
 | `alternatives` | Optional | Alternative packages that provide similar functionality |
 | `install_timeout` | Optional | Seconds allowed for *each* install command (default: 300). Raise it for a dependency that is slow but healthy — a cold-cache `apt-get install ffmpeg` on a GitHub runner has hit the 300s wall. |
+| `install_retries` | Optional | Extra attempts (default: 2, with 5s/10s/… exponential backoff) for an install command that fails or times out; `0` disables. Only the failed command is retried, so a good `apt-get update` is not repeated. Covers transient apt mirror timeouts that a larger `install_timeout` does not. CLI fallback: `--install-retries`. |
 
 ### Supported Platforms
 

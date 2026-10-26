@@ -124,7 +124,9 @@ def test_declared_timeout_wins_over_default_install_timeout(tmp_path, monkeypatc
 
 def test_timeout_message_names_the_command_that_stalled():
     """A multi-command install must say WHICH command hit the wall."""
-    success, error = install_dependency("demo", ["echo first", "sleep 5"], timeout=0.5)
+    success, error = install_dependency(
+        "demo", ["echo first", "sleep 5"], timeout=0.5, retries=0
+    )
 
     assert success is False
     assert "sleep 5" in error, f"timeout message does not name the command: {error!r}"
