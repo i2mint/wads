@@ -21,7 +21,8 @@ A failed or timed-out install command is retried with exponential backoff
 before the first retry, doubling), because the usual cause on a hosted runner is a
 transient apt mirror timeout that a raised ceiling does not cure. A dependency may
 declare ``install_retries`` (``0`` disables retrying); the CLI's ``--install-retries``
-sets the fallback. Commands are retried one at a time, so a successful
+sets the fallback. Worst case for a command that always fails is
+``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful
 ``apt-get update`` is not repeated when only the following install flaked.
 """
 
@@ -131,6 +132,8 @@ def _run_with_retries(
     sleep=None,
 ) -> Optional[str]:
     """Run one shell command, retrying failures; return an error message or None."""
+    if retries < 0:
+        raise ValueError(f"retries must be >= 0, got {retries}")
     error = None
     for attempt in range(retries + 1):
         if attempt:
@@ -276,43 +279,43 @@ def install_system_dependencies(
     if verbose:
         print(f"Found {len(ops)} system dependencies\n")
 
-    def timeout_for(dep_name: str, dep_config: dict) -> float:
-        """Per-command install timeout declared by a dep, else the default.
+    def setting_for(dep_name: str, dep_config: dict, key: str, default, is_valid):
+        """A dep's own ``key`` if valid, else ``default``.
 
-        A non-numeric or non-positive `install_timeout` is reported and ignored
-        rather than raised: a typo in pyproject.toml should not take down the
-        whole install step, it should degrade to the default ceiling.
+        An invalid value is reported and ignored rather than raised: a typo in
+        pyproject.toml should not take down the whole install step, it should
+        degrade to the default.
         """
-        declared = dep_config.get("install_timeout")
+        declared = dep_config.get(key)
         if declared is None:
-            return default_install_timeout
-        is_valid_number = isinstance(declared, (int, float)) and not isinstance(
-            declared, bool
-        )
-        if not is_valid_number or declared <= 0:
+            return default
+        if isinstance(declared, bool) or not is_valid(declared):
             if verbose:
                 print(
-                    f"Warning: ignoring invalid install_timeout={declared!r} for "
-                    f"{dep_name}; using {default_install_timeout}s",
+                    f"Warning: ignoring invalid {key}={declared!r} for "
+                    f"{dep_name}; using {default}",
                     file=sys.stderr,
                 )
-            return default_install_timeout
+            return default
         return declared
 
-    def retries_for(dep_name: str, dep_config: dict) -> int:
-        """Retries declared by a dep via ``install_retries``, else the default."""
-        declared = dep_config.get("install_retries")
-        if declared is None:
-            return default_install_retries
-        if not isinstance(declared, int) or isinstance(declared, bool) or declared < 0:
-            if verbose:
-                print(
-                    f"Warning: ignoring invalid install_retries={declared!r} for "
-                    f"{dep_name}; using {default_install_retries}",
-                    file=sys.stderr,
-                )
-            return default_install_retries
-        return declared
+    def timeout_for(dep_name, dep_config):
+        return setting_for(
+            dep_name,
+            dep_config,
+            "install_timeout",
+            default_install_timeout,
+            lambda v: isinstance(v, (int, float)) and v > 0,
+        )
+
+    def retries_for(dep_name, dep_config):
+        return setting_for(
+            dep_name,
+            dep_config,
+            "install_retries",
+            default_install_retries,
+            lambda v: isinstance(v, int) and v >= 0,
+        )
 
     # Process each dependency
     installed_count = 0
@@ -394,6 +397,14 @@ def install_system_dependencies(
     return installed_count, skipped_count, failed_count
 
 
+def _non_negative_int(text: str) -> int:
+    """argparse type: an int >= 0."""
+    value = int(text)
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be >= 0, got {value}")
+    return value
+
+
 def main():
     """CLI entry point."""
     # The progress output uses non-ASCII markers (✓, ✗, ⊘). On Windows CI
@@ -440,7 +451,7 @@ def main():
 
     parser.add_argument(
         "--install-retries",
-        type=int,
+        type=_non_negative_int,
         default=DFLT_INSTALL_RETRIES,
         metavar="N",
         help=(

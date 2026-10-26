@@ -141,3 +141,29 @@ def test_cli_install_retries_flag(tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as e:
         mod.main()
     assert e.value.code == 1 and len(flaky.calls) == 1
+
+
+def test_negative_retries_is_rejected_not_silently_skipped(monkeypatch, waits):
+    flaky = _Flaky({})
+    monkeypatch.setattr("wads.install_system_deps.subprocess.run", flaky)
+    with pytest.raises(ValueError):
+        install_dependency("d", ["x"], retries=-1)
+    assert flaky.calls == []
+
+
+def test_cli_rejects_negative_retries(tmp_path, monkeypatch):
+    from wads import install_system_deps as mod
+
+    monkeypatch.setattr("sys.argv", ["x", str(tmp_path), "--install-retries", "-1"])
+    with pytest.raises(SystemExit) as e:
+        mod.main()
+    assert e.value.code == 2
+
+
+def test_unexpected_exception_is_retried_and_reported(monkeypatch, waits):
+    def boom(cmd, **kw):
+        raise OSError("no shell")
+
+    monkeypatch.setattr("wads.install_system_deps.subprocess.run", boom)
+    ok, err = install_dependency("d", ["x"], sleep=waits.append, retries=1)
+    assert not ok and err == "no shell" and waits == [5]
