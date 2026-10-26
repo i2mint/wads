@@ -171,7 +171,7 @@ def test_action_runs_installer_script_from_its_own_checkout():
     text = (root / "actions" / "install-system-deps" / "action.yml").read_text()
     assert "pip install --quiet wads" not in text
     assert "$GITHUB_ACTION_PATH/../../wads/install_system_deps.py" in text
-    # -I -S: no site-packages, so any third-party or `wads` package import would fail
+    # -I: the `wads` package is not importable, so the script must be self-contained
     result = subprocess.run(
         [
             sys.executable,
