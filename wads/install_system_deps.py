@@ -15,11 +15,21 @@ Without a declaration the timeout stays at :data:`DFLT_INSTALL_TIMEOUT`::
 
 The CLI's ``--install-timeout`` sets the fallback for dependencies that declare
 none; a declaration always wins over it.
+
+A failed or timed-out install command is retried with exponential backoff
+(:data:`DFLT_INSTALL_RETRIES` extra attempts, :data:`DFLT_INSTALL_BACKOFF` seconds
+before the first retry, doubling), because the usual cause on a hosted runner is a
+transient apt mirror timeout that a raised ceiling does not cure. A dependency may
+declare ``install_retries`` (``0`` disables retrying); the CLI's ``--install-retries``
+sets the fallback. Worst case for a command that always fails is
+``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful
+``apt-get update`` is not repeated when only the following install flaked.
 """
 
 import sys
 import os
 import subprocess
+import time
 import platform as platform_module
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -41,6 +51,10 @@ else:
 # Both are overridable — see `install_system_dependencies` and the CLI.
 DFLT_INSTALL_TIMEOUT = 300
 DFLT_CHECK_TIMEOUT = 10
+# Extra attempts per failed install command, and the wait before the first retry
+# (doubled for each further one). Transient mirror failures are the common cause.
+DFLT_INSTALL_RETRIES = 2
+DFLT_INSTALL_BACKOFF = 5
 
 
 def find_pyproject(path: str) -> Path:
@@ -109,8 +123,52 @@ def check_if_installed(
     return False
 
 
+def _run_with_retries(
+    cmd: str,
+    *,
+    timeout: float,
+    retries: int,
+    backoff: float,
+    sleep=None,
+) -> Optional[str]:
+    """Run one shell command, retrying failures; return an error message or None."""
+    if retries < 0:
+        raise ValueError(f"retries must be >= 0, got {retries}")
+    error = None
+    for attempt in range(retries + 1):
+        if attempt:
+            wait = backoff * 2 ** (attempt - 1)
+            print(
+                f"  Retry {attempt}/{retries} in {wait:g}s (previous attempt: {error})"
+            )
+            (sleep or time.sleep)(wait)  # looked up late so tests can patch it
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=False,  # Show output in real-time
+                timeout=timeout,
+            )
+            if result.returncode == 0:
+                return None
+            error = f"Exit code {result.returncode}"
+        except subprocess.TimeoutExpired:
+            # Name the command: a multi-command install (e.g. an apt update
+            # followed by an apt install) is otherwise indistinguishable in the log.
+            error = f"Timeout after {timeout}s running: {cmd}"
+        except Exception as e:
+            error = str(e)
+    return error
+
+
 def install_dependency(
-    dep_name: str, install_cmds: any, timeout: float = DFLT_INSTALL_TIMEOUT
+    dep_name: str,
+    install_cmds: any,
+    timeout: float = DFLT_INSTALL_TIMEOUT,
+    *,
+    retries: int = DFLT_INSTALL_RETRIES,
+    backoff: float = DFLT_INSTALL_BACKOFF,
+    sleep=None,
 ) -> Tuple[bool, Optional[str]]:
     """
     Install a dependency using install commands.
@@ -119,6 +177,9 @@ def install_dependency(
         dep_name: Name of dependency
         install_cmds: Command(s) to install (string or list)
         timeout: Timeout in seconds for each command
+        retries: Extra attempts for a command that fails or times out
+        backoff: Seconds before the first retry; doubles for each further one
+        sleep: Wait function (default ``time.sleep``; injectable for tests)
 
     Returns:
         (success: bool, error_message: Optional[str])
@@ -142,23 +203,11 @@ def install_dependency(
         else:
             print(f"  Command: {cmd}")
 
-        try:
-            result = subprocess.run(
-                cmd,
-                shell=True,
-                capture_output=False,  # Show output in real-time
-                timeout=timeout,
-            )
-
-            if result.returncode != 0:
-                return False, f"Exit code {result.returncode}"
-
-        except subprocess.TimeoutExpired:
-            # Name the command: a multi-command install (e.g. an apt update
-            # followed by an apt install) is otherwise indistinguishable in the log.
-            return False, f"Timeout after {timeout}s running: {cmd}"
-        except Exception as e:
-            return False, str(e)
+        error = _run_with_retries(
+            cmd, timeout=timeout, retries=retries, backoff=backoff, sleep=sleep
+        )
+        if error:
+            return False, error
 
     return True, None
 
@@ -170,6 +219,7 @@ def install_system_dependencies(
     verbose: bool = True,
     *,
     default_install_timeout: float = DFLT_INSTALL_TIMEOUT,
+    default_install_retries: int = DFLT_INSTALL_RETRIES,
 ) -> Tuple[int, int, int]:
     """
     Install system dependencies from pyproject.toml.
@@ -181,6 +231,8 @@ def install_system_dependencies(
         verbose: Print detailed progress
         default_install_timeout: Per-command install timeout (seconds) for
             dependencies that declare no ``install_timeout`` of their own.
+        default_install_retries: Retries per failed install command for
+            dependencies that declare no ``install_retries`` of their own.
 
     Returns:
         (installed_count, skipped_count, failed_count)
@@ -227,28 +279,43 @@ def install_system_dependencies(
     if verbose:
         print(f"Found {len(ops)} system dependencies\n")
 
-    def timeout_for(dep_name: str, dep_config: dict) -> float:
-        """Per-command install timeout declared by a dep, else the default.
+    def setting_for(dep_name: str, dep_config: dict, key: str, default, is_valid):
+        """A dep's own ``key`` if valid, else ``default``.
 
-        A non-numeric or non-positive `install_timeout` is reported and ignored
-        rather than raised: a typo in pyproject.toml should not take down the
-        whole install step, it should degrade to the default ceiling.
+        An invalid value is reported and ignored rather than raised: a typo in
+        pyproject.toml should not take down the whole install step, it should
+        degrade to the default.
         """
-        declared = dep_config.get("install_timeout")
+        declared = dep_config.get(key)
         if declared is None:
-            return default_install_timeout
-        is_valid_number = isinstance(declared, (int, float)) and not isinstance(
-            declared, bool
-        )
-        if not is_valid_number or declared <= 0:
+            return default
+        if isinstance(declared, bool) or not is_valid(declared):
             if verbose:
                 print(
-                    f"Warning: ignoring invalid install_timeout={declared!r} for "
-                    f"{dep_name}; using {default_install_timeout}s",
+                    f"Warning: ignoring invalid {key}={declared!r} for "
+                    f"{dep_name}; using {default}",
                     file=sys.stderr,
                 )
-            return default_install_timeout
+            return default
         return declared
+
+    def timeout_for(dep_name, dep_config):
+        return setting_for(
+            dep_name,
+            dep_config,
+            "install_timeout",
+            default_install_timeout,
+            lambda v: isinstance(v, (int, float)) and v > 0,
+        )
+
+    def retries_for(dep_name, dep_config):
+        return setting_for(
+            dep_name,
+            dep_config,
+            "install_retries",
+            default_install_retries,
+            lambda v: isinstance(v, int) and v >= 0,
+        )
 
     # Process each dependency
     installed_count = 0
@@ -293,7 +360,12 @@ def install_system_dependencies(
                 f"\nInstalling {dep_name}... (timeout: {install_timeout}s per command)"
             )
 
-        success, error = install_dependency(dep_name, install_cmds, install_timeout)
+        success, error = install_dependency(
+            dep_name,
+            install_cmds,
+            install_timeout,
+            retries=retries_for(dep_name, dep_config),
+        )
 
         if success:
             if verbose:
@@ -323,6 +395,14 @@ def install_system_dependencies(
             print(f"✗ Failed: {failed_count}")
 
     return installed_count, skipped_count, failed_count
+
+
+def _non_negative_int(text: str) -> int:
+    """argparse type: an int >= 0."""
+    value = int(text)
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be >= 0, got {value}")
+    return value
 
 
 def main():
@@ -369,6 +449,18 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--install-retries",
+        type=_non_negative_int,
+        default=DFLT_INSTALL_RETRIES,
+        metavar="N",
+        help=(
+            "Retries (with exponential backoff) of a failed install command, for "
+            "dependencies that declare no install_retries of their own "
+            f"(default: {DFLT_INSTALL_RETRIES})"
+        ),
+    )
+
     args = parser.parse_args()
 
     installed, skipped, failed = install_system_dependencies(
@@ -377,6 +469,7 @@ def main():
         skip_check=args.skip_check,
         verbose=not args.quiet,
         default_install_timeout=args.install_timeout,
+        default_install_retries=args.install_retries,
     )
 
     # Exit with error if any failed
