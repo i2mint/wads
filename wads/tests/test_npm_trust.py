@@ -800,3 +800,39 @@ def test_select_is_shared_by_workspace_globs_and_filters():
     same = lambda a, b: a == b
     assert select(["a", "b"], ["!a"], same, default_all=True) == ["b"]
     assert select(["a", "b"], ["!a"], same, default_all=False) == []
+
+
+@pytest.mark.parametrize("command", ["npm help publish", "npm install publish", "pnpm add publish"])
+def test_a_subcommand_that_merely_mentions_publish_is_not_a_problem(command):
+    assert publish_calls(command) == []
+
+
+def test_pnpm_path_selectors_are_read_from_the_cwd_not_the_workspace_root(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n")
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": f"@x/{name}"})
+    # from packages/, `./a` is packages/a (not <root>/a, which does not exist)
+    _workflow(tmp_path, "p.yml", {"run": "cd packages && pnpm --filter ./a publish"})
+    assert _names(tmp_path) == [("@x/a", "p.yml", "")]
+
+
+@pytest.mark.parametrize("tool", ["release-it", "semantic-release", "npx semantic-release"])
+def test_release_tools_publish_the_package_in_their_directory(tmp_path, tool):
+    _write(tmp_path / "package.json", {"name": "solo"})
+    _workflow(tmp_path, "r.yml", {"run": tool})
+    assert _names(tmp_path) == [("solo", "r.yml", "")]
+
+
+def test_release_tool_dry_run_is_not_a_publish():
+    assert publish_calls("release-it --dry-run") == []
+
+
+def test_a_yarn_foreach_script_that_runs_a_release_tool_yields_rows(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root", "private": True, "workspaces": ["packages/*"]})
+    _write(
+        tmp_path / "packages" / "a" / "package.json",
+        {"name": "a", "scripts": {"ship": "release-it"}},
+    )
+    _workflow(tmp_path, "y.yml", {"run": "yarn workspaces foreach -A run ship"})
+    assert _names(tmp_path) == [("a", "y.yml", "")]

@@ -114,6 +114,21 @@ _SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "t
 _EXCLUDE = "!"
 #: Selector syntax we cannot evaluate (``...[origin/main]``, ``{dir}``): never guess a set.
 _UNRESOLVABLE_SELECTOR_RE = re.compile(r"[\[\]{}]")
+#: Subcommands whose arguments may mention ``publish`` without publishing anything.
+_NON_PUBLISH_SUBCOMMANDS = {
+    "help",
+    "install",
+    "i",
+    "add",
+    "view",
+    "info",
+    "exec",
+    "x",
+    "dlx",
+}
+#: Release tools that publish the package in their directory (and are not an
+#: ``npm publish`` call we can read): ``release-it``, ``semantic-release``.
+_RELEASE_TOOLS = {"release-it", "semantic-release"}
 _MAX_SCRIPT_DEPTH = 5
 _PRUNED_DIRS = {"node_modules", ".git"}
 
@@ -376,7 +391,11 @@ def _npm_call(
                 problem=parsed["problem"],
             )
         ]
-    if "publish" in positional[1:] and sub not in ("run", "run-script"):
+    if (
+        "publish" in positional[1:]
+        and sub not in ("run", "run-script")
+        and sub not in _NON_PUBLISH_SUBCOMMANDS
+    ):
         # a flag we do not know took the real subcommand's place: never drop the call
         return [
             PublishCall(where, problem=f"unrecognised {tokens[0]} flag before publish")
@@ -426,6 +445,9 @@ def publish_calls(
             elif command in ("changeset", "changesets") and tokens[1:2] == ["publish"]:
                 if "--dry-run" not in tokens:
                     calls.append(PublishCall(cwd, everything=True))
+            elif command in _RELEASE_TOOLS:
+                if not {"--dry-run", "-d"} & set(tokens):
+                    calls.append(PublishCall(cwd))
             elif command in ("npm", "pnpm", "yarn"):
                 calls += _npm_call(tokens, cwd, scripts, _depth)
     return calls
@@ -575,6 +597,27 @@ def _runs_publish(manifest: dict, script: str) -> bool:
     return isinstance(text, str) and bool(publish_calls(text, scripts))
 
 
+def _cwd_relative(selectors: Sequence[str], cwd: str, base: "Path | str") -> list[str]:
+    """Selectors with ``./``/``../`` paths re-based from the call's cwd to ``base``.
+
+    pnpm and npm read a path selector relative to the directory they run in, while
+    :func:`packages_of` matches from the workspace root ``base``; both are repo-relative.
+
+    >>> _cwd_relative(["./a", "!../b", "pkg-*", "packages/c"], "ws/sub", "ws")
+    ['sub/a', '!b', 'pkg-*', 'packages/c']
+    """
+    result = []
+    for selector in selectors:
+        sign = _EXCLUDE if selector.startswith(_EXCLUDE) else ""
+        body = selector[len(sign) :]
+        if body.startswith(("./", "../")) or body in (".", ".."):
+            repo_path = posixpath.normpath(posixpath.join(cwd, body))
+            body = posixpath.relpath(repo_path, str(base) or ".")
+            body = "." if body == "." else body
+        result.append(sign + body)
+    return result
+
+
 def packages_of(root: Path, call: PublishCall) -> list[str]:
     """Names of the non-private packages ``call`` publishes in the repo at ``root``.
 
@@ -597,15 +640,20 @@ def packages_of(root: Path, call: PublishCall) -> list[str]:
         if call.workspace_root and not whole:
             chosen = members[:1]
         else:
+            filters = _cwd_relative(
+                call.filters,
+                call.directory,
+                posixpath.relpath(base.resolve().as_posix(), root.resolve().as_posix()),
+            )
             chosen = select(
                 members,
-                call.filters,
+                filters,
                 lambda member, selector: _selected(
                     base, member[0], member[1], [selector]
                 ),
                 default_all=True,
             )
-            explicit = any(not f.startswith(_EXCLUDE) for f in call.filters)
+            explicit = any(not f.startswith(_EXCLUDE) for f in filters)
             if not (explicit or call.include_root) and len(members) > 1:
                 chosen = [m for m in chosen if m[0] != base]  # pnpm -r skips the root
     if call.script:
