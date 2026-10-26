@@ -123,7 +123,6 @@ _NON_PUBLISH_SUBCOMMANDS = {
     "view",
     "info",
     "exec",
-    "x",
     "dlx",
 }
 #: Release tools that publish the package in their directory (and are not an
