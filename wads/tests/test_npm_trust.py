@@ -373,3 +373,30 @@ def test_publish_calls_follow_scripts_and_changesets():
     scripts = {"release": "pnpm build && changeset publish", "ship": "npm run release"}
     assert publish_calls("pnpm ship", scripts)[0].everything
     assert publish_calls("npx changeset publish --dry-run") == []
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        "pnpm -C packages/a publish",
+        "npm publish --prefix packages/a",
+        "npm publish ./packages/a",
+        "if true; then cd packages/a && npm publish; fi",
+        'FOO="a b" npm publish --prefix packages/a',
+    ],
+)
+def test_directory_flags_and_shell_guards_find_the_right_package(tmp_path, script):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "packages" / "a" / "package.json", {"name": "a"})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert _names(tmp_path) == [("a", "pub.yml", "")]
+
+
+def test_no_github_origin_means_nothing_is_ever_run(tmp_path):
+    _write(tmp_path / "package.json", {"name": "p"})
+    _workflow(tmp_path, "pub.yml", {"run": "npm publish"})
+    nogit = lambda argv: subprocess.CompletedProcess(argv, 1, "", "no remote")
+    (publisher,) = discover(tmp_path, run=nogit)
+    assert "unknown GitHub repo" in publisher.problem
+    row = survey([publisher], run=FakeNpm(on_npm={"p"}))[0]
+    assert not row.actionable

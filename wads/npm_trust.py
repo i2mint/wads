@@ -54,9 +54,12 @@ _WADS_REUSABLE_RE = re.compile(r"i2mint/wads/\.github/workflows/(npm-ci[\w-]*\.y
 _GITHUB_REMOTE_RE = re.compile(r"github\.com[:/]([^/\s]+)/([^/\s]+?)(?:\.git)?\s*$")
 _SPLIT_RE = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
 _NPM_NAME_RE = re.compile(r"^(@[a-z0-9~][a-z0-9._~-]*/)?[a-z0-9~][a-z0-9._~-]*$")
+_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _WORKFLOW_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.ya?ml$")
 _VALUE_FLAGS = {"--filter", "-F", "--dir", "-C", "--prefix", "--workspace", "-w"}
 _FILTER_FLAGS = {"--filter", "-F", "--workspace", "-w"}
+_DIR_FLAGS = {"--dir", "-C", "--prefix"}
+_SHELL_KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "time"}
 _RECURSIVE_FLAGS = {"-r", "--recursive", "--workspaces", "-ws"}
 _MAX_SCRIPT_DEPTH = 5
 
@@ -157,7 +160,7 @@ def _npm_call(
     tokens: list[str], cwd: str, scripts: dict, depth: int
 ) -> list[PublishCall]:
     """``npm|pnpm|yarn [flags] <sub> ...``: a publish, or a script that may run one."""
-    flags, positional, filters, index = set(), [], [], 1
+    flags, positional, filters, index, where = set(), [], [], 1, cwd
     while index < len(tokens):
         token = tokens[index]
         name, _, inline = token.partition("=")
@@ -168,6 +171,8 @@ def _npm_call(
                 inline = tokens[index]
             if name in _FILTER_FLAGS and inline:
                 filters.append(inline)
+            if name in _DIR_FLAGS and inline:
+                where = posixpath.normpath(posixpath.join(cwd, inline))
         else:
             positional.append(token)
         index += 1
@@ -175,7 +180,12 @@ def _npm_call(
         return []
     sub = positional[0]
     if sub == "publish":
-        return [PublishCall(cwd, bool(flags & _RECURSIVE_FLAGS), tuple(filters))]
+        target = positional[1] if len(positional) > 1 else ""
+        if target and not target.endswith((".tgz", ".tar.gz")) and "/" in target:
+            where = posixpath.normpath(
+                posixpath.join(where, target)
+            )  # `npm publish ./dir`
+        return [PublishCall(where, bool(flags & _RECURSIVE_FLAGS), tuple(filters))]
     script = (
         positional[1] if sub in ("run", "run-script") and len(positional) > 1 else sub
     )
@@ -206,8 +216,11 @@ def publish_calls(
             continue
         for segment in _SPLIT_RE.split(line):
             tokens = _tokens(segment)
-            while tokens and re.fullmatch(r"[A-Za-z_]\w*=\S*", tokens[0]):
-                tokens = tokens[1:]  # leading VAR=value assignments
+            while tokens and (
+                tokens[0] in _SHELL_KEYWORDS
+                or re.fullmatch(r"[A-Za-z_]\w*=.*", tokens[0])
+            ):
+                tokens = tokens[1:]  # leading `if`/`then`/... and VAR=value assignments
             if tokens and tokens[0] in ("npx", "pnpx", "bunx"):
                 tokens = tokens[1:]
             if not tokens:
@@ -346,6 +359,13 @@ def check_publisher(publisher: Publisher) -> Publisher:
         else:
             continue
         return Publisher(**{**asdict(publisher), "problem": problem})
+    if not _REPO_RE.match(publisher.repo):
+        return Publisher(
+            **{
+                **asdict(publisher),
+                "problem": "unknown GitHub repo (pass --github-repo)",
+            }
+        )
     environment = publisher.environment
     if "${{" in environment or environment.startswith("-"):
         problem = (
