@@ -24,7 +24,7 @@ machine-readable report. ``--no-network`` skips everything that leaves the
 machine (gh calls and the PyPI lookup); it also degrades gracefully when
 ``gh`` is absent or offline.
 
-Stdlib only. Strictly read-only: never modifies the target repo or anything
+Needs only wads' core dependencies. Strictly read-only: never modifies the target repo or anything
 else. The ``wads-repo-doctor`` skill ships a thin shim (``scripts/repo_audit.py``)
 that defers to this module.
 """
@@ -40,6 +40,8 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+from wads.ci_trigger import inline_trigger_gate, stub_markers
 
 try:  # Python 3.11+
     import tomllib  # type: ignore
@@ -363,9 +365,6 @@ def classify_workflow(text):
     return info
 
 
-_RE_STUB_MARKER = re.compile(
-    r"contains\(github\.event\.head_commit\.message, '((?:[^']|'')*)'\)"
-)
 _TRIGGER_DEFAULTS = {
     "mode": "auto",
     "run_ci_marker": "[run ci]",
@@ -373,10 +372,42 @@ _TRIGGER_DEFAULTS = {
 }
 
 
-def _decode_marker(raw):
-    """A marker as written in the stub: ``''`` is a quote, ``\\uXXXX`` a json escape."""
-    raw = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), raw)
-    return raw.replace("''", "'")
+def _declared_trigger(repo):
+    """``[tool.wads.ci.trigger]`` of the repo, defaults filled; a malformed table is ignored."""
+    node = read_pyproject(repo) or {}
+    for key in ("tool", "wads", "ci", "trigger"):
+        node = node.get(key, {}) if isinstance(node, dict) else {}
+    trigger = node if isinstance(node, dict) else {}
+    return {
+        k: v if isinstance(v := trigger.get(k, d), str) else d
+        for k, d in _TRIGGER_DEFAULTS.items()
+    }
+
+
+def audit_inline_trigger_gate(repo, rep, text):
+    """Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand.
+
+    The inline workflow reads the trigger at run time, so it cannot go stale on a marker;
+    but a copy without the gate ignores ``mode = "on-demand"`` and runs on every push.
+    """
+    gate = inline_trigger_gate(text)
+    rep.facts["ci_inline_trigger_gate"] = gate
+    if _declared_trigger(repo)["mode"] != "on-demand" or gate == "level":
+        return
+    deploy_marker = _declared_trigger(repo)["deploy_marker"]
+    summary = {
+        "none": "this inline workflow predates the trigger gate: it ignores the mode "
+        "and runs on every push",
+        "markers": f"this inline workflow has the first trigger gate: it ignores "
+        f"deploy_marker and run_ci_publishes, so a `{deploy_marker}` commit runs nothing",
+    }[gate]
+    rep.add(
+        "MEDIUM",
+        "ci",
+        f"pyproject sets trigger mode = on-demand but {summary} — re-copy "
+        "wads/data/github_ci_uv.yml, or `wads-migrate ci-to-stub`",
+        "wads-migrate",
+    )
 
 
 def audit_trigger_drift(repo, rep, stub_text):
@@ -385,22 +416,10 @@ def audit_trigger_drift(repo, rep, stub_text):
     A stale pre-filter silently runs nothing for a marker pyproject declares (the
     workflow behind it is fine): the fix is always a re-render.
     """
-    node = read_pyproject(repo) or {}
-    for key in (
-        "tool",
-        "wads",
-        "ci",
-        "trigger",
-    ):  # a malformed table is not our finding
-        node = node.get(key, {}) if isinstance(node, dict) else {}
-    trigger = node if isinstance(node, dict) else {}
-    wanted = {
-        k: v if isinstance(v := trigger.get(k, d), str) else d
-        for k, d in _TRIGGER_DEFAULTS.items()
-    }
-    in_stub = [_decode_marker(m) for m in _RE_STUB_MARKER.findall(stub_text)]
+    wanted = _declared_trigger(repo)
+    in_stub = stub_markers(stub_text)
     in_stub_lower = [m.lower() for m in in_stub]
-    stub_on_demand = "workflow_dispatch" in stub_text and bool(in_stub)
+    stub_on_demand = bool(in_stub)
     rep.facts["ci_stub_trigger"] = {"mode": wanted["mode"], "stub_markers": in_stub}
     if wanted["mode"] == "on-demand":
         missing = [
@@ -411,7 +430,7 @@ def audit_trigger_drift(repo, rep, stub_text):
         if not stub_on_demand:
             summary = (
                 "pyproject sets trigger mode = on-demand but the stub has no "
-                "pre-filter (every push spends a setup job)"
+                "recognised pre-filter (every push spends a setup job)"
             )
         elif missing:
             summary = (
@@ -494,6 +513,7 @@ def audit_ci(repo, rep):
         # whose trigger pre-filter disagrees with pyproject (rendered before a change).
         audit_trigger_drift(repo, rep, text)
     elif info["format"] == "uv-inline":
+        audit_inline_trigger_gate(repo, rep, text)
         if info.get("stale_pins"):
             rep.add(
                 "MEDIUM",
