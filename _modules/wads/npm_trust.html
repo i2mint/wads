@@ -316,11 +316,13 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
@@ -344,6 +346,8 @@
 <span class="n">_SHELL_KEYWORDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"if"</span><span class="p">,</span> <span class="s2">"then"</span><span class="p">,</span> <span class="s2">"else"</span><span class="p">,</span> <span class="s2">"elif"</span><span class="p">,</span> <span class="s2">"do"</span><span class="p">,</span> <span class="s2">"while"</span><span class="p">,</span> <span class="s2">"until"</span><span class="p">,</span> <span class="s2">"!"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">}</span>
 <span class="n">_RECURSIVE_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"-r"</span><span class="p">,</span> <span class="s2">"--recursive"</span><span class="p">,</span> <span class="s2">"--workspaces"</span><span class="p">,</span> <span class="s2">"-ws"</span><span class="p">}</span>
 <span class="n">_MAX_SCRIPT_DEPTH</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">_MANAGERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"npm"</span><span class="p">,</span> <span class="s2">"pnpm"</span><span class="p">,</span> <span class="s2">"yarn"</span><span class="p">}</span>
+<span class="n">_PRUNED_DIRS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"node_modules"</span><span class="p">,</span> <span class="s2">".git"</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="Publisher">
@@ -360,7 +364,8 @@
     <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">environment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-    <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+    <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">publishing_disabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># a wads npm-ci caller with wads.ci.publish off</span></div>
 
 
 
@@ -379,10 +384,14 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">problem</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">"skipped (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">problem</span><span class="si">}</span><span class="s2">)"</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_npm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">"unknown"</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_npm</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">"first-publish-needed"</span>
-        <span class="k">return</span> <span class="s2">"trusted"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trusted</span> <span class="k">else</span> <span class="s2">"on-npm"</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_npm</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"first-publish-needed"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"trusted"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trusted</span> <span class="k">else</span> <span class="s2">"on-npm"</span>
+        <span class="k">return</span> <span class="n">status</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="s2">" (publishing disabled)"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">publishing_disabled</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">actionable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -442,7 +451,9 @@
 
     <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span>
     <span class="n">everything</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># -r / --workspaces / changesets: every workspace member</span>
-    <span class="n">filters</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># --filter / --workspace selectors</span></div>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># --filter / --workspace selectors</span>
+    <span class="n">wads_caller</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># a call of wads' own npm-ci*.yml reusable workflow</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># the call publishes something we cannot name</span></div>
 
 
 
@@ -453,29 +464,99 @@
         <span class="k">return</span> <span class="n">segment</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_npm_call</span><span class="p">(</span>
-    <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scripts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PublishCall</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""``npm|pnpm|yarn [flags] &lt;sub&gt; ...``: a publish, or a script that may run one."""</span>
-    <span class="n">flags</span><span class="p">,</span> <span class="n">positional</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cwd</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_flags</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Flags, filters, ``-C`` directory and positionals (with their index) of a pm call."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"flags"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span> <span class="s2">"filters"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"where"</span><span class="p">:</span> <span class="n">cwd</span><span class="p">,</span> <span class="s2">"positional"</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
         <span class="n">token</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
         <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
-            <span class="n">flags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">found</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_VALUE_FLAGS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">inline</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
                 <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">inline</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_FILTER_FLAGS</span> <span class="ow">and</span> <span class="n">inline</span><span class="p">:</span>
-                <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inline</span><span class="p">)</span>
+                <span class="n">found</span><span class="p">[</span><span class="s2">"filters"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inline</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_DIR_FLAGS</span> <span class="ow">and</span> <span class="n">inline</span><span class="p">:</span>
-                <span class="n">where</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">posixpath</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="n">inline</span><span class="p">))</span>
+                <span class="n">found</span><span class="p">[</span><span class="s2">"where"</span><span class="p">]</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">posixpath</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="n">inline</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">positional</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="n">found</span><span class="p">[</span><span class="s2">"positional"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">index</span><span class="p">,</span> <span class="n">token</span><span class="p">))</span>
         <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_foreach_command</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``."""</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">tokens</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"foreach"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">_MANAGERS</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="p">[],</span> <span class="s2">""</span>
+    <span class="k">for</span> <span class="n">at</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rest</span><span class="p">[:</span><span class="n">start</span><span class="p">]):</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"--include"</span><span class="p">,</span> <span class="s2">"--from"</span><span class="p">):</span>
+            <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inline</span> <span class="ow">or</span> <span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="n">at</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">at</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">start</span> <span class="k">else</span> <span class="s2">""</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"--exclude"</span><span class="p">,</span> <span class="s2">"--since"</span><span class="p">,</span> <span class="s2">"--from-since"</span><span class="p">):</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"yarn foreach </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> selects an unresolvable set"</span>
+    <span class="k">return</span> <span class="n">rest</span><span class="p">[</span><span class="n">start</span><span class="p">:],</span> <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_wrapped_calls</span><span class="p">(</span>
+    <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scripts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">PublishCall</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Publish calls of ``pnpm -r exec CMD`` / ``yarn workspaces foreach ... CMD``.</span>
+
+<span class="sd">    The outer ``-r`` / ``--filter`` / ``-C`` apply to the wrapped command. ``None`` when</span>
+<span class="sd">    ``tokens`` wrap nothing.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"foreach"</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="n">_foreach_command</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wrapped</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">inner</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="n">wrapped</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"flags"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span> <span class="s2">"filters"</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span> <span class="s2">"where"</span><span class="p">:</span> <span class="n">cwd</span><span class="p">}</span>
+        <span class="n">everything</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">_split_flags</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">cwd</span><span class="p">)</span>
+        <span class="n">positional</span> <span class="o">=</span> <span class="n">outer</span><span class="p">[</span><span class="s2">"positional"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">positional</span> <span class="ow">or</span> <span class="n">positional</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"exec"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">positional</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="n">everything</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">outer</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">_RECURSIVE_FLAGS</span><span class="p">),</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inner</span> <span class="ow">or</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="n">_MAX_SCRIPT_DEPTH</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">calls</span> <span class="o">=</span> <span class="n">publish_calls</span><span class="p">(</span>
+        <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inner</span><span class="p">),</span> <span class="n">scripts</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">outer</span><span class="p">[</span><span class="s2">"where"</span><span class="p">],</span> <span class="n">_depth</span><span class="o">=</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">replace</span><span class="p">(</span>
+            <span class="n">c</span><span class="p">,</span>
+            <span class="n">everything</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">everything</span> <span class="ow">or</span> <span class="n">everything</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">filters</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">outer</span><span class="p">[</span><span class="s2">"filters"</span><span class="p">]),</span>
+            <span class="n">problem</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">problem</span> <span class="ow">or</span> <span class="n">problem</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">calls</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_npm_call</span><span class="p">(</span>
+    <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scripts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PublishCall</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``npm|pnpm|yarn [flags] &lt;sub&gt; ...``: a publish, or a script that may run one."""</span>
+    <span class="n">wrapped</span> <span class="o">=</span> <span class="n">_wrapped_calls</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">scripts</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wrapped</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">wrapped</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">_split_flags</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">cwd</span><span class="p">)</span>
+    <span class="n">flags</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">where</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">],</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">"filters"</span><span class="p">],</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">"where"</span><span class="p">]</span>
+    <span class="n">positional</span> <span class="o">=</span> <span class="p">[</span><span class="n">token</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">"positional"</span><span class="p">]]</span>
     <span class="k">if</span> <span class="s2">"--dry-run"</span> <span class="ow">in</span> <span class="n">flags</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">positional</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">sub</span> <span class="o">=</span> <span class="n">positional</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">sub</span> <span class="o">==</span> <span class="s2">"npm"</span> <span class="ow">and</span> <span class="n">positional</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span>
+        <span class="s2">"publish"</span>
+    <span class="p">]:</span>  <span class="c1"># yarn berry: `yarn npm publish`</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="s2">"publish"</span>
     <span class="k">if</span> <span class="n">sub</span> <span class="o">==</span> <span class="s2">"publish"</span><span class="p">:</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">positional</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">positional</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">""</span>
         <span class="k">if</span> <span class="n">target</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">".tgz"</span><span class="p">,</span> <span class="s2">".tar.gz"</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>
@@ -498,8 +579,8 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PublishCall</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The publish commands in a shell script text, following ``cd`` and package scripts.</span>
 
-<span class="sd">    &gt;&gt;&gt; publish_calls("pnpm -r publish --access public")</span>
-<span class="sd">    [PublishCall(directory='.', everything=True, filters=())]</span>
+<span class="sd">    &gt;&gt;&gt; publish_calls("pnpm -r publish --access public")[0].everything</span>
+<span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; publish_calls("cd packages/a &amp;&amp; npm publish")[0].directory</span>
 <span class="sd">    'packages/a'</span>
 <span class="sd">    &gt;&gt;&gt; publish_calls("npm publish --dry-run\\n# npm publish\\necho npm publish")</span>
@@ -567,23 +648,63 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_glob_regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"re.Pattern"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A workspace glob (``*`` within a segment, ``**`` across segments) as a regex."""</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"./"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">segment</span> <span class="o">==</span> <span class="s2">"**"</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"(?:[^/]+/)*"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\*"</span><span class="p">,</span> <span class="s2">"[^/]*"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"^"</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"$"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="glob_dirs">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.glob_dirs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Directories under ``root`` matching a workspace glob, never entering ``node_modules``."""</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">_glob_regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">current</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+        <span class="n">names</span><span class="p">[:]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PRUNED_DIRS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">relative</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">current</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">relative</span> <span class="o">!=</span> <span class="s2">"."</span> <span class="ow">and</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">relative</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">current</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
 <div class="viewcode-block" id="workspace_manifests">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.workspace_manifests">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""``package.json`` contents of ``root`` itself and its workspace members."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(directory, package.json)`` of ``root`` itself and its workspace members."""</span>
     <span class="n">patterns</span> <span class="o">=</span> <span class="n">workspace_globs</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-    <span class="n">skipped</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])}</span>
+    <span class="n">skipped</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])}</span>
     <span class="n">directories</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">)):</span>
-        <span class="n">directories</span> <span class="o">+=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">_load_json</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"package.json"</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directories</span>
-        <span class="k">if</span> <span class="s2">"node_modules"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">parts</span>
-    <span class="p">]</span></div>
+        <span class="n">directories</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">_load_json</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"package.json"</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directories</span><span class="p">]</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_selected</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">selectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a selector (a name glob, or a path / path glob) picks this member."""</span>
+    <span class="n">relative</span> <span class="o">=</span> <span class="n">directory</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">selector</span> <span class="ow">in</span> <span class="n">selectors</span><span class="p">:</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="o">==</span> <span class="n">relative</span><span class="p">:</span>  <span class="c1"># `npm -w packages/a`: the workspace directory itself</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">selector</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">selector</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">selector</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">):</span>
+            <span class="n">wanted</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_glob_regex</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">relative</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">selector</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="packages_of">
@@ -597,18 +718,13 @@
 <span class="sd">    ...     packages_of(Path(d), PublishCall())</span>
 <span class="sd">    ['solo']</span>
 <span class="sd">    """</span>
-    <span class="n">manifests</span> <span class="o">=</span> <span class="n">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">members</span> <span class="o">=</span> <span class="n">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span><span class="p">:</span>
-        <span class="n">patterns</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span><span class="p">]</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">m</span>
-            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">manifests</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">)</span>
-        <span class="p">]</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span> <span class="k">if</span> <span class="n">_selected</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span><span class="p">)]</span>
     <span class="k">elif</span> <span class="n">call</span><span class="o">.</span><span class="n">everything</span><span class="p">:</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="n">manifests</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="n">manifests</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">members</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
@@ -640,7 +756,9 @@
         <span class="n">directory</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
             <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"package-dir"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">WADS_REUSABLE_DEFAULT_DIR</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">PublishCall</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">everything</span><span class="o">=</span><span class="s2">"monorepo"</span> <span class="ow">in</span> <span class="n">workflow</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">PublishCall</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">everything</span><span class="o">=</span><span class="s2">"monorepo"</span> <span class="ow">in</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">wads_caller</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">]</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"defaults"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">calls</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"steps"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
@@ -649,6 +767,12 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"run"</span><span class="p">):</span>
             <span class="n">calls</span> <span class="o">+=</span> <span class="n">publish_calls</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="s2">"run"</span><span class="p">]),</span> <span class="n">scripts</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"js-devtools/npm-publish"</span><span class="p">):</span>
+            <span class="n">package</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"package"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">package</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"package.json"</span><span class="p">):</span>
+                <span class="n">package</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">package</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"."</span>
+            <span class="c1"># `defaults.run.working-directory` only applies to `run` steps</span>
+            <span class="n">calls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PublishCall</span><span class="p">(</span><span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">package</span><span class="p">)))</span>
         <span class="k">elif</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"changesets/action"</span><span class="p">):</span>
             <span class="n">command</span> <span class="o">=</span> <span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">command</span><span class="p">:</span>
@@ -690,6 +814,14 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_wads_publishing_enabled</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``wads.ci.publish.enabled`` is literally ``true`` (as the workflow requires)."""</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">_load_json</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">"package.json"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="s2">"ci"</span><span class="p">,</span> <span class="s2">"publish"</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+
+
 <div class="viewcode-block" id="discover">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.discover">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">discover</span><span class="p">(</span>
@@ -716,13 +848,34 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">job_calls</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">scripts</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">problem</span><span class="p">:</span>
+                    <span class="n">problem</span> <span class="o">=</span> <span class="n">Publisher</span><span class="p">(</span>
+                        <span class="s2">"&lt;unknown packages&gt;"</span><span class="p">,</span>
+                        <span class="n">slug</span><span class="p">,</span>
+                        <span class="n">workflow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">_environment</span><span class="p">(</span><span class="n">job</span><span class="p">),</span>
+                        <span class="n">call</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">environment</span><span class="p">),</span> <span class="n">problem</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
                 <span class="k">if</span> <span class="s2">"${{"</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">directory</span><span class="p">:</span>
                     <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">names</span> <span class="o">=</span> <span class="n">packages_of</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">call</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">call</span><span class="p">)</span>
+                <span class="n">disabled</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">wads_caller</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_wads_publishing_enabled</span><span class="p">(</span>
+                    <span class="n">root</span> <span class="o">/</span> <span class="n">call</span><span class="o">.</span><span class="n">directory</span>
+                <span class="p">)</span>
                 <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
                     <span class="n">publisher</span> <span class="o">=</span> <span class="n">check_publisher</span><span class="p">(</span>
-                        <span class="n">Publisher</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">slug</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_environment</span><span class="p">(</span><span class="n">job</span><span class="p">))</span>
+                        <span class="n">Publisher</span><span class="p">(</span>
+                            <span class="n">name</span><span class="p">,</span>
+                            <span class="n">slug</span><span class="p">,</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">_environment</span><span class="p">(</span><span class="n">job</span><span class="p">),</span>
+                            <span class="n">publishing_disabled</span><span class="o">=</span><span class="n">disabled</span><span class="p">,</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
                     <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">publisher</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="n">publisher</span><span class="o">.</span><span class="n">workflow</span><span class="p">,</span> <span class="n">publisher</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span>
                     <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">publisher</span><span class="p">)</span>
@@ -961,6 +1114,19 @@
 
 
 
+<div class="viewcode-block" id="shared_packages">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.shared_packages">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shared_packages</span><span class="p">(</span><span class="n">publishers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Publisher</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Packages that more than one workflow publishes, with those workflows."""</span>
+    <span class="n">by_package</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">publishers</span><span class="p">:</span>
+        <span class="n">by_package</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">workflow</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_package</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">package</span><span class="p">]:</span>
+            <span class="n">by_package</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">package</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">workflow</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">by_package</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span></div>
+
+
+
 <div class="viewcode-block" id="run_npm_trust">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.run_npm_trust">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_npm_trust</span><span class="p">(</span>
@@ -973,24 +1139,31 @@
     <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"table"</span><span class="p">,</span>
     <span class="n">run</span><span class="p">:</span> <span class="n">Run</span> <span class="o">=</span> <span class="n">subprocess_run</span><span class="p">,</span>
     <span class="n">out</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="nb">print</span><span class="p">,</span>
+    <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">""":func:`npm_trust` with injectable ``run`` (npm/git) and ``out`` (printing)."""</span>
     <span class="k">if</span> <span class="n">apply</span> <span class="ow">and</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">"--apply and --dry-run contradict each other"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FORMATS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--fmt must be one of </span><span class="si">{</span><span class="n">FORMATS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">fmt</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">note</span> <span class="o">=</span> <span class="n">err</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">message</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">))</span>
     <span class="n">publishers</span> <span class="o">=</span> <span class="n">discover</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">github_repo</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">publishers</span><span class="p">:</span>
         <span class="n">out</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No npm publishing workflow found under </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">WORKFLOWS_DIR</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">survey</span><span class="p">(</span><span class="n">publishers</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">,</span> <span class="n">check_npm</span><span class="o">=</span><span class="ow">not</span> <span class="n">offline</span><span class="p">)</span>
     <span class="n">out</span><span class="p">(</span><span class="n">render_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">fmt</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">package</span><span class="p">,</span> <span class="n">workflows</span> <span class="ow">in</span> <span class="n">shared_packages</span><span class="p">(</span><span class="n">publishers</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">note</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"warning: </span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2"> is published by </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">workflows</span><span class="p">)</span><span class="si">}</span><span class="s2">; npm may keep "</span>
+            <span class="s2">"only one Trusted Publisher per package, so attach the one you ship from"</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">apply</span><span class="p">:</span>
         <span class="n">todo</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">actionable</span> <span class="ow">or</span> <span class="p">(</span><span class="n">offline</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
         <span class="p">]</span>
-        <span class="n">out</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Would run for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">todo</span><span class="p">)</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> (use --apply to run):"</span><span class="p">)</span>
-        <span class="n">out</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"  "</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">trust_command</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">publisher</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">todo</span><span class="p">))</span>
+        <span class="n">note</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Would run for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">todo</span><span class="p">)</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> (use --apply to run):"</span><span class="p">)</span>
+        <span class="n">note</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"  "</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">trust_command</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">publisher</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">todo</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">problems</span> <span class="o">=</span> <span class="n">preflight</span><span class="p">(</span><span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
@@ -1068,7 +1241,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=5463bd81"></script>
+</div><script src="../../_static/documentation_options.js?v=fd23c9e7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
