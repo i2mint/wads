@@ -55,3 +55,18 @@ def test_on_demand_pyproject_with_the_plain_stub_and_the_reverse(tmp_path):
     stub = render_stub_trigger(STUB, mode="on-demand")
     (finding,) = _drift(_repo(other, trigger={}, stub=stub))
     assert "on-demand shape" in finding["summary"]
+
+
+def test_a_malformed_trigger_table_does_not_crash_the_audit(tmp_path):
+    (tmp_path / ".github" / "workflows").mkdir(parents=True)
+    (tmp_path / ".github" / "workflows" / "ci.yml").write_text(STUB)
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "pkg"\nversion = "0.1.0"\n\n[tool.wads.ci]\ntrigger = "on-demand"\n'
+    )
+    assert _drift(tmp_path) == []
+
+
+def test_marker_comparison_is_case_insensitive_and_unicode_safe(tmp_path):
+    stub = render_stub_trigger(STUB, mode="on-demand", run_ci_marker="[Déploy it]", deploy_marker="[ship]")
+    repo = _repo(tmp_path, trigger={"mode": "on-demand", "run_ci_marker": "[déploy IT]", "deploy_marker": "[SHIP]"}, stub=stub)
+    assert _drift(repo) == []

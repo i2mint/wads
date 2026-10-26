@@ -60,11 +60,23 @@ def test_pytest_args_are_honoured(tmp_path):
     (tmp_path / "other.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
     assert doctest_optionflags_arg(repo, pytest_args="-x -c other.ini") == ""
     assert doctest_optionflags_arg(repo, pytest_args="--config-file=missing.ini") == default
-    # --rootdir moves the search
+    assert doctest_optionflags_arg(repo, pytest_args="-cother.ini") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="--override-ini doctest_optionflags=X") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="--override-ini=doctest_optionflags=X") == ""
+    # --rootdir does not move pytest's config search, so it does not move ours
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "pytest.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
-    assert doctest_optionflags_arg(repo, pytest_args="--rootdir sub") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="--rootdir sub") == default
     assert doctest_optionflags_arg(repo, pytest_args="-x") == default
+
+
+def test_the_cli_survives_a_trailing_pytest_args_flag(tmp_path):
+    script = REPO_ROOT / "wads" / "scripts" / "pytest_doctest_flags.py"
+    run = subprocess.run(
+        [sys.executable, "-I", "-S", str(script), str(tmp_path), "--pytest-args"],
+        capture_output=True, text=True, check=True,
+    )
+    assert run.stdout.strip() == f"doctest_optionflags={DOCTEST_OPTIONFLAGS}"
 
 
 def test_the_cli_takes_pytest_args(tmp_path):

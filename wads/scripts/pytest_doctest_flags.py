@@ -102,30 +102,31 @@ def repo_sets_doctest_optionflags(
 
 
 def pytest_args_say(pytest_args: str) -> dict:
-    """What a pytest argument string says about the flags: ``-o``, ``-c`` and ``--rootdir``.
+    """What a pytest argument string says about the flags: ``-o`` / ``--override-ini`` and ``-c``.
 
-    >>> pytest_args_say("-x -c other.ini --rootdir=sub")
-    {'override': False, 'config_file': 'other.ini', 'rootdir': 'sub'}
-    >>> pytest_args_say("-o doctest_optionflags=ELLIPSIS")["override"]
+    >>> pytest_args_say("-x -c other.ini")
+    {'override': False, 'config_file': 'other.ini'}
+    >>> pytest_args_say("--override-ini=doctest_optionflags=ELLIPSIS")["override"]
     True
     """
     try:
         tokens = shlex.split(pytest_args)
     except ValueError:
         tokens = pytest_args.split()
-    said = {"override": False, "config_file": None, "rootdir": None}
+    said = {"override": False, "config_file": None}
     for index, token in enumerate(tokens):
         name, _, inline = token.partition("=")
         following = tokens[index + 1] if index + 1 < len(tokens) else ""
         if name in ("-c", "--config-file"):
             said["config_file"] = inline or following
-        elif name == "--rootdir":
-            said["rootdir"] = inline or following
-        elif name == "-o" and following.startswith(_KEY):
-            said["override"] = True
-        elif token.startswith(f"-o{_KEY}") or (
-            name == "-o" and inline.startswith(_KEY)
+        elif token.startswith("-c") and not token.startswith("--") and len(token) > 2:
+            said["config_file"] = token[2:]  # `-cFILE`
+        elif (
+            name in ("-o", "--override-ini")
+            and _KEY in (inline or following)[: len(_KEY)]
         ):
+            said["override"] = True
+        elif token.startswith(f"-o{_KEY}"):
             said["override"] = True
     return said
 
@@ -136,9 +137,10 @@ def doctest_optionflags_arg(
     """The ``-o`` value to pass, or ``''`` when the repo's own pytest config wins.
 
     ``repo=None`` means "do not look": the default flags are returned. ``pytest_args``
-    (the extra arguments CI also passes) is honoured: an explicit ``-o
-    doctest_optionflags=...`` there wins, ``-c FILE`` names the config file, and
-    ``--rootdir DIR`` moves the search.
+    (the extra arguments CI also passes) is honoured: an explicit ``-o`` /
+    ``--override-ini doctest_optionflags=...`` there wins and ``-c FILE`` names the
+    config file. ``--rootdir`` does not matter: pytest picks its config file from
+    ``-c`` and the test paths, never from the rootdir option.
 
     >>> doctest_optionflags_arg()
     'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'
@@ -148,18 +150,17 @@ def doctest_optionflags_arg(
     said = pytest_args_say(pytest_args)
     if said["override"]:
         return ""
-    if repo is not None:
-        root = str(Path(repo) / said["rootdir"]) if said["rootdir"] else repo
-        if repo_sets_doctest_optionflags(root, config_file=said["config_file"]):
-            return ""
+    if repo is not None and repo_sets_doctest_optionflags(
+        repo, config_file=said["config_file"]
+    ):
+        return ""
     return f"{_KEY}={DOCTEST_OPTIONFLAGS}"
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
-    pytest_args = (
-        argv[argv.index("--pytest-args") + 1] if "--pytest-args" in argv else ""
-    )
+    at = argv.index("--pytest-args") + 1 if "--pytest-args" in argv else None
+    pytest_args = argv[at] if at is not None and at < len(argv) else ""
     print(doctest_optionflags_arg(argv[0] if argv else ".", pytest_args=pytest_args))
     return 0
 

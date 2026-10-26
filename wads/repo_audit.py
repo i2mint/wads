@@ -373,23 +373,40 @@ _TRIGGER_DEFAULTS = {
 }
 
 
+def _decode_marker(raw):
+    """A marker as written in the stub: ``''`` is a quote, ``\\uXXXX`` a json escape."""
+    raw = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), raw)
+    return raw.replace("''", "'")
+
+
 def audit_trigger_drift(repo, rep, stub_text):
     """Flag a stub whose on-demand pre-filter markers differ from ``[tool.wads.ci.trigger]``.
 
     A stale pre-filter silently runs nothing for a marker pyproject declares (the
     workflow behind it is fine): the fix is always a re-render.
     """
-    data = read_pyproject(repo) or {}
-    trigger = data.get("tool", {}).get("wads", {}).get("ci", {}).get("trigger", {})
-    wanted = {k: trigger.get(k, d) for k, d in _TRIGGER_DEFAULTS.items()}
-    in_stub = [m.replace("''", "'") for m in _RE_STUB_MARKER.findall(stub_text)]
+    node = read_pyproject(repo) or {}
+    for key in (
+        "tool",
+        "wads",
+        "ci",
+        "trigger",
+    ):  # a malformed table is not our finding
+        node = node.get(key, {}) if isinstance(node, dict) else {}
+    trigger = node if isinstance(node, dict) else {}
+    wanted = {
+        k: v if isinstance(v := trigger.get(k, d), str) else d
+        for k, d in _TRIGGER_DEFAULTS.items()
+    }
+    in_stub = [_decode_marker(m) for m in _RE_STUB_MARKER.findall(stub_text)]
+    in_stub_lower = [m.lower() for m in in_stub]
     stub_on_demand = "workflow_dispatch" in stub_text and bool(in_stub)
     rep.facts["ci_stub_trigger"] = {"mode": wanted["mode"], "stub_markers": in_stub}
     if wanted["mode"] == "on-demand":
         missing = [
             wanted[k]
             for k in ("run_ci_marker", "deploy_marker")
-            if wanted[k] not in in_stub
+            if wanted[k].lower() not in in_stub_lower
         ]
         if not stub_on_demand:
             summary = (
