@@ -346,19 +346,22 @@ that defers to this module.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_skills</span></code>(repo, rep, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift" title="wads.repo_audit.audit_trigger_drift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_trigger_drift</span></code></a>(repo, rep, stub_text)</p></td>
+<td><p>Flag a stub whose on-demand pre-filter markers differ from <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
 <td><p>Classify one workflow file's text into a wads CI generation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pyproject</span></code>(repo)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pyproject</span></code>(repo)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_text</span></code>(rep)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_text</span></code>(rep)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -399,6 +402,14 @@ same structure as <code class="docutils literal notranslate"><span class="pre">p
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">network=False</span></code> skips everything that leaves the machine (<code class="docutils literal notranslate"><span class="pre">gh</span></code> + PyPI),
 matching the <code class="docutils literal notranslate"><span class="pre">--no-network</span></code> CLI flag.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.audit_trigger_drift">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_trigger_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#audit_trigger_drift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_trigger_drift" title="Link to this definition">¶</a></dt>
+<dd><p>Flag a stub whose on-demand pre-filter markers differ from <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code>.</p>
+<p>A stale pre-filter silently runs nothing for a marker pyproject declares (the
+workflow behind it is fine): the fix is always a re-render.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -464,6 +475,7 @@ matching the <code class="docutils literal notranslate"><span class="pre">--no-n
 <li><a class="reference internal" href="#wads.repo_audit.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_github"><code class="docutils literal notranslate"><span class="pre">audit_github()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_repo"><code class="docutils literal notranslate"><span class="pre">audit_repo()</span></code></a></li>
+<li><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift"><code class="docutils literal notranslate"><span class="pre">audit_trigger_drift()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.classify_workflow"><code class="docutils literal notranslate"><span class="pre">classify_workflow()</span></code></a></li>
 </ul>
 </li>
@@ -476,7 +488,7 @@ matching the <code class="docutils literal notranslate"><span class="pre">--no-n
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=130ffd09"></script>
+</div><script src="../_static/documentation_options.js?v=5463bd81"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

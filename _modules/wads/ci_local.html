@@ -465,7 +465,10 @@
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">coverage_enabled</span><span class="p">:</span>
         <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--cov=</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"--cov-report=term-missing"</span><span class="p">]</span>
     <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--doctest-modules"</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">flags_arg</span> <span class="o">:=</span> <span class="n">doctest_optionflags_arg</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">)):</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">flags_arg</span> <span class="o">:=</span> <span class="n">doctest_optionflags_arg</span><span class="p">(</span>
+        <span class="kc">None</span> <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo</span><span class="p">),</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">extra</span>
+    <span class="p">):</span>
         <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-o"</span><span class="p">,</span> <span class="n">flags_arg</span><span class="p">]</span>
     <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--ignore=</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">exclude_paths</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     <span class="c1"># The action joins pytest_args with spaces and `eval`s the result.</span>
@@ -1144,7 +1147,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=130ffd09"></script>
+</div><script src="../../_static/documentation_options.js?v=5463bd81"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

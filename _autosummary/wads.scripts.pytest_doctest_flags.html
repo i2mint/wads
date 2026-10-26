@@ -304,13 +304,16 @@ nothing; stdlib only. Used by
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg" title="wads.scripts.pytest_doctest_flags.doctest_optionflags_arg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">doctest_optionflags_arg</span></code></a>([repo])</p></td>
-<td><p>The <code class="docutils literal notranslate"><span class="pre">-o</span></code> value to pass, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when <code class="docutils literal notranslate"><span class="pre">repo</span></code>'s own pytest config wins.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg" title="wads.scripts.pytest_doctest_flags.doctest_optionflags_arg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">doctest_optionflags_arg</span></code></a>([repo, pytest_args])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">-o</span></code> value to pass, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when the repo's own pytest config wins.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags" title="wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_sets_doctest_optionflags</span></code></a>([repo])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.pytest_args_say" title="wads.scripts.pytest_doctest_flags.pytest_args_say"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_args_say</span></code></a>(pytest_args)</p></td>
+<td><p>What a pytest argument string says about the flags: <code class="docutils literal notranslate"><span class="pre">-o</span></code> / <code class="docutils literal notranslate"><span class="pre">--override-ini</span></code> and <code class="docutils literal notranslate"><span class="pre">-c</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags" title="wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_sets_doctest_optionflags</span></code></a>([repo, ...])</p></td>
 <td><p>Whether the pytest config file pytest itself would pick sets <code class="docutils literal notranslate"><span class="pre">doctest_optionflags</span></code>.</p></td>
 </tr>
 </tbody>
@@ -318,11 +321,17 @@ nothing; stdlib only. Used by
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.scripts.pytest_doctest_flags.doctest_optionflags_arg">
-<span class="sig-prename descclassname"><span class="pre">wads.scripts.pytest_doctest_flags.</span></span><span class="sig-name descname"><span class="pre">doctest_optionflags_arg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/pytest_doctest_flags.html#doctest_optionflags_arg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg" title="Link to this definition">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">-o</span></code> value to pass, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when <code class="docutils literal notranslate"><span class="pre">repo</span></code>’s own pytest config wins.</p>
-<p><code class="docutils literal notranslate"><span class="pre">repo=None</span></code> means “do not look”: the default flags are returned.</p>
+<span class="sig-prename descclassname"><span class="pre">wads.scripts.pytest_doctest_flags.</span></span><span class="sig-name descname"><span class="pre">doctest_optionflags_arg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pytest_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/pytest_doctest_flags.html#doctest_optionflags_arg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">-o</span></code> value to pass, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when the repo’s own pytest config wins.</p>
+<p><code class="docutils literal notranslate"><span class="pre">repo=None</span></code> means “do not look”: the default flags are returned. <code class="docutils literal notranslate"><span class="pre">pytest_args</span></code>
+(the extra arguments CI also passes) is honoured: an explicit <code class="docutils literal notranslate"><span class="pre">-o</span></code> /
+<code class="docutils literal notranslate"><span class="pre">--override-ini</span> <span class="pre">doctest_optionflags=...</span></code> there wins and <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">FILE</span></code> names the
+config file. <code class="docutils literal notranslate"><span class="pre">--rootdir</span></code> does not matter: pytest picks its config file from
+<code class="docutils literal notranslate"><span class="pre">-c</span></code> and the test paths, never from the rootdir option.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">doctest_optionflags_arg</span><span class="p">()</span>
 <span class="go">'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doctest_optionflags_arg</span><span class="p">(</span><span class="n">pytest_args</span><span class="o">=</span><span class="s2">"-o doctest_optionflags=ELLIPSIS"</span><span class="p">)</span>
+<span class="go">''</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -333,12 +342,29 @@ nothing; stdlib only. Used by
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.scripts.pytest_doctest_flags.pytest_args_say">
+<span class="sig-prename descclassname"><span class="pre">wads.scripts.pytest_doctest_flags.</span></span><span class="sig-name descname"><span class="pre">pytest_args_say</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pytest_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/pytest_doctest_flags.html#pytest_args_say"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.pytest_doctest_flags.pytest_args_say" title="Link to this definition">¶</a></dt>
+<dd><p>What a pytest argument string says about the flags: <code class="docutils literal notranslate"><span class="pre">-o</span></code> / <code class="docutils literal notranslate"><span class="pre">--override-ini</span></code> and <code class="docutils literal notranslate"><span class="pre">-c</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pytest_args_say</span><span class="p">(</span><span class="s2">"-x -c other.ini"</span><span class="p">)</span>
+<span class="go">{'override': False, 'config_file': 'other.ini'}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pytest_args_say</span><span class="p">(</span><span class="s2">"--override-ini=doctest_optionflags=ELLIPSIS"</span><span class="p">)[</span><span class="s2">"override"</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags">
-<span class="sig-prename descclassname"><span class="pre">wads.scripts.pytest_doctest_flags.</span></span><span class="sig-name descname"><span class="pre">repo_sets_doctest_optionflags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/pytest_doctest_flags.html#repo_sets_doctest_optionflags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.scripts.pytest_doctest_flags.</span></span><span class="sig-name descname"><span class="pre">repo_sets_doctest_optionflags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/scripts/pytest_doctest_flags.html#repo_sets_doctest_optionflags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags" title="Link to this definition">¶</a></dt>
 <dd><p>Whether the pytest config file pytest itself would pick sets <code class="docutils literal notranslate"><span class="pre">doctest_optionflags</span></code>.</p>
 <p>Mirrors pytest’s precedence (<code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code>, <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>, <code class="docutils literal notranslate"><span class="pre">tox.ini</span></code>,
 <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>; the last three only with their pytest section), stdlib only so it
-runs under any CI interpreter.</p>
+runs under any CI interpreter. <code class="docutils literal notranslate"><span class="pre">config_file</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">FILE</span></code>) replaces the search.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="o">**</span><span class="n">files</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
@@ -416,6 +442,7 @@ runs under any CI interpreter.</p>
             <ul>
 <li><a class="reference internal" href="#">wads.scripts.pytest_doctest_flags</a><ul>
 <li><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg"><code class="docutils literal notranslate"><span class="pre">doctest_optionflags_arg()</span></code></a></li>
+<li><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.pytest_args_say"><code class="docutils literal notranslate"><span class="pre">pytest_args_say()</span></code></a></li>
 <li><a class="reference internal" href="#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags"><code class="docutils literal notranslate"><span class="pre">repo_sets_doctest_optionflags()</span></code></a></li>
 </ul>
 </li>
@@ -428,7 +455,7 @@ runs under any CI interpreter.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=130ffd09"></script>
+</div><script src="../_static/documentation_options.js?v=5463bd81"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

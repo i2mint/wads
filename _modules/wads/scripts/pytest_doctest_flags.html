@@ -296,6 +296,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
@@ -334,14 +335,26 @@
     <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_PYPROJECT_KEY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_config_file_sets_flags</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether an explicitly named config file (``-c``) sets the flags."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".toml"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_pyproject_sets_flags</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="n">section</span> <span class="o">=</span> <span class="s2">"tool:pytest"</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"setup.cfg"</span> <span class="k">else</span> <span class="s2">"pytest"</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_ini_sets_flags</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="repo_sets_doctest_optionflags">
 <a class="viewcode-back" href="../../../_autosummary/wads.scripts.pytest_doctest_flags.html#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">repo_sets_doctest_optionflags</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">repo_sets_doctest_optionflags</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Whether the pytest config file pytest itself would pick sets ``doctest_optionflags``.</span>
 
 <span class="sd">    Mirrors pytest's precedence (``pytest.ini``, ``pyproject.toml``, ``tox.ini``,</span>
 <span class="sd">    ``setup.cfg``; the last three only with their pytest section), stdlib only so it</span>
-<span class="sd">    runs under any CI interpreter.</span>
+<span class="sd">    runs under any CI interpreter. ``config_file`` (``-c FILE``) replaces the search.</span>
 
 <span class="sd">    &gt;&gt;&gt; import tempfile</span>
 <span class="sd">    &gt;&gt;&gt; def check(**files):</span>
@@ -358,6 +371,8 @@
 <span class="sd">    False</span>
 <span class="sd">    """</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_config_file_sets_flags</span><span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">config_file</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">path</span> <span class="o">:=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"pytest.ini"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_ini_sets_flags</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">path</span> <span class="o">:=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -371,17 +386,63 @@
 
 
 
+<div class="viewcode-block" id="pytest_args_say">
+<a class="viewcode-back" href="../../../_autosummary/wads.scripts.pytest_doctest_flags.html#wads.scripts.pytest_doctest_flags.pytest_args_say">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pytest_args_say</span><span class="p">(</span><span class="n">pytest_args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What a pytest argument string says about the flags: ``-o`` / ``--override-ini`` and ``-c``.</span>
+
+<span class="sd">    &gt;&gt;&gt; pytest_args_say("-x -c other.ini")</span>
+<span class="sd">    {'override': False, 'config_file': 'other.ini'}</span>
+<span class="sd">    &gt;&gt;&gt; pytest_args_say("--override-ini=doctest_optionflags=ELLIPSIS")["override"]</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">pytest_args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">pytest_args</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">said</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"override"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"config_file"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+        <span class="n">following</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"--config-file"</span><span class="p">):</span>
+            <span class="n">said</span><span class="p">[</span><span class="s2">"config_file"</span><span class="p">]</span> <span class="o">=</span> <span class="n">inline</span> <span class="ow">or</span> <span class="n">following</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-c"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"--"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">said</span><span class="p">[</span><span class="s2">"config_file"</span><span class="p">]</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># `-cFILE`</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"-o"</span><span class="p">,</span> <span class="s2">"--override-ini"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">_KEY</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inline</span> <span class="ow">or</span> <span class="n">following</span><span class="p">)[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">_KEY</span><span class="p">)]</span>
+        <span class="p">):</span>
+            <span class="n">said</span><span class="p">[</span><span class="s2">"override"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">"-o</span><span class="si">{</span><span class="n">_KEY</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="n">said</span><span class="p">[</span><span class="s2">"override"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">said</span></div>
+
+
+
 <div class="viewcode-block" id="doctest_optionflags_arg">
 <a class="viewcode-back" href="../../../_autosummary/wads.scripts.pytest_doctest_flags.html#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">doctest_optionflags_arg</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The ``-o`` value to pass, or ``''`` when ``repo``'s own pytest config wins.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">doctest_optionflags_arg</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">pytest_args</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``-o`` value to pass, or ``''`` when the repo's own pytest config wins.</span>
 
-<span class="sd">    ``repo=None`` means "do not look": the default flags are returned.</span>
+<span class="sd">    ``repo=None`` means "do not look": the default flags are returned. ``pytest_args``</span>
+<span class="sd">    (the extra arguments CI also passes) is honoured: an explicit ``-o`` /</span>
+<span class="sd">    ``--override-ini doctest_optionflags=...`` there wins and ``-c FILE`` names the</span>
+<span class="sd">    config file. ``--rootdir`` does not matter: pytest picks its config file from</span>
+<span class="sd">    ``-c`` and the test paths, never from the rootdir option.</span>
 
 <span class="sd">    &gt;&gt;&gt; doctest_optionflags_arg()</span>
 <span class="sd">    'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'</span>
+<span class="sd">    &gt;&gt;&gt; doctest_optionflags_arg(pytest_args="-o doctest_optionflags=ELLIPSIS")</span>
+<span class="sd">    ''</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">repo_sets_doctest_optionflags</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
+    <span class="n">said</span> <span class="o">=</span> <span class="n">pytest_args_say</span><span class="p">(</span><span class="n">pytest_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">said</span><span class="p">[</span><span class="s2">"override"</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">repo_sets_doctest_optionflags</span><span class="p">(</span>
+        <span class="n">repo</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="n">said</span><span class="p">[</span><span class="s2">"config_file"</span><span class="p">]</span>
+    <span class="p">):</span>
         <span class="k">return</span> <span class="s2">""</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_KEY</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">DOCTEST_OPTIONFLAGS</span><span class="si">}</span><span class="s2">"</span></div>
 
@@ -389,7 +450,9 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
     <span class="n">argv</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">argv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">argv</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">doctest_optionflags_arg</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">argv</span> <span class="k">else</span> <span class="s2">"."</span><span class="p">))</span>
+    <span class="n">at</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"--pytest-args"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="s2">"--pytest-args"</span> <span class="ow">in</span> <span class="n">argv</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">pytest_args</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="n">at</span><span class="p">]</span> <span class="k">if</span> <span class="n">at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">at</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">doctest_optionflags_arg</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">argv</span> <span class="k">else</span> <span class="s2">"."</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">))</span>
     <span class="k">return</span> <span class="mi">0</span>
 
 
@@ -423,7 +486,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=130ffd09"></script>
+</div><script src="../../../_static/documentation_options.js?v=5463bd81"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

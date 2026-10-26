@@ -1,4 +1,4 @@
-> built 2026-10-26 10:27 UTC from aa634f0 (master) · wads 0.2.49. Details: build_info.json
+> built 2026-10-26 10:59 UTC from a87fce0 (master) · wads 0.2.50. Details: build_info.json
 
 # index.html.md
 
@@ -6003,21 +6003,22 @@ that defers to this module.
 
 ### Functions
 
-| `audit_ci`(repo, rep)                                                                       |                                                                     |
-|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `audit_files`(repo, rep)                                                                    |                                                                     |
-| `audit_git`(repo, rep)                                                                      |                                                                     |
-| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail. |
-| `audit_package`(repo, rep, project_name)                                                    |                                                                     |
-| `audit_pypi`(rep, project)                                                                  |                                                                     |
-| `audit_pyproject`(repo, rep)                                                                |                                                                     |
-| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.           |
-| `audit_skills`(repo, rep, project_name)                                                     |                                                                     |
-| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.        |
-| `find_package_dir`(repo, project_name)                                                      |                                                                     |
-| `main`([argv])                                                                              |                                                                     |
-| `read_pyproject`(repo)                                                                      |                                                                     |
-| `render_text`(rep)                                                                          |                                                                     |
+| `audit_ci`(repo, rep)                                                                       |                                                                                      |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `audit_files`(repo, rep)                                                                    |                                                                                      |
+| `audit_git`(repo, rep)                                                                      |                                                                                      |
+| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                  |
+| `audit_package`(repo, rep, project_name)                                                    |                                                                                      |
+| `audit_pypi`(rep, project)                                                                  |                                                                                      |
+| `audit_pyproject`(repo, rep)                                                                |                                                                                      |
+| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                            |
+| `audit_skills`(repo, rep, project_name)                                                     |                                                                                      |
+| [`audit_trigger_drift`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`. |
+| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                         |
+| `find_package_dir`(repo, project_name)                                                      |                                                                                      |
+| `main`([argv])                                                                              |                                                                                      |
+| `read_pyproject`(repo)                                                                      |                                                                                      |
+| `render_text`(rep)                                                                          |                                                                                      |
 
 ### Classes
 
@@ -6048,6 +6049,13 @@ same structure as `python -m wads.repo_audit <repo> --json`:
 
 `network=False` skips everything that leaves the machine (`gh` + PyPI),
 matching the `--no-network` CLI flag.
+
+### wads.repo_audit.audit_trigger_drift(repo, rep, stub_text)
+
+Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`.
+
+A stale pre-filter silently runs nothing for a marker pyproject declares (the
+workflow behind it is fine): the fix is always a re-render.
 
 ### wads.repo_audit.classify_workflow(text)
 
@@ -6397,32 +6405,53 @@ nothing; stdlib only. Used by
 
 ### Functions
 
-| [`doctest_optionflags_arg`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg)([repo])       | The `-o` value to pass, or `''` when `repo`'s own pytest config wins.               |
-|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `main`([argv])                                                                         |                                                                                     |
-| [`repo_sets_doctest_optionflags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags)([repo]) | Whether the pytest config file pytest itself would pick sets `doctest_optionflags`. |
+| [`doctest_optionflags_arg`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.doctest_optionflags_arg)([repo, pytest_args])   | The `-o` value to pass, or `''` when the repo's own pytest config wins.               |
+|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| `main`([argv])                                                                                  |                                                                                       |
+| [`pytest_args_say`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.pytest_args_say)(pytest_args)                   | What a pytest argument string says about the flags: `-o` / `--override-ini` and `-c`. |
+| [`repo_sets_doctest_optionflags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags)([repo, ...])     | Whether the pytest config file pytest itself would pick sets `doctest_optionflags`.   |
 
-### wads.scripts.pytest_doctest_flags.doctest_optionflags_arg(repo=None)
+### wads.scripts.pytest_doctest_flags.doctest_optionflags_arg(repo=None, , pytest_args='')
 
-The `-o` value to pass, or `''` when `repo`’s own pytest config wins.
+The `-o` value to pass, or `''` when the repo’s own pytest config wins.
 
-`repo=None` means “do not look”: the default flags are returned.
+`repo=None` means “do not look”: the default flags are returned. `pytest_args`
+(the extra arguments CI also passes) is honoured: an explicit `-o` /
+`--override-ini doctest_optionflags=...` there wins and `-c FILE` names the
+config file. `--rootdir` does not matter: pytest picks its config file from
+`-c` and the test paths, never from the rootdir option.
 
 ```pycon
 >>> doctest_optionflags_arg()
 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'
+>>> doctest_optionflags_arg(pytest_args="-o doctest_optionflags=ELLIPSIS")
+''
 ```
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags(repo='.')
+### wads.scripts.pytest_doctest_flags.pytest_args_say(pytest_args)
+
+What a pytest argument string says about the flags: `-o` / `--override-ini` and `-c`.
+
+```pycon
+>>> pytest_args_say("-x -c other.ini")
+{'override': False, 'config_file': 'other.ini'}
+>>> pytest_args_say("--override-ini=doctest_optionflags=ELLIPSIS")["override"]
+True
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.scripts.pytest_doctest_flags.repo_sets_doctest_optionflags(repo='.', , config_file=None)
 
 Whether the pytest config file pytest itself would pick sets `doctest_optionflags`.
 
 Mirrors pytest’s precedence (`pytest.ini`, `pyproject.toml`, `tox.ini`,
 `setup.cfg`; the last three only with their pytest section), stdlib only so it
-runs under any CI interpreter.
+runs under any CI interpreter. `config_file` (`-c FILE`) replaces the search.
 
 ```pycon
 >>> import tempfile
@@ -7464,16 +7493,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 10:27 UTC** from commit <a href="https://github.com/i2mint/wads/commit/aa634f0014a95fa4ef94154e0ad2342275ba80f8"><code>aa634f0</code></a> on branch <code>master</code>, for **wads 0.2.49** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 10:59 UTC** from commit <a href="https://github.com/i2mint/wads/commit/a87fce03db063dddfa46dbdf4ce04c397e64f91d"><code>a87fce0</code></a> on branch <code>master</code>, for **wads 0.2.50** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.50) is behind the latest release on PyPI (0.2.51): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/aa634f0014a95fa4ef94154e0ad2342275ba80f8"><code>aa634f0014a95fa4ef94154e0ad2342275ba80f8</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/a87fce03db063dddfa46dbdf4ce04c397e64f91d"><code>a87fce03db063dddfa46dbdf4ce04c397e64f91d</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7484,9 +7515,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40307077514">40307077514</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40311300940">40311300940</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>aa634f0014a95fa4ef94154e0ad2342275ba80f8</code> (in the history of the built commit) |
+| Event commit | <code>a87fce03db063dddfa46dbdf4ce04c397e64f91d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7511,13 +7542,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.49/">0.2.49</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.51/">0.2.51</a>, newer than the documented version (0.2.50).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout aa634f0014a95fa4ef94154e0ad2342275ba80f8
+git checkout a87fce03db063dddfa46dbdf4ce04c397e64f91d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

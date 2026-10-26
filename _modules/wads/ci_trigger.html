@@ -921,14 +921,17 @@
         <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"YAML that does not parse (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
-            <span class="n">marker</span> <span class="o">=</span> <span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">DFLT_RUN_CI_MARKER</span>
+            <span class="n">declared</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">(</span><span class="n">tomllib</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">old_py</span><span class="p">))</span>
+            <span class="n">marker</span> <span class="o">=</span> <span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">declared</span><span class="o">.</span><span class="n">run_ci_marker</span>
+            <span class="n">expression</span> <span class="o">=</span> <span class="n">stub_if_expression</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="n">declared</span><span class="o">.</span><span class="n">deploy_marker</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"refused"</span>
             <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> has customizations a re-render would drop: "</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">. Flip it by hand: in pyproject.toml set "</span>
                 <span class="s1">'[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '</span>
-                <span class="s2">"workflow use `on: [push, workflow_dispatch]` and give the job that calls "</span>
-                <span class="sa">f</span><span class="s2">"uv-ci.yml `if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stub_if_expression</span><span class="p">(</span><span class="n">marker</span><span class="p">))</span><span class="si">}</span><span class="s2">`."</span>
+                <span class="s2">"workflow use `on: [push, workflow_dispatch]` (a `level` input of "</span>
+                <span class="s2">"`config`, `validate`, `deploy` is optional) and give the job that calls "</span>
+                <span class="sa">f</span><span class="s2">"uv-ci.yml `if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span><span class="si">}</span><span class="s2">`."</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">result</span>
 
@@ -1142,7 +1145,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=130ffd09"></script>
+</div><script src="../../_static/documentation_options.js?v=5463bd81"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
