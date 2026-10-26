@@ -312,7 +312,7 @@ modern wads repo” classification. Import it:</p>
 machine-readable report. <code class="docutils literal notranslate"><span class="pre">--no-network</span></code> skips everything that leaves the
 machine (gh calls and the PyPI lookup); it also degrades gracefully when
 <code class="docutils literal notranslate"><span class="pre">gh</span></code> is absent or offline.</p>
-<p>Stdlib only. Strictly read-only: never modifies the target repo or anything
+<p>Needs only wads’ core dependencies. Strictly read-only: never modifies the target repo or anything
 else. The <code class="docutils literal notranslate"><span class="pre">wads-repo-doctor</span></code> skill ships a thin shim (<code class="docutils literal notranslate"><span class="pre">scripts/repo_audit.py</span></code>)
 that defers to this module.</p>
 <p class="rubric">Functions</p>
@@ -331,37 +331,40 @@ that defers to this module.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.audit_github" title="wads.repo_audit.audit_github"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_github</span></code></a>(repo_slug, rep, project, ...)</p></td>
 <td><p>gh-based checks; every step degrades silently when gh/network fail.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_package</span></code>(repo, rep, project_name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.audit_inline_trigger_gate" title="wads.repo_audit.audit_inline_trigger_gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_inline_trigger_gate</span></code></a>(repo, rep, text)</p></td>
+<td><p>Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_package</span></code>(repo, rep, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_pypi</span></code>(rep, project)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_pypi</span></code>(rep, project)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_pyproject</span></code>(repo, rep)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_pyproject</span></code>(repo, rep)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.audit_repo" title="wads.repo_audit.audit_repo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_repo</span></code></a>([repo, network])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.audit_repo" title="wads.repo_audit.audit_repo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_repo</span></code></a>([repo, network])</p></td>
 <td><p>Audit a repo and return the machine-readable report dict.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_skills</span></code>(repo, rep, project_name)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_skills</span></code>(repo, rep, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift" title="wads.repo_audit.audit_trigger_drift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_trigger_drift</span></code></a>(repo, rep, stub_text)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift" title="wads.repo_audit.audit_trigger_drift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_trigger_drift</span></code></a>(repo, rep, stub_text)</p></td>
 <td><p>Flag a stub whose on-demand pre-filter markers differ from <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
 <td><p>Classify one workflow file's text into a wads CI generation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pyproject</span></code>(repo)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pyproject</span></code>(repo)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_text</span></code>(rep)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_text</span></code>(rep)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -388,6 +391,14 @@ that defers to this module.</p>
 <dt class="sig sig-object py" id="wads.repo_audit.audit_github">
 <span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_github</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_slug</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docs_enabled</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#audit_github"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_github" title="Link to this definition">¶</a></dt>
 <dd><p>gh-based checks; every step degrades silently when gh/network fail.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.audit_inline_trigger_gate">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_inline_trigger_gate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#audit_inline_trigger_gate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_inline_trigger_gate" title="Link to this definition">¶</a></dt>
+<dd><p>Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand.</p>
+<p>The inline workflow reads the trigger at run time, so it cannot go stale on a marker;
+but a copy without the gate ignores <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;on-demand&quot;</span></code> and runs on every push.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -474,6 +485,7 @@ workflow behind it is fine): the fix is always a re-render.</p>
 <li><a class="reference internal" href="#">wads.repo_audit</a><ul>
 <li><a class="reference internal" href="#wads.repo_audit.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_github"><code class="docutils literal notranslate"><span class="pre">audit_github()</span></code></a></li>
+<li><a class="reference internal" href="#wads.repo_audit.audit_inline_trigger_gate"><code class="docutils literal notranslate"><span class="pre">audit_inline_trigger_gate()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_repo"><code class="docutils literal notranslate"><span class="pre">audit_repo()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift"><code class="docutils literal notranslate"><span class="pre">audit_trigger_drift()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.classify_workflow"><code class="docutils literal notranslate"><span class="pre">classify_workflow()</span></code></a></li>
@@ -488,7 +500,7 @@ workflow behind it is fine): the fix is always a re-render.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=dd92530c"></script>
+</div><script src="../_static/documentation_options.js?v=74d2276a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

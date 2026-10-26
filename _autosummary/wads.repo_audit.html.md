@@ -29,28 +29,29 @@ machine-readable report. `--no-network` skips everything that leaves the
 machine (gh calls and the PyPI lookup); it also degrades gracefully when
 `gh` is absent or offline.
 
-Stdlib only. Strictly read-only: never modifies the target repo or anything
+Needs only wads’ core dependencies. Strictly read-only: never modifies the target repo or anything
 else. The `wads-repo-doctor` skill ships a thin shim (`scripts/repo_audit.py`)
 that defers to this module.
 
 ### Functions
 
-| `audit_ci`(repo, rep)                                                                       |                                                                                      |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| `audit_files`(repo, rep)                                                                    |                                                                                      |
-| `audit_git`(repo, rep)                                                                      |                                                                                      |
-| [`audit_github`](#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                  |
-| `audit_package`(repo, rep, project_name)                                                    |                                                                                      |
-| `audit_pypi`(rep, project)                                                                  |                                                                                      |
-| `audit_pyproject`(repo, rep)                                                                |                                                                                      |
-| [`audit_repo`](#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                            |
-| `audit_skills`(repo, rep, project_name)                                                     |                                                                                      |
-| [`audit_trigger_drift`](#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`. |
-| [`classify_workflow`](#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                         |
-| `find_package_dir`(repo, project_name)                                                      |                                                                                      |
-| `main`([argv])                                                                              |                                                                                      |
-| `read_pyproject`(repo)                                                                      |                                                                                      |
-| `render_text`(rep)                                                                          |                                                                                      |
+| `audit_ci`(repo, rep)                                                                       |                                                                                           |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `audit_files`(repo, rep)                                                                    |                                                                                           |
+| `audit_git`(repo, rep)                                                                      |                                                                                           |
+| [`audit_github`](#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                       |
+| [`audit_inline_trigger_gate`](#wads.repo_audit.audit_inline_trigger_gate)(repo, rep, text) | Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand. |
+| `audit_package`(repo, rep, project_name)                                                    |                                                                                           |
+| `audit_pypi`(rep, project)                                                                  |                                                                                           |
+| `audit_pyproject`(repo, rep)                                                                |                                                                                           |
+| [`audit_repo`](#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                                 |
+| `audit_skills`(repo, rep, project_name)                                                     |                                                                                           |
+| [`audit_trigger_drift`](#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`.      |
+| [`classify_workflow`](#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                              |
+| `find_package_dir`(repo, project_name)                                                      |                                                                                           |
+| `main`([argv])                                                                              |                                                                                           |
+| `read_pyproject`(repo)                                                                      |                                                                                           |
+| `render_text`(rep)                                                                          |                                                                                           |
 
 ### Classes
 
@@ -66,6 +67,13 @@ Accumulates facts and findings; renders text or JSON.
 ### wads.repo_audit.audit_github(repo_slug, rep, project, docs_enabled)
 
 gh-based checks; every step degrades silently when gh/network fail.
+
+### wads.repo_audit.audit_inline_trigger_gate(repo, rep, text)
+
+Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand.
+
+The inline workflow reads the trigger at run time, so it cannot go stale on a marker;
+but a copy without the gate ignores `mode = "on-demand"` and runs on every push.
 
 ### wads.repo_audit.audit_repo(repo='.', , network=True)
 

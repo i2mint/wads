@@ -1,4 +1,4 @@
-> built 2026-10-26 14:38 UTC from 99e8a13 (master) · wads 0.2.52. Details: build_info.json
+> built 2026-10-26 14:52 UTC from 03c4ca6 (master) · wads 0.2.53. Details: build_info.json
 
 # index.html.md
 
@@ -2408,6 +2408,8 @@ copy of the repo first, so a dry run and a real run take the same path.
 |--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`commit_paths`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                                                                                                     |
 | [`flip_to_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
+| [`inline_trigger_gate`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.inline_trigger_gate)(text)                       | Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.                                                                               |
+| [`parse_stub_if`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.parse_stub_if)(condition)                        | The markers a stub's pre-filter `if:` tests, or `None` if it is not that shape.                                                                                   |
 | [`render_stub_inputs`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
 | [`render_stub_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
 | [`repo_pyproject_for`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
@@ -2416,6 +2418,7 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`stub_customizations`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
 | [`stub_if_expression`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
 | [`stub_inputs_of`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
+| [`stub_markers`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_markers)(text)                              | The markers the pre-filter of the stub `text` tests; `[]` if it has none.                                                                                         |
 | [`stub_shape`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
 | [`trigger_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
 | [`trigger_settings_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger) keyword arguments. |
@@ -2488,6 +2491,42 @@ Idempotent: a second run reports `"unchanged"` and writes nothing.
 
 * **Return type:**
   [`FlipResult`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.FlipResult)
+
+### wads.ci_trigger.inline_trigger_gate(text)
+
+Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.
+
+`"level"` is the current gate (`wads/data/github_ci_uv.yml`). `"markers"` is the
+first one, which honours `run_ci_marker` but not `deploy_marker` or
+`run_ci_publishes`. `"none"` ignores `[tool.wads.ci.trigger]` altogether.
+
+```pycon
+>>> inline_trigger_gate("- name: Decide trigger level")
+'level'
+>>> inline_trigger_gate("trigger-mode: ${{ x }}")
+'markers'
+>>> inline_trigger_gate("name: Continuous Integration (uv)")
+'none'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.parse_stub_if(condition)
+
+The markers a stub’s pre-filter `if:` tests, or `None` if it is not that shape.
+
+The inverse of [`stub_if_expression()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_if_expression); `condition` is the decoded YAML scalar.
+
+```pycon
+>>> parse_stub_if(stub_if_expression("it's", "[go]"))
+["it's", '[go]']
+>>> parse_stub_if(stub_if_expression("a", "b") + " && github.actor == 'me'") is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.ci_trigger.render_stub_inputs(stub, inputs)
 
@@ -2585,6 +2624,21 @@ The `with:` inputs an existing stub file passes; `{}` if none or not a stub.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.ci_trigger.stub_markers(text)
+
+The markers the pre-filter of the stub `text` tests; `[]` if it has none.
+
+```pycon
+>>> stub = "jobs:\n  ci:\n    if: " + json.dumps(stub_if_expression('[say "hi"]', "[go]"))
+>>> stub_markers(stub)
+['[say "hi"]', '[go]']
+>>> stub_markers("on: [push, pull_request]")
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_trigger.stub_shape(ci_text)
 
@@ -6015,28 +6069,29 @@ machine-readable report. `--no-network` skips everything that leaves the
 machine (gh calls and the PyPI lookup); it also degrades gracefully when
 `gh` is absent or offline.
 
-Stdlib only. Strictly read-only: never modifies the target repo or anything
+Needs only wads’ core dependencies. Strictly read-only: never modifies the target repo or anything
 else. The `wads-repo-doctor` skill ships a thin shim (`scripts/repo_audit.py`)
 that defers to this module.
 
 ### Functions
 
-| `audit_ci`(repo, rep)                                                                       |                                                                                      |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| `audit_files`(repo, rep)                                                                    |                                                                                      |
-| `audit_git`(repo, rep)                                                                      |                                                                                      |
-| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                  |
-| `audit_package`(repo, rep, project_name)                                                    |                                                                                      |
-| `audit_pypi`(rep, project)                                                                  |                                                                                      |
-| `audit_pyproject`(repo, rep)                                                                |                                                                                      |
-| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                            |
-| `audit_skills`(repo, rep, project_name)                                                     |                                                                                      |
-| [`audit_trigger_drift`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`. |
-| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                         |
-| `find_package_dir`(repo, project_name)                                                      |                                                                                      |
-| `main`([argv])                                                                              |                                                                                      |
-| `read_pyproject`(repo)                                                                      |                                                                                      |
-| `render_text`(rep)                                                                          |                                                                                      |
+| `audit_ci`(repo, rep)                                                                       |                                                                                           |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `audit_files`(repo, rep)                                                                    |                                                                                           |
+| `audit_git`(repo, rep)                                                                      |                                                                                           |
+| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                       |
+| [`audit_inline_trigger_gate`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_inline_trigger_gate)(repo, rep, text) | Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand. |
+| `audit_package`(repo, rep, project_name)                                                    |                                                                                           |
+| `audit_pypi`(rep, project)                                                                  |                                                                                           |
+| `audit_pyproject`(repo, rep)                                                                |                                                                                           |
+| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                                 |
+| `audit_skills`(repo, rep, project_name)                                                     |                                                                                           |
+| [`audit_trigger_drift`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`.      |
+| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                              |
+| `find_package_dir`(repo, project_name)                                                      |                                                                                           |
+| `main`([argv])                                                                              |                                                                                           |
+| `read_pyproject`(repo)                                                                      |                                                                                           |
+| `render_text`(rep)                                                                          |                                                                                           |
 
 ### Classes
 
@@ -6052,6 +6107,13 @@ Accumulates facts and findings; renders text or JSON.
 ### wads.repo_audit.audit_github(repo_slug, rep, project, docs_enabled)
 
 gh-based checks; every step degrades silently when gh/network fail.
+
+### wads.repo_audit.audit_inline_trigger_gate(repo, rep, text)
+
+Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand.
+
+The inline workflow reads the trigger at run time, so it cannot go stale on a marker;
+but a copy without the gate ignores `mode = "on-demand"` and runs on every push.
 
 ### wads.repo_audit.audit_repo(repo='.', , network=True)
 
@@ -7511,16 +7573,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 14:38 UTC** from commit <a href="https://github.com/i2mint/wads/commit/99e8a13faa194d0a8163a3092b088c9634cb788a"><code>99e8a13</code></a> on branch <code>master</code>, for **wads 0.2.52** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 14:52 UTC** from commit <a href="https://github.com/i2mint/wads/commit/03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b"><code>03c4ca6</code></a> on branch <code>master</code>, for **wads 0.2.53** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.53) is behind the latest release on PyPI (0.2.54): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/99e8a13faa194d0a8163a3092b088c9634cb788a"><code>99e8a13faa194d0a8163a3092b088c9634cb788a</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b"><code>03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7531,9 +7595,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40340913729">40340913729</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40343169991">40343169991</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>99e8a13faa194d0a8163a3092b088c9634cb788a</code> (in the history of the built commit) |
+| Event commit | <code>03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7558,13 +7622,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.52/">0.2.52</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.54/">0.2.54</a>, newer than the documented version (0.2.53).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 99e8a13faa194d0a8163a3092b088c9634cb788a
+git checkout 03c4ca6529b1bceb0d4ca1db5a8adc6202a55d6b
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

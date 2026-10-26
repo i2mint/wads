@@ -377,10 +377,6 @@
 
 
 <span class="n">_STUB_JOB_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">"permissions"</span><span class="p">,</span> <span class="s2">"secrets"</span><span class="p">,</span> <span class="s2">"if"</span><span class="p">,</span> <span class="s2">"with"</span><span class="p">)</span>
-<span class="n">_STUB_IF_PREFIX</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"github.event_name == 'workflow_dispatch' || "</span>
-    <span class="s2">"contains(github.event.head_commit.message, '"</span>
-<span class="p">)</span>
 <span class="n">_USES_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
     <span class="sa">r</span><span class="s2">"^    uses: i2mint/wads/\.github/workflows/uv-ci\.yml@\S+\n"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
 <span class="p">)</span>
@@ -412,6 +408,85 @@
         <span class="k">for</span> <span class="n">marker</span> <span class="ow">in</span> <span class="p">(</span><span class="n">run_ci_marker</span><span class="p">,</span> <span class="n">deploy_marker</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="k">return</span> <span class="s2">" || "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clauses</span><span class="p">)</span></div>
+
+
+
+<span class="n">_STUB_CONTAINS</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"contains\(github\.event\.head_commit\.message, '((?:[^']|'')*)'\)"</span>
+<span class="n">_STUB_MARKER_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">_STUB_CONTAINS</span><span class="p">)</span>
+<span class="n">_STUB_IF_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"github\.event_name == 'workflow_dispatch'(?: \|\| "</span> <span class="o">+</span> <span class="n">_STUB_CONTAINS</span> <span class="o">+</span> <span class="s2">")+"</span>
+<span class="p">)</span>
+<span class="c1">#: The step name that, in an inline workflow, decides the level from the markers.</span>
+<span class="n">_TRIGGER_LEVEL_STEP</span> <span class="o">=</span> <span class="s2">"Decide trigger level"</span>
+<span class="c1">#: Output of the first-generation gate (#86), which knew ``run_ci_marker`` alone.</span>
+<span class="n">_FIRST_GATE_OUTPUT</span> <span class="o">=</span> <span class="s2">"trigger-mode"</span>
+
+
+<div class="viewcode-block" id="parse_stub_if">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.parse_stub_if">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_stub_if</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""The markers a stub's pre-filter ``if:`` tests, or ``None`` if it is not that shape.</span>
+
+<span class="sd">    The inverse of :func:`stub_if_expression`; ``condition`` is the decoded YAML scalar.</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_stub_if(stub_if_expression("it's", "[go]"))</span>
+<span class="sd">    ["it's", '[go]']</span>
+<span class="sd">    &gt;&gt;&gt; parse_stub_if(stub_if_expression("a", "b") + " &amp;&amp; github.actor == 'me'") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_STUB_IF_RE</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># json.dumps writes non-BMP characters as surrogate pairs, which YAML leaves split</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"''"</span><span class="p">,</span> <span class="s2">"'"</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16"</span><span class="p">,</span> <span class="s2">"surrogatepass"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-16"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_STUB_MARKER_RE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="stub_markers">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.stub_markers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_markers</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The markers the pre-filter of the stub ``text`` tests; ``[]`` if it has none.</span>
+
+<span class="sd">    &gt;&gt;&gt; stub = "jobs:\\n  ci:\\n    if: " + json.dumps(stub_if_expression('[say "hi"]', "[go]"))</span>
+<span class="sd">    &gt;&gt;&gt; stub_markers(stub)</span>
+<span class="sd">    ['[say "hi"]', '[go]']</span>
+<span class="sd">    &gt;&gt;&gt; stub_markers("on: [push, pull_request]")</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">condition</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"if"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">parse_stub_if</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="inline_trigger_gate">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.inline_trigger_gate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inline_trigger_gate</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Which trigger gate an inline workflow copy has: ``"level"``, ``"markers"`` or ``"none"``.</span>
+
+<span class="sd">    ``"level"`` is the current gate (``wads/data/github_ci_uv.yml``). ``"markers"`` is the</span>
+<span class="sd">    first one, which honours ``run_ci_marker`` but not ``deploy_marker`` or</span>
+<span class="sd">    ``run_ci_publishes``. ``"none"`` ignores ``[tool.wads.ci.trigger]`` altogether.</span>
+
+<span class="sd">    &gt;&gt;&gt; inline_trigger_gate("- name: Decide trigger level")</span>
+<span class="sd">    'level'</span>
+<span class="sd">    &gt;&gt;&gt; inline_trigger_gate("trigger-mode: ${{ x }}")</span>
+<span class="sd">    'markers'</span>
+<span class="sd">    &gt;&gt;&gt; inline_trigger_gate("name: Continuous Integration (uv)")</span>
+<span class="sd">    'none'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_TRIGGER_LEVEL_STEP</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"level"</span>
+    <span class="k">return</span> <span class="s2">"markers"</span> <span class="k">if</span> <span class="n">_FIRST_GATE_OUTPUT</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">else</span> <span class="s2">"none"</span></div>
 
 
 
@@ -782,7 +857,7 @@
     <span class="n">job</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">dropped</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"`jobs.ci.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">job</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_STUB_JOB_KEYS</span><span class="p">]</span>
     <span class="n">condition</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"if"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_STUB_IF_PREFIX</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parse_stub_if</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">condition</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"`jobs.ci.if`"</span><span class="p">)</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
@@ -1145,7 +1220,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=dd92530c"></script>
+</div><script src="../../_static/documentation_options.js?v=74d2276a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

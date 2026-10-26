@@ -35,6 +35,8 @@ copy of the repo first, so a dry run and a real run take the same path.
 |--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`commit_paths`](#wads.ci_trigger.commit_paths)(repo, paths, \*, message)          | Commit exactly `paths` and return the new commit's short sha.                                                                                                     |
 | [`flip_to_on_demand`](#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
+| [`inline_trigger_gate`](#wads.ci_trigger.inline_trigger_gate)(text)                       | Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.                                                                               |
+| [`parse_stub_if`](#wads.ci_trigger.parse_stub_if)(condition)                        | The markers a stub's pre-filter `if:` tests, or `None` if it is not that shape.                                                                                   |
 | [`render_stub_inputs`](#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
 | [`render_stub_trigger`](#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
 | [`repo_pyproject_for`](#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
@@ -43,6 +45,7 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
 | [`stub_if_expression`](#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
 | [`stub_inputs_of`](#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
+| [`stub_markers`](#wads.ci_trigger.stub_markers)(text)                              | The markers the pre-filter of the stub `text` tests; `[]` if it has none.                                                                                         |
 | [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
 | [`trigger_for_workflow`](#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
 | [`trigger_settings_for_workflow`](#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](#wads.ci_trigger.render_stub_trigger) keyword arguments. |
@@ -115,6 +118,42 @@ Idempotent: a second run reports `"unchanged"` and writes nothing.
 
 * **Return type:**
   [`FlipResult`](#wads.ci_trigger.FlipResult)
+
+### wads.ci_trigger.inline_trigger_gate(text)
+
+Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.
+
+`"level"` is the current gate (`wads/data/github_ci_uv.yml`). `"markers"` is the
+first one, which honours `run_ci_marker` but not `deploy_marker` or
+`run_ci_publishes`. `"none"` ignores `[tool.wads.ci.trigger]` altogether.
+
+```pycon
+>>> inline_trigger_gate("- name: Decide trigger level")
+'level'
+>>> inline_trigger_gate("trigger-mode: ${{ x }}")
+'markers'
+>>> inline_trigger_gate("name: Continuous Integration (uv)")
+'none'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.parse_stub_if(condition)
+
+The markers a stub’s pre-filter `if:` tests, or `None` if it is not that shape.
+
+The inverse of [`stub_if_expression()`](#wads.ci_trigger.stub_if_expression); `condition` is the decoded YAML scalar.
+
+```pycon
+>>> parse_stub_if(stub_if_expression("it's", "[go]"))
+["it's", '[go]']
+>>> parse_stub_if(stub_if_expression("a", "b") + " && github.actor == 'me'") is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.ci_trigger.render_stub_inputs(stub, inputs)
 
@@ -212,6 +251,21 @@ The `with:` inputs an existing stub file passes; `{}` if none or not a stub.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.ci_trigger.stub_markers(text)
+
+The markers the pre-filter of the stub `text` tests; `[]` if it has none.
+
+```pycon
+>>> stub = "jobs:\n  ci:\n    if: " + json.dumps(stub_if_expression('[say "hi"]', "[go]"))
+>>> stub_markers(stub)
+['[say "hi"]', '[go]']
+>>> stub_markers("on: [push, pull_request]")
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_trigger.stub_shape(ci_text)
 
