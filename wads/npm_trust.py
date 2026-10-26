@@ -379,9 +379,7 @@ def _npm_call(
     if "publish" in positional[1:] and sub not in ("run", "run-script"):
         # a flag we do not know took the real subcommand's place: never drop the call
         return [
-            PublishCall(
-                where, problem=f"unrecognised {tokens[0]} flag before publish"
-            )
+            PublishCall(where, problem=f"unrecognised {tokens[0]} flag before publish")
         ]
     script = (
         positional[1] if sub in ("run", "run-script") and len(positional) > 1 else sub
