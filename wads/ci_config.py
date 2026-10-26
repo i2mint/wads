@@ -33,6 +33,11 @@ WINDOWS_JOB_LITERAL_ENV = ("PYTHONUTF8", "PYTHONIOENCODING")
 TRIGGER_MODES = ("auto", "on-demand")
 DFLT_TRIGGER_MODE = "auto"
 DFLT_RUN_CI_MARKER = "[run ci]"
+#: The deploy rung of the on-demand ladder (i2mint/wads#131): validation, then the
+#: publish / Pages jobs. ``run_ci_publishes`` keeps today's behaviour by default
+#: (the run-ci marker also releases); ``false`` makes it validate only.
+DFLT_DEPLOY_MARKER = "[run deploy]"
+DFLT_RUN_CI_PUBLISHES = True
 #: Narrow skip markers (i2mint/wads#62): each suppresses one side-effecting job
 #: and nothing else. The reusable workflow falls back to these same literals when
 #: read-ci-config's wads is too old to emit them.
@@ -92,6 +97,16 @@ def _yaml_scalar(value) -> str:
         else (f"\\u{ord(ch):04x}" if ord(ch) <= 0xFFFF else f"\\U{ord(ch):08x}")
         for ch in json.dumps(value, ensure_ascii=False)
     )
+
+
+def _single_line_marker(trigger: dict, key: str, default: str) -> str:
+    marker = trigger.get(key, default)
+    if not isinstance(marker, str) or not marker.strip() or "\n" in marker:
+        raise ValueError(
+            f"[tool.wads.ci.trigger].{key} must be a non-empty, "
+            f"single-line string, got {marker!r}"
+        )
+    return marker
 
 
 class CIConfig:
@@ -535,13 +550,43 @@ class CIConfig:
         Must be a non-empty single line: an empty marker would match every
         subject and silently turn on-demand back into auto.
         """
-        marker = self.trigger_config.get("run_ci_marker", DFLT_RUN_CI_MARKER)
-        if not isinstance(marker, str) or not marker.strip() or "\n" in marker:
+        return _single_line_marker(self.trigger_config, "run_ci_marker", DFLT_RUN_CI_MARKER)
+
+    @property
+    def deploy_marker(self) -> str:
+        """Commit-subject substring that validates **and** deploys in ``"on-demand"`` mode.
+
+        Defaults to ``"[run deploy]"``. Same rules as :attr:`run_ci_marker` (subject
+        line only, non-empty, single line) and it must differ from it.
+
+        >>> CIConfig({}).deploy_marker
+        '[run deploy]'
+        """
+        marker = _single_line_marker(self.trigger_config, "deploy_marker", DFLT_DEPLOY_MARKER)
+        if marker == self.run_ci_marker:
             raise ValueError(
-                "[tool.wads.ci.trigger].run_ci_marker must be a non-empty, "
-                f"single-line string, got {marker!r}"
+                "[tool.wads.ci.trigger].run_ci_marker and deploy_marker must differ"
             )
         return marker
+
+    @property
+    def run_ci_publishes(self) -> bool:
+        """Whether the run-ci marker also releases (the default, as wads always did).
+
+        ``false`` opts in to the ladder: ``run_ci_marker`` validates only and
+        ``deploy_marker`` (or a manual run with ``level=deploy``) ships.
+
+        >>> CIConfig({}).run_ci_publishes
+        True
+        >>> CIConfig({"tool": {"wads": {"ci": {"trigger": {"run_ci_publishes": False}}}}}).run_ci_publishes
+        False
+        """
+        value = self.trigger_config.get("run_ci_publishes", DFLT_RUN_CI_PUBLISHES)
+        if not isinstance(value, bool):
+            raise ValueError(
+                f"[tool.wads.ci.trigger].run_ci_publishes must be a boolean, got {value!r}"
+            )
+        return value
 
     # 📄 DOCUMENTATION SETTINGS
     @property

@@ -95,6 +95,12 @@ outputs:
   run-ci-marker:
     description: 'Substring that runs CI in on-demand mode, matched against the commit SUBJECT LINE (never the full message, which a squash-merge fills with the PR body). Defaults to "[run ci]". Set via [tool.wads.ci.trigger].run_ci_marker.'
     value: ${{ steps.config.outputs.run-ci-marker }}
+  deploy-marker:
+    description: 'Substring that runs validation AND the publish / Pages jobs in on-demand mode, matched against the commit SUBJECT LINE. Defaults to "[run deploy]". Set via [tool.wads.ci.trigger].deploy_marker.'
+    value: ${{ steps.config.outputs.deploy-marker }}
+  run-ci-publishes:
+    description: 'Whether the run-ci marker also releases in on-demand mode: "true" (default, the historical behaviour) or "false" (run-ci validates only; deploy-marker ships). Set via [tool.wads.ci.trigger].run_ci_publishes.'
+    value: ${{ steps.config.outputs.run-ci-publishes }}
   env-required:
     description: 'JSON array of required env-var names from [tool.wads.ci.env].required_envvars. CI fails if any is not set in secrets.'
     value: ${{ steps.config.outputs.env-required }}

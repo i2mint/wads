@@ -769,14 +769,28 @@ def render_plan(steps: Sequence[Step]) -> str:
     return "\n".join(lines)
 
 
-def ci_local(repo: str = ".", *, publish: bool = False, dry_run: bool = False):
+LEVELS = ("validate", "deploy")
+
+
+def ci_local(
+    repo: str = ".",
+    *,
+    publish: bool = False,
+    dry_run: bool = False,
+    level: Optional[str] = None,
+):
     """Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.
 
     Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the
     publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
     refusing on a dirty tree, off the default branch, or without PyPI credentials. With
-    --dry-run, print the plan and run nothing.
+    --dry-run, print the plan and run nothing. ``--level validate|deploy`` names the same
+    choice as CI's on-demand ladder (``deploy`` is ``--publish``).
     """
+    if level is not None:
+        if level not in LEVELS:
+            raise SystemExit(f"--level must be one of {LEVELS}, got {level!r}")
+        publish = publish or level == "deploy"
     if dry_run:
         print(render_plan(plan_ci_local(repo, publish=publish)))
         return None

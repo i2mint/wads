@@ -44,6 +44,8 @@ INLINE = REPO_ROOT / "wads" / "data" / "github_ci_uv.yml"
 READ_CI_CONFIG_ACTION = REPO_ROOT / "actions" / "read-ci-config" / "action.yml"
 STUB_TEMPLATE = Path(github_ci_uv_stub_path).read_text()
 MARKER = "[run ci]"
+DEPLOY = "[run deploy]"
+LEVEL_STEP = "Decide trigger level"
 GATED_JOBS = ("validation", "windows-validation", "publish", "github-pages")
 
 
@@ -197,25 +199,71 @@ def _context(
     marker=MARKER,
     ref="refs/heads/master",
     default_branch="master",
+    deploy_marker=DEPLOY,
+    run_ci_publishes="true",
+    level="",
 ):
     head_commit = message if event == "push" else ""
+    subject = _run_extraction(UV_CI, head_commit)
+    verdicts = run_level_step(
+        UV_CI,
+        event=event,
+        subject=subject,
+        mode=mode,
+        run_ci_marker=marker,
+        deploy_marker=deploy_marker,
+        run_ci_publishes=run_ci_publishes,
+        level=level,
+    )
     return {
+        **{f"needs.setup.outputs.{k}": v for k, v in verdicts.items()},
         "github.event_name": event,
         "github.event.head_commit.message": head_commit,
         "github.ref": ref,
         "github.event.repository.default_branch": default_branch,
-        "needs.setup.outputs.commit-subject": _run_extraction(UV_CI, head_commit),
+        "needs.setup.outputs.commit-subject": subject,
         "needs.setup.outputs.trigger-mode": mode,
         "needs.setup.outputs.run-ci-marker": marker,
         "needs.setup.outputs.skip-ci-marker": "[skip ci]",
         # the setup job's own verdict on the skip markers (#62), from its script
-        **_skip_verdicts(UV_CI, _run_extraction(UV_CI, head_commit)),
+        **_skip_verdicts(UV_CI, subject),
         "needs.setup.outputs.publish-enabled": "true",
         "needs.setup.outputs.publish-marker": "[publish]",
         "needs.setup.outputs.test-on-windows": "true",
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
     }
+
+
+def run_level_step(
+    workflow, *, event, subject, mode, run_ci_marker, deploy_marker, run_ci_publishes, level
+):
+    """Run the workflow's own "Decide trigger level" step; return its outputs."""
+    import os
+    import tempfile
+
+    steps = yaml.safe_load(workflow.read_text())["jobs"]["setup"]["steps"]
+    (step,) = [st for st in steps if st.get("name") == LEVEL_STEP]
+    assert "${{" not in step["run"], "values must reach bash via env:, not spliced"
+    with tempfile.TemporaryDirectory() as tmp:
+        out = os.path.join(tmp, "github_output")
+        open(out, "w").close()
+        env = dict(
+            os.environ,
+            EVENT_NAME=event,
+            LEVEL_INPUT=level,
+            SUBJECT=subject,
+            TRIGGER_MODE=mode,
+            RUN_CI_MARKER=run_ci_marker,
+            DEPLOY_MARKER=deploy_marker,
+            RUN_CI_PUBLISHES=run_ci_publishes,
+            GITHUB_OUTPUT=out,
+        )
+        result = subprocess.run(
+            ["bash", "-e", "-c", step["run"]], env=env, capture_output=True, text=True
+        )
+        assert result.returncode == 0, result.stderr
+        return dict(line.split("=", 1) for line in open(out).read().splitlines())
 
 
 def _skip_verdicts(workflow, subject):
@@ -326,13 +374,127 @@ def test_the_run_marker_matches_case_insensitively_like_github():
     assert _job_verdicts(UV_CI, context)["validation"]
 
 
+def _ladder(message, **kwargs):
+    """The job verdicts of the real workflow for a push, as {job: ran}."""
+    return _job_verdicts(UV_CI, _context(message, **kwargs))
+
+
+@bash_required
+def test_both_workflows_ship_the_same_level_step():
+    def step(workflow):
+        steps = yaml.safe_load(workflow.read_text())["jobs"]["setup"]["steps"]
+        (found,) = [st for st in steps if st.get("name") == LEVEL_STEP]
+        return found
+
+    assert step(UV_CI) == step(INLINE)
+
+
+@bash_required
+def test_ladder_default_run_ci_still_validates_and_releases():
+    assert all(_ladder(f"Fix {MARKER}").values())
+
+
+@bash_required
+def test_ladder_run_ci_validates_only_when_it_does_not_publish():
+    verdicts = _ladder(f"Fix {MARKER}", run_ci_publishes="false")
+    assert verdicts == {
+        "validation": True,
+        "windows-validation": True,
+        "publish": False,
+        "github-pages": False,
+    }
+
+
+@bash_required
+@pytest.mark.parametrize("publishes", ["true", "false"])
+def test_ladder_deploy_marker_alone_validates_then_deploys(publishes):
+    assert all(_ladder(f"Ship it {DEPLOY}", run_ci_publishes=publishes).values())
+
+
+@bash_required
+def test_ladder_deploy_marker_in_a_squashed_body_runs_nothing():
+    verdicts = _ladder(f"Docs (#1)\n\nUse {DEPLOY} to ship.\n", run_ci_publishes="false")
+    assert not any(verdicts.values())
+
+
+@bash_required
+def test_ladder_deploy_marker_in_the_stub_pre_filter():
+    context = _context(f"Ship it {DEPLOY}")
+    stub = yaml.safe_load(
+        render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=False)
+    )
+    assert evaluate(stub["jobs"]["ci"]["if"], context)
+
+
+@bash_required
+@pytest.mark.parametrize(
+    "level, publishes, deploys",
+    [
+        ("validate", "true", False),
+        ("deploy", "false", True),
+        ("", "true", True),  # an old stub with no `level` input: as before
+        ("", "false", False),
+    ],
+)
+def test_ladder_manual_run_asks_for_a_level(level, publishes, deploys):
+    verdicts = _ladder("", event="workflow_dispatch", level=level, run_ci_publishes=publishes)
+    assert verdicts["validation"] and verdicts["windows-validation"]
+    assert verdicts["publish"] is deploys and verdicts["github-pages"] is deploys
+
+
+@bash_required
+def test_ladder_markers_fall_back_to_defaults_for_a_wads_too_old_to_emit_them():
+    verdicts = _ladder(f"Ship it {DEPLOY}", deploy_marker="", run_ci_publishes="")
+    assert all(verdicts.values())
+
+
+@bash_required
+def test_ladder_does_not_touch_auto_mode():
+    assert all(_ladder("Plain", mode="auto", run_ci_publishes="false").values())
+
+
+def test_stub_declares_the_level_input_defaulting_to_what_a_run_does():
+    def level(publishes):
+        stub = yaml.safe_load(
+            render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=publishes)
+        )
+        return stub[True]["workflow_dispatch"]["inputs"]["level"]
+
+    assert level(True)["default"] == "deploy"
+    assert level(False)["default"] == "validate"
+    assert level(False)["options"] == ["validate", "deploy"]
+
+
+def test_a_rendered_on_demand_stub_has_no_customizations_to_drop():
+    from wads.ci_trigger import stub_customizations
+
+    text = render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=False)
+    assert stub_customizations(text)[1] == []
+
+
+def test_deploy_marker_must_differ_and_run_ci_publishes_must_be_boolean():
+    def config(**trigger):
+        return CIConfig({"tool": {"wads": {"ci": {"trigger": trigger}}}})
+
+    with pytest.raises(ValueError, match="must differ"):
+        config(deploy_marker="[run ci]").deploy_marker
+    with pytest.raises(ValueError, match="boolean"):
+        config(run_ci_publishes="no").run_ci_publishes
+    with pytest.raises(ValueError, match="deploy_marker"):
+        config(deploy_marker=" ").deploy_marker
+
+
 @WORKFLOWS
 def test_setup_job_exports_the_trigger_outputs(workflow):
     outputs = yaml.safe_load(workflow.read_text())["jobs"]["setup"]["outputs"]
     assert outputs["trigger-mode"] == "${{ steps.config.outputs.trigger-mode }}"
     assert outputs["run-ci-marker"] == "${{ steps.config.outputs.run-ci-marker }}"
     action_outputs = yaml.safe_load(READ_CI_CONFIG_ACTION.read_text())["outputs"]
-    assert {"trigger-mode", "run-ci-marker"} <= set(action_outputs)
+    assert outputs["validate"] == "${{ steps.level.outputs.validate }}"
+    assert outputs["deploy"] == "${{ steps.level.outputs.deploy }}"
+    assert {"trigger-mode", "run-ci-marker", "deploy-marker", "run-ci-publishes"} <= set(
+        action_outputs
+    )
 
 
 def test_read_ci_config_writes_the_trigger_outputs(tmp_path, monkeypatch):
@@ -679,7 +841,10 @@ def test_every_event_nobody_asks_for_is_reported(tmp_path):
     assert not any("manual.yml" in note for note in notes)
 
 
-def test_the_on_demand_header_warns_that_a_manual_default_branch_run_releases():
+def test_the_on_demand_header_explains_the_ladder():
     text = render_stub_trigger(STUB_TEMPLATE, mode="on-demand")
-    assert "a manual run on the DEFAULT branch releases" in text
-    assert "only the pushed HEAD commit's subject" in text
+    assert "validates and, on the DEFAULT branch, releases" in text
+    assert "[run deploy]" in text and "-f level=validate|deploy" in text
+    assert "Only the pushed HEAD" in text
+    only = render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=False)
+    assert "validates only" in only

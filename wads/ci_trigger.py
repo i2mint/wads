@@ -6,15 +6,20 @@ a repo to on-demand in one idempotent command.
 - ``"auto"`` (the default): every push and pull request, as wads always has. The stub
   renders byte-identical to ``wads/data/github_ci_uv_stub.yml``.
 - ``"on-demand"``: **nothing runs unless asked** -- the commit subject carries
-  ``run_ci_marker`` (default ``"[run ci]"``), or someone starts a ``workflow_dispatch``.
+  ``run_ci_marker`` (default ``"[run ci]"``) or ``deploy_marker`` (default
+  ``"[run deploy]"``), or someone starts a ``workflow_dispatch``. The levels form a
+  ladder: ``run_ci_marker`` validates (lint, tests, build) and, while
+  ``run_ci_publishes`` is true (the default, wads' historical behaviour), also
+  deploys; with ``run_ci_publishes = false`` only ``deploy_marker`` (or a manual run
+  with ``level=deploy``) runs the publish / Pages jobs, which ``need:`` validation.
 
 Two gates, because workflow expressions cannot split a string:
 
 1. The stub's job-level ``if:`` is a zero-cost pre-filter. An ordinary push schedules
-   no runner at all, but the pre-filter can only ask whether the marker is *anywhere*
+   no runner at all, but the pre-filter can only ask whether a marker is *anywhere*
    in the commit message.
-2. The reusable workflow's setup job extracts the subject line, and every other job
-   gates on the marker being in *that* (the TRIGGER GATE note in
+2. The reusable workflow's setup job extracts the subject line and decides the level
+   from the markers in *that*; every other job gates on the verdict (the TRIGGER GATE note in
    ``.github/workflows/uv-ci.yml``). A marker quoted only in a squash-merged PR body
    passes gate 1, costs one setup job, and runs nothing else.
 
@@ -37,7 +42,9 @@ from typing import Mapping, Optional, Sequence
 
 from wads.ci_config import (
     CIConfig,
+    DFLT_DEPLOY_MARKER,
     DFLT_RUN_CI_MARKER,
+    DFLT_RUN_CI_PUBLISHES,
     DFLT_TRIGGER_MODE,
     tomllib,
 )
@@ -56,10 +63,24 @@ CI_JOB_ANCHOR = "  ci:\n    uses: "
 ASKED_EVENTS = frozenset({"workflow_dispatch", "workflow_call", "repository_dispatch"})
 
 # What a stub may hold that a re-render reproduces (anything else would be dropped).
-_TEMPLATE_TRIGGERS = (
-    ["push", "pull_request"],
-    {"push": None, "workflow_dispatch": None},
-)
+_TEMPLATE_TRIGGERS = (["push", "pull_request"], {"push": None, "workflow_dispatch": None})
+_LEVELS = ("validate", "deploy")
+
+
+def _is_template_trigger(triggers) -> bool:
+    """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""
+    if triggers in _TEMPLATE_TRIGGERS:
+        return True
+    if not (isinstance(triggers, dict) and set(triggers) == {"push", "workflow_dispatch"}):
+        return False
+    dispatch = triggers["workflow_dispatch"]
+    return (
+        triggers["push"] is None
+        and isinstance(dispatch, dict)
+        and set(dispatch) == {"inputs"}
+        and set(dispatch["inputs"]) == {"level"}
+        and dispatch["inputs"]["level"].get("options") == list(_LEVELS)
+    )
 _STUB_JOB_KEYS = ("uses", "permissions", "secrets", "if", "with")
 _STUB_IF_PREFIX = (
     "github.event_name == 'workflow_dispatch' || "
@@ -76,44 +97,51 @@ _PIN_RE = re.compile(r"uv-ci\.yml(@\S+)")
 # Rendering
 
 
-def stub_if_expression(run_ci_marker: str = DFLT_RUN_CI_MARKER) -> str:
+def stub_if_expression(
+    run_ci_marker: str = DFLT_RUN_CI_MARKER, deploy_marker: str = DFLT_DEPLOY_MARKER
+) -> str:
     """The on-demand stub's job-level pre-filter, as a workflow expression.
 
-    >>> stub_if_expression("[run ci]")
-    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]')"
+    >>> stub_if_expression("[run ci]", "[run deploy]")
+    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run ci]') || contains(github.event.head_commit.message, '[run deploy]')"
 
-    A quote in the marker is doubled, which is how workflow expressions escape it:
+    A quote in a marker is doubled, which is how workflow expressions escape it:
 
-    >>> stub_if_expression("it's")
-    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s')"
+    >>> stub_if_expression("it's", "x")
+    "github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'it''s') || contains(github.event.head_commit.message, 'x')"
     """
-    literal = run_ci_marker.replace("'", "''")
-    return (
-        "github.event_name == 'workflow_dispatch' || "
-        f"contains(github.event.head_commit.message, '{literal}')"
+    clauses = ["github.event_name == 'workflow_dispatch'"] + [
+        f"contains(github.event.head_commit.message, '{marker.replace(chr(39), chr(39) * 2)}')"
+        for marker in (run_ci_marker, deploy_marker)
+    ]
+    return " || ".join(clauses)
+
+
+def _on_demand_header(
+    run_ci_marker: str, deploy_marker: str, run_ci_publishes: bool
+) -> str:
+    run_ci_effect = (
+        "validates and, on the DEFAULT branch, releases" if run_ci_publishes else "validates only"
     )
-
-
-def _on_demand_header(run_ci_marker: str) -> str:
+    default_level = "deploy" if run_ci_publishes else "validate"
     return f"""\
 # --- ON-DEMAND CI: NOTHING RUNS UNLESS ASKED ---------------------------------
 # pyproject.toml sets [tool.wads.ci.trigger] mode = "on-demand". A push does
 # NOT run tests, build, publish or docs. CI runs only when:
-#   - the commit SUBJECT (its first line) contains {run_ci_marker}
+#   - the commit SUBJECT (its first line) contains {run_ci_marker}  ({run_ci_effect})
 #       git commit -m "Fix the parser {run_ci_marker}"
-#   - or it is started by hand, which is always allowed:
-#       gh workflow run ci.yml --ref <branch>    (or Actions tab > Run workflow)
-# Publishing obeys the same gate, so a manual run on the DEFAULT branch releases
-# (when publishing is enabled), exactly like a {run_ci_marker} push: to only test,
-# run it on another branch, or run `wads ci-local`. The publish marker needs
-# {run_ci_marker} in the same subject, and only the pushed HEAD commit's subject
-# counts. To do locally what CI would have done:
-#   wads ci-local              # lint, tests, build
-#   wads ci-local --publish    # + version bump, PyPI upload, tag, push
+#   - or the subject contains {deploy_marker}: validate, then publish / Pages
+#   - or it is started by hand, which is always allowed, and asks for a level:
+#       gh workflow run ci.yml --ref <branch> -f level=validate|deploy
+# Publish and Pages `need:` validation, so a release never happens without
+# it passing, and they run only on the DEFAULT branch. Only the pushed HEAD
+# commit's subject counts. To do locally what CI would have done:
+#   wads ci-local                    # lint, tests, build
+#   wads ci-local --level deploy     # + version bump, PyPI upload, tag, push
 #
 # The job-level `if:` below is a zero-cost pre-filter: an ordinary push
 # schedules no runner at all. Workflow expressions cannot split out the first
-# line, so it matches the marker anywhere in the message, and the reusable
+# line, so it matches the markers anywhere in the message, and the reusable
 # workflow re-checks the extracted SUBJECT before any job runs. A marker quoted
 # only in a squash-merged PR body therefore costs one short setup job, nothing
 # else. This file is rendered from pyproject.toml: after changing
@@ -122,7 +150,32 @@ def _on_demand_header(run_ci_marker: str) -> str:
 on:
   push:
   workflow_dispatch:
+    inputs:
+      level:
+        description: "validate = lint, tests, build; deploy = also publish / Pages"
+        type: choice
+        options: [validate, deploy]
+        default: {default_level}
 """
+
+
+def _trigger_config(
+    mode: str,
+    run_ci_marker: str,
+    deploy_marker: str = DFLT_DEPLOY_MARKER,
+    run_ci_publishes: bool = DFLT_RUN_CI_PUBLISHES,
+) -> CIConfig:
+    """A CIConfig holding these trigger settings, validated by reading each back."""
+    trigger = {
+        "mode": mode,
+        "run_ci_marker": run_ci_marker,
+        "deploy_marker": deploy_marker,
+        "run_ci_publishes": run_ci_publishes,
+    }
+    config = CIConfig({"tool": {"wads": {"ci": {"trigger": trigger}}}})
+    config.trigger_mode, config.run_ci_marker, config.deploy_marker  # noqa: B018
+    config.run_ci_publishes  # noqa: B018
+    return config
 
 
 def validate_trigger(mode: str, run_ci_marker: str) -> tuple[str, str]:
@@ -135,8 +188,7 @@ def validate_trigger(mode: str, run_ci_marker: str) -> tuple[str, str]:
       ...
     ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), got 'sometimes'
     """
-    trigger = {"mode": mode, "run_ci_marker": run_ci_marker}
-    config = CIConfig({"tool": {"wads": {"ci": {"trigger": trigger}}}})
+    config = _trigger_config(mode, run_ci_marker)
     return config.trigger_mode, config.run_ci_marker
 
 
@@ -145,15 +197,18 @@ def render_stub_trigger(
     *,
     mode: str = DFLT_TRIGGER_MODE,
     run_ci_marker: str = DFLT_RUN_CI_MARKER,
+    deploy_marker: str = DFLT_DEPLOY_MARKER,
+    run_ci_publishes: bool = DFLT_RUN_CI_PUBLISHES,
 ) -> str:
     """Render the caller stub for a trigger mode.
 
     ``"auto"`` returns ``stub`` unchanged. ``"on-demand"`` replaces the push/PR trigger
-    with push + ``workflow_dispatch``, puts the plain-language explanation above it, and
-    adds the pre-filter ``if:`` to the ``ci`` job.
+    with push + ``workflow_dispatch`` (with its ``level`` input), puts the
+    plain-language explanation above it, and adds the pre-filter ``if:`` to the ``ci``
+    job.
     """
-    mode, run_ci_marker = validate_trigger(mode, run_ci_marker)
-    if mode == "auto":
+    config = _trigger_config(mode, run_ci_marker, deploy_marker, run_ci_publishes)
+    if config.trigger_mode == "auto":
         return stub
     for anchor in (AUTO_ON_LINE, CI_JOB_ANCHOR):
         if stub.count(anchor) != 1:
@@ -161,11 +216,11 @@ def render_stub_trigger(
                 f"stub template changed shape: expected exactly one {anchor!r}"
             )
     gated_job = (
-        f"  ci:\n    if: {json.dumps(stub_if_expression(run_ci_marker))}\n    uses: "
+        "  ci:\n    if: "
+        f"{json.dumps(stub_if_expression(run_ci_marker, deploy_marker))}\n    uses: "
     )
-    return stub.replace(AUTO_ON_LINE, _on_demand_header(run_ci_marker)).replace(
-        CI_JOB_ANCHOR, gated_job
-    )
+    header = _on_demand_header(run_ci_marker, deploy_marker, run_ci_publishes)
+    return stub.replace(AUTO_ON_LINE, header).replace(CI_JOB_ANCHOR, gated_job)
 
 
 def repo_pyproject_for(ci_path) -> Optional[Path]:
@@ -186,18 +241,28 @@ def repo_pyproject_for(ci_path) -> Optional[Path]:
     return None
 
 
-def trigger_for_workflow(ci_path) -> tuple[str, str]:
-    """The ``(mode, run_ci_marker)`` declared by the repo holding ``ci_path``.
+def trigger_settings_for_workflow(ci_path) -> dict:
+    """The ``[tool.wads.ci.trigger]`` settings of the repo holding ``ci_path``, as
+    :func:`render_stub_trigger` keyword arguments.
 
     Defaults when there is no such file or no pyproject. An invalid trigger table
     raises: a stub must never silently render ``auto`` for a repo that asked for
     ``on-demand``.
     """
     pyproject = repo_pyproject_for(ci_path)
-    if pyproject is None:
-        return DFLT_TRIGGER_MODE, DFLT_RUN_CI_MARKER
-    config = CIConfig.from_file(pyproject)
-    return config.trigger_mode, config.run_ci_marker
+    config = CIConfig({}) if pyproject is None else CIConfig.from_file(pyproject)
+    return {
+        "mode": config.trigger_mode,
+        "run_ci_marker": config.run_ci_marker,
+        "deploy_marker": config.deploy_marker,
+        "run_ci_publishes": config.run_ci_publishes,
+    }
+
+
+def trigger_for_workflow(ci_path) -> tuple[str, str]:
+    """The ``(mode, run_ci_marker)`` declared by the repo holding ``ci_path``."""
+    settings = trigger_settings_for_workflow(ci_path)
+    return settings["mode"], settings["run_ci_marker"]
 
 
 # --------------------------------------------------------------------------------------
@@ -378,7 +443,7 @@ def stub_customizations(text: str) -> tuple[dict, list]:
         f"top-level `{key}`" for key in doc if key not in ("name", "on", True, "jobs")
     ]
     triggers = doc.get("on", doc.get(True))  # PyYAML reads a bare `on:` as True
-    if triggers not in _TEMPLATE_TRIGGERS:
+    if not _is_template_trigger(triggers):
         dropped.append(f"`on: {json.dumps(triggers)}`")
     jobs = doc.get("jobs") or {}
     dropped += [f"job `{name}`" for name in jobs if name != "ci"]

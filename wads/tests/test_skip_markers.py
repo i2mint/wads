@@ -158,7 +158,7 @@ def test_a_hostile_subject_is_data(workflow, tmp_path):
 
 
 def _verdicts(workflow, message, *, ref="refs/heads/main", publish_enabled="true"):
-    from wads.tests.test_ci_trigger import evaluate
+    from wads.tests.test_ci_trigger import evaluate, run_level_step
 
     subject = _run_extraction(workflow, message)
     context = {
@@ -176,6 +176,19 @@ def _verdicts(workflow, message, *, ref="refs/heads/main", publish_enabled="true
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
         **{f"needs.setup.outputs.{k}": v for k, v in run_gates(workflow, subject).items()},
+        **{
+            f"needs.setup.outputs.{k}": v
+            for k, v in run_level_step(
+                workflow,
+                event="push",
+                subject=subject,
+                mode="auto",
+                run_ci_marker="[run ci]",
+                deploy_marker="[run deploy]",
+                run_ci_publishes="true",
+                level="",
+            ).items()
+        },
     }
     jobs = yaml.safe_load(workflow.read_text())["jobs"]
     return {

@@ -49,6 +49,8 @@ jobs:
       publish-marker: ${{ steps.config.outputs.publish-marker }}
       trigger-mode: ${{ steps.config.outputs.trigger-mode }}
       run-ci-marker: ${{ steps.config.outputs.run-ci-marker }}
+      validate: ${{ steps.level.outputs.validate }}
+      deploy: ${{ steps.level.outputs.deploy }}
       commit-subject: ${{ steps.commit.outputs.subject }}
       skip-publish: ${{ steps.gates.outputs.skip-publish }}
       skip-pages: ${{ steps.gates.outputs.skip-pages }}
@@ -159,16 +161,80 @@ jobs:
           printf 'skip-pages=%s\n' "$skip_pages" >> "$GITHUB_OUTPUT"
           printf 'skip publish: %s, skip pages: %s\n' "$skip_publish" "$skip_pages"
 
-  # TRIGGER GATE. Every job after `setup` carries the same clause:
-  #   (trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch'
-  #    || contains(commit-subject, run-ci-marker))
-  # [tool.wads.ci.trigger].mode = "auto" (the default) makes it always true, so
-  # auto repos behave exactly as before. "on-demand" means NOTHING RUNS UNLESS
-  # ASKED: the commit SUBJECT must carry run_ci_marker (default "[run ci]"), or
-  # the run must be a manual workflow_dispatch (always allowed). Publishing and
-  # Pages obey the same gate. `!= 'on-demand'` fails OPEN to auto when
-  # read-ci-config installed a wads too old to emit the output: a repo that
-  # never asked for on-demand must not lose its CI to a version skew.
+      # ------------------------------------------------------------------
+      # TRIGGER LEVEL, decided once (#131). The on-demand ladder, each rung
+      # including the one below:
+      #   nothing                   -> no job (the stub's pre-filter normally
+      #                                keeps even this setup job from starting)
+      #   run_ci_marker  [run ci]   -> validate: lint, tests, build; and, when
+      #                                run_ci_publishes is true (the default,
+      #                                what wads always did), also deploy
+      #   deploy_marker  [run deploy] -> validate, then publish / Pages
+      #   workflow_dispatch         -> validate, plus deploy when the `level`
+      #                                input says deploy (an old stub with no
+      #                                such input follows run_ci_publishes)
+      # mode "auto" validates and deploys on every push, as before.
+      # Publish and Pages `need:` validation, so a release can never happen
+      # without it passing. Empty marker/mode outputs (a read-ci-config from a
+      # wads that predates them) fall back to the documented defaults, the same
+      # reason the skip markers go through a step. Matching mirrors GitHub's
+      # `contains()`: case-insensitive substring of the SUBJECT. Everything
+      # reaches bash through env:, never spliced.
+      # ------------------------------------------------------------------
+      - name: Decide trigger level
+        id: level
+        shell: bash  # `shopt` and `[[ ]]`: never run this under sh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          LEVEL_INPUT: ${{ github.event.inputs.level }}
+          SUBJECT: ${{ steps.commit.outputs.subject }}
+          TRIGGER_MODE: ${{ steps.config.outputs.trigger-mode }}
+          RUN_CI_MARKER: ${{ steps.config.outputs.run-ci-marker }}
+          DEPLOY_MARKER: ${{ steps.config.outputs.deploy-marker }}
+          RUN_CI_PUBLISHES: ${{ steps.config.outputs.run-ci-publishes }}
+        run: |
+          run_ci_marker="${RUN_CI_MARKER:-[run ci]}"
+          deploy_marker="${DEPLOY_MARKER:-[run deploy]}"
+          publishes=true
+          if [[ "$RUN_CI_PUBLISHES" == false ]]; then publishes=false; fi
+          shopt -s nocasematch
+          has() { [[ "$SUBJECT" == *"$1"* ]]; }
+          validate=true
+          deploy=true
+          if [[ "$TRIGGER_MODE" == on-demand ]]; then
+            validate=false
+            deploy=false
+            if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+              validate=true
+              case "$LEVEL_INPUT" in
+                deploy) deploy=true ;;
+                validate) deploy=false ;;
+                *) deploy=$publishes ;;
+              esac
+            elif has "$deploy_marker"; then
+              validate=true
+              deploy=true
+            elif has "$run_ci_marker"; then
+              validate=true
+              deploy=$publishes
+            fi
+          fi
+          printf 'validate=%s\n' "$validate" >> "$GITHUB_OUTPUT"
+          printf 'deploy=%s\n' "$deploy" >> "$GITHUB_OUTPUT"
+          printf 'validate: %s, deploy: %s\n' "$validate" "$deploy"
+
+  # TRIGGER GATE. Every job after `setup` is gated on a verdict of the "Decide
+  # trigger level" step: validation and windows-validation on
+  # `outputs.validate`, publish and github-pages on `outputs.deploy` (and they
+  # `need:` validation). [tool.wads.ci.trigger].mode = "auto" (the default)
+  # makes both true, so auto repos behave exactly as before. "on-demand" means
+  # NOTHING RUNS UNLESS ASKED: the commit SUBJECT must carry run_ci_marker
+  # (default "[run ci]") or deploy_marker (default "[run deploy]", which also
+  # deploys), or the run must be a manual workflow_dispatch (always allowed).
+  # Whether `[run ci]` also deploys is [tool.wads.ci.trigger].run_ci_publishes
+  # (default true, as before). An empty mode output (a read-ci-config from an
+  # older wads) fails OPEN to auto: a repo that never asked for on-demand must
+  # not lose its CI to a version skew.
   #
   # An on-demand caller stub also pre-filters at zero cost (no runner is
   # scheduled for an ordinary push). That pre-filter can only test the whole
@@ -183,7 +249,7 @@ jobs:
     # it never pushes, so its GITHUB_TOKEN cannot write either.
     permissions:
       contents: read
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.validate == 'true'"
     needs: setup
     runs-on: ubuntu-latest
     # Secret-backed env vars from [tool.wads.ci.env] land here (test jobs
@@ -290,7 +356,7 @@ jobs:
     # it never pushes, so its GITHUB_TOKEN cannot write either.
     permissions:
       contents: read
-    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true' && needs.setup.outputs.tests-enabled != 'false' && needs.setup.outputs.validate == 'true'"
     needs: setup
     runs-on: windows-latest
     # Fail-closed opt-in ([tool.wads.ci.testing].windows_blocking): only the
@@ -353,9 +419,8 @@ jobs:
   #   - publish-marker  : when publishing is disabled, a commit SUBJECT LINE
   #                       containing this substring forces the publish job
   #                       (default "[publish]").
-  #   - trigger-mode    : in on-demand mode, publish also needs the run-ci
-  #                       marker in the subject or a workflow_dispatch —
-  #                       the TRIGGER GATE above `validation`.
+  #   - deploy          : in on-demand mode, publish also needs the deploy verdict
+  #                       of the TRIGGER GATE above `validation`.
   # The publish-enabled check uses `== 'true'` (fail-closed): if an older wads
   # without these outputs is installed by read-ci-config, publishing is skipped
   # rather than run unintentionally.
@@ -368,7 +433,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
@@ -452,7 +517,7 @@ jobs:
       contents: write
       pages: write
       id-token: write
-    if: "needs.setup.outputs.skip-pages == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false' && (needs.setup.outputs.trigger-mode != 'on-demand' || github.event_name == 'workflow_dispatch' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.run-ci-marker))"
+    if: "needs.setup.outputs.skip-pages == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.setup.outputs.docs-enabled != 'false' && needs.setup.outputs.deploy == 'true'"
     needs: [setup, validation]
     runs-on: ubuntu-latest
 
