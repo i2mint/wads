@@ -47,10 +47,13 @@ from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import CIConfig
+from wads.scripts.pytest_doctest_flags import (
+    doctest_optionflags_arg,
+    repo_sets_doctest_optionflags,
+)
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
 # (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.
-DOCTEST_OPTIONFLAGS = "ELLIPSIS IGNORE_EXCEPTION_DETAIL"
 RELEASE_COMMIT_MESSAGE = (
     "**CI** Formatted code + Updated version to <<version>> [skip ci]"
 )
@@ -157,8 +160,11 @@ def subprocess_runner(
 # What CI runs, as data
 
 
-def pytest_argv(config: CIConfig) -> list[str]:
+def pytest_argv(config: CIConfig, *, repo=None) -> list[str]:
     """The pytest arguments ``actions/run-tests-uv`` builds, in its order.
+
+    The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config
+    sets them (``repo=None``: not checked, defaults passed).
 
     >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE
     ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
@@ -168,7 +174,10 @@ def pytest_argv(config: CIConfig) -> list[str]:
     argv = []
     if config.coverage_enabled:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
-    argv += ["--doctest-modules", "-o", f"doctest_optionflags={DOCTEST_OPTIONFLAGS}"]
+    argv += ["--doctest-modules"]
+    repo_sets = repo is not None and repo_sets_doctest_optionflags(str(repo))
+    if flags_arg := doctest_optionflags_arg(repo_sets_flags=repo_sets):
+        argv += ["-o", flags_arg]
     argv += [f"--ignore={p.strip()}" for p in config.exclude_paths if p.strip()]
     # The action joins pytest_args with spaces and `eval`s the result.
     argv += shlex.split(" ".join(config.pytest_args))
@@ -219,7 +228,7 @@ def plan_ci_local(
     if config.env_vars_required:
         steps.append(_required_env_step(config.env_vars_required))
     steps += _quality_steps(config)
-    steps += _test_steps(config, platform=platform)
+    steps += _test_steps(config, platform=platform, repo=repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
     return steps
 
@@ -265,7 +274,7 @@ def _quality_steps(config: CIConfig) -> list[Step]:
     return steps
 
 
-def _test_steps(config: CIConfig, *, platform: str) -> list[Step]:
+def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
     if not (config.tests_enabled or config.licence_enabled):
         return []
     target = f".[{config.install_extras}]" if config.install_extras else "."
@@ -303,7 +312,10 @@ def _test_steps(config: CIConfig, *, platform: str) -> list[Step]:
                     f"{label}: install pytest",
                     ("uv", "pip", "install", "--python", python, *runner_deps),
                 ),
-                Step(f"{label}: tests", (python, "-m", "pytest", *pytest_argv(config))),
+                Step(
+                    f"{label}: tests",
+                    (python, "-m", "pytest", *pytest_argv(config, repo=repo)),
+                ),
             ]
     return steps
 
