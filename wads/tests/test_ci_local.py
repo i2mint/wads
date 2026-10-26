@@ -90,8 +90,8 @@ class FakeRunner:
 # The plan
 
 
-def test_default_plan_mirrors_the_ci_validation_job():
-    steps = plan_ci_local(".", config=_config(), platform="posix")
+def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
+    steps = plan_ci_local(tmp_path, config=_config(), platform="posix")
     assert _names(steps) == [
         "format check (ruff)",
         "lint (ruff)",
@@ -114,7 +114,7 @@ def test_default_plan_mirrors_the_ci_validation_job():
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
     assert tests[:3] == ("<<workdir>>/py3.12/bin/python", "-m", "pytest")
-    assert list(tests[3:]) == pytest_argv(_config(), repo=".")
+    assert list(tests[3:]) == pytest_argv(_config(), repo=tmp_path)
     assert by_name["build"].argv == ("uv", "build", "--out-dir", "<<workdir>>/dist")
     assert not any(step.side_effect for step in steps), "validation has no side effects"
 

@@ -47,10 +47,7 @@ from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import CIConfig
-from wads.scripts.pytest_doctest_flags import (
-    doctest_optionflags_arg,
-    repo_sets_doctest_optionflags,
-)
+from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
 # (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.
@@ -175,8 +172,7 @@ def pytest_argv(config: CIConfig, *, repo=None) -> list[str]:
     if config.coverage_enabled:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
     argv += ["--doctest-modules"]
-    repo_sets = repo is not None and repo_sets_doctest_optionflags(str(repo))
-    if flags_arg := doctest_optionflags_arg(repo_sets_flags=repo_sets):
+    if flags_arg := doctest_optionflags_arg(None if repo is None else str(repo)):
         argv += ["-o", flags_arg]
     argv += [f"--ignore={p.strip()}" for p in config.exclude_paths if p.strip()]
     # The action joins pytest_args with spaces and `eval`s the result.
