@@ -14,6 +14,7 @@ nothing; stdlib only. Used by
 
 import configparser
 import re
+import shlex
 import sys
 from pathlib import Path
 from typing import Optional
@@ -52,12 +53,24 @@ def _pyproject_sets_flags(path: Path) -> Optional[bool]:
     return None if match is None else bool(_PYPROJECT_KEY.search(match.group(1)))
 
 
-def repo_sets_doctest_optionflags(repo: str = ".") -> bool:
+def _config_file_sets_flags(path: Path) -> bool:
+    """Whether an explicitly named config file (``-c``) sets the flags."""
+    if not path.is_file():
+        return False
+    if path.suffix == ".toml":
+        return bool(_pyproject_sets_flags(path))
+    section = "tool:pytest" if path.name == "setup.cfg" else "pytest"
+    return bool(_ini_sets_flags(path, section, always=True))
+
+
+def repo_sets_doctest_optionflags(
+    repo: str = ".", *, config_file: Optional[str] = None
+) -> bool:
     """Whether the pytest config file pytest itself would pick sets ``doctest_optionflags``.
 
     Mirrors pytest's precedence (``pytest.ini``, ``pyproject.toml``, ``tox.ini``,
     ``setup.cfg``; the last three only with their pytest section), stdlib only so it
-    runs under any CI interpreter.
+    runs under any CI interpreter. ``config_file`` (``-c FILE``) replaces the search.
 
     >>> import tempfile
     >>> def check(**files):
@@ -74,6 +87,8 @@ def repo_sets_doctest_optionflags(repo: str = ".") -> bool:
     False
     """
     root = Path(repo)
+    if config_file:
+        return _config_file_sets_flags(root / config_file)
     if (path := root / "pytest.ini").is_file():
         return bool(_ini_sets_flags(path, "pytest", always=True))
     if (path := root / "pyproject.toml").is_file():
@@ -86,22 +101,66 @@ def repo_sets_doctest_optionflags(repo: str = ".") -> bool:
     return False
 
 
-def doctest_optionflags_arg(repo: Optional[str] = None) -> str:
-    """The ``-o`` value to pass, or ``''`` when ``repo``'s own pytest config wins.
+def pytest_args_say(pytest_args: str) -> dict:
+    """What a pytest argument string says about the flags: ``-o``, ``-c`` and ``--rootdir``.
 
-    ``repo=None`` means "do not look": the default flags are returned.
+    >>> pytest_args_say("-x -c other.ini --rootdir=sub")
+    {'override': False, 'config_file': 'other.ini', 'rootdir': 'sub'}
+    >>> pytest_args_say("-o doctest_optionflags=ELLIPSIS")["override"]
+    True
+    """
+    try:
+        tokens = shlex.split(pytest_args)
+    except ValueError:
+        tokens = pytest_args.split()
+    said = {"override": False, "config_file": None, "rootdir": None}
+    for index, token in enumerate(tokens):
+        name, _, inline = token.partition("=")
+        following = tokens[index + 1] if index + 1 < len(tokens) else ""
+        if name in ("-c", "--config-file"):
+            said["config_file"] = inline or following
+        elif name == "--rootdir":
+            said["rootdir"] = inline or following
+        elif name == "-o" and following.startswith(_KEY):
+            said["override"] = True
+        elif token.startswith(f"-o{_KEY}") or (
+            name == "-o" and inline.startswith(_KEY)
+        ):
+            said["override"] = True
+    return said
+
+
+def doctest_optionflags_arg(
+    repo: Optional[str] = None, *, pytest_args: str = ""
+) -> str:
+    """The ``-o`` value to pass, or ``''`` when the repo's own pytest config wins.
+
+    ``repo=None`` means "do not look": the default flags are returned. ``pytest_args``
+    (the extra arguments CI also passes) is honoured: an explicit ``-o
+    doctest_optionflags=...`` there wins, ``-c FILE`` names the config file, and
+    ``--rootdir DIR`` moves the search.
 
     >>> doctest_optionflags_arg()
     'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL'
+    >>> doctest_optionflags_arg(pytest_args="-o doctest_optionflags=ELLIPSIS")
+    ''
     """
-    if repo is not None and repo_sets_doctest_optionflags(repo):
+    said = pytest_args_say(pytest_args)
+    if said["override"]:
         return ""
+    if repo is not None:
+        root = str(Path(repo) / said["rootdir"]) if said["rootdir"] else repo
+        if repo_sets_doctest_optionflags(root, config_file=said["config_file"]):
+            return ""
     return f"{_KEY}={DOCTEST_OPTIONFLAGS}"
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
-    print(doctest_optionflags_arg(argv[0] if argv else "."))
+    pytest_args = (
+        argv[argv.index("--pytest-args") + 1] if "--pytest-args" in argv else ""
+    )
+    print(doctest_optionflags_arg(argv[0] if argv else ".", pytest_args=pytest_args))
     return 0
 
 

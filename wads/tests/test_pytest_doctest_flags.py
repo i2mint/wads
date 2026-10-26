@@ -46,3 +46,38 @@ def test_the_key_under_another_section_does_not_count(tmp_path):
         '[tool.pytest.ini_options]\ntestpaths = []\n[tool.other]\ndoctest_optionflags = "x"\n'
     )
     assert not repo_sets_doctest_optionflags(str(tmp_path))
+
+
+def test_pytest_args_are_honoured(tmp_path):
+    from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
+
+    default = f"doctest_optionflags={DOCTEST_OPTIONFLAGS}"
+    repo = str(tmp_path)
+    # an explicit -o in the extra args wins over everything
+    assert doctest_optionflags_arg(repo, pytest_args="-o doctest_optionflags=ELLIPSIS") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="-odoctest_optionflags=ELLIPSIS") == ""
+    # -c names the one config file that counts
+    (tmp_path / "other.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
+    assert doctest_optionflags_arg(repo, pytest_args="-x -c other.ini") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="--config-file=missing.ini") == default
+    # --rootdir moves the search
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "pytest.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
+    assert doctest_optionflags_arg(repo, pytest_args="--rootdir sub") == ""
+    assert doctest_optionflags_arg(repo, pytest_args="-x") == default
+
+
+def test_the_cli_takes_pytest_args(tmp_path):
+    script = REPO_ROOT / "wads" / "scripts" / "pytest_doctest_flags.py"
+    run = subprocess.run(
+        [sys.executable, "-I", "-S", str(script), str(tmp_path), "--pytest-args", "-o doctest_optionflags=X"],
+        capture_output=True, text=True, check=True,
+    )
+    assert run.stdout.strip() == ""
+
+
+def test_every_pytest_runner_action_uses_the_shared_script():
+    for name in ("run-tests-uv", "run-tests", "windows-tests"):
+        text = (REPO_ROOT / "actions" / name / "action.yml").read_text()
+        assert "pytest_doctest_flags.py" in text, name
+        assert 'doctest_optionflags="ELLIPSIS' not in text, name
