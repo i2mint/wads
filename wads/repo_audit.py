@@ -363,6 +363,79 @@ def classify_workflow(text):
     return info
 
 
+_RE_STUB_MARKER = re.compile(
+    r"contains\(github\.event\.head_commit\.message, '((?:[^']|'')*)'\)"
+)
+_TRIGGER_DEFAULTS = {
+    "mode": "auto",
+    "run_ci_marker": "[run ci]",
+    "deploy_marker": "[run deploy]",
+}
+
+
+def _decode_marker(raw):
+    """A marker as written in the stub: ``''`` is a quote, ``\\uXXXX`` a json escape."""
+    raw = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), raw)
+    return raw.replace("''", "'")
+
+
+def audit_trigger_drift(repo, rep, stub_text):
+    """Flag a stub whose on-demand pre-filter markers differ from ``[tool.wads.ci.trigger]``.
+
+    A stale pre-filter silently runs nothing for a marker pyproject declares (the
+    workflow behind it is fine): the fix is always a re-render.
+    """
+    node = read_pyproject(repo) or {}
+    for key in (
+        "tool",
+        "wads",
+        "ci",
+        "trigger",
+    ):  # a malformed table is not our finding
+        node = node.get(key, {}) if isinstance(node, dict) else {}
+    trigger = node if isinstance(node, dict) else {}
+    wanted = {
+        k: v if isinstance(v := trigger.get(k, d), str) else d
+        for k, d in _TRIGGER_DEFAULTS.items()
+    }
+    in_stub = [_decode_marker(m) for m in _RE_STUB_MARKER.findall(stub_text)]
+    in_stub_lower = [m.lower() for m in in_stub]
+    stub_on_demand = "workflow_dispatch" in stub_text and bool(in_stub)
+    rep.facts["ci_stub_trigger"] = {"mode": wanted["mode"], "stub_markers": in_stub}
+    if wanted["mode"] == "on-demand":
+        missing = [
+            wanted[k]
+            for k in ("run_ci_marker", "deploy_marker")
+            if wanted[k].lower() not in in_stub_lower
+        ]
+        if not stub_on_demand:
+            summary = (
+                "pyproject sets trigger mode = on-demand but the stub has no "
+                "pre-filter (every push spends a setup job)"
+            )
+        elif missing:
+            summary = (
+                f"stub pre-filter does not mention {missing} that pyproject declares: "
+                "a commit using it silently runs nothing"
+            )
+        else:
+            return
+        rep.add(
+            "MEDIUM",
+            "ci",
+            summary + " — re-render with `wads-migrate ci-to-stub`",
+            "wads-migrate",
+        )
+    elif stub_on_demand:
+        rep.add(
+            "MEDIUM",
+            "ci",
+            "stub is the on-demand shape but pyproject trigger mode is auto: pushes "
+            "without a marker still run nothing — re-render with `wads-migrate ci-to-stub`",
+            "wads-migrate",
+        )
+
+
 def audit_ci(repo, rep):
     wf_dir = repo / ".github" / "workflows"
     wf_files = (
@@ -417,7 +490,9 @@ def audit_ci(repo, rep):
     if info["format"] == "uv-stub":
         pins = info["reusable_pins"]
         rep.facts["ci_stub_pin"] = pins
-        # On the SSOT stub: nothing to flag. A tag pin is a sanctioned choice.
+        # On the SSOT stub: a tag pin is a sanctioned choice. What is flagged is a stub
+        # whose trigger pre-filter disagrees with pyproject (rendered before a change).
+        audit_trigger_drift(repo, rep, text)
     elif info["format"] == "uv-inline":
         if info.get("stale_pins"):
             rep.add(

@@ -592,14 +592,17 @@ def flip_to_on_demand(
         except yaml.YAMLError as exc:
             dropped = [f"YAML that does not parse ({type(exc).__name__})"]
         if dropped:
-            marker = run_ci_marker or DFLT_RUN_CI_MARKER
+            declared = CIConfig(tomllib.loads(old_py))
+            marker = run_ci_marker or declared.run_ci_marker
+            expression = stub_if_expression(marker, declared.deploy_marker)
             result.status = "refused"
             result.notes.append(
                 f"{workflow} has customizations a re-render would drop: "
                 f"{', '.join(dropped)}. Flip it by hand: in pyproject.toml set "
                 '[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '
-                "workflow use `on: [push, workflow_dispatch]` and give the job that calls "
-                f"uv-ci.yml `if: {json.dumps(stub_if_expression(marker))}`."
+                "workflow use `on: [push, workflow_dispatch]` (a `level` input of "
+                "`config`, `validate`, `deploy` is optional) and give the job that calls "
+                f"uv-ci.yml `if: {json.dumps(expression)}`."
             )
             return result
 

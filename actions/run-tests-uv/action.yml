@@ -79,7 +79,7 @@ runs:
         CMD="$CMD --doctest-modules"
         # ...with wads' default flags only when the repo's own pytest config does
         # not set doctest_optionflags (the script is their single source).
-        DOCTEST_ARG=$("$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/pytest_doctest_flags.py" .)
+        DOCTEST_ARG=$("$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/pytest_doctest_flags.py" . --pytest-args "${{ inputs.pytest-args }}")
         DOCTEST_ARG=${DOCTEST_ARG%$'\r'}
         if [ -n "$DOCTEST_ARG" ]; then
           CMD="$CMD -o '$DOCTEST_ARG'"

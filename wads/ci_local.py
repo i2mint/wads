@@ -172,7 +172,10 @@ def pytest_argv(config: CIConfig, *, repo=None) -> list[str]:
     if config.coverage_enabled:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
     argv += ["--doctest-modules"]
-    if flags_arg := doctest_optionflags_arg(None if repo is None else str(repo)):
+    extra = " ".join(config.pytest_args)
+    if flags_arg := doctest_optionflags_arg(
+        None if repo is None else str(repo), pytest_args=extra
+    ):
         argv += ["-o", flags_arg]
     argv += [f"--ignore={p.strip()}" for p in config.exclude_paths if p.strip()]
     # The action joins pytest_args with spaces and `eval`s the result.

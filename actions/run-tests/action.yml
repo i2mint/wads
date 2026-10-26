@@ -94,8 +94,11 @@ runs:
           echo "Running: pytest $pytest_args ${{ inputs.root-dir }}"
           pytest $pytest_args "${{ inputs.root-dir }}"
         else
-          echo "Running: pytest $pytest_args --doctest-modules ${{ inputs.root-dir }}"
+          # wads' default doctest flags, unless the repo's own pytest config sets them
+          DOCTEST_ARG=$(python -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/pytest_doctest_flags.py" . --pytest-args "$pytest_args")
+          DOCTEST_ARG=${DOCTEST_ARG%$'\r'}
+          echo "Running: pytest $pytest_args --doctest-modules ${DOCTEST_ARG:+-o "$DOCTEST_ARG"} ${{ inputs.root-dir }}"
           pytest $pytest_args --doctest-modules \
-            -o doctest_optionflags="ELLIPSIS IGNORE_EXCEPTION_DETAIL" \
+            ${DOCTEST_ARG:+-o "$DOCTEST_ARG"} \
             "${{ inputs.root-dir }}"
         fi

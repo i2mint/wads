@@ -62,8 +62,11 @@ runs:
         Write-Host "Running: pytest $pytest_args --doctest-modules ${{ inputs.root-dir }}"
         
         # Run tests and capture result
-        python -m pytest $pytest_args.Split() --doctest-modules `
-          -o doctest_optionflags="ELLIPSIS IGNORE_EXCEPTION_DETAIL" `
+        # wads' default doctest flags, unless the repo's own pytest config sets them
+        $doctest_arg = (python -I -S "$env:GITHUB_ACTION_PATH/../../wads/scripts/pytest_doctest_flags.py" . --pytest-args "$pytest_args").Trim()
+        $doctest_flags = @()
+        if ($doctest_arg -ne "") { $doctest_flags = @("-o", $doctest_arg) }
+        python -m pytest $pytest_args.Split() --doctest-modules @doctest_flags `
           "${{ inputs.root-dir }}"
         
         $test_result = $LASTEXITCODE
