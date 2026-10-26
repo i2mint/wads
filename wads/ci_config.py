@@ -575,7 +575,8 @@ class CIConfig:
                 "[tool.wads.ci.trigger].run_ci_marker and deploy_marker must differ, "
                 "and neither may contain the other (matching is case-insensitive "
                 "substring, so the overlap would deploy on the wrong marker): "
-                f"got {self.run_ci_marker!r} and {marker!r}"
+                f"got {self.run_ci_marker!r} and {marker!r} (set deploy_marker "
+                "explicitly if the clash is with the default)"
             )
         return marker
 
