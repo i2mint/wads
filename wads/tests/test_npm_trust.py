@@ -16,6 +16,8 @@ from wads.npm_trust import (
     apply_trust,
     discover,
     github_slug,
+    has_trust,
+    publish_calls,
     run_npm_trust,
     render_rows,
     survey,
@@ -158,7 +160,11 @@ class FakeNpm:
             )
         if argv[:3] == ["npm", "trust", "list"]:
             listed = argv[3] in self.trusted or argv[3] in self.attached
-            return done(out=f"github {SLUG} release.yml\n" if listed else "")
+            return done(
+                out=f"github {SLUG} release.yml\n"
+                if listed
+                else "github other/x other.yml\n"
+            )
         if argv[:3] == ["npm", "trust", "github"]:
             if argv[3] in self.failing:
                 return done(1, err="npm error EOTP")
@@ -270,3 +276,100 @@ def test_apply_exits_nonzero_when_an_attach_fails(tmp_path):
             out=lambda _: None,
         )
     assert exc.value.code == 1
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        "npm publish --dry-run",
+        "# npm publish",
+        "echo 'npm publish'",
+        "npm run publish:docs",
+        "pnpm add publish-utils",
+        "npm test",
+    ],
+)
+def test_things_that_are_not_a_publish_are_not_found(tmp_path, script):
+    _write(
+        tmp_path / "package.json", {"name": "p", "scripts": {"publish:docs": "typedoc"}}
+    )
+    _workflow(tmp_path, "ci.yml", {"run": script})
+    assert discover(tmp_path, repo=SLUG) == []
+
+
+def test_filter_and_cd_scope_a_publish_to_what_it_covers(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n")
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": f"@x/{name}"})
+    _workflow(tmp_path, "one.yml", {"run": "pnpm --filter @x/a publish"})
+    _workflow(tmp_path, "two.yml", {"run": "cd packages/b && npm publish"})
+    _workflow(tmp_path, "root.yml", {"run": "npm publish"})  # private root: nothing
+    assert _names(tmp_path) == [("@x/a", "one.yml", ""), ("@x/b", "two.yml", "")]
+
+
+def test_a_wads_caller_without_package_dir_publishes_the_default_one(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root-pkg"})
+    _write(tmp_path / "js" / "package.json", {"name": "js-pkg"})
+    import yaml
+
+    _write(
+        tmp_path / ".github" / "workflows" / "npm-ci.yml",
+        yaml.safe_dump(
+            {
+                "on": "push",
+                "jobs": {
+                    "c": {"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"}
+                },
+            }
+        ),
+    )
+    assert _names(tmp_path) == [("js-pkg", "npm-ci.yml", "")]
+
+
+def test_unresolved_and_unsafe_values_are_reported_and_never_run(tmp_path):
+    _write(tmp_path / "package.json", {"name": "p"})
+    _workflow(
+        tmp_path, "a.yml", {"run": "npm publish"}, environment="${{ inputs.env }}"
+    )
+    _write(tmp_path / "b" / "package.json", {"name": "--registry=evil"})
+    _workflow(tmp_path, "b.yml", {"run": "npm publish", "working-directory": "b"})
+    rows = survey(discover(tmp_path, repo=SLUG), run=FakeNpm(on_npm={"p"}))
+    assert [r.status for r in rows] == [
+        "skipped (unresolved environment)",
+        "skipped (unsafe package name)",
+    ]
+    npm = FakeNpm(on_npm={"p"})
+    assert {o.action for o in apply_trust(rows, run=npm)} == {"skipped"}
+    assert npm.attached == []
+
+
+def test_has_trust_needs_whole_tokens_in_one_entry():
+    p = Publisher("pkg", "o/r", "release.yml", "npm")
+    assert has_trust("github  o/r  release.yml  npm", p)
+    assert not has_trust("github  o/rr  release.yml", p)
+    assert not has_trust("github  o/r  release.yml.bak  npm", p)
+    assert not has_trust("github o/r release.yml\ngithub other/x ci.yml npm", p)
+    assert has_trust(
+        json.dumps(
+            [{"repository": "o/r", "file": "release.yml", "environment": "npm"}]
+        ),
+        p,
+    )
+    assert not has_trust(json.dumps([{"repository": "o/r", "file": "other.yml"}]), p)
+
+
+def test_the_dry_run_lists_only_the_commands_apply_would_run(tmp_path):
+    _write(tmp_path / "package.json", {"name": "new"})
+    _workflow(tmp_path, "release.yml", {"run": "npm publish"})
+    lines = []
+    run_npm_trust(str(tmp_path), github_repo=SLUG, run=FakeNpm(), out=lines.append)
+    assert "first-publish-needed" in lines[0]
+    assert "Would run for 0 of 1" in "\n".join(lines)
+    assert not any("npm trust github" in line for line in lines)
+
+
+def test_publish_calls_follow_scripts_and_changesets():
+    scripts = {"release": "pnpm build && changeset publish", "ship": "npm run release"}
+    assert publish_calls("pnpm ship", scripts)[0].everything
+    assert publish_calls("npx changeset publish --dry-run") == []

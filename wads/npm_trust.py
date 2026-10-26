@@ -9,13 +9,17 @@ runs the commands:
 
 1. **Discover** (:func:`discover`): the workflows under ``.github/workflows`` that publish
    (``npm publish``, ``pnpm publish``, ``pnpm -r publish``, ``changeset publish``,
-   ``changesets/action``, a script such as ``pnpm release`` that runs one of those, or a
-   caller of a wads ``npm-ci*.yml`` reusable workflow), and the non-private packages each
-   publishes (a single package or a ``workspaces`` / ``pnpm-workspace.yaml`` monorepo),
-   with the job's ``environment``. For a reusable workflow npm checks the *caller's*
-   filename, which is the file found here.
+   ``changesets/action`` with a ``publish:`` command, a script such as ``pnpm release``
+   that runs one of those, or a caller of a wads ``npm-ci*.yml`` reusable workflow), and
+   the non-private packages each publishes (the package in the working directory, every
+   workspace member for ``-r`` / ``--workspaces`` / changesets, or the ``--filter``ed
+   ones), with the job's ``environment``. A ``--dry-run``, a commented or ``echo``ed
+   line, or ``npm run publish:docs`` is not a publish. For a reusable workflow npm checks
+   the *caller's* filename, which is the file found here.
 2. **Report** (:func:`npm_trust`, the default): one row per (package, workflow,
-   environment), saying whether the package is on npm or needs a first manual publish.
+   environment), saying whether the package is on npm or needs a first manual publish;
+   a row whose name or environment cannot be resolved (``${{ ... }}``) or is unsafe to
+   pass to npm says so and is never run.
 3. **Apply** (``apply=True``): run ``npm trust github`` for each package that is on npm,
    continue past per-package failures, and verify with ``npm trust list``.
 
@@ -28,36 +32,48 @@ Everything that touches the world (``npm``, ``git``) goes through one injectable
 
 from __future__ import annotations
 
+import fnmatch
 import json
+import posixpath
 import re
+import shlex
 import subprocess
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 import yaml
 
 WORKFLOWS_DIR = ".github/workflows"
 FORMATS = ("table", "tsv", "json")
-#: A shell line that publishes to npm (npm/pnpm/yarn ... publish, changeset publish).
-_PUBLISH_RE = re.compile(
-    r"\b(?:(?:npm|pnpm|yarn)\b[^\n;&|]*?\bpublish\b|changesets?\s+publish\b)"
-)
-#: ``pnpm release`` / ``npm run release``: a script name, resolved against package.json.
-_SCRIPT_RE = re.compile(r"\b(?:npm|pnpm|yarn)\s+(?:run\s+)?([\w:.-]+)")
-#: wads' own reusable npm workflows; a job calling one publishes its ``package-dir``.
-_WADS_REUSABLE_RE = re.compile(r"i2mint/wads/\.github/workflows/npm-ci[\w-]*\.yml")
+#: Seconds one npm/git call may take (npm may wait on an OTP or a web login).
+CALL_TIMEOUT = 60
+#: What wads' reusable npm workflows publish when the caller passes no ``package-dir``.
+WADS_REUSABLE_DEFAULT_DIR = {"npm-ci.yml": "js", "npm-ci-monorepo.yml": "."}
+_WADS_REUSABLE_RE = re.compile(r"i2mint/wads/\.github/workflows/(npm-ci[\w-]*\.yml)")
 _GITHUB_REMOTE_RE = re.compile(r"github\.com[:/]([^/\s]+)/([^/\s]+?)(?:\.git)?\s*$")
+_SPLIT_RE = re.compile(r"\s*(?:&&|\|\||;|\|)\s*")
+_NPM_NAME_RE = re.compile(r"^(@[a-z0-9~][a-z0-9._~-]*/)?[a-z0-9~][a-z0-9._~-]*$")
+_WORKFLOW_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.ya?ml$")
+_VALUE_FLAGS = {"--filter", "-F", "--dir", "-C", "--prefix", "--workspace", "-w"}
+_FILTER_FLAGS = {"--filter", "-F", "--workspace", "-w"}
+_RECURSIVE_FLAGS = {"-r", "--recursive", "--workspaces", "-ws"}
+_MAX_SCRIPT_DEPTH = 5
 
 
 @dataclass(frozen=True)
 class Publisher:
-    """One package that one workflow job publishes: what ``npm trust github`` needs."""
+    """One package that one workflow job publishes: what ``npm trust github`` needs.
+
+    ``problem`` is set when the row cannot be acted on (unresolved expression, name
+    npm would read as an option); such rows are reported, never run.
+    """
 
     package: str
     repo: str
     workflow: str
     environment: str = ""
+    problem: str = ""
 
 
 @dataclass(frozen=True)
@@ -70,11 +86,18 @@ class Row:
 
     @property
     def status(self) -> str:
+        if self.publisher.problem:
+            return f"skipped ({self.publisher.problem})"
         if self.on_npm is None:
             return "unknown"
         if not self.on_npm:
             return "first-publish-needed"
         return "trusted" if self.trusted else "on-npm"
+
+    @property
+    def actionable(self) -> bool:
+        """Whether ``--apply`` would run ``npm trust github`` for this row."""
+        return not self.publisher.problem and self.on_npm is True and not self.trusted
 
 
 @dataclass
@@ -91,17 +114,117 @@ Run = Callable[[Sequence[str]], "subprocess.CompletedProcess"]
 
 
 def subprocess_run(argv: Sequence[str]) -> "subprocess.CompletedProcess":
-    """The default ``run``: a captured subprocess that reports a missing tool as rc 127."""
+    """The default ``run``: captured, no stdin, time-limited; a missing tool is rc 127."""
     try:
-        return subprocess.run(list(argv), capture_output=True, text=True)
+        return subprocess.run(
+            list(argv),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=CALL_TIMEOUT,
+        )
     except FileNotFoundError:
         return subprocess.CompletedProcess(
             argv, 127, "", f"{argv[0]!r} not found on PATH"
         )
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(
+            argv, 124, "", f"timed out after {CALL_TIMEOUT}s"
+        )
 
 
 # --------------------------------------------------------------------------------------
-# Discovery
+# Reading publish commands
+
+
+@dataclass(frozen=True)
+class PublishCall:
+    """One publish command: where it runs and which workspace members it covers."""
+
+    directory: str = "."
+    everything: bool = False  # -r / --workspaces / changesets: every workspace member
+    filters: tuple = ()  # --filter / --workspace selectors
+
+
+def _tokens(segment: str) -> list[str]:
+    try:
+        return shlex.split(segment)
+    except ValueError:
+        return segment.split()
+
+
+def _npm_call(
+    tokens: list[str], cwd: str, scripts: dict, depth: int
+) -> list[PublishCall]:
+    """``npm|pnpm|yarn [flags] <sub> ...``: a publish, or a script that may run one."""
+    flags, positional, filters, index = set(), [], [], 1
+    while index < len(tokens):
+        token = tokens[index]
+        name, _, inline = token.partition("=")
+        if token.startswith("-"):
+            flags.add(name)
+            if name in _VALUE_FLAGS and not inline and index + 1 < len(tokens):
+                index += 1
+                inline = tokens[index]
+            if name in _FILTER_FLAGS and inline:
+                filters.append(inline)
+        else:
+            positional.append(token)
+        index += 1
+    if "--dry-run" in flags or not positional:
+        return []
+    sub = positional[0]
+    if sub == "publish":
+        return [PublishCall(cwd, bool(flags & _RECURSIVE_FLAGS), tuple(filters))]
+    script = (
+        positional[1] if sub in ("run", "run-script") and len(positional) > 1 else sub
+    )
+    if depth < _MAX_SCRIPT_DEPTH and isinstance(scripts.get(script), str):
+        return publish_calls(scripts[script], scripts, directory=cwd, _depth=depth + 1)
+    return []
+
+
+def publish_calls(
+    text: str, scripts: Optional[dict] = None, *, directory: str = ".", _depth: int = 0
+) -> list[PublishCall]:
+    """The publish commands in a shell script text, following ``cd`` and package scripts.
+
+    >>> publish_calls("pnpm -r publish --access public")
+    [PublishCall(directory='.', everything=True, filters=())]
+    >>> publish_calls("cd packages/a && npm publish")[0].directory
+    'packages/a'
+    >>> publish_calls("npm publish --dry-run\\n# npm publish\\necho npm publish")
+    []
+    >>> publish_calls("pnpm release", {"release": "changeset publish"})[0].everything
+    True
+    """
+    scripts = scripts or {}
+    calls, cwd = [], directory
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        for segment in _SPLIT_RE.split(line):
+            tokens = _tokens(segment)
+            while tokens and re.fullmatch(r"[A-Za-z_]\w*=\S*", tokens[0]):
+                tokens = tokens[1:]  # leading VAR=value assignments
+            if tokens and tokens[0] in ("npx", "pnpx", "bunx"):
+                tokens = tokens[1:]
+            if not tokens:
+                continue
+            command = tokens[0]
+            if command == "cd" and len(tokens) > 1:
+                cwd = posixpath.normpath(posixpath.join(cwd, tokens[1]))
+            elif command in ("changeset", "changesets") and tokens[1:2] == ["publish"]:
+                if "--dry-run" not in tokens:
+                    calls.append(PublishCall(cwd, everything=True))
+            elif command in ("npm", "pnpm", "yarn"):
+                calls += _npm_call(tokens, cwd, scripts, _depth)
+    return calls
+
+
+# --------------------------------------------------------------------------------------
+# Packages
 
 
 def _load_json(path: Path) -> dict:
@@ -128,48 +251,53 @@ def workspace_globs(root: Path) -> list[str]:
     return patterns
 
 
-def publishable_packages(root: Path) -> list[str]:
-    """Names of the non-private packages at ``root``: itself and its workspace members.
+def workspace_manifests(root: Path) -> list[dict]:
+    """``package.json`` contents of ``root`` itself and its workspace members."""
+    patterns = workspace_globs(root)
+    skipped = {d for p in patterns if p.startswith("!") for d in root.glob(p[1:])}
+    directories = [root]
+    for pattern in (p for p in patterns if not p.startswith("!")):
+        directories += sorted(
+            d for d in root.glob(pattern) if d.is_dir() and d not in skipped
+        )
+    return [
+        _load_json(d / "package.json")
+        for d in directories
+        if "node_modules" not in d.parts
+    ]
+
+
+def packages_of(root: Path, call: PublishCall) -> list[str]:
+    """Names of the non-private packages ``call`` publishes from ``root``.
 
     >>> import tempfile
     >>> with tempfile.TemporaryDirectory() as d:
     ...     _ = Path(d, "package.json").write_text('{"name": "solo"}')
-    ...     publishable_packages(Path(d))
+    ...     packages_of(Path(d), PublishCall())
     ['solo']
     """
-    candidates = [root]
-    include = [p for p in workspace_globs(root) if not p.startswith("!")]
-    exclude = [p[1:] for p in workspace_globs(root) if p.startswith("!")]
-    skipped = {d for pattern in exclude for d in root.glob(pattern)}
-    for pattern in include:
-        candidates += sorted(
-            d for d in root.glob(pattern) if d.is_dir() and d not in skipped
-        )
-    names, seen = [], set()
-    for directory in candidates:
-        if "node_modules" in directory.parts:
-            continue
-        manifest = _load_json(directory / "package.json")
+    manifests = workspace_manifests(root)
+    if call.filters:
+        patterns = [f.removeprefix("...").removesuffix("...") for f in call.filters]
+        chosen = [
+            m
+            for m in manifests
+            if any(fnmatch.fnmatch(str(m.get("name")), p) for p in patterns)
+        ]
+    elif call.everything:
+        chosen = manifests
+    else:
+        chosen = manifests[:1]
+    names = []
+    for manifest in chosen:
         name = manifest.get("name")
-        if name and not manifest.get("private") and name not in seen:
-            seen.add(name)
+        if name and not manifest.get("private") and name not in names:
             names.append(name)
     return names
 
 
-def _run_texts(job: dict, scripts: dict) -> Iterable[str]:
-    """The shell text a job runs, with ``pnpm <script>`` calls expanded via ``scripts``."""
-    texts = [str(step["run"]) for step in job.get("steps") or [] if step.get("run")]
-    for step in job.get("steps") or []:
-        if str(step.get("uses", "")).startswith("changesets/action"):
-            texts.append(
-                f"changesets publish {(step.get('with') or {}).get('publish', '')}"
-            )
-    for text in list(texts):
-        for name in _SCRIPT_RE.findall(text):
-            if isinstance(scripts.get(name), str):
-                texts.append(scripts[name])
-    return texts
+# --------------------------------------------------------------------------------------
+# Discovery
 
 
 def _environment(job: dict) -> str:
@@ -179,35 +307,64 @@ def _environment(job: dict) -> str:
     return str(environment) if environment else ""
 
 
-def _job_directory(job: dict) -> str:
-    """The directory a job publishes from: wads' ``package-dir``, or a ``working-directory``."""
-    inputs = job.get("with") or {}
-    if inputs.get("package-dir"):
-        return str(inputs["package-dir"])
+def job_calls(job: dict, scripts: dict) -> list[PublishCall]:
+    """The publish calls of a workflow job: its ``run`` steps, changesets, a wads caller."""
+    match = _WADS_REUSABLE_RE.search(str(job.get("uses", "")))
+    if match:
+        workflow = match.group(1)
+        inputs = job.get("with") or {}
+        directory = str(
+            inputs.get("package-dir") or WADS_REUSABLE_DEFAULT_DIR.get(workflow, ".")
+        )
+        return [PublishCall(directory, everything="monorepo" in workflow)]
     defaults = (job.get("defaults") or {}).get("run") or {}
-    directories = [defaults.get("working-directory")] + [
-        step.get("working-directory")
-        for step in job.get("steps") or []
-        if step.get("run") and _PUBLISH_RE.search(str(step["run"]))
-    ]
-    return next((str(d) for d in directories if d), ".")
+    calls = []
+    for step in job.get("steps") or []:
+        directory = str(
+            step.get("working-directory") or defaults.get("working-directory") or "."
+        )
+        if step.get("run"):
+            calls += publish_calls(str(step["run"]), scripts, directory=directory)
+        elif str(step.get("uses", "")).startswith("changesets/action"):
+            command = (step.get("with") or {}).get("publish")
+            if command:
+                calls += publish_calls(str(command), scripts, directory=directory)
+    return calls
 
 
-def job_publishes(job: dict, scripts: dict) -> bool:
-    """Whether a workflow job publishes to npm (directly, via a script, or a wads caller)."""
-    if _WADS_REUSABLE_RE.search(str(job.get("uses", ""))):
-        return True
-    return any(_PUBLISH_RE.search(text) for text in _run_texts(job, scripts))
+def check_publisher(publisher: Publisher) -> Publisher:
+    """``publisher`` with ``problem`` set if it must not be passed to ``npm trust``."""
+    fields = {
+        "package": (publisher.package, _NPM_NAME_RE),
+        "workflow": (publisher.workflow, _WORKFLOW_RE),
+    }
+    for label, (value, pattern) in fields.items():
+        if "${{" in value:
+            problem = f"unresolved {label}"
+        elif not pattern.match(value):
+            problem = f"unsafe {label} name"
+        else:
+            continue
+        return Publisher(**{**asdict(publisher), "problem": problem})
+    environment = publisher.environment
+    if "${{" in environment or environment.startswith("-"):
+        problem = (
+            "unresolved environment" if "${{" in environment else "unsafe environment"
+        )
+        return Publisher(**{**asdict(publisher), "problem": problem})
+    return publisher
 
 
-def discover(repo_dir=".", *, repo: Optional[str] = None) -> list[Publisher]:
+def discover(
+    repo_dir=".", *, repo: Optional[str] = None, run: Run = subprocess_run
+) -> list[Publisher]:
     """Every (package, workflow, environment) the repo's workflows publish to npm.
 
     ``repo`` is the ``owner/name`` slug; ``None`` reads it from the ``origin`` remote
     (see :func:`github_slug`), falling back to ``'?/?'``.
     """
     root = Path(repo_dir)
-    slug = repo or github_slug(root) or "?/?"
+    slug = repo or github_slug(root, run=run) or "?/?"
     scripts = _load_json(root / "package.json").get("scripts") or {}
     found: dict[tuple, Publisher] = {}
     workflows = sorted(
@@ -219,15 +376,19 @@ def discover(repo_dir=".", *, repo: Optional[str] = None) -> list[Publisher]:
         except (OSError, yaml.YAMLError):
             continue
         for job in (doc.get("jobs") or {}).values():
-            if not isinstance(job, dict) or not job_publishes(job, scripts):
+            if not isinstance(job, dict):
                 continue
-            directory = root / _job_directory(job)
-            for name in publishable_packages(directory):
-                publisher = Publisher(name, slug, workflow.name, _environment(job))
-                found.setdefault(
-                    (publisher.package, publisher.workflow, publisher.environment),
-                    publisher,
-                )
+            for call in job_calls(job, scripts):
+                if "${{" in call.directory:
+                    names = [f"<{call.directory}>"]
+                else:
+                    names = packages_of(root / call.directory, call)
+                for name in names:
+                    publisher = check_publisher(
+                        Publisher(name, slug, workflow.name, _environment(job))
+                    )
+                    key = (publisher.package, publisher.workflow, publisher.environment)
+                    found.setdefault(key, publisher)
     return list(found.values())
 
 
@@ -265,9 +426,57 @@ def trust_listing(package: str, *, run: Run = subprocess_run) -> Optional[str]:
     return result.stdout if result.returncode == 0 else None
 
 
+_TOKEN_SPLIT = re.compile(r"""[\s,"'\[\]{}:=()]+""")
+
+
+def _listing_entries(listing: str) -> list[set]:
+    """One set of exact tokens per entry of an ``npm trust list`` text (JSON or lines)."""
+
+    def strings(value) -> set:
+        if isinstance(value, dict):
+            return set().union(*map(strings, value.values())) if value else set()
+        if isinstance(value, list):
+            return set().union(*map(strings, value)) if value else set()
+        return {value} if isinstance(value, str) else set()
+
+    try:
+        data = json.loads(listing)
+    except ValueError:
+        return [
+            set(_TOKEN_SPLIT.split(line))
+            for line in listing.splitlines()
+            if line.strip()
+        ]
+    entries = (
+        data
+        if isinstance(data, list)
+        else next((v for v in data.values() if isinstance(v, list)), [data])
+        if isinstance(data, dict)
+        else [data]
+    )
+    return [strings(entry) for entry in entries]
+
+
 def has_trust(listing: Optional[str], publisher: Publisher) -> bool:
-    """Whether an ``npm trust list`` text already names this repo and workflow file."""
-    return bool(listing) and publisher.repo in listing and publisher.workflow in listing
+    """Whether an ``npm trust list`` text has an entry naming exactly this repo and workflow.
+
+    Whole tokens only, so ``o/rr`` or ``release.yml.bak`` never stand in for ``o/r`` or
+    ``release.yml``.
+
+    >>> p = Publisher("pkg", "o/r", "release.yml")
+    >>> has_trust("github  o/r  release.yml", p)
+    True
+    >>> has_trust("github  o/rr  release.yml.bak", p)
+    False
+    """
+    if not listing:
+        return False
+    return any(
+        publisher.repo in entry
+        and publisher.workflow in entry
+        and (not publisher.environment or publisher.environment in entry)
+        for entry in _listing_entries(listing)
+    )
 
 
 def survey(
@@ -276,17 +485,17 @@ def survey(
     run: Run = subprocess_run,
     check_npm: bool = True,
 ) -> list[Row]:
-    """:class:`Row` per publisher, asking npm (once per package) unless ``check_npm=False``."""
+    """:class:`Row` per publisher, asking npm once per package unless ``check_npm=False``."""
     if not check_npm:
         return [Row(p) for p in publishers]
-    on_npm = {p.package: is_on_npm(p.package, run=run) for p in publishers}
+    askable = {p.package for p in publishers if not p.problem}
+    on_npm = {name: is_on_npm(name, run=run) for name in askable}
+    listings = {name: trust_listing(name, run=run) for name in askable if on_npm[name]}
     return [
         Row(
             p,
-            on_npm[p.package],
-            has_trust(trust_listing(p.package, run=run), p)
-            if on_npm[p.package]
-            else None,
+            on_npm.get(p.package),
+            has_trust(listings.get(p.package), p) if on_npm.get(p.package) else None,
         )
         for p in publishers
     ]
@@ -316,14 +525,16 @@ def trust_command(publisher: Publisher) -> list[str]:
 def apply_trust(rows: Sequence[Row], *, run: Run = subprocess_run) -> list[Outcome]:
     """Attach each row's publisher; a failure on one package never stops the others.
 
-    Rows not on npm (or whose state is unknown) are skipped with the reason, rows that
-    already carry the trust are left alone, and a successful attach is verified with
-    ``npm trust list``.
+    Rows with a problem, not on npm, or of unknown state are skipped with the reason,
+    rows that already carry the trust are left alone, and a successful attach is
+    verified with ``npm trust list``.
     """
     outcomes = []
     for row in rows:
         publisher = row.publisher
-        if row.on_npm is not True:
+        if publisher.problem:
+            outcomes.append(Outcome(row, "skipped", publisher.problem))
+        elif row.on_npm is not True:
             reason = (
                 "not on npm: publish the first version by hand"
                 if row.on_npm is False
@@ -399,15 +610,20 @@ def run_npm_trust(
     """:func:`npm_trust` with injectable ``run`` (npm/git) and ``out`` (printing)."""
     if apply and dry_run:
         raise SystemExit("--apply and --dry-run contradict each other")
-    publishers = discover(repo, repo=github_repo)
+    if fmt not in FORMATS:
+        raise SystemExit(f"--fmt must be one of {FORMATS}, got {fmt!r}")
+    publishers = discover(repo, repo=github_repo, run=run)
     if not publishers:
         out(f"No npm publishing workflow found under {Path(repo) / WORKFLOWS_DIR}")
         return None
     rows = survey(publishers, run=run, check_npm=not offline)
     out(render_rows(rows, fmt))
     if not apply:
-        out("\nWould run (use --apply to run):")
-        out("\n".join("  " + " ".join(trust_command(r.publisher)) for r in rows))
+        todo = [
+            r for r in rows if r.actionable or (offline and not r.publisher.problem)
+        ]
+        out(f"\nWould run for {len(todo)} of {len(rows)} (use --apply to run):")
+        out("\n".join("  " + " ".join(trust_command(r.publisher)) for r in todo))
         return None
     problems = preflight(run=run)
     if problems:
@@ -438,8 +654,9 @@ def npm_trust(
     """Find the npm packages ``repo`` publishes and attach Trusted Publishers (dry run by default).
 
     Prints one row per (package, workflow, environment) with whether the package is on npm
-    or needs a first manual publish, and the ``npm trust github`` call for each. Nothing
-    changes unless ``--apply``: then each package that is on npm gets its Trusted
+    or needs a first manual publish, and the ``npm trust github`` call for each package
+    ``--apply`` would act on. Nothing changes unless ``--apply`` (``--dry-run`` is the
+    explicit spelling of the default): then each package that is on npm gets its Trusted
     Publisher (needs npm >= 11.15 and an owner login with 2FA), failures are reported per
     package, and every attach is verified with ``npm trust list``. ``--offline`` skips the
     npm lookups; ``--github-repo owner/name`` overrides the origin remote.
