@@ -1,5 +1,6 @@
 """Actions run their scripts from their own checkout, never from a PyPI wheel (#156)."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[2]
 ACTIONS = ("read-ci-config", "set-env-vars", "build-dist")
 # The actions pin Python 3.11 (tomllib); on older interpreters tomli lives in site-packages.
 _NO_SITE = ["-S"] if sys.version_info >= (3, 11) else []
+# Windows needs SYSTEMROOT to even start Python; nothing else leaks in.
+_BASE_ENV = {k: os.environ[k] for k in ("SYSTEMROOT",) if k in os.environ}
 PYPROJECT = (
     '[project]\nname = "demo"\nversion = "0.0.1"\n'
     '[project.optional-dependencies]\ndev = ["pytest", "httpx>=0.27"]\n'
@@ -37,7 +40,7 @@ def test_script_runs_isolated_without_wads_package(script, env, tmp_path):
     result = subprocess.run(
         [sys.executable, "-I", *_NO_SITE, str(ROOT / "wads" / "scripts" / script), "."],
         cwd=tmp_path,
-        env={**env, "PATH": ""},
+        env={**_BASE_ENV, **env, "PATH": ""},
         capture_output=True,
         text=True,
     )
@@ -51,7 +54,7 @@ def test_read_ci_config_emits_outputs_and_test_extra_warning(tmp_path):
     result = subprocess.run(
         [sys.executable, "-I", str(ROOT / "wads" / "scripts" / "read_ci_config.py"), "."],
         cwd=tmp_path,
-        env={"GITHUB_OUTPUT": str(out), "PATH": ""},
+        env={**_BASE_ENV, "GITHUB_OUTPUT": str(out), "PATH": ""},
         capture_output=True,
         text=True,
     )
