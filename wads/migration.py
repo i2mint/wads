@@ -1049,15 +1049,13 @@ def migrate_ci_to_stub(
         render_stub_inputs,
         render_stub_trigger,
         stub_inputs_of,
-        trigger_for_workflow,
+        trigger_settings_for_workflow,
     )
 
-    declared_mode, declared_marker = trigger_for_workflow(old_ci)
-    stub = render_stub_trigger(
-        stub,
-        mode=trigger_mode or declared_mode,
-        run_ci_marker=run_ci_marker or declared_marker,
-    )
+    declared = trigger_settings_for_workflow(old_ci)
+    declared["mode"] = trigger_mode or declared["mode"]
+    declared["run_ci_marker"] = run_ci_marker or declared["run_ci_marker"]
+    stub = render_stub_trigger(stub, **declared)
     # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
     return render_stub_inputs(stub, stub_inputs_of(old_ci))
 

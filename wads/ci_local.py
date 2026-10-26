@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
-from wads.ci_config import CIConfig
+from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
@@ -769,14 +769,29 @@ def render_plan(steps: Sequence[Step]) -> str:
     return "\n".join(lines)
 
 
-def ci_local(repo: str = ".", *, publish: bool = False, dry_run: bool = False):
+def ci_local(
+    repo: str = ".",
+    *,
+    publish: bool = False,
+    dry_run: bool = False,
+    level: Optional[str] = None,
+):
     """Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.
 
     Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the
     publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
     refusing on a dirty tree, off the default branch, or without PyPI credentials. With
-    --dry-run, print the plan and run nothing.
+    --dry-run, print the plan and run nothing. ``--level validate|deploy`` names the same
+    choice as CI's on-demand ladder (``deploy`` is ``--publish``).
     """
+    if level is not None:
+        if level not in TRIGGER_LEVELS:
+            raise SystemExit(f"--level must be one of {TRIGGER_LEVELS}, got {level!r}")
+        if publish and level != "deploy":
+            raise SystemExit(
+                "--publish is --level deploy; it contradicts --level validate"
+            )
+        publish = level == "deploy"
     if dry_run:
         print(render_plan(plan_ci_local(repo, publish=publish)))
         return None
