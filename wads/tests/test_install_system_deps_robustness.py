@@ -29,6 +29,16 @@ def test_timeout_kills_grandchildren(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX")
+def test_timeout_kills_grandchildren_that_ignore_sigterm(tmp_path):
+    marker = tmp_path / "survivor"
+    cmd = f"(trap '' TERM; sleep 2; touch {marker}) & sleep 30"
+    with pytest.raises(subprocess.TimeoutExpired):
+        _run_shell(cmd, timeout=0.5, kill_grace=0.3)
+    time.sleep(2.5)
+    assert not marker.exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX")
 def test_interrupt_kills_the_group(tmp_path, monkeypatch):
     marker = tmp_path / "survivor"
 

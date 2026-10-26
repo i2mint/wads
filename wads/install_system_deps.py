@@ -27,6 +27,7 @@ sets the fallback. Worst case for a command that always fails is
 """
 
 import sys
+import math
 import os
 import re
 import signal
@@ -152,29 +153,44 @@ def with_apt_lock_timeout(cmd: str, seconds: Optional[float]) -> str:
     if not seconds or "dpkg::lock::timeout" in cmd.lower():
         return cmd
     return _APT_CALL_RE.sub(
-        lambda m: f"{m['head']}{m['apt']} -o DPkg::Lock::Timeout={int(seconds)}", cmd
+        lambda m: f"{m['head']}{m['apt']} -o DPkg::Lock::Timeout={math.ceil(seconds)}",
+        cmd,
     )
+
+
+def _group_alive(pgid: int) -> bool:
+    try:
+        os.killpg(pgid, 0)
+    except (ProcessLookupError, PermissionError):
+        # macOS reports EPERM for a group that holds only zombies; for root-owned
+        # members we could not signal them anyway
+        return False
+    return True
 
 
 def _kill_group(proc: subprocess.Popen, *, grace: float) -> None:
     """Stop ``proc`` and, on POSIX, everything in its session.
 
-    SIGTERM first (``sudo`` relays it to a root-owned child it cannot be SIGKILLed
-    through), SIGKILL after ``grace`` seconds.
+    SIGTERM first (``sudo`` relays it to a root-owned child that cannot be SIGKILLed
+    through), then SIGKILL for whatever is still in the group after ``grace`` seconds.
+    The shell exiting early proves nothing about its descendants, so the wait is on the
+    group, not on ``proc``.
     """
     if os.name != "posix":
         proc.kill()
     else:
-        for sig, wait in ((signal.SIGTERM, grace), (signal.SIGKILL, None)):
-            try:
-                os.killpg(proc.pid, sig)
-            except ProcessLookupError:
-                break
-            try:
-                proc.wait(timeout=wait)
-                break
-            except subprocess.TimeoutExpired:
-                continue
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            pass
+        deadline = time.monotonic() + grace
+        while _group_alive(proc.pid) and time.monotonic() < deadline:
+            proc.poll()  # reap the shell so it does not linger as a zombie in the group
+            time.sleep(0.05)
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
     proc.wait()
 
 
