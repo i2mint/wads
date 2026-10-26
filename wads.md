@@ -1,4 +1,4 @@
-> built 2026-10-26 10:05 UTC from 7187cc1 (master) · wads 0.2.48. Details: build_info.json
+> built 2026-10-26 10:27 UTC from aa634f0 (master) · wads 0.2.49. Details: build_info.json
 
 # index.html.md
 
@@ -357,6 +357,18 @@ wads ci-local --publish   # instead of the plain build: format, bump version (is
 `--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages.
 
 To go back, set `mode = "auto"` and run `wads-migrate ci-to-stub`. Workflow files other than `ci.yml` (cron jobs, Pages, npm) are not governed by the trigger; `ci-on-demand` lists any that still run unasked.
+
+## npm trusted publishing: `wads npm-trust`
+
+npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the repo and the *caller* workflow file. `wads npm-trust` finds them for you:
+
+```bash
+wads npm-trust                  # dry run: one row per (package, repo, workflow, environment) + the commands
+wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups
+wads npm-trust --apply          # run `npm trust github ...` for packages already on npm, then verify
+```
+
+It discovers publishing workflows (`npm publish`, `pnpm -r publish`, `changeset publish` / `changesets/action`, `pnpm release`-style scripts, callers of wads `npm-ci*.yml`) and the non-private packages each publishes (single package or `workspaces` / `pnpm-workspace.yaml`), with the job’s `environment`. Status is `first-publish-needed` (publish v1 by hand first), `on-npm`, or `trusted`. `--apply` needs npm >= 11.15 and an owner login with 2FA; it continues past per-package failures and exits non-zero if one failed.
 
 ## CI Configuration Reference
 
@@ -2925,6 +2937,7 @@ wads --help
 | [`licensing`](_autosummary/wads.licensing.html.md#module-wads.licensing)                     | Licensing                                                                                                                        |
 | [`migration`](_autosummary/wads.migration.html.md#module-wads.migration)                     | Migration tools for converting old setuptools/CI configurations to modern formats.                                               |
 | [`npm_config`](_autosummary/wads.npm_config.html.md#module-wads.npm_config)                   | Read NPM CI configuration from a `package.json` `wads.ci` block.                                                                 |
+| [`npm_trust`](_autosummary/wads.npm_trust.html.md#module-wads.npm_trust)                     | `wads npm-trust`: find a repo's npm publishers and attach Trusted Publishers.                                                    |
 | [`pack`](_autosummary/wads.pack.html.md#module-wads.pack)                               | Utils to package and publish.                                                                                                    |
 | [`populate`](_autosummary/wads.populate.html.md#module-wads.populate)                       | Populate a package directory with useful packaging files.                                                                        |
 | [`profiles`](_autosummary/wads.profiles.html.md#module-wads.profiles)                       | Declarative generation *profiles* and *overlays* built on the engine.                                                            |
@@ -4702,6 +4715,299 @@ Package managers the reusable npm CI workflow knows how to drive.
 
 `wads.ci.trigger.mode` values the reusable workflow understands. Mirrors
 `wads.ci_config.TRIGGER_MODES` (the Python/pyproject.toml side).
+
+
+# _autosummary/wads.npm_trust.html.md
+
+# wads.npm_trust
+
+`wads npm-trust`: find a repo’s npm publishers and attach Trusted Publishers.
+
+npm trusted publishing (OIDC, see the `npm-publishing` skill) needs, per package,
+one `npm trust github <pkg> --file <caller workflow> --repo <owner>/<repo> [--env E]
+--allow-publish -y` (npm >= 11.15, an owner login with 2FA) and the package must already
+exist on npm. Doing that by hand across a fleet means finding, for every package, the
+workflow that publishes it. This module does the finding, reports it, and optionally
+runs the commands:
+
+1. **Discover** ([`discover()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.discover)): the workflows under `.github/workflows` that publish
+   (`npm publish`, `pnpm publish`, `pnpm -r publish`, `changeset publish`,
+   `changesets/action` with a `publish:` command, a script such as `pnpm release`
+   that runs one of those, or a caller of a wads `npm-ci*.yml` reusable workflow), and
+   the non-private packages each publishes (the package in the working directory, every
+   workspace member for `-r` / `--workspaces` / changesets, or the `--filter``ed
+   ones), with the job's ``environment`. A `--dry-run`, a commented or `echo``ed
+   line, or ``npm run publish:docs` is not a publish. For a reusable workflow npm checks
+   the *caller’s* filename, which is the file found here.
+2. **Report** ([`npm_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust), the default): one row per (package, workflow,
+   environment), saying whether the package is on npm or needs a first manual publish;
+   a row whose name or environment cannot be resolved (`${{ ... }}`) or is unsafe to
+   pass to npm says so and is never run.
+3. **Apply** (`apply=True`): run `npm trust github` for each package that is on npm,
+   continue past per-package failures, and verify with `npm trust list`.
+
+Everything that touches the world (`npm`, `git`) goes through one injectable
+`run` callable, so the discovery and the plan are testable without a network.
+
+```pycon
+>>> trust_command(Publisher("@x/a", "o/r", "release.yml", "npm"))
+['npm', 'trust', 'github', '@x/a', '--file', 'release.yml', '--repo', 'o/r', '--env', 'npm', '--allow-publish', '-y']
+```
+
+### Module Attributes
+
+| [`CALL_TIMEOUT`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.CALL_TIMEOUT)              | Seconds one npm/git call may take (npm may wait on an OTP or a web login).         |
+|----------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`WADS_REUSABLE_DEFAULT_DIR`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.WADS_REUSABLE_DEFAULT_DIR) | What wads' reusable npm workflows publish when the caller passes no `package-dir`. |
+
+### Functions
+
+| [`apply_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust)(rows, \*[, run])                       | Attach each row's publisher; a failure on one package never stops the others.                                             |
+|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| [`check_publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.check_publisher)(publisher)                         | `publisher` with `problem` set if it must not be passed to `npm trust`.                                                   |
+| [`discover`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.discover)([repo_dir, repo, run])                    | Every (package, workflow, environment) the repo's workflows publish to npm.                                               |
+| [`github_slug`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.github_slug)([repo_dir, run])                       | `owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.                                                 |
+| [`has_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.has_trust)(listing, publisher)                      | Whether an `npm trust list` text has an entry naming exactly this repo and workflow.                                      |
+| [`is_on_npm`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
+| [`job_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
+| [`npm_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust)([repo, apply, dry_run, ...])             | Find the npm packages `repo` publishes and attach Trusted Publishers (dry run by default).                                |
+| [`packages_of`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.packages_of)(root, call)                            | Names of the non-private packages `call` publishes from `root`.                                                           |
+| [`preflight`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.preflight)(\*[, run])                               | Problems that would make every attach fail: no npm, not logged in.                                                        |
+| [`publish_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.publish_calls)(text[, scripts, directory, \_depth]) | The publish commands in a shell script text, following `cd` and package scripts.                                          |
+| [`render_rows`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.render_rows)(rows[, fmt])                           | Rows as an aligned `table`, `tsv` (the fleet rollout's format) or `json`.                                                 |
+| `row_fields`(row)                                                                                   |                                                                                                                           |
+| [`run_npm_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.run_npm_trust)([repo, apply, dry_run, ...])         | [`npm_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust) with injectable `run` (npm/git) and `out` (printing).        |
+| [`subprocess_run`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.subprocess_run)(argv)                               | The default `run`: captured, no stdin, time-limited; a missing tool is rc 127.                                            |
+| [`survey`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.survey)(publishers, \*[, run, check_npm])           | [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row) per publisher, asking npm once per package unless `check_npm=False`. |
+| [`trust_command`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.trust_command)(publisher)                           | The `npm trust github` call that attaches this publisher.                                                                 |
+| [`trust_listing`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.trust_listing)(package, \*[, run])                  | The text of `npm trust list <package>`, or `None` when it cannot be read.                                                 |
+| [`workspace_globs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_globs)(root)                              | The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).                                          |
+| [`workspace_manifests`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_manifests)(root)                          | `package.json` contents of `root` itself and its workspace members.                                                       |
+
+### Classes
+
+| [`Outcome`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Outcome)(row, action[, detail, verified])      | What [`apply_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust) did for one row.                                |
+|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| [`PublishCall`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.PublishCall)([directory, everything, filters]) | One publish command: where it runs and which workspace members it covers.                                           |
+| [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher)(package, repo, workflow[, ...])     | One package that one workflow job publishes: what `npm trust github` needs.                                         |
+| [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row)(publisher[, on_npm, trusted])             | A [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher) plus what npm says about it (`on_npm` None = unknown). |
+
+### wads.npm_trust.CALL_TIMEOUT *= 60*
+
+Seconds one npm/git call may take (npm may wait on an OTP or a web login).
+
+### *class* wads.npm_trust.Outcome(row, action, detail='', verified=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What [`apply_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.apply_trust) did for one row.
+
+### *class* wads.npm_trust.PublishCall(directory='.', everything=False, filters=())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One publish command: where it runs and which workspace members it covers.
+
+### *class* wads.npm_trust.Publisher(package, repo, workflow, environment='', problem='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One package that one workflow job publishes: what `npm trust github` needs.
+
+`problem` is set when the row cannot be acted on (unresolved expression, name
+npm would read as an option); such rows are reported, never run.
+
+### *class* wads.npm_trust.Row(publisher, on_npm=None, trusted=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher) plus what npm says about it (`on_npm` None = unknown).
+
+#### *property* actionable *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether `--apply` would run `npm trust github` for this row.
+
+### wads.npm_trust.WADS_REUSABLE_DEFAULT_DIR *= {'npm-ci-monorepo.yml': '.', 'npm-ci.yml': 'js'}*
+
+What wads’ reusable npm workflows publish when the caller passes no `package-dir`.
+
+### wads.npm_trust.apply_trust(rows, \*, run=<function subprocess_run>)
+
+Attach each row’s publisher; a failure on one package never stops the others.
+
+Rows with a problem, not on npm, or of unknown state are skipped with the reason,
+rows that already carry the trust are left alone, and a successful attach is
+verified with `npm trust list`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Outcome`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Outcome)]
+
+### wads.npm_trust.check_publisher(publisher)
+
+`publisher` with `problem` set if it must not be passed to `npm trust`.
+
+* **Return type:**
+  [`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher)
+
+### wads.npm_trust.discover(repo_dir='.', \*, repo=None, run=<function subprocess_run>)
+
+Every (package, workflow, environment) the repo’s workflows publish to npm.
+
+`repo` is the `owner/name` slug; `None` reads it from the `origin` remote
+(see [`github_slug()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.github_slug)), falling back to `'?/?'`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Publisher)]
+
+### wads.npm_trust.github_slug(repo_dir='.', \*, run=<function subprocess_run>)
+
+`owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.
+
+```pycon
+>>> fake = lambda argv: subprocess.CompletedProcess(argv, 0, "git@github.com:i2mint/wads.git\n", "")
+>>> github_slug(".", run=fake)
+'i2mint/wads'
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.has_trust(listing, publisher)
+
+Whether an `npm trust list` text has an entry naming exactly this repo and workflow.
+
+Whole tokens only, so `o/rr` or `release.yml.bak` never stand in for `o/r` or
+`release.yml`.
+
+```pycon
+>>> p = Publisher("pkg", "o/r", "release.yml")
+>>> has_trust("github  o/r  release.yml", p)
+True
+>>> has_trust("github  o/rr  release.yml.bak", p)
+False
+```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### wads.npm_trust.is_on_npm(package, \*, run=<function subprocess_run>)
+
+Whether `package` is published (`None`: could not tell, e.g. offline).
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+
+### wads.npm_trust.job_calls(job, scripts)
+
+The publish calls of a workflow job: its `run` steps, changesets, a wads caller.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`PublishCall`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.PublishCall)]
+
+### wads.npm_trust.npm_trust(repo='.', , apply=False, dry_run=False, github_repo=None, offline=False, fmt='table')
+
+Find the npm packages `repo` publishes and attach Trusted Publishers (dry run by default).
+
+Prints one row per (package, workflow, environment) with whether the package is on npm
+or needs a first manual publish, and the `npm trust github` call for each package
+`--apply` would act on. Nothing changes unless `--apply` (`--dry-run` is the
+explicit spelling of the default): then each package that is on npm gets its Trusted
+Publisher (needs npm >= 11.15 and an owner login with 2FA), failures are reported per
+package, and every attach is verified with `npm trust list`. `--offline` skips the
+npm lookups; `--github-repo owner/name` overrides the origin remote.
+
+### wads.npm_trust.packages_of(root, call)
+
+Names of the non-private packages `call` publishes from `root`.
+
+```pycon
+>>> import tempfile
+>>> with tempfile.TemporaryDirectory() as d:
+...     _ = Path(d, "package.json").write_text('{"name": "solo"}')
+...     packages_of(Path(d), PublishCall())
+['solo']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.preflight(\*, run=<function subprocess_run>)
+
+Problems that would make every attach fail: no npm, not logged in.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.publish_calls(text, scripts=None, , directory='.', \_depth=0)
+
+The publish commands in a shell script text, following `cd` and package scripts.
+
+```pycon
+>>> publish_calls("pnpm -r publish --access public")
+[PublishCall(directory='.', everything=True, filters=())]
+>>> publish_calls("cd packages/a && npm publish")[0].directory
+'packages/a'
+>>> publish_calls("npm publish --dry-run\n# npm publish\necho npm publish")
+[]
+>>> publish_calls("pnpm release", {"release": "changeset publish"})[0].everything
+True
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`PublishCall`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.PublishCall)]
+
+### wads.npm_trust.render_rows(rows, fmt='table')
+
+Rows as an aligned `table`, `tsv` (the fleet rollout’s format) or `json`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.npm_trust.run_npm_trust(repo='.', \*, apply=False, dry_run=False, github_repo=None, offline=False, fmt='table', run=<function subprocess_run>, out=<built-in function print>)
+
+[`npm_trust()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust) with injectable `run` (npm/git) and `out` (printing).
+
+### wads.npm_trust.subprocess_run(argv)
+
+The default `run`: captured, no stdin, time-limited; a missing tool is rc 127.
+
+* **Return type:**
+  [`CompletedProcess`](https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess)
+
+### wads.npm_trust.survey(publishers, \*, run=<function subprocess_run>, check_npm=True)
+
+[`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row) per publisher, asking npm once per package unless `check_npm=False`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row)]
+
+### wads.npm_trust.trust_command(publisher)
+
+The `npm trust github` call that attaches this publisher.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.trust_listing(package, \*, run=<function subprocess_run>)
+
+The text of `npm trust list <package>`, or `None` when it cannot be read.
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.workspace_globs(root)
+
+The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.workspace_manifests(root)
+
+`package.json` contents of `root` itself and its workspace members.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 
 # _autosummary/wads.pack.html.md
@@ -7158,18 +7464,16 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 10:05 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7187cc1ff3ea7dd3ab6399bf1b64563016bcf570"><code>7187cc1</code></a> on branch <code>master</code>, for **wads 0.2.48** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 10:27 UTC** from commit <a href="https://github.com/i2mint/wads/commit/aa634f0014a95fa4ef94154e0ad2342275ba80f8"><code>aa634f0</code></a> on branch <code>master</code>, for **wads 0.2.49** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.48) is behind the latest release on PyPI (0.2.49): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/7187cc1ff3ea7dd3ab6399bf1b64563016bcf570"><code>7187cc1ff3ea7dd3ab6399bf1b64563016bcf570</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/aa634f0014a95fa4ef94154e0ad2342275ba80f8"><code>aa634f0014a95fa4ef94154e0ad2342275ba80f8</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7180,9 +7484,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40304218338">40304218338</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40307077514">40307077514</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>7187cc1ff3ea7dd3ab6399bf1b64563016bcf570</code> (in the history of the built commit) |
+| Event commit | <code>aa634f0014a95fa4ef94154e0ad2342275ba80f8</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7207,13 +7511,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.49/">0.2.49</a>, newer than the documented version (0.2.48).
+Latest release: <a href="https://pypi.org/project/wads/0.2.49/">0.2.49</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 7187cc1ff3ea7dd3ab6399bf1b64563016bcf570
+git checkout aa634f0014a95fa4ef94154e0ad2342275ba80f8
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

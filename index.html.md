@@ -354,6 +354,18 @@ wads ci-local --publish   # instead of the plain build: format, bump version (is
 
 To go back, set `mode = "auto"` and run `wads-migrate ci-to-stub`. Workflow files other than `ci.yml` (cron jobs, Pages, npm) are not governed by the trigger; `ci-on-demand` lists any that still run unasked.
 
+## npm trusted publishing: `wads npm-trust`
+
+npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the repo and the *caller* workflow file. `wads npm-trust` finds them for you:
+
+```bash
+wads npm-trust                  # dry run: one row per (package, repo, workflow, environment) + the commands
+wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups
+wads npm-trust --apply          # run `npm trust github ...` for packages already on npm, then verify
+```
+
+It discovers publishing workflows (`npm publish`, `pnpm -r publish`, `changeset publish` / `changesets/action`, `pnpm release`-style scripts, callers of wads `npm-ci*.yml`) and the non-private packages each publishes (single package or `workspaces` / `pnpm-workspace.yaml`), with the job’s `environment`. Status is `first-publish-needed` (publish v1 by hand first), `on-npm`, or `trusted`. `--apply` needs npm >= 11.15 and an owner login with 2FA; it continues past per-package failures and exits non-zero if one failed.
+
 ## CI Configuration Reference
 
 Wads uses `pyproject.toml` as a single source of truth for CI configuration. Here’s what you can configure:

@@ -30,6 +30,7 @@ wads --help
 | [`licensing`](wads.licensing.html.md#module-wads.licensing)                     | Licensing                                                                                                                        |
 | [`migration`](wads.migration.html.md#module-wads.migration)                     | Migration tools for converting old setuptools/CI configurations to modern formats.                                               |
 | [`npm_config`](wads.npm_config.html.md#module-wads.npm_config)                   | Read NPM CI configuration from a `package.json` `wads.ci` block.                                                                 |
+| [`npm_trust`](wads.npm_trust.html.md#module-wads.npm_trust)                     | `wads npm-trust`: find a repo's npm publishers and attach Trusted Publishers.                                                    |
 | [`pack`](wads.pack.html.md#module-wads.pack)                               | Utils to package and publish.                                                                                                    |
 | [`populate`](wads.populate.html.md#module-wads.populate)                       | Populate a package directory with useful packaging files.                                                                        |
 | [`profiles`](wads.profiles.html.md#module-wads.profiles)                       | Declarative generation *profiles* and *overlays* built on the engine.                                                            |

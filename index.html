@@ -223,6 +223,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.licensing.html">wads.licensing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.migration.html">wads.migration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.npm_config.html">wads.npm_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.npm_trust.html">wads.npm_trust</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.pack.html">wads.pack</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.populate.html">wads.populate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.profiles.html">wads.profiles</a></li>
@@ -630,6 +631,16 @@ wads<span class="w"> </span>ci-local<span class="w"> </span>--publish<span class
 <p><code class="docutils literal notranslate"><span class="pre">--publish</span></code> refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (<code class="docutils literal notranslate"><span class="pre">$PYPI_PASSWORD</span></code>, then <code class="docutils literal notranslate"><span class="pre">$UV_PUBLISH_TOKEN</span></code>, then <code class="docutils literal notranslate"><span class="pre">~/.pypirc</span></code> <code class="docutils literal notranslate"><span class="pre">[pypi]</span></code> with <code class="docutils literal notranslate"><span class="pre">username</span> <span class="pre">=</span> <span class="pre">__token__</span></code>). <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> needs <a class="reference external" href="https://docs.astral.sh/uv/getting-started/installation/">uv</a> and git on <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, and does not install <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> system packages.</p>
 <p>To go back, set <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> and run <code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code>. Workflow files other than <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> (cron jobs, Pages, npm) are not governed by the trigger; <code class="docutils literal notranslate"><span class="pre">ci-on-demand</span></code> lists any that still run unasked.</p>
 </section>
+<section id="npm-trusted-publishing-wads-npm-trust">
+<h2>npm trusted publishing: <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code><a class="headerlink" href="#npm-trusted-publishing-wads-npm-trust" title="Link to this heading">¶</a></h2>
+<p>npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the repo and the <em>caller</em> workflow file. <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code> finds them for you:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads<span class="w"> </span>npm-trust<span class="w">                  </span><span class="c1"># dry run: one row per (package, repo, workflow, environment) + the commands</span>
+wads<span class="w"> </span>npm-trust<span class="w"> </span>--fmt<span class="w"> </span>tsv<span class="w">        </span><span class="c1"># the same rows as TSV (or --fmt json); --offline skips the npm lookups</span>
+wads<span class="w"> </span>npm-trust<span class="w"> </span>--apply<span class="w">          </span><span class="c1"># run `npm trust github ...` for packages already on npm, then verify</span>
+</pre></div>
+</div>
+<p>It discovers publishing workflows (<code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">publish</span></code>, <code class="docutils literal notranslate"><span class="pre">pnpm</span> <span class="pre">-r</span> <span class="pre">publish</span></code>, <code class="docutils literal notranslate"><span class="pre">changeset</span> <span class="pre">publish</span></code> / <code class="docutils literal notranslate"><span class="pre">changesets/action</span></code>, <code class="docutils literal notranslate"><span class="pre">pnpm</span> <span class="pre">release</span></code>-style scripts, callers of wads <code class="docutils literal notranslate"><span class="pre">npm-ci*.yml</span></code>) and the non-private packages each publishes (single package or <code class="docutils literal notranslate"><span class="pre">workspaces</span></code> / <code class="docutils literal notranslate"><span class="pre">pnpm-workspace.yaml</span></code>), with the job’s <code class="docutils literal notranslate"><span class="pre">environment</span></code>. Status is <code class="docutils literal notranslate"><span class="pre">first-publish-needed</span></code> (publish v1 by hand first), <code class="docutils literal notranslate"><span class="pre">on-npm</span></code>, or <code class="docutils literal notranslate"><span class="pre">trusted</span></code>. <code class="docutils literal notranslate"><span class="pre">--apply</span></code> needs npm &gt;= 11.15 and an owner login with 2FA; it continues past per-package failures and exits non-zero if one failed.</p>
+</section>
 <section id="ci-configuration-reference">
 <h2>CI Configuration Reference<a class="headerlink" href="#ci-configuration-reference" title="Link to this heading">¶</a></h2>
 <p>Wads uses <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as a single source of truth for CI configuration. Here’s what you can configure:</p>
@@ -975,7 +986,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-26 10:05 UTC from <a href="https://github.com/i2mint/wads/commit/7187cc1ff3ea7dd3ab6399bf1b64563016bcf570">7187cc1</a> (master) · wads 0.2.48 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-26 10:27 UTC from <a href="https://github.com/i2mint/wads/commit/aa634f0014a95fa4ef94154e0ad2342275ba80f8">aa634f0</a> (master) · wads 0.2.49 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1037,6 +1048,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </ul>
 </li>
 <li><a class="reference internal" href="#on-demand-ci">On-demand CI</a></li>
+<li><a class="reference internal" href="#npm-trusted-publishing-wads-npm-trust">npm trusted publishing: <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code></a></li>
 <li><a class="reference internal" href="#ci-configuration-reference">CI Configuration Reference</a><ul>
 <li><a class="reference internal" href="#install-extras">Install Extras</a></li>
 <li><a class="reference internal" href="#python-versions-and-testing">Python Versions and Testing</a></li>
@@ -1071,7 +1083,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=ba4f896f"></script>
+</div><script src="_static/documentation_options.js?v=130ffd09"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
