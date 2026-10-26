@@ -125,6 +125,13 @@ runs:
       with:
         python-version: '3.11'
 
+    # The scripts run from this action's own checkout (never a PyPI wheel of
+    # wads); the one third-party import they need is `packaging`, used to
+    # evaluate requirement markers for the test-extras warning (#59).
+    - name: Install packaging (the only third-party import)
+      shell: bash
+      run: python -m pip install --quiet packaging
+
     - name: Read CI Configuration
       id: config
       shell: bash
