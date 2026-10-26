@@ -339,7 +339,7 @@
 <span class="c1"># NOTE: `cw` is imported lazily, inside the two functions that need it, and NOT</span>
 <span class="c1"># here. `wads/__init__.py` imports `wads.populate`, which imports this module, so</span>
 <span class="c1"># anything imported at this level is imported by `import wads` -- including by</span>
-<span class="c1"># `python -m wads.scripts.read_ci_config`, which the reusable CI workflow runs</span>
+<span class="c1"># `wads/scripts/read_ci_config.py`, which the reusable CI workflow runs</span>
 <span class="c1"># against a bare checkout before any of this project's dependencies exist. A</span>
 <span class="c1"># module-level CLI import there is a bootstrap dependency nobody declared, and it</span>
 <span class="c1"># also contradicts the core dependency list's stated aim of keeping `import wads`</span>
@@ -2017,7 +2017,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=1e370d76"></script>
+</div><script src="../../_static/documentation_options.js?v=b7777910"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

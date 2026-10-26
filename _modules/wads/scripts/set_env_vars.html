@@ -301,6 +301,9 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>  <span class="c1"># also under `-m`</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">_checkout_import</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_wads_module</span>  <span class="c1"># noqa: E402</span>
+
 <span class="c1"># Reserved env vars that should not be set from secrets</span>
 <span class="n">RESERVED_VARS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"GITHUB_TOKEN"</span><span class="p">,</span>
@@ -349,7 +352,7 @@
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+        <span class="n">CIConfig</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"ci_config"</span><span class="p">)</span><span class="o">.</span><span class="n">CIConfig</span>
 
         <span class="c1"># Read CI configuration</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
@@ -513,7 +516,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=1e370d76"></script>
+</div><script src="../../../_static/documentation_options.js?v=b7777910"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
