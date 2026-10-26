@@ -16,7 +16,9 @@ from wads.npm_trust import (
     apply_trust,
     discover,
     github_slug,
+    glob_dirs,
     has_trust,
+    shared_packages,
     publish_calls,
     run_npm_trust,
     render_rows,
@@ -400,3 +402,96 @@ def test_no_github_origin_means_nothing_is_ever_run(tmp_path):
     assert "unknown GitHub repo" in publisher.problem
     row = survey([publisher], run=FakeNpm(on_npm={"p"}))[0]
     assert not row.actionable
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        "yarn workspaces foreach -A --no-private npm publish",
+        "pnpm -r exec npm publish",
+    ],
+)
+def test_foreach_and_exec_wrappers_publish_every_member(tmp_path, script):
+    _write(
+        tmp_path / "package.json",
+        {"name": "root", "private": True, "workspaces": ["packages/*"]},
+    )
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(tmp_path, "pub.yml", {"run": script})
+    assert [n for n, *_ in _names(tmp_path)] == ["a", "b"]
+
+
+def test_a_plain_yarn_npm_publish_is_the_current_package(tmp_path):
+    _write(tmp_path / "package.json", {"name": "solo"})
+    _workflow(tmp_path, "pub.yml", {"run": "yarn npm publish"})
+    assert _names(tmp_path) == [("solo", "pub.yml", "")]
+
+
+def test_filter_by_path_and_the_js_devtools_action(tmp_path):
+    _write(tmp_path / "package.json", {"name": "root", "private": True})
+    _write(tmp_path / "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n")
+    for name in "ab":
+        _write(tmp_path / "packages" / name / "package.json", {"name": name})
+    _workflow(tmp_path, "one.yml", {"run": "pnpm --filter ./packages/b publish"})
+    _workflow(
+        tmp_path,
+        "two.yml",
+        {
+            "uses": "JS-DevTools/npm-publish@v3",
+            "with": {"package": "packages/a/package.json"},
+        },
+    )
+    assert _names(tmp_path) == [("b", "one.yml", ""), ("a", "two.yml", "")]
+
+
+def test_workspace_globs_never_enter_node_modules(tmp_path):
+    for path in ("packages/a", "packages/a/node_modules/dep", "apps/x/y"):
+        _write(tmp_path / path / "package.json", {"name": path.replace("/", "-")})
+    found = {
+        d.relative_to(tmp_path).as_posix() for d in glob_dirs(tmp_path, "packages/**")
+    }
+    assert "packages/a" in found and not any("node_modules" in f for f in found)
+    assert {
+        d.relative_to(tmp_path).as_posix() for d in glob_dirs(tmp_path, "apps/*")
+    } == {"apps/x"}
+
+
+def test_a_wads_caller_with_publishing_off_is_flagged_and_still_listed(tmp_path):
+    import yaml
+
+    _write(
+        tmp_path / "js" / "package.json",
+        {"name": "js-pkg", "wads": {"ci": {"publish": {"enabled": False}}}},
+    )
+    _write(
+        tmp_path / ".github" / "workflows" / "npm-ci.yml",
+        yaml.safe_dump(
+            {
+                "on": "push",
+                "jobs": {
+                    "c": {"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"}
+                },
+            }
+        ),
+    )
+    (row,) = survey(discover(tmp_path, repo=SLUG), check_npm=False)
+    assert row.status == "unknown (publishing disabled)"
+    _write(
+        tmp_path / "js" / "package.json",
+        {"name": "js-pkg", "wads": {"ci": {"publish": {"enabled": True}}}},
+    )
+    (row,) = survey(discover(tmp_path, repo=SLUG), check_npm=False)
+    assert row.status == "unknown"
+
+
+def test_a_package_published_by_two_workflows_is_warned_about(tmp_path):
+    _write(tmp_path / "package.json", {"name": "dup"})
+    _workflow(tmp_path, "a.yml", {"run": "npm publish"})
+    _workflow(tmp_path, "b.yml", {"run": "npm publish"})
+    assert shared_packages(discover(tmp_path, repo=SLUG)) == {"dup": ["a.yml", "b.yml"]}
+    lines = []
+    run_npm_trust(str(tmp_path), github_repo=SLUG, offline=True, out=lines.append)
+    assert any(
+        line.startswith("warning: dup is published by a.yml, b.yml") for line in lines
+    )
