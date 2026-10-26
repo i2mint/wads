@@ -13,8 +13,8 @@ import pytest
 
 import wads.ci_local as ci_local_module
 from wads.ci_config import CIConfig
+from wads.scripts.pytest_doctest_flags import DOCTEST_OPTIONFLAGS
 from wads.ci_local import (
-    DOCTEST_OPTIONFLAGS,
     PUSHES,
     RELEASE_COMMIT_MESSAGE,
     RELEASE_TAG_MESSAGE,
@@ -90,8 +90,8 @@ class FakeRunner:
 # The plan
 
 
-def test_default_plan_mirrors_the_ci_validation_job():
-    steps = plan_ci_local(".", config=_config(), platform="posix")
+def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
+    steps = plan_ci_local(tmp_path, config=_config(), platform="posix")
     assert _names(steps) == [
         "format check (ruff)",
         "lint (ruff)",
@@ -114,7 +114,7 @@ def test_default_plan_mirrors_the_ci_validation_job():
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
     assert tests[:3] == ("<<workdir>>/py3.12/bin/python", "-m", "pytest")
-    assert list(tests[3:]) == pytest_argv(_config())
+    assert list(tests[3:]) == pytest_argv(_config(), repo=tmp_path)
     assert by_name["build"].argv == ("uv", "build", "--out-dir", "<<workdir>>/dist")
     assert not any(step.side_effect for step in steps), "validation has no side effects"
 
@@ -212,9 +212,32 @@ def test_render_plan_flags_non_blocking_and_side_effecting_steps():
 # --- drift guards: ci-local's mirrors of values the CI files hardcode -------------------
 
 
-def test_doctest_flags_match_the_run_tests_action():
+def test_run_tests_action_takes_its_doctest_flags_from_the_shared_script():
     action = (REPO_ROOT / "actions" / "run-tests-uv" / "action.yml").read_text()
-    assert f"-o doctest_optionflags='{DOCTEST_OPTIONFLAGS}'" in action
+    assert "wads/scripts/pytest_doctest_flags.py" in action
+    assert "ELLIPSIS IGNORE_EXCEPTION_DETAIL" not in action
+
+
+@pytest.mark.parametrize(
+    "name, text",
+    [
+        ("pyproject.toml", '[tool.pytest.ini_options]\ndoctest_optionflags = ["ELLIPSIS"]\n'),
+        ("pytest.ini", "[pytest]\ndoctest_optionflags = ELLIPSIS\n"),
+        ("tox.ini", "[pytest]\ndoctest_optionflags=ELLIPSIS\n"),
+        ("setup.cfg", "[tool:pytest]\ndoctest_optionflags = ELLIPSIS\n"),
+    ],
+)
+def test_repo_doctest_flags_win_over_the_ci_default(tmp_path, name, text):
+    (tmp_path / name).write_text(text)
+    argv = pytest_argv(_config(), repo=tmp_path)
+    assert "--doctest-modules" in argv
+    assert not any("doctest_optionflags" in a for a in argv)
+
+
+def test_ci_default_doctest_flags_apply_when_the_repo_sets_none(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.pytest.ini_options]\ntestpaths = []\n")
+    argv = pytest_argv(_config(), repo=tmp_path)
+    assert f"doctest_optionflags={DOCTEST_OPTIONFLAGS}" in argv
 
 
 def test_release_commit_and_tag_messages_match_the_reusable_workflow():
