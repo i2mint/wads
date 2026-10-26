@@ -46,7 +46,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`check_publisher`](#wads.npm_trust.check_publisher)(publisher)                         | `publisher` with `problem` set if it must not be passed to `npm trust`.                                                   |
 | [`discover`](#wads.npm_trust.discover)([repo_dir, repo, run])                    | Every (package, workflow, environment) the repo's workflows publish to npm.                                               |
 | [`github_slug`](#wads.npm_trust.github_slug)([repo_dir, run])                       | `owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.                                                 |
-| [`glob_dirs`](#wads.npm_trust.glob_dirs)(root, pattern)                           | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
+| [`glob_dirs`](#wads.npm_trust.glob_dirs)(root, pattern, \*[, directories])        | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
 | [`has_trust`](#wads.npm_trust.has_trust)(listing, publisher)                      | Whether an `npm trust list` text has an entry naming exactly this repo and workflow.                                      |
 | [`is_on_npm`](#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
 | [`job_calls`](#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
@@ -153,9 +153,11 @@ Every (package, workflow, environment) the repo’s workflows publish to npm.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.npm_trust.glob_dirs(root, pattern)
+### wads.npm_trust.glob_dirs(root, pattern, , directories=None)
 
 Directories under `root` matching a workspace glob, never entering `node_modules`.
+
+`directories` (from a previous walk) spares walking the tree again for each pattern.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]

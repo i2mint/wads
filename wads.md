@@ -1,4 +1,4 @@
-> built 2026-10-26 11:02 UTC from 6422c4d (master) · wads 0.2.51. Details: build_info.json
+> built 2026-10-26 14:38 UTC from 99e8a13 (master) · wads 0.2.52. Details: build_info.json
 
 # index.html.md
 
@@ -4767,7 +4767,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`check_publisher`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.check_publisher)(publisher)                         | `publisher` with `problem` set if it must not be passed to `npm trust`.                                                   |
 | [`discover`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.discover)([repo_dir, repo, run])                    | Every (package, workflow, environment) the repo's workflows publish to npm.                                               |
 | [`github_slug`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.github_slug)([repo_dir, run])                       | `owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.                                                 |
-| [`glob_dirs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.glob_dirs)(root, pattern)                           | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
+| [`glob_dirs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.glob_dirs)(root, pattern, \*[, directories])        | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
 | [`has_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.has_trust)(listing, publisher)                      | Whether an `npm trust list` text has an entry naming exactly this repo and workflow.                                      |
 | [`is_on_npm`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
 | [`job_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
@@ -4874,9 +4874,11 @@ Every (package, workflow, environment) the repo’s workflows publish to npm.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.npm_trust.glob_dirs(root, pattern)
+### wads.npm_trust.glob_dirs(root, pattern, , directories=None)
 
 Directories under `root` matching a workspace glob, never entering `node_modules`.
+
+`directories` (from a previous walk) spares walking the tree again for each pattern.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
@@ -7509,18 +7511,16 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 11:02 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6422c4d1bca1cdb3d26253a95183f0d3337abbbe"><code>6422c4d</code></a> on branch <code>master</code>, for **wads 0.2.51** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 14:38 UTC** from commit <a href="https://github.com/i2mint/wads/commit/99e8a13faa194d0a8163a3092b088c9634cb788a"><code>99e8a13</code></a> on branch <code>master</code>, for **wads 0.2.52** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.51) is behind the latest release on PyPI (0.2.52): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/6422c4d1bca1cdb3d26253a95183f0d3337abbbe"><code>6422c4d1bca1cdb3d26253a95183f0d3337abbbe</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/99e8a13faa194d0a8163a3092b088c9634cb788a"><code>99e8a13faa194d0a8163a3092b088c9634cb788a</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7531,9 +7531,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40311713195">40311713195</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40340913729">40340913729</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>6422c4d1bca1cdb3d26253a95183f0d3337abbbe</code> (in the history of the built commit) |
+| Event commit | <code>99e8a13faa194d0a8163a3092b088c9634cb788a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7558,13 +7558,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.52/">0.2.52</a>, newer than the documented version (0.2.51).
+Latest release: <a href="https://pypi.org/project/wads/0.2.52/">0.2.52</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 6422c4d1bca1cdb3d26253a95183f0d3337abbbe
+git checkout 99e8a13faa194d0a8163a3092b088c9634cb788a
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

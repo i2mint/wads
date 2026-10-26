@@ -340,11 +340,29 @@
 <span class="n">_NPM_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(@[a-z0-9~][a-z0-9._~-]*/)?[a-z0-9~][a-z0-9._~-]*$"</span><span class="p">)</span>
 <span class="n">_REPO_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"</span><span class="p">)</span>
 <span class="n">_WORKFLOW_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.ya?ml$"</span><span class="p">)</span>
+<span class="c1">#: ``yarn workspaces foreach`` flags that take a value (so it is not mistaken for the command).</span>
+<span class="n">_FOREACH_VALUE_FLAGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"--include"</span><span class="p">,</span>
+    <span class="s2">"--exclude"</span><span class="p">,</span>
+    <span class="s2">"--from"</span><span class="p">,</span>
+    <span class="s2">"--since"</span><span class="p">,</span>
+    <span class="s2">"--from-since"</span><span class="p">,</span>
+    <span class="s2">"-j"</span><span class="p">,</span>
+    <span class="s2">"--jobs"</span><span class="p">,</span>
+    <span class="s2">"--worktree"</span><span class="p">,</span>
+<span class="p">}</span>
 <span class="n">_VALUE_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"--filter"</span><span class="p">,</span> <span class="s2">"-F"</span><span class="p">,</span> <span class="s2">"--dir"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="s2">"--prefix"</span><span class="p">,</span> <span class="s2">"--workspace"</span><span class="p">,</span> <span class="s2">"-w"</span><span class="p">}</span>
 <span class="n">_FILTER_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"--filter"</span><span class="p">,</span> <span class="s2">"-F"</span><span class="p">,</span> <span class="s2">"--workspace"</span><span class="p">,</span> <span class="s2">"-w"</span><span class="p">}</span>
+<span class="c1">#: Flags that look like value flags of another manager but take no value in this one</span>
+<span class="c1">#: (pnpm's ``-w`` selects the workspace root; npm's ``-w &lt;ws&gt;`` selects a member).</span>
+<span class="n">_NO_VALUE_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"pnpm"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"-w"</span><span class="p">}}</span>
 <span class="n">_DIR_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"--dir"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="s2">"--prefix"</span><span class="p">}</span>
 <span class="n">_SHELL_KEYWORDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"if"</span><span class="p">,</span> <span class="s2">"then"</span><span class="p">,</span> <span class="s2">"else"</span><span class="p">,</span> <span class="s2">"elif"</span><span class="p">,</span> <span class="s2">"do"</span><span class="p">,</span> <span class="s2">"while"</span><span class="p">,</span> <span class="s2">"until"</span><span class="p">,</span> <span class="s2">"!"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">}</span>
 <span class="n">_RECURSIVE_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"-r"</span><span class="p">,</span> <span class="s2">"--recursive"</span><span class="p">,</span> <span class="s2">"--workspaces"</span><span class="p">,</span> <span class="s2">"-ws"</span><span class="p">}</span>
+<span class="c1">#: Prefix of a selector that subtracts its matches (pnpm ``--filter '!x'``).</span>
+<span class="n">_EXCLUDE</span> <span class="o">=</span> <span class="s2">"!"</span>
+<span class="c1">#: Selector syntax we cannot evaluate (``...[origin/main]``, ``{dir}``): never guess a set.</span>
+<span class="n">_UNRESOLVABLE_SELECTOR_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[\[\]</span><span class="si">{}</span><span class="s2">]"</span><span class="p">)</span>
 <span class="n">_MAX_SCRIPT_DEPTH</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">_MANAGERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"npm"</span><span class="p">,</span> <span class="s2">"pnpm"</span><span class="p">,</span> <span class="s2">"yarn"</span><span class="p">}</span>
 <span class="n">_PRUNED_DIRS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"node_modules"</span><span class="p">,</span> <span class="s2">".git"</span><span class="p">}</span>
@@ -466,18 +484,31 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_split_flags</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Flags, filters, ``-C`` directory and positionals (with their index) of a pm call."""</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"flags"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span> <span class="s2">"filters"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"where"</span><span class="p">:</span> <span class="n">cwd</span><span class="p">,</span> <span class="s2">"positional"</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"flags"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
+        <span class="s2">"filters"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"where"</span><span class="p">:</span> <span class="n">cwd</span><span class="p">,</span>
+        <span class="s2">"positional"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"problem"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">}</span>
     <span class="n">index</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
         <span class="n">token</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
         <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
             <span class="n">found</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_VALUE_FLAGS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">inline</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+            <span class="n">takes_value</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_VALUE_FLAGS</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NO_VALUE_FLAGS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">takes_value</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">inline</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
                 <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">inline</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_FILTER_FLAGS</span> <span class="ow">and</span> <span class="n">inline</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">takes_value</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_FILTER_FLAGS</span> <span class="ow">and</span> <span class="n">inline</span><span class="p">:</span>
                 <span class="n">found</span><span class="p">[</span><span class="s2">"filters"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inline</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">_UNRESOLVABLE_SELECTOR_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">inline</span><span class="p">):</span>
+                    <span class="n">found</span><span class="p">[</span><span class="s2">"problem"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> selector </span><span class="si">{</span><span class="n">inline</span><span class="si">!r}</span><span class="s2"> is unresolvable"</span>
+                    <span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_DIR_FLAGS</span> <span class="ow">and</span> <span class="n">inline</span><span class="p">:</span>
                 <span class="n">found</span><span class="p">[</span><span class="s2">"where"</span><span class="p">]</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">posixpath</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="n">inline</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -487,19 +518,36 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_foreach_command</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``."""</span>
+<span class="w">    </span><span class="sd">"""``(command, filters, problem)`` of ``yarn workspaces foreach [flags] CMD``.</span>
+
+<span class="sd">    A ``yarn run SCRIPT`` / ``yarn SCRIPT`` command runs in the members that define the</span>
+<span class="sd">    script, which we do not read: it is reported as a problem, never as an empty set.</span>
+<span class="sd">    """</span>
     <span class="n">rest</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">tokens</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"foreach"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
-    <span class="n">start</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">_MANAGERS</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="p">[],</span> <span class="s2">""</span>
-    <span class="k">for</span> <span class="n">at</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rest</span><span class="p">[:</span><span class="n">start</span><span class="p">]):</span>
-        <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+    <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">at</span> <span class="o">=</span> <span class="p">[],</span> <span class="s2">""</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">at</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="ow">and</span> <span class="n">rest</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">inline</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">inline</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_FOREACH_VALUE_FLAGS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">inline</span> <span class="ow">and</span> <span class="n">at</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">):</span>
+            <span class="n">at</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="n">at</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"--include"</span><span class="p">,</span> <span class="s2">"--from"</span><span class="p">):</span>
-            <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inline</span> <span class="ow">or</span> <span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="n">at</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">at</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">start</span> <span class="k">else</span> <span class="s2">""</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"--exclude"</span><span class="p">,</span> <span class="s2">"--since"</span><span class="p">,</span> <span class="s2">"--from-since"</span><span class="p">):</span>
+            <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"--exclude"</span><span class="p">:</span>
+            <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_EXCLUDE</span> <span class="o">+</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"--since"</span><span class="p">,</span> <span class="s2">"--from-since"</span><span class="p">):</span>
             <span class="n">problem</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"yarn foreach </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> selects an unresolvable set"</span>
-    <span class="k">return</span> <span class="n">rest</span><span class="p">[</span><span class="n">start</span><span class="p">:],</span> <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span>
+        <span class="n">at</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="n">at</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">command</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"exec"</span><span class="p">]:</span>  <span class="c1"># `foreach exec [--] npm publish`</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">t</span> <span class="o">!=</span> <span class="s2">"--"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">command</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_MANAGERS</span><span class="p">:</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"run"</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"yarn foreach runs script </span><span class="si">{</span><span class="n">script</span><span class="si">!r}</span><span class="s2"> in each member"</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">command</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">problem</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_wrapped_calls</span><span class="p">(</span>
@@ -523,7 +571,11 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">positional</span> <span class="ow">or</span> <span class="n">positional</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"exec"</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">inner</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">positional</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
-        <span class="n">everything</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">outer</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">_RECURSIVE_FLAGS</span><span class="p">),</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">inner</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"--"</span><span class="p">]:</span>  <span class="c1"># `pnpm -r exec -- npm publish`</span>
+            <span class="n">inner</span> <span class="o">=</span> <span class="n">inner</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">everything</span><span class="p">,</span> <span class="n">problem</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">outer</span><span class="p">[</span><span class="s2">"flags"</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">_RECURSIVE_FLAGS</span><span class="p">),</span> <span class="n">outer</span><span class="p">[</span><span class="s2">"problem"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inner</span> <span class="ow">and</span> <span class="n">problem</span><span class="p">:</span>  <span class="c1"># a command we cannot follow, but must not drop</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">PublishCall</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">outer</span><span class="p">[</span><span class="s2">"filters"</span><span class="p">]),</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">)]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">inner</span> <span class="ow">or</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="n">_MAX_SCRIPT_DEPTH</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">calls</span> <span class="o">=</span> <span class="n">publish_calls</span><span class="p">(</span>
@@ -563,7 +615,14 @@
             <span class="n">where</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span>
                 <span class="n">posixpath</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
             <span class="p">)</span>  <span class="c1"># `npm publish ./dir`</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">PublishCall</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">_RECURSIVE_FLAGS</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">filters</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">PublishCall</span><span class="p">(</span>
+                <span class="n">where</span><span class="p">,</span>
+                <span class="nb">bool</span><span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">_RECURSIVE_FLAGS</span><span class="p">),</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span>
+                <span class="n">problem</span><span class="o">=</span><span class="n">parsed</span><span class="p">[</span><span class="s2">"problem"</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
     <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">positional</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">sub</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"run"</span><span class="p">,</span> <span class="s2">"run-script"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">positional</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">sub</span>
     <span class="p">)</span>
@@ -659,20 +718,31 @@
     <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"^"</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"$"</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="glob_dirs">
-<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.glob_dirs">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Directories under ``root`` matching a workspace glob, never entering ``node_modules``."""</span>
-    <span class="n">regex</span> <span class="o">=</span> <span class="n">_glob_regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_all_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every directory under ``root`` (not ``root``), never entering ``node_modules``."""</span>
     <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">current</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
         <span class="n">names</span><span class="p">[:]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
             <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PRUNED_DIRS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">relative</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">current</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">relative</span> <span class="o">!=</span> <span class="s2">"."</span> <span class="ow">and</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">relative</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">current</span><span class="p">)</span> <span class="o">!=</span> <span class="n">root</span><span class="p">:</span>
             <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">current</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">found</span></div>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<div class="viewcode-block" id="glob_dirs">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.glob_dirs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">glob_dirs</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">directories</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Directories under ``root`` matching a workspace glob, never entering ``node_modules``.</span>
+
+<span class="sd">    ``directories`` (from a previous walk) spares walking the tree again for each pattern.</span>
+<span class="sd">    """</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">_glob_regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">directories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">directories</span> <span class="o">=</span> <span class="n">_all_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directories</span> <span class="k">if</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">)]</span></div>
 
 
 
@@ -681,10 +751,18 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""``(directory, package.json)`` of ``root`` itself and its workspace members."""</span>
     <span class="n">patterns</span> <span class="o">=</span> <span class="n">workspace_globs</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-    <span class="n">skipped</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])}</span>
+    <span class="n">walked</span> <span class="o">=</span> <span class="n">_all_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="k">if</span> <span class="n">patterns</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="n">skipped</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">d</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_EXCLUDE</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">directories</span><span class="o">=</span><span class="n">walked</span><span class="p">)</span>
+    <span class="p">}</span>
     <span class="n">directories</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"!"</span><span class="p">)):</span>
-        <span class="n">directories</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_EXCLUDE</span><span class="p">)):</span>
+        <span class="n">directories</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">glob_dirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">directories</span><span class="o">=</span><span class="n">walked</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span>
+        <span class="p">]</span>
     <span class="k">return</span> <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">_load_json</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"package.json"</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directories</span><span class="p">]</span></div>
 
 
@@ -719,8 +797,16 @@
 <span class="sd">    ['solo']</span>
 <span class="sd">    """</span>
     <span class="n">members</span> <span class="o">=</span> <span class="n">workspace_manifests</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">included</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_EXCLUDE</span><span class="p">)]</span>
+    <span class="n">excluded</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">_EXCLUDE</span><span class="p">)</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_EXCLUDE</span><span class="p">)]</span>
     <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span><span class="p">:</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span> <span class="k">if</span> <span class="n">_selected</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">call</span><span class="o">.</span><span class="n">filters</span><span class="p">)]</span>
+        <span class="c1"># only exclusions: subtract from the full set rather than match nothing</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">m</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">included</span> <span class="ow">or</span> <span class="n">_selected</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">included</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">_selected</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">excluded</span><span class="p">)</span>
+        <span class="p">]</span>
     <span class="k">elif</span> <span class="n">call</span><span class="o">.</span><span class="n">everything</span><span class="p">:</span>
         <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1241,7 +1327,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=fd23c9e7"></script>
+</div><script src="../../_static/documentation_options.js?v=dd92530c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
