@@ -999,11 +999,18 @@ def preflight(*, run: Run = subprocess_run) -> list[str]:
 
 
 _COLUMNS = ("package", "repo", "workflow", "environment", "status")
+#: ``tsv`` appends one trailing column (additive: positional readers of the first five keep
+#: working). ``status`` still carries the "(publishing disabled)" suffix, as in the table.
+_TSV_COLUMNS = (*_COLUMNS, "publishing-disabled")
 
 
 def row_fields(row: Row) -> tuple:
     p = row.publisher
     return (p.package, p.repo, p.workflow, p.environment or "-", row.status)
+
+
+def _tsv_fields(row: Row) -> tuple:
+    return (*row_fields(row), str(row.publisher.publishing_disabled).lower())
 
 
 def render_rows(rows: Sequence[Row], fmt: str = "table") -> str:
@@ -1014,9 +1021,11 @@ def render_rows(rows: Sequence[Row], fmt: str = "table") -> str:
         return json.dumps(
             [{**asdict(r.publisher), "status": r.status} for r in rows], indent=2
         )
-    table = [_COLUMNS, *(row_fields(r) for r in rows)]
     if fmt == "tsv":
-        return "\n".join("\t".join(line) for line in table)
+        return "\n".join(
+            "\t".join(line) for line in [_TSV_COLUMNS, *(_tsv_fields(r) for r in rows)]
+        )
+    table = [_COLUMNS, *(row_fields(r) for r in rows)]
     widths = [max(len(line[i]) for line in table) for i in range(len(_COLUMNS))]
     return "\n".join(
         "  ".join(cell.ljust(width) for cell, width in zip(line, widths)).rstrip()
