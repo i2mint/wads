@@ -7725,9 +7725,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41060872788">41060872788</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41060882127">41060882127</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>3639006e09d13657d76a005ee2a03936ea6f28c7</code> (in the history of the built commit) |
+| Event commit | <code>00b44896c40d4032cc96bf7c7503df14cc78f283</code> (in the history of the built commit) |
 
 ## Tools
 
