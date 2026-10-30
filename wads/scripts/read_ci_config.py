@@ -56,6 +56,11 @@ def _set_env(name: str, value):
         f.write(f"{name}={value}\n")
 
 
+def _project_dir(pyproject_path: str | Path) -> Path:
+    path = Path(pyproject_path)
+    return path if path.is_dir() else path.parent
+
+
 def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
     """
     Read CI configuration and export to GitHub Actions.
@@ -67,7 +72,9 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         Exit code (0 for success, 1 for failure)
     """
     try:
-        read_ci_config = load_wads_module("ci_config").read_ci_config
+        ci_config_module = load_wads_module("ci_config")
+        read_ci_config = ci_config_module.read_ci_config
+        doctests_hidden_by_testpaths = ci_config_module.doctests_hidden_by_testpaths
 
         # Read configuration
         config = read_ci_config(pyproject_path)
@@ -151,6 +158,22 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
                 f"[tool.wads.ci.install].extras is unset (CI installs core "
                 f'dependencies only). Set extras = "{extra}" to install it, '
                 f'or extras = "" to keep core-only and silence this warning.'
+            )
+
+        # testpaths that leave the package's doctests uncollected (i2mint/wads#56).
+        # A warning only: it never reddens a run that is green today.
+        try:
+            hidden = doctests_hidden_by_testpaths(
+                config.data, _project_dir(pyproject_path)
+            )
+        except Exception:  # a diagnostic must never fail the setup job
+            hidden = []
+        for package_dir in hidden:
+            print(
+                f"::warning title=Doctests not collected::{package_dir}/ has doctests "
+                f"but [tool.pytest.ini_options].testpaths does not include it, so CI "
+                f"(pytest --doctest-modules, no path) never runs them. Add "
+                f'"{package_dir}" to testpaths (see i2mint/wads#56).'
             )
 
         # Print summary
