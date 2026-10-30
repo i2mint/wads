@@ -1066,6 +1066,53 @@ class CIConfig:
         return f"CIConfig(project_name={self.project_name!r}, has_config={self.has_ci_config()})"
 
 
+def doctests_hidden_by_testpaths(data: dict, repo_dir: str | Path = ".") -> list[str]:
+    """Package dirs holding doctests that ``[tool.pytest.ini_options].testpaths`` leaves uncollected.
+
+    ``run-tests-uv`` runs ``pytest --doctest-modules`` with no path, so ``testpaths`` alone
+    decides what is collected: with ``testpaths = ["tests"]`` the package's own doctests
+    never run while CI stays green (i2mint/wads#56). Returns the package directories (as
+    paths relative to *repo_dir*) that contain ``>>>`` lines but are neither named by a
+    testpath nor below one. Empty when ``testpaths`` is unset (pytest then collects from the
+    rootdir) or the package dir cannot be found.
+
+    >>> import tempfile, pathlib
+    >>> with tempfile.TemporaryDirectory() as d:
+    ...     _ = (pathlib.Path(d) / 'my_pkg').mkdir()
+    ...     _ = (pathlib.Path(d) / 'my_pkg' / 'm.py').write_text('# >>> 1\\n')
+    ...     data = {'project': {'name': 'my-pkg'}}
+    ...     hidden = doctests_hidden_by_testpaths(
+    ...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['tests']}}}}, d)
+    ...     covered = doctests_hidden_by_testpaths(
+    ...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['my_pkg']}}}}, d)
+    >>> hidden, covered
+    (['my_pkg'], [])
+    """
+    repo = Path(repo_dir)
+    ini = ((data.get("tool") or {}).get("pytest") or {}).get("ini_options") or {}
+    testpaths = ini.get("testpaths")
+    if isinstance(testpaths, str):
+        testpaths = testpaths.split()
+    if not testpaths:
+        return []
+    covers = [Path(str(t)).as_posix().strip("/").removeprefix("./") for t in testpaths]
+    name = ((data.get("project") or {}).get("name") or "").replace("-", "_")
+    hidden = []
+    for candidate in (repo / name, repo / "src" / name):
+        if not name or not candidate.is_dir():
+            continue
+        rel = candidate.relative_to(repo).as_posix()
+        if any(c in ("", ".") or rel == c or rel.startswith(c + "/") for c in covers):
+            continue
+        has_doctests = any(
+            ">>>" in f.read_text(encoding="utf-8", errors="ignore")
+            for f in candidate.rglob("*.py")
+        )
+        if has_doctests:
+            hidden.append(rel)
+    return hidden
+
+
 def read_ci_config(pyproject_path: str | Path) -> CIConfig:
     """
     Read CI configuration from pyproject.toml.
