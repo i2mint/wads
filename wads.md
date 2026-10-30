@@ -1,4 +1,4 @@
-> built 2026-10-26 19:46 UTC from 3f38c17 (master) · wads 0.2.59. Details: build_info.json
+> built 2026-10-30 13:12 UTC from 00b4489 (master) · wads 0.2.60. Details: build_info.json
 
 # index.html.md
 
@@ -364,7 +364,7 @@ npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the
 
 ```bash
 wads npm-trust                  # dry run: one row per (package, repo, workflow, environment) + the commands
-wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups
+wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups. TSV has a trailing `publishing-disabled` column (true/false), JSON a `publishing_disabled` key; the status keeps its "(publishing disabled)" suffix
 wads npm-trust --apply          # run `npm trust github ...` for packages already on npm, then verify
 ```
 
@@ -1210,10 +1210,11 @@ settings in CI workflow files.
 
 ### Functions
 
-| [`get_ci_config_or_defaults`](_autosummary/wads.ci_config.html.md#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...])   | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
-|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`read_ci_config`](_autosummary/wads.ci_config.html.md#wads.ci_config.read_ci_config)(pyproject_path)                     | Read CI configuration from pyproject.toml.                                                                                                                                                                       |
-| [`render_minimal_env_placeholders`](_autosummary/wads.ci_config.html.md#wads.ci_config.render_minimal_env_placeholders)(...)               | Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars). |
+| [`doctests_hidden_by_testpaths`](_autosummary/wads.ci_config.html.md#wads.ci_config.doctests_hidden_by_testpaths)(data[, repo_dir])   | Package dirs holding doctests that `[tool.pytest.ini_options].testpaths` leaves uncollected.                                                                                                                     |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`get_ci_config_or_defaults`](_autosummary/wads.ci_config.html.md#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...]) | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
+| [`read_ci_config`](_autosummary/wads.ci_config.html.md#wads.ci_config.read_ci_config)(pyproject_path)                   | Read CI configuration from pyproject.toml.                                                                                                                                                                       |
+| [`render_minimal_env_placeholders`](_autosummary/wads.ci_config.html.md#wads.ci_config.render_minimal_env_placeholders)(...)             | Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars). |
 
 ### Classes
 
@@ -1814,6 +1815,34 @@ read-ci-config’s wads is too old to emit them.
 ### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
 
 The levels a manual run (or `wads ci-local --level`) can ask for.
+
+### wads.ci_config.doctests_hidden_by_testpaths(data, repo_dir='.')
+
+Package dirs holding doctests that `[tool.pytest.ini_options].testpaths` leaves uncollected.
+
+`run-tests-uv` runs `pytest --doctest-modules` with no path, so `testpaths` alone
+decides what is collected: with `testpaths = ["tests"]` the package’s own doctests
+never run while CI stays green (i2mint/wads#56). Returns the package directories (as
+paths relative to *repo_dir*) that contain `>>>` lines but are neither named by a
+testpath nor below one. Empty when `testpaths` is unset (pytest then collects from the
+rootdir) or the package dir cannot be found.
+
+```pycon
+>>> import tempfile, pathlib
+>>> with tempfile.TemporaryDirectory() as d:
+...     _ = (pathlib.Path(d) / 'my_pkg').mkdir()
+...     _ = (pathlib.Path(d) / 'my_pkg' / 'm.py').write_text('# >>> 1\n')
+...     data = {'project': {'name': 'my-pkg'}}
+...     hidden = doctests_hidden_by_testpaths(
+...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['tests']}}}}, d)
+...     covered = doctests_hidden_by_testpaths(
+...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['my_pkg']}}}}, d)
+>>> hidden, covered
+(['my_pkg'], [])
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 
@@ -7674,18 +7703,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-10-26 19:46 UTC** from commit <a href="https://github.com/i2mint/wads/commit/3f38c17d496943579e3835650cf52f11ddcafbf8"><code>3f38c17</code></a> on branch <code>master</code>, for **wads 0.2.59** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-30 13:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/00b44896c40d4032cc96bf7c7503df14cc78f283"><code>00b4489</code></a> on branch <code>master</code>, for **wads 0.2.60** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.59) is behind the latest release on PyPI (0.2.60): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.60) is behind the latest release on PyPI (0.2.61): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/3f38c17d496943579e3835650cf52f11ddcafbf8"><code>3f38c17d496943579e3835650cf52f11ddcafbf8</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/00b44896c40d4032cc96bf7c7503df14cc78f283"><code>00b44896c40d4032cc96bf7c7503df14cc78f283</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7696,9 +7725,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/40389308257">40389308257</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41060872788">41060872788</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>3f38c17d496943579e3835650cf52f11ddcafbf8</code> (in the history of the built commit) |
+| Event commit | <code>3639006e09d13657d76a005ee2a03936ea6f28c7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7723,13 +7752,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.60/">0.2.60</a>, newer than the documented version (0.2.59).
+Latest release: <a href="https://pypi.org/project/wads/0.2.61/">0.2.61</a>, newer than the documented version (0.2.60).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 3f38c17d496943579e3835650cf52f11ddcafbf8
+git checkout 00b44896c40d4032cc96bf7c7503df14cc78f283
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

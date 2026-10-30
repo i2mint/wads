@@ -314,13 +314,16 @@ settings in CI workflow files.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults" title="wads.ci_config.get_ci_config_or_defaults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ci_config_or_defaults</span></code></a>(pyproject_path[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.doctests_hidden_by_testpaths" title="wads.ci_config.doctests_hidden_by_testpaths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">doctests_hidden_by_testpaths</span></code></a>(data[, repo_dir])</p></td>
+<td><p>Package dirs holding doctests that <code class="docutils literal notranslate"><span class="pre">[tool.pytest.ini_options].testpaths</span></code> leaves uncollected.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults" title="wads.ci_config.get_ci_config_or_defaults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ci_config_or_defaults</span></code></a>(pyproject_path[, ...])</p></td>
 <td><p>Read CI configuration from pyproject.toml, using defaults if file doesn't exist.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.read_ci_config" title="wads.ci_config.read_ci_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ci_config</span></code></a>(pyproject_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.read_ci_config" title="wads.ci_config.read_ci_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ci_config</span></code></a>(pyproject_path)</p></td>
 <td><p>Read CI configuration from pyproject.toml.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders" title="wads.ci_config.render_minimal_env_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_minimal_env_placeholders</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders" title="wads.ci_config.render_minimal_env_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_minimal_env_placeholders</span></code></a>(...)</p></td>
 <td><p>Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars).</p></td>
 </tr>
 </tbody>
@@ -1110,6 +1113,36 @@ read-ci-config’s wads is too old to emit them.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_config.doctests_hidden_by_testpaths">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">doctests_hidden_by_testpaths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_config.html#doctests_hidden_by_testpaths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.doctests_hidden_by_testpaths" title="Link to this definition">¶</a></dt>
+<dd><p>Package dirs holding doctests that <code class="docutils literal notranslate"><span class="pre">[tool.pytest.ini_options].testpaths</span></code> leaves uncollected.</p>
+<p><code class="docutils literal notranslate"><span class="pre">run-tests-uv</span></code> runs <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--doctest-modules</span></code> with no path, so <code class="docutils literal notranslate"><span class="pre">testpaths</span></code> alone
+decides what is collected: with <code class="docutils literal notranslate"><span class="pre">testpaths</span> <span class="pre">=</span> <span class="pre">[&quot;tests&quot;]</span></code> the package’s own doctests
+never run while CI stays green (i2mint/wads#56). Returns the package directories (as
+paths relative to <em>repo_dir</em>) that contain <code class="docutils literal notranslate"><span class="pre">&gt;&gt;&gt;</span></code> lines but are neither named by a
+testpath nor below one. Empty when <code class="docutils literal notranslate"><span class="pre">testpaths</span></code> is unset (pytest then collects from the
+rootdir) or the package dir cannot be found.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="s1">'my_pkg'</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="s1">'my_pkg'</span> <span class="o">/</span> <span class="s1">'m.py'</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'# &gt;&gt;&gt; 1</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'project'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'my-pkg'</span><span class="p">}}</span>
+<span class="gp">... </span>    <span class="n">hidden</span> <span class="o">=</span> <span class="n">doctests_hidden_by_testpaths</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="o">**</span><span class="n">data</span><span class="p">,</span> <span class="s1">'tool'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'pytest'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ini_options'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'testpaths'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'tests'</span><span class="p">]}}}},</span> <span class="n">d</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">covered</span> <span class="o">=</span> <span class="n">doctests_hidden_by_testpaths</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="o">**</span><span class="n">data</span><span class="p">,</span> <span class="s1">'tool'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'pytest'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ini_options'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'testpaths'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'my_pkg'</span><span class="p">]}}}},</span> <span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hidden</span><span class="p">,</span> <span class="n">covered</span>
+<span class="go">(['my_pkg'], [])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_config.get_ci_config_or_defaults">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">get_ci_config_or_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_config.html#get_ci_config_or_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.get_ci_config_or_defaults" title="Link to this definition">¶</a></dt>
 <dd><p>Read CI configuration from pyproject.toml, using defaults if file doesn’t exist.</p>
@@ -1300,6 +1333,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.DFLT_DEPLOY_MARKER"><code class="docutils literal notranslate"><span class="pre">DFLT_DEPLOY_MARKER</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER"><code class="docutils literal notranslate"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.TRIGGER_LEVELS"><code class="docutils literal notranslate"><span class="pre">TRIGGER_LEVELS</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.doctests_hidden_by_testpaths"><code class="docutils literal notranslate"><span class="pre">doctests_hidden_by_testpaths()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
@@ -1314,7 +1348,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=b7777910"></script>
+</div><script src="../_static/documentation_options.js?v=639b37eb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

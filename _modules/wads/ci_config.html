@@ -1405,6 +1405,56 @@
 
 
 
+<div class="viewcode-block" id="doctests_hidden_by_testpaths">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_config.html#wads.ci_config.doctests_hidden_by_testpaths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">doctests_hidden_by_testpaths</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">repo_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Package dirs holding doctests that ``[tool.pytest.ini_options].testpaths`` leaves uncollected.</span>
+
+<span class="sd">    ``run-tests-uv`` runs ``pytest --doctest-modules`` with no path, so ``testpaths`` alone</span>
+<span class="sd">    decides what is collected: with ``testpaths = ["tests"]`` the package's own doctests</span>
+<span class="sd">    never run while CI stays green (i2mint/wads#56). Returns the package directories (as</span>
+<span class="sd">    paths relative to *repo_dir*) that contain ``&gt;&gt;&gt;`` lines but are neither named by a</span>
+<span class="sd">    testpath nor below one. Empty when ``testpaths`` is unset (pytest then collects from the</span>
+<span class="sd">    rootdir) or the package dir cannot be found.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile, pathlib</span>
+<span class="sd">    &gt;&gt;&gt; with tempfile.TemporaryDirectory() as d:</span>
+<span class="sd">    ...     _ = (pathlib.Path(d) / 'my_pkg').mkdir()</span>
+<span class="sd">    ...     _ = (pathlib.Path(d) / 'my_pkg' / 'm.py').write_text('# &gt;&gt;&gt; 1\\n')</span>
+<span class="sd">    ...     data = {'project': {'name': 'my-pkg'}}</span>
+<span class="sd">    ...     hidden = doctests_hidden_by_testpaths(</span>
+<span class="sd">    ...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['tests']}}}}, d)</span>
+<span class="sd">    ...     covered = doctests_hidden_by_testpaths(</span>
+<span class="sd">    ...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['my_pkg']}}}}, d)</span>
+<span class="sd">    &gt;&gt;&gt; hidden, covered</span>
+<span class="sd">    (['my_pkg'], [])</span>
+<span class="sd">    """</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
+    <span class="n">ini</span> <span class="o">=</span> <span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pytest"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ini_options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">testpaths</span> <span class="o">=</span> <span class="n">ini</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"testpaths"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">testpaths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">testpaths</span> <span class="o">=</span> <span class="n">testpaths</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">testpaths</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">covers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">))</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"./"</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">testpaths</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">)</span>
+    <span class="n">hidden</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="n">name</span><span class="p">,</span> <span class="n">repo</span> <span class="o">/</span> <span class="s2">"src"</span> <span class="o">/</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">candidate</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">rel</span> <span class="o">=</span> <span class="n">candidate</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rel</span> <span class="o">==</span> <span class="n">c</span> <span class="ow">or</span> <span class="n">rel</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">covers</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">has_doctests</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="s2">"&gt;&gt;&gt;"</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">candidate</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.py"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_doctests</span><span class="p">:</span>
+            <span class="n">hidden</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hidden</span></div>
+
+
+
 <div class="viewcode-block" id="read_ci_config">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_config.html#wads.ci_config.read_ci_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CIConfig</span><span class="p">:</span>
@@ -1480,7 +1530,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=b7777910"></script>
+</div><script src="../../_static/documentation_options.js?v=639b37eb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

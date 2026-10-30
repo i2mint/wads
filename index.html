@@ -635,7 +635,7 @@ wads<span class="w"> </span>ci-local<span class="w"> </span>--publish<span class
 <h2>npm trusted publishing: <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code><a class="headerlink" href="#npm-trusted-publishing-wads-npm-trust" title="Link to this heading">¶</a></h2>
 <p>npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the repo and the <em>caller</em> workflow file. <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code> finds them for you:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wads<span class="w"> </span>npm-trust<span class="w">                  </span><span class="c1"># dry run: one row per (package, repo, workflow, environment) + the commands</span>
-wads<span class="w"> </span>npm-trust<span class="w"> </span>--fmt<span class="w"> </span>tsv<span class="w">        </span><span class="c1"># the same rows as TSV (or --fmt json); --offline skips the npm lookups</span>
+wads<span class="w"> </span>npm-trust<span class="w"> </span>--fmt<span class="w"> </span>tsv<span class="w">        </span><span class="c1"># the same rows as TSV (or --fmt json); --offline skips the npm lookups. TSV has a trailing `publishing-disabled` column (true/false), JSON a `publishing_disabled` key; the status keeps its "(publishing disabled)" suffix</span>
 wads<span class="w"> </span>npm-trust<span class="w"> </span>--apply<span class="w">          </span><span class="c1"># run `npm trust github ...` for packages already on npm, then verify</span>
 </pre></div>
 </div>
@@ -986,7 +986,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-26 19:46 UTC from <a href="https://github.com/i2mint/wads/commit/3f38c17d496943579e3835650cf52f11ddcafbf8">3f38c17</a> (master) · wads 0.2.59 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-30 13:12 UTC from <a href="https://github.com/i2mint/wads/commit/00b44896c40d4032cc96bf7c7503df14cc78f283">00b4489</a> (master) · wads 0.2.60 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1083,7 +1083,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=b7777910"></script>
+</div><script src="_static/documentation_options.js?v=639b37eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

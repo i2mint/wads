@@ -15,10 +15,11 @@ settings in CI workflow files.
 
 ### Functions
 
-| [`get_ci_config_or_defaults`](#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...])   | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
-|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`read_ci_config`](#wads.ci_config.read_ci_config)(pyproject_path)                     | Read CI configuration from pyproject.toml.                                                                                                                                                                       |
-| [`render_minimal_env_placeholders`](#wads.ci_config.render_minimal_env_placeholders)(...)               | Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars). |
+| [`doctests_hidden_by_testpaths`](#wads.ci_config.doctests_hidden_by_testpaths)(data[, repo_dir])   | Package dirs holding doctests that `[tool.pytest.ini_options].testpaths` leaves uncollected.                                                                                                                     |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`get_ci_config_or_defaults`](#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...]) | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
+| [`read_ci_config`](#wads.ci_config.read_ci_config)(pyproject_path)                   | Read CI configuration from pyproject.toml.                                                                                                                                                                       |
+| [`render_minimal_env_placeholders`](#wads.ci_config.render_minimal_env_placeholders)(...)             | Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars). |
 
 ### Classes
 
@@ -619,6 +620,34 @@ read-ci-config’s wads is too old to emit them.
 ### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
 
 The levels a manual run (or `wads ci-local --level`) can ask for.
+
+### wads.ci_config.doctests_hidden_by_testpaths(data, repo_dir='.')
+
+Package dirs holding doctests that `[tool.pytest.ini_options].testpaths` leaves uncollected.
+
+`run-tests-uv` runs `pytest --doctest-modules` with no path, so `testpaths` alone
+decides what is collected: with `testpaths = ["tests"]` the package’s own doctests
+never run while CI stays green (i2mint/wads#56). Returns the package directories (as
+paths relative to *repo_dir*) that contain `>>>` lines but are neither named by a
+testpath nor below one. Empty when `testpaths` is unset (pytest then collects from the
+rootdir) or the package dir cannot be found.
+
+```pycon
+>>> import tempfile, pathlib
+>>> with tempfile.TemporaryDirectory() as d:
+...     _ = (pathlib.Path(d) / 'my_pkg').mkdir()
+...     _ = (pathlib.Path(d) / 'my_pkg' / 'm.py').write_text('# >>> 1\n')
+...     data = {'project': {'name': 'my-pkg'}}
+...     hidden = doctests_hidden_by_testpaths(
+...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['tests']}}}}, d)
+...     covered = doctests_hidden_by_testpaths(
+...         {**data, 'tool': {'pytest': {'ini_options': {'testpaths': ['my_pkg']}}}}, d)
+>>> hidden, covered
+(['my_pkg'], [])
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_config.get_ci_config_or_defaults(pyproject_path, project_name=None)
 

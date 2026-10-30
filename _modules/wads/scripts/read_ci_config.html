@@ -338,6 +338,11 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_project_dir</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">path</span><span class="o">.</span><span class="n">parent</span>
+
+
 <div class="viewcode-block" id="read_and_export_ci_config">
 <a class="viewcode-back" href="../../../_autosummary/wads.scripts.read_ci_config.html#wads.scripts.read_ci_config.read_and_export_ci_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -351,7 +356,9 @@
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">read_ci_config</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"ci_config"</span><span class="p">)</span><span class="o">.</span><span class="n">read_ci_config</span>
+        <span class="n">ci_config_module</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"ci_config"</span><span class="p">)</span>
+        <span class="n">read_ci_config</span> <span class="o">=</span> <span class="n">ci_config_module</span><span class="o">.</span><span class="n">read_ci_config</span>
+        <span class="n">doctests_hidden_by_testpaths</span> <span class="o">=</span> <span class="n">ci_config_module</span><span class="o">.</span><span class="n">doctests_hidden_by_testpaths</span>
 
         <span class="c1"># Read configuration</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">read_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
@@ -437,6 +444,22 @@
                 <span class="sa">f</span><span class="s1">'or extras = "" to keep core-only and silence this warning.'</span>
             <span class="p">)</span>
 
+        <span class="c1"># testpaths that leave the package's doctests uncollected (i2mint/wads#56).</span>
+        <span class="c1"># A warning only: it never reddens a run that is green today.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hidden</span> <span class="o">=</span> <span class="n">doctests_hidden_by_testpaths</span><span class="p">(</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">_project_dir</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># a diagnostic must never fail the setup job</span>
+            <span class="n">hidden</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">package_dir</span> <span class="ow">in</span> <span class="n">hidden</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"::warning title=Doctests not collected::</span><span class="si">{</span><span class="n">package_dir</span><span class="si">}</span><span class="s2">/ has doctests "</span>
+                <span class="sa">f</span><span class="s2">"but [tool.pytest.ini_options].testpaths does not include it, so CI "</span>
+                <span class="sa">f</span><span class="s2">"(pytest --doctest-modules, no path) never runs them. Add "</span>
+                <span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">package_dir</span><span class="si">}</span><span class="s1">" to testpaths (see i2mint/wads#56).'</span>
+            <span class="p">)</span>
+
         <span class="c1"># Print summary</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"[OK] CI configuration loaded successfully"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Project: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -508,7 +531,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=b7777910"></script>
+</div><script src="../../../_static/documentation_options.js?v=639b37eb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

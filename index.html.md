@@ -360,7 +360,7 @@ npm trusted publishing (OIDC) needs, per package, a Trusted Publisher naming the
 
 ```bash
 wads npm-trust                  # dry run: one row per (package, repo, workflow, environment) + the commands
-wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups
+wads npm-trust --fmt tsv        # the same rows as TSV (or --fmt json); --offline skips the npm lookups. TSV has a trailing `publishing-disabled` column (true/false), JSON a `publishing_disabled` key; the status keeps its "(publishing disabled)" suffix
 wads npm-trust --apply          # run `npm trust github ...` for packages already on npm, then verify
 ```
 

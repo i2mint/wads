@@ -1353,11 +1353,18 @@
 
 
 <span class="n">_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"package"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"workflow"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">)</span>
+<span class="c1">#: ``tsv`` appends one trailing column (additive: positional readers of the first five keep</span>
+<span class="c1">#: working). ``status`` still carries the "(publishing disabled)" suffix, as in the table.</span>
+<span class="n">_TSV_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">_COLUMNS</span><span class="p">,</span> <span class="s2">"publishing-disabled"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">row_fields</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Row</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">publisher</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">workflow</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">environment</span> <span class="ow">or</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tsv_fields</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Row</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">row_fields</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">publisher</span><span class="o">.</span><span class="n">publishing_disabled</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
 
 
 <div class="viewcode-block" id="render_rows">
@@ -1370,9 +1377,11 @@
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
             <span class="p">[{</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">publisher</span><span class="p">),</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">}</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">],</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span>
         <span class="p">)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">_COLUMNS</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">row_fields</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)]</span>
     <span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">"tsv"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">table</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_TSV_COLUMNS</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">_tsv_fields</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)]</span>
+        <span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">_COLUMNS</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">row_fields</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)]</span>
     <span class="n">widths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">table</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_COLUMNS</span><span class="p">))]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
         <span class="s2">"  "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="k">for</span> <span class="n">cell</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">widths</span><span class="p">))</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
@@ -1508,7 +1517,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=b7777910"></script>
+</div><script src="../../_static/documentation_options.js?v=639b37eb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
