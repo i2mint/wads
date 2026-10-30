@@ -225,9 +225,27 @@ def test_trust_command_includes_the_environment_only_when_there_is_one():
     ]
 
 
+def test_render_rows_publishing_disabled_column():
+    pub = Publisher("p", SLUG, "w.yml", "npm", publishing_disabled=True)
+    rows = survey([pub], check_npm=False)
+    line = render_rows(rows, "tsv").splitlines()[1].split("\t")
+    assert line[4] == "unknown (publishing disabled)"  # status suffix kept
+    assert line[5] == "true"
+    assert json.loads(render_rows(rows, "json"))[0]["publishing_disabled"] is True
+
+
 def test_render_rows_formats():
     rows = survey([Publisher("p", SLUG, "w.yml", "npm")], check_npm=False)
-    assert render_rows(rows, "tsv").splitlines()[1] == "p\to/r\tw.yml\tnpm\tunknown"
+    assert (
+        render_rows(rows, "tsv").splitlines()[1] == "p\to/r\tw.yml\tnpm\tunknown\tfalse"
+    )
+    assert (
+        render_rows(rows, "tsv")
+        .splitlines()[0]
+        .endswith("\tstatus\tpublishing-disabled")
+    )
+    assert json.loads(render_rows(rows, "json"))[0]["publishing_disabled"] is False
+    assert "publishing-disabled" not in render_rows(rows)
     assert json.loads(render_rows(rows, "json"))[0]["package"] == "p"
     assert "package" in render_rows(rows)
     with pytest.raises(ValueError):
@@ -785,9 +803,7 @@ def test_an_unknown_flag_before_publish_is_reported_not_dropped():
     ],
 )
 def test_include_workspace_root_covers_a_public_root(tmp_path, script, expected):
-    _write(
-        tmp_path / "package.json", {"name": "pubroot", "workspaces": ["packages/*"]}
-    )
+    _write(tmp_path / "package.json", {"name": "pubroot", "workspaces": ["packages/*"]})
     for name in "ab":
         _write(tmp_path / "packages" / name / "package.json", {"name": name})
     _workflow(tmp_path, "pub.yml", {"run": script})
@@ -802,7 +818,9 @@ def test_select_is_shared_by_workspace_globs_and_filters():
     assert select(["a", "b"], ["!a"], same, default_all=False) == []
 
 
-@pytest.mark.parametrize("command", ["npm help publish", "npm install publish", "pnpm add publish"])
+@pytest.mark.parametrize(
+    "command", ["npm help publish", "npm install publish", "pnpm add publish"]
+)
 def test_a_subcommand_that_merely_mentions_publish_is_not_a_problem(command):
     assert publish_calls(command) == []
 
@@ -817,7 +835,9 @@ def test_pnpm_path_selectors_are_read_from_the_cwd_not_the_workspace_root(tmp_pa
     assert _names(tmp_path) == [("@x/a", "p.yml", "")]
 
 
-@pytest.mark.parametrize("tool", ["release-it", "semantic-release", "npx semantic-release"])
+@pytest.mark.parametrize(
+    "tool", ["release-it", "semantic-release", "npx semantic-release"]
+)
 def test_release_tools_publish_the_package_in_their_directory(tmp_path, tool):
     _write(tmp_path / "package.json", {"name": "solo"})
     _workflow(tmp_path, "r.yml", {"run": tool})
@@ -829,7 +849,10 @@ def test_release_tool_dry_run_is_not_a_publish():
 
 
 def test_a_yarn_foreach_script_that_runs_a_release_tool_yields_rows(tmp_path):
-    _write(tmp_path / "package.json", {"name": "root", "private": True, "workspaces": ["packages/*"]})
+    _write(
+        tmp_path / "package.json",
+        {"name": "root", "private": True, "workspaces": ["packages/*"]},
+    )
     _write(
         tmp_path / "packages" / "a" / "package.json",
         {"name": "a", "scripts": {"ship": "release-it"}},
@@ -867,7 +890,12 @@ def test_release_tools_are_found_however_they_are_invoked(command):
 
 @pytest.mark.parametrize(
     "command",
-    ["semantic-release -d", "npx release-it --dry-run", "npm uninstall publish", "yarn remove publish"],
+    [
+        "semantic-release -d",
+        "npx release-it --dry-run",
+        "npm uninstall publish",
+        "yarn remove publish",
+    ],
 )
 def test_dry_runs_and_removals_are_not_publishes(command):
     assert publish_calls(command) == []
