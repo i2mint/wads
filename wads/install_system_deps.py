@@ -24,12 +24,35 @@ declare ``install_retries`` (``0`` disables retrying); the CLI's ``--install-ret
 sets the fallback. Worst case for a command that always fails is
 ``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful
 ``apt-get update`` is not repeated when only the following install flaked.
+
+An install whose commands all exit 0 is not trusted on that alone: when the dependency
+declares a ``check.<platform>``, that check is re-run afterwards, and a dependency whose
+check still fails is re-installed (:data:`DFLT_VERIFY_RETRIES` more rounds, each after a
+backoff wait that starts at :data:`DFLT_INSTALL_BACKOFF` seconds and doubles) and then
+reported as failed. Package managers do report success for installs that did nothing —
+Chocolatey prints ``installed 0/0 packages`` and exits 0 when its feed returns a 5xx —
+and a CI job would then run its tests without the dependency, red for the wrong reason
+or green with the coverage silently skipped (issue #162). A dependency whose check
+cannot pass in the installing process (one that only works in a new shell, say) opts
+out with ``verify_install = false``. A blank check counts as no check: not verified.
+
+So the worst case for one dependency is ``(verify_retries + 1)`` full install rounds —
+each up to ``n_commands * (retries + 1) * install_timeout`` plus its command backoffs,
+followed by its checks (``n_checks * DFLT_CHECK_TIMEOUT``) — plus the backoff waits
+between rounds: with the defaults, a failing verify roughly doubles the install time.
+
+``check`` and ``install`` take a string or a list. A list item is either a command line
+or a command in argv form (a list of strings, e.g.
+``check.linux = [["dpkg", "-s", "unixodbc"], ["rpm", "-q", "unixODBC"]]``), which is
+quoted into one command line for the platform's shell. Checks are OR-ed (any passing
+one means installed); install commands are AND-ed (run in order, all must succeed).
 """
 
 import sys
 import math
 import os
 import re
+import shlex
 import signal
 import subprocess
 import time
@@ -66,6 +89,10 @@ DFLT_CHECK_TIMEOUT = 10
 # (doubled for each further one). Transient mirror failures are the common cause.
 DFLT_INSTALL_RETRIES = 2
 DFLT_INSTALL_BACKOFF = 5
+#: Extra install rounds for a dependency whose commands succeeded but whose declared
+#: ``check`` still fails afterwards (a package manager that reported success for
+#: nothing — e.g. Chocolatey on a feed 5xx).
+DFLT_VERIFY_RETRIES = 1
 
 
 def find_pyproject(path: str) -> Path:
@@ -97,6 +124,47 @@ def read_system_deps(pyproject_path: Path) -> Dict[str, dict]:
     return data.get("tool", {}).get("wads", {}).get("ops", {})
 
 
+def _as_commands(cmds) -> List[str]:
+    """The command lines declared by ``cmds``; blank or malformed entries are dropped.
+
+    A string is one command line; a list holds command lines and argv-form commands
+    (lists of strings, quoted for the platform's shell); anything else declares none.
+
+    >>> _as_commands("which ffmpeg")
+    ['which ffmpeg']
+    >>> _as_commands(["which ffmpeg", "  ", ["dpkg", "-s", "unixodbc"], [], 3])
+    ['which ffmpeg', 'dpkg -s unixodbc']
+    >>> _as_commands("   "), _as_commands([[]]), _as_commands(None)
+    ([], [], [])
+    """
+
+    def command_line(item) -> Optional[str]:
+        if isinstance(item, str):
+            return item if item.strip() else None
+        if isinstance(item, list) and item and all(isinstance(a, str) for a in item):
+            join = subprocess.list2cmdline if os.name == "nt" else shlex.join
+            return join(item)
+        return None
+
+    if isinstance(cmds, str):
+        return [cmds] if cmds.strip() else []
+    if not isinstance(cmds, list):
+        return []
+    return [line for line in map(command_line, cmds) if line]
+
+
+def _platform_value(dep_config: dict, key: str, platform: str):
+    """``dep_config[key][platform]``, or ``None`` when ``key`` is not a per-platform table.
+
+    >>> _platform_value({"check": {"linux": "which x"}}, "check", "linux")
+    'which x'
+    >>> _platform_value({"check": "which x"}, "check", "linux") is None
+    True
+    """
+    table = dep_config.get(key)
+    return table.get(platform) if isinstance(table, dict) else None
+
+
 def check_if_installed(
     dep_name: str, check_cmds: any, timeout: float = DFLT_CHECK_TIMEOUT
 ) -> bool:
@@ -105,22 +173,14 @@ def check_if_installed(
 
     Args:
         dep_name: Name of dependency
-        check_cmds: Command(s) to check if installed (string, list, or empty)
+        check_cmds: Command(s) to check if installed (see :func:`_as_commands`)
         timeout: Timeout in seconds for check commands
 
     Returns:
         True if installed, False otherwise
     """
-    # Normalize to list of commands
-    if isinstance(check_cmds, str):
-        commands = [check_cmds] if check_cmds.strip() else []
-    elif isinstance(check_cmds, list):
-        commands = [cmd for cmd in check_cmds if cmd]
-    else:
-        return False
-
     # Try each check command (OR logic)
-    for check_cmd in commands:
+    for check_cmd in _as_commands(check_cmds):
         try:
             result = subprocess.run(
                 check_cmd, shell=True, capture_output=True, timeout=timeout
@@ -265,7 +325,7 @@ def install_dependency(
 
     Args:
         dep_name: Name of dependency
-        install_cmds: Command(s) to install (string or list)
+        install_cmds: Command(s) to install (see :func:`_as_commands`)
         timeout: Timeout in seconds for each command
         retries: Extra attempts for a command that fails or times out
         backoff: Seconds before the first retry; doubles for each further one
@@ -275,16 +335,12 @@ def install_dependency(
     Returns:
         (success: bool, error_message: Optional[str])
     """
-    # Normalize to list of commands
-    if isinstance(install_cmds, str):
-        if not install_cmds.strip():
+    commands = _as_commands(install_cmds)
+    if not commands:
+        if isinstance(install_cmds, str):
             return False, "Empty install command"
-        commands = [install_cmds]
-    elif isinstance(install_cmds, list):
-        commands = [cmd for cmd in install_cmds if cmd]
-        if not commands:
+        if isinstance(install_cmds, list):
             return False, "Empty install command list"
-    else:
         return False, "Invalid install command format"
 
     # Execute install commands (AND logic - all must succeed)
@@ -304,6 +360,51 @@ def install_dependency(
     return True, None
 
 
+def install_and_verify(
+    dep_name: str,
+    install_cmds: any,
+    check_cmds: any,
+    *,
+    verify_retries: int = DFLT_VERIFY_RETRIES,
+    backoff: float = DFLT_INSTALL_BACKOFF,
+    sleep=None,
+    is_installed=check_if_installed,
+    install=install_dependency,
+    **install_kwargs,
+) -> Tuple[bool, Optional[str]]:
+    """Install a dependency, then confirm it with its check commands.
+
+    ``install`` runs ``install_cmds`` (with its own per-command retries); when it
+    reports success and ``check_cmds`` declares a command, ``is_installed`` must
+    agree, or the install is repeated up to ``verify_retries`` more times, after
+    ``backoff`` seconds (doubling), before failing. With no check declared the
+    install's own exit status is all there is to go on. ``backoff`` and ``sleep``
+    are also passed on to ``install`` for its per-command retries.
+
+    Returns ``(success, error_message)`` like :func:`install_dependency`.
+    """
+    if verify_retries < 0:
+        raise ValueError(f"verify_retries must be >= 0, got {verify_retries}")
+    checks = _as_commands(check_cmds)
+    for attempt in range(verify_retries + 1):
+        if attempt:
+            wait = backoff * 2 ** (attempt - 1)
+            print(
+                f"  Re-installing {dep_name} ({attempt}/{verify_retries}) in {wait:g}s"
+            )
+            (sleep or time.sleep)(wait)  # looked up late so tests can patch it
+        success, error = install(
+            dep_name, install_cmds, backoff=backoff, sleep=sleep, **install_kwargs
+        )
+        if not success or not checks or is_installed(dep_name, checks):
+            return success, error
+        error = "install commands exited 0 but the check still fails: " + " || ".join(
+            checks
+        )
+        print(f"  {error}")
+    return False, error
+
+
 def install_system_dependencies(
     pyproject_path: str = ".",
     platform: Optional[str] = None,
@@ -313,6 +414,8 @@ def install_system_dependencies(
     default_install_timeout: Optional[float] = None,
     default_install_retries: int = DFLT_INSTALL_RETRIES,
     apt_lock_timeout: Optional[float] = DFLT_APT_LOCK_TIMEOUT,
+    install=None,
+    is_installed=None,
 ) -> Tuple[int, int, int]:
     """
     Install system dependencies from pyproject.toml.
@@ -329,6 +432,10 @@ def install_system_dependencies(
         apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).
         default_install_retries: Retries per failed install command for
             dependencies that declare no ``install_retries`` of their own.
+        install: Runs one dependency's install commands (``None``:
+            :func:`install_dependency`).
+        is_installed: Runs one dependency's check commands, before installing and to
+            verify the install (``None``: :func:`check_if_installed`).
 
     Returns:
         (installed_count, skipped_count, failed_count)
@@ -344,6 +451,9 @@ def install_system_dependencies(
         raise ValueError(
             f"default_install_timeout must be > 0, got {default_install_timeout}"
         )
+    # Resolved now, not at definition time, so patching the module still takes effect
+    install = install or install_dependency
+    is_installed = is_installed or check_if_installed
 
     # Find pyproject.toml
     try:
@@ -430,10 +540,23 @@ def install_system_dependencies(
             lambda v: isinstance(v, int) and v >= 0,
         )
 
+    def verify_for(dep_name, dep_config):
+        declared = dep_config.get("verify_install", True)
+        if isinstance(declared, bool):
+            return declared
+        if verbose:
+            print(
+                f"Warning: ignoring invalid verify_install={declared!r} for "
+                f"{dep_name}; using True",
+                file=sys.stderr,
+            )
+        return True
+
     # Process each dependency
     installed_count = 0
     skipped_count = 0
     failed_count = 0
+    unverified = []  # installed with no check to confirm it
 
     for dep_name, dep_config in ops.items():
         if verbose:
@@ -448,18 +571,27 @@ def install_system_dependencies(
             if url:
                 print(f"URL: {url}")
 
+        check_cmds = _as_commands(_platform_value(dep_config, "check", platform))
         # Check if already installed
-        if not skip_check:
-            check_cmds = dep_config.get("check", {}).get(platform)
-            if check_cmds:
-                if check_if_installed(dep_name, check_cmds):
-                    if verbose:
-                        print(f"✓ {dep_name} is already installed")
-                    skipped_count += 1
-                    continue
+        if not skip_check and check_cmds and is_installed(dep_name, check_cmds):
+            if verbose:
+                print(f"✓ {dep_name} is already installed")
+            skipped_count += 1
+            continue
 
-        # Get install commands
-        install_cmds = dep_config.get("install", {}).get(platform)
+        # Get install commands. A non-table `install` is a config error, not "nothing
+        # to install here": failing it keeps a typo from going green silently.
+        if not isinstance(dep_config.get("install", {}), dict):
+            if verbose:
+                print(
+                    f"✗ {dep_name}: install must be a per-platform table "
+                    f"(install.{platform} = ...), got "
+                    f"{type(dep_config['install']).__name__}",
+                    file=sys.stderr,
+                )
+            failed_count += 1
+            continue
+        install_cmds = _platform_value(dep_config, "install", platform)
 
         if not install_cmds:
             if verbose:
@@ -473,18 +605,24 @@ def install_system_dependencies(
                 f"\nInstalling {dep_name}... (timeout: {install_timeout}s per command)"
             )
 
-        success, error = install_dependency(
+        verify = verify_for(dep_name, dep_config)
+        success, error = install_and_verify(
             dep_name,
             install_cmds,
-            install_timeout,
+            check_cmds if verify else [],
+            timeout=install_timeout,
             retries=retries_for(dep_name, dep_config),
             apt_lock_timeout=apt_lock_timeout,
+            install=install,
+            is_installed=is_installed,
         )
 
         if success:
             if verbose:
                 print(f"✓ {dep_name} installed successfully")
             installed_count += 1
+            if verify and not check_cmds:
+                unverified.append(dep_name)
         else:
             if verbose:
                 print(f"✗ Installation failed for {dep_name}: {error}", file=sys.stderr)
@@ -507,6 +645,8 @@ def install_system_dependencies(
         print(f"⊘ Already present: {skipped_count}")
         if failed_count > 0:
             print(f"✗ Failed: {failed_count}")
+        if unverified:
+            print(f"Not verified (no check.{platform}): {', '.join(unverified)}")
 
     return installed_count, skipped_count, failed_count
 
