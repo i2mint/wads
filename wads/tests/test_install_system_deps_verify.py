@@ -259,3 +259,19 @@ def test_cli_exits_nonzero_on_silent_failure(tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as exc:
         mod.main()
     assert exc.value.code == 1
+
+
+def test_non_table_install_fails_instead_of_passing_silently(tmp_path):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.0.1"\n\n'
+        '[tool.wads.ops.ffmpeg]\ninstall = "sudo apt-get install -y ffmpeg"\n'
+    )
+    calls = []
+    counts = install_system_dependencies(
+        str(tmp_path),
+        platform="linux",
+        verbose=False,
+        install=lambda *a, **k: calls.append(a) or (True, None),
+        is_installed=lambda *a: False,
+    )
+    assert counts == (0, 0, 1) and calls == []

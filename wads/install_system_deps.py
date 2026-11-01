@@ -579,7 +579,18 @@ def install_system_dependencies(
             skipped_count += 1
             continue
 
-        # Get install commands
+        # Get install commands. A non-table `install` is a config error, not "nothing
+        # to install here": failing it keeps a typo from going green silently.
+        if not isinstance(dep_config.get("install", {}), dict):
+            if verbose:
+                print(
+                    f"✗ {dep_name}: install must be a per-platform table "
+                    f"(install.{platform} = ...), got "
+                    f"{type(dep_config['install']).__name__}",
+                    file=sys.stderr,
+                )
+            failed_count += 1
+            continue
         install_cmds = _platform_value(dep_config, "install", platform)
 
         if not install_cmds:
