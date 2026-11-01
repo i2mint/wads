@@ -11,6 +11,8 @@ Large amounts of inline Python and bash code in `.github/actions/*/action.yml` f
 - **Reusability**: Scripts can be used outside of GitHub Actions
 - **Development**: Better IDE support, type checking, and linting
 
+Actions run these scripts **by path from their own checkout** (`$GITHUB_ACTION_PATH/../../wads/scripts/<script>.py`), not as `python -m wads.scripts.<script>` from a pip-installed wheel, so a merged fix is live on the next run and the scripts never import the `wads` package ([#156](https://github.com/i2mint/wads/issues/156)). The `-m` form still works for local use.
+
 ## Migrated Actions
 
 ### 1. `read-ci-config` → `wads/scripts/read_ci_config.py`
@@ -29,7 +31,7 @@ The script:
 - name: Read CI Configuration
   shell: bash
   run: |
-    python3 -m wads.scripts.read_ci_config "${{ inputs.pyproject-path }}"
+    python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/read_ci_config.py" "${{ inputs.pyproject-path }}"
 ```
 
 **Standalone usage**:
@@ -56,7 +58,7 @@ The script:
     SECRETS_CONTEXT: ${{ toJson(secrets) }}
   shell: bash
   run: |
-    python3 -m wads.scripts.set_env_vars "${{ inputs.pyproject-path }}"
+    python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/set_env_vars.py" "${{ inputs.pyproject-path }}"
 ```
 
 **Standalone usage**:
@@ -76,12 +78,12 @@ The script:
 - Builds distributions (sdist and/or wheel)
 - Reports built packages with sizes
 
-**Usage in action.yml**:
+**Usage in action.yml** (the non-uv path; the action passes its own `--output-dir`/`--no-sdist`/`--no-wheel` from its inputs, and its uv path runs `uv build`):
 ```yaml
 - name: Build Distributions
   shell: bash
   run: |
-    python3 -m wads.scripts.build_dist \
+    python3 "$GITHUB_ACTION_PATH/../../wads/scripts/build_dist.py" \
       --output-dir=dist \
       --sdist \
       --wheel
