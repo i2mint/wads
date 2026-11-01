@@ -24,6 +24,16 @@ declare ``install_retries`` (``0`` disables retrying); the CLI's ``--install-ret
 sets the fallback. Worst case for a command that always fails is
 ``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful
 ``apt-get update`` is not repeated when only the following install flaked.
+
+An install whose commands all exit 0 is not trusted on that alone: when the dependency
+declares a ``check.<platform>``, that check is re-run afterwards, and a dependency whose
+check still fails is re-installed (:data:`DFLT_VERIFY_RETRIES` more rounds) and then
+reported as failed. Package managers do report success for installs that did nothing —
+Chocolatey prints ``installed 0/0 packages`` and exits 0 when its feed returns a 5xx —
+and a CI job would then run its tests without the dependency, red for the wrong reason
+or green with the coverage silently skipped (issue #162). A dependency whose check
+cannot pass in the installing process (one that only works in a new shell, say) opts
+out with ``verify_install = false``.
 """
 
 import sys
@@ -66,6 +76,10 @@ DFLT_CHECK_TIMEOUT = 10
 # (doubled for each further one). Transient mirror failures are the common cause.
 DFLT_INSTALL_RETRIES = 2
 DFLT_INSTALL_BACKOFF = 5
+#: Extra install rounds for a dependency whose commands succeeded but whose declared
+#: ``check`` still fails afterwards (a package manager that reported success for
+#: nothing — e.g. Chocolatey on a feed 5xx).
+DFLT_VERIFY_RETRIES = 1
 
 
 def find_pyproject(path: str) -> Path:
@@ -304,6 +318,38 @@ def install_dependency(
     return True, None
 
 
+def install_and_verify(
+    dep_name: str,
+    install_cmds: any,
+    check_cmds: any,
+    *,
+    verify_retries: int = DFLT_VERIFY_RETRIES,
+    is_installed=check_if_installed,
+    install=install_dependency,
+    **install_kwargs,
+) -> Tuple[bool, Optional[str]]:
+    """Install a dependency, then confirm it with its check commands.
+
+    ``install`` runs ``install_cmds`` (with its own per-command retries); when it
+    reports success and ``check_cmds`` is non-empty, ``is_installed`` must agree, or
+    the install is repeated up to ``verify_retries`` more times before failing. With
+    no ``check_cmds`` the install's own exit status is all there is to go on.
+
+    Returns ``(success, error_message)`` like :func:`install_dependency`.
+    """
+    if verify_retries < 0:
+        raise ValueError(f"verify_retries must be >= 0, got {verify_retries}")
+    for attempt in range(verify_retries + 1):
+        if attempt:
+            print(f"  Re-installing {dep_name} ({attempt}/{verify_retries})")
+        success, error = install(dep_name, install_cmds, **install_kwargs)
+        if not success or not check_cmds or is_installed(dep_name, check_cmds):
+            return success, error
+        error = f"install commands exited 0 but the check still fails: {check_cmds!r}"
+        print(f"  {error}")
+    return False, error
+
+
 def install_system_dependencies(
     pyproject_path: str = ".",
     platform: Optional[str] = None,
@@ -473,10 +519,18 @@ def install_system_dependencies(
                 f"\nInstalling {dep_name}... (timeout: {install_timeout}s per command)"
             )
 
-        success, error = install_dependency(
+        verify = dep_config.get("verify_install", True) is not False
+        check_cmds = dep_config.get("check", {}).get(platform) if verify else None
+        if verify and not check_cmds and verbose:
+            print(
+                f"  (no check.{platform} declared for {dep_name}: "
+                "the install's exit status is not verified)"
+            )
+        success, error = install_and_verify(
             dep_name,
             install_cmds,
-            install_timeout,
+            check_cmds,
+            timeout=install_timeout,
             retries=retries_for(dep_name, dep_config),
             apt_lock_timeout=apt_lock_timeout,
         )
