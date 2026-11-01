@@ -1124,13 +1124,23 @@ def _existing_stub_secrets(old_ci) -> "tuple[str, list] | None":
 
 
 def _find_pyproject_near(old_ci) -> Path | None:
-    """Best-effort locate a pyproject.toml given a CI path like .../.github/workflows/ci.yml."""
-    if not old_ci:
+    """Best-effort locate a pyproject.toml given a CI path like .../.github/workflows/ci.yml.
+
+    ``old_ci`` may also be the workflow's *content* (as ``migrate_ci_to_stub``
+    accepts), which is not a file and so locates nothing: ``None``, never an
+    ``OSError`` from statting the text as a path (``File name too long`` on macOS,
+    issue #168), and never the current directory's pyproject.toml.
+
+    >>> _find_pyproject_near("name: CI\\non: [push]\\n") is None
+    True
+    >>> _find_pyproject_near("x" * 300) is None
+    True
+    """
+    if not old_ci or not os.path.isfile(str(old_ci)):
         return None
-    p = Path(old_ci)
     # Walk up from the CI file looking for a sibling pyproject.toml.
-    for parent in [p] + list(p.parents):
-        candidate = (parent if parent.is_dir() else parent.parent) / "pyproject.toml"
+    for parent in Path(old_ci).parents:
+        candidate = parent / "pyproject.toml"
         if candidate.is_file():
             return candidate
     return None
