@@ -23,6 +23,12 @@ Known differences from CI: the developer's environment passes through to the com
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
+Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's
+PID (:mod:`wads.workdirs`). Before starting, a run removes those that killed runs left
+behind (older than a few hours, owner no longer running) and refuses, with a plain
+message, when the temp filesystem lacks room for one venv per tested Python, rather than
+failing partway with ``No space left on device`` (issue #159).
+
 Every command goes through one ``runner`` seam. The default runs subprocesses; tests pass
 a fake. The default also refuses upload and push steps while pytest is running, so no test
 can ever spend or publish.
@@ -41,13 +47,13 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
+from wads.workdirs import make_workdir, sweep_stale_workdirs
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
 # (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.
@@ -80,6 +86,12 @@ PUBLISH_CREDENTIAL_VARS = (
 )
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
+
+#: Prefix of the temporary work directory each run makes (and sweeps when left behind).
+WORKDIR_PREFIX = "wads-ci-local-"
+#: Free space the temp filesystem needs per tested Python before a run starts: one venv
+#: with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.
+WORKDIR_BYTES_PER_PYTHON = 1_000_000_000
 
 _INSTALL_HINTS = {
     "uv": "install uv: https://docs.astral.sh/uv/getting-started/installation/",
@@ -230,6 +242,32 @@ def plan_ci_local(
     steps += _test_steps(config, platform=platform, repo=repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
     return steps
+
+
+def _temp_space_step(n_pythons: int) -> Step:
+    """Refuse up front when the temp filesystem cannot hold the run's venvs (issue #159).
+
+    Not part of :func:`plan_ci_local`, which mirrors what CI does: it is a check on this
+    machine, run first by :func:`run_ci_local`. Without it a full tmpfs fails the run
+    partway, as test errors or a crashed pytest that read as red CI.
+    """
+    needed = max(n_pythons, 1) * WORKDIR_BYTES_PER_PYTHON
+
+    def check(ctx):
+        free = shutil.disk_usage(ctx.values["workdir"]).free
+        if free < needed:
+            return (
+                f"only {free / 1e9:.1f} GB free in the temp directory, need about "
+                f"{needed / 1e9:.1f} GB (one venv per tested Python): free space, or "
+                "set TMPDIR to a bigger filesystem"
+            )
+        return None
+
+    return Step(
+        "temp space",
+        check=check,
+        description=f">= {needed / 1e9:.1f} GB free for <<workdir>>",
+    )
 
 
 def _required_env_step(names) -> Step:
@@ -703,17 +741,28 @@ def run_ci_local(
     environ: Optional[Mapping[str, str]] = None,
     out=None,
     keep_workdir: bool = False,
+    workdir_root: Optional[str] = None,
 ) -> CILocalReport:
-    """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report."""
+    """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
+
+    The steps run in a fresh work directory under ``workdir_root`` (default: the system
+    temp directory), after removing the stale ones killed runs left there and checking
+    that the filesystem has room for this run (issue #159).
+    """
     repo = Path(repo).resolve()
     out = out or sys.stdout
     config = config if config is not None else CIConfig.from_file(repo)
-    steps = plan_ci_local(repo, publish=publish, config=config)
+    steps = [_temp_space_step(len(config.python_versions))]
+    steps += plan_ci_local(repo, publish=publish, config=config)
     source_env = dict(os.environ if environ is None else environ)
     env = {k: v for k, v in source_env.items() if k not in PUBLISH_CREDENTIAL_VARS}
     # Committed defaults are authoritative, as in CI's export-ci-env.
     env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
-    workdir = tempfile.mkdtemp(prefix="wads-ci-local-")
+    # A killed run never reaches the cleanup below; remove what earlier ones left.
+    swept = sweep_stale_workdirs(WORKDIR_PREFIX, root=workdir_root)
+    if swept:
+        print(f"Removed {len(swept)} stale {WORKDIR_PREFIX}* workdir(s)", file=out)
+    workdir = make_workdir(WORKDIR_PREFIX, root=workdir_root)
     ctx = _Context(
         repo=repo,
         runner=runner,

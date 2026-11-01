@@ -7,6 +7,7 @@ to refuse upload and push steps under pytest on its own.
 """
 
 import io
+import os
 from pathlib import Path
 
 import pytest
@@ -592,3 +593,37 @@ def test_level_validate_contradicts_publish_and_deploy_is_publish(capsys):
         ci_local(".", level="bogus", dry_run=True)
     ci_local(".", level="deploy", dry_run=True)
     assert "upload to PyPI" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------------------
+# The work directory (issue #159)
+
+
+def test_a_run_sweeps_workdirs_that_killed_runs_left(repo, tmp_path):
+    root = tmp_path / "tmp"
+    root.mkdir()
+    stale = root / "wads-ci-local-killed"
+    stale.mkdir()
+    os.utime(stale, (0, 0))  # ancient, and no owner file: a pre-#159 leftover
+    out = io.StringIO()
+    report = run_ci_local(
+        repo, runner=FakeRunner(), environ={}, out=out, workdir_root=str(root)
+    )
+    assert report.ok and not stale.exists()
+    assert "Removed 1 stale wads-ci-local-* workdir(s)" in out.getvalue()
+    assert list(root.iterdir()) == [], "this run's own workdir is cleaned up too"
+
+
+def test_a_full_temp_filesystem_fails_before_any_command(repo, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        ci_local_module.shutil,
+        "disk_usage",
+        lambda path: type("Usage", (), {"free": 10**8})(),
+    )
+    runner = FakeRunner()
+    report = run_ci_local(
+        repo, runner=runner, environ={}, out=io.StringIO(), workdir_root=str(tmp_path)
+    )
+    assert not report.ok and report.failure.name == "temp space"
+    assert "0.1 GB free" in report.outcomes[0][2]
+    assert runner.calls == []
