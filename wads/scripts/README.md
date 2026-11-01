@@ -67,7 +67,7 @@ python -m wads.scripts.validate_ci_env
 
 ### In GitHub Actions
 
-Actions run each script by path from the action's own checkout of wads, not with `python -m wads.scripts...` from an installed wheel: a fix merged here is then live on the next run instead of being shadowed by whichever wads release pip resolves, and the script never imports the `wads` package (whose dependencies a bare runner Python lacks). `-I` keeps the caller's working tree off `sys.path`:
+Actions run each script by path from the action's own checkout of wads, not with `python -m wads.scripts...` from an installed wheel: a fix merged here is then live on the next run instead of being shadowed by whichever wads release pip resolves, and the script never imports the `wads` package (whose dependencies a bare runner Python lacks). `-I` ignores `PYTHONPATH` and the user site, so nothing from the caller's environment is importable:
 
 ```yaml
 - name: Read CI Configuration
@@ -83,7 +83,7 @@ Scripts that need `wads/ci_config.py` load it through `wads/scripts/_checkout_im
 Locally, with wads installed, the `-m` form works too:
 
 ```bash
-# All scripts support --help
+# build_dist and install_deps support --help (the others take a path argument)
 python -m wads.scripts.build_dist --help
 
 # Most scripts work with current directory by default
