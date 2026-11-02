@@ -1458,7 +1458,7 @@ def main():
         default="@master",
         help=(
             "wads ref to pin in the stub (default '@master'). "
-            "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix)."
+            "Use e.g. '@0.2.15' to freeze the workflow (its actions still float; tags have no 'v' prefix)."
         ),
     )
     fleet_parser.add_argument(
@@ -1499,7 +1499,7 @@ def main():
             "wads ref to pin in the stub. Defaults to the existing stub's pin, "
             "else '@master' (floats with "
             "wads — convenient, occasional CI breakage on bad wads merges). "
-            "Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "
+            "Use e.g. '@0.2.15' to freeze the workflow (its actions still float; tags have no 'v' prefix). The "
             "JSON transport needs a ref whose uv-ci.yml declares "
             "WADS_CI_SECRETS_JSON (releases after 0.2.14); the named transport "
             "works with any pin. Must start with '@'."
@@ -1740,8 +1740,8 @@ def main():
                 )
             if pin == "@master":
                 print(
-                    "\nPinned to @master (floats with wads). If you need version "
-                    "stability for this repo, re-run with `--pin @X.Y.Z` (tags "
+                    "\nPinned to @master (floats with wads). If you need a stable "
+                    "job graph for this repo, re-run with `--pin @X.Y.Z` (tags "
                     "have no 'v' prefix; latest via "
                     "`gh api repos/i2mint/wads/tags --jq '.[0].name'`).",
                     file=sys.stderr,
