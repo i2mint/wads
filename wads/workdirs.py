@@ -15,6 +15,10 @@ Windows ``os.kill`` with signal 0 terminates the process instead of probing it. 
 the sweep also leaves alone directories another user owns: it could not remove them from
 a shared ``/tmp`` anyway, and root should not age-sweep other users' work.
 
+:func:`room_shortfall` says what a filesystem lacks (free bytes, and free inodes where
+:func:`free_inodes` can report them) before a job needing that much room starts: a tmpfs
+can run out of inodes with bytes to spare.
+
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
 >>> d = make_workdir("demo-", root=root)
@@ -112,3 +116,42 @@ def sweep_stale_workdirs(
             if not workdir.exists():
                 removed.append(str(workdir))
     return removed
+
+
+#: Bytes per GB, for the messages :func:`room_shortfall` writes.
+BYTES_PER_GB = 1e9
+
+
+def free_inodes(path: str) -> Optional[int]:
+    """Inodes free to us on ``path``'s filesystem; ``None`` where that is not reported.
+
+    ``None`` off POSIX (no ``os.statvfs``) and on filesystems that do not track inodes
+    (``f_files == 0``: btrfs, an unlimited tmpfs).
+    """
+    statvfs = getattr(os, "statvfs", None)
+    if statvfs is None:
+        return None
+    stats = statvfs(path)
+    return stats.f_favail if stats.f_files else None
+
+
+def room_shortfall(path: str, *, min_bytes: int, min_inodes: int) -> Optional[str]:
+    """What ``path``'s filesystem lacks for a job needing that much room, or ``None``.
+
+    Both bytes and inodes count: a tmpfs can run out of inodes with bytes to spare
+    (issue #159). Inodes are skipped where :func:`free_inodes` cannot report them.
+
+    >>> import tempfile
+    >>> room_shortfall(tempfile.gettempdir(), min_bytes=0, min_inodes=0) is None
+    True
+    >>> room_shortfall(tempfile.gettempdir(), min_bytes=10**30, min_inodes=0)[:5]
+    'only '
+    """
+    shortfalls = []
+    free = shutil.disk_usage(path).free
+    if free < min_bytes:
+        shortfalls.append(f"only {free / BYTES_PER_GB:.1f} GB free")
+    inodes = free_inodes(path)
+    if inodes is not None and inodes < min_inodes:
+        shortfalls.append(f"only {inodes:,} inodes free")
+    return " and ".join(shortfalls) or None
