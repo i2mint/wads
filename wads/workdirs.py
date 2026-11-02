@@ -15,6 +15,10 @@ Windows ``os.kill`` with signal 0 terminates the process instead of probing it. 
 the sweep also leaves alone directories another user owns: it could not remove them from
 a shared ``/tmp`` anyway, and root should not age-sweep other users' work.
 
+:func:`room_shortfall` says what a filesystem lacks (free bytes, and free inodes where
+:func:`free_inodes` can report them) before a job needing that much room starts: a tmpfs
+can run out of inodes with bytes to spare.
+
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
 >>> d = make_workdir("demo-", root=root)

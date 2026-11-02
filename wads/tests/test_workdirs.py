@@ -121,3 +121,13 @@ def test_room_shortfall_counts_inodes(tmp_path, monkeypatch, files, favail, expe
     assert workdirs.room_shortfall(str(tmp_path), min_bytes=1, min_inodes=1000) == (
         expected
     )
+
+
+def test_room_shortfall_skips_inodes_without_statvfs(tmp_path, monkeypatch):
+    from wads import workdirs
+
+    monkeypatch.delattr(workdirs.os, "statvfs", raising=False)
+    assert workdirs.free_inodes(str(tmp_path)) is None
+    assert (
+        workdirs.room_shortfall(str(tmp_path), min_bytes=0, min_inodes=10**12) is None
+    )
