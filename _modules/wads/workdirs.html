@@ -305,9 +305,10 @@
 <span class="sd">&gt;&gt;&gt; import tempfile</span>
 <span class="sd">&gt;&gt;&gt; root = tempfile.mkdtemp()</span>
 <span class="sd">&gt;&gt;&gt; d = make_workdir("demo-", root=root)</span>
-<span class="sd">&gt;&gt;&gt; sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: True)</span>
+<span class="sd">&gt;&gt;&gt; import os; os.utime(d, (0, 0))  # make it old (a fresh mtime can lead the clock)</span>
+<span class="sd">&gt;&gt;&gt; sweep_stale_workdirs("demo-", root=root, min_age=60, is_alive=lambda pid: True)</span>
 <span class="sd">[]</span>
-<span class="sd">&gt;&gt;&gt; sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: False) == [d]</span>
+<span class="sd">&gt;&gt;&gt; sweep_stale_workdirs("demo-", root=root, min_age=60, is_alive=lambda pid: False) == [d]</span>
 <span class="sd">True</span>
 <span class="sd">&gt;&gt;&gt; import shutil; shutil.rmtree(root)</span>
 <span class="sd">"""</span>
@@ -481,7 +482,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=8bb8765b"></script>
+</div><script src="../../_static/documentation_options.js?v=29cf871c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

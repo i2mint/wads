@@ -25,9 +25,10 @@ can run out of inodes with bytes to spare.
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
 >>> d = make_workdir("demo-", root=root)
->>> sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: True)
+>>> import os; os.utime(d, (0, 0))  # make it old (a fresh mtime can lead the clock)
+>>> sweep_stale_workdirs("demo-", root=root, min_age=60, is_alive=lambda pid: True)
 []
->>> sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: False) == [d]
+>>> sweep_stale_workdirs("demo-", root=root, min_age=60, is_alive=lambda pid: False) == [d]
 True
 >>> import shutil; shutil.rmtree(root)
 ```
