@@ -23,6 +23,14 @@ Known differences from CI: the developer's environment passes through to the com
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
+Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's
+PID (:mod:`wads.workdirs`), and gives pytest a private ``--basetemp`` inside it, so
+concurrent runs never delete each other's basetemp and the workdir's removal takes the
+basetemp with it. Before starting, a run removes the workdirs killed runs left behind
+(older than a few hours, owner no longer running) and refuses, with a plain message, when
+the temp filesystem lacks the space or the inodes for one venv per tested Python, rather
+than failing partway with ``No space left on device`` (issue #159).
+
 Every command goes through one ``runner`` seam. The default runs subprocesses; tests pass
 a fake. The default also refuses upload and push steps while pytest is running, so no test
 can ever spend or publish.
@@ -41,13 +49,13 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
+from wads.workdirs import DFLT_STALE_AGE, HOUR, make_workdir, sweep_stale_workdirs
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
 # (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.
@@ -64,6 +72,9 @@ VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 # (so they cannot collide with braces in a user's pytest_args).
 WORKDIR = "<<workdir>>"
 DIST_DIR = f"{WORKDIR}/dist"
+# ci-local's own pytest --basetemp: private to the run (pytest prunes the shared default
+# one on startup, deleting a concurrent run's live basetemp), and swept with the workdir.
+PYTEST_BASETEMP = f"{WORKDIR}/pytest"
 _PLACEHOLDER = re.compile(r"<<(\w+)>>")
 
 # Side-effect classes. The default runner refuses the outward ones under pytest.
@@ -80,6 +91,16 @@ PUBLISH_CREDENTIAL_VARS = (
 )
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
+
+#: Prefix of the temporary work directory each run makes (and sweeps when left behind).
+WORKDIR_PREFIX = "wads-ci-local-"
+#: Free space the temp filesystem needs per tested Python before a run starts: one venv
+#: with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.
+WORKDIR_BYTES_PER_PYTHON = 1_000_000_000
+#: Free inodes it needs per tested Python: a workdir held ~22k and a pytest basetemp up
+#: to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).
+WORKDIR_INODES_PER_PYTHON = 100_000
+_BYTES_PER_GB = 1e9
 
 _INSTALL_HINTS = {
     "uv": "install uv: https://docs.astral.sh/uv/getting-started/installation/",
@@ -232,6 +253,61 @@ def plan_ci_local(
     return steps
 
 
+def _venv_count(steps: Sequence[Step]) -> int:
+    """How many venvs ``steps`` create (none when tests and the licence gate are off)."""
+    return sum(step.argv[:2] == ("uv", "venv") for step in steps)
+
+
+def _space_needed(n_venvs: int) -> str:
+    """The temp space a run with ``n_venvs`` venvs needs, as the plan and check word it."""
+    gb = n_venvs * WORKDIR_BYTES_PER_PYTHON / _BYTES_PER_GB
+    return f"{gb:.1f} GB / {n_venvs * WORKDIR_INODES_PER_PYTHON:,} inodes"
+
+
+def _free_inodes(path: str) -> Optional[int]:
+    """Inodes free to us on ``path``'s filesystem; ``None`` where that is not reported."""
+    statvfs = getattr(os, "statvfs", None)  # POSIX only
+    if statvfs is None:
+        return None
+    stats = statvfs(path)
+    return stats.f_favail if stats.f_files else None  # f_files == 0: not tracked
+
+
+def _temp_space_step(n_venvs: int) -> Step:
+    """Refuse up front when the temp filesystem cannot hold the run's venvs (issue #159).
+
+    Not part of :func:`plan_ci_local`, which mirrors what CI does: it is a check on this
+    machine, run first by :func:`run_ci_local`. Without it a full tmpfs fails the run
+    partway, as test errors or a crashed pytest that read as red CI. Both bytes and
+    inodes count: the outage behind #159 had bytes to spare and no inodes left.
+    """
+    needed_bytes = n_venvs * WORKDIR_BYTES_PER_PYTHON
+    needed_inodes = n_venvs * WORKDIR_INODES_PER_PYTHON
+
+    def check(ctx):
+        workdir = ctx.values["workdir"]
+        free = shutil.disk_usage(workdir).free
+        free_inodes = _free_inodes(workdir)
+        shortfalls = []
+        if free < needed_bytes:
+            shortfalls.append(f"only {free / _BYTES_PER_GB:.1f} GB free")
+        if free_inodes is not None and free_inodes < needed_inodes:
+            shortfalls.append(f"only {free_inodes:,} inodes free")
+        if shortfalls:
+            return (
+                f"{' and '.join(shortfalls)} in the temp directory, need about "
+                f"{_space_needed(n_venvs)} (one venv and pytest basetemp per tested "
+                "Python): free some, or set TMPDIR to a bigger filesystem"
+            )
+        return None
+
+    return Step(
+        "temp space",
+        check=check,
+        description=f">= {_space_needed(n_venvs)} free for <<workdir>>",
+    )
+
+
 def _required_env_step(names) -> Step:
     def check(ctx):
         missing = [name for name in names if not ctx.env.get(name)]
@@ -313,7 +389,16 @@ def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
                 ),
                 Step(
                     f"{label}: tests",
-                    (python, "-m", "pytest", *pytest_argv(config, repo=repo)),
+                    (
+                        python,
+                        "-m",
+                        "pytest",
+                        # First, so a `--` in the user's pytest_args cannot turn it
+                        # into a test path.
+                        "--basetemp",
+                        PYTEST_BASETEMP,
+                        *pytest_argv(config, repo=repo),
+                    ),
                 ),
             ]
     return steps
@@ -703,17 +788,34 @@ def run_ci_local(
     environ: Optional[Mapping[str, str]] = None,
     out=None,
     keep_workdir: bool = False,
+    workdir_root: Optional[str] = None,
 ) -> CILocalReport:
-    """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report."""
+    """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
+
+    The steps run in a fresh work directory under ``workdir_root`` (default: the system
+    temp directory), after removing the stale ones killed runs left there and checking
+    that the filesystem has room for this run (issue #159).
+    """
     repo = Path(repo).resolve()
     out = out or sys.stdout
     config = config if config is not None else CIConfig.from_file(repo)
     steps = plan_ci_local(repo, publish=publish, config=config)
+    if n_venvs := _venv_count(steps):
+        steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
     env = {k: v for k, v in source_env.items() if k not in PUBLISH_CREDENTIAL_VARS}
     # Committed defaults are authoritative, as in CI's export-ci-env.
     env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
-    workdir = tempfile.mkdtemp(prefix="wads-ci-local-")
+    # A killed run never reaches the cleanup below; remove what earlier ones left.
+    # Best effort: a sweep that fails must not stop the run it was clearing room for.
+    try:
+        swept = sweep_stale_workdirs(WORKDIR_PREFIX, root=workdir_root)
+    except OSError as exc:
+        swept = []
+        print(f"Note: skipped the stale workdir sweep ({exc})", file=out)
+    if swept:
+        print(f"Removed {len(swept)} stale {WORKDIR_PREFIX}* workdir(s)", file=out)
+    workdir = make_workdir(WORKDIR_PREFIX, root=workdir_root)
     ctx = _Context(
         repo=repo,
         runner=runner,
@@ -758,10 +860,18 @@ def run_ci_local(
 
 
 def render_plan(steps: Sequence[Step]) -> str:
-    """The plan as numbered lines, flagging non-blocking and side-effecting steps."""
+    """The plan as numbered lines, flagging non-blocking and side-effecting steps.
+
+    The header also says what :func:`run_ci_local` does before the plan: sweep stale
+    workdirs and check the temp filesystem has room.
+    """
+    n_venvs = _venv_count(steps)
+    room = f", and requires about {_space_needed(n_venvs)} free" if n_venvs else ""
     lines = [
         "wads ci-local plan (<<workdir>> is a fresh temporary directory; "
-        "<<version>> comes from the bump step):"
+        "<<version>> comes from the bump step):",
+        f"  A real run first removes stale {WORKDIR_PREFIX}* workdirs older than "
+        f"{DFLT_STALE_AGE / HOUR:g} h whose owner is gone{room}.",
     ]
     for number, step in enumerate(steps, 1):
         tags = ([] if step.blocking else ["non-blocking"]) + (

@@ -7,6 +7,7 @@ to refuse upload and push steps under pytest on its own.
 """
 
 import io
+import os
 from pathlib import Path
 
 import pytest
@@ -128,7 +129,13 @@ def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
     assert tests[:3] == ("<<workdir>>/py3.12/bin/python", "-m", "pytest")
-    assert list(tests[3:]) == pytest_argv(_config(), repo=tmp_path)
+    # ci-local's private basetemp (issue #159; first, so a `--` in the user's
+    # pytest_args cannot make it a test path), then CI's pytest arguments
+    assert list(tests[3:]) == [
+        "--basetemp",
+        "<<workdir>>/pytest",
+        *pytest_argv(_config(), repo=tmp_path),
+    ]
     assert by_name["build"].argv == ("uv", "build", "--out-dir", "<<workdir>>/dist")
     assert not any(step.side_effect for step in steps), "validation has no side effects"
 
@@ -592,3 +599,106 @@ def test_level_validate_contradicts_publish_and_deploy_is_publish(capsys):
         ci_local(".", level="bogus", dry_run=True)
     ci_local(".", level="deploy", dry_run=True)
     assert "upload to PyPI" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------------------
+# The work directory (issue #159)
+
+
+def test_a_run_sweeps_workdirs_that_killed_runs_left(repo, tmp_path):
+    root = tmp_path / "tmp"
+    root.mkdir()
+    stale = root / "wads-ci-local-killed"
+    stale.mkdir()
+    os.utime(stale, (0, 0))  # ancient, and no owner file: a pre-#159 leftover
+    out = io.StringIO()
+    report = run_ci_local(
+        repo, runner=FakeRunner(), environ={}, out=out, workdir_root=str(root)
+    )
+    assert report.ok and not stale.exists()
+    assert "Removed 1 stale wads-ci-local-* workdir(s)" in out.getvalue()
+    assert list(root.iterdir()) == [], "this run's own workdir is cleaned up too"
+
+
+def test_a_full_temp_filesystem_fails_before_any_command(repo, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        ci_local_module.shutil,
+        "disk_usage",
+        lambda path: type("Usage", (), {"free": 10**8})(),
+    )
+    runner = FakeRunner()
+    report = run_ci_local(
+        repo, runner=runner, environ={}, out=io.StringIO(), workdir_root=str(tmp_path)
+    )
+    assert not report.ok and report.failure.name == "temp space"
+    assert "0.1 GB free" in report.outcomes[0][2]
+    assert runner.calls == []
+
+
+def _statvfs_reporting(monkeypatch, *, favail):
+    """Make ``os.statvfs`` report ``favail`` free inodes (bytes stay real)."""
+    real = os.statvfs
+
+    class Stats:
+        def __init__(self, path):
+            self._real, self.f_files, self.f_favail = real(path), 10**6, favail
+
+        def __getattr__(self, name):
+            return getattr(self._real, name)
+
+    monkeypatch.setattr(ci_local_module.os, "statvfs", Stats)
+
+
+@pytest.mark.skipif(not hasattr(os, "statvfs"), reason="inodes are POSIX only")
+def test_an_inode_shortfall_fails_before_any_command(repo, tmp_path, monkeypatch):
+    _statvfs_reporting(monkeypatch, favail=5)
+    runner = FakeRunner()
+    report = run_ci_local(
+        repo, runner=runner, environ={}, out=io.StringIO(), workdir_root=str(tmp_path)
+    )
+    assert not report.ok and report.failure.name == "temp space"
+    assert "only 5 inodes free" in report.outcomes[0][2]
+    assert runner.calls == []
+
+
+def test_a_run_without_venvs_skips_the_temp_space_check(repo, monkeypatch):
+    monkeypatch.setattr(ci_local_module, "_temp_space_step", None)  # never built
+    config = _config(testing={"enabled": False})
+    report = run_ci_local(
+        repo, config=config, runner=FakeRunner(), environ={}, out=io.StringIO()
+    )
+    assert report.ok and "temp space" not in _names(s for s, *_ in report.outcomes)
+
+
+def test_a_failing_sweep_does_not_stop_the_run(repo, monkeypatch):
+    def broken_sweep(*args, **kwargs):
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(ci_local_module, "sweep_stale_workdirs", broken_sweep)
+    out = io.StringIO()
+    report = run_ci_local(repo, runner=FakeRunner(), environ={}, out=out)
+    assert report.ok
+    assert "Note: skipped the stale workdir sweep (denied)" in out.getvalue()
+
+
+def test_dry_run_header_names_the_sweep_and_the_space_needed():
+    text = render_plan(plan_ci_local(".", config=_config()))
+    assert (
+        "A real run first removes stale wads-ci-local-* workdirs older than 6 h "
+        "whose owner is gone, and requires about 2.0 GB / 200,000 inodes free."
+    ) in text
+    no_venvs = render_plan(
+        plan_ci_local(".", config=_config(testing={"enabled": False}))
+    )
+    assert "whose owner is gone." in no_venvs and "requires" not in no_venvs
+
+
+def test_a_corrupt_owner_file_is_judged_by_age(tmp_path):
+    from wads.workdirs import OWNER_FILE, sweep_stale_workdirs
+
+    for i, junk in enumerate(["99999999999999999999", "0", "-1", "x"]):
+        d = tmp_path / f"wads-ci-local-{i}"
+        d.mkdir()
+        (d / OWNER_FILE).write_text(junk)
+        os.utime(d, (0, 0))
+    assert len(sweep_stale_workdirs("wads-ci-local-", root=str(tmp_path))) == 4
