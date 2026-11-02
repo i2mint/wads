@@ -1,4 +1,4 @@
-> built 2026-11-01 23:46 UTC from 963c1ec (master) · wads 0.2.61. Details: build_info.json
+> built 2026-11-02 00:03 UTC from 9485bf6 (master) · wads 0.2.62. Details: build_info.json
 
 # index.html.md
 
@@ -205,6 +205,7 @@ url = "https://ffmpeg.org/"
 
 check.linux = "which ffmpeg"
 check.macos = "which ffmpeg"
+check.windows = "where ffmpeg"
 
 install.linux = "sudo apt-get install -y ffmpeg"
 install.macos = "brew install ffmpeg"
@@ -213,7 +214,7 @@ install.windows = "choco install ffmpeg -y"
 note = "Required for audio processing features"
 ```
 
-The `install-system-deps` action in your CI workflow will automatically install these.
+The `install-system-deps` action in your CI workflow will automatically install these. Declare a `check` for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with `verify_install = false`.
 
 ## Core Features
 
@@ -3123,12 +3124,35 @@ sets the fallback. Worst case for a command that always fails is
 `(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
 `apt-get update` is not repeated when only the following install flaked.
 
+An install whose commands all exit 0 is not trusted on that alone: when the dependency
+declares a `check.<platform>`, that check is re-run afterwards, and a dependency whose
+check still fails is re-installed ([`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES) more rounds, each after a
+backoff wait that starts at `DFLT_INSTALL_BACKOFF` seconds and doubles) and then
+reported as failed. Package managers do report success for installs that did nothing —
+Chocolatey prints `installed 0/0 packages` and exits 0 when its feed returns a 5xx —
+and a CI job would then run its tests without the dependency, red for the wrong reason
+or green with the coverage silently skipped (issue #162). A dependency whose check
+cannot pass in the installing process (one that only works in a new shell, say) opts
+out with `verify_install = false`. A blank check counts as no check: not verified.
+
+So the worst case for one dependency is `(verify_retries + 1)` full install rounds —
+each up to `n_commands * (retries + 1) * install_timeout` plus its command backoffs,
+followed by its checks (`n_checks * DFLT_CHECK_TIMEOUT`) — plus the backoff waits
+between rounds: with the defaults, a failing verify roughly doubles the install time.
+
+`check` and `install` take a string or a list. A list item is either a command line
+or a command in argv form (a list of strings, e.g.
+`check.linux = [["dpkg", "-s", "unixodbc"], ["rpm", "-q", "unixODBC"]]`), which is
+quoted into one command line for the platform’s shell. Checks are OR-ed (any passing
+one means installed); install commands are AND-ed (run in order, all must succeed).
+
 ### Module Attributes
 
-| [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).   |
-|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                              |
-| [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                      |
+| [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).                                                             |
+|------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                        |
+| [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                |
+| [`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx). |
 
 ### Functions
 
@@ -3136,6 +3160,7 @@ sets the fallback. Worst case for a command that always fails is
 |----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | [`detect_platform`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.detect_platform)()                                 | Detect the current platform.                                                    |
 | [`find_pyproject`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.find_pyproject)(path)                              | Find pyproject.toml file from path (file or directory).                         |
+| [`install_and_verify`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_and_verify)(dep_name, install_cmds, ...)   | Install a dependency, then confirm it with its check commands.                  |
 | [`install_dependency`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_dependency)(dep_name, install_cmds[, ...]) | Install a dependency using install commands.                                    |
 | [`install_system_dependencies`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_system_dependencies)([...])                | Install system dependencies from pyproject.toml.                                |
 | [`main`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
@@ -3150,6 +3175,12 @@ Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).
 
 Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.
 
+### wads.install_system_deps.DFLT_VERIFY_RETRIES *= 1*
+
+Extra install rounds for a dependency whose commands succeeded but whose declared
+`check` still fails afterwards (a package manager that reported success for
+nothing — e.g. Chocolatey on a feed 5xx).
+
 ### wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS *= {'ffmpeg': 900}*
 
 Dependencies with a big dependency tree get a longer ceiling than the global default
@@ -3162,7 +3193,7 @@ Check if dependency is already installed using check commands.
 
 * **Parameters:**
   * **dep_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Name of dependency
-  * **check_cmds** (`any`) – Command(s) to check if installed (string, list, or empty)
+  * **check_cmds** (`any`) – Command(s) to check if installed (see `_as_commands()`)
   * **timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Timeout in seconds for check commands
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
@@ -3183,13 +3214,29 @@ Find pyproject.toml file from path (file or directory).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
+### wads.install_system_deps.install_and_verify(dep_name, install_cmds, check_cmds, \*, verify_retries=1, backoff=5, sleep=None, is_installed=<function check_if_installed>, install=<function install_dependency>, \*\*install_kwargs)
+
+Install a dependency, then confirm it with its check commands.
+
+`install` runs `install_cmds` (with its own per-command retries); when it
+reports success and `check_cmds` declares a command, `is_installed` must
+agree, or the install is repeated up to `verify_retries` more times, after
+`backoff` seconds (doubling), before failing. With no check declared the
+install’s own exit status is all there is to go on. `backoff` and `sleep`
+are also passed on to `install` for its per-command retries.
+
+Returns `(success, error_message)` like [`install_dependency()`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_dependency).
+
+* **Return type:**
+  [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
 ### wads.install_system_deps.install_dependency(dep_name, install_cmds, timeout=300, , retries=2, backoff=5, sleep=None, apt_lock_timeout=120)
 
 Install a dependency using install commands.
 
 * **Parameters:**
   * **dep_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Name of dependency
-  * **install_cmds** (`any`) – Command(s) to install (string or list)
+  * **install_cmds** (`any`) – Command(s) to install (see `_as_commands()`)
   * **timeout** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Timeout in seconds for each command
   * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts for a command that fails or times out
   * **backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Seconds before the first retry; doubles for each further one
@@ -3200,7 +3247,7 @@ Install a dependency using install commands.
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool), [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=None, default_install_retries=2, apt_lock_timeout=120)
+### wads.install_system_deps.install_system_dependencies(pyproject_path='.', platform=None, skip_check=False, verbose=True, , default_install_timeout=None, default_install_retries=2, apt_lock_timeout=120, install=None, is_installed=None)
 
 Install system dependencies from pyproject.toml.
 
@@ -3216,6 +3263,10 @@ Install system dependencies from pyproject.toml.
   * **apt_lock_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds each apt call waits for the dpkg lock (`None`: no flag).
   * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
     dependencies that declare no `install_retries` of their own.
+  * **install** – Runs one dependency’s install commands (`None`:
+    [`install_dependency()`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_dependency)).
+  * **is_installed** – Runs one dependency’s check commands, before installing and to
+    verify the install (`None`: [`check_if_installed()`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.check_if_installed)).
 * **Return type:**
   [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
 * **Returns:**
@@ -7703,16 +7754,18 @@ For examples, see the mk_import_root_replacer helper function.
 
 # About this build
 
-This documentation was built on **2026-11-01 23:46 UTC** from commit <a href="https://github.com/i2mint/wads/commit/963c1ece3afc8ad254577e7f604f9e8e059aa4d4"><code>963c1ec</code></a> on branch <code>master</code>, for **wads 0.2.61** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-02 00:03 UTC** from commit <a href="https://github.com/i2mint/wads/commit/9485bf6e37f4eb25d08d8a7f619f8cf5b838c308"><code>9485bf6</code></a> on branch <code>master</code>, for **wads 0.2.62** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.62) is behind the latest release on PyPI (0.2.63): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/963c1ece3afc8ad254577e7f604f9e8e059aa4d4"><code>963c1ece3afc8ad254577e7f604f9e8e059aa4d4</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/9485bf6e37f4eb25d08d8a7f619f8cf5b838c308"><code>9485bf6e37f4eb25d08d8a7f619f8cf5b838c308</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7723,9 +7776,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41363436874">41363436874</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41364742761">41364742761</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>963c1ece3afc8ad254577e7f604f9e8e059aa4d4</code> (in the history of the built commit) |
+| Event commit | <code>9485bf6e37f4eb25d08d8a7f619f8cf5b838c308</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7750,13 +7803,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.61/">0.2.61</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.63/">0.2.63</a>, newer than the documented version (0.2.62).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 963c1ece3afc8ad254577e7f604f9e8e059aa4d4
+git checkout 9485bf6e37f4eb25d08d8a7f619f8cf5b838c308
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

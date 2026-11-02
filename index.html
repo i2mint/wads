@@ -493,6 +493,7 @@ wads-secrets<span class="w"> </span>list<span class="w">                        
 
 <span class="n">check</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"which ffmpeg"</span>
 <span class="n">check</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"which ffmpeg"</span>
+<span class="n">check</span><span class="p">.</span><span class="n">windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"where ffmpeg"</span>
 
 <span class="n">install</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sudo apt-get install -y ffmpeg"</span>
 <span class="n">install</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew install ffmpeg"</span>
@@ -501,7 +502,7 @@ wads-secrets<span class="w"> </span>list<span class="w">                        
 <span class="n">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Required for audio processing features"</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">install-system-deps</span></code> action in your CI workflow will automatically install these.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">install-system-deps</span></code> action in your CI workflow will automatically install these. Declare a <code class="docutils literal notranslate"><span class="pre">check</span></code> for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with <code class="docutils literal notranslate"><span class="pre">verify_install</span> <span class="pre">=</span> <span class="pre">false</span></code>.</p>
 </section>
 </section>
 <section id="core-features">
@@ -986,7 +987,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-01 23:46 UTC from <a href="https://github.com/i2mint/wads/commit/963c1ece3afc8ad254577e7f604f9e8e059aa4d4">963c1ec</a> (master) · wads 0.2.61 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-02 00:03 UTC from <a href="https://github.com/i2mint/wads/commit/9485bf6e37f4eb25d08d8a7f619f8cf5b838c308">9485bf6</a> (master) · wads 0.2.62 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1083,7 +1084,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=cadb438d"></script>
+</div><script src="_static/documentation_options.js?v=ea6ad966"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

@@ -201,6 +201,7 @@ url = "https://ffmpeg.org/"
 
 check.linux = "which ffmpeg"
 check.macos = "which ffmpeg"
+check.windows = "where ffmpeg"
 
 install.linux = "sudo apt-get install -y ffmpeg"
 install.macos = "brew install ffmpeg"
@@ -209,7 +210,7 @@ install.windows = "choco install ffmpeg -y"
 note = "Required for audio processing features"
 ```
 
-The `install-system-deps` action in your CI workflow will automatically install these.
+The `install-system-deps` action in your CI workflow will automatically install these. Declare a `check` for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with `verify_install = false`.
 
 ## Core Features
 

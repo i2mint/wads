@@ -306,12 +306,35 @@
 <span class="sd">sets the fallback. Worst case for a command that always fails is</span>
 <span class="sd">``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful</span>
 <span class="sd">``apt-get update`` is not repeated when only the following install flaked.</span>
+
+<span class="sd">An install whose commands all exit 0 is not trusted on that alone: when the dependency</span>
+<span class="sd">declares a ``check.&lt;platform&gt;``, that check is re-run afterwards, and a dependency whose</span>
+<span class="sd">check still fails is re-installed (:data:`DFLT_VERIFY_RETRIES` more rounds, each after a</span>
+<span class="sd">backoff wait that starts at :data:`DFLT_INSTALL_BACKOFF` seconds and doubles) and then</span>
+<span class="sd">reported as failed. Package managers do report success for installs that did nothing —</span>
+<span class="sd">Chocolatey prints ``installed 0/0 packages`` and exits 0 when its feed returns a 5xx —</span>
+<span class="sd">and a CI job would then run its tests without the dependency, red for the wrong reason</span>
+<span class="sd">or green with the coverage silently skipped (issue #162). A dependency whose check</span>
+<span class="sd">cannot pass in the installing process (one that only works in a new shell, say) opts</span>
+<span class="sd">out with ``verify_install = false``. A blank check counts as no check: not verified.</span>
+
+<span class="sd">So the worst case for one dependency is ``(verify_retries + 1)`` full install rounds —</span>
+<span class="sd">each up to ``n_commands * (retries + 1) * install_timeout`` plus its command backoffs,</span>
+<span class="sd">followed by its checks (``n_checks * DFLT_CHECK_TIMEOUT``) — plus the backoff waits</span>
+<span class="sd">between rounds: with the defaults, a failing verify roughly doubles the install time.</span>
+
+<span class="sd">``check`` and ``install`` take a string or a list. A list item is either a command line</span>
+<span class="sd">or a command in argv form (a list of strings, e.g.</span>
+<span class="sd">``check.linux = [["dpkg", "-s", "unixodbc"], ["rpm", "-q", "unixODBC"]]``), which is</span>
+<span class="sd">quoted into one command line for the platform's shell. Checks are OR-ed (any passing</span>
+<span class="sd">one means installed); install commands are AND-ed (run in order, all must succeed).</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -348,6 +371,10 @@
 <span class="c1"># (doubled for each further one). Transient mirror failures are the common cause.</span>
 <span class="n">DFLT_INSTALL_RETRIES</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">DFLT_INSTALL_BACKOFF</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1">#: Extra install rounds for a dependency whose commands succeeded but whose declared</span>
+<span class="c1">#: ``check`` still fails afterwards (a package manager that reported success for</span>
+<span class="c1">#: nothing — e.g. Chocolatey on a feed 5xx).</span>
+<span class="n">DFLT_VERIFY_RETRIES</span> <span class="o">=</span> <span class="mi">1</span>
 
 
 <div class="viewcode-block" id="find_pyproject">
@@ -388,6 +415,47 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_commands</span><span class="p">(</span><span class="n">cmds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The command lines declared by ``cmds``; blank or malformed entries are dropped.</span>
+
+<span class="sd">    A string is one command line; a list holds command lines and argv-form commands</span>
+<span class="sd">    (lists of strings, quoted for the platform's shell); anything else declares none.</span>
+
+<span class="sd">    &gt;&gt;&gt; _as_commands("which ffmpeg")</span>
+<span class="sd">    ['which ffmpeg']</span>
+<span class="sd">    &gt;&gt;&gt; _as_commands(["which ffmpeg", "  ", ["dpkg", "-s", "unixodbc"], [], 3])</span>
+<span class="sd">    ['which ffmpeg', 'dpkg -s unixodbc']</span>
+<span class="sd">    &gt;&gt;&gt; _as_commands("   "), _as_commands([[]]), _as_commands(None)</span>
+<span class="sd">    ([], [], [])</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">command_line</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">item</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">item</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">item</span><span class="p">):</span>
+            <span class="n">join</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">list2cmdline</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"nt"</span> <span class="k">else</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span>
+            <span class="k">return</span> <span class="n">join</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">cmds</span><span class="p">]</span> <span class="k">if</span> <span class="n">cmds</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="n">command_line</span><span class="p">,</span> <span class="n">cmds</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``dep_config[key][platform]``, or ``None`` when ``key`` is not a per-platform table.</span>
+
+<span class="sd">    &gt;&gt;&gt; _platform_value({"check": {"linux": "which x"}}, "check", "linux")</span>
+<span class="sd">    'which x'</span>
+<span class="sd">    &gt;&gt;&gt; _platform_value({"check": "which x"}, "check", "linux") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
 <div class="viewcode-block" id="check_if_installed">
 <a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.check_if_installed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_if_installed</span><span class="p">(</span>
@@ -398,22 +466,14 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        dep_name: Name of dependency</span>
-<span class="sd">        check_cmds: Command(s) to check if installed (string, list, or empty)</span>
+<span class="sd">        check_cmds: Command(s) to check if installed (see :func:`_as_commands`)</span>
 <span class="sd">        timeout: Timeout in seconds for check commands</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if installed, False otherwise</span>
 <span class="sd">    """</span>
-    <span class="c1"># Normalize to list of commands</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">check_cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_cmds</span><span class="p">]</span> <span class="k">if</span> <span class="n">check_cmds</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">check_cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd</span> <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">check_cmds</span> <span class="k">if</span> <span class="n">cmd</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
     <span class="c1"># Try each check command (OR logic)</span>
-    <span class="k">for</span> <span class="n">check_cmd</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">check_cmd</span> <span class="ow">in</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">check_cmds</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
                 <span class="n">check_cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span>
@@ -564,7 +624,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        dep_name: Name of dependency</span>
-<span class="sd">        install_cmds: Command(s) to install (string or list)</span>
+<span class="sd">        install_cmds: Command(s) to install (see :func:`_as_commands`)</span>
 <span class="sd">        timeout: Timeout in seconds for each command</span>
 <span class="sd">        retries: Extra attempts for a command that fails or times out</span>
 <span class="sd">        backoff: Seconds before the first retry; doubles for each further one</span>
@@ -574,16 +634,12 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        (success: bool, error_message: Optional[str])</span>
 <span class="sd">    """</span>
-    <span class="c1"># Normalize to list of commands</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+    <span class="n">commands</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">commands</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Empty install command"</span>
-        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">install_cmds</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd</span> <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">install_cmds</span> <span class="k">if</span> <span class="n">cmd</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">commands</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">install_cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Empty install command list"</span>
-    <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Invalid install command format"</span>
 
     <span class="c1"># Execute install commands (AND logic - all must succeed)</span>
@@ -604,6 +660,54 @@
 
 
 
+<div class="viewcode-block" id="install_and_verify">
+<a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.install_and_verify">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">install_and_verify</span><span class="p">(</span>
+    <span class="n">dep_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">install_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span>
+    <span class="n">check_cmds</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">verify_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_VERIFY_RETRIES</span><span class="p">,</span>
+    <span class="n">backoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_BACKOFF</span><span class="p">,</span>
+    <span class="n">sleep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_installed</span><span class="o">=</span><span class="n">check_if_installed</span><span class="p">,</span>
+    <span class="n">install</span><span class="o">=</span><span class="n">install_dependency</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">install_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Install a dependency, then confirm it with its check commands.</span>
+
+<span class="sd">    ``install`` runs ``install_cmds`` (with its own per-command retries); when it</span>
+<span class="sd">    reports success and ``check_cmds`` declares a command, ``is_installed`` must</span>
+<span class="sd">    agree, or the install is repeated up to ``verify_retries`` more times, after</span>
+<span class="sd">    ``backoff`` seconds (doubling), before failing. With no check declared the</span>
+<span class="sd">    install's own exit status is all there is to go on. ``backoff`` and ``sleep``</span>
+<span class="sd">    are also passed on to ``install`` for its per-command retries.</span>
+
+<span class="sd">    Returns ``(success, error_message)`` like :func:`install_dependency`.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">verify_retries</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"verify_retries must be &gt;= 0, got </span><span class="si">{</span><span class="n">verify_retries</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">check_cmds</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">verify_retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attempt</span><span class="p">:</span>
+            <span class="n">wait</span> <span class="o">=</span> <span class="n">backoff</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  Re-installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">verify_retries</span><span class="si">}</span><span class="s2">) in </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">s"</span>
+            <span class="p">)</span>
+            <span class="p">(</span><span class="n">sleep</span> <span class="ow">or</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">)(</span><span class="n">wait</span><span class="p">)</span>  <span class="c1"># looked up late so tests can patch it</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install</span><span class="p">(</span>
+            <span class="n">dep_name</span><span class="p">,</span> <span class="n">install_cmds</span><span class="p">,</span> <span class="n">backoff</span><span class="o">=</span><span class="n">backoff</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="n">sleep</span><span class="p">,</span> <span class="o">**</span><span class="n">install_kwargs</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">checks</span> <span class="ow">or</span> <span class="n">is_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">checks</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">error</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="s2">"install commands exited 0 but the check still fails: "</span> <span class="o">+</span> <span class="s2">" || "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">checks</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">error</span></div>
+
+
+
 <div class="viewcode-block" id="install_system_dependencies">
 <a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.install_system_dependencies">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">install_system_dependencies</span><span class="p">(</span>
@@ -615,6 +719,8 @@
     <span class="n">default_install_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">default_install_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_INSTALL_RETRIES</span><span class="p">,</span>
     <span class="n">apt_lock_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_APT_LOCK_TIMEOUT</span><span class="p">,</span>
+    <span class="n">install</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_installed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Install system dependencies from pyproject.toml.</span>
@@ -631,6 +737,10 @@
 <span class="sd">        apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).</span>
 <span class="sd">        default_install_retries: Retries per failed install command for</span>
 <span class="sd">            dependencies that declare no ``install_retries`` of their own.</span>
+<span class="sd">        install: Runs one dependency's install commands (``None``:</span>
+<span class="sd">            :func:`install_dependency`).</span>
+<span class="sd">        is_installed: Runs one dependency's check commands, before installing and to</span>
+<span class="sd">            verify the install (``None``: :func:`check_if_installed`).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (installed_count, skipped_count, failed_count)</span>
@@ -646,6 +756,9 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"default_install_timeout must be &gt; 0, got </span><span class="si">{</span><span class="n">default_install_timeout</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
+    <span class="c1"># Resolved now, not at definition time, so patching the module still takes effect</span>
+    <span class="n">install</span> <span class="o">=</span> <span class="n">install</span> <span class="ow">or</span> <span class="n">install_dependency</span>
+    <span class="n">is_installed</span> <span class="o">=</span> <span class="n">is_installed</span> <span class="ow">or</span> <span class="n">check_if_installed</span>
 
     <span class="c1"># Find pyproject.toml</span>
     <span class="k">try</span><span class="p">:</span>
@@ -732,10 +845,23 @@
             <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">verify_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">):</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verify_install"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">declared</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Warning: ignoring invalid verify_install=</span><span class="si">{</span><span class="n">declared</span><span class="si">!r}</span><span class="s2"> for "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">; using True"</span><span class="p">,</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
     <span class="c1"># Process each dependency</span>
     <span class="n">installed_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">skipped_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">failed_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">unverified</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># installed with no check to confirm it</span>
 
     <span class="k">for</span> <span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -750,18 +876,27 @@
             <span class="k">if</span> <span class="n">url</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"URL: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
+        <span class="n">check_cmds</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"check"</span><span class="p">,</span> <span class="n">platform</span><span class="p">))</span>
         <span class="c1"># Check if already installed</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_check</span><span class="p">:</span>
-            <span class="n">check_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"check"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">check_cmds</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">check_if_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed"</span><span class="p">)</span>
-                    <span class="n">skipped_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_check</span> <span class="ow">and</span> <span class="n">check_cmds</span> <span class="ow">and</span> <span class="n">is_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed"</span><span class="p">)</span>
+            <span class="n">skipped_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
 
-        <span class="c1"># Get install commands</span>
-        <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span>
+        <span class="c1"># Get install commands. A non-table `install` is a config error, not "nothing</span>
+        <span class="c1"># to install here": failing it keeps a typo from going green silently.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{}),</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"✗ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">: install must be a per-platform table "</span>
+                    <span class="sa">f</span><span class="s2">"(install.</span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2"> = ...), got "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dep_config</span><span class="p">[</span><span class="s1">'install'</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="n">platform</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -775,18 +910,24 @@
                 <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">... (timeout: </span><span class="si">{</span><span class="n">install_timeout</span><span class="si">}</span><span class="s2">s per command)"</span>
             <span class="p">)</span>
 
-        <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install_dependency</span><span class="p">(</span>
+        <span class="n">verify</span> <span class="o">=</span> <span class="n">verify_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">)</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">install_and_verify</span><span class="p">(</span>
             <span class="n">dep_name</span><span class="p">,</span>
             <span class="n">install_cmds</span><span class="p">,</span>
-            <span class="n">install_timeout</span><span class="p">,</span>
+            <span class="n">check_cmds</span> <span class="k">if</span> <span class="n">verify</span> <span class="k">else</span> <span class="p">[],</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">install_timeout</span><span class="p">,</span>
             <span class="n">retries</span><span class="o">=</span><span class="n">retries_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">),</span>
             <span class="n">apt_lock_timeout</span><span class="o">=</span><span class="n">apt_lock_timeout</span><span class="p">,</span>
+            <span class="n">install</span><span class="o">=</span><span class="n">install</span><span class="p">,</span>
+            <span class="n">is_installed</span><span class="o">=</span><span class="n">is_installed</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> installed successfully"</span><span class="p">)</span>
             <span class="n">installed_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">verify</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">check_cmds</span><span class="p">:</span>
+                <span class="n">unverified</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep_name</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ Installation failed for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
@@ -809,6 +950,8 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"⊘ Already present: </span><span class="si">{</span><span class="n">skipped_count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">failed_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ Failed: </span><span class="si">{</span><span class="n">failed_count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unverified</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Not verified (no check.</span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unverified</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">installed_count</span><span class="p">,</span> <span class="n">skipped_count</span><span class="p">,</span> <span class="n">failed_count</span></div>
 
@@ -935,7 +1078,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=cadb438d"></script>
+</div><script src="../../_static/documentation_options.js?v=ea6ad966"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
