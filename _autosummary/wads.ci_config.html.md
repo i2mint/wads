@@ -8,10 +8,11 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_DEPLOY_MARKER`](#wads.ci_config.DFLT_DEPLOY_MARKER)       | validation, then the publish / Pages jobs.                        |
-|---------------------------------------------------------------------------|-------------------------------------------------------------------|
-| [`TRIGGER_LEVELS`](#wads.ci_config.TRIGGER_LEVELS)           | The levels a manual run (or `wads ci-local --level`) can ask for. |
-| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER) | each suppresses one side-effecting job and nothing else.          |
+| [`DFLT_JOB_TIMEOUT_MINUTES`](#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.   |
+|-----------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`DFLT_DEPLOY_MARKER`](#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                         |
+| [`TRIGGER_LEVELS`](#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                  |
+| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                           |
 
 ### Functions
 
@@ -336,6 +337,22 @@ Check if Ruff linter is enabled.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+#### *property* job_timeout_minutes *: [int](https://docs.python.org/3/builtins/functions.html#int)*
+
+Minutes a validation job may run before GitHub stops it (`timeout-minutes`).
+
+`[tool.wads.ci.testing].job_timeout_minutes`, a positive integer; anything
+else falls back to [`DFLT_JOB_TIMEOUT_MINUTES`](#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES), with a warning naming the
+ignored value. Applied to the Linux `validation` matrix and to
+`windows-validation` in the uv workflows.
+
+```pycon
+>>> CIConfig({}).job_timeout_minutes == DFLT_JOB_TIMEOUT_MINUTES
+True
+>>> CIConfig({"tool": {"wads": {"ci": {"testing": {"job_timeout_minutes": 15}}}}}).job_timeout_minutes
+15
+```
+
 #### *property* licence_config *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)*
 
 The `[tool.wads.licence]` table.
@@ -607,6 +624,14 @@ publish / Pages jobs. `run_ci_publishes` keeps today’s behaviour by default
 
 * **Type:**
   The deploy rung of the on-demand ladder (i2mint/wads#131)
+
+### wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES *= 60*
+
+Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.
+GitHub’s own default is 360, which lets one stalled step (an apt mirror crawling,
+a hung test) hold a runner for six hours (issue #160). High enough that no
+healthy run should hit it; lower it per repo with
+`[tool.wads.ci.testing].job_timeout_minutes`.
 
 ### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
 

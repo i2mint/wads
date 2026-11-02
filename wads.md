@@ -1,4 +1,4 @@
-> built 2026-11-02 00:51 UTC from 6020fa3 (master) · wads 0.2.66. Details: build_info.json
+> built 2026-11-02 00:57 UTC from f2aca9e (master) · wads 0.2.67. Details: build_info.json
 
 # index.html.md
 
@@ -216,6 +216,20 @@ note = "Required for audio processing features"
 
 The `install-system-deps` action in your CI workflow will automatically install these. Declare a `check` for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with `verify_install = false`.
 
+For ffmpeg on Linux, prefer the built-in recipe over apt. `apt-get install ffmpeg` pulls about 99 packages from the runner’s mirror, which sometimes crawls for 20+ minutes; the recipe installs a pinned, sha256-checked static `ffmpeg` + `ffprobe` build in seconds and falls back to apt (with a warning) only if the download, checksum or extraction fails. The static build is Linux x86_64 only: naming the recipe under another platform fails the dependency, and an arm64 Linux runner goes straight to apt. An unknown or mistyped recipe parameter fails the dependency, and overriding `url` requires its `sha256`:
+
+```toml
+[tool.wads.ops.ffmpeg]
+check.linux = "ffmpeg -version && ffprobe -version"   # running both also catches a wrong-arch or corrupt binary; tests that need ffprobe skip silently without it
+install.linux = "wads:static-ffmpeg"
+install.macos = "brew install ffmpeg"
+
+# Optional overrides: url, sha256, binaries, bin_dir, download_timeout, apt_fallback
+# [tool.wads.ops.ffmpeg.recipe]
+# url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/<month-end autobuild>/<asset>.tar.xz"
+# sha256 = "<its sha256>"
+```
+
 ## Core Features
 
 ### 1. Project Setup (`populate`)
@@ -398,7 +412,10 @@ coverage_threshold = 80                      # Minimum coverage %
 exclude_paths = ["examples", "scrap"]        # Paths to exclude
 test_on_windows = true                       # Run Windows tests
 windows_blocking = false                     # true = a failing Windows leg reddens the run
+job_timeout_minutes = 60                     # validation jobs stop after this (GitHub's default is 6 h)
 ```
+
+`job_timeout_minutes` (default 60) bounds the Linux validation matrix and the Windows job, so a stalled step (an apt mirror crawling, a hung test) fails within the hour instead of holding a runner for GitHub’s default six hours.
 
 `windows_blocking` defaults to `false`: the Windows job is informational
 (`continue-on-error`), which is how Windows-only defects — backslash path
@@ -1204,10 +1221,11 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)       | validation, then the publish / Pages jobs.                        |
-|---------------------------------------------------------------------------|-------------------------------------------------------------------|
-| [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)           | The levels a manual run (or `wads ci-local --level`) can ask for. |
-| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER) | each suppresses one side-effecting job and nothing else.          |
+| [`DFLT_JOB_TIMEOUT_MINUTES`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.   |
+|-----------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                         |
+| [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                  |
+| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                           |
 
 ### Functions
 
@@ -1532,6 +1550,22 @@ Check if Ruff linter is enabled.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+#### *property* job_timeout_minutes *: [int](https://docs.python.org/3/builtins/functions.html#int)*
+
+Minutes a validation job may run before GitHub stops it (`timeout-minutes`).
+
+`[tool.wads.ci.testing].job_timeout_minutes`, a positive integer; anything
+else falls back to [`DFLT_JOB_TIMEOUT_MINUTES`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES), with a warning naming the
+ignored value. Applied to the Linux `validation` matrix and to
+`windows-validation` in the uv workflows.
+
+```pycon
+>>> CIConfig({}).job_timeout_minutes == DFLT_JOB_TIMEOUT_MINUTES
+True
+>>> CIConfig({"tool": {"wads": {"ci": {"testing": {"job_timeout_minutes": 15}}}}}).job_timeout_minutes
+15
+```
+
 #### *property* licence_config *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)*
 
 The `[tool.wads.licence]` table.
@@ -1803,6 +1837,14 @@ publish / Pages jobs. `run_ci_publishes` keeps today’s behaviour by default
 
 * **Type:**
   The deploy rung of the on-demand ladder (i2mint/wads#131)
+
+### wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES *= 60*
+
+Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.
+GitHub’s own default is 360, which lets one stalled step (an apt mirror crawling,
+a hung test) hold a runner for six hours (issue #160). High enough that no
+healthy run should hit it; lower it per repo with
+`[tool.wads.ci.testing].job_timeout_minutes`.
 
 ### wads.ci_config.DFLT_SKIP_PUBLISH_MARKER *= '[skip publish]'*
 
@@ -3167,6 +3209,21 @@ sets the fallback. Worst case for a command that always fails is
 `(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
 `apt-get update` is not repeated when only the following install flaked.
 
+An install command may name a wads recipe instead of spelling it out (issue #160):
+
+```default
+[tool.wads.ops.ffmpeg]
+check.linux = "ffmpeg -version && ffprobe -version"
+install.linux = "wads:static-ffmpeg"
+```
+
+expands to [`static_ffmpeg_commands()`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.static_ffmpeg_commands): a pinned, sha256-checked static build in
+seconds instead of a crawling apt mirror, with apt as the fallback (Linux x86_64 only;
+another architecture goes straight to apt). Override its parameters (`url`,
+`sha256`, …) under `[tool.wads.ops.ffmpeg.recipe]`; an unknown or mistyped
+parameter fails the dependency. Running the binaries in the check (rather than
+`which`) also catches a wrong-architecture or corrupt download.
+
 An install whose commands all exit 0 is not trusted on that alone: when the dependency
 declares a `check.<platform>`, that check is re-run afterwards, and a dependency whose
 check still fails is re-installed ([`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES) more rounds, each after a
@@ -3191,11 +3248,14 @@ one means installed); install commands are AND-ed (run in order, all must succee
 
 ### Module Attributes
 
-| [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).                                                             |
-|------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                        |
-| [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                |
-| [`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx). |
+| [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).                                                                        |
+|------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`RECIPE_PREFIX`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.RECIPE_PREFIX)               | An install command of the form `wads:<name>` names a recipe here, expanded into the commands the recipe builds from its defaults overridden by the dependency's `[tool.wads.ops.<dep>.recipe]` table (issue #160). |
+| [`STATIC_FFMPEG_DEFAULTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS)      | Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.                                                                                                                                          |
+| [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                                   |
+| [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                           |
+| [`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).            |
+| [`INSTALL_RECIPES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.INSTALL_RECIPES)             | Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.                                                                                                                                     |
 
 ### Functions
 
@@ -3208,7 +3268,13 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`install_system_dependencies`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.install_system_dependencies)([...])                | Install system dependencies from pyproject.toml.                                |
 | [`main`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
 | [`read_system_deps`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.                           |
+| [`static_ffmpeg_commands`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.static_ffmpeg_commands)(params)                    | Commands installing a static ffmpeg build: download, verify, extract, else apt. |
 | [`with_apt_lock_timeout`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.with_apt_lock_timeout)(cmd, seconds)               | `cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock. |
+
+### Classes
+
+| [`InstallRecipe`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.InstallRecipe)(commands, defaults, platforms)   | A named install: builds commands from `defaults` overridden by parameters.   |
+|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 
 ### wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT *= 120*
 
@@ -3224,11 +3290,35 @@ Extra install rounds for a dependency whose commands succeeded but whose declare
 `check` still fails afterwards (a package manager that reported success for
 nothing — e.g. Chocolatey on a feed 5xx).
 
+### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',))}*
+
+Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.
+
+### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A named install: builds commands from `defaults` overridden by parameters.
+
+`platforms` are the `install.<platform>` keys the recipe may be named under.
+
+### wads.install_system_deps.RECIPE_PREFIX *= 'wads:'*
+
+An install command of the form `wads:<name>` names a recipe here, expanded into
+the commands the recipe builds from its defaults overridden by the dependency’s
+`[tool.wads.ops.<dep>.recipe]` table (issue #160).
+
 ### wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS *= {'ffmpeg': 900}*
 
 Dependencies with a big dependency tree get a longer ceiling than the global default
 (a cold-cache `apt-get install ffmpeg` outlasts 300s). A declaration or an explicit
 `default_install_timeout` still wins.
+
+### wads.install_system_deps.STATIC_FFMPEG_DEFAULTS *= {'apt_fallback': True, 'bin_dir': '/usr/local/bin', 'binaries': ['ffmpeg', 'ffprobe'], 'download_timeout': 120, 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz'}*
+
+Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
+BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
+2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.
 
 ### wads.install_system_deps.check_if_installed(dep_name, check_cmds, timeout=10)
 
@@ -3325,6 +3415,29 @@ Read [tool.wads.ops.\*] sections from pyproject.toml.
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### wads.install_system_deps.static_ffmpeg_commands(params)
+
+Commands installing a static ffmpeg build: download, verify, extract, else apt.
+
+A static build takes seconds; `apt-get install ffmpeg` pulls ~99 packages from
+a runner mirror that sometimes crawls for 20+ minutes, which no timeout or retry
+cures (issue #160). `params` overrides [`STATIC_FFMPEG_DEFAULTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS): `url`
+and `sha256` of a `.tar.xz` whose `*/bin/` holds `binaries`, extracted
+into `bin_dir`. The archive goes to `$RUNNER_TEMP` (else `/tmp`) and is
+removed afterwards, whatever happened. On a machine that is not x86_64, or when
+the download, the checksum or the extraction fails, the command fails, or, when
+`apt_fallback` is true, removes any partly extracted `binaries` and installs
+ffmpeg from apt (`--no-install-recommends`) with a warning.
+
+```pycon
+>>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
+>>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
+True
+```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.install_system_deps.with_apt_lock_timeout(cmd, seconds)
 
@@ -7922,7 +8035,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-02 00:51 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5"><code>6020fa3</code></a> on branch <code>master</code>, for **wads 0.2.66** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-02 00:57 UTC** from commit <a href="https://github.com/i2mint/wads/commit/f2aca9e107b8fb354405708feb1f45b68f263f5c"><code>f2aca9e</code></a> on branch <code>master</code>, for **wads 0.2.67** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -7931,7 +8044,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5"><code>6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/f2aca9e107b8fb354405708feb1f45b68f263f5c"><code>f2aca9e107b8fb354405708feb1f45b68f263f5c</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7942,9 +8055,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41369049603">41369049603</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41369626356">41369626356</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5</code> (in the history of the built commit) |
+| Event commit | <code>f2aca9e107b8fb354405708feb1f45b68f263f5c</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7969,13 +8082,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.66/">0.2.66</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.67/">0.2.67</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5
+git checkout f2aca9e107b8fb354405708feb1f45b68f263f5c
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -313,6 +313,18 @@ declare <code class="docutils literal notranslate"><span class="pre">install_ret
 sets the fallback. Worst case for a command that always fails is
 <code class="docutils literal notranslate"><span class="pre">(retries</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">install_timeout</span></code> plus the backoff waits. Commands are retried one at a time, so a successful
 <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">update</span></code> is not repeated when only the following install flaked.</p>
+<p>An install command may name a wads recipe instead of spelling it out (issue #160):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">wads</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ffmpeg</span><span class="p">]</span>
+<span class="n">check</span><span class="o">.</span><span class="n">linux</span> <span class="o">=</span> <span class="s2">"ffmpeg -version &amp;&amp; ffprobe -version"</span>
+<span class="n">install</span><span class="o">.</span><span class="n">linux</span> <span class="o">=</span> <span class="s2">"wads:static-ffmpeg"</span>
+</pre></div>
+</div>
+<p>expands to <a class="reference internal" href="#wads.install_system_deps.static_ffmpeg_commands" title="wads.install_system_deps.static_ffmpeg_commands"><code class="xref py py-func docutils literal notranslate"><span class="pre">static_ffmpeg_commands()</span></code></a>: a pinned, sha256-checked static build in
+seconds instead of a crawling apt mirror, with apt as the fallback (Linux x86_64 only;
+another architecture goes straight to apt). Override its parameters (<code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sha256</span></code>, …) under <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.ffmpeg.recipe]</span></code>; an unknown or mistyped
+parameter fails the dependency. Running the binaries in the check (rather than
+<code class="docutils literal notranslate"><span class="pre">which</span></code>) also catches a wrong-architecture or corrupt download.</p>
 <p>An install whose commands all exit 0 is not trusted on that alone: when the dependency
 declares a <code class="docutils literal notranslate"><span class="pre">check.&lt;platform&gt;</span></code>, that check is re-run afterwards, and a dependency whose
 check still fails is re-installed (<a class="reference internal" href="#wads.install_system_deps.DFLT_VERIFY_RETRIES" title="wads.install_system_deps.DFLT_VERIFY_RETRIES"><code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_VERIFY_RETRIES</span></code></a> more rounds, each after a
@@ -339,6 +351,12 @@ one means installed); install commands are AND-ed (run in order, all must succee
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS" title="wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a></p></td>
 <td><p>Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> outlasts 300s).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.RECIPE_PREFIX" title="wads.install_system_deps.RECIPE_PREFIX"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RECIPE_PREFIX</span></code></a></p></td>
+<td><p>An install command of the form <code class="docutils literal notranslate"><span class="pre">wads:&lt;name&gt;</span></code> names a recipe here, expanded into the commands the recipe builds from its defaults overridden by the dependency's <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.&lt;dep&gt;.recipe]</span></code> table (issue #160).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS" title="wads.install_system_deps.STATIC_FFMPEG_DEFAULTS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STATIC_FFMPEG_DEFAULTS</span></code></a></p></td>
+<td><p>Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT" title="wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_APT_LOCK_TIMEOUT</span></code></a></p></td>
 <td><p>Seconds apt waits for the dpkg lock before giving up (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">DPkg::Lock::Timeout</span></code>).</p></td>
 </tr>
@@ -347,6 +365,9 @@ one means installed); install commands are AND-ed (run in order, all must succee
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.DFLT_VERIFY_RETRIES" title="wads.install_system_deps.DFLT_VERIFY_RETRIES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_VERIFY_RETRIES</span></code></a></p></td>
 <td><p>Extra install rounds for a dependency whose commands succeeded but whose declared <code class="docutils literal notranslate"><span class="pre">check</span></code> still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.INSTALL_RECIPES" title="wads.install_system_deps.INSTALL_RECIPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">INSTALL_RECIPES</span></code></a></p></td>
+<td><p>Recipes <code class="docutils literal notranslate"><span class="pre">install.&lt;platform&gt;</span> <span class="pre">=</span> <span class="pre">&quot;wads:&lt;name&gt;&quot;</span></code> may name; extend by adding to it.</p></td>
 </tr>
 </tbody>
 </table>
@@ -379,8 +400,21 @@ one means installed); install commands are AND-ed (run in order, all must succee
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.read_system_deps" title="wads.install_system_deps.read_system_deps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_system_deps</span></code></a>(pyproject_path)</p></td>
 <td><p>Read [tool.wads.ops.*] sections from pyproject.toml.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout" title="wads.install_system_deps.with_apt_lock_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_apt_lock_timeout</span></code></a>(cmd, seconds)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.static_ffmpeg_commands" title="wads.install_system_deps.static_ffmpeg_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">static_ffmpeg_commands</span></code></a>(params)</p></td>
+<td><p>Commands installing a static ffmpeg build: download, verify, extract, else apt.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout" title="wads.install_system_deps.with_apt_lock_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_apt_lock_timeout</span></code></a>(cmd, seconds)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.InstallRecipe" title="wads.install_system_deps.InstallRecipe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InstallRecipe</span></code></a>(commands, defaults, platforms)</p></td>
+<td><p>A named install: builds commands from <code class="docutils literal notranslate"><span class="pre">defaults</span></code> overridden by parameters.</p></td>
 </tr>
 </tbody>
 </table>
@@ -406,11 +440,43 @@ nothing — e.g. Chocolatey on a feed 5xx).</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.INSTALL_RECIPES">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">INSTALL_RECIPES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'static-ffmpeg':</span> <span class="pre">InstallRecipe(commands=&lt;function</span> <span class="pre">static_ffmpeg_commands&gt;,</span> <span class="pre">defaults={'url':</span> <span class="pre">'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz',</span> <span class="pre">'sha256':</span> <span class="pre">'97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79',</span> <span class="pre">'binaries':</span> <span class="pre">['ffmpeg',</span> <span class="pre">'ffprobe'],</span> <span class="pre">'bin_dir':</span> <span class="pre">'/usr/local/bin',</span> <span class="pre">'download_timeout':</span> <span class="pre">120,</span> <span class="pre">'apt_fallback':</span> <span class="pre">True},</span> <span class="pre">platforms=('linux',))}</span></span><a class="headerlink" href="#wads.install_system_deps.INSTALL_RECIPES" title="Link to this definition">¶</a></dt>
+<dd><p>Recipes <code class="docutils literal notranslate"><span class="pre">install.&lt;platform&gt;</span> <span class="pre">=</span> <span class="pre">&quot;wads:&lt;name&gt;&quot;</span></code> may name; extend by adding to it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.install_system_deps.InstallRecipe">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">InstallRecipe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">commands</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platforms</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#InstallRecipe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.InstallRecipe" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A named install: builds commands from <code class="docutils literal notranslate"><span class="pre">defaults</span></code> overridden by parameters.</p>
+<p><code class="docutils literal notranslate"><span class="pre">platforms</span></code> are the <code class="docutils literal notranslate"><span class="pre">install.&lt;platform&gt;</span></code> keys the recipe may be named under.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.RECIPE_PREFIX">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">RECIPE_PREFIX</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'wads:'</span></span><a class="headerlink" href="#wads.install_system_deps.RECIPE_PREFIX" title="Link to this definition">¶</a></dt>
+<dd><p>An install command of the form <code class="docutils literal notranslate"><span class="pre">wads:&lt;name&gt;</span></code> names a recipe here, expanded into
+the commands the recipe builds from its defaults overridden by the dependency’s
+<code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.&lt;dep&gt;.recipe]</span></code> table (issue #160).</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS">
 <span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ffmpeg':</span> <span class="pre">900}</span></span><a class="headerlink" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS" title="Link to this definition">¶</a></dt>
 <dd><p>Dependencies with a big dependency tree get a longer ceiling than the global default
 (a cold-cache <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> outlasts 300s). A declaration or an explicit
 <code class="docutils literal notranslate"><span class="pre">default_install_timeout</span></code> still wins.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.STATIC_FFMPEG_DEFAULTS">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">STATIC_FFMPEG_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'apt_fallback':</span> <span class="pre">True,</span> <span class="pre">'bin_dir':</span> <span class="pre">'/usr/local/bin',</span> <span class="pre">'binaries':</span> <span class="pre">['ffmpeg',</span> <span class="pre">'ffprobe'],</span> <span class="pre">'download_timeout':</span> <span class="pre">120,</span> <span class="pre">'sha256':</span> <span class="pre">'97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79',</span> <span class="pre">'url':</span> <span class="pre">'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz'}</span></span><a class="headerlink" href="#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS" title="Link to this definition">¶</a></dt>
+<dd><p>Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
+BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
+2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -550,6 +616,31 @@ verify the install (<code class="docutils literal notranslate"><span class="pre"
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.install_system_deps.static_ffmpeg_commands">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">static_ffmpeg_commands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#static_ffmpeg_commands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.static_ffmpeg_commands" title="Link to this definition">¶</a></dt>
+<dd><p>Commands installing a static ffmpeg build: download, verify, extract, else apt.</p>
+<p>A static build takes seconds; <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> pulls ~99 packages from
+a runner mirror that sometimes crawls for 20+ minutes, which no timeout or retry
+cures (issue #160). <code class="docutils literal notranslate"><span class="pre">params</span></code> overrides <a class="reference internal" href="#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS" title="wads.install_system_deps.STATIC_FFMPEG_DEFAULTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">STATIC_FFMPEG_DEFAULTS</span></code></a>: <code class="docutils literal notranslate"><span class="pre">url</span></code>
+and <code class="docutils literal notranslate"><span class="pre">sha256</span></code> of a <code class="docutils literal notranslate"><span class="pre">.tar.xz</span></code> whose <code class="docutils literal notranslate"><span class="pre">*/bin/</span></code> holds <code class="docutils literal notranslate"><span class="pre">binaries</span></code>, extracted
+into <code class="docutils literal notranslate"><span class="pre">bin_dir</span></code>. The archive goes to <code class="docutils literal notranslate"><span class="pre">$RUNNER_TEMP</span></code> (else <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>) and is
+removed afterwards, whatever happened. On a machine that is not x86_64, or when
+the download, the checksum or the extraction fails, the command fails, or, when
+<code class="docutils literal notranslate"><span class="pre">apt_fallback</span></code> is true, removes any partly extracted <code class="docutils literal notranslate"><span class="pre">binaries</span></code> and installs
+ffmpeg from apt (<code class="docutils literal notranslate"><span class="pre">--no-install-recommends</span></code>) with a warning.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">cmd</span><span class="p">]</span> <span class="o">=</span> <span class="n">static_ffmpeg_commands</span><span class="p">({</span><span class="s2">"apt_fallback"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"sha256sum -c -"</span> <span class="ow">in</span> <span class="n">cmd</span> <span class="ow">and</span> <span class="s2">"'*/bin/ffprobe'"</span> <span class="ow">in</span> <span class="n">cmd</span> <span class="ow">and</span> <span class="s2">"apt-get"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cmd</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.install_system_deps.with_apt_lock_timeout">
 <span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">with_apt_lock_timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#with_apt_lock_timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.with_apt_lock_timeout" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p>
@@ -623,7 +714,11 @@ verify the install (<code class="docutils literal notranslate"><span class="pre"
 <li><a class="reference internal" href="#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DFLT_APT_LOCK_TIMEOUT</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.DFLT_KILL_GRACE"><code class="docutils literal notranslate"><span class="pre">DFLT_KILL_GRACE</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.DFLT_VERIFY_RETRIES"><code class="docutils literal notranslate"><span class="pre">DFLT_VERIFY_RETRIES</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.INSTALL_RECIPES"><code class="docutils literal notranslate"><span class="pre">INSTALL_RECIPES</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.InstallRecipe"><code class="docutils literal notranslate"><span class="pre">InstallRecipe</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.RECIPE_PREFIX"><code class="docutils literal notranslate"><span class="pre">RECIPE_PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">STATIC_FFMPEG_DEFAULTS</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.check_if_installed"><code class="docutils literal notranslate"><span class="pre">check_if_installed()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.detect_platform"><code class="docutils literal notranslate"><span class="pre">detect_platform()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.find_pyproject"><code class="docutils literal notranslate"><span class="pre">find_pyproject()</span></code></a></li>
@@ -632,6 +727,7 @@ verify the install (<code class="docutils literal notranslate"><span class="pre"
 <li><a class="reference internal" href="#wads.install_system_deps.install_system_dependencies"><code class="docutils literal notranslate"><span class="pre">install_system_dependencies()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.read_system_deps"><code class="docutils literal notranslate"><span class="pre">read_system_deps()</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.static_ffmpeg_commands"><code class="docutils literal notranslate"><span class="pre">static_ffmpeg_commands()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout"><code class="docutils literal notranslate"><span class="pre">with_apt_lock_timeout()</span></code></a></li>
 </ul>
 </li>
@@ -644,7 +740,7 @@ verify the install (<code class="docutils literal notranslate"><span class="pre"
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=22f8023d"></script>
+</div><script src="../_static/documentation_options.js?v=8bb8765b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

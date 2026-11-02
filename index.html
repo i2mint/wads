@@ -504,6 +504,18 @@ wads-secrets<span class="w"> </span>list<span class="w">                        
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">install-system-deps</span></code> action in your CI workflow will automatically install these. Declare a <code class="docutils literal notranslate"><span class="pre">check</span></code> for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with <code class="docutils literal notranslate"><span class="pre">verify_install</span> <span class="pre">=</span> <span class="pre">false</span></code>.</p>
+<p>For ffmpeg on Linux, prefer the built-in recipe over apt. <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> pulls about 99 packages from the runner’s mirror, which sometimes crawls for 20+ minutes; the recipe installs a pinned, sha256-checked static <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> + <code class="docutils literal notranslate"><span class="pre">ffprobe</span></code> build in seconds and falls back to apt (with a warning) only if the download, checksum or extraction fails. The static build is Linux x86_64 only: naming the recipe under another platform fails the dependency, and an arm64 Linux runner goes straight to apt. An unknown or mistyped recipe parameter fails the dependency, and overriding <code class="docutils literal notranslate"><span class="pre">url</span></code> requires its <code class="docutils literal notranslate"><span class="pre">sha256</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.wads.ops.ffmpeg]</span>
+<span class="n">check</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ffmpeg -version &amp;&amp; ffprobe -version"</span><span class="w">   </span><span class="c1"># running both also catches a wrong-arch or corrupt binary; tests that need ffprobe skip silently without it</span>
+<span class="n">install</span><span class="p">.</span><span class="n">linux</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"wads:static-ffmpeg"</span>
+<span class="n">install</span><span class="p">.</span><span class="n">macos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"brew install ffmpeg"</span>
+
+<span class="c1"># Optional overrides: url, sha256, binaries, bin_dir, download_timeout, apt_fallback</span>
+<span class="c1"># [tool.wads.ops.ffmpeg.recipe]</span>
+<span class="c1"># url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/&lt;month-end autobuild&gt;/&lt;asset&gt;.tar.xz"</span>
+<span class="c1"># sha256 = "&lt;its sha256&gt;"</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="core-features">
@@ -667,8 +679,10 @@ silently never running. Override or opt out explicitly:</p>
 <span class="n">exclude_paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"examples"</span><span class="p">,</span><span class="w"> </span><span class="s2">"scrap"</span><span class="p">]</span><span class="w">        </span><span class="c1"># Paths to exclude</span>
 <span class="n">test_on_windows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                       </span><span class="c1"># Run Windows tests</span>
 <span class="n">windows_blocking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w">                     </span><span class="c1"># true = a failing Windows leg reddens the run</span>
+<span class="n">job_timeout_minutes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="w">                     </span><span class="c1"># validation jobs stop after this (GitHub's default is 6 h)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">job_timeout_minutes</span></code> (default 60) bounds the Linux validation matrix and the Windows job, so a stalled step (an apt mirror crawling, a hung test) fails within the hour instead of holding a runner for GitHub’s default six hours.</p>
 <p><code class="docutils literal notranslate"><span class="pre">windows_blocking</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code>: the Windows job is informational
 (<code class="docutils literal notranslate"><span class="pre">continue-on-error</span></code>), which is how Windows-only defects — backslash path
 separators, locale-decoded <code class="docutils literal notranslate"><span class="pre">read_text()</span></code> — merge behind a green tick. Set it to
@@ -988,7 +1002,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-02 00:51 UTC from <a href="https://github.com/i2mint/wads/commit/6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5">6020fa3</a> (master) · wads 0.2.66 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-02 00:57 UTC from <a href="https://github.com/i2mint/wads/commit/f2aca9e107b8fb354405708feb1f45b68f263f5c">f2aca9e</a> (master) · wads 0.2.67 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1085,7 +1099,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=22f8023d"></script>
+</div><script src="_static/documentation_options.js?v=8bb8765b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

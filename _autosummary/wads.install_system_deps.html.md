@@ -28,6 +28,21 @@ sets the fallback. Worst case for a command that always fails is
 `(retries + 1) * install_timeout` plus the backoff waits. Commands are retried one at a time, so a successful
 `apt-get update` is not repeated when only the following install flaked.
 
+An install command may name a wads recipe instead of spelling it out (issue #160):
+
+```default
+[tool.wads.ops.ffmpeg]
+check.linux = "ffmpeg -version && ffprobe -version"
+install.linux = "wads:static-ffmpeg"
+```
+
+expands to [`static_ffmpeg_commands()`](#wads.install_system_deps.static_ffmpeg_commands): a pinned, sha256-checked static build in
+seconds instead of a crawling apt mirror, with apt as the fallback (Linux x86_64 only;
+another architecture goes straight to apt). Override its parameters (`url`,
+`sha256`, …) under `[tool.wads.ops.ffmpeg.recipe]`; an unknown or mistyped
+parameter fails the dependency. Running the binaries in the check (rather than
+`which`) also catches a wrong-architecture or corrupt download.
+
 An install whose commands all exit 0 is not trusted on that alone: when the dependency
 declares a `check.<platform>`, that check is re-run afterwards, and a dependency whose
 check still fails is re-installed ([`DFLT_VERIFY_RETRIES`](#wads.install_system_deps.DFLT_VERIFY_RETRIES) more rounds, each after a
@@ -52,11 +67,14 @@ one means installed); install commands are AND-ed (run in order, all must succee
 
 ### Module Attributes
 
-| [`SLOW_DEP_INSTALL_TIMEOUTS`](#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).                                                             |
-|------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DFLT_APT_LOCK_TIMEOUT`](#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                        |
-| [`DFLT_KILL_GRACE`](#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                |
-| [`DFLT_VERIFY_RETRIES`](#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx). |
+| [`SLOW_DEP_INSTALL_TIMEOUTS`](#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS)   | Dependencies with a big dependency tree get a longer ceiling than the global default (a cold-cache `apt-get install ffmpeg` outlasts 300s).                                                                        |
+|------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`RECIPE_PREFIX`](#wads.install_system_deps.RECIPE_PREFIX)               | An install command of the form `wads:<name>` names a recipe here, expanded into the commands the recipe builds from its defaults overridden by the dependency's `[tool.wads.ops.<dep>.recipe]` table (issue #160). |
+| [`STATIC_FFMPEG_DEFAULTS`](#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS)      | Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.                                                                                                                                          |
+| [`DFLT_APT_LOCK_TIMEOUT`](#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                                   |
+| [`DFLT_KILL_GRACE`](#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                           |
+| [`DFLT_VERIFY_RETRIES`](#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).            |
+| [`INSTALL_RECIPES`](#wads.install_system_deps.INSTALL_RECIPES)             | Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.                                                                                                                                     |
 
 ### Functions
 
@@ -69,7 +87,13 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`install_system_dependencies`](#wads.install_system_deps.install_system_dependencies)([...])                | Install system dependencies from pyproject.toml.                                |
 | [`main`](#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
 | [`read_system_deps`](#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.                           |
+| [`static_ffmpeg_commands`](#wads.install_system_deps.static_ffmpeg_commands)(params)                    | Commands installing a static ffmpeg build: download, verify, extract, else apt. |
 | [`with_apt_lock_timeout`](#wads.install_system_deps.with_apt_lock_timeout)(cmd, seconds)               | `cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock. |
+
+### Classes
+
+| [`InstallRecipe`](#wads.install_system_deps.InstallRecipe)(commands, defaults, platforms)   | A named install: builds commands from `defaults` overridden by parameters.   |
+|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 
 ### wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT *= 120*
 
@@ -85,11 +109,35 @@ Extra install rounds for a dependency whose commands succeeded but whose declare
 `check` still fails afterwards (a package manager that reported success for
 nothing — e.g. Chocolatey on a feed 5xx).
 
+### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',))}*
+
+Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.
+
+### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A named install: builds commands from `defaults` overridden by parameters.
+
+`platforms` are the `install.<platform>` keys the recipe may be named under.
+
+### wads.install_system_deps.RECIPE_PREFIX *= 'wads:'*
+
+An install command of the form `wads:<name>` names a recipe here, expanded into
+the commands the recipe builds from its defaults overridden by the dependency’s
+`[tool.wads.ops.<dep>.recipe]` table (issue #160).
+
 ### wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS *= {'ffmpeg': 900}*
 
 Dependencies with a big dependency tree get a longer ceiling than the global default
 (a cold-cache `apt-get install ffmpeg` outlasts 300s). A declaration or an explicit
 `default_install_timeout` still wins.
+
+### wads.install_system_deps.STATIC_FFMPEG_DEFAULTS *= {'apt_fallback': True, 'bin_dir': '/usr/local/bin', 'binaries': ['ffmpeg', 'ffprobe'], 'download_timeout': 120, 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz'}*
+
+Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
+BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
+2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.
 
 ### wads.install_system_deps.check_if_installed(dep_name, check_cmds, timeout=10)
 
@@ -186,6 +234,29 @@ Read [tool.wads.ops.\*] sections from pyproject.toml.
 
 * **Return type:**
   [`Dict`](https://docs.python.org/3/library/typing.html#typing.Dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### wads.install_system_deps.static_ffmpeg_commands(params)
+
+Commands installing a static ffmpeg build: download, verify, extract, else apt.
+
+A static build takes seconds; `apt-get install ffmpeg` pulls ~99 packages from
+a runner mirror that sometimes crawls for 20+ minutes, which no timeout or retry
+cures (issue #160). `params` overrides [`STATIC_FFMPEG_DEFAULTS`](#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS): `url`
+and `sha256` of a `.tar.xz` whose `*/bin/` holds `binaries`, extracted
+into `bin_dir`. The archive goes to `$RUNNER_TEMP` (else `/tmp`) and is
+removed afterwards, whatever happened. On a machine that is not x86_64, or when
+the download, the checksum or the extraction fails, the command fails, or, when
+`apt_fallback` is true, removes any partly extracted `binaries` and installs
+ffmpeg from apt (`--no-install-recommends`) with a warning.
+
+```pycon
+>>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
+>>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
+True
+```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.install_system_deps.with_apt_lock_timeout(cmd, seconds)
 

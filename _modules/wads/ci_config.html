@@ -315,6 +315,12 @@
 <span class="c1"># subject carrying the run-ci marker, or a manual workflow_dispatch.</span>
 <span class="n">TRIGGER_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"on-demand"</span><span class="p">)</span>
 <span class="n">DFLT_TRIGGER_MODE</span> <span class="o">=</span> <span class="s2">"auto"</span>
+<span class="c1">#: Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.</span>
+<span class="c1">#: GitHub's own default is 360, which lets one stalled step (an apt mirror crawling,</span>
+<span class="c1">#: a hung test) hold a runner for six hours (issue #160). High enough that no</span>
+<span class="c1">#: healthy run should hit it; lower it per repo with</span>
+<span class="c1">#: ``[tool.wads.ci.testing].job_timeout_minutes``.</span>
+<span class="n">DFLT_JOB_TIMEOUT_MINUTES</span> <span class="o">=</span> <span class="mi">60</span>
 <span class="n">DFLT_RUN_CI_MARKER</span> <span class="o">=</span> <span class="s2">"[run ci]"</span>
 <span class="c1">#: The deploy rung of the on-demand ladder (i2mint/wads#131): validation, then the</span>
 <span class="c1">#: publish / Pages jobs. ``run_ci_publishes`` keeps today's behaviour by default</span>
@@ -729,6 +735,31 @@
 <span class="sd">        ``publish`` does not depend on the Windows job.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"windows_blocking"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">job_timeout_minutes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Minutes a validation job may run before GitHub stops it (``timeout-minutes``).</span>
+
+<span class="sd">        ``[tool.wads.ci.testing].job_timeout_minutes``, a positive integer; anything</span>
+<span class="sd">        else falls back to :data:`DFLT_JOB_TIMEOUT_MINUTES`, with a warning naming the</span>
+<span class="sd">        ignored value. Applied to the Linux ``validation`` matrix and to</span>
+<span class="sd">        ``windows-validation`` in the uv workflows.</span>
+
+<span class="sd">        &gt;&gt;&gt; CIConfig({}).job_timeout_minutes == DFLT_JOB_TIMEOUT_MINUTES</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; CIConfig({"tool": {"wads": {"ci": {"testing": {"job_timeout_minutes": 15}}}}}).job_timeout_minutes</span>
+<span class="sd">        15</span>
+<span class="sd">        """</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">testing_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"job_timeout_minutes"</span><span class="p">,</span> <span class="n">DFLT_JOB_TIMEOUT_MINUTES</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ignoring invalid [tool.wads.ci.testing].job_timeout_minutes="</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> (want a positive integer); using "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DFLT_JOB_TIMEOUT_MINUTES</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">DFLT_JOB_TIMEOUT_MINUTES</span>
+        <span class="k">return</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">system_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
@@ -1531,7 +1562,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=22f8023d"></script>
+</div><script src="../../_static/documentation_options.js?v=8bb8765b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
