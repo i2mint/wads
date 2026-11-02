@@ -129,7 +129,7 @@ runs:
               # The built commit was replayed onto a moved branch (#161): only
               # this runner has it, so a clone cannot tag it. Name the bump that
               # did land instead, and say what that costs.
-              echo "::error::Commit $commit (what was built) exists only on this runner, so the command above fails in a clone. Tag the replayed bump commit $(git rev-parse HEAD) instead (its tree also holds the merges that landed during the run), or re-run this job."
+              echo "::error::Commit $commit (what was built) exists only on this runner, so the command above fails in a clone. Tag the replayed bump commit $(git rev-parse HEAD) instead (its tree also holds the merges that landed during the run). Do not re-run this job: it would publish the same code again under a new version."
             fi
             exit 1
           fi
