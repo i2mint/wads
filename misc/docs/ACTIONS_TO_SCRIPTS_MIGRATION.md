@@ -73,8 +73,7 @@ python -m wads.scripts.set_env_vars
 **After**: Single Python script handling all build logic
 
 The script:
-- Installs build tools (pip, build)
-- Installs project dependencies
+- Installs `build` only when it is missing (the project itself is never installed: `python -m build` builds in an isolated environment)
 - Builds distributions (sdist and/or wheel)
 - Reports built packages with sizes
 

@@ -46,51 +46,34 @@ def _pip_install_cmd() -> list[str]:
     return [sys.executable, "-m", "pip", "install"]
 
 
-def _install_build_tools():
-    """Install modern build tools."""
-    print("Installing modern build tools")
-    # uv pip rejects "pip" as a target when pip isn't already present; only
-    # upgrade pip when we're actually using pip.
-    if _using_uv():
-        packages = ["build"]
-    else:
-        packages = ["--upgrade", "pip", "build"]
+def _has_build_tool() -> bool:
+    """True when ``python -m build`` can run in this interpreter.
+
+    Probes ``build.__main__``, not ``build``: a stray ``build/`` directory in the
+    working directory (setuptools leaves one) imports as an empty namespace package,
+    which ``import build`` accepts and ``python -m build`` does not.
+    """
+    probe = [sys.executable, "-c", "import build.__main__"]
+    return subprocess.run(probe, capture_output=True).returncode == 0
+
+
+def _ensure_build_tool() -> bool:
+    """Install ``build`` into this interpreter only when it is missing.
+
+    Nothing else is installed or upgraded: the project itself is never installed,
+    because ``python -m build`` builds in an isolated environment, so installing it
+    into this interpreter never affected the build and only left it behind (an
+    editable install pointing at the build directory, issue #119).
+    """
+    if _has_build_tool():
+        return True
+    print("Installing the build tool")
     try:
-        subprocess.run(_pip_install_cmd() + packages, check=True)
+        subprocess.run(_pip_install_cmd() + ["build"], check=True)
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] Failed to install build tools: {e}", file=sys.stderr)
         return False
     return True
-
-
-def _install_dependencies():
-    """Install project dependencies."""
-    print("Installing project dependencies")
-    pip_install = _pip_install_cmd()
-
-    # Try different dependency files
-    if Path("pyproject.toml").exists():
-        print("Installing from pyproject.toml")
-        result = subprocess.run(
-            pip_install + ["-e", "."],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            print("Could not install in editable mode, continuing...")
-    elif Path("setup.cfg").exists():
-        print("Installing from setup.cfg")
-        result = subprocess.run(
-            pip_install + ["-e", "."],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            print("Could not install in editable mode, continuing...")
-    elif Path("requirements.txt").exists():
-        print("Installing from requirements.txt")
-        subprocess.run(
-            pip_install + ["-r", "requirements.txt"],
-            check=False,
-        )
 
 
 def build_distributions(
@@ -109,12 +92,8 @@ def build_distributions(
     Returns:
         Exit code (0 for success, 1 for failure)
     """
-    # Install build tools
-    if not _install_build_tools():
+    if not _ensure_build_tool():
         return 1
-
-    # Install dependencies
-    _install_dependencies()
 
     # Build distributions
     print("Building distributions")
