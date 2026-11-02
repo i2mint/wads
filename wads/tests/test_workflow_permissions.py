@@ -56,7 +56,9 @@ def test_only_pushing_jobs_can_write(which):
 @pytest.mark.parametrize("which", sorted(WORKFLOWS))
 def test_publish_job_does_not_restore_the_shared_uv_cache(which):
     steps = _jobs(WORKFLOWS[which])["publish"]["steps"]
-    uv_setups = [s for s in steps if str(s.get("uses", "")).startswith("astral-sh/setup-uv@")]
+    uv_setups = [
+        s for s in steps if str(s.get("uses", "")).startswith("astral-sh/setup-uv@")
+    ]
     assert uv_setups
     for step in uv_setups:
         assert (step.get("with") or {}).get("enable-cache") is False

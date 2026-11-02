@@ -50,9 +50,7 @@ def test_defaults_are_pinned():
     assert (DFLT_INSTALL_RETRIES, DFLT_INSTALL_BACKOFF) == (2, 5)
 
 
-def test_flaky_command_succeeds_after_retries_with_doubling_backoff(
-    monkeypatch, waits
-):
+def test_flaky_command_succeeds_after_retries_with_doubling_backoff(monkeypatch, waits):
     (ok, err), flaky = _install(
         monkeypatch, waits, {"apt": ["timeout", 100, 0]}, ["apt"]
     )
@@ -135,8 +133,16 @@ def test_cli_install_retries_flag(tmp_path, monkeypatch):
     monkeypatch.setattr("wads.install_system_deps.time.sleep", lambda s: None)
     monkeypatch.setattr(
         "sys.argv",
-        ["x", str(tmp_path), "--platform", "linux", "--skip-check", "--quiet",
-         "--install-retries", "0"],
+        [
+            "x",
+            str(tmp_path),
+            "--platform",
+            "linux",
+            "--skip-check",
+            "--quiet",
+            "--install-retries",
+            "0",
+        ],
     )
     with pytest.raises(SystemExit) as e:
         mod.main()

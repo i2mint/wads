@@ -422,7 +422,6 @@ def test_existing_stub_secrets_reads_a_path_or_content(tmp_path):
     assert _existing_stub_secrets(None) is None
 
 
-
 def test_an_unreadable_pyproject_keeps_a_named_stubs_secrets(tmp_path, capsys):
     """Same guard as for a JSON stub: the declared names are unknown, so keep
     the ones the stub passes rather than shrink it to PYPI_PASSWORD."""
@@ -516,7 +515,9 @@ def test_an_inline_workflows_variable_is_carried_and_needs_no_transport(
 # Found by the adversarial review of #126.
 
 
-def _carry(tmp_path, ci_text, pyproject_text='[project]\nname = "demo"\nversion = "0.1.0"\n'):
+def _carry(
+    tmp_path, ci_text, pyproject_text='[project]\nname = "demo"\nversion = "0.1.0"\n'
+):
     from wads.migration import carry_ci_env_into_pyproject
 
     pyproject = tmp_path / "pyproject.toml"

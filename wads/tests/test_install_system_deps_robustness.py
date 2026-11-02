@@ -80,7 +80,10 @@ def test_install_dependency_runs_the_apt_flagged_command(monkeypatch):
             "apt-get update\nsudo -u root apt-get install x",
             "apt-get -o DPkg::Lock::Timeout=9 update\nsudo -u root apt-get -o DPkg::Lock::Timeout=9 install x",
         ),
-        ("(env A=1 apt-get update)", "(env A=1 apt-get -o DPkg::Lock::Timeout=9 update)"),
+        (
+            "(env A=1 apt-get update)",
+            "(env A=1 apt-get -o DPkg::Lock::Timeout=9 update)",
+        ),
         ("dpkg -s apt-get", "dpkg -s apt-get"),
         ("brew install apt", "brew install apt"),
         (
@@ -99,7 +102,11 @@ def test_apt_lock_timeout_disabled():
 
 @pytest.mark.parametrize(
     "kwargs",
-    [{"default_install_retries": -1}, {"default_install_timeout": 0}, {"apt_lock_timeout": -1}],
+    [
+        {"default_install_retries": -1},
+        {"default_install_timeout": 0},
+        {"apt_lock_timeout": -1},
+    ],
 )
 def test_invalid_defaults_fail_before_any_work(tmp_path, capsys, kwargs):
     with pytest.raises(ValueError):

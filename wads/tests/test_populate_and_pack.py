@@ -291,9 +291,9 @@ class TestBuild:
                 pytest.skip("twine not installed")
 
             # Twine check should pass
-            assert (
-                result.returncode == 0
-            ), f"Twine check failed: {result.stdout}\n{result.stderr}"
+            assert result.returncode == 0, (
+                f"Twine check failed: {result.stdout}\n{result.stderr}"
+            )
             assert "PASSED" in result.stdout or result.returncode == 0
 
 

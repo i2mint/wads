@@ -547,6 +547,18 @@ jobs:
           commit-message: "**CI** Formatted code + Updated version to ${{ env.VERSION }} [skip ci]"
           push: true
 
+      # Callers that pin this workflow to a release tag still ran every
+      # `<this repo>/actions/*@<default branch>` at the tip (issue #170). Tag a
+      # commit, on top of the built bump, whose workflow and action files pin
+      # those self-references to this release; a repo without any (most of
+      # them) gets the built commit back and tags it exactly as before.
+      - name: Pin self refs for the release tag
+        id: release_commit
+        uses: i2mint/wads/actions/pin-self-refs@master
+        with:
+          version: ${{ env.VERSION }}
+          ref: ${{ steps.bump.outputs.commit-sha }}
+
       # Tag the commit that was built and uploaded, not the branch tip: when a
       # merge landed during the run, the push above replayed the bump onto it,
       # and that tip holds code this release does not (issue #161).
@@ -555,7 +567,7 @@ jobs:
         with:
           tag: ${{ env.VERSION }}
           message: "Release version ${{ env.VERSION }}"
-          ref: ${{ steps.bump.outputs.commit-sha }}
+          ref: ${{ steps.release_commit.outputs.commit-sha }}
           push: true
 
   # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false, or

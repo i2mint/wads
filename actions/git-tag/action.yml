@@ -55,7 +55,7 @@ runs:
         if [ "$target" != "$head" ]; then
           # The branch moved past the built commit (a merge landed during the
           # run and the bump was replayed onto it). The tag names what was built.
-          echo "::notice::Tag $TAG names the built commit $target, not the branch tip $head: another merge landed while this release ran, so that tip holds code this release does not."
+          echo "::notice::Tag $TAG names the release commit $target, not the branch tip $head: either another merge landed while this release ran (that tip holds code this release does not), or the tag pins this repo's own action refs to the release (i2mint/wads#170)."
         fi
 
         tag_args=()

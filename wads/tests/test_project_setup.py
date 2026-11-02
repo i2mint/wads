@@ -122,6 +122,7 @@ class TestNameCandidates:
 
         # Need to also patch the import in list_name_candidate_files
         from wads import user_dirs
+
         monkeypatch.setattr(user_dirs, "name_candidates_dir", lambda: pool_dir)
 
         names = project_setup.load_name_candidates()
@@ -133,7 +134,9 @@ class TestNameCandidates:
     def test_list_name_candidate_files_empty(self, tmp_path, monkeypatch):
         from wads import project_setup, user_dirs
 
-        monkeypatch.setattr(user_dirs, "name_candidates_dir", lambda: tmp_path / "nonexistent")
+        monkeypatch.setattr(
+            user_dirs, "name_candidates_dir", lambda: tmp_path / "nonexistent"
+        )
 
         # Reimport to pick up the monkeypatch
         files = project_setup.list_name_candidate_files()

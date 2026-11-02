@@ -12,22 +12,22 @@ def test_nested_get():
     """Test nested dictionary getter."""
     from wads.config_comparison import _nested_get
 
-    d = {'a': {'b': {'c': 1}}, 'd': 2}
+    d = {"a": {"b": {"c": 1}}, "d": 2}
 
-    assert _nested_get(d, 'a.b.c') == 1
-    assert _nested_get(d, 'd') == 2
-    assert _nested_get(d, 'a.b') == {'c': 1}
-    assert _nested_get(d, 'x.y.z', 'default') == 'default'
+    assert _nested_get(d, "a.b.c") == 1
+    assert _nested_get(d, "d") == 2
+    assert _nested_get(d, "a.b") == {"c": 1}
+    assert _nested_get(d, "x.y.z", "default") == "default"
 
 
 def test_flatten_dict():
     """Test dictionary flattening."""
     from wads.config_comparison import _flatten_dict
 
-    d = {'a': {'b': 1, 'c': 2}, 'd': 3}
+    d = {"a": {"b": 1, "c": 2}, "d": 3}
     flat = _flatten_dict(d)
 
-    assert flat == {'a.b': 1, 'a.c': 2, 'd': 3}
+    assert flat == {"a.b": 1, "a.c": 2, "d": 3}
 
 
 def test_find_missing_sections():
@@ -35,18 +35,18 @@ def test_find_missing_sections():
     from wads.config_comparison import _find_missing_sections
 
     template = {
-        'project': {'name': '', 'version': ''},
-        'tool': {'ruff': {'line-length': 88}},
+        "project": {"name": "", "version": ""},
+        "tool": {"ruff": {"line-length": 88}},
     }
 
     actual = {
-        'project': {'name': 'test', 'version': '1.0'},
+        "project": {"name": "test", "version": "1.0"},
     }
 
-    ignore_keys = {'project.name', 'project.version'}
+    ignore_keys = {"project.name", "project.version"}
     missing = _find_missing_sections(actual, template, ignore_keys)
 
-    assert 'tool.ruff.line-length' in missing
+    assert "tool.ruff.line-length" in missing
 
 
 def test_compare_pyproject_toml_with_temp_files():
@@ -56,7 +56,7 @@ def test_compare_pyproject_toml_with_temp_files():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a minimal pyproject.toml
-        test_pyproject = Path(tmpdir) / 'pyproject.toml'
+        test_pyproject = Path(tmpdir) / "pyproject.toml"
         test_pyproject.write_text(
             """
 [build-system]
@@ -72,9 +72,9 @@ description = "Test"
 
         result = compare_pyproject_toml(test_pyproject)
 
-        assert 'missing_sections' in result
-        assert 'recommendations' in result
-        assert isinstance(result.get('needs_attention'), bool)
+        assert "missing_sections" in result
+        assert "recommendations" in result
+        assert isinstance(result.get("needs_attention"), bool)
 
 
 def test_compare_setup_cfg():
@@ -83,7 +83,7 @@ def test_compare_setup_cfg():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a setup.cfg
-        setup_cfg = Path(tmpdir) / 'setup.cfg'
+        setup_cfg = Path(tmpdir) / "setup.cfg"
         setup_cfg.write_text(
             """
 [metadata]
@@ -97,10 +97,10 @@ packages = find:
 
         result = compare_setup_cfg(setup_cfg)
 
-        assert result['exists'] == True
-        assert result['should_migrate'] == True
-        assert 'recommendations' in result
-        assert len(result['sections']) > 0
+        assert result["exists"] == True
+        assert result["should_migrate"] == True
+        assert "recommendations" in result
+        assert len(result["sections"]) > 0
 
 
 def test_summarize_config_status():
@@ -109,7 +109,7 @@ def test_summarize_config_status():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create a minimal project structure
-        pyproject = Path(tmpdir) / 'pyproject.toml'
+        pyproject = Path(tmpdir) / "pyproject.toml"
         pyproject.write_text(
             """
 [project]
@@ -118,7 +118,7 @@ version = "0.1.0"
 """
         )
 
-        setup_cfg = Path(tmpdir) / 'setup.cfg'
+        setup_cfg = Path(tmpdir) / "setup.cfg"
         setup_cfg.write_text(
             """
 [metadata]
@@ -128,34 +128,34 @@ name = test
 
         result = summarize_config_status(tmpdir, check_ci=False)
 
-        assert result['has_pyproject'] == True
-        assert result['has_setup_cfg'] == True
-        assert isinstance(result['needs_attention'], list)
+        assert result["has_pyproject"] == True
+        assert result["has_setup_cfg"] == True
+        assert isinstance(result["needs_attention"], list)
 
         # Should flag setup.cfg as needing attention
-        assert 'setup.cfg' in result['needs_attention']
+        assert "setup.cfg" in result["needs_attention"]
 
 
 def test_compare_pyproject_missing_file():
     """Test comparison when file doesn't exist."""
     from wads.config_comparison import compare_pyproject_toml
 
-    result = compare_pyproject_toml('/nonexistent/pyproject.toml')
+    result = compare_pyproject_toml("/nonexistent/pyproject.toml")
 
     # When file doesn't exist, read_pyproject_toml returns empty dict
     # So comparison just shows everything as missing
-    assert 'missing_sections' in result
-    assert 'needs_attention' in result
+    assert "missing_sections" in result
+    assert "needs_attention" in result
 
 
 def test_compare_setup_cfg_missing():
     """Test setup.cfg comparison when file missing."""
     from wads.config_comparison import compare_setup_cfg
 
-    result = compare_setup_cfg('/nonexistent/setup.cfg')
+    result = compare_setup_cfg("/nonexistent/setup.cfg")
 
-    assert result['exists'] == False
-    assert result['should_migrate'] == False
+    assert result["exists"] == False
+    assert result["should_migrate"] == False
 
 
 def test_manifest_in_parsing():
@@ -163,7 +163,7 @@ def test_manifest_in_parsing():
     from wads.migration import analyze_manifest_in
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        manifest_path = Path(tmpdir) / 'MANIFEST.in'
+        manifest_path = Path(tmpdir) / "MANIFEST.in"
 
         # Create a sample MANIFEST.in
         manifest_content = """
@@ -179,25 +179,25 @@ global-exclude *.pyc
 
         result = analyze_manifest_in(manifest_path)
 
-        assert result['exists'] == True
-        assert result['needs_migration'] == True
-        assert len(result['directives']) > 0
-        assert len(result['recommendations']) > 0
-        assert result['hatchling_config'] is not None
+        assert result["exists"] == True
+        assert result["needs_migration"] == True
+        assert len(result["directives"]) > 0
+        assert len(result["recommendations"]) > 0
+        assert result["hatchling_config"] is not None
 
         # Check that hatchling config is generated
-        assert '[tool.hatch.build.targets.wheel]' in result['hatchling_config']
+        assert "[tool.hatch.build.targets.wheel]" in result["hatchling_config"]
 
 
 def test_manifest_in_nonexistent():
     """Test MANIFEST.in analysis when file doesn't exist."""
     from wads.migration import analyze_manifest_in
 
-    result = analyze_manifest_in('/nonexistent/MANIFEST.in')
+    result = analyze_manifest_in("/nonexistent/MANIFEST.in")
 
-    assert result['exists'] == False
-    assert result['needs_migration'] == False
-    assert result['hatchling_config'] is None
+    assert result["exists"] == False
+    assert result["needs_migration"] == False
+    assert result["hatchling_config"] is None
 
 
 def test_compare_manifest_in():
@@ -205,14 +205,14 @@ def test_compare_manifest_in():
     from wads.config_comparison import compare_manifest_in
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        manifest_path = Path(tmpdir) / 'MANIFEST.in'
-        manifest_path.write_text('include README.md\n')
+        manifest_path = Path(tmpdir) / "MANIFEST.in"
+        manifest_path.write_text("include README.md\n")
 
         result = compare_manifest_in(manifest_path)
 
-        assert result['exists'] == True
-        assert result['needs_migration'] == True
-        assert result['needs_attention'] == True
+        assert result["exists"] == True
+        assert result["needs_migration"] == True
+        assert result["needs_attention"] == True
 
 
 def test_compare_ci_workflow_flags_outdated_actions():
@@ -220,7 +220,7 @@ def test_compare_ci_workflow_flags_outdated_actions():
     from wads.config_comparison import compare_ci_workflow
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        wf = Path(tmpdir) / 'ci.yml'
+        wf = Path(tmpdir) / "ci.yml"
         wf.write_text(
             "name: CI\n"
             "on: [push]\n"
@@ -231,10 +231,10 @@ def test_compare_ci_workflow_flags_outdated_actions():
             "      - uses: actions/checkout@v2\n"
         )
         result = compare_ci_workflow(wf)
-        assert result['needs_attention'] is True
-        recs = ' '.join(result['recommendations'])
-        assert 'outdated' in recs
-        assert 'ruff' in recs  # no ruff present -> flagged
+        assert result["needs_attention"] is True
+        recs = " ".join(result["recommendations"])
+        assert "outdated" in recs
+        assert "ruff" in recs  # no ruff present -> flagged
 
 
 def test_compare_ci_workflow_modern_is_clean():
@@ -242,7 +242,7 @@ def test_compare_ci_workflow_modern_is_clean():
     from wads.config_comparison import compare_ci_workflow
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        wf = Path(tmpdir) / 'ci.yml'
+        wf = Path(tmpdir) / "ci.yml"
         wf.write_text(
             "name: CI\n"
             "on: [push]\n"
@@ -254,18 +254,18 @@ def test_compare_ci_workflow_modern_is_clean():
             "      - run: ruff check .\n"
         )
         result = compare_ci_workflow(wf)
-        assert result['needs_attention'] is False
-        assert result['recommendations'] == []
+        assert result["needs_attention"] is False
+        assert result["recommendations"] == []
 
 
 def test_compare_ci_workflow_missing_file():
     """A missing workflow file is reported as an error, not a crash."""
     from wads.config_comparison import compare_ci_workflow
 
-    result = compare_ci_workflow('/nonexistent/ci.yml')
-    assert result['needs_attention'] is True
-    assert 'error' in result
+    result = compare_ci_workflow("/nonexistent/ci.yml")
+    assert result["needs_attention"] is True
+    assert "error" in result
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

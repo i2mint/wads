@@ -29,16 +29,16 @@ coverage_enabled = true
         )
 
         # Mock GitHub Actions environment
-        output_file = tmp_path / 'output.txt'
-        env_file = tmp_path / 'env.txt'
-        summary_file = tmp_path / 'summary.txt'
+        output_file = tmp_path / "output.txt"
+        env_file = tmp_path / "env.txt"
+        summary_file = tmp_path / "summary.txt"
 
         with patch.dict(
-            'os.environ',
+            "os.environ",
             {
-                'GITHUB_OUTPUT': str(output_file),
-                'GITHUB_ENV': str(env_file),
-                'GITHUB_STEP_SUMMARY': str(summary_file),
+                "GITHUB_OUTPUT": str(output_file),
+                "GITHUB_ENV": str(env_file),
+                "GITHUB_STEP_SUMMARY": str(summary_file),
             },
         ):
             result = read_and_export_ci_config(tmp_path)
@@ -47,12 +47,12 @@ coverage_enabled = true
 
             # Check outputs
             output_content = output_file.read_text()
-            assert 'project-name=test-project' in output_content
-            assert '3.10' in output_content
+            assert "project-name=test-project" in output_content
+            assert "3.10" in output_content
 
             # Check env vars
             env_content = env_file.read_text()
-            assert 'PROJECT_NAME=test-project' in env_content
+            assert "PROJECT_NAME=test-project" in env_content
 
     def test_exports_tests_enabled_output(self, tmp_path):
         """Test that tests-enabled is exported, defaulting true and overridable."""
@@ -68,10 +68,10 @@ name = "test-project"
 enabled = false
 """
         )
-        output_file = tmp_path / 'output.txt'
-        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+        output_file = tmp_path / "output.txt"
+        with patch.dict("os.environ", {"GITHUB_OUTPUT": str(output_file)}):
             assert read_and_export_ci_config(tmp_path) == 0
-        assert 'tests-enabled=false' in output_file.read_text()
+        assert "tests-enabled=false" in output_file.read_text()
 
     def test_exports_publish_gate_outputs(self, tmp_path):
         """Test that publish-enabled and the commit-message markers are exported."""
@@ -91,15 +91,15 @@ publish_marker = "[ship it]"
 """
         )
 
-        output_file = tmp_path / 'output.txt'
-        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+        output_file = tmp_path / "output.txt"
+        with patch.dict("os.environ", {"GITHUB_OUTPUT": str(output_file)}):
             result = read_and_export_ci_config(tmp_path)
 
         assert result == 0
         output_content = output_file.read_text()
-        assert 'publish-enabled=false' in output_content
-        assert 'skip-ci-marker=[no ci]' in output_content
-        assert 'publish-marker=[ship it]' in output_content
+        assert "publish-enabled=false" in output_content
+        assert "skip-ci-marker=[no ci]" in output_content
+        assert "publish-marker=[ship it]" in output_content
 
     def test_publish_gate_outputs_have_defaults(self, tmp_path):
         """Test that publish gate outputs fall back to sensible defaults."""
@@ -114,15 +114,15 @@ version = "0.1.0"
 """
         )
 
-        output_file = tmp_path / 'output.txt'
-        with patch.dict('os.environ', {'GITHUB_OUTPUT': str(output_file)}):
+        output_file = tmp_path / "output.txt"
+        with patch.dict("os.environ", {"GITHUB_OUTPUT": str(output_file)}):
             result = read_and_export_ci_config(tmp_path)
 
         assert result == 0
         output_content = output_file.read_text()
-        assert 'publish-enabled=true' in output_content
-        assert 'skip-ci-marker=[skip ci]' in output_content
-        assert 'publish-marker=[publish]' in output_content
+        assert "publish-enabled=true" in output_content
+        assert "skip-ci-marker=[skip ci]" in output_content
+        assert "publish-marker=[publish]" in output_content
 
     def test_handles_missing_pyproject(self, tmp_path):
         """Test error handling for missing pyproject.toml."""
@@ -144,7 +144,7 @@ name = "test-project"
         )
 
         # Should not crash without GITHUB_OUTPUT
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             result = read_and_export_ci_config(tmp_path)
             # Should succeed but outputs won't be written
             assert result == 0
@@ -168,7 +168,7 @@ required_envvars = ["API_KEY"]
 """
         )
 
-        with patch.dict('os.environ', {'API_KEY': 'secret'}):
+        with patch.dict("os.environ", {"API_KEY": "secret"}):
             success, missing = validate_ci_environment(tmp_path)
             assert success
             assert len(missing) == 0
@@ -188,7 +188,7 @@ required_envvars = ["MISSING_VAR", "ANOTHER_MISSING"]
 """
         )
 
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             success, missing = validate_ci_environment(tmp_path)
             assert not success
             assert "MISSING_VAR" in missing
@@ -231,8 +231,8 @@ extra_envvars = ["OPTIONAL_VAR"]
 """
         )
 
-        env_file = tmp_path / 'env.txt'
-        summary_file = tmp_path / 'summary.txt'
+        env_file = tmp_path / "env.txt"
+        summary_file = tmp_path / "summary.txt"
 
         secrets = {
             "DATABASE_URL": "postgres://localhost/db",
@@ -241,19 +241,19 @@ extra_envvars = ["OPTIONAL_VAR"]
         }
 
         with patch.dict(
-            'os.environ',
+            "os.environ",
             {
-                'GITHUB_ENV': str(env_file),
-                'GITHUB_STEP_SUMMARY': str(summary_file),
-                'SECRETS_CONTEXT': json.dumps(secrets),
+                "GITHUB_ENV": str(env_file),
+                "GITHUB_STEP_SUMMARY": str(summary_file),
+                "SECRETS_CONTEXT": json.dumps(secrets),
             },
         ):
             result = set_environment_variables(tmp_path)
 
             assert result == 0
             env_content = env_file.read_text()
-            assert 'DATABASE_URL' in env_content
-            assert 'postgres://localhost/db' in env_content
+            assert "DATABASE_URL" in env_content
+            assert "postgres://localhost/db" in env_content
 
     def test_fails_on_missing_required_var(self, tmp_path):
         """Test failure when required var is missing."""
@@ -270,10 +270,10 @@ required_envvars = ["CRITICAL_VAR"]
 """
         )
 
-        env_file = tmp_path / 'env.txt'
+        env_file = tmp_path / "env.txt"
 
         with patch.dict(
-            'os.environ', {'GITHUB_ENV': str(env_file), 'SECRETS_CONTEXT': '{}'}
+            "os.environ", {"GITHUB_ENV": str(env_file), "SECRETS_CONTEXT": "{}"}
         ):
             result = set_environment_variables(tmp_path)
             assert result == 1
@@ -293,13 +293,13 @@ required_envvars = ["GITHUB_TOKEN", "MY_VAR"]
 """
         )
 
-        env_file = tmp_path / 'env.txt'
+        env_file = tmp_path / "env.txt"
 
         secrets = {"GITHUB_TOKEN": "should_not_be_set", "MY_VAR": "should_be_set"}
 
         with patch.dict(
-            'os.environ',
-            {'GITHUB_ENV': str(env_file), 'SECRETS_CONTEXT': json.dumps(secrets)},
+            "os.environ",
+            {"GITHUB_ENV": str(env_file), "SECRETS_CONTEXT": json.dumps(secrets)},
         ):
             result = set_environment_variables(tmp_path)
 
@@ -379,7 +379,7 @@ version = "0.1.0"
         files = list(dist_dir.iterdir())
 
         # Should have wheel
-        assert any(f.suffix == '.whl' for f in files)
+        assert any(f.suffix == ".whl" for f in files)
 
 
 class TestInstallDeps:
@@ -390,7 +390,7 @@ class TestInstallDeps:
         from wads.scripts.install_deps import install_pypi_packages
 
         # Test with a simple package
-        result = install_pypi_packages(['pip'])
+        result = install_pypi_packages(["pip"])
         assert result is True
 
     def test_handles_empty_package_list(self):

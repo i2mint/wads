@@ -76,7 +76,10 @@ def test_the_step_takes_everything_through_env_and_is_wired_to_setup(workflow):
     assert step.get("id") == "gates"
     assert "${{" not in step["run"], "values must reach bash via env:, not spliced"
     assert set(step["env"]) == {
-        "SUBJECT", "SKIP_CI_MARKER", "SKIP_PUBLISH_MARKER", "SKIP_PAGES_MARKER"
+        "SUBJECT",
+        "SKIP_CI_MARKER",
+        "SKIP_PUBLISH_MARKER",
+        "SKIP_PAGES_MARKER",
     }
     outputs = yaml.safe_load(workflow.read_text())["jobs"]["setup"]["outputs"]
     assert outputs["skip-publish"] == "${{ steps.gates.outputs.skip-publish }}"
@@ -117,7 +120,10 @@ def test_publish_and_pages_gate_on_the_verdict_failing_closed(workflow):
     ],
 )
 def test_verdicts(workflow, subject, publish, pages):
-    assert run_gates(workflow, subject) == {"skip-publish": publish, "skip-pages": pages}
+    assert run_gates(workflow, subject) == {
+        "skip-publish": publish,
+        "skip-pages": pages,
+    }
 
 
 @bash_required
@@ -137,7 +143,8 @@ def test_an_empty_marker_output_falls_back_to_the_default_never_to_match_all(wor
 def test_renamed_markers_are_honoured_and_globs_are_literal(workflow):
     custom = dict(skip_ci="[no ci]", skip_publish="[no*rel]", skip_pages="?docs?")
     assert run_gates(workflow, "x [no ci]", **custom) == {
-        "skip-publish": "true", "skip-pages": "true"
+        "skip-publish": "true",
+        "skip-pages": "true",
     }
     assert run_gates(workflow, "x [no*rel]", **custom)["skip-publish"] == "true"
     assert run_gates(workflow, "x [no release]", **custom)["skip-publish"] == "false"
@@ -175,7 +182,10 @@ def _verdicts(workflow, message, *, ref="refs/heads/main", publish_enabled="true
         "needs.setup.outputs.test-on-windows": "true",
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
-        **{f"needs.setup.outputs.{k}": v for k, v in run_gates(workflow, subject).items()},
+        **{
+            f"needs.setup.outputs.{k}": v
+            for k, v in run_gates(workflow, subject).items()
+        },
         **{
             f"needs.setup.outputs.{k}": v
             for k, v in run_level_step(
@@ -207,7 +217,10 @@ def _verdicts(workflow, message, *, ref="refs/heads/main", publish_enabled="true
         ("Docs build [skip github-pages] (#12)", (True, True, False)),
         ("Chore [skip ci]", (False, False, False)),
         # a marker quoted only in a squash-merged PR body does not count
-        ("Explain markers (#62)\n\nUse [skip publish] to keep tests.", (True, True, True)),
+        (
+            "Explain markers (#62)\n\nUse [skip publish] to keep tests.",
+            (True, True, True),
+        ),
     ],
 )
 def test_jobs_on_the_default_branch(workflow, message, expected):

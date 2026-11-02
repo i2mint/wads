@@ -84,7 +84,10 @@ def run_push_tag(
         "COUNTER": str(tmp_path / "pushes"),
     }
     return subprocess.run(
-        [BASH, "-c", push_tag_script()], cwd=clone, capture_output=True, text=True,
+        [BASH, "-c", push_tag_script()],
+        cwd=clone,
+        capture_output=True,
+        text=True,
         env=env,
     )
 

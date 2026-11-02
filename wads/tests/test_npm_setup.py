@@ -70,9 +70,7 @@ def test_npm_config_trigger_on_demand():
     cfg = NpmCIConfig(
         {
             "name": "x",
-            "wads": {
-                "ci": {"trigger": {"mode": "on-demand", "runCiMarker": "[go]"}}
-            },
+            "wads": {"ci": {"trigger": {"mode": "on-demand", "runCiMarker": "[go]"}}},
         }
     )
     assert cfg.trigger_mode == "on-demand"

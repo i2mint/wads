@@ -118,7 +118,7 @@ def test_the_tag_names_the_built_commit_after_a_replay(remote_and_clone, tmp_pat
 
     res = _create_tag(clone, ref=built)
     assert res.returncode == 0, res.stderr
-    assert f"::notice::Tag {TAG} names the built commit {built}" in res.stdout
+    assert f"::notice::Tag {TAG} names the release commit {built}" in res.stdout
     assert _head(clone, f"{TAG}^{{commit}}") == built
     # The tag's tree is the built tree: the bump, without the concurrent merge.
     files = _git("ls-tree", "--name-only", TAG, cwd=clone).stdout.split()
@@ -172,11 +172,15 @@ def test_an_empty_ref_tags_head_as_before(remote_and_clone, message):
     "workflow", [".github/workflows/uv-ci.yml", "wads/data/github_ci_uv.yml"]
 )
 def test_the_publish_job_tags_the_bump_commit_output(workflow):
+    """Tag <- pinned release commit (#170) <- the bump commit's output (#161)."""
     jobs = yaml.safe_load((ROOT / workflow).read_text())["jobs"]
     steps = {s.get("name"): s for s in jobs["publish"]["steps"]}
     commit_id = steps["Commit Changes"]["id"]
-    ref = steps["Tag Repository"]["with"]["ref"]
-    assert ref == f"${{{{ steps.{commit_id}.outputs.commit-sha }}}}"
+    pin = steps["Pin self refs for the release tag"]
+    assert pin["with"]["ref"] == f"${{{{ steps.{commit_id}.outputs.commit-sha }}}}"
+    assert steps["Tag Repository"]["with"]["ref"] == (
+        f"${{{{ steps.{pin['id']}.outputs.commit-sha }}}}"
+    )
 
 
 def test_the_commit_action_exposes_its_commit_step_output():

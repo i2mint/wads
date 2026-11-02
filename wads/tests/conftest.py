@@ -63,9 +63,9 @@ version = "0.1.0"
 def github_env_files(tmp_path):
     """Create temporary files for GitHub Actions environment."""
     files = {
-        'output': tmp_path / 'github_output.txt',
-        'env': tmp_path / 'github_env.txt',
-        'summary': tmp_path / 'github_summary.md',
+        "output": tmp_path / "github_output.txt",
+        "env": tmp_path / "github_env.txt",
+        "summary": tmp_path / "github_summary.md",
     }
 
     for file in files.values():
@@ -78,12 +78,12 @@ def github_env_files(tmp_path):
 def github_actions_env(github_env_files, tmp_path):
     """Mock GitHub Actions environment variables."""
     return {
-        'GITHUB_OUTPUT': str(github_env_files['output']),
-        'GITHUB_ENV': str(github_env_files['env']),
-        'GITHUB_STEP_SUMMARY': str(github_env_files['summary']),
-        'GITHUB_WORKSPACE': str(tmp_path),
-        'GITHUB_REPOSITORY': 'test/test-repo',
-        'GITHUB_REF': 'refs/heads/main',
+        "GITHUB_OUTPUT": str(github_env_files["output"]),
+        "GITHUB_ENV": str(github_env_files["env"]),
+        "GITHUB_STEP_SUMMARY": str(github_env_files["summary"]),
+        "GITHUB_WORKSPACE": str(tmp_path),
+        "GITHUB_REPOSITORY": "test/test-repo",
+        "GITHUB_REF": "refs/heads/main",
     }
 
 

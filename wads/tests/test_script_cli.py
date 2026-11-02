@@ -184,9 +184,7 @@ enabled = false
     def test_read_ci_config_quality_and_docs_defaults(self, tmp_path):
         """Defaults when sections are absent: ruff/docs default ON,
         black/mypy default OFF."""
-        outputs = self._run_read_ci_config(
-            tmp_path, '[project]\nname = "demo"\n'
-        )
+        outputs = self._run_read_ci_config(tmp_path, '[project]\nname = "demo"\n')
         assert outputs.get("ruff-enabled") == "true"
         assert outputs.get("black-enabled") == "false"
         assert outputs.get("mypy-enabled") == "false"
@@ -207,11 +205,11 @@ enabled = false
     def test_scripts_can_be_imported(self):
         """Test that all scripts can be imported as modules."""
         scripts = [
-            'wads.scripts.read_ci_config',
-            'wads.scripts.build_dist',
-            'wads.scripts.install_deps',
-            'wads.scripts.set_env_vars',
-            'wads.scripts.validate_ci_env',
+            "wads.scripts.read_ci_config",
+            "wads.scripts.build_dist",
+            "wads.scripts.install_deps",
+            "wads.scripts.set_env_vars",
+            "wads.scripts.validate_ci_env",
         ]
 
         for script in scripts:
@@ -270,9 +268,9 @@ class TestScriptDocumentation:
             docstring = module.__doc__ or ""
             # Should have Usage section or python -m example
             assert (
-                'Usage:' in docstring
-                or 'python -m' in docstring
-                or 'python3 -m' in docstring
+                "Usage:" in docstring
+                or "python -m" in docstring
+                or "python3 -m" in docstring
             ), f"{module.__name__} docstring missing usage example"
 
 

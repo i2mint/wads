@@ -54,18 +54,39 @@ def test_pytest_args_are_honoured(tmp_path):
     default = f"doctest_optionflags={DOCTEST_OPTIONFLAGS}"
     repo = str(tmp_path)
     # an explicit -o in the extra args wins over everything
-    assert doctest_optionflags_arg(repo, pytest_args="-o doctest_optionflags=ELLIPSIS") == ""
-    assert doctest_optionflags_arg(repo, pytest_args="-odoctest_optionflags=ELLIPSIS") == ""
+    assert (
+        doctest_optionflags_arg(repo, pytest_args="-o doctest_optionflags=ELLIPSIS")
+        == ""
+    )
+    assert (
+        doctest_optionflags_arg(repo, pytest_args="-odoctest_optionflags=ELLIPSIS")
+        == ""
+    )
     # -c names the one config file that counts
     (tmp_path / "other.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
     assert doctest_optionflags_arg(repo, pytest_args="-x -c other.ini") == ""
-    assert doctest_optionflags_arg(repo, pytest_args="--config-file=missing.ini") == default
+    assert (
+        doctest_optionflags_arg(repo, pytest_args="--config-file=missing.ini")
+        == default
+    )
     assert doctest_optionflags_arg(repo, pytest_args="-cother.ini") == ""
-    assert doctest_optionflags_arg(repo, pytest_args="--override-ini doctest_optionflags=X") == ""
-    assert doctest_optionflags_arg(repo, pytest_args="--override-ini=doctest_optionflags=X") == ""
+    assert (
+        doctest_optionflags_arg(
+            repo, pytest_args="--override-ini doctest_optionflags=X"
+        )
+        == ""
+    )
+    assert (
+        doctest_optionflags_arg(
+            repo, pytest_args="--override-ini=doctest_optionflags=X"
+        )
+        == ""
+    )
     # --rootdir does not move pytest's config search, so it does not move ours
     (tmp_path / "sub").mkdir()
-    (tmp_path / "sub" / "pytest.ini").write_text("[pytest]\ndoctest_optionflags = ELLIPSIS\n")
+    (tmp_path / "sub" / "pytest.ini").write_text(
+        "[pytest]\ndoctest_optionflags = ELLIPSIS\n"
+    )
     assert doctest_optionflags_arg(repo, pytest_args="--rootdir sub") == default
     assert doctest_optionflags_arg(repo, pytest_args="-x") == default
 
@@ -74,7 +95,9 @@ def test_the_cli_survives_a_trailing_pytest_args_flag(tmp_path):
     script = REPO_ROOT / "wads" / "scripts" / "pytest_doctest_flags.py"
     run = subprocess.run(
         [sys.executable, "-I", "-S", str(script), str(tmp_path), "--pytest-args"],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     assert run.stdout.strip() == f"doctest_optionflags={DOCTEST_OPTIONFLAGS}"
 
@@ -82,8 +105,18 @@ def test_the_cli_survives_a_trailing_pytest_args_flag(tmp_path):
 def test_the_cli_takes_pytest_args(tmp_path):
     script = REPO_ROOT / "wads" / "scripts" / "pytest_doctest_flags.py"
     run = subprocess.run(
-        [sys.executable, "-I", "-S", str(script), str(tmp_path), "--pytest-args", "-o doctest_optionflags=X"],
-        capture_output=True, text=True, check=True,
+        [
+            sys.executable,
+            "-I",
+            "-S",
+            str(script),
+            str(tmp_path),
+            "--pytest-args",
+            "-o doctest_optionflags=X",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     assert run.stdout.strip() == ""
 

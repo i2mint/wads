@@ -52,7 +52,12 @@ def test_read_ci_config_emits_outputs_and_test_extra_warning(tmp_path):
     (tmp_path / "pyproject.toml").write_text(PYPROJECT)
     out = tmp_path / "out.txt"
     result = subprocess.run(
-        [sys.executable, "-I", str(ROOT / "wads" / "scripts" / "read_ci_config.py"), "."],
+        [
+            sys.executable,
+            "-I",
+            str(ROOT / "wads" / "scripts" / "read_ci_config.py"),
+            ".",
+        ],
         cwd=tmp_path,
         env={**_BASE_ENV, "GITHUB_OUTPUT": str(out), "PATH": ""},
         capture_output=True,

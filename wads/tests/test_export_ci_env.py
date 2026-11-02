@@ -112,9 +112,7 @@ def test_merge_named_secret_wins_and_infra_keys_dropped():
 
 
 def test_merge_tolerates_malformed_blob():
-    merged = merge_transported_secrets(
-        {"WADS_CI_SECRETS_JSON": "not json", "A": "x"}
-    )
+    merged = merge_transported_secrets({"WADS_CI_SECRETS_JSON": "not json", "A": "x"})
     assert merged == {"A": "x"}
 
 
@@ -200,11 +198,24 @@ def test_main_always_required_and_masks(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("WADS_ENV_ALWAYS_REQUIRED", '["PYPI_PASSWORD"]')
     monkeypatch.setenv(
         "WADS_SECRETS_JSON",
-        json.dumps({"WADS_CI_SECRETS_JSON": json.dumps(json.dumps(
-            {"PYPI_PASSWORD": "pypi-tok", "github_token": "t"}, indent=2))}),
+        json.dumps(
+            {
+                "WADS_CI_SECRETS_JSON": json.dumps(
+                    json.dumps(
+                        {"PYPI_PASSWORD": "pypi-tok", "github_token": "t"}, indent=2
+                    )
+                )
+            }
+        ),
     )
-    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_TEST", "WADS_ENV_EXTRA",
-                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+    for unset in (
+        "WADS_ENV_REQUIRED",
+        "WADS_ENV_TEST",
+        "WADS_ENV_EXTRA",
+        "WADS_ENV_DEFAULTS",
+        "WADS_ENV_ALIASES",
+        "WADS_VARS_JSON",
+    ):
         monkeypatch.delenv(unset, raising=False)
 
     assert mod.main() == 0
@@ -225,8 +236,14 @@ def test_masks_percent_escape(tmp_path, monkeypatch, capsys):
         "WADS_SECRETS_JSON",
         json.dumps({"DATABASE_URL": "postgres://u:p%25w@host/db"}),
     )
-    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_ALWAYS_REQUIRED", "WADS_ENV_TEST",
-                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+    for unset in (
+        "WADS_ENV_REQUIRED",
+        "WADS_ENV_ALWAYS_REQUIRED",
+        "WADS_ENV_TEST",
+        "WADS_ENV_DEFAULTS",
+        "WADS_ENV_ALIASES",
+        "WADS_VARS_JSON",
+    ):
         monkeypatch.delenv(unset, raising=False)
 
     assert mod.main() == 0
@@ -255,8 +272,14 @@ def test_main_fails_on_missing_always_required(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "github_env"))
     monkeypatch.setenv("WADS_ENV_ALWAYS_REQUIRED", '["PYPI_PASSWORD"]')
     monkeypatch.setenv("WADS_SECRETS_JSON", "{}")
-    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_TEST", "WADS_ENV_EXTRA",
-                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+    for unset in (
+        "WADS_ENV_REQUIRED",
+        "WADS_ENV_TEST",
+        "WADS_ENV_EXTRA",
+        "WADS_ENV_DEFAULTS",
+        "WADS_ENV_ALIASES",
+        "WADS_VARS_JSON",
+    ):
         monkeypatch.delenv(unset, raising=False)
 
     assert mod.main() == 1
@@ -388,8 +411,14 @@ def test_main_without_github_env_writes_nothing_and_says_so(monkeypatch, capsys)
     monkeypatch.delenv("GITHUB_ENV", raising=False)
     monkeypatch.setenv("WADS_ENV_EXTRA", '["OPENAI_API_KEY"]')
     monkeypatch.setenv("WADS_SECRETS_JSON", '{"OPENAI_API_KEY": "sk-x"}')
-    for unset in ("WADS_ENV_REQUIRED", "WADS_ENV_TEST", "WADS_ENV_ALWAYS_REQUIRED",
-                  "WADS_ENV_DEFAULTS", "WADS_ENV_ALIASES", "WADS_VARS_JSON"):
+    for unset in (
+        "WADS_ENV_REQUIRED",
+        "WADS_ENV_TEST",
+        "WADS_ENV_ALWAYS_REQUIRED",
+        "WADS_ENV_DEFAULTS",
+        "WADS_ENV_ALIASES",
+        "WADS_VARS_JSON",
+    ):
         monkeypatch.delenv(unset, raising=False)
 
     assert mod.main() == 0
@@ -407,7 +436,7 @@ def test_malformed_non_secret_input_is_reported_verbatim(monkeypatch, capsys):
     monkeypatch.setenv("WADS_ENV_REQUIRED", '["A"')
     with pytest.raises(SystemExit):
         mod.main()
-    assert '\'["A"\'' in capsys.readouterr().err
+    assert "'[\"A\"'" in capsys.readouterr().err
 
 
 def test_publish_job_exports_only_the_pypi_token():

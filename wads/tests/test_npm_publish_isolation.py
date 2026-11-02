@@ -34,12 +34,15 @@ def test_publish_job_runs_no_repo_code(name):
     assert job["needs"] == ["setup", "pack"]
     uses = [str(step.get("uses", "")) for step in job["steps"]]
     assert not any(u.startswith(("actions/checkout@", "pnpm/")) for u in uses)
-    runs = "\n".join(
-        line
-        for step in job["steps"]
-        for line in step.get("run", "").splitlines()
-        if not line.strip().startswith("#")
-    ) + "\n"
+    runs = (
+        "\n".join(
+            line
+            for step in job["steps"]
+            for line in step.get("run", "").splitlines()
+            if not line.strip().startswith("#")
+        )
+        + "\n"
+    )
     for forbidden in ("npm ci", "npm install\n", "pnpm ", "npm run", "npm pack"):
         assert forbidden not in runs, forbidden
     publish_lines = [l for l in runs.splitlines() if "npm publish" in l]

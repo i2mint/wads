@@ -523,7 +523,7 @@ class TestSecretEnvScoping:
         (wf / "ci.yml").write_text("name: old\non: push\n")
         (tmp_path / "pyproject.toml").write_text(
             '[project]\nname = "demo"\n\n'
-            "[tool.wads.ci.env]\nextra_envvars = [\"COSMO_TEST_LEVEL\"]\n"
+            '[tool.wads.ci.env]\nextra_envvars = ["COSMO_TEST_LEVEL"]\n'
         )
         result = migrate_ci_to_uv(wf / "ci.yml")
         assert "scoped to the test jobs" in result
