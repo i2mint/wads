@@ -17,6 +17,7 @@ Environment:
 import json
 import os
 import sys
+import warnings
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # also under `-m`
@@ -208,8 +209,18 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         return 1
 
 
+def _warning_as_annotation(message, category, filename, lineno, file=None, line=None):
+    """Print a warning as a GitHub Actions ``::warning::``, so it shows in the run summary.
+
+    A config value the reader ignores (an invalid ``job_timeout_minutes``, say) would
+    otherwise go to plain stderr in the setup job, where nobody looks (issue #181).
+    """
+    print(f"::warning::{message}", file=sys.stderr)
+
+
 def main():
     """Main entry point."""
+    warnings.showwarning = _warning_as_annotation
     pyproject_path = sys.argv[1] if len(sys.argv) > 1 else "."
     sys.exit(read_and_export_ci_config(pyproject_path))
 
