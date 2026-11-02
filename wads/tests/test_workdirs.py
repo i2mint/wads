@@ -127,6 +127,10 @@ def test_room_shortfall_skips_inodes_without_statvfs(tmp_path, monkeypatch):
     from wads import workdirs
 
     monkeypatch.delattr(workdirs.os, "statvfs", raising=False)
+    # shutil.disk_usage itself uses os.statvfs on POSIX: stub it as Windows would answer.
+    monkeypatch.setattr(
+        workdirs.shutil, "disk_usage", lambda p: type("U", (), {"free": 10**12})()
+    )
     assert workdirs.free_inodes(str(tmp_path)) is None
     assert (
         workdirs.room_shortfall(str(tmp_path), min_bytes=0, min_inodes=10**12) is None
