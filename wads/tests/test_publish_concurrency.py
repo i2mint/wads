@@ -2,8 +2,8 @@
 
 Two merges seconds apart ran their publish jobs concurrently, both bumped to the
 same next version, and the second upload was refused (a red run on master). A
-job-level ``concurrency`` group on ``publish`` queues them; only ``publish`` is
-grouped, so every merge is still validated in parallel.
+job-level ``concurrency`` group with ``queue: max`` on ``publish`` queues them
+(FIFO); only ``publish`` is grouped, so every merge is still validated in parallel.
 """
 
 from pathlib import Path
@@ -26,9 +26,13 @@ def test_publish_is_queued_per_repo_and_branch(workflow):
     concurrency = _jobs(workflow)["publish"]["concurrency"]
     assert concurrency == {
         "group": "wads-publish-${{ github.repository }}-${{ github.ref }}",
-        # A running upload must never be cancelled half-way.
-        "cancel-in-progress": False,
+        # Keep every waiting run: with the default single pending slot, a later
+        # *arrival* (not a later merge) replaces the waiting run.
+        "queue": "max",
     }
+    # cancel-in-progress may not be combined with queue: max (validation error),
+    # and its default (false) is what a running upload needs.
+    assert "cancel-in-progress" not in concurrency
 
 
 @WORKFLOWS

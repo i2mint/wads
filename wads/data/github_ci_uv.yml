@@ -450,14 +450,16 @@ jobs:
     # apart used to run their publish jobs side by side: both bumped to the same
     # next version, the second upload was refused, and the run went red. Queued
     # instead, each run bumps past the version the previous one published.
-    # GitHub keeps one *pending* run per group, so a third merge arriving while
-    # one runs and one waits replaces the waiting one, which loses nothing: the
-    # newer run builds a later commit of the same branch, so it releases the
-    # replaced merge's changes too. cancel-in-progress stays false: a running
-    # upload must never be interrupted.
+    # `queue: max` keeps every waiting run (FIFO, up to 100) instead of GitHub's
+    # default of one pending run that a later arrival replaces: arrival order is
+    # validation-finish order, not merge order, so a replaced run could hold a
+    # newer merge that would then go unreleased. cancel-in-progress is left
+    # unset (false): it may not be combined with `queue: max`, and a running
+    # upload must never be interrupted anyway. Verified to parse at job level in
+    # a called workflow (2026-11-02).
     concurrency:
       group: wads-publish-${{ github.repository }}-${{ github.ref }}
-      cancel-in-progress: false
+      queue: max
 
     steps:
       # `actions/checkout@v6` defaults to persist-credentials: true, configuring
@@ -513,9 +515,9 @@ jobs:
       # push-back fail as non-fast-forward: PyPI had the release, but the bump
       # commit and tag never landed and the run went red (i2mint/wads#81). The
       # git-commit action replays the bump onto the moved branch and retries;
-      # see its `push-rebase-retries` input. The job's `concurrency` group
-      # queues publish runs, so this only happens for a merge that lands while
-      # this run is publishing.
+      # see its `push-rebase-retries` input. With publish runs queued (the
+      # job's `concurrency` above), a queued run's commit predates the previous
+      # run's bump, so this replay is the normal path for a queued run.
       - name: Commit Changes
         id: bump
         uses: i2mint/wads/actions/git-commit@master
