@@ -1773,7 +1773,7 @@
         <span class="n">default</span><span class="o">=</span><span class="s2">"@master"</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"wads ref to pin in the stub (default '@master'). "</span>
-            <span class="s2">"Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix)."</span>
+            <span class="s2">"Use e.g. '@0.2.15' to freeze the workflow (its actions still float; tags have no 'v' prefix)."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">fleet_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -1814,7 +1814,7 @@
             <span class="s2">"wads ref to pin in the stub. Defaults to the existing stub's pin, "</span>
             <span class="s2">"else '@master' (floats with "</span>
             <span class="s2">"wads — convenient, occasional CI breakage on bad wads merges). "</span>
-            <span class="s2">"Use e.g. '@0.2.15' to freeze (tags have no 'v' prefix). The "</span>
+            <span class="s2">"Use e.g. '@0.2.15' to freeze the workflow (its actions still float; tags have no 'v' prefix). The "</span>
             <span class="s2">"JSON transport needs a ref whose uv-ci.yml declares "</span>
             <span class="s2">"WADS_CI_SECRETS_JSON (releases after 0.2.14); the named transport "</span>
             <span class="s2">"works with any pin. Must start with '@'."</span>
@@ -2055,8 +2055,8 @@
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">pin</span> <span class="o">==</span> <span class="s2">"@master"</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="s2">"</span><span class="se">\n</span><span class="s2">Pinned to @master (floats with wads). If you need version "</span>
-                    <span class="s2">"stability for this repo, re-run with `--pin @X.Y.Z` (tags "</span>
+                    <span class="s2">"</span><span class="se">\n</span><span class="s2">Pinned to @master (floats with wads). If you need a stable "</span>
+                    <span class="s2">"job graph for this repo, re-run with `--pin @X.Y.Z` (tags "</span>
                     <span class="s2">"have no 'v' prefix; latest via "</span>
                     <span class="s2">"`gh api repos/i2mint/wads/tags --jq '.[0].name'`)."</span><span class="p">,</span>
                     <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
@@ -2114,7 +2114,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c7e3b3f2"></script>
+</div><script src="../../_static/documentation_options.js?v=6ea3c794"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
