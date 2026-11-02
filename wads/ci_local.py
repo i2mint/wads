@@ -393,9 +393,11 @@ def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
                         python,
                         "-m",
                         "pytest",
-                        *pytest_argv(config, repo=repo),
+                        # First, so a `--` in the user's pytest_args cannot turn it
+                        # into a test path.
                         "--basetemp",
                         PYTEST_BASETEMP,
+                        *pytest_argv(config, repo=repo),
                     ),
                 ),
             ]

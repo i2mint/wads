@@ -59,16 +59,17 @@ def pid_alive(pid: int) -> Optional[bool]:
         return False
     except PermissionError:  # exists, owned by someone else
         return True
-    except OSError:
+    except (OSError, OverflowError):  # OverflowError: a corrupt, out-of-range pid
         return None
     return True
 
 
 def _owner_pid(workdir: Path) -> Optional[int]:
     try:
-        return int((workdir / OWNER_FILE).read_text().strip())
+        pid = int((workdir / OWNER_FILE).read_text().strip())
     except (OSError, ValueError):
         return None
+    return pid if pid > 0 else None  # 0 and negatives address process groups
 
 
 def _is_stale(workdir: Path, *, min_age: float, now: float, is_alive: Callable) -> bool:

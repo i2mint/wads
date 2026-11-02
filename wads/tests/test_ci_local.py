@@ -129,11 +129,12 @@ def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
     assert tests[:3] == ("<<workdir>>/py3.12/bin/python", "-m", "pytest")
-    # CI's pytest arguments, then ci-local's private basetemp (issue #159)
+    # ci-local's private basetemp (issue #159; first, so a `--` in the user's
+    # pytest_args cannot make it a test path), then CI's pytest arguments
     assert list(tests[3:]) == [
-        *pytest_argv(_config(), repo=tmp_path),
         "--basetemp",
         "<<workdir>>/pytest",
+        *pytest_argv(_config(), repo=tmp_path),
     ]
     assert by_name["build"].argv == ("uv", "build", "--out-dir", "<<workdir>>/dist")
     assert not any(step.side_effect for step in steps), "validation has no side effects"
@@ -690,3 +691,14 @@ def test_dry_run_header_names_the_sweep_and_the_space_needed():
         plan_ci_local(".", config=_config(testing={"enabled": False}))
     )
     assert "whose owner is gone." in no_venvs and "requires" not in no_venvs
+
+
+def test_a_corrupt_owner_file_is_judged_by_age(tmp_path):
+    from wads.workdirs import OWNER_FILE, sweep_stale_workdirs
+
+    for i, junk in enumerate(["99999999999999999999", "0", "-1", "x"]):
+        d = tmp_path / f"wads-ci-local-{i}"
+        d.mkdir()
+        (d / OWNER_FILE).write_text(junk)
+        os.utime(d, (0, 0))
+    assert len(sweep_stale_workdirs("wads-ci-local-", root=str(tmp_path))) == 4
