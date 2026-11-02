@@ -167,7 +167,7 @@ The CI workflow has 4-5 jobs:
 2. **validation** - Matrix testing across python_versions:
    - Install system deps → Install Python deps → **export-ci-env** (write declared secrets to `$GITHUB_ENV`, fail on missing required) → Ruff format → Ruff lint → Pytest → Metrics
 3. **windows-validation** (optional) - Same tests on Windows, `continue-on-error: true` (never blocks publish)
-4. **publish** - Runs **only on the repo's default branch**, **only if `validation` succeeded** (the Linux matrix; the `if:` has no `!cancelled()`/`always()` escape hatch), not `[skip ci]`, and publishing enabled. Format → Bump version → Build → PyPI upload → Commit → Tag (push-back via `GITHUB_TOKEN`)
+4. **publish** - Runs **only on the repo's default branch**, **only if `validation` succeeded** (the Linux matrix; the `if:` has no `!cancelled()`/`always()` escape hatch), not `[skip ci]`, and publishing enabled. Format → Bump version → Build → PyPI upload → Commit → Tag (push-back via `GITHUB_TOKEN`; the tag names the built bump commit even when the push had to replay it onto a moved branch, #161)
 5. **github-pages** (optional) - Publish docs via epythet (also default-branch-gated)
 
 ### Migration Flow

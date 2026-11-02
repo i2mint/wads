@@ -39,6 +39,16 @@ inputs:
     required: false
     default: "3"
 
+outputs:
+  commit-sha:
+    description: >-
+      The commit this action made (or HEAD when there was nothing to commit), as
+      it was BEFORE any push-back replay. When the branch moved during the run,
+      the push replays the commit onto it under a new sha; this output still
+      names the tree that was committed, i.e. what the publish job built and
+      uploaded, which is what a release tag must point at (i2mint/wads#161).
+    value: ${{ steps.commit.outputs.commit-sha }}
+
 runs:
   using: 'composite'
   steps:
@@ -57,28 +67,33 @@ runs:
         echo "Configured git as: ${{ inputs.git-username }} <${{ inputs.git-email }}>"
 
     - name: Commit Changes
+      id: commit
       shell: bash
+      env:
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        ADD_PATTERN: ${{ inputs.add-pattern }}
+        ALLOW_EMPTY: ${{ inputs.allow-empty }}
       run: |
         set -e
 
-        # Add files
-        echo "Adding files matching pattern: ${{ inputs.add-pattern }}"
-        git add ${{ inputs.add-pattern }}
+        # Add files (unquoted on purpose: the pattern may name several paths)
+        echo "Adding files matching pattern: $ADD_PATTERN"
+        git add $ADD_PATTERN
 
         # Check if there are changes to commit
         if git diff --staged --quiet; then
           echo "No changes to commit"
-          if [ "${{ inputs.allow-empty }}" = "true" ]; then
+          if [ "$ALLOW_EMPTY" = "true" ]; then
             echo "Creating empty commit (allow-empty=true)"
-            git commit --allow-empty -m "${{ inputs.commit-message }}"
+            git commit --allow-empty -m "$COMMIT_MESSAGE"
           else
             echo "Skipping commit (no changes and allow-empty=false)"
-            exit 0
           fi
         else
           echo "Committing changes"
-          git commit -m "${{ inputs.commit-message }}"
+          git commit -m "$COMMIT_MESSAGE"
         fi
+        echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
     - name: Push Changes
       if: ${{ inputs.push == 'true' }}
