@@ -47,10 +47,10 @@ def test_static_ffmpeg_downloads_verifies_extracts_and_falls_back_to_apt():
     assert static.endswith(f"; then rm -f {ARCHIVE}")
     assert fallback.startswith(f"rm -f {ARCHIVE}; sudo rm -f /usr/local/bin/ffmpeg ")
     assert (
-        "::warning::static ffmpeg install failed; installing from apt (slow)"
+        "::warning::static ffmpeg not installed (not x86_64, or the download, checksum or extraction failed); installing from apt (slow)"
         in fallback
     )
-    assert "apt-get install -y --no-install-recommends ffmpeg" in fallback
+    assert "apt-get install -y --reinstall --no-install-recommends ffmpeg" in fallback
 
 
 def test_static_ffmpeg_parameters_are_overridable_and_quoted():
@@ -277,8 +277,10 @@ def test_checksum_mismatch_falls_back_to_apt_after_removing_stale_binaries(sandb
     result = sandbox.run({"sha256": "0" * 64})
     assert result.returncode == 0, result.stderr
     assert list(sandbox.bin_dir.iterdir()) == []
-    assert "static ffmpeg install failed; installing from apt (slow)" in result.stdout
-    assert "install -y --no-install-recommends ffmpeg" in sandbox.apt_log.read_text()
+    assert "static ffmpeg not installed" in result.stdout
+    assert "install -y --reinstall --no-install-recommends ffmpeg" in (
+        sandbox.apt_log.read_text()
+    )
 
 
 def test_another_architecture_never_downloads_the_x86_64_build(sandbox):
@@ -354,3 +356,90 @@ def test_read_ci_config_exports_the_timeout(tmp_path, monkeypatch):
     except SystemExit as e:
         assert not e.code
     assert "job-timeout-minutes=20" in out.read_text()
+
+
+# --------------------------------------------------------------------------------------
+# Follow-ups from the #176 review (issue #181)
+
+
+def _pyproject(tmp_path, body):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.0.1"\n\n' + textwrap.dedent(body)
+    )
+
+
+def test_the_recipe_floors_the_timeout_whatever_the_dependency_is_called(tmp_path):
+    """Under a name other than ffmpeg, the default 300 s would kill the apt fallback."""
+    _pyproject(
+        tmp_path,
+        """
+        [tool.wads.ops.media]
+        install.linux = "wads:static-ffmpeg"
+
+        [tool.wads.ops.declared]
+        install_timeout = 120
+        install.linux = "wads:static-ffmpeg"
+        """,
+    )
+    timeouts = {}
+    install_system_dependencies(
+        str(tmp_path),
+        platform="linux",
+        verbose=False,
+        install=lambda dep, cmds, **k: (
+            timeouts.update({dep: k["timeout"]}) or (True, None)
+        ),
+        is_installed=lambda *a: False,
+    )
+    assert timeouts == {"media": 900, "declared": 120}  # a declaration still wins
+
+
+def test_a_bad_recipe_fails_even_where_the_dependency_is_present(tmp_path):
+    """The pre-check used to skip the dependency before the recipe was validated."""
+    _pyproject(
+        tmp_path,
+        """
+        [tool.wads.ops.ffmpeg]
+        check.macos = "true"
+        install.macos = "wads:static-ffmpeg"
+        """,
+    )
+    counts = install_system_dependencies(
+        str(tmp_path),
+        platform="macos",
+        verbose=False,
+        install=lambda *a, **k: (True, None),
+        is_installed=lambda *a: True,
+    )
+    assert counts == (0, 0, 1)
+
+
+def test_a_present_dependency_without_an_install_command_is_still_skipped(tmp_path):
+    _pyproject(tmp_path, '[tool.wads.ops.git]\ncheck.linux = "true"\n')
+    counts = install_system_dependencies(
+        str(tmp_path),
+        platform="linux",
+        verbose=False,
+        is_installed=lambda *a: True,
+    )
+    assert counts == (0, 1, 0)
+
+
+def test_read_ci_config_prints_ignored_values_as_annotations(
+    tmp_path, monkeypatch, capsys
+):
+    from wads.scripts import read_ci_config as script
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\n\n[tool.wads.ci.testing]\njob_timeout_minutes = 0\n'
+    )
+    monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "out"))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env"))
+    monkeypatch.setattr("sys.argv", ["x", str(tmp_path / "pyproject.toml")])
+    monkeypatch.setattr(script.warnings, "showwarning", script.warnings.showwarning)
+    with pytest.raises(SystemExit):
+        script.main()
+    assert (
+        "::warning::ignoring invalid [tool.wads.ci.testing].job_timeout_minutes=0"
+        in (capsys.readouterr().err)
+    )

@@ -92,7 +92,8 @@ else:
 DFLT_INSTALL_TIMEOUT = 300
 #: Dependencies with a big dependency tree get a longer ceiling than the global default
 #: (a cold-cache ``apt-get install ffmpeg`` outlasts 300s). A declaration or an explicit
-#: ``default_install_timeout`` still wins.
+#: ``default_install_timeout`` still wins, except that a recipe's ``min_timeout``
+#: floors the latter (only a per-dependency ``install_timeout`` goes below it).
 SLOW_DEP_INSTALL_TIMEOUTS = {"ffmpeg": 900}
 
 #: An install command of the form ``wads:<name>`` names a recipe here, expanded into
@@ -236,9 +237,12 @@ def static_ffmpeg_commands(params: dict) -> List[str]:
         installed = " ".join(q(f"{p['bin_dir']}/{name}") for name in p["binaries"])
         otherwise = (
             f"sudo rm -f {installed}"
-            ' && echo "::warning::static ffmpeg install failed; installing from apt (slow)"'
+            ' && echo "::warning::static ffmpeg not installed (not x86_64, or the'
+            ' download, checksum or extraction failed); installing from apt (slow)"'
             " && sudo apt-get update"
-            " && sudo apt-get install -y --no-install-recommends ffmpeg"
+            # --reinstall: if bin_dir is apt's own (/usr/bin), the rm above removed
+            # files of an installed package, which a plain install would not restore.
+            " && sudo apt-get install -y --reinstall --no-install-recommends ffmpeg"
         )
     else:
         otherwise = "false"
@@ -250,17 +254,25 @@ class InstallRecipe:
     """A named install: builds commands from ``defaults`` overridden by parameters.
 
     ``platforms`` are the ``install.<platform>`` keys the recipe may be named under.
+    ``min_timeout`` (seconds) floors the per-command install timeout of a dependency
+    using the recipe unless it declares ``install_timeout`` itself, so the recipe's
+    own worst case fits whatever the dependency is called (issue #181).
     """
 
     commands: Callable[[dict], List[str]]
     defaults: dict
     platforms: Tuple[str, ...]
+    min_timeout: Optional[float] = None
 
 
 #: Recipes ``install.<platform> = "wads:<name>"`` may name; extend by adding to it.
 INSTALL_RECIPES = {
+    # The apt fallback runs inside the same command, so the floor is apt's ffmpeg one.
     "static-ffmpeg": InstallRecipe(
-        static_ffmpeg_commands, STATIC_FFMPEG_DEFAULTS, platforms=("linux",)
+        static_ffmpeg_commands,
+        STATIC_FFMPEG_DEFAULTS,
+        platforms=("linux",),
+        min_timeout=SLOW_DEP_INSTALL_TIMEOUTS["ffmpeg"],
     ),
 }
 
@@ -310,6 +322,21 @@ def _validate_recipe_params(params, *, defaults: dict) -> None:
         kind, is_valid = _RECIPE_PARAM_KINDS[type(defaults[key])]
         if not is_valid(value):
             raise ValueError(f"recipe parameter {key} must be {kind}, got {value!r}")
+
+
+def _recipe_timeout_floor(commands: List[str]) -> float:
+    """The largest ``min_timeout`` of the recipes ``commands`` name (0 when none).
+
+    >>> _recipe_timeout_floor(["echo hi"]), _recipe_timeout_floor(["wads:static-ffmpeg"])
+    (0, 900)
+    """
+    floors = [
+        recipe.min_timeout or 0
+        for cmd in commands
+        if cmd.strip().startswith(RECIPE_PREFIX)
+        and (recipe := INSTALL_RECIPES.get(cmd.strip()[len(RECIPE_PREFIX) :]))
+    ]
+    return max(floors, default=0)
 
 
 def _expand_recipes(commands: List[str], params, *, platform: str) -> List[str]:
@@ -613,7 +640,8 @@ def install_system_dependencies(
         default_install_timeout: Per-command install timeout (seconds) for
             dependencies that declare no ``install_timeout`` of their own. ``None``:
             :data:`SLOW_DEP_INSTALL_TIMEOUTS` for known-slow ones, else
-            :data:`DFLT_INSTALL_TIMEOUT`.
+            :data:`DFLT_INSTALL_TIMEOUT`. Either way, a dependency using an install
+            recipe gets at least the recipe's ``min_timeout``.
         apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).
         default_install_retries: Retries per failed install command for
             dependencies that declare no ``install_retries`` of their own.
@@ -707,12 +735,12 @@ def install_system_dependencies(
             return default_install_timeout
         return SLOW_DEP_INSTALL_TIMEOUTS.get(dep_name, DFLT_INSTALL_TIMEOUT)
 
-    def timeout_for(dep_name, dep_config):
+    def timeout_for(dep_name, dep_config, *, floor=0):
         return setting_for(
             dep_name,
             dep_config,
             "install_timeout",
-            fallback_timeout_for(dep_name),
+            max(fallback_timeout_for(dep_name), floor),
             lambda v: isinstance(v, (int, float)) and v > 0,
         )
 
@@ -757,15 +785,11 @@ def install_system_dependencies(
                 print(f"URL: {url}")
 
         check_cmds = _as_commands(_platform_value(dep_config, "check", platform))
-        # Check if already installed
-        if not skip_check and check_cmds and is_installed(dep_name, check_cmds):
-            if verbose:
-                print(f"✓ {dep_name} is already installed")
-            skipped_count += 1
-            continue
 
-        # Get install commands. A non-table `install` is a config error, not "nothing
-        # to install here": failing it keeps a typo from going green silently.
+        # Configuration errors fail the dependency before the pre-check, so one is
+        # reported even on a machine that already has the dependency (issue #181).
+        # A non-table `install` is a config error, not "nothing to install here":
+        # failing it keeps a typo from going green silently.
         if not isinstance(dep_config.get("install", {}), dict):
             if verbose:
                 print(
@@ -776,15 +800,10 @@ def install_system_dependencies(
                 )
             failed_count += 1
             continue
-        install_cmds = _as_commands(_platform_value(dep_config, "install", platform))
-
-        if not install_cmds:
-            if verbose:
-                print(f"Warning: No install command for {dep_name} on {platform}")
-            continue
+        declared_cmds = _as_commands(_platform_value(dep_config, "install", platform))
         try:
             install_cmds = _expand_recipes(
-                install_cmds, dep_config.get("recipe", {}), platform=platform
+                declared_cmds, dep_config.get("recipe", {}), platform=platform
             )
         except ValueError as e:
             if verbose:
@@ -792,8 +811,22 @@ def install_system_dependencies(
             failed_count += 1
             continue
 
+        # Check if already installed
+        if not skip_check and check_cmds and is_installed(dep_name, check_cmds):
+            if verbose:
+                print(f"✓ {dep_name} is already installed")
+            skipped_count += 1
+            continue
+
+        if not install_cmds:
+            if verbose:
+                print(f"Warning: No install command for {dep_name} on {platform}")
+            continue
+
         # Install
-        install_timeout = timeout_for(dep_name, dep_config)
+        install_timeout = timeout_for(
+            dep_name, dep_config, floor=_recipe_timeout_floor(declared_cmds)
+        )
         if verbose:
             print(
                 f"\nInstalling {dep_name}... (timeout: {install_timeout}s per command)"

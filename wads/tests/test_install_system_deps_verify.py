@@ -275,3 +275,16 @@ def test_non_table_install_fails_instead_of_passing_silently(tmp_path):
         is_installed=lambda *a: False,
     )
     assert counts == (0, 0, 1) and calls == []
+
+
+def test_non_table_install_fails_even_where_the_dependency_is_present(tmp_path):
+    """Config errors are reported before the pre-check could hide them (#181)."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.0.1"\n\n'
+        '[tool.wads.ops.ffmpeg]\ncheck.linux = "true"\n'
+        'install = "sudo apt-get install -y ffmpeg"\n'
+    )
+    counts = install_system_dependencies(
+        str(tmp_path), platform="linux", verbose=False, is_installed=lambda *a: True
+    )
+    assert counts == (0, 0, 1)
