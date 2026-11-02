@@ -109,8 +109,9 @@ rg -o 'uv-ci\.yml(@\S+)' -r '$1' .github/workflows/ci.yml
 - `@master` — floats with wads. **Safe by default**: a bad wads merge can
   break CI runs everywhere, but publish is gated on workflow success, so a
   broken artifact never ships ("CI failure ≠ broken release").
-- `@0.1.81` (a tag) — frozen; the repo only picks up wads workflow updates
-  when re-pinned (`wads-migrate ci-to-stub --pin @0.1.81`). Report how far
+- `@0.1.81` (a tag) — the workflow (job graph) is frozen until re-pinned
+  (`wads-migrate ci-to-stub --pin @0.1.81`), but the actions it calls still
+  run at `@master` (i2mint/wads#170). Report how far
   behind the pin is (compare against the latest wads tag:
   `gh api repos/i2mint/wads/tags --jq '.[0].name'`). A stale pin is a note,
   not an alarm — pinning is a legitimate choice for release-sensitive repos.

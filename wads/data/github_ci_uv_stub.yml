@@ -4,9 +4,10 @@
 # To customize the workflow itself (rare), replace this file with the
 # full inline template `wads/data/github_ci_uv.yml` from i2mint/wads.
 #
-# Pinning: `@master` floats with wads. If you need version stability for
+# Pinning: `@master` floats with wads. If you need a stable job graph for
 # a release-sensitive repo, change `@master` to a wads tag (e.g. `@0.2.15`;
-# tags have no `v` prefix).
+# tags have no `v` prefix). That freezes this workflow, not the actions it
+# calls, which still run at `@master`.
 # CI failure does not block a published release — it blocks the publish
 # step itself — so floating master is generally safe.
 #
