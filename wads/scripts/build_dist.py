@@ -47,8 +47,13 @@ def _pip_install_cmd() -> list[str]:
 
 
 def _has_build_tool() -> bool:
-    """True when ``python -m build`` is importable in this interpreter."""
-    probe = [sys.executable, "-c", "import build"]
+    """True when ``python -m build`` can run in this interpreter.
+
+    Probes ``build.__main__``, not ``build``: a stray ``build/`` directory in the
+    working directory (setuptools leaves one) imports as an empty namespace package,
+    which ``import build`` accepts and ``python -m build`` does not.
+    """
+    probe = [sys.executable, "-c", "import build.__main__"]
     return subprocess.run(probe, capture_output=True).returncode == 0
 
 
