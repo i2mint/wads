@@ -100,3 +100,24 @@ def test_pid_alive_on_posix():
 @pytest.mark.skipif(os.name == "posix", reason="non-POSIX behaviour")
 def test_pid_alive_never_probes_off_posix():
     assert pid_alive(os.getpid()) is None
+
+
+@pytest.mark.parametrize(
+    "files, favail, expected",
+    [
+        (10**6, 5, "only 5 inodes free"),
+        (10**6, 10**6, None),
+        (0, 0, None),  # f_files == 0: the filesystem does not track inodes
+    ],
+)
+def test_room_shortfall_counts_inodes(tmp_path, monkeypatch, files, favail, expected):
+    from wads import workdirs
+
+    stats = type("Stats", (), {"f_files": files, "f_favail": favail})()
+    monkeypatch.setattr(workdirs.os, "statvfs", lambda path: stats, raising=False)
+    monkeypatch.setattr(
+        workdirs.shutil, "disk_usage", lambda p: type("U", (), {"free": 10**12})()
+    )
+    assert workdirs.room_shortfall(str(tmp_path), min_bytes=1, min_inodes=1000) == (
+        expected
+    )

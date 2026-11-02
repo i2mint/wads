@@ -55,7 +55,14 @@ from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
-from wads.workdirs import DFLT_STALE_AGE, HOUR, make_workdir, sweep_stale_workdirs
+from wads.workdirs import (
+    BYTES_PER_GB,
+    DFLT_STALE_AGE,
+    HOUR,
+    make_workdir,
+    room_shortfall,
+    sweep_stale_workdirs,
+)
 
 # Mirrors of values the CI actions hardcode. Tests pin each against its source
 # (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.
@@ -100,7 +107,6 @@ WORKDIR_BYTES_PER_PYTHON = 1_000_000_000
 #: Free inodes it needs per tested Python: a workdir held ~22k and a pytest basetemp up
 #: to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).
 WORKDIR_INODES_PER_PYTHON = 100_000
-_BYTES_PER_GB = 1e9
 
 _INSTALL_HINTS = {
     "uv": "install uv: https://docs.astral.sh/uv/getting-started/installation/",
@@ -260,17 +266,8 @@ def _venv_count(steps: Sequence[Step]) -> int:
 
 def _space_needed(n_venvs: int) -> str:
     """The temp space a run with ``n_venvs`` venvs needs, as the plan and check word it."""
-    gb = n_venvs * WORKDIR_BYTES_PER_PYTHON / _BYTES_PER_GB
+    gb = n_venvs * WORKDIR_BYTES_PER_PYTHON / BYTES_PER_GB
     return f"{gb:.1f} GB / {n_venvs * WORKDIR_INODES_PER_PYTHON:,} inodes"
-
-
-def _free_inodes(path: str) -> Optional[int]:
-    """Inodes free to us on ``path``'s filesystem; ``None`` where that is not reported."""
-    statvfs = getattr(os, "statvfs", None)  # POSIX only
-    if statvfs is None:
-        return None
-    stats = statvfs(path)
-    return stats.f_favail if stats.f_files else None  # f_files == 0: not tracked
 
 
 def _temp_space_step(n_venvs: int) -> Step:
@@ -285,17 +282,12 @@ def _temp_space_step(n_venvs: int) -> Step:
     needed_inodes = n_venvs * WORKDIR_INODES_PER_PYTHON
 
     def check(ctx):
-        workdir = ctx.values["workdir"]
-        free = shutil.disk_usage(workdir).free
-        free_inodes = _free_inodes(workdir)
-        shortfalls = []
-        if free < needed_bytes:
-            shortfalls.append(f"only {free / _BYTES_PER_GB:.1f} GB free")
-        if free_inodes is not None and free_inodes < needed_inodes:
-            shortfalls.append(f"only {free_inodes:,} inodes free")
-        if shortfalls:
+        shortfall = room_shortfall(
+            ctx.values["workdir"], min_bytes=needed_bytes, min_inodes=needed_inodes
+        )
+        if shortfall:
             return (
-                f"{' and '.join(shortfalls)} in the temp directory, need about "
+                f"{shortfall} in the temp directory, need about "
                 f"{_space_needed(n_venvs)} (one venv and pytest basetemp per tested "
                 "Python): free some, or set TMPDIR to a bigger filesystem"
             )
