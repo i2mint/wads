@@ -126,8 +126,17 @@ def test_the_tag_names_the_built_commit_after_a_replay(remote_and_clone, tmp_pat
     assert _git("show", f"{TAG}:pyproject.toml", cwd=clone).stdout == (
         'version = "0.0.3"\n'
     )
-    # ...and it reaches the remote although no branch contains that commit.
-    _git("push", "origin", f"refs/tags/{TAG}", cwd=clone)
+    # ...and the real Push Tag step lands it although no branch contains that commit.
+    pushed_tag = _bash(
+        _step("git-tag", "Push Tag"),
+        clone,
+        TAG=TAG,
+        TAG_MESSAGE=MESSAGE,
+        FORCE="false",
+        PUSH_RETRIES="0",
+        PUSH_RETRY_DELAY="0",
+    )
+    assert pushed_tag.returncode == 0, pushed_tag.stdout + pushed_tag.stderr
     assert _head(origin, f"{TAG}^{{commit}}") == built
     assert _head(origin, DEFAULT_BRANCH) != built
 
@@ -168,3 +177,44 @@ def test_the_publish_job_tags_the_bump_commit_output(workflow):
     commit_id = steps["Commit Changes"]["id"]
     ref = steps["Tag Repository"]["with"]["ref"]
     assert ref == f"${{{{ steps.{commit_id}.outputs.commit-sha }}}}"
+
+
+def test_the_commit_action_exposes_its_commit_step_output():
+    """Renaming the step id would empty the output and silently tag HEAD again."""
+    spec = yaml.safe_load((ROOT / "actions" / "git-commit" / "action.yml").read_text())
+    (step,) = [s for s in spec["runs"]["steps"] if s.get("name") == "Commit Changes"]
+    assert spec["outputs"]["commit-sha"]["value"] == (
+        f"${{{{ steps.{step['id']}.outputs.commit-sha }}}}"
+    )
+    assert 'echo "commit-sha=' in step["run"]
+
+
+def test_a_failed_tag_push_after_a_replay_names_the_bump_that_landed(
+    remote_and_clone, tmp_path
+):
+    """The built commit is only on the runner, so the clone-restore hint must say so."""
+    from wads.tests.test_git_tag_push_retry import REJECTING_HOOK
+
+    origin, clone = remote_and_clone
+    (clone / "pyproject.toml").write_text('version = "0.0.3"\n')
+    _, built = _commit_step(clone, tmp_path)
+    _land_a_concurrent_merge(origin, tmp_path)
+    assert run_push_step(clone).returncode == 0
+    assert _create_tag(clone, ref=built).returncode == 0
+    hook = origin / "hooks" / "pre-receive"
+    hook.write_text(REJECTING_HOOK)
+    hook.chmod(0o755)
+    res = _bash(
+        _step("git-tag", "Push Tag"),
+        clone,
+        TAG=TAG,
+        TAG_MESSAGE=MESSAGE,
+        FORCE="false",
+        PUSH_RETRIES="0",
+        PUSH_RETRY_DELAY="0",
+        REJECTIONS="99",
+        COUNTER=str(tmp_path / "pushes"),
+    )
+    assert res.returncode == 1
+    assert f"Commit {built} (what was built) exists only on this runner" in res.stdout
+    assert f"Tag the replayed bump commit {_head(clone)}" in res.stdout

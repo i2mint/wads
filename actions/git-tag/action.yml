@@ -125,6 +125,12 @@ runs:
               restore=$(printf 'git tag %q %q && git push origin %q' "$TAG" "$commit" "refs/tags/$TAG")
             fi
             echo "::error::Push of tag '$TAG' was rejected after $retries retr(y/ies). The release has no tag; restore it from a clone with: $restore"
+            if ! git merge-base --is-ancestor "$commit" HEAD; then
+              # The built commit was replayed onto a moved branch (#161): only
+              # this runner has it, so a clone cannot tag it. Name the bump that
+              # did land instead, and say what that costs.
+              echo "::error::Commit $commit (what was built) exists only on this runner, so the command above fails in a clone. Tag the replayed bump commit $(git rev-parse HEAD) instead (its tree also holds the merges that landed during the run), or re-run this job."
+            fi
             exit 1
           fi
           wait_s=$((delay * attempt))
