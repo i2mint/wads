@@ -298,6 +298,10 @@
 <span class="sd">the sweep also leaves alone directories another user owns: it could not remove them from</span>
 <span class="sd">a shared ``/tmp`` anyway, and root should not age-sweep other users' work.</span>
 
+<span class="sd">:func:`room_shortfall` says what a filesystem lacks (free bytes, and free inodes where</span>
+<span class="sd">:func:`free_inodes` can report them) before a job needing that much room starts: a tmpfs</span>
+<span class="sd">can run out of inodes with bytes to spare.</span>
+
 <span class="sd">&gt;&gt;&gt; import tempfile</span>
 <span class="sd">&gt;&gt;&gt; root = tempfile.mkdtemp()</span>
 <span class="sd">&gt;&gt;&gt; d = make_workdir("demo-", root=root)</span>
@@ -404,6 +408,51 @@
                 <span class="n">removed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">workdir</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">removed</span></div>
 
+
+
+<span class="c1">#: Bytes per GB, for the messages :func:`room_shortfall` writes.</span>
+<span class="n">BYTES_PER_GB</span> <span class="o">=</span> <span class="mf">1e9</span>
+
+
+<div class="viewcode-block" id="free_inodes">
+<a class="viewcode-back" href="../../_autosummary/wads.workdirs.html#wads.workdirs.free_inodes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">free_inodes</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Inodes free to us on ``path``'s filesystem; ``None`` where that is not reported.</span>
+
+<span class="sd">    ``None`` off POSIX (no ``os.statvfs``) and on filesystems that do not track inodes</span>
+<span class="sd">    (``f_files == 0``: btrfs, an unlimited tmpfs).</span>
+<span class="sd">    """</span>
+    <span class="n">statvfs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">"statvfs"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">statvfs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">statvfs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">f_favail</span> <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">f_files</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="room_shortfall">
+<a class="viewcode-back" href="../../_autosummary/wads.workdirs.html#wads.workdirs.room_shortfall">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">room_shortfall</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_inodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""What ``path``'s filesystem lacks for a job needing that much room, or ``None``.</span>
+
+<span class="sd">    Both bytes and inodes count: a tmpfs can run out of inodes with bytes to spare</span>
+<span class="sd">    (issue #159). Inodes are skipped where :func:`free_inodes` cannot report them.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; room_shortfall(tempfile.gettempdir(), min_bytes=0, min_inodes=0) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; room_shortfall(tempfile.gettempdir(), min_bytes=10**30, min_inodes=0)[:5]</span>
+<span class="sd">    'only '</span>
+<span class="sd">    """</span>
+    <span class="n">shortfalls</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">free</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">disk_usage</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">free</span>
+    <span class="k">if</span> <span class="n">free</span> <span class="o">&lt;</span> <span class="n">min_bytes</span><span class="p">:</span>
+        <span class="n">shortfalls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">free</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">BYTES_PER_GB</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> GB free"</span><span class="p">)</span>
+    <span class="n">inodes</span> <span class="o">=</span> <span class="n">free_inodes</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">inodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inodes</span> <span class="o">&lt;</span> <span class="n">min_inodes</span><span class="p">:</span>
+        <span class="n">shortfalls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">inodes</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> inodes free"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">" and "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shortfalls</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -432,7 +481,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=024998d6"></script>
+</div><script src="../../_static/documentation_options.js?v=22f8023d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

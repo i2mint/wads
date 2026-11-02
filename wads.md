@@ -1,4 +1,4 @@
-> built 2026-11-02 00:42 UTC from cf1ac24 (master) · wads 0.2.65. Details: build_info.json
+> built 2026-11-02 00:51 UTC from 6020fa3 (master) · wads 0.2.66. Details: build_info.json
 
 # index.html.md
 
@@ -7812,6 +7812,10 @@ Windows `os.kill` with signal 0 terminates the process instead of probing it. On
 the sweep also leaves alone directories another user owns: it could not remove them from
 a shared `/tmp` anyway, and root should not age-sweep other users’ work.
 
+[`room_shortfall()`](_autosummary/wads.workdirs.html.md#wads.workdirs.room_shortfall) says what a filesystem lacks (free bytes, and free inodes where
+[`free_inodes()`](_autosummary/wads.workdirs.html.md#wads.workdirs.free_inodes) can report them) before a job needing that much room starts: a tmpfs
+can run out of inodes with bytes to spare.
+
 ```pycon
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
@@ -7825,17 +7829,24 @@ True
 
 ### Module Attributes
 
-| [`OWNER_FILE`](_autosummary/wads.workdirs.html.md#wads.workdirs.OWNER_FILE)     | Name of the file inside a work directory that holds its owner's PID.          |
-|-----------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`HOUR`](_autosummary/wads.workdirs.html.md#wads.workdirs.HOUR)           | Seconds in an hour.                                                           |
-| [`DFLT_STALE_AGE`](_autosummary/wads.workdirs.html.md#wads.workdirs.DFLT_STALE_AGE) | A work directory younger than this (seconds) is never swept, whoever owns it. |
+| [`OWNER_FILE`](_autosummary/wads.workdirs.html.md#wads.workdirs.OWNER_FILE)     | Name of the file inside a work directory that holds its owner's PID.                                     |
+|-----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| [`HOUR`](_autosummary/wads.workdirs.html.md#wads.workdirs.HOUR)           | Seconds in an hour.                                                                                      |
+| [`DFLT_STALE_AGE`](_autosummary/wads.workdirs.html.md#wads.workdirs.DFLT_STALE_AGE) | A work directory younger than this (seconds) is never swept, whoever owns it.                            |
+| [`BYTES_PER_GB`](_autosummary/wads.workdirs.html.md#wads.workdirs.BYTES_PER_GB)   | Bytes per GB, for the messages [`room_shortfall()`](_autosummary/wads.workdirs.html.md#wads.workdirs.room_shortfall) writes. |
 
 ### Functions
 
-| [`make_workdir`](_autosummary/wads.workdirs.html.md#wads.workdirs.make_workdir)(prefix, \*[, root])              | `tempfile.mkdtemp(prefix=prefix, dir=root)`, plus an owner file with our PID.   |
-|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`pid_alive`](_autosummary/wads.workdirs.html.md#wads.workdirs.pid_alive)(pid)                                | Whether process `pid` exists; `None` where that cannot be checked safely.       |
-| [`sweep_stale_workdirs`](_autosummary/wads.workdirs.html.md#wads.workdirs.sweep_stale_workdirs)(prefix, \*[, root, ...]) | Remove `<root>/<prefix>*` directories that are stale; return the removed paths. |
+| [`free_inodes`](_autosummary/wads.workdirs.html.md#wads.workdirs.free_inodes)(path)                               | Inodes free to us on `path`'s filesystem; `None` where that is not reported.    |
+|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`make_workdir`](_autosummary/wads.workdirs.html.md#wads.workdirs.make_workdir)(prefix, \*[, root])                | `tempfile.mkdtemp(prefix=prefix, dir=root)`, plus an owner file with our PID.   |
+| [`pid_alive`](_autosummary/wads.workdirs.html.md#wads.workdirs.pid_alive)(pid)                                  | Whether process `pid` exists; `None` where that cannot be checked safely.       |
+| [`room_shortfall`](_autosummary/wads.workdirs.html.md#wads.workdirs.room_shortfall)(path, \*, min_bytes, min_inodes) | What `path`'s filesystem lacks for a job needing that much room, or `None`.     |
+| [`sweep_stale_workdirs`](_autosummary/wads.workdirs.html.md#wads.workdirs.sweep_stale_workdirs)(prefix, \*[, root, ...])   | Remove `<root>/<prefix>*` directories that are stale; return the removed paths. |
+
+### wads.workdirs.BYTES_PER_GB *= 1000000000.0*
+
+Bytes per GB, for the messages [`room_shortfall()`](_autosummary/wads.workdirs.html.md#wads.workdirs.room_shortfall) writes.
 
 ### wads.workdirs.DFLT_STALE_AGE *= 21600*
 
@@ -7848,6 +7859,16 @@ Seconds in an hour.
 ### wads.workdirs.OWNER_FILE *= '.owner-pid'*
 
 Name of the file inside a work directory that holds its owner’s PID.
+
+### wads.workdirs.free_inodes(path)
+
+Inodes free to us on `path`’s filesystem; `None` where that is not reported.
+
+`None` off POSIX (no `os.statvfs`) and on filesystems that do not track inodes
+(`f_files == 0`: btrfs, an unlimited tmpfs).
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### wads.workdirs.make_workdir(prefix, , root=None)
 
@@ -7862,6 +7883,24 @@ Whether process `pid` exists; `None` where that cannot be checked safely.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+
+### wads.workdirs.room_shortfall(path, , min_bytes, min_inodes)
+
+What `path`’s filesystem lacks for a job needing that much room, or `None`.
+
+Both bytes and inodes count: a tmpfs can run out of inodes with bytes to spare
+(issue #159). Inodes are skipped where [`free_inodes()`](_autosummary/wads.workdirs.html.md#wads.workdirs.free_inodes) cannot report them.
+
+```pycon
+>>> import tempfile
+>>> room_shortfall(tempfile.gettempdir(), min_bytes=0, min_inodes=0) is None
+True
+>>> room_shortfall(tempfile.gettempdir(), min_bytes=10**30, min_inodes=0)[:5]
+'only '
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.workdirs.sweep_stale_workdirs(prefix, \*, root=None, min_age=21600, is_alive=<function pid_alive>)
 
@@ -7883,7 +7922,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-02 00:42 UTC** from commit <a href="https://github.com/i2mint/wads/commit/cf1ac24668a28c4f9a26c6f9f7ec469f505e8e10"><code>cf1ac24</code></a> on branch <code>master</code>, for **wads 0.2.65** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-02 00:51 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5"><code>6020fa3</code></a> on branch <code>master</code>, for **wads 0.2.66** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -7892,7 +7931,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/cf1ac24668a28c4f9a26c6f9f7ec469f505e8e10"><code>cf1ac24668a28c4f9a26c6f9f7ec469f505e8e10</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5"><code>6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -7903,9 +7942,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41368309278">41368309278</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41369049603">41369049603</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>cf1ac24668a28c4f9a26c6f9f7ec469f505e8e10</code> (in the history of the built commit) |
+| Event commit | <code>6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7930,13 +7969,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.65/">0.2.65</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.66/">0.2.66</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout cf1ac24668a28c4f9a26c6f9f7ec469f505e8e10
+git checkout 6020fa3c421bfeb0c2a1b9105fb0b0469dfa7ca5
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

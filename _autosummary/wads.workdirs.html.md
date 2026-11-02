@@ -17,6 +17,10 @@ Windows `os.kill` with signal 0 terminates the process instead of probing it. On
 the sweep also leaves alone directories another user owns: it could not remove them from
 a shared `/tmp` anyway, and root should not age-sweep other users’ work.
 
+[`room_shortfall()`](#wads.workdirs.room_shortfall) says what a filesystem lacks (free bytes, and free inodes where
+[`free_inodes()`](#wads.workdirs.free_inodes) can report them) before a job needing that much room starts: a tmpfs
+can run out of inodes with bytes to spare.
+
 ```pycon
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
@@ -30,17 +34,24 @@ True
 
 ### Module Attributes
 
-| [`OWNER_FILE`](#wads.workdirs.OWNER_FILE)     | Name of the file inside a work directory that holds its owner's PID.          |
-|-----------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`HOUR`](#wads.workdirs.HOUR)           | Seconds in an hour.                                                           |
-| [`DFLT_STALE_AGE`](#wads.workdirs.DFLT_STALE_AGE) | A work directory younger than this (seconds) is never swept, whoever owns it. |
+| [`OWNER_FILE`](#wads.workdirs.OWNER_FILE)     | Name of the file inside a work directory that holds its owner's PID.                                     |
+|-----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| [`HOUR`](#wads.workdirs.HOUR)           | Seconds in an hour.                                                                                      |
+| [`DFLT_STALE_AGE`](#wads.workdirs.DFLT_STALE_AGE) | A work directory younger than this (seconds) is never swept, whoever owns it.                            |
+| [`BYTES_PER_GB`](#wads.workdirs.BYTES_PER_GB)   | Bytes per GB, for the messages [`room_shortfall()`](#wads.workdirs.room_shortfall) writes. |
 
 ### Functions
 
-| [`make_workdir`](#wads.workdirs.make_workdir)(prefix, \*[, root])              | `tempfile.mkdtemp(prefix=prefix, dir=root)`, plus an owner file with our PID.   |
-|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`pid_alive`](#wads.workdirs.pid_alive)(pid)                                | Whether process `pid` exists; `None` where that cannot be checked safely.       |
-| [`sweep_stale_workdirs`](#wads.workdirs.sweep_stale_workdirs)(prefix, \*[, root, ...]) | Remove `<root>/<prefix>*` directories that are stale; return the removed paths. |
+| [`free_inodes`](#wads.workdirs.free_inodes)(path)                               | Inodes free to us on `path`'s filesystem; `None` where that is not reported.    |
+|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`make_workdir`](#wads.workdirs.make_workdir)(prefix, \*[, root])                | `tempfile.mkdtemp(prefix=prefix, dir=root)`, plus an owner file with our PID.   |
+| [`pid_alive`](#wads.workdirs.pid_alive)(pid)                                  | Whether process `pid` exists; `None` where that cannot be checked safely.       |
+| [`room_shortfall`](#wads.workdirs.room_shortfall)(path, \*, min_bytes, min_inodes) | What `path`'s filesystem lacks for a job needing that much room, or `None`.     |
+| [`sweep_stale_workdirs`](#wads.workdirs.sweep_stale_workdirs)(prefix, \*[, root, ...])   | Remove `<root>/<prefix>*` directories that are stale; return the removed paths. |
+
+### wads.workdirs.BYTES_PER_GB *= 1000000000.0*
+
+Bytes per GB, for the messages [`room_shortfall()`](#wads.workdirs.room_shortfall) writes.
 
 ### wads.workdirs.DFLT_STALE_AGE *= 21600*
 
@@ -53,6 +64,16 @@ Seconds in an hour.
 ### wads.workdirs.OWNER_FILE *= '.owner-pid'*
 
 Name of the file inside a work directory that holds its owner’s PID.
+
+### wads.workdirs.free_inodes(path)
+
+Inodes free to us on `path`’s filesystem; `None` where that is not reported.
+
+`None` off POSIX (no `os.statvfs`) and on filesystems that do not track inodes
+(`f_files == 0`: btrfs, an unlimited tmpfs).
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 ### wads.workdirs.make_workdir(prefix, , root=None)
 
@@ -67,6 +88,24 @@ Whether process `pid` exists; `None` where that cannot be checked safely.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+
+### wads.workdirs.room_shortfall(path, , min_bytes, min_inodes)
+
+What `path`’s filesystem lacks for a job needing that much room, or `None`.
+
+Both bytes and inodes count: a tmpfs can run out of inodes with bytes to spare
+(issue #159). Inodes are skipped where [`free_inodes()`](#wads.workdirs.free_inodes) cannot report them.
+
+```pycon
+>>> import tempfile
+>>> room_shortfall(tempfile.gettempdir(), min_bytes=0, min_inodes=0) is None
+True
+>>> room_shortfall(tempfile.gettempdir(), min_bytes=10**30, min_inodes=0)[:5]
+'only '
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.workdirs.sweep_stale_workdirs(prefix, \*, root=None, min_age=21600, is_alive=<function pid_alive>)
 

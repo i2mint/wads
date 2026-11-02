@@ -305,6 +305,9 @@ with <code class="docutils literal notranslate"><span class="pre">os.kill(pid,</
 Windows <code class="docutils literal notranslate"><span class="pre">os.kill</span></code> with signal 0 terminates the process instead of probing it. On POSIX
 the sweep also leaves alone directories another user owns: it could not remove them from
 a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> anyway, and root should not age-sweep other users’ work.</p>
+<p><a class="reference internal" href="#wads.workdirs.room_shortfall" title="wads.workdirs.room_shortfall"><code class="xref py py-func docutils literal notranslate"><span class="pre">room_shortfall()</span></code></a> says what a filesystem lacks (free bytes, and free inodes where
+<a class="reference internal" href="#wads.workdirs.free_inodes" title="wads.workdirs.free_inodes"><code class="xref py py-func docutils literal notranslate"><span class="pre">free_inodes()</span></code></a> can report them) before a job needing that much room starts: a tmpfs
+can run out of inodes with bytes to spare.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">make_workdir</span><span class="p">(</span><span class="s2">"demo-"</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
@@ -328,6 +331,9 @@ a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.workdirs.DFLT_STALE_AGE" title="wads.workdirs.DFLT_STALE_AGE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_STALE_AGE</span></code></a></p></td>
 <td><p>A work directory younger than this (seconds) is never swept, whoever owns it.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.workdirs.BYTES_PER_GB" title="wads.workdirs.BYTES_PER_GB"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BYTES_PER_GB</span></code></a></p></td>
+<td><p>Bytes per GB, for the messages <a class="reference internal" href="#wads.workdirs.room_shortfall" title="wads.workdirs.room_shortfall"><code class="xref py py-func docutils literal notranslate"><span class="pre">room_shortfall()</span></code></a> writes.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -335,11 +341,17 @@ a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.workdirs.make_workdir" title="wads.workdirs.make_workdir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_workdir</span></code></a>(prefix, *[, root])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.workdirs.free_inodes" title="wads.workdirs.free_inodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">free_inodes</span></code></a>(path)</p></td>
+<td><p>Inodes free to us on <code class="docutils literal notranslate"><span class="pre">path</span></code>'s filesystem; <code class="docutils literal notranslate"><span class="pre">None</span></code> where that is not reported.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.workdirs.make_workdir" title="wads.workdirs.make_workdir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_workdir</span></code></a>(prefix, *[, root])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tempfile.mkdtemp(prefix=prefix,</span> <span class="pre">dir=root)</span></code>, plus an owner file with our PID.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.workdirs.pid_alive" title="wads.workdirs.pid_alive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid_alive</span></code></a>(pid)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.workdirs.pid_alive" title="wads.workdirs.pid_alive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid_alive</span></code></a>(pid)</p></td>
 <td><p>Whether process <code class="docutils literal notranslate"><span class="pre">pid</span></code> exists; <code class="docutils literal notranslate"><span class="pre">None</span></code> where that cannot be checked safely.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.workdirs.room_shortfall" title="wads.workdirs.room_shortfall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">room_shortfall</span></code></a>(path, *, min_bytes, min_inodes)</p></td>
+<td><p>What <code class="docutils literal notranslate"><span class="pre">path</span></code>'s filesystem lacks for a job needing that much room, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.workdirs.sweep_stale_workdirs" title="wads.workdirs.sweep_stale_workdirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sweep_stale_workdirs</span></code></a>(prefix, *[, root, ...])</p></td>
 <td><p>Remove <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/&lt;prefix&gt;*</span></code> directories that are stale; return the removed paths.</p></td>
@@ -347,6 +359,12 @@ a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span
 </tbody>
 </table>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.workdirs.BYTES_PER_GB">
+<span class="sig-prename descclassname"><span class="pre">wads.workdirs.</span></span><span class="sig-name descname"><span class="pre">BYTES_PER_GB</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000.0</span></span><a class="headerlink" href="#wads.workdirs.BYTES_PER_GB" title="Link to this definition">¶</a></dt>
+<dd><p>Bytes per GB, for the messages <a class="reference internal" href="#wads.workdirs.room_shortfall" title="wads.workdirs.room_shortfall"><code class="xref py py-func docutils literal notranslate"><span class="pre">room_shortfall()</span></code></a> writes.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="wads.workdirs.DFLT_STALE_AGE">
 <span class="sig-prename descclassname"><span class="pre">wads.workdirs.</span></span><span class="sig-name descname"><span class="pre">DFLT_STALE_AGE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">21600</span></span><a class="headerlink" href="#wads.workdirs.DFLT_STALE_AGE" title="Link to this definition">¶</a></dt>
@@ -363,6 +381,19 @@ a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span
 <dt class="sig sig-object py" id="wads.workdirs.OWNER_FILE">
 <span class="sig-prename descclassname"><span class="pre">wads.workdirs.</span></span><span class="sig-name descname"><span class="pre">OWNER_FILE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.owner-pid'</span></span><a class="headerlink" href="#wads.workdirs.OWNER_FILE" title="Link to this definition">¶</a></dt>
 <dd><p>Name of the file inside a work directory that holds its owner’s PID.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.workdirs.free_inodes">
+<span class="sig-prename descclassname"><span class="pre">wads.workdirs.</span></span><span class="sig-name descname"><span class="pre">free_inodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/workdirs.html#free_inodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.workdirs.free_inodes" title="Link to this definition">¶</a></dt>
+<dd><p>Inodes free to us on <code class="docutils literal notranslate"><span class="pre">path</span></code>’s filesystem; <code class="docutils literal notranslate"><span class="pre">None</span></code> where that is not reported.</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code> off POSIX (no <code class="docutils literal notranslate"><span class="pre">os.statvfs</span></code>) and on filesystems that do not track inodes
+(<code class="docutils literal notranslate"><span class="pre">f_files</span> <span class="pre">==</span> <span class="pre">0</span></code>: btrfs, an unlimited tmpfs).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -383,6 +414,26 @@ a shared <code class="docutils literal notranslate"><span class="pre">/tmp</span
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.workdirs.room_shortfall">
+<span class="sig-prename descclassname"><span class="pre">wads.workdirs.</span></span><span class="sig-name descname"><span class="pre">room_shortfall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_inodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/workdirs.html#room_shortfall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.workdirs.room_shortfall" title="Link to this definition">¶</a></dt>
+<dd><p>What <code class="docutils literal notranslate"><span class="pre">path</span></code>’s filesystem lacks for a job needing that much room, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Both bytes and inodes count: a tmpfs can run out of inodes with bytes to spare
+(issue #159). Inodes are skipped where <a class="reference internal" href="#wads.workdirs.free_inodes" title="wads.workdirs.free_inodes"><code class="xref py py-func docutils literal notranslate"><span class="pre">free_inodes()</span></code></a> cannot report them.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">room_shortfall</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_inodes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">room_shortfall</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="n">min_bytes</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">30</span><span class="p">,</span> <span class="n">min_inodes</span><span class="o">=</span><span class="mi">0</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">'only '</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -457,11 +508,14 @@ cannot be removed is not reported.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">wads.workdirs</a><ul>
+<li><a class="reference internal" href="#wads.workdirs.BYTES_PER_GB"><code class="docutils literal notranslate"><span class="pre">BYTES_PER_GB</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.DFLT_STALE_AGE"><code class="docutils literal notranslate"><span class="pre">DFLT_STALE_AGE</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.HOUR"><code class="docutils literal notranslate"><span class="pre">HOUR</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.OWNER_FILE"><code class="docutils literal notranslate"><span class="pre">OWNER_FILE</span></code></a></li>
+<li><a class="reference internal" href="#wads.workdirs.free_inodes"><code class="docutils literal notranslate"><span class="pre">free_inodes()</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.make_workdir"><code class="docutils literal notranslate"><span class="pre">make_workdir()</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.pid_alive"><code class="docutils literal notranslate"><span class="pre">pid_alive()</span></code></a></li>
+<li><a class="reference internal" href="#wads.workdirs.room_shortfall"><code class="docutils literal notranslate"><span class="pre">room_shortfall()</span></code></a></li>
 <li><a class="reference internal" href="#wads.workdirs.sweep_stale_workdirs"><code class="docutils literal notranslate"><span class="pre">sweep_stale_workdirs()</span></code></a></li>
 </ul>
 </li>
@@ -474,7 +528,7 @@ cannot be removed is not reported.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=024998d6"></script>
+</div><script src="../_static/documentation_options.js?v=22f8023d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
