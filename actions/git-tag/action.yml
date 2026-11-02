@@ -12,6 +12,13 @@ inputs:
     description: "Push tag to remote after creating"
     required: false
     default: "true"
+  ref:
+    description: >-
+      Commit to tag (default: HEAD). The publish job passes the version-bump
+      commit it built, which differs from HEAD when another merge landed during
+      the run and the bump was replayed onto it (i2mint/wads#161).
+    required: false
+    default: ""
   force:
     description: "Force create tag (overwrites existing tag)"
     required: false
@@ -35,24 +42,36 @@ runs:
   steps:
     - name: Create Tag
       shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        TAG_MESSAGE: ${{ inputs.message }}
+        FORCE: ${{ inputs.force }}
+        REF: ${{ inputs.ref }}
       run: |
         set -e
 
-        tag_args=""
-
-        if [ "${{ inputs.force }}" = "true" ]; then
-          tag_args="$tag_args -f"
+        target=$(git rev-parse --verify "${REF:-HEAD}^{commit}")
+        head=$(git rev-parse HEAD)
+        if [ "$target" != "$head" ]; then
+          # The branch moved past the built commit (a merge landed during the
+          # run and the bump was replayed onto it). The tag names what was built.
+          echo "::notice::Tag $TAG names the built commit $target, not the branch tip $head: another merge landed while this release ran, so that tip holds code this release does not."
         fi
 
-        if [ -n "${{ inputs.message }}" ]; then
-          echo "Creating annotated tag: ${{ inputs.tag }}"
-          git tag $tag_args -a "${{ inputs.tag }}" -m "${{ inputs.message }}"
+        tag_args=()
+        if [ "$FORCE" = "true" ]; then
+          tag_args+=(-f)
+        fi
+
+        if [ -n "$TAG_MESSAGE" ]; then
+          echo "Creating annotated tag: $TAG at $target"
+          git tag "${tag_args[@]}" -a "$TAG" -m "$TAG_MESSAGE" "$target"
         else
-          echo "Creating lightweight tag: ${{ inputs.tag }}"
-          git tag $tag_args "${{ inputs.tag }}"
+          echo "Creating lightweight tag: $TAG at $target"
+          git tag "${tag_args[@]}" "$TAG" "$target"
         fi
 
-        echo "Tag created: ${{ inputs.tag }}"
+        echo "Tag created: $TAG"
 
     - name: Push Tag
       if: ${{ inputs.push == 'true' }}
@@ -106,6 +125,12 @@ runs:
               restore=$(printf 'git tag %q %q && git push origin %q' "$TAG" "$commit" "refs/tags/$TAG")
             fi
             echo "::error::Push of tag '$TAG' was rejected after $retries retr(y/ies). The release has no tag; restore it from a clone with: $restore"
+            if ! git merge-base --is-ancestor "$commit" HEAD; then
+              # The built commit was replayed onto a moved branch (#161): only
+              # this runner has it, so a clone cannot tag it. Name the bump that
+              # did land instead, and say what that costs.
+              echo "::error::Commit $commit (what was built) exists only on this runner, so the command above fails in a clone. Tag the replayed bump commit $(git rev-parse HEAD) instead (its tree also holds the merges that landed during the run), or re-run this job."
+            fi
             exit 1
           fi
           wait_s=$((delay * attempt))

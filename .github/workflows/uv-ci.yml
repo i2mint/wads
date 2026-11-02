@@ -714,16 +714,21 @@ jobs:
       # newer `queue: max` lifts that limit, but unrecognised workflow syntax
       # fails to parse, and this file is consumed by ~180 repos via @master.)
       - name: Commit Changes
+        id: bump
         uses: i2mint/wads/actions/git-commit@master
         with:
           commit-message: "**CI** Formatted code + Updated version to ${{ env.VERSION }} [skip ci]"
           push: true
 
+      # Tag the commit that was built and uploaded, not the branch tip: when a
+      # merge landed during the run, the push above replayed the bump onto it,
+      # and that tip holds code this release does not (issue #161).
       - name: Tag Repository
         uses: i2mint/wads/actions/git-tag@master
         with:
           tag: ${{ env.VERSION }}
           message: "Release version ${{ env.VERSION }}"
+          ref: ${{ steps.bump.outputs.commit-sha }}
           push: true
 
   # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false, or
