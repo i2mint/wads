@@ -14,7 +14,7 @@ inputs:
     required: false
     default: 'false'
   install-timeout:
-    description: 'Per-command install timeout in seconds for dependencies that declare no install_timeout of their own. Empty keeps the installer default (300; 900 for ffmpeg).'
+    description: 'Per-command install timeout in seconds for dependencies that declare no install_timeout of their own. Empty keeps the installer default (300; 900 for ffmpeg). A dependency using an install recipe (e.g. wads:static-ffmpeg) gets at least the recipe''s minimum.'
     required: false
     default: ''
 

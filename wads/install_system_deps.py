@@ -92,7 +92,8 @@ else:
 DFLT_INSTALL_TIMEOUT = 300
 #: Dependencies with a big dependency tree get a longer ceiling than the global default
 #: (a cold-cache ``apt-get install ffmpeg`` outlasts 300s). A declaration or an explicit
-#: ``default_install_timeout`` still wins.
+#: ``default_install_timeout`` still wins, except that a recipe's ``min_timeout``
+#: floors the latter (only a per-dependency ``install_timeout`` goes below it).
 SLOW_DEP_INSTALL_TIMEOUTS = {"ffmpeg": 900}
 
 #: An install command of the form ``wads:<name>`` names a recipe here, expanded into
@@ -639,7 +640,8 @@ def install_system_dependencies(
         default_install_timeout: Per-command install timeout (seconds) for
             dependencies that declare no ``install_timeout`` of their own. ``None``:
             :data:`SLOW_DEP_INSTALL_TIMEOUTS` for known-slow ones, else
-            :data:`DFLT_INSTALL_TIMEOUT`.
+            :data:`DFLT_INSTALL_TIMEOUT`. Either way, a dependency using an install
+            recipe gets at least the recipe's ``min_timeout``.
         apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).
         default_install_retries: Retries per failed install command for
             dependencies that declare no ``install_retries`` of their own.
