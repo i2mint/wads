@@ -641,6 +641,18 @@ jobs:
     if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
     needs: [setup, validation]
     runs-on: ubuntu-latest
+    # One publish at a time per repo and branch (issue #174). Two merges seconds
+    # apart used to run their publish jobs side by side: both bumped to the same
+    # next version, the second upload was refused, and the run went red. Queued
+    # instead, each run bumps past the version the previous one published.
+    # GitHub keeps one *pending* run per group, so a third merge arriving while
+    # one runs and one waits replaces the waiting one, which loses nothing: the
+    # newer run builds a later commit of the same branch, so it releases the
+    # replaced merge's changes too. cancel-in-progress stays false: a running
+    # upload must never be interrupted.
+    concurrency:
+      group: wads-publish-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: false
 
     steps:
       # `actions/checkout@v6` defaults to persist-credentials: true, configuring
@@ -716,12 +728,12 @@ jobs:
       # default branch mid-run — PyPI has the release, the push is rejected as
       # non-fast-forward, the run goes red and no tag is pushed (issue #81). The
       # git-commit action now replays the bump onto the moved branch and retries
-      # (see its `push-rebase-retries` input), which is why no `concurrency`
-      # group is set on this job: GitHub keeps at most one *pending* run per
-      # group, so a third merge arriving during a queued release cancels the
-      # second one outright — trading a red run for a skipped release. (The
-      # newer `queue: max` lifts that limit, but unrecognised workflow syntax
-      # fails to parse, and this file is consumed by ~180 repos via @master.)
+      # (see its `push-rebase-retries` input). The job's `concurrency` group
+      # (above) now also queues publish runs, so this replay only happens when
+      # a merge lands while *this* run is publishing. (`queue: max` would keep
+      # every pending run, but unrecognised workflow syntax fails to parse, and
+      # this file is consumed by ~180 repos via @master; one pending run is
+      # enough, see the concurrency note.)
       - name: Commit Changes
         id: bump
         uses: i2mint/wads/actions/git-commit@master
