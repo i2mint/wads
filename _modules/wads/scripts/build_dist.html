@@ -329,51 +329,34 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_install_build_tools</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">"""Install modern build tools."""</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing modern build tools"</span><span class="p">)</span>
-    <span class="c1"># uv pip rejects "pip" as a target when pip isn't already present; only</span>
-    <span class="c1"># upgrade pip when we're actually using pip.</span>
-    <span class="k">if</span> <span class="n">_using_uv</span><span class="p">():</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"build"</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">packages</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"--upgrade"</span><span class="p">,</span> <span class="s2">"pip"</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">]</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_build_tool</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True when ``python -m build`` can run in this interpreter.</span>
+
+<span class="sd">    Probes ``build.__main__``, not ``build``: a stray ``build/`` directory in the</span>
+<span class="sd">    working directory (setuptools leaves one) imports as an empty namespace package,</span>
+<span class="sd">    which ``import build`` accepts and ``python -m build`` does not.</span>
+<span class="sd">    """</span>
+    <span class="n">probe</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="s2">"import build.__main__"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">probe</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_build_tool</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Install ``build`` into this interpreter only when it is missing.</span>
+
+<span class="sd">    Nothing else is installed or upgraded: the project itself is never installed,</span>
+<span class="sd">    because ``python -m build`` builds in an isolated environment, so installing it</span>
+<span class="sd">    into this interpreter never affected the build and only left it behind (an</span>
+<span class="sd">    editable install pointing at the build directory, issue #119).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_has_build_tool</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing the build tool"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_install_cmd</span><span class="p">()</span> <span class="o">+</span> <span class="n">packages</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_pip_install_cmd</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"build"</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[ERROR] Failed to install build tools: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_install_dependencies</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">"""Install project dependencies."""</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing project dependencies"</span><span class="p">)</span>
-    <span class="n">pip_install</span> <span class="o">=</span> <span class="n">_pip_install_cmd</span><span class="p">()</span>
-
-    <span class="c1"># Try different dependency files</span>
-    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"pyproject.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from pyproject.toml"</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">],</span>
-            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"Could not install in editable mode, continuing..."</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"setup.cfg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from setup.cfg"</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"."</span><span class="p">],</span>
-            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"Could not install in editable mode, continuing..."</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"requirements.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Installing from requirements.txt"</span><span class="p">)</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">pip_install</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"-r"</span><span class="p">,</span> <span class="s2">"requirements.txt"</span><span class="p">],</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
 
 
 <div class="viewcode-block" id="build_distributions">
@@ -394,12 +377,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Exit code (0 for success, 1 for failure)</span>
 <span class="sd">    """</span>
-    <span class="c1"># Install build tools</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_install_build_tools</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_ensure_build_tool</span><span class="p">():</span>
         <span class="k">return</span> <span class="mi">1</span>
-
-    <span class="c1"># Install dependencies</span>
-    <span class="n">_install_dependencies</span><span class="p">()</span>
 
     <span class="c1"># Build distributions</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Building distributions"</span><span class="p">)</span>
@@ -512,7 +491,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=ab09ecb0"></script>
+</div><script src="../../../_static/documentation_options.js?v=024998d6"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
