@@ -245,6 +245,7 @@
 <li class="toctree-l3"><a class="reference internal" href="wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
 </ul>
@@ -312,6 +313,13 @@ the default, a branch behind its remote, or missing PyPI credentials.</p>
 (minus PyPI credentials, which only the upload step sees), where CI exports only the
 variables <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> declares; <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.</p>
+<p>Each run works in a fresh <code class="docutils literal notranslate"><span class="pre">wads-ci-local-*</span></code> temporary directory that records its owner’s
+PID (<a class="reference internal" href="wads.workdirs.html#module-wads.workdirs" title="wads.workdirs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">wads.workdirs</span></code></a>), and gives pytest a private <code class="docutils literal notranslate"><span class="pre">--basetemp</span></code> inside it, so
+concurrent runs never delete each other’s basetemp and the workdir’s removal takes the
+basetemp with it. Before starting, a run removes the workdirs killed runs left behind
+(older than a few hours, owner no longer running) and refuses, with a plain message, when
+the temp filesystem lacks the space or the inodes for one venv per tested Python, rather
+than failing partway with <code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">space</span> <span class="pre">left</span> <span class="pre">on</span> <span class="pre">device</span></code> (issue #159).</p>
 <p>Every command goes through one <code class="docutils literal notranslate"><span class="pre">runner</span></code> seam. The default runs subprocesses; tests pass
 a fake. The default also refuses upload and push steps while pytest is running, so no test
 can ever spend or publish.</p>
@@ -319,6 +327,22 @@ can ever spend or publish.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">][:</span><span class="mi">3</span><span class="p">]</span>
 <span class="go">['format check (ruff)', 'lint (ruff)', 'python 3.10: venv']</span>
 </pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.WORKDIR_PREFIX" title="wads.ci_local.WORKDIR_PREFIX"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKDIR_PREFIX</span></code></a></p></td>
+<td><p>Prefix of the temporary work directory each run makes (and sweeps when left behind).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.WORKDIR_BYTES_PER_PYTHON" title="wads.ci_local.WORKDIR_BYTES_PER_PYTHON"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKDIR_BYTES_PER_PYTHON</span></code></a></p></td>
+<td><p>one venv with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.WORKDIR_INODES_PER_PYTHON" title="wads.ci_local.WORKDIR_INODES_PER_PYTHON"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKDIR_INODES_PER_PYTHON</span></code></a></p></td>
+<td><p>a workdir held ~22k and a pytest basetemp up to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -408,6 +432,36 @@ an error message, or <code class="docutils literal notranslate"><span class="pre
 </dl>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.ci_local.WORKDIR_BYTES_PER_PYTHON">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">WORKDIR_BYTES_PER_PYTHON</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000</span></span><a class="headerlink" href="#wads.ci_local.WORKDIR_BYTES_PER_PYTHON" title="Link to this definition">¶</a></dt>
+<dd><p>one venv
+with the project’s deps installed (0.5-0.7 GB for a mid-size package), plus headroom.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Free space the temp filesystem needs per tested Python before a run starts</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.ci_local.WORKDIR_INODES_PER_PYTHON">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">WORKDIR_INODES_PER_PYTHON</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100000</span></span><a class="headerlink" href="#wads.ci_local.WORKDIR_INODES_PER_PYTHON" title="Link to this definition">¶</a></dt>
+<dd><p>a workdir held ~22k and a pytest basetemp up
+to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Free inodes it needs per tested Python</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.ci_local.WORKDIR_PREFIX">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">WORKDIR_PREFIX</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'wads-ci-local-'</span></span><a class="headerlink" href="#wads.ci_local.WORKDIR_PREFIX" title="Link to this definition">¶</a></dt>
+<dd><p>Prefix of the temporary work directory each run makes (and sweeps when left behind).</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_local.ci_local">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.ci_local" title="Link to this definition">¶</a></dt>
@@ -455,6 +509,8 @@ sets them (<code class="docutils literal notranslate"><span class="pre">repo=Non
 <dt class="sig sig-object py" id="wads.ci_local.render_plan">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">render_plan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#render_plan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.render_plan" title="Link to this definition">¶</a></dt>
 <dd><p>The plan as numbered lines, flagging non-blocking and side-effecting steps.</p>
+<p>The header also says what <a class="reference internal" href="#wads.ci_local.run_ci_local" title="wads.ci_local.run_ci_local"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_ci_local()</span></code></a> does before the plan: sweep stale
+workdirs and check the temp filesystem has room.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
@@ -488,8 +544,11 @@ sets them (<code class="docutils literal notranslate"><span class="pre">repo=Non
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_local.run_ci_local">
-<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">run_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_runner&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#run_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.run_ci_local" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">run_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_runner&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#run_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.run_ci_local" title="Link to this definition">¶</a></dt>
 <dd><p>Run <a class="reference internal" href="#wads.ci_local.plan_ci_local" title="wads.ci_local.plan_ci_local"><code class="xref py py-func docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a>’s steps, stop at the first blocking failure, and report.</p>
+<p>The steps run in a fresh work directory under <code class="docutils literal notranslate"><span class="pre">workdir_root</span></code> (default: the system
+temp directory), after removing the stale ones killed runs left there and checking
+that the filesystem has room for this run (issue #159).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.ci_local.CILocalReport" title="wads.ci_local.CILocalReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CILocalReport</span></code></a></span></p>
@@ -605,6 +664,9 @@ sets them (<code class="docutils literal notranslate"><span class="pre">repo=Non
 </li>
 <li><a class="reference internal" href="#wads.ci_local.RunResult"><code class="docutils literal notranslate"><span class="pre">RunResult</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.Step"><code class="docutils literal notranslate"><span class="pre">Step</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_local.WORKDIR_BYTES_PER_PYTHON"><code class="docutils literal notranslate"><span class="pre">WORKDIR_BYTES_PER_PYTHON</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_local.WORKDIR_INODES_PER_PYTHON"><code class="docutils literal notranslate"><span class="pre">WORKDIR_INODES_PER_PYTHON</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_local.WORKDIR_PREFIX"><code class="docutils literal notranslate"><span class="pre">WORKDIR_PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.ci_local"><code class="docutils literal notranslate"><span class="pre">ci_local()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.plan_ci_local"><code class="docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.pytest_argv"><code class="docutils literal notranslate"><span class="pre">pytest_argv()</span></code></a></li>
@@ -625,7 +687,7 @@ sets them (<code class="docutils literal notranslate"><span class="pre">repo=Non
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=432aad00"></script>
+</div><script src="../_static/documentation_options.js?v=ab09ecb0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

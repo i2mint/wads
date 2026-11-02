@@ -242,6 +242,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
 </ul>
@@ -305,6 +306,14 @@
 <span class="sd">variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not</span>
 <span class="sd">installed; and lint runs on the tree as it is, where CI formats first.</span>
 
+<span class="sd">Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's</span>
+<span class="sd">PID (:mod:`wads.workdirs`), and gives pytest a private ``--basetemp`` inside it, so</span>
+<span class="sd">concurrent runs never delete each other's basetemp and the workdir's removal takes the</span>
+<span class="sd">basetemp with it. Before starting, a run removes the workdirs killed runs left behind</span>
+<span class="sd">(older than a few hours, owner no longer running) and refuses, with a plain message, when</span>
+<span class="sd">the temp filesystem lacks the space or the inodes for one venv per tested Python, rather</span>
+<span class="sd">than failing partway with ``No space left on device`` (issue #159).</span>
+
 <span class="sd">Every command goes through one ``runner`` seam. The default runs subprocesses; tests pass</span>
 <span class="sd">a fake. The default also refuses upload and push steps while pytest is running, so no test</span>
 <span class="sd">can ever spend or publish.</span>
@@ -323,13 +332,13 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRIGGER_LEVELS</span><span class="p">,</span> <span class="n">CIConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.pytest_doctest_flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">doctest_optionflags_arg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.workdirs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_STALE_AGE</span><span class="p">,</span> <span class="n">HOUR</span><span class="p">,</span> <span class="n">make_workdir</span><span class="p">,</span> <span class="n">sweep_stale_workdirs</span>
 
 <span class="c1"># Mirrors of values the CI actions hardcode. Tests pin each against its source</span>
 <span class="c1"># (actions/run-tests-uv/action.yml, .github/workflows/uv-ci.yml) so they cannot drift.</span>
@@ -346,6 +355,9 @@
 <span class="c1"># (so they cannot collide with braces in a user's pytest_args).</span>
 <span class="n">WORKDIR</span> <span class="o">=</span> <span class="s2">"&lt;&lt;workdir&gt;&gt;"</span>
 <span class="n">DIST_DIR</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/dist"</span>
+<span class="c1"># ci-local's own pytest --basetemp: private to the run (pytest prunes the shared default</span>
+<span class="c1"># one on startup, deleting a concurrent run's live basetemp), and swept with the workdir.</span>
+<span class="n">PYTEST_BASETEMP</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/pytest"</span>
 <span class="n">_PLACEHOLDER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"&lt;&lt;(\w+)&gt;&gt;"</span><span class="p">)</span>
 
 <span class="c1"># Side-effect classes. The default runner refuses the outward ones under pytest.</span>
@@ -362,6 +374,16 @@
 <span class="p">)</span>
 
 <span class="n">PASSED</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"FAIL"</span><span class="p">,</span> <span class="s2">"skip"</span>
+
+<span class="c1">#: Prefix of the temporary work directory each run makes (and sweeps when left behind).</span>
+<span class="n">WORKDIR_PREFIX</span> <span class="o">=</span> <span class="s2">"wads-ci-local-"</span>
+<span class="c1">#: Free space the temp filesystem needs per tested Python before a run starts: one venv</span>
+<span class="c1">#: with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.</span>
+<span class="n">WORKDIR_BYTES_PER_PYTHON</span> <span class="o">=</span> <span class="mi">1_000_000_000</span>
+<span class="c1">#: Free inodes it needs per tested Python: a workdir held ~22k and a pytest basetemp up</span>
+<span class="c1">#: to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).</span>
+<span class="n">WORKDIR_INODES_PER_PYTHON</span> <span class="o">=</span> <span class="mi">100_000</span>
+<span class="n">_BYTES_PER_GB</span> <span class="o">=</span> <span class="mf">1e9</span>
 
 <span class="n">_INSTALL_HINTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"uv"</span><span class="p">:</span> <span class="s2">"install uv: https://docs.astral.sh/uv/getting-started/installation/"</span><span class="p">,</span>
@@ -535,6 +557,61 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Step</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How many venvs ``steps`` create (none when tests and the licence gate are off)."""</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">argv</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"venv"</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_space_needed</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The temp space a run with ``n_venvs`` venvs needs, as the plan and check word it."""</span>
+    <span class="n">gb</span> <span class="o">=</span> <span class="n">n_venvs</span> <span class="o">*</span> <span class="n">WORKDIR_BYTES_PER_PYTHON</span> <span class="o">/</span> <span class="n">_BYTES_PER_GB</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">gb</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> GB / </span><span class="si">{</span><span class="n">n_venvs</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">WORKDIR_INODES_PER_PYTHON</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> inodes"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_free_inodes</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Inodes free to us on ``path``'s filesystem; ``None`` where that is not reported."""</span>
+    <span class="n">statvfs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">"statvfs"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># POSIX only</span>
+    <span class="k">if</span> <span class="n">statvfs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">statvfs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">f_favail</span> <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">f_files</span> <span class="k">else</span> <span class="kc">None</span>  <span class="c1"># f_files == 0: not tracked</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_temp_space_step</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Step</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse up front when the temp filesystem cannot hold the run's venvs (issue #159).</span>
+
+<span class="sd">    Not part of :func:`plan_ci_local`, which mirrors what CI does: it is a check on this</span>
+<span class="sd">    machine, run first by :func:`run_ci_local`. Without it a full tmpfs fails the run</span>
+<span class="sd">    partway, as test errors or a crashed pytest that read as red CI. Both bytes and</span>
+<span class="sd">    inodes count: the outage behind #159 had bytes to spare and no inodes left.</span>
+<span class="sd">    """</span>
+    <span class="n">needed_bytes</span> <span class="o">=</span> <span class="n">n_venvs</span> <span class="o">*</span> <span class="n">WORKDIR_BYTES_PER_PYTHON</span>
+    <span class="n">needed_inodes</span> <span class="o">=</span> <span class="n">n_venvs</span> <span class="o">*</span> <span class="n">WORKDIR_INODES_PER_PYTHON</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">workdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">"workdir"</span><span class="p">]</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">disk_usage</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span><span class="o">.</span><span class="n">free</span>
+        <span class="n">free_inodes</span> <span class="o">=</span> <span class="n">_free_inodes</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+        <span class="n">shortfalls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">free</span> <span class="o">&lt;</span> <span class="n">needed_bytes</span><span class="p">:</span>
+            <span class="n">shortfalls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">free</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">_BYTES_PER_GB</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> GB free"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">free_inodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">free_inodes</span> <span class="o">&lt;</span> <span class="n">needed_inodes</span><span class="p">:</span>
+            <span class="n">shortfalls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">free_inodes</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> inodes free"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shortfalls</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">' and '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shortfalls</span><span class="p">)</span><span class="si">}</span><span class="s2"> in the temp directory, need about "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_space_needed</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">)</span><span class="si">}</span><span class="s2"> (one venv and pytest basetemp per tested "</span>
+                <span class="s2">"Python): free some, or set TMPDIR to a bigger filesystem"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">Step</span><span class="p">(</span>
+        <span class="s2">"temp space"</span><span class="p">,</span>
+        <span class="n">check</span><span class="o">=</span><span class="n">check</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">"&gt;= </span><span class="si">{</span><span class="n">_space_needed</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">)</span><span class="si">}</span><span class="s2"> free for &lt;&lt;workdir&gt;&gt;"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_required_env_step</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Step</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
@@ -616,7 +693,16 @@
                 <span class="p">),</span>
                 <span class="n">Step</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: tests"</span><span class="p">,</span>
-                    <span class="p">(</span><span class="n">python</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)),</span>
+                    <span class="p">(</span>
+                        <span class="n">python</span><span class="p">,</span>
+                        <span class="s2">"-m"</span><span class="p">,</span>
+                        <span class="s2">"pytest"</span><span class="p">,</span>
+                        <span class="c1"># First, so a `--` in the user's pytest_args cannot turn it</span>
+                        <span class="c1"># into a test path.</span>
+                        <span class="s2">"--basetemp"</span><span class="p">,</span>
+                        <span class="n">PYTEST_BASETEMP</span><span class="p">,</span>
+                        <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">),</span>
+                    <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">]</span>
     <span class="k">return</span> <span class="n">steps</span>
@@ -1014,17 +1100,34 @@
     <span class="n">environ</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keep_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">workdir_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CILocalReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report."""</span>
+<span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.</span>
+
+<span class="sd">    The steps run in a fresh work directory under ``workdir_root`` (default: the system</span>
+<span class="sd">    temp directory), after removing the stale ones killed runs left there and checking</span>
+<span class="sd">    that the filesystem has room for this run (issue #159).</span>
+<span class="sd">    """</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">=</span> <span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_venvs</span> <span class="o">:=</span> <span class="n">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_temp_space_step</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">))</span>
     <span class="n">source_env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span><span class="p">)</span>
     <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">source_env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">}</span>
     <span class="c1"># Committed defaults are authoritative, as in CI's export-ci-env.</span>
     <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
-    <span class="n">workdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"wads-ci-local-"</span><span class="p">)</span>
+    <span class="c1"># A killed run never reaches the cleanup below; remove what earlier ones left.</span>
+    <span class="c1"># Best effort: a sweep that fails must not stop the run it was clearing room for.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">swept</span> <span class="o">=</span> <span class="n">sweep_stale_workdirs</span><span class="p">(</span><span class="n">WORKDIR_PREFIX</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">workdir_root</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">swept</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Note: skipped the stale workdir sweep (</span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">swept</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">swept</span><span class="p">)</span><span class="si">}</span><span class="s2"> stale </span><span class="si">{</span><span class="n">WORKDIR_PREFIX</span><span class="si">}</span><span class="s2">* workdir(s)"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">workdir</span> <span class="o">=</span> <span class="n">make_workdir</span><span class="p">(</span><span class="n">WORKDIR_PREFIX</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">workdir_root</span><span class="p">)</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">_Context</span><span class="p">(</span>
         <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
         <span class="n">runner</span><span class="o">=</span><span class="n">runner</span><span class="p">,</span>
@@ -1072,10 +1175,18 @@
 <div class="viewcode-block" id="render_plan">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.render_plan">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_plan</span><span class="p">(</span><span class="n">steps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Step</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The plan as numbered lines, flagging non-blocking and side-effecting steps."""</span>
+<span class="w">    </span><span class="sd">"""The plan as numbered lines, flagging non-blocking and side-effecting steps.</span>
+
+<span class="sd">    The header also says what :func:`run_ci_local` does before the plan: sweep stale</span>
+<span class="sd">    workdirs and check the temp filesystem has room.</span>
+<span class="sd">    """</span>
+    <span class="n">n_venvs</span> <span class="o">=</span> <span class="n">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
+    <span class="n">room</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">", and requires about </span><span class="si">{</span><span class="n">_space_needed</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">)</span><span class="si">}</span><span class="s2"> free"</span> <span class="k">if</span> <span class="n">n_venvs</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">"wads ci-local plan (&lt;&lt;workdir&gt;&gt; is a fresh temporary directory; "</span>
-        <span class="s2">"&lt;&lt;version&gt;&gt; comes from the bump step):"</span>
+        <span class="s2">"&lt;&lt;version&gt;&gt; comes from the bump step):"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"  A real run first removes stale </span><span class="si">{</span><span class="n">WORKDIR_PREFIX</span><span class="si">}</span><span class="s2">* workdirs older than "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DFLT_STALE_AGE</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">HOUR</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> h whose owner is gone</span><span class="si">{</span><span class="n">room</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="k">for</span> <span class="n">number</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">tags</span> <span class="o">=</span> <span class="p">([]</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">blocking</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"non-blocking"</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span>
@@ -1147,7 +1258,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=432aad00"></script>
+</div><script src="../../_static/documentation_options.js?v=ab09ecb0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

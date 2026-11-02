@@ -25,6 +25,14 @@ Known differences from CI: the developer’s environment passes through to the c
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
+Each run works in a fresh `wads-ci-local-*` temporary directory that records its owner’s
+PID ([`wads.workdirs`](wads.workdirs.html.md#module-wads.workdirs)), and gives pytest a private `--basetemp` inside it, so
+concurrent runs never delete each other’s basetemp and the workdir’s removal takes the
+basetemp with it. Before starting, a run removes the workdirs killed runs left behind
+(older than a few hours, owner no longer running) and refuses, with a plain message, when
+the temp filesystem lacks the space or the inodes for one venv per tested Python, rather
+than failing partway with `No space left on device` (issue #159).
+
 Every command goes through one `runner` seam. The default runs subprocesses; tests pass
 a fake. The default also refuses upload and push steps while pytest is running, so no test
 can ever spend or publish.
@@ -34,6 +42,13 @@ can ever spend or publish.
 >>> [s.name for s in steps][:3]
 ['format check (ruff)', 'lint (ruff)', 'python 3.10: venv']
 ```
+
+### Module Attributes
+
+| [`WORKDIR_PREFIX`](#wads.ci_local.WORKDIR_PREFIX)            | Prefix of the temporary work directory each run makes (and sweeps when left behind).                                 |
+|----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [`WORKDIR_BYTES_PER_PYTHON`](#wads.ci_local.WORKDIR_BYTES_PER_PYTHON)  | one venv with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.                       |
+| [`WORKDIR_INODES_PER_PYTHON`](#wads.ci_local.WORKDIR_INODES_PER_PYTHON) | a workdir held ~22k and a pytest basetemp up to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159). |
 
 ### Functions
 
@@ -83,6 +98,26 @@ failure is reported without stopping the run. `capture` names the context value 
 receives the command’s last stdout line. A `check` takes the run context and returns
 an error message, or `None` when it passes.
 
+### wads.ci_local.WORKDIR_BYTES_PER_PYTHON *= 1000000000*
+
+one venv
+with the project’s deps installed (0.5-0.7 GB for a mid-size package), plus headroom.
+
+* **Type:**
+  Free space the temp filesystem needs per tested Python before a run starts
+
+### wads.ci_local.WORKDIR_INODES_PER_PYTHON *= 100000*
+
+a workdir held ~22k and a pytest basetemp up
+to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).
+
+* **Type:**
+  Free inodes it needs per tested Python
+
+### wads.ci_local.WORKDIR_PREFIX *= 'wads-ci-local-'*
+
+Prefix of the temporary work directory each run makes (and sweeps when left behind).
+
 ### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False, level=None)
 
 Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.
@@ -121,6 +156,9 @@ sets them (`repo=None`: not checked, defaults passed).
 
 The plan as numbered lines, flagging non-blocking and side-effecting steps.
 
+The header also says what [`run_ci_local()`](#wads.ci_local.run_ci_local) does before the plan: sweep stale
+workdirs and check the temp filesystem has room.
+
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
@@ -145,9 +183,13 @@ Token-only, like CI. The token itself is never printed.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False)
+### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None)
 
 Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)’s steps, stop at the first blocking failure, and report.
+
+The steps run in a fresh work directory under `workdir_root` (default: the system
+temp directory), after removing the stale ones killed runs left there and checking
+that the filesystem has room for this run (issue #159).
 
 * **Return type:**
   [`CILocalReport`](#wads.ci_local.CILocalReport)
