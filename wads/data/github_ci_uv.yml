@@ -474,6 +474,28 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Re-running an old run would rebuild its old commit and publish it under
+      # a NEW, higher version, newer than code that already shipped (issue
+      # #183). A first attempt may build a non-tip commit (publish runs queue,
+      # see `concurrency`), and so may a re-run of the latest run, whose tip
+      # can carry the previous queued run's `[skip ci]` bump. So a re-run is
+      # refused only when a commit other than such a CI bump landed after the
+      # built one: those changes are released, or will be, by a later run.
+      - name: Refuse a re-run of an old commit
+        env:
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILT_SHA: ${{ github.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          [ "$RUN_ATTEMPT" = "1" ] && exit 0
+          # An unreachable remote must not block a legitimate re-run.
+          git fetch --quiet origin "$DEFAULT_BRANCH" || exit 0
+          newer=$(git log --format=%s "$BUILT_SHA..FETCH_HEAD" | grep -cvE '^\*\*CI\*\* .*\[skip ci\]$' || true)
+          if [ "$newer" -gt 0 ]; then
+            echo "::error::This is re-run attempt $RUN_ATTEMPT of a publish for $BUILT_SHA, but $newer newer commit(s) other than CI version bumps have landed on $DEFAULT_BRANCH since. Publishing would release this old commit under a new, higher version. Re-run the latest run on $DEFAULT_BRANCH instead."
+            exit 1
+          fi
+
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
