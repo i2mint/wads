@@ -435,8 +435,9 @@ class CIConfig:
         """Minutes a validation job may run before GitHub stops it (``timeout-minutes``).
 
         ``[tool.wads.ci.testing].job_timeout_minutes``, a positive integer; anything
-        else falls back to :data:`DFLT_JOB_TIMEOUT_MINUTES`. Applied to the Linux
-        ``validation`` matrix and to ``windows-validation`` in the uv workflows.
+        else falls back to :data:`DFLT_JOB_TIMEOUT_MINUTES`, with a warning naming the
+        ignored value. Applied to the Linux ``validation`` matrix and to
+        ``windows-validation`` in the uv workflows.
 
         >>> CIConfig({}).job_timeout_minutes == DFLT_JOB_TIMEOUT_MINUTES
         True
@@ -445,6 +446,12 @@ class CIConfig:
         """
         value = self.testing_config.get("job_timeout_minutes", DFLT_JOB_TIMEOUT_MINUTES)
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            warnings.warn(
+                f"ignoring invalid [tool.wads.ci.testing].job_timeout_minutes="
+                f"{value!r} (want a positive integer); using "
+                f"{DFLT_JOB_TIMEOUT_MINUTES}",
+                stacklevel=2,
+            )
             return DFLT_JOB_TIMEOUT_MINUTES
         return value
 

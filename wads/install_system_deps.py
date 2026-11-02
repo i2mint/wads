@@ -28,12 +28,15 @@ sets the fallback. Worst case for a command that always fails is
 An install command may name a wads recipe instead of spelling it out (issue #160)::
 
     [tool.wads.ops.ffmpeg]
-    check.linux = "which ffmpeg && which ffprobe"
+    check.linux = "ffmpeg -version && ffprobe -version"
     install.linux = "wads:static-ffmpeg"
 
 expands to :func:`static_ffmpeg_commands`: a pinned, sha256-checked static build in
-seconds instead of a crawling apt mirror, with apt as the fallback. Override its
-parameters (``url``, ``sha256``, ...) under ``[tool.wads.ops.ffmpeg.recipe]``.
+seconds instead of a crawling apt mirror, with apt as the fallback (Linux x86_64 only;
+another architecture goes straight to apt). Override its parameters (``url``,
+``sha256``, ...) under ``[tool.wads.ops.ffmpeg.recipe]``; an unknown or mistyped
+parameter fails the dependency. Running the binaries in the check (rather than
+``which``) also catches a wrong-architecture or corrupt download.
 
 An install whose commands all exit 0 is not trusted on that alone: when the dependency
 declares a ``check.<platform>``, that check is re-run afterwards, and a dependency whose
@@ -67,8 +70,9 @@ import signal
 import subprocess
 import time
 import platform as platform_module
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 import argparse
 
 if sys.version_info >= (3, 11):
@@ -95,8 +99,9 @@ SLOW_DEP_INSTALL_TIMEOUTS = {"ffmpeg": 900}
 #: the commands the recipe builds from its defaults overridden by the dependency's
 #: ``[tool.wads.ops.<dep>.recipe]`` table (issue #160).
 RECIPE_PREFIX = "wads:"
-#: Static ffmpeg + ffprobe for linux64: BtbN/FFmpeg-Builds keeps each month-end
-#: autobuild, so this pinned asset does not expire. Checked against its sha256.
+#: Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
+#: BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
+#: 2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.
 STATIC_FFMPEG_DEFAULTS = {
     "url": (
         "https://github.com/BtbN/FFmpeg-Builds/releases/download/"
@@ -108,6 +113,11 @@ STATIC_FFMPEG_DEFAULTS = {
     "download_timeout": 120,
     "apt_fallback": True,
 }
+#: Where the static ffmpeg archive is downloaded: a double-quoted shell word, so the
+#: runner's shell expands ``RUNNER_TEMP`` (``/tmp`` outside GitHub Actions).
+_STATIC_FFMPEG_ARCHIVE = '"${RUNNER_TEMP:-/tmp}/wads-static-ffmpeg.tar.xz"'
+#: ``uname -m`` of the only architecture the static ffmpeg build runs on.
+_STATIC_FFMPEG_ARCH = "x86_64"
 #: Seconds apt waits for the dpkg lock before giving up (``-o DPkg::Lock::Timeout``).
 DFLT_APT_LOCK_TIMEOUT = 120
 #: Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.
@@ -200,8 +210,11 @@ def static_ffmpeg_commands(params: dict) -> List[str]:
     a runner mirror that sometimes crawls for 20+ minutes, which no timeout or retry
     cures (issue #160). ``params`` overrides :data:`STATIC_FFMPEG_DEFAULTS`: ``url``
     and ``sha256`` of a ``.tar.xz`` whose ``*/bin/`` holds ``binaries``, extracted
-    into ``bin_dir``. When the download or the checksum fails and ``apt_fallback`` is
-    true, apt installs ffmpeg instead (``--no-install-recommends``) with a warning.
+    into ``bin_dir``. The archive goes to ``$RUNNER_TEMP`` (else ``/tmp``) and is
+    removed afterwards, whatever happened. On a machine that is not x86_64, or when
+    the download, the checksum or the extraction fails, the command fails, or, when
+    ``apt_fallback`` is true, removes any partly extracted ``binaries`` and installs
+    ffmpeg from apt (``--no-install-recommends``) with a warning.
 
     >>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
     >>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
@@ -209,42 +222,114 @@ def static_ffmpeg_commands(params: dict) -> List[str]:
     """
     p = {**STATIC_FFMPEG_DEFAULTS, **params}
     q = shlex.quote
-    archive = "/tmp/wads-static-ffmpeg.tar.xz"
+    archive = _STATIC_FFMPEG_ARCHIVE
     members = " ".join(q(f"*/bin/{name}") for name in p["binaries"])
     static = (
-        f"curl -fsSL --retry 2 --retry-all-errors --retry-delay 5 --connect-timeout 20 "
-        f"--max-time {int(p['download_timeout'])} -o {archive} {q(p['url'])}"
-        f" && echo {q(p['sha256'] + '  ' + archive)} | sha256sum -c -"
+        f'[ "$(uname -m)" = {_STATIC_FFMPEG_ARCH} ]'
+        f" && curl -fsSL --retry 2 --retry-all-errors --retry-delay 5 --connect-timeout 20"
+        f" --max-time {p['download_timeout']} -o {archive} {q(p['url'])}"
+        f" && printf '%s  %s\\n' {q(p['sha256'])} {archive} | sha256sum -c -"
         f" && sudo tar -xJf {archive} -C {q(p['bin_dir'])} --no-same-owner"
         f" --strip-components=2 --wildcards {members}"
     )
-    if not p["apt_fallback"]:
-        return [static]
-    fallback = (
-        'echo "::warning::static ffmpeg download failed; installing from apt (slow)"'
-        " && sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg"
-    )
-    return [f"({static}) || ({fallback})"]
+    if p["apt_fallback"]:
+        installed = " ".join(q(f"{p['bin_dir']}/{name}") for name in p["binaries"])
+        otherwise = (
+            f"sudo rm -f {installed}"
+            ' && echo "::warning::static ffmpeg install failed; installing from apt (slow)"'
+            " && sudo apt-get update"
+            " && sudo apt-get install -y --no-install-recommends ffmpeg"
+        )
+    else:
+        otherwise = "false"
+    return [f"if {static}; then rm -f {archive}; else rm -f {archive}; {otherwise}; fi"]
+
+
+@dataclass(frozen=True)
+class InstallRecipe:
+    """A named install: builds commands from ``defaults`` overridden by parameters.
+
+    ``platforms`` are the ``install.<platform>`` keys the recipe may be named under.
+    """
+
+    commands: Callable[[dict], List[str]]
+    defaults: dict
+    platforms: Tuple[str, ...]
 
 
 #: Recipes ``install.<platform> = "wads:<name>"`` may name; extend by adding to it.
-INSTALL_RECIPES = {"static-ffmpeg": static_ffmpeg_commands}
+INSTALL_RECIPES = {
+    "static-ffmpeg": InstallRecipe(
+        static_ffmpeg_commands, STATIC_FFMPEG_DEFAULTS, platforms=("linux",)
+    ),
+}
+
+#: What a recipe parameter must be, keyed by the type of its default.
+_RECIPE_PARAM_KINDS = {
+    bool: ("a boolean", lambda v: isinstance(v, bool)),
+    int: (
+        "a positive integer",
+        lambda v: isinstance(v, int) and not isinstance(v, bool) and v > 0,
+    ),
+    str: ("a non-empty string", lambda v: isinstance(v, str) and bool(v)),
+    list: (
+        "a non-empty list of strings",
+        lambda v: (
+            isinstance(v, list) and bool(v) and all(isinstance(x, str) for x in v)
+        ),
+    ),
+}
 
 
-def _expand_recipes(commands: List[str], params) -> List[str]:
-    """``commands`` with each ``wads:<name>`` replaced by that recipe's commands.
+def _validate_recipe_params(params, *, defaults: dict) -> None:
+    """Raise ``ValueError`` unless ``params`` can override ``defaults``.
 
-    Raises ``ValueError`` for an unknown recipe or a non-table ``params``.
+    Every key must be one of ``defaults``' and of the same kind as its default; a
+    ``url`` override must come with its ``sha256`` when the recipe checks one.
 
-    >>> _expand_recipes(["echo hi"], {})
-    ['echo hi']
-    >>> _expand_recipes(["wads:nope"], {})
+    >>> _validate_recipe_params({"retries": 2}, defaults={"url": "u"})
     Traceback (most recent call last):
     ...
-    ValueError: unknown install recipe 'wads:nope' (known: static-ffmpeg)
+    ValueError: unknown recipe parameter(s) retries (known: url)
+    >>> _validate_recipe_params({"n": "2"}, defaults={"n": 1})
+    Traceback (most recent call last):
+    ...
+    ValueError: recipe parameter n must be a positive integer, got '2'
     """
     if not isinstance(params, dict):
         raise ValueError(f"recipe parameters must be a table, got {params!r}")
+    unknown = sorted(set(params) - set(defaults))
+    if unknown:
+        raise ValueError(
+            f"unknown recipe parameter(s) {', '.join(unknown)} "
+            f"(known: {', '.join(sorted(defaults))})"
+        )
+    if "url" in params and "sha256" in defaults and "sha256" not in params:
+        raise ValueError("a recipe url override needs its sha256 too")
+    for key, value in params.items():
+        kind, is_valid = _RECIPE_PARAM_KINDS[type(defaults[key])]
+        if not is_valid(value):
+            raise ValueError(f"recipe parameter {key} must be {kind}, got {value!r}")
+
+
+def _expand_recipes(commands: List[str], params, *, platform: str) -> List[str]:
+    """``commands`` with each ``wads:<name>`` replaced by that recipe's commands.
+
+    Raises ``ValueError`` for an unknown recipe, one that does not support
+    ``platform``, or ``params`` it does not accept (see
+    :func:`_validate_recipe_params`).
+
+    >>> _expand_recipes(["echo hi"], {}, platform="linux")
+    ['echo hi']
+    >>> _expand_recipes(["wads:nope"], {}, platform="linux")
+    Traceback (most recent call last):
+    ...
+    ValueError: unknown install recipe 'wads:nope' (known: static-ffmpeg)
+    >>> _expand_recipes(["wads:static-ffmpeg"], {}, platform="macos")
+    Traceback (most recent call last):
+    ...
+    ValueError: install recipe 'wads:static-ffmpeg' supports linux, not macos
+    """
     expanded = []
     for cmd in commands:
         name = cmd.strip()
@@ -255,7 +340,13 @@ def _expand_recipes(commands: List[str], params) -> List[str]:
         if recipe is None:
             known = ", ".join(sorted(INSTALL_RECIPES))
             raise ValueError(f"unknown install recipe {name!r} (known: {known})")
-        expanded += recipe(params)
+        if platform not in recipe.platforms:
+            raise ValueError(
+                f"install recipe {name!r} supports "
+                f"{', '.join(recipe.platforms)}, not {platform}"
+            )
+        _validate_recipe_params(params, defaults=recipe.defaults)
+        expanded += recipe.commands(params)
     return expanded
 
 
@@ -692,7 +783,9 @@ def install_system_dependencies(
                 print(f"Warning: No install command for {dep_name} on {platform}")
             continue
         try:
-            install_cmds = _expand_recipes(install_cmds, dep_config.get("recipe", {}))
+            install_cmds = _expand_recipes(
+                install_cmds, dep_config.get("recipe", {}), platform=platform
+            )
         except ValueError as e:
             if verbose:
                 print(f"✗ {dep_name}: {e}", file=sys.stderr)

@@ -208,11 +208,11 @@ note = "Required for audio processing features"
 
 The `install-system-deps` action in your CI workflow will automatically install these. Declare a `check` for every platform you install on: it skips an install that is not needed, and it is re-run after the install, so a package manager that exits 0 without installing anything (Chocolatey does this when its feed is down) fails the step instead of letting the tests run without the dependency. A failed check triggers one re-install before the step fails. A dependency whose check only passes in a fresh shell can opt out with `verify_install = false`.
 
-For ffmpeg on Linux, prefer the built-in recipe over apt. `apt-get install ffmpeg` pulls about 99 packages from the runner's mirror, which sometimes crawls for 20+ minutes; the recipe installs a pinned, sha256-checked static `ffmpeg` + `ffprobe` build in seconds and falls back to apt (with a warning) only if the download fails:
+For ffmpeg on Linux, prefer the built-in recipe over apt. `apt-get install ffmpeg` pulls about 99 packages from the runner's mirror, which sometimes crawls for 20+ minutes; the recipe installs a pinned, sha256-checked static `ffmpeg` + `ffprobe` build in seconds and falls back to apt (with a warning) only if the download, checksum or extraction fails. The static build is Linux x86_64 only: naming the recipe under another platform fails the dependency, and an arm64 Linux runner goes straight to apt. An unknown or mistyped recipe parameter fails the dependency, and overriding `url` requires its `sha256`:
 
 ```toml
 [tool.wads.ops.ffmpeg]
-check.linux = "which ffmpeg && which ffprobe"   # check ffprobe too: tests that need it skip silently without it
+check.linux = "ffmpeg -version && ffprobe -version"   # running both also catches a wrong-arch or corrupt binary; tests that need ffprobe skip silently without it
 install.linux = "wads:static-ffmpeg"
 install.macos = "brew install ffmpeg"
 
