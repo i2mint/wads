@@ -109,17 +109,20 @@ Extra install rounds for a dependency whose commands succeeded but whose declare
 `check` still fails afterwards (a package manager that reported success for
 nothing — e.g. Chocolatey on a feed 5xx).
 
-### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',))}*
+### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',), min_timeout=900)}*
 
 Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.
 
-### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms)
+### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms, min_timeout=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A named install: builds commands from `defaults` overridden by parameters.
 
 `platforms` are the `install.<platform>` keys the recipe may be named under.
+`min_timeout` (seconds) floors the per-command install timeout of a dependency
+using the recipe unless it declares `install_timeout` itself, so the recipe’s
+own worst case fits whatever the dependency is called (issue #181).
 
 ### wads.install_system_deps.RECIPE_PREFIX *= 'wads:'*
 
@@ -131,7 +134,8 @@ the commands the recipe builds from its defaults overridden by the dependency’
 
 Dependencies with a big dependency tree get a longer ceiling than the global default
 (a cold-cache `apt-get install ffmpeg` outlasts 300s). A declaration or an explicit
-`default_install_timeout` still wins.
+`default_install_timeout` still wins, except that a recipe’s `min_timeout`
+floors the latter (only a per-dependency `install_timeout` goes below it).
 
 ### wads.install_system_deps.STATIC_FFMPEG_DEFAULTS *= {'apt_fallback': True, 'bin_dir': '/usr/local/bin', 'binaries': ['ffmpeg', 'ffprobe'], 'download_timeout': 120, 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz'}*
 
@@ -211,7 +215,8 @@ Install system dependencies from pyproject.toml.
   * **default_install_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Per-command install timeout (seconds) for
     dependencies that declare no `install_timeout` of their own. `None`:
     [`SLOW_DEP_INSTALL_TIMEOUTS`](#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS) for known-slow ones, else
-    `DFLT_INSTALL_TIMEOUT`.
+    `DFLT_INSTALL_TIMEOUT`. Either way, a dependency using an install
+    recipe gets at least the recipe’s `min_timeout`.
   * **apt_lock_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds each apt call waits for the dpkg lock (`None`: no flag).
   * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
     dependencies that declare no `install_retries` of their own.

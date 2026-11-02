@@ -1,4 +1,4 @@
-> built 2026-11-02 01:03 UTC from 45b079a (master) · wads 0.2.68. Details: build_info.json
+> built 2026-11-02 01:19 UTC from 2685aa9 (master) · wads 0.2.69. Details: build_info.json
 
 # index.html.md
 
@@ -3290,17 +3290,20 @@ Extra install rounds for a dependency whose commands succeeded but whose declare
 `check` still fails afterwards (a package manager that reported success for
 nothing — e.g. Chocolatey on a feed 5xx).
 
-### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',))}*
+### wads.install_system_deps.INSTALL_RECIPES *= {'static-ffmpeg': InstallRecipe(commands=<function static_ffmpeg_commands>, defaults={'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz', 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'binaries': ['ffmpeg', 'ffprobe'], 'bin_dir': '/usr/local/bin', 'download_timeout': 120, 'apt_fallback': True}, platforms=('linux',), min_timeout=900)}*
 
 Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.
 
-### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms)
+### *class* wads.install_system_deps.InstallRecipe(commands, defaults, platforms, min_timeout=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A named install: builds commands from `defaults` overridden by parameters.
 
 `platforms` are the `install.<platform>` keys the recipe may be named under.
+`min_timeout` (seconds) floors the per-command install timeout of a dependency
+using the recipe unless it declares `install_timeout` itself, so the recipe’s
+own worst case fits whatever the dependency is called (issue #181).
 
 ### wads.install_system_deps.RECIPE_PREFIX *= 'wads:'*
 
@@ -3312,7 +3315,8 @@ the commands the recipe builds from its defaults overridden by the dependency’
 
 Dependencies with a big dependency tree get a longer ceiling than the global default
 (a cold-cache `apt-get install ffmpeg` outlasts 300s). A declaration or an explicit
-`default_install_timeout` still wins.
+`default_install_timeout` still wins, except that a recipe’s `min_timeout`
+floors the latter (only a per-dependency `install_timeout` goes below it).
 
 ### wads.install_system_deps.STATIC_FFMPEG_DEFAULTS *= {'apt_fallback': True, 'bin_dir': '/usr/local/bin', 'binaries': ['ffmpeg', 'ffprobe'], 'download_timeout': 120, 'sha256': '97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79', 'url': 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz'}*
 
@@ -3392,7 +3396,8 @@ Install system dependencies from pyproject.toml.
   * **default_install_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Per-command install timeout (seconds) for
     dependencies that declare no `install_timeout` of their own. `None`:
     [`SLOW_DEP_INSTALL_TIMEOUTS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS) for known-slow ones, else
-    `DFLT_INSTALL_TIMEOUT`.
+    `DFLT_INSTALL_TIMEOUT`. Either way, a dependency using an install
+    recipe gets at least the recipe’s `min_timeout`.
   * **apt_lock_timeout** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Seconds each apt call waits for the dpkg lock (`None`: no flag).
   * **default_install_retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Retries per failed install command for
     dependencies that declare no `install_retries` of their own.
@@ -8036,18 +8041,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-02 01:03 UTC** from commit <a href="https://github.com/i2mint/wads/commit/45b079a37bc01e554ad5c9ec0beabb4e529fb128"><code>45b079a</code></a> on branch <code>master</code>, for **wads 0.2.68** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-02 01:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/2685aa9633564a839a7cd3b3b34baa322e03a6bb"><code>2685aa9</code></a> on branch <code>master</code>, for **wads 0.2.69** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.68) is behind the latest release on PyPI (0.2.69): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.69) is behind the latest release on PyPI (0.2.70): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/45b079a37bc01e554ad5c9ec0beabb4e529fb128"><code>45b079a37bc01e554ad5c9ec0beabb4e529fb128</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/2685aa9633564a839a7cd3b3b34baa322e03a6bb"><code>2685aa9633564a839a7cd3b3b34baa322e03a6bb</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8058,9 +8063,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41370149391">41370149391</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41371628503">41371628503</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>45b079a37bc01e554ad5c9ec0beabb4e529fb128</code> (in the history of the built commit) |
+| Event commit | <code>2685aa9633564a839a7cd3b3b34baa322e03a6bb</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8085,13 +8090,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.69/">0.2.69</a>, newer than the documented version (0.2.68).
+Latest release: <a href="https://pypi.org/project/wads/0.2.70/">0.2.70</a>, newer than the documented version (0.2.69).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 45b079a37bc01e554ad5c9ec0beabb4e529fb128
+git checkout 2685aa9633564a839a7cd3b3b34baa322e03a6bb
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

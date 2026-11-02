@@ -375,7 +375,8 @@
 <span class="n">DFLT_INSTALL_TIMEOUT</span> <span class="o">=</span> <span class="mi">300</span>
 <span class="c1">#: Dependencies with a big dependency tree get a longer ceiling than the global default</span>
 <span class="c1">#: (a cold-cache ``apt-get install ffmpeg`` outlasts 300s). A declaration or an explicit</span>
-<span class="c1">#: ``default_install_timeout`` still wins.</span>
+<span class="c1">#: ``default_install_timeout`` still wins, except that a recipe's ``min_timeout``</span>
+<span class="c1">#: floors the latter (only a per-dependency ``install_timeout`` goes below it).</span>
 <span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ffmpeg"</span><span class="p">:</span> <span class="mi">900</span><span class="p">}</span>
 
 <span class="c1">#: An install command of the form ``wads:&lt;name&gt;`` names a recipe here, expanded into</span>
@@ -530,9 +531,12 @@
         <span class="n">installed</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">q</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">'bin_dir'</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">p</span><span class="p">[</span><span class="s2">"binaries"</span><span class="p">])</span>
         <span class="n">otherwise</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">"sudo rm -f </span><span class="si">{</span><span class="n">installed</span><span class="si">}</span><span class="s2">"</span>
-            <span class="s1">' &amp;&amp; echo "::warning::static ffmpeg install failed; installing from apt (slow)"'</span>
+            <span class="s1">' &amp;&amp; echo "::warning::static ffmpeg not installed (not x86_64, or the'</span>
+            <span class="s1">' download, checksum or extraction failed); installing from apt (slow)"'</span>
             <span class="s2">" &amp;&amp; sudo apt-get update"</span>
-            <span class="s2">" &amp;&amp; sudo apt-get install -y --no-install-recommends ffmpeg"</span>
+            <span class="c1"># --reinstall: if bin_dir is apt's own (/usr/bin), the rm above removed</span>
+            <span class="c1"># files of an installed package, which a plain install would not restore.</span>
+            <span class="s2">" &amp;&amp; sudo apt-get install -y --reinstall --no-install-recommends ffmpeg"</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">otherwise</span> <span class="o">=</span> <span class="s2">"false"</span>
@@ -547,18 +551,26 @@
 <span class="w">    </span><span class="sd">"""A named install: builds commands from ``defaults`` overridden by parameters.</span>
 
 <span class="sd">    ``platforms`` are the ``install.&lt;platform&gt;`` keys the recipe may be named under.</span>
+<span class="sd">    ``min_timeout`` (seconds) floors the per-command install timeout of a dependency</span>
+<span class="sd">    using the recipe unless it declares ``install_timeout`` itself, so the recipe's</span>
+<span class="sd">    own worst case fits whatever the dependency is called (issue #181).</span>
 <span class="sd">    """</span>
 
     <span class="n">commands</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="n">defaults</span><span class="p">:</span> <span class="nb">dict</span>
-    <span class="n">platforms</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span></div>
+    <span class="n">platforms</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">min_timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
 <span class="c1">#: Recipes ``install.&lt;platform&gt; = "wads:&lt;name&gt;"`` may name; extend by adding to it.</span>
 <span class="n">INSTALL_RECIPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># The apt fallback runs inside the same command, so the floor is apt's ffmpeg one.</span>
     <span class="s2">"static-ffmpeg"</span><span class="p">:</span> <span class="n">InstallRecipe</span><span class="p">(</span>
-        <span class="n">static_ffmpeg_commands</span><span class="p">,</span> <span class="n">STATIC_FFMPEG_DEFAULTS</span><span class="p">,</span> <span class="n">platforms</span><span class="o">=</span><span class="p">(</span><span class="s2">"linux"</span><span class="p">,)</span>
+        <span class="n">static_ffmpeg_commands</span><span class="p">,</span>
+        <span class="n">STATIC_FFMPEG_DEFAULTS</span><span class="p">,</span>
+        <span class="n">platforms</span><span class="o">=</span><span class="p">(</span><span class="s2">"linux"</span><span class="p">,),</span>
+        <span class="n">min_timeout</span><span class="o">=</span><span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span><span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">],</span>
     <span class="p">),</span>
 <span class="p">}</span>
 
@@ -608,6 +620,21 @@
         <span class="n">kind</span><span class="p">,</span> <span class="n">is_valid</span> <span class="o">=</span> <span class="n">_RECIPE_PARAM_KINDS</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">defaults</span><span class="p">[</span><span class="n">key</span><span class="p">])]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"recipe parameter </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recipe_timeout_floor</span><span class="p">(</span><span class="n">commands</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The largest ``min_timeout`` of the recipes ``commands`` name (0 when none).</span>
+
+<span class="sd">    &gt;&gt;&gt; _recipe_timeout_floor(["echo hi"]), _recipe_timeout_floor(["wads:static-ffmpeg"])</span>
+<span class="sd">    (0, 900)</span>
+<span class="sd">    """</span>
+    <span class="n">floors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">recipe</span><span class="o">.</span><span class="n">min_timeout</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">commands</span>
+        <span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">RECIPE_PREFIX</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="n">recipe</span> <span class="o">:=</span> <span class="n">INSTALL_RECIPES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="nb">len</span><span class="p">(</span><span class="n">RECIPE_PREFIX</span><span class="p">)</span> <span class="p">:]))</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">floors</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_expand_recipes</span><span class="p">(</span><span class="n">commands</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">params</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -925,7 +952,8 @@
 <span class="sd">        default_install_timeout: Per-command install timeout (seconds) for</span>
 <span class="sd">            dependencies that declare no ``install_timeout`` of their own. ``None``:</span>
 <span class="sd">            :data:`SLOW_DEP_INSTALL_TIMEOUTS` for known-slow ones, else</span>
-<span class="sd">            :data:`DFLT_INSTALL_TIMEOUT`.</span>
+<span class="sd">            :data:`DFLT_INSTALL_TIMEOUT`. Either way, a dependency using an install</span>
+<span class="sd">            recipe gets at least the recipe's ``min_timeout``.</span>
 <span class="sd">        apt_lock_timeout: Seconds each apt call waits for the dpkg lock (``None``: no flag).</span>
 <span class="sd">        default_install_retries: Retries per failed install command for</span>
 <span class="sd">            dependencies that declare no ``install_retries`` of their own.</span>
@@ -1019,12 +1047,12 @@
             <span class="k">return</span> <span class="n">default_install_timeout</span>
         <span class="k">return</span> <span class="n">SLOW_DEP_INSTALL_TIMEOUTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">DFLT_INSTALL_TIMEOUT</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">setting_for</span><span class="p">(</span>
             <span class="n">dep_name</span><span class="p">,</span>
             <span class="n">dep_config</span><span class="p">,</span>
             <span class="s2">"install_timeout"</span><span class="p">,</span>
-            <span class="n">fallback_timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">),</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">fallback_timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">),</span> <span class="n">floor</span><span class="p">),</span>
             <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1069,15 +1097,11 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"URL: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="n">check_cmds</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"check"</span><span class="p">,</span> <span class="n">platform</span><span class="p">))</span>
-        <span class="c1"># Check if already installed</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_check</span> <span class="ow">and</span> <span class="n">check_cmds</span> <span class="ow">and</span> <span class="n">is_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed"</span><span class="p">)</span>
-            <span class="n">skipped_count</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">continue</span>
 
-        <span class="c1"># Get install commands. A non-table `install` is a config error, not "nothing</span>
-        <span class="c1"># to install here": failing it keeps a typo from going green silently.</span>
+        <span class="c1"># Configuration errors fail the dependency before the pre-check, so one is</span>
+        <span class="c1"># reported even on a machine that already has the dependency (issue #181).</span>
+        <span class="c1"># A non-table `install` is a config error, not "nothing to install here":</span>
+        <span class="c1"># failing it keeps a typo from going green silently.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="p">{}),</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
@@ -1088,15 +1112,10 @@
                 <span class="p">)</span>
             <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">continue</span>
-        <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="n">platform</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: No install command for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">continue</span>
+        <span class="n">declared_cmds</span> <span class="o">=</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"install"</span><span class="p">,</span> <span class="n">platform</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">install_cmds</span> <span class="o">=</span> <span class="n">_expand_recipes</span><span class="p">(</span>
-                <span class="n">install_cmds</span><span class="p">,</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe"</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span>
+                <span class="n">declared_cmds</span><span class="p">,</span> <span class="n">dep_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recipe"</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -1104,8 +1123,22 @@
             <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">continue</span>
 
+        <span class="c1"># Check if already installed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_check</span> <span class="ow">and</span> <span class="n">check_cmds</span> <span class="ow">and</span> <span class="n">is_installed</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">check_cmds</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> is already installed"</span><span class="p">)</span>
+            <span class="n">skipped_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">install_cmds</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Warning: No install command for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">platform</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">continue</span>
+
         <span class="c1"># Install</span>
-        <span class="n">install_timeout</span> <span class="o">=</span> <span class="n">timeout_for</span><span class="p">(</span><span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">)</span>
+        <span class="n">install_timeout</span> <span class="o">=</span> <span class="n">timeout_for</span><span class="p">(</span>
+            <span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="n">_recipe_timeout_floor</span><span class="p">(</span><span class="n">declared_cmds</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Installing </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">... (timeout: </span><span class="si">{</span><span class="n">install_timeout</span><span class="si">}</span><span class="s2">s per command)"</span>
@@ -1279,7 +1312,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=29cf871c"></script>
+</div><script src="../../_static/documentation_options.js?v=808ff37a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
