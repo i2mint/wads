@@ -32,6 +32,12 @@ WINDOWS_JOB_LITERAL_ENV = ("PYTHONUTF8", "PYTHONIOENCODING")
 # subject carrying the run-ci marker, or a manual workflow_dispatch.
 TRIGGER_MODES = ("auto", "on-demand")
 DFLT_TRIGGER_MODE = "auto"
+#: Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.
+#: GitHub's own default is 360, which lets one stalled step (an apt mirror crawling,
+#: a hung test) hold a runner for six hours (issue #160). High enough that no
+#: healthy run should hit it; lower it per repo with
+#: ``[tool.wads.ci.testing].job_timeout_minutes``.
+DFLT_JOB_TIMEOUT_MINUTES = 60
 DFLT_RUN_CI_MARKER = "[run ci]"
 #: The deploy rung of the on-demand ladder (i2mint/wads#131): validation, then the
 #: publish / Pages jobs. ``run_ci_publishes`` keeps today's behaviour by default
@@ -423,6 +429,24 @@ class CIConfig:
         ``publish`` does not depend on the Windows job.
         """
         return self.testing_config.get("windows_blocking", False)
+
+    @property
+    def job_timeout_minutes(self) -> int:
+        """Minutes a validation job may run before GitHub stops it (``timeout-minutes``).
+
+        ``[tool.wads.ci.testing].job_timeout_minutes``, a positive integer; anything
+        else falls back to :data:`DFLT_JOB_TIMEOUT_MINUTES`. Applied to the Linux
+        ``validation`` matrix and to ``windows-validation`` in the uv workflows.
+
+        >>> CIConfig({}).job_timeout_minutes == DFLT_JOB_TIMEOUT_MINUTES
+        True
+        >>> CIConfig({"tool": {"wads": {"ci": {"testing": {"job_timeout_minutes": 15}}}}}).job_timeout_minutes
+        15
+        """
+        value = self.testing_config.get("job_timeout_minutes", DFLT_JOB_TIMEOUT_MINUTES)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            return DFLT_JOB_TIMEOUT_MINUTES
+        return value
 
     @property
     def system_dependencies(self) -> dict | list:

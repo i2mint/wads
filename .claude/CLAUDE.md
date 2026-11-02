@@ -20,7 +20,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 |---------|---------|
 | `[project]` | Standard Python project metadata |
 | `[tool.wads.ci.install]` | `extras` — package extras CI installs (`.[extras]`); empty = core deps only |
-| `[tool.wads.ci.testing]` | Python versions, pytest args, coverage, Windows testing |
+| `[tool.wads.ci.testing]` | Python versions, pytest args, coverage, Windows testing, `job_timeout_minutes` (validation jobs' `timeout-minutes`, default 60) |
 | `[tool.wads.ci.commands]` | Pre-test, test, post-test, lint, format commands |
 | `[tool.wads.ci.env]` | Environment variables (required, test, extra, defaults) |
 | `[tool.wads.ci.quality]` | Ruff/Black/Mypy settings |
@@ -29,7 +29,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 | `[tool.wads.ci.trigger]` | `mode = "auto"` (default) or `"on-demand"`: nothing runs unless the commit subject has `run_ci_marker` (default `[run ci]`: validate, and also deploy while `run_ci_publishes = true`, the default) or `deploy_marker` (default `[run deploy]`: validate then publish/Pages), or the run is a `workflow_dispatch` (`level` input `config`\|`validate`\|`deploy`; `config`, the default, follows `run_ci_publishes`). `run_ci_publishes = false` makes `[run ci]` validate only. The level is decided by the setup job's "Decide trigger level" step (`validate`/`deploy` outputs). Stub rendering + the `ci-on-demand` flip live in `wads/ci_trigger.py`; `wads ci-local` (`wads/ci_local.py`) runs the same config locally |
 | `[tool.wads.ci.docs]` | Documentation generation (epythet) |
 | `[tool.wads.ci.metrics]` | Code metrics tracking (umpyre) |
-| `[tool.wads.ops.*]` | System/OS-level dependencies (ffmpeg, ODBC, etc.) |
+| `[tool.wads.ops.*]` | System/OS-level dependencies (ffmpeg, ODBC, etc.); an install may name a recipe, e.g. `install.linux = "wads:static-ffmpeg"` (`INSTALL_RECIPES` in `install_system_deps.py`) |
 
 ## Project Structure
 

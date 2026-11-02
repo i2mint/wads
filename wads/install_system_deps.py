@@ -25,6 +25,16 @@ sets the fallback. Worst case for a command that always fails is
 ``(retries + 1) * install_timeout`` plus the backoff waits. Commands are retried one at a time, so a successful
 ``apt-get update`` is not repeated when only the following install flaked.
 
+An install command may name a wads recipe instead of spelling it out (issue #160)::
+
+    [tool.wads.ops.ffmpeg]
+    check.linux = "which ffmpeg && which ffprobe"
+    install.linux = "wads:static-ffmpeg"
+
+expands to :func:`static_ffmpeg_commands`: a pinned, sha256-checked static build in
+seconds instead of a crawling apt mirror, with apt as the fallback. Override its
+parameters (``url``, ``sha256``, ...) under ``[tool.wads.ops.ffmpeg.recipe]``.
+
 An install whose commands all exit 0 is not trusted on that alone: when the dependency
 declares a ``check.<platform>``, that check is re-run afterwards, and a dependency whose
 check still fails is re-installed (:data:`DFLT_VERIFY_RETRIES` more rounds, each after a
@@ -80,6 +90,24 @@ DFLT_INSTALL_TIMEOUT = 300
 #: (a cold-cache ``apt-get install ffmpeg`` outlasts 300s). A declaration or an explicit
 #: ``default_install_timeout`` still wins.
 SLOW_DEP_INSTALL_TIMEOUTS = {"ffmpeg": 900}
+
+#: An install command of the form ``wads:<name>`` names a recipe here, expanded into
+#: the commands the recipe builds from its defaults overridden by the dependency's
+#: ``[tool.wads.ops.<dep>.recipe]`` table (issue #160).
+RECIPE_PREFIX = "wads:"
+#: Static ffmpeg + ffprobe for linux64: BtbN/FFmpeg-Builds keeps each month-end
+#: autobuild, so this pinned asset does not expire. Checked against its sha256.
+STATIC_FFMPEG_DEFAULTS = {
+    "url": (
+        "https://github.com/BtbN/FFmpeg-Builds/releases/download/"
+        "autobuild-2026-09-30-13-08/ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1.tar.xz"
+    ),
+    "sha256": "97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79",
+    "binaries": ["ffmpeg", "ffprobe"],
+    "bin_dir": "/usr/local/bin",
+    "download_timeout": 120,
+    "apt_fallback": True,
+}
 #: Seconds apt waits for the dpkg lock before giving up (``-o DPkg::Lock::Timeout``).
 DFLT_APT_LOCK_TIMEOUT = 120
 #: Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.
@@ -163,6 +191,72 @@ def _platform_value(dep_config: dict, key: str, platform: str):
     """
     table = dep_config.get(key)
     return table.get(platform) if isinstance(table, dict) else None
+
+
+def static_ffmpeg_commands(params: dict) -> List[str]:
+    """Commands installing a static ffmpeg build: download, verify, extract, else apt.
+
+    A static build takes seconds; ``apt-get install ffmpeg`` pulls ~99 packages from
+    a runner mirror that sometimes crawls for 20+ minutes, which no timeout or retry
+    cures (issue #160). ``params`` overrides :data:`STATIC_FFMPEG_DEFAULTS`: ``url``
+    and ``sha256`` of a ``.tar.xz`` whose ``*/bin/`` holds ``binaries``, extracted
+    into ``bin_dir``. When the download or the checksum fails and ``apt_fallback`` is
+    true, apt installs ffmpeg instead (``--no-install-recommends``) with a warning.
+
+    >>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
+    >>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
+    True
+    """
+    p = {**STATIC_FFMPEG_DEFAULTS, **params}
+    q = shlex.quote
+    archive = "/tmp/wads-static-ffmpeg.tar.xz"
+    members = " ".join(q(f"*/bin/{name}") for name in p["binaries"])
+    static = (
+        f"curl -fsSL --retry 2 --retry-all-errors --retry-delay 5 --connect-timeout 20 "
+        f"--max-time {int(p['download_timeout'])} -o {archive} {q(p['url'])}"
+        f" && echo {q(p['sha256'] + '  ' + archive)} | sha256sum -c -"
+        f" && sudo tar -xJf {archive} -C {q(p['bin_dir'])} --no-same-owner"
+        f" --strip-components=2 --wildcards {members}"
+    )
+    if not p["apt_fallback"]:
+        return [static]
+    fallback = (
+        'echo "::warning::static ffmpeg download failed; installing from apt (slow)"'
+        " && sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg"
+    )
+    return [f"({static}) || ({fallback})"]
+
+
+#: Recipes ``install.<platform> = "wads:<name>"`` may name; extend by adding to it.
+INSTALL_RECIPES = {"static-ffmpeg": static_ffmpeg_commands}
+
+
+def _expand_recipes(commands: List[str], params) -> List[str]:
+    """``commands`` with each ``wads:<name>`` replaced by that recipe's commands.
+
+    Raises ``ValueError`` for an unknown recipe or a non-table ``params``.
+
+    >>> _expand_recipes(["echo hi"], {})
+    ['echo hi']
+    >>> _expand_recipes(["wads:nope"], {})
+    Traceback (most recent call last):
+    ...
+    ValueError: unknown install recipe 'wads:nope' (known: static-ffmpeg)
+    """
+    if not isinstance(params, dict):
+        raise ValueError(f"recipe parameters must be a table, got {params!r}")
+    expanded = []
+    for cmd in commands:
+        name = cmd.strip()
+        if not name.startswith(RECIPE_PREFIX):
+            expanded.append(cmd)
+            continue
+        recipe = INSTALL_RECIPES.get(name[len(RECIPE_PREFIX) :])
+        if recipe is None:
+            known = ", ".join(sorted(INSTALL_RECIPES))
+            raise ValueError(f"unknown install recipe {name!r} (known: {known})")
+        expanded += recipe(params)
+    return expanded
 
 
 def check_if_installed(
@@ -591,11 +685,18 @@ def install_system_dependencies(
                 )
             failed_count += 1
             continue
-        install_cmds = _platform_value(dep_config, "install", platform)
+        install_cmds = _as_commands(_platform_value(dep_config, "install", platform))
 
         if not install_cmds:
             if verbose:
                 print(f"Warning: No install command for {dep_name} on {platform}")
+            continue
+        try:
+            install_cmds = _expand_recipes(install_cmds, dep_config.get("recipe", {}))
+        except ValueError as e:
+            if verbose:
+                print(f"✗ {dep_name}: {e}", file=sys.stderr)
+            failed_count += 1
             continue
 
         # Install
