@@ -11,15 +11,18 @@ process's PID. :func:`sweep_stale_workdirs` removes directories with the same pr
 are older than ``min_age`` seconds and whose owner is not running. A directory with no
 owner file (made by an older version) is judged by age alone. Owner liveness is checked
 with ``os.kill(pid, 0)`` on POSIX only; elsewhere age is the only test, because on
-Windows ``os.kill`` with signal 0 terminates the process instead of probing it.
+Windows ``os.kill`` with signal 0 terminates the process instead of probing it. On POSIX
+the sweep also leaves alone directories another user owns: it could not remove them from
+a shared ``/tmp`` anyway, and root should not age-sweep other users' work.
 
 >>> import tempfile
 >>> root = tempfile.mkdtemp()
 >>> d = make_workdir("demo-", root=root)
->>> sweep_stale_workdirs("demo-", root=root, min_age=0)  # its owner (us) is alive
+>>> sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: True)
 []
 >>> sweep_stale_workdirs("demo-", root=root, min_age=0, is_alive=lambda pid: False) == [d]
 True
+>>> import shutil; shutil.rmtree(root)
 """
 
 from __future__ import annotations
@@ -33,8 +36,10 @@ from typing import Callable, Optional
 
 #: Name of the file inside a work directory that holds its owner's PID.
 OWNER_FILE = ".owner-pid"
+#: Seconds in an hour.
+HOUR = 3600
 #: A work directory younger than this (seconds) is never swept, whoever owns it.
-DFLT_STALE_AGE = 6 * 3600
+DFLT_STALE_AGE = 6 * HOUR
 
 
 def make_workdir(prefix: str, *, root: Optional[str] = None) -> str:
@@ -68,10 +73,13 @@ def _owner_pid(workdir: Path) -> Optional[int]:
 
 def _is_stale(workdir: Path, *, min_age: float, now: float, is_alive: Callable) -> bool:
     try:
-        age = now - workdir.stat().st_mtime
+        st = workdir.stat()
     except OSError:
         return False
-    if age < min_age:
+    getuid = getattr(os, "getuid", None)  # POSIX only
+    if getuid is not None and st.st_uid != getuid():
+        return False
+    if now - st.st_mtime < min_age:
         return False
     pid = _owner_pid(workdir)
     return pid is None or is_alive(pid) is not True
@@ -82,18 +90,18 @@ def sweep_stale_workdirs(
     *,
     root: Optional[str] = None,
     min_age: float = DFLT_STALE_AGE,
-    now: Optional[float] = None,
     is_alive: Callable[[int], Optional[bool]] = pid_alive,
 ) -> list[str]:
     """Remove ``<root>/<prefix>*`` directories that are stale; return the removed paths.
 
-    Stale: last modified at least ``min_age`` seconds ago, and either no owner file or an
-    owner that ``is_alive`` does not confirm running (``False`` or ``None``). ``root``
+    Stale: owned by this user (POSIX), last modified at least ``min_age`` seconds ago, and
+    either no owner file or an owner that ``is_alive`` does not confirm running (``False``
+    or ``None``). Symbolic links are never followed or removed. ``root``
     defaults to the system temp directory. Removal errors are ignored: a directory that
     cannot be removed is not reported.
     """
     root_path = Path(root or tempfile.gettempdir())
-    now = time.time() if now is None else now
+    now = time.time()
     removed = []
     for workdir in sorted(root_path.glob(f"{prefix}*")):
         if not workdir.is_dir() or workdir.is_symlink():

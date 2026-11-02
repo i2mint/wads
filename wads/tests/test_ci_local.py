@@ -129,7 +129,12 @@ def test_default_plan_mirrors_the_ci_validation_job(tmp_path):
     assert by_name["python 3.12: install pytest"].argv[-2:] == ("pytest", "pytest-cov")
     tests = by_name["python 3.12: tests"].argv
     assert tests[:3] == ("<<workdir>>/py3.12/bin/python", "-m", "pytest")
-    assert list(tests[3:]) == pytest_argv(_config(), repo=tmp_path)
+    # CI's pytest arguments, then ci-local's private basetemp (issue #159)
+    assert list(tests[3:]) == [
+        *pytest_argv(_config(), repo=tmp_path),
+        "--basetemp",
+        "<<workdir>>/pytest",
+    ]
     assert by_name["build"].argv == ("uv", "build", "--out-dir", "<<workdir>>/dist")
     assert not any(step.side_effect for step in steps), "validation has no side effects"
 
@@ -627,3 +632,61 @@ def test_a_full_temp_filesystem_fails_before_any_command(repo, tmp_path, monkeyp
     assert not report.ok and report.failure.name == "temp space"
     assert "0.1 GB free" in report.outcomes[0][2]
     assert runner.calls == []
+
+
+def _statvfs_reporting(monkeypatch, *, favail):
+    """Make ``os.statvfs`` report ``favail`` free inodes (bytes stay real)."""
+    real = os.statvfs
+
+    class Stats:
+        def __init__(self, path):
+            self._real, self.f_files, self.f_favail = real(path), 10**6, favail
+
+        def __getattr__(self, name):
+            return getattr(self._real, name)
+
+    monkeypatch.setattr(ci_local_module.os, "statvfs", Stats)
+
+
+@pytest.mark.skipif(not hasattr(os, "statvfs"), reason="inodes are POSIX only")
+def test_an_inode_shortfall_fails_before_any_command(repo, tmp_path, monkeypatch):
+    _statvfs_reporting(monkeypatch, favail=5)
+    runner = FakeRunner()
+    report = run_ci_local(
+        repo, runner=runner, environ={}, out=io.StringIO(), workdir_root=str(tmp_path)
+    )
+    assert not report.ok and report.failure.name == "temp space"
+    assert "only 5 inodes free" in report.outcomes[0][2]
+    assert runner.calls == []
+
+
+def test_a_run_without_venvs_skips_the_temp_space_check(repo, monkeypatch):
+    monkeypatch.setattr(ci_local_module, "_temp_space_step", None)  # never built
+    config = _config(testing={"enabled": False})
+    report = run_ci_local(
+        repo, config=config, runner=FakeRunner(), environ={}, out=io.StringIO()
+    )
+    assert report.ok and "temp space" not in _names(s for s, *_ in report.outcomes)
+
+
+def test_a_failing_sweep_does_not_stop_the_run(repo, monkeypatch):
+    def broken_sweep(*args, **kwargs):
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(ci_local_module, "sweep_stale_workdirs", broken_sweep)
+    out = io.StringIO()
+    report = run_ci_local(repo, runner=FakeRunner(), environ={}, out=out)
+    assert report.ok
+    assert "Note: skipped the stale workdir sweep (denied)" in out.getvalue()
+
+
+def test_dry_run_header_names_the_sweep_and_the_space_needed():
+    text = render_plan(plan_ci_local(".", config=_config()))
+    assert (
+        "A real run first removes stale wads-ci-local-* workdirs older than 6 h "
+        "whose owner is gone, and requires about 2.0 GB / 200,000 inodes free."
+    ) in text
+    no_venvs = render_plan(
+        plan_ci_local(".", config=_config(testing={"enabled": False}))
+    )
+    assert "whose owner is gone." in no_venvs and "requires" not in no_venvs

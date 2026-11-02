@@ -6,9 +6,13 @@ import sys
 
 import pytest
 
-from wads.workdirs import OWNER_FILE, make_workdir, pid_alive, sweep_stale_workdirs
-
-HOUR = 3600
+from wads.workdirs import (
+    HOUR,
+    OWNER_FILE,
+    make_workdir,
+    pid_alive,
+    sweep_stale_workdirs,
+)
 
 
 def _dir(root, name, *, age, owner=None):
@@ -55,6 +59,27 @@ def test_make_workdir_records_this_process_as_owner(tmp_path):
     d = make_workdir("wads-ci-local-", root=str(tmp_path))
     assert os.path.basename(d).startswith("wads-ci-local-")
     assert (tmp_path / os.path.basename(d) / OWNER_FILE).read_text() == str(os.getpid())
+
+
+def test_sweep_never_follows_a_symlink(tmp_path):
+    target = _dir(tmp_path, "elsewhere", age=9 * HOUR)
+    link = tmp_path / "wads-ci-local-link"
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks need privileges here")
+    swept = sweep_stale_workdirs(
+        "wads-ci-local-", root=str(tmp_path), is_alive=lambda pid: False
+    )
+    assert swept == [] and link.is_symlink() and target.exists()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="ownership is only checked on POSIX")
+def test_sweep_leaves_another_users_workdir_alone(tmp_path, monkeypatch):
+    d = _dir(tmp_path, "wads-ci-local-theirs", age=9 * HOUR)
+    monkeypatch.setattr(os, "getuid", lambda: d.stat().st_uid + 1)
+    assert sweep_stale_workdirs("wads-ci-local-", root=str(tmp_path)) == []
+    assert d.exists()
 
 
 @pytest.mark.skipif(os.name != "posix", reason="liveness is only probed on POSIX")
