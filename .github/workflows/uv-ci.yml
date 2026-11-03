@@ -528,7 +528,7 @@ jobs:
       # fmt, clippy (warnings denied) and cargo test on the pure-Rust crates, once:
       # the answer does not vary with the Python version.
       - name: Rust Checks
-        if: needs.setup.outputs.native == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
+        if: needs.setup.outputs.native == 'true' && !matrix.pinned && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
         uses: i2mint/wads/actions/rust-checks@master
         with:
           cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options || '{}').cargo_test_args) }}
