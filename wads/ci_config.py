@@ -150,11 +150,18 @@ def _requirement(text: str) -> str:
     from packaging.requirements import InvalidRequirement, Requirement
 
     try:
-        Requirement(text)
+        requirement = Requirement(text)
     except InvalidRequirement:
         raise ValueError(
             f"requirements: {text!r} is not a PEP 508 requirement"
         ) from None
+    if requirement.marker is not None:
+        # uv would skip it where the marker is false, leaving the leg silently unpinned;
+        # a pinned run picks its Python with python_version instead.
+        raise ValueError(
+            f"requirements: {text!r} has an environment marker; use the entry's "
+            "python_version instead"
+        )
     return text
 
 

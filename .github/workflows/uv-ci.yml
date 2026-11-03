@@ -434,7 +434,7 @@ jobs:
   # it had before (`Validation (3.10)`, ...); the explicit `name:` keeps the
   # `pinned: false` key out of them.
   validation:
-    name: ${{ matrix.pinned && format('Validation (pinned {0})', matrix.pinned.name) || format('Validation ({0})', matrix.python-version) }}
+    name: ${{ matrix.pinned && format('Validation (pinned {0})', matrix.pinned.name) || matrix.python-version && format('Validation ({0})', matrix.python-version) || 'Validation' }}
     # Least privilege (#113): this job runs the repo's code or reads config;
     # it never pushes, so its GITHUB_TOKEN cannot write either.
     permissions:
@@ -447,6 +447,9 @@ jobs:
     # `|| '60'` keeps the job startable if the output is ever missing.
     timeout-minutes: ${{ fromJSON(needs.setup.outputs.job-timeout-minutes || '60') }}
     strategy:
+      # GitHub's default (true) unless pinned legs exist: then a failing old-dependency
+      # leg must not cancel the legs that say whether the current dependencies pass.
+      fail-fast: ${{ needs.setup.outputs.pinned-runs == '[]' || needs.setup.outputs.pinned-runs == '' }}
       matrix:
         python-version: ${{ fromJson(needs.setup.outputs.python-versions) }}
         pinned: [false]
@@ -490,6 +493,7 @@ jobs:
         env:
           PINNED_REQUIREMENTS: ${{ toJSON(matrix.pinned.requirements) }}
           INSTALL_EXTRAS: ${{ needs.setup.outputs.install-extras }}
+          COVERAGE: ${{ needs.setup.outputs.coverage-enabled }}
         run: |
           source .venv/bin/activate
           target=.
@@ -500,8 +504,12 @@ jobs:
             echo "::error::no pinned requirements reached this step (PINNED_REQUIREMENTS: $PINNED_REQUIREMENTS)"
             exit 1
           fi
+          # pytest joins the resolve, so run-tests-uv's later pytest install is a no-op
+          # and cannot re-upgrade a pin in pytest's own closure (pluggy, packaging, ...).
+          runner=(pytest)
+          if [ "$COVERAGE" = "true" ]; then runner+=(pytest-cov); fi
           echo "Resolving $target with: ${reqs[*]}"
-          uv pip install -e "$target" "${reqs[@]}"
+          uv pip install -e "$target" "${reqs[@]}" "${runner[@]}"
           uv pip check
           uv pip list
 

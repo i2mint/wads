@@ -203,14 +203,12 @@ def pytest_argv(
     *,
     repo=None,
     pytest_args: Optional[Sequence[str]] = None,
-    coverage: Optional[bool] = None,
 ) -> list[str]:
     """The pytest arguments ``actions/run-tests-uv`` builds, in its order.
 
     The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config
-    sets them (``repo=None``: not checked, defaults passed). ``pytest_args`` and
-    ``coverage`` default to the config's (a pinned leg passes its own ``pytest_args``,
-    issue #189).
+    sets them (``repo=None``: not checked, defaults passed). ``pytest_args`` defaults
+    to the config's (a pinned leg passes its own, issue #189).
 
     >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE
     ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
@@ -218,9 +216,8 @@ def pytest_argv(
      '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']
     """
     pytest_args = config.pytest_args if pytest_args is None else pytest_args
-    coverage = config.coverage_enabled if coverage is None else coverage
     argv = []
-    if coverage:
+    if config.coverage_enabled:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
     argv += ["--doctest-modules"]
     extra = " ".join(pytest_args)
@@ -399,7 +396,9 @@ def _leg_steps(
     )
     steps = [
         Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
-        Step(f"{label}: install", (*install, *pins)),
+        # A pinned leg resolves pytest with the pins, so the later pytest install is a
+        # no-op and cannot re-upgrade a pin in pytest's own closure (pluggy, ...).
+        Step(f"{label}: install", (*install, *pins, *(runner_deps if pins else ()))),
     ]
     if pins:
         steps.append(

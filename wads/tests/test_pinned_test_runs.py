@@ -313,7 +313,10 @@ def test_requirements_reach_the_shell_only_through_the_environment():
     assert "${{" not in pin["run"]
 
 
-@pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
+@pytest.mark.skipif(
+    os.name != "posix" or shutil.which("bash") is None,
+    reason="needs a POSIX bash (Windows may resolve WSL's bash.exe); the step runs on Linux",
+)
 @pytest.mark.parametrize("extras, target", [("", "."), ("test,dev", ".[test,dev]")])
 def test_the_pin_step_script_passes_each_requirement_as_one_argument(
     tmp_path, extras, target
@@ -326,11 +329,13 @@ def test_the_pin_step_script_passes_each_requirement_as_one_argument(
     uv.write_text(f'#!/bin/sh\nprintf "%s|" "$@" >> "{log}"\necho >> "{log}"\n')
     uv.chmod(0o755)
     (bin_dir / "activate").write_text(f'PATH="{bin_dir}:$PATH"\n')
-    requirements = ["x>=1,<2", 'y==1; python_version < "3.12"']
+    # The step quotes each value whole, whatever shell characters it holds.
+    requirements = ["x>=1,<2", 'y[a,b]==1 ; "z"']
     env = dict(
         os.environ,
         PINNED_REQUIREMENTS=json.dumps(requirements),
         INSTALL_EXTRAS=extras,
+        COVERAGE="true",
     )
     script = _step("Install Pinned Requirements")["run"]
     result = subprocess.run(
@@ -342,11 +347,23 @@ def test_the_pin_step_script_passes_each_requirement_as_one_argument(
     )
     assert result.returncode == 0, result.stderr
     calls = [line.rstrip("|").split("|") for line in log.read_text().splitlines()]
-    assert calls[0] == ["pip", "install", "-e", target, *requirements]
+    # pytest joins the resolve, so a later pytest install cannot undo a pin
+    assert calls[0] == [
+        "pip",
+        "install",
+        "-e",
+        target,
+        *requirements,
+        "pytest",
+        "pytest-cov",
+    ]
     assert calls[1] == ["pip", "check"]
 
 
-@pytest.mark.skipif(shutil.which("bash") is None, reason="needs bash")
+@pytest.mark.skipif(
+    os.name != "posix" or shutil.which("bash") is None,
+    reason="needs a POSIX bash (Windows may resolve WSL's bash.exe); the step runs on Linux",
+)
 @pytest.mark.parametrize("payload", ["[]", "not json"])
 def test_the_pin_step_fails_when_no_requirement_arrives(tmp_path, payload):
     """Never a silent unpinned leg: an empty or broken payload turns the step red."""
@@ -401,7 +418,9 @@ def test_ci_local_plans_each_run_after_the_normal_tests(tmp_path):
     by_name = {s.name: s for s in steps}
     assert by_name["pinned oldest-sdk: venv"].argv[-1] == "3.11", "first python"
     install = by_name["pinned oldest-sdk: install"].argv
-    assert install[-3:] == ("-e", ".", "elevenlabs==2.58.0"), "one resolve"
+    assert install[-5:] == ("-e", ".", "elevenlabs==2.58.0", "pytest", "pytest-cov"), (
+        "one resolve, pytest included"
+    )
     assert by_name["pinned oldest-sdk: pip check"].argv[:3] == ("uv", "pip", "check")
     assert names.index("pinned oldest-sdk: pip check") < names.index(
         "pinned oldest-sdk: tests"
@@ -430,3 +449,28 @@ def test_ci_local_plans_nothing_extra_when_tests_are_off(tmp_path):
 def test_ci_local_fails_closed_on_an_invalid_entry(tmp_path):
     with pytest.raises(ValueError, match="pinned"):
         plan_ci_local(tmp_path, config=_cfg([{"name": "x"}]))
+
+
+def test_a_pin_with_an_environment_marker_is_refused():
+    """uv skips a requirement whose marker is false: the leg would run unpinned."""
+    with pytest.raises(ValueError, match="environment marker"):
+        CIConfig(
+            {
+                "tool": {
+                    "wads": {
+                        "ci": {
+                            "testing": {
+                                "pinned": [
+                                    {
+                                        "name": "m",
+                                        "requirements": [
+                                            "x==1; python_version < '3.10'"
+                                        ],
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ).pinned_test_runs
