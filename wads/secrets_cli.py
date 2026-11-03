@@ -27,6 +27,7 @@ Examples::
     wads-secrets add DB_URL --kind required          # fail CI if unset
     wads-secrets add COSMO_TEST_LEVEL --variable     # non-sensitive: repo var
     wads-secrets add OPENAI_API_KEY --no-github      # edit files only
+    pass show openai | wads-secrets add OPENAI_API_KEY --value -   # value on stdin
     wads-secrets list                                # show configured env vars
 
 Names are forced to ``UPPER_SNAKE`` and value-looking inputs are rejected, so
@@ -61,6 +62,9 @@ _JSON_TRANSPORT_LINE_RE = re.compile(rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET
 # logs of any job that receives it, and a short value (a digit, a level) is
 # near-certain to collide with ordinary log text (issue #61).
 _MASK_HAZARD_VALUE_LEN = 8
+
+# `--value -` reads the value from stdin (the usual CLI convention).
+STDIN_VALUE = "-"
 
 
 def _err(msg: str):
@@ -241,17 +245,37 @@ def _gh_available() -> bool:
 
 
 def set_github_secret(repo, secret_name, value, *, variable=False) -> bool:
-    """Set a secret (or, with ``variable=True``, a repo variable) via ``gh``."""
+    """Set a secret (or, with ``variable=True``, a repo variable) via ``gh``.
+
+    The value goes to ``gh`` on **stdin** (``gh {secret,variable} set`` reads
+    the body from stdin when ``--body`` is absent), never in argv: an argv
+    sits in the process table, readable by every local process with ``ps``,
+    and ends up in any log that records the command (issue #190).
+    """
     kind = "variable" if variable else "secret"
     try:
         subprocess.run(
-            ["gh", kind, "set", secret_name, "--repo", repo, "--body", value],
+            ["gh", kind, "set", secret_name, "--repo", repo],
+            input=value.encode(),
             check=True,
+            capture_output=True,
         )
         return True
     except subprocess.CalledProcessError as e:
-        _err(f"gh {kind} set failed: {e}")
+        detail = (e.stderr or b"").decode(errors="replace").strip()
+        _err(f"gh {kind} set {secret_name} failed (exit {e.returncode}): {detail}")
         return False
+
+
+
+def read_value_from_stdin(stream=None) -> str:
+    """Read a secret value from ``stream`` (default ``sys.stdin``).
+
+    Trailing CR/LF is dropped, as ``gh secret set`` does with a stdin body, so
+    ``printf '%s\\n' "$TOKEN" | wads-secrets add X --value -`` stores the token,
+    not the token plus a newline.
+    """
+    return (stream or sys.stdin).read().rstrip("\r\n")
 
 
 def add(
@@ -273,6 +297,7 @@ def add(
     :param repo: ``org/repo`` to set the secret on (default: git origin here).
     :param kind: ``extra`` (default), ``test``, or ``required``.
     :param value: secret value to push to GitHub (default: ``$VAR_NAME`` in env).
+        It reaches ``gh`` on stdin, never in argv (see :func:`set_github_secret`).
     :param github: also set the value on GitHub via ``gh`` (default True).
     :param variable: store as a repository *variable* instead of a secret —
         for non-sensitive values (a test verbosity level, a flag). Variables
@@ -514,7 +539,11 @@ def main(argv=None):
     p_add.add_argument(
         "--value",
         default=None,
-        help="secret value to push to GitHub (default: $VAR_NAME)",
+        help=(
+            "value to push to GitHub; '-' reads it from stdin (default: "
+            "$VAR_NAME). A literal value lands in shell history and the "
+            "process table, so prefer '-' or the env var"
+        ),
     )
     p_add.add_argument(
         "--no-github",
@@ -540,12 +569,22 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
     if args.command == "add":
+        value = args.value
+        if value == STDIN_VALUE:
+            value = read_value_from_stdin()
+        elif value is not None and not args.variable:
+            print(
+                "⚠ --value: a secret given on the command line is kept in "
+                "shell history and visible in the process table; next time "
+                "pipe it in with `--value -` or export it as the env var.",
+                file=sys.stderr,
+            )
         return add(
             args.var_name,
             args.secret_name,
             repo=args.repo,
             kind=args.kind,
-            value=args.value,
+            value=value,
             github=args.github,
             variable=args.variable,
             pyproject=args.pyproject,

@@ -389,3 +389,68 @@ def test_a_variables_value_that_is_not_a_list_is_refused(tmp_path):
 
     with pytest.raises(ValueError, match="must be a list"):
         CIConfig.from_file(str(pp)).stub_secret_names()
+
+
+def test_set_github_secret_never_puts_value_in_argv(monkeypatch):
+    """Issue #190: the value reaches `gh` on stdin, never as an argument
+    (argv is readable by any local process via `ps`)."""
+    import subprocess
+
+    import wads.secrets_cli as m
+
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, b"", b"")
+
+    monkeypatch.setattr(m.subprocess, "run", fake_run)
+    value = "sk-very-secret-0123456789"
+    for variable in (False, True):
+        assert m.set_github_secret("org/repo", "API_KEY", value, variable=variable)
+    assert len(calls) == 2
+    for cmd, kwargs in calls:
+        assert all(value not in arg for arg in cmd)
+        assert "--body" not in cmd
+        assert kwargs["input"] == value.encode()
+    assert calls[0][0][:3] == ["gh", "secret", "set"]
+    assert calls[1][0][:3] == ["gh", "variable", "set"]
+
+
+def test_set_github_secret_failure_reports_gh_stderr_not_value(monkeypatch, capsys):
+    import subprocess
+
+    import wads.secrets_cli as m
+
+    value = "sk-very-secret-0123456789"
+
+    def fake_run(cmd, **kwargs):
+        raise subprocess.CalledProcessError(1, cmd, b"", b"HTTP 404: Not Found")
+
+    monkeypatch.setattr(m.subprocess, "run", fake_run)
+    assert not m.set_github_secret("org/repo", "API_KEY", value)
+    err = capsys.readouterr().err
+    assert "HTTP 404" in err and value not in err
+
+
+def test_cli_value_dash_reads_stdin(monkeypatch, tmp_path):
+    """`--value -` takes the value from stdin, trailing newline dropped."""
+    import io
+
+    import wads.secrets_cli as m
+
+    seen = {}
+    monkeypatch.setattr(m, "add", lambda *a, **k: seen.update(k) or 0)
+    monkeypatch.setattr(m.sys, "stdin", io.StringIO("sk-from-stdin\n"))
+    assert m.main(["add", "API_KEY", "--value", "-"]) == 0
+    assert seen["value"] == "sk-from-stdin"
+
+
+def test_cli_literal_value_warns(monkeypatch, capsys):
+    import wads.secrets_cli as m
+
+    seen = {}
+    monkeypatch.setattr(m, "add", lambda *a, **k: seen.update(k) or 0)
+    assert m.main(["add", "API_KEY", "--value", "sk-literal-value"]) == 0
+    assert seen["value"] == "sk-literal-value"
+    assert "--value -" in capsys.readouterr().err

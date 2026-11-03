@@ -284,6 +284,7 @@ wads-secrets add OPENAI_API_KEY                  # var == secret name
 wads-secrets add HF_TOKEN HF_WRITE_TOKEN          # env var <- aliased secret
 wads-secrets add DB_URL --kind required           # fail CI if unset
 wads-secrets add OPENAI_API_KEY --no-github       # edit files only
+pass show openai | wads-secrets add OPENAI_API_KEY --value -   # value from stdin
 wads-secrets list                                 # show configured env vars
 wads-secrets superset                             # names the stub may pass
 
