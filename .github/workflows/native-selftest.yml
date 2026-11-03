@@ -1,0 +1,151 @@
+# Self-test of the reusable workflow's native (maturin) path (i2mint/wads#166), on this
+# repo's own runners: builds ci-fixtures/native_pkg through the SAME actions uv-ci.yml's
+# native jobs call, at this commit (./actions/*), so a change to them is exercised on
+# Linux x86_64/aarch64, macOS arm64/x86_64 and Windows before it reaches the fleet.
+# Publishes nothing. Runs on a PR touching the native path, and by hand.
+name: native-selftest
+on:
+  pull_request:
+    paths:
+      - "actions/setup-rust/**"
+      - "actions/rust-checks/**"
+      - "actions/build-native-wheel/**"
+      - "wads/native_build.py"
+      - "wads/scripts/cargo_test_args.py"
+      - "wads/scripts/read_ci_config.py"
+      - "ci-fixtures/native_pkg/**"
+      - ".github/workflows/native-selftest.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FIXTURE: ci-fixtures/native_pkg
+  # The version the release path would stamp; the wheels must carry it.
+  RELEASE_VERSION: "0.0.99"
+
+jobs:
+  setup:
+    name: Read the fixture's native config
+    runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.config.outputs.native }}
+      native-targets: ${{ steps.config.outputs.native-targets }}
+      native-options: ${{ steps.config.outputs.native-options }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - id: config
+        run: python3 -I wads/scripts/read_ci_config.py "$FIXTURE"
+      - name: The fixture is detected as native
+        env:
+          NATIVE: ${{ steps.config.outputs.native }}
+        run: test "$NATIVE" = "true"
+
+  rust-checks:
+    name: Rust checks + editable install
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: ./actions/setup-rust
+        with:
+          project-dir: ${{ env.FIXTURE }}
+      - name: Editable install builds the extension; its tests pass
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          uv venv -q
+          uv pip install -e . pytest
+          .venv/bin/python -m pytest -q tests
+      - uses: ./actions/rust-checks
+        with:
+          project-dir: ${{ env.FIXTURE }}
+          cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options).cargo_test_args) }}
+          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
+
+  release-pyproject:
+    name: Stamp the release version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      # isee's stamp, as the native-version job's bump action applies it (the version
+      # itself comes from isee gen-semver there; here it is fixed so the wheels can be
+      # checked against it).
+      - name: Stamp the fixture with isee, as the release path does
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          python -m pip install --quiet isee
+          isee update-pyproject-toml --version "$RELEASE_VERSION"
+          grep -m1 '^version' pyproject.toml | grep -q "\"$RELEASE_VERSION\""
+      - uses: actions/upload-artifact@v6
+        with:
+          name: wads-release-pyproject
+          path: ${{ env.FIXTURE }}/pyproject.toml
+          overwrite: true
+
+  wheels:
+    name: Wheel (${{ matrix.name }})
+    needs: [setup, release-pyproject]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.setup.outputs.native-targets) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./actions/build-native-wheel
+        with:
+          name: ${{ matrix.name }}
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          python-arch: ${{ matrix.python_arch }}
+          smoke: ${{ matrix.smoke }}
+          smoke-import: ${{ fromJson(needs.setup.outputs.native-options).smoke_import }}
+          maturin-args: ${{ fromJson(needs.setup.outputs.native-options).maturin_args }}
+          version: ${{ env.RELEASE_VERSION }}
+          pyproject-artifact: wads-release-pyproject
+          project-dir: ${{ env.FIXTURE }}
+
+  collect:
+    name: Wheels + sdist, as publish-native assembles them
+    needs: [setup, wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - name: Build the sdist
+        working-directory: ${{ env.FIXTURE }}
+        run: uv build --sdist --out-dir ../../dist
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      - name: One wheel per target plus the sdist
+        env:
+          TARGETS: ${{ needs.setup.outputs.native-targets }}
+        run: |
+          ls -la dist/
+          test "$(ls dist/*.whl | wc -l)" -eq "$(python3 -c 'import json, os; print(len(json.loads(os.environ["TARGETS"])))')"
+          test "$(ls dist/*.tar.gz | wc -l)" -eq 1
+          uvx twine check dist/*

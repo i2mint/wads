@@ -1,0 +1,134 @@
+name: "Build a native wheel"
+description: >-
+  One abi3 wheel of a native (maturin) package for one target: use the release's bumped
+  pyproject.toml (not committed), build with maturin, import the wheel from outside
+  the repo when the runner can run it, and upload it as an artifact (issue #166).
+
+inputs:
+  name:
+    description: "Target name, used for the artifact (wheels-<name>)"
+    required: true
+  target:
+    description: "maturin --target (x86_64, aarch64, x64, ...)"
+    required: true
+  manylinux:
+    description: "maturin-action manylinux setting (Linux targets; empty elsewhere)"
+    required: false
+    default: ""
+  python-arch:
+    description: "actions/setup-python architecture (Windows targets; empty for the default)"
+    required: false
+    default: ""
+  smoke:
+    description: "Whether to import the built wheel ('true'/'false'); false when cross-compiled"
+    required: false
+    default: "true"
+  smoke-import:
+    description: "Module the smoke test imports (the extension module, e.g. pkg._core)"
+    required: true
+  maturin-args:
+    description: "maturin build arguments (before --out dist)"
+    required: false
+    default: "--release --locked"
+  version:
+    description: "Release version the wheel must carry (checked against its file name; empty: no check)"
+    required: false
+    default: ""
+  pyproject-artifact:
+    description: >-
+      Artifact holding the release's pyproject.toml, version already bumped (the
+      native-version job uploads it), restored over the committed one before building and
+      not committed. Empty: build the version as committed.
+    required: false
+    default: ""
+  python-version:
+    description: "Python the runner sets up (abi3: any supported one builds the same wheel)"
+    required: false
+    default: "3.12"
+  project-dir:
+    description: "Directory holding pyproject.toml"
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      id: python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+        architecture: ${{ inputs.python-arch }}
+
+    - name: Fetch the release pyproject.toml
+      if: inputs.pyproject-artifact != ''
+      uses: actions/download-artifact@v7
+      with:
+        name: ${{ inputs.pyproject-artifact }}
+        path: ${{ runner.temp }}/wads-release-pyproject
+
+    - name: Use the release version (not committed)
+      if: inputs.pyproject-artifact != ''
+      shell: bash
+      env:
+        SRC: ${{ runner.temp }}/wads-release-pyproject/pyproject.toml
+        DST: ${{ inputs.project-dir }}/pyproject.toml
+      run: cp "$SRC" "$DST" && grep -m1 -E '^version\s*=' "$DST"
+
+    - name: Build the wheel
+      uses: PyO3/maturin-action@v1
+      with:
+        target: ${{ inputs.target }}
+        manylinux: ${{ inputs.manylinux }}
+        working-directory: ${{ inputs.project-dir }}
+        args: ${{ inputs.maturin-args }} --out dist
+
+    - name: Check the wheel
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -e
+        shopt -s nullglob
+        wheels=(dist/*.whl)
+        if [ "${#wheels[@]}" -ne 1 ]; then
+          echo "::error::expected exactly one wheel in dist/, found ${#wheels[@]}: ${wheels[*]}"
+          exit 1
+        fi
+        echo "Built: ${wheels[0]}"
+        wheel=$(basename "${wheels[0]}")
+        if [ -n "$VERSION" ] && [[ "$wheel" != *"-${VERSION}-"* ]]; then
+          echo "::error::the wheel does not carry the release version $VERSION"
+          exit 1
+        fi
+        # One wheel per platform covers every supported CPython only when it is abi3.
+        if [[ "$wheel" != *"-abi3-"* ]]; then
+          echo "::error::$wheel is not an abi3 wheel: the native path builds one wheel per platform, so other Python versions would compile from the sdist. Enable pyo3's abi3-py3X feature (e.g. features = [\"abi3-py310\"])."
+          exit 1
+        fi
+
+    # From outside the repo, or the source package (which has no compiled module) shadows
+    # the installed wheel and the import proves nothing.
+    - name: Import the wheel
+      if: inputs.smoke == 'true'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        WHEEL_DIR: ${{ github.workspace }}/${{ inputs.project-dir }}/dist
+        SMOKE_IMPORT: ${{ inputs.smoke-import }}
+        HOST_PYTHON: ${{ steps.python.outputs.python-path }}
+      run: |
+        set -e
+        "$HOST_PYTHON" -m venv wads-native-smoke
+        if [ -x wads-native-smoke/Scripts/python.exe ]; then PY=wads-native-smoke/Scripts/python.exe; else PY=wads-native-smoke/bin/python; fi
+        "$PY" -m pip install --quiet --no-index --no-deps "$WHEEL_DIR"/*.whl
+        "$PY" -I -c 'import importlib, os; m = importlib.import_module(os.environ["SMOKE_IMPORT"]); print("imported", m.__name__, "from", m.__file__)'
+
+    - name: Upload the wheel
+      uses: actions/upload-artifact@v6
+      with:
+        name: wheels-${{ inputs.name }}
+        path: ${{ inputs.project-dir }}/dist/*.whl
+        if-no-files-found: error
+        overwrite: true

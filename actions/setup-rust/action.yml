@@ -1,0 +1,35 @@
+name: "Set up Rust"
+description: >-
+  Rust for a native (maturin) package, before its install builds the extension: the
+  components the rust-checks action needs, and a cargo cache. The runner's rustup is used
+  as is, so a rust-toolchain.toml in the repo picks the toolchain (issue #166).
+
+inputs:
+  project-dir:
+    description: "Directory holding the Cargo workspace (the repo root by default)"
+    required: false
+    default: "."
+  save-cache:
+    description: >-
+      Whether this run may write the cargo cache ("true"/"false"). Pass "true" only on
+      the default branch, so a PR cannot plant an entry that a default-branch run restores.
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Rust toolchain and components
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      run: |
+        set -e
+        rustup show active-toolchain || rustup default stable
+        rustup component add rustfmt clippy
+        cargo --version
+
+    - name: Cargo cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: ${{ inputs.project-dir }}
+        save-if: ${{ inputs.save-cache == 'true' }}
