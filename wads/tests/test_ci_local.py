@@ -359,6 +359,33 @@ def test_required_env_is_checked_and_defaults_are_exported(repo):
     assert all(call["env"]["LOG_LEVEL"] == "INFO" for call in runner.calls)
 
 
+def test_host_install_pins_are_kept_out_of_every_step(repo):
+    """Issue #191: the dev machine's UV_CONSTRAINT (which pins fleet packages to their
+    main checkouts) must not reach ci-local's installs; hosted CI has no such file."""
+    runner, out = FakeRunner(), io.StringIO()
+    environ = {"UV_CONSTRAINT": "/x/constraints.txt", "PIP_CONSTRAINT": "/x/c.txt"}
+    report = run_ci_local(repo, runner=runner, environ=environ, out=out)
+    assert report.ok and runner.calls
+    for call in runner.calls:
+        assert not {"UV_CONSTRAINT", "PIP_CONSTRAINT"} & call["env"].keys()
+    assert "ran without PIP_CONSTRAINT, UV_CONSTRAINT" in out.getvalue()
+
+    # The seam keeps them for a caller who wants the dev machine's pins.
+    runner = FakeRunner()
+    run_ci_local(
+        repo, runner=runner, environ=environ, out=io.StringIO(), host_pin_vars=()
+    )
+    assert all(
+        call["env"]["UV_CONSTRAINT"] == "/x/constraints.txt" for call in runner.calls
+    )
+
+
+def test_no_pin_note_when_no_pin_was_set(repo):
+    out = io.StringIO()
+    run_ci_local(repo, runner=FakeRunner(), environ={"HOME": "/h"}, out=out)
+    assert "ran without" not in out.getvalue()
+
+
 # --- publish -----------------------------------------------------------------------------
 
 

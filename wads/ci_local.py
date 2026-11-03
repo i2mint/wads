@@ -19,7 +19,8 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer's environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus the machine's install
+pins such as ``UV_CONSTRAINT``, which hosted CI does not have), where CI exports only the
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -95,6 +96,17 @@ PUBLISH_CREDENTIAL_VARS = (
     "UV_PUBLISH_TOKEN",
     "UV_PUBLISH_USERNAME",
     "UV_PUBLISH_PASSWORD",
+)
+
+# The dev machine's install pins. Hosted CI has none; inherited, they make ci-local test a
+# different environment (and the fleet's constraint file, which pins every local package
+# to its main checkout, breaks the install from a git worktree, issue #191). So every
+# step runs without them, by default: ``run_ci_local(host_pin_vars=())`` keeps them.
+HOST_INSTALL_PIN_VARS = (
+    "UV_CONSTRAINT",
+    "UV_BUILD_CONSTRAINT",
+    "UV_OVERRIDE",
+    "PIP_CONSTRAINT",
 )
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
@@ -781,12 +793,17 @@ def run_ci_local(
     out=None,
     keep_workdir: bool = False,
     workdir_root: Optional[str] = None,
+    host_pin_vars: Sequence[str] = HOST_INSTALL_PIN_VARS,
 ) -> CILocalReport:
     """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
 
     The steps run in a fresh work directory under ``workdir_root`` (default: the system
     temp directory), after removing the stale ones killed runs left there and checking
     that the filesystem has room for this run (issue #159).
+
+    ``environ`` (default ``os.environ``) reaches every step minus the PyPI credentials
+    (only the upload sees them) and minus ``host_pin_vars``, the dev machine's install
+    constraints that hosted CI does not have (issue #191).
     """
     repo = Path(repo).resolve()
     out = out or sys.stdout
@@ -795,7 +812,9 @@ def run_ci_local(
     if n_venvs := _venv_count(steps):
         steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
-    env = {k: v for k, v in source_env.items() if k not in PUBLISH_CREDENTIAL_VARS}
+    dropped_pins = sorted(set(host_pin_vars) & source_env.keys())
+    withheld = {*PUBLISH_CREDENTIAL_VARS, *dropped_pins}
+    env = {k: v for k, v in source_env.items() if k not in withheld}
     # Committed defaults are authoritative, as in CI's export-ci-env.
     env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
     # A killed run never reaches the cleanup below; remove what earlier ones left.
@@ -815,6 +834,8 @@ def run_ci_local(
         values={"workdir": workdir},
         source_env=source_env,
     )
+    if dropped_pins:
+        ctx.notes.append(f"ran without {', '.join(dropped_pins)} (hosted CI has none)")
     report = CILocalReport(
         project=config.project_name,
         publish=publish,
