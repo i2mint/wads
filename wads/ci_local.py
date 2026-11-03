@@ -455,27 +455,28 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
         args = native.cargo_test_args
         if args is None:
             meta = ctx.run(
-                ["cargo", "metadata", "--no-deps", "--format-version", "1"],
+                ["cargo", "metadata", *manifest, "--no-deps", "--format-version", "1"],
                 capture=True,
             )
             if meta.returncode != 0:
                 return f"cargo metadata failed (exit {meta.returncode})"
-            maturin = config.data.get("tool", {}).get("maturin", {})
-            binding = repo / maturin.get("manifest-path", "Cargo.toml")
             args = cargo_test_args(
-                json.loads(meta.stdout), binding_manifest=str(binding)
+                json.loads(meta.stdout),
+                binding_manifest=str(repo / native.manifest_path),
             )
         if not args:
             ctx.notes.append("no pure-Rust crate to cargo test")
             return None
-        result = ctx.run(["cargo", "test", *args])
+        result = ctx.run(["cargo", "test", *manifest, *args])
         return f"exit {result.returncode}" if result.returncode else None
 
+    manifest = ("--manifest-path", native.manifest_path)
     return [
-        Step("rust: fmt", ("cargo", "fmt", "--all", "--check")),
+        Step("rust: fmt", ("cargo", "fmt", "--all", "--check", *manifest)),
         Step(
             "rust: clippy",
-            ("cargo", "clippy", "--workspace", "--all-targets", "--", "-D", "warnings"),
+            ("cargo", "clippy", *manifest, "--workspace", "--all-targets")
+            + ("--", "-D", "warnings"),
         ),
         Step(
             "rust: test",

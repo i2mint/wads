@@ -41,6 +41,14 @@ inputs:
       not committed. Empty: build the version as committed.
     required: false
     default: ""
+  python-version:
+    description: "Python the runner sets up (abi3: any supported one builds the same wheel)"
+    required: false
+    default: "3.12"
+  manifest-path:
+    description: "The binding crate's Cargo.toml, relative to project-dir ([tool.maturin].manifest-path)"
+    required: false
+    default: "Cargo.toml"
   project-dir:
     description: "Directory holding pyproject.toml"
     required: false
@@ -50,9 +58,10 @@ runs:
   using: "composite"
   steps:
     - name: Set up Python
+      id: python
       uses: actions/setup-python@v6
       with:
-        python-version: "3.12"
+        python-version: ${{ inputs.python-version }}
         architecture: ${{ inputs.python-arch }}
 
     - name: Fetch the release pyproject.toml
@@ -92,8 +101,14 @@ runs:
           exit 1
         fi
         echo "Built: ${wheels[0]}"
-        if [ -n "$VERSION" ] && [[ "$(basename "${wheels[0]}")" != *"-${VERSION}-"* ]]; then
+        wheel=$(basename "${wheels[0]}")
+        if [ -n "$VERSION" ] && [[ "$wheel" != *"-${VERSION}-"* ]]; then
           echo "::error::the wheel does not carry the release version $VERSION"
+          exit 1
+        fi
+        # One wheel per platform covers every supported CPython only when it is abi3.
+        if [[ "$wheel" != *"-abi3-"* ]]; then
+          echo "::error::$wheel is not an abi3 wheel: the native path builds one wheel per platform, so other Python versions would compile from the sdist. Enable pyo3's abi3-py3X feature (e.g. features = [\"abi3-py310\"])."
           exit 1
         fi
 
@@ -106,9 +121,10 @@ runs:
       env:
         WHEEL_DIR: ${{ github.workspace }}/${{ inputs.project-dir }}/dist
         SMOKE_IMPORT: ${{ inputs.smoke-import }}
+        HOST_PYTHON: ${{ steps.python.outputs.python-path }}
       run: |
         set -e
-        python -m venv wads-native-smoke
+        "$HOST_PYTHON" -m venv wads-native-smoke
         if [ -x wads-native-smoke/Scripts/python.exe ]; then PY=wads-native-smoke/Scripts/python.exe; else PY=wads-native-smoke/bin/python; fi
         "$PY" -m pip install --quiet --no-index --no-deps "$WHEEL_DIR"/*.whl
         "$PY" -I -c 'import importlib, os; m = importlib.import_module(os.environ["SMOKE_IMPORT"]); print("imported", m.__name__, "from", m.__file__)'
@@ -119,3 +135,4 @@ runs:
         name: wheels-${{ inputs.name }}
         path: ${{ inputs.project-dir }}/dist/*.whl
         if-no-files-found: error
+        overwrite: true

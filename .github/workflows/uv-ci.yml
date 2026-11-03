@@ -532,6 +532,7 @@ jobs:
         uses: i2mint/wads/actions/rust-checks@master
         with:
           cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options || '{}').cargo_test_args) }}
+          manifest-path: ${{ fromJson(needs.setup.outputs.native-options || '{}').manifest_path }}
 
       # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast
       # if a required secret is missing). Driven by [tool.wads.ci.env].
@@ -729,9 +730,10 @@ jobs:
           name: wads-release-pyproject
           path: pyproject.toml
           if-no-files-found: error
+          overwrite: true
 
   native-wheels:
-    name: Native Wheel (${{ matrix.name }})
+    name: Native Wheel
     permissions:
       contents: read
     needs: [setup, native-version]
@@ -760,6 +762,8 @@ jobs:
           maturin-args: ${{ fromJson(needs.setup.outputs.native-options).maturin_args }}
           version: ${{ needs.native-version.outputs.version }}
           pyproject-artifact: wads-release-pyproject
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
 
   # Publishing job
   #
@@ -971,11 +975,12 @@ jobs:
           WHEELS_VERSION: ${{ needs.native-version.outputs.version }}
         run: |
           if [ "$VERSION" != "$WHEELS_VERSION" ]; then
-            echo "::error::The wheels were built as $WHEELS_VERSION but this release bumps to $VERSION (another release landed while they were building). Re-run this workflow to rebuild them."
+            echo "::error::The wheels were built as $WHEELS_VERSION but this release bumps to $VERSION (another release landed while they were building). Re-run ALL jobs of this workflow (not just the failed one) to rebuild them for the new version."
             exit 1
           fi
 
       - name: Build the sdist
+        if: needs.setup.outputs.build-sdist != 'false'
         uses: i2mint/wads/actions/build-dist-uv@master
         with:
           sdist: "true"

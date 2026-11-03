@@ -495,13 +495,13 @@ A package built with [maturin](https://www.maturin.rs/) (`build-backend = "matur
 native = false            # opt out (e.g. you release from your own workflow), or "maturin" to opt in
 
 [tool.wads.ci.build.native]   # or the table form, for the details (all optional)
-targets = ["linux-x86_64", "macos-arm64", { name = "linux-musl", runner = "ubuntu-latest", target = "x86_64-unknown-linux-musl", manylinux = "musllinux_1_2" }]
+targets = ["linux-x86_64", "macos-arm64", { name = "linux-musl", runner = "ubuntu-latest", target = "x86_64-unknown-linux-musl", manylinux = "musllinux_1_2", smoke = false }]   # a musl wheel cannot import on the glibc runner
 maturin_args = ["--release", "--locked"]
 smoke_import = "mypkg._core"        # default: [tool.maturin].module-name
 cargo_test_args = ["-p", "mypkg-core"]   # default: derived from cargo metadata; [] skips
 ```
 
-A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow builds `ci-fixtures/native_pkg` through the same actions on every target whenever the native path changes.
+Commit `Cargo.lock` (the default `--locked` refuses a build without it) and enable pyo3's `abi3-py3X` feature (a non-abi3 wheel is refused). The Cargo workspace is found from `[tool.maturin].manifest-path`, so it may live below the repo root. If a release lands while the wheels are building, `publish-native` refuses (the wheels carry the old number): re-run **all** jobs, not only the failed one. A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow builds `ci-fixtures/native_pkg` through the same actions on every target whenever the native path changes.
 
 ### Licence Perimeter (`wads-licence-check`)
 

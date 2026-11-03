@@ -87,6 +87,7 @@ def test_the_table_form_sets_targets_args_and_imports():
     assert nb.options() == {
         "maturin_args": "--release",
         "smoke_import": "pkg._core",
+        "manifest_path": "Cargo.toml",
         "cargo_test_args": ["-p", "pkg-core"],
     }
 
@@ -300,7 +301,16 @@ def test_ci_local_runs_the_rust_checks_for_a_native_repo(tmp_path):
     runner = FakeRunner((["cargo", "metadata"], RunResult(0, meta)))
     report = run_ci_local(tmp_path, runner=runner, environ={}, out=io.StringIO())
     assert report.ok
-    assert ["cargo", "test", "--workspace", "--exclude", "b"] in runner.argvs()
+    manifest = ["--manifest-path", "rust/py/Cargo.toml"]
+    assert [
+        "cargo",
+        "test",
+        *manifest,
+        "--workspace",
+        "--exclude",
+        "b",
+    ] in runner.argvs()
+    assert ["cargo", "fmt", "--all", "--check", *manifest] in runner.argvs()
 
 
 def test_ci_local_has_no_rust_steps_for_a_pure_python_repo(tmp_path):
@@ -308,3 +318,50 @@ def test_ci_local_has_no_rust_steps_for_a_pure_python_repo(tmp_path):
 
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "p"\n')
     assert not any(s.name.startswith("rust:") for s in plan_ci_local(tmp_path))
+
+
+def test_the_wheel_check_refuses_a_non_abi3_wheel():
+    """One wheel per platform covers every CPython only when it is abi3 (#166 review)."""
+    action = yaml.safe_load(
+        (ROOT / "actions/build-native-wheel/action.yml").read_text()
+    )
+    (check,) = [
+        s for s in action["runs"]["steps"] if s.get("name") == "Check the wheel"
+    ]
+
+    def run(wheel_name, version=""):
+        with __import__("tempfile").TemporaryDirectory() as d:
+            (Path(d) / "dist").mkdir()
+            (Path(d) / "dist" / wheel_name).write_text("")
+            env = {"PATH": "/usr/bin:/bin", "VERSION": version}
+            return subprocess.run(
+                ["bash", "-c", check["run"]],
+                cwd=d,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+    assert run("p-0.1.0-cp310-abi3-manylinux_2_17_x86_64.whl", "0.1.0").returncode == 0
+    bad = run("p-0.1.0-cp312-cp312-manylinux_2_17_x86_64.whl", "0.1.0")
+    assert bad.returncode == 1 and "not an abi3 wheel" in bad.stdout
+    assert run("p-0.0.9-cp310-abi3-win_amd64.whl", "0.1.0").returncode == 1
+
+
+def test_the_release_artifacts_overwrite_on_a_full_rerun():
+    """A full re-run re-uploads the same artifact names; without overwrite it 409s."""
+    action = yaml.safe_load(
+        (ROOT / "actions/build-native-wheel/action.yml").read_text()
+    )
+    (upload,) = [
+        s for s in action["runs"]["steps"] if "upload-artifact" in str(s.get("uses"))
+    ]
+    assert upload["with"]["overwrite"] is True
+    steps = _jobs()["native-version"]["steps"]
+    (upload,) = [s for s in steps if "upload-artifact" in str(s.get("uses"))]
+    assert upload["with"]["overwrite"] is True
+
+
+def test_the_fixture_commits_its_lockfile_so_the_locked_default_is_exercised():
+    assert (FIXTURE / "Cargo.lock").is_file()
+    assert "generate-lockfile" not in SELFTEST.read_text()

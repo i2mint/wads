@@ -77,6 +77,9 @@ class NativeBuild:
     targets: tuple = field(default_factory=tuple)
     maturin_args: tuple = DFLT_MATURIN_ARGS
     smoke_import: str = ""
+    #: The binding crate's Cargo.toml (``[tool.maturin].manifest-path``); cargo finds the
+    #: workspace from it.
+    manifest_path: str = "Cargo.toml"
     #: ``None``: derive from cargo metadata (every crate but the binding one).
     cargo_test_args: Optional[tuple] = None
 
@@ -89,6 +92,7 @@ class NativeBuild:
         return {
             "maturin_args": " ".join(self.maturin_args),
             "smoke_import": self.smoke_import,
+            "manifest_path": self.manifest_path,
             "cargo_test_args": (
                 None if self.cargo_test_args is None else list(self.cargo_test_args)
             ),
@@ -172,7 +176,8 @@ def native_build_config(pyproject: dict) -> Optional[NativeBuild]:
             raise ValueError(
                 f"unknown key(s) {sorted(unknown)}; known: {sorted(_TABLE_KEYS)}"
             )
-        module_name = tool.get("maturin", {}).get("module-name", "")
+        maturin = tool.get("maturin", {})
+        module_name = maturin.get("module-name", "")
         import_name = pyproject.get("project", {}).get("name", "").replace("-", "_")
         cargo_test = table.get("cargo_test_args")
         return NativeBuild(
@@ -185,6 +190,7 @@ def native_build_config(pyproject: dict) -> Optional[NativeBuild]:
                 table.get("smoke_import", module_name or import_name),
                 key="smoke_import",
             ),
+            manifest_path=maturin.get("manifest-path", "Cargo.toml"),
             cargo_test_args=(
                 None
                 if cargo_test is None

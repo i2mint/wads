@@ -10,5 +10,7 @@ name = "_core"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.25", features = ["abi3-py310"] }
+# abi3-py310: one wheel per platform for every CPython >= 3.10. No "extension-module"
+# feature: maturin >= 1.9.4 sets PYO3_BUILD_EXTENSION_MODULE, which pyo3 >= 0.26 reads.
+pyo3 = { version = "0.30", features = ["abi3-py310"] }
 wads-native-fixture-core = { path = "../core" }

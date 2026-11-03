@@ -8,6 +8,12 @@ inputs:
     description: "Directory holding pyproject.toml and the Cargo workspace"
     required: false
     default: "."
+  manifest-path:
+    description: >-
+      The binding crate's Cargo.toml, relative to project-dir ([tool.maturin].manifest-path);
+      cargo finds its workspace from there, so the workspace need not sit at project-dir.
+    required: false
+    default: "Cargo.toml"
   cargo-test-args:
     description: >-
       JSON list of `cargo test` arguments ([] skips the tests). Empty or "null": every
@@ -21,22 +27,27 @@ runs:
     - name: cargo fmt
       shell: bash
       working-directory: ${{ inputs.project-dir }}
-      run: cargo fmt --all --check
+      env:
+        MANIFEST: ${{ inputs.manifest-path }}
+      run: cargo fmt --all --check --manifest-path "$MANIFEST"
 
     - name: cargo clippy
       shell: bash
       working-directory: ${{ inputs.project-dir }}
-      run: cargo clippy --workspace --all-targets -- -D warnings
+      env:
+        MANIFEST: ${{ inputs.manifest-path }}
+      run: cargo clippy --manifest-path "$MANIFEST" --workspace --all-targets -- -D warnings
 
     - name: cargo test
       shell: bash
       working-directory: ${{ inputs.project-dir }}
       env:
         CARGO_TEST_ARGS: ${{ inputs.cargo-test-args }}
+        MANIFEST: ${{ inputs.manifest-path }}
       run: |
         set -e
         if [ -z "$CARGO_TEST_ARGS" ] || [ "$CARGO_TEST_ARGS" = "null" ]; then
-          ARGS=$(cargo metadata --no-deps --format-version 1 \
+          ARGS=$(cargo metadata --manifest-path "$MANIFEST" --no-deps --format-version 1 \
             | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/cargo_test_args.py" .)
           read -ra args <<< "$ARGS"
         else
@@ -47,4 +58,4 @@ runs:
           exit 0
         fi
         echo "Running: cargo test ${args[*]}"
-        cargo test "${args[@]}"
+        cargo test --manifest-path "$MANIFEST" "${args[@]}"
