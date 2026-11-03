@@ -219,6 +219,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.licence_check.html">wads.licence_check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.licensing.html">wads.licensing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.migration.html">wads.migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.native_build.html">wads.native_build</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.npm_config.html">wads.npm_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.npm_trust.html">wads.npm_trust</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/wads.pack.html">wads.pack</a></li>
@@ -232,6 +233,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.read_ci_config.html">wads.scripts.read_ci_config</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 </ul>
@@ -329,6 +331,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
@@ -340,6 +343,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRIGGER_LEVELS</span><span class="p">,</span> <span class="n">CIConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.native_build</span><span class="w"> </span><span class="kn">import</span> <span class="n">cargo_test_args</span><span class="p">,</span> <span class="n">native_build_config</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.pytest_doctest_flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">doctest_optionflags_arg</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.workdirs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BYTES_PER_GB</span><span class="p">,</span>
@@ -578,6 +582,7 @@
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">:</span>
         <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_required_env_step</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_required</span><span class="p">))</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_quality_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">+=</span> <span class="n">_rust_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_pinned_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_release_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="n">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -744,6 +749,47 @@
             <span class="p">),</span>
         <span class="p">]</span>
     <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rust_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The validation job's Rust checks for a native (maturin) package (issue #166)."""</span>
+    <span class="n">native</span> <span class="o">=</span> <span class="n">native_build_config</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">native</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cargo_test</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">native</span><span class="o">.</span><span class="n">cargo_test_args</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="s2">"--no-deps"</span><span class="p">,</span> <span class="s2">"--format-version"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">],</span>
+                <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">"cargo metadata failed (exit </span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">cargo_test_args</span><span class="p">(</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span>
+                <span class="n">binding_manifest</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="n">native</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"no pure-Rust crate to cargo test"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"test"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">manifest</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"--manifest-path"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Step</span><span class="p">(</span><span class="s2">"rust: fmt"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"fmt"</span><span class="p">,</span> <span class="s2">"--all"</span><span class="p">,</span> <span class="s2">"--check"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">)),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"rust: clippy"</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"clippy"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="s2">"--workspace"</span><span class="p">,</span> <span class="s2">"--all-targets"</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span><span class="s2">"--"</span><span class="p">,</span> <span class="s2">"-D"</span><span class="p">,</span> <span class="s2">"warnings"</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"rust: test"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">cargo_test</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"cargo test on the pure-Rust crates (not the binding one)"</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
@@ -1370,7 +1416,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a6311ccf"></script>
+</div><script src="../../_static/documentation_options.js?v=86808624"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

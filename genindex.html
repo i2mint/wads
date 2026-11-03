@@ -218,6 +218,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.licence_check.html">wads.licence_check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.licensing.html">wads.licensing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.migration.html">wads.migration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.native_build.html">wads.native_build</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.npm_config.html">wads.npm_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.npm_trust.html">wads.npm_trust</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.pack.html">wads.pack</a></li>
@@ -231,6 +232,7 @@
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.read_ci_config.html">wads.scripts.read_ci_config</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.set_env_vars.html">wads.scripts.set_env_vars</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 </ul>
@@ -374,6 +376,10 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.CANARY_FAMILIES">CANARY_FAMILIES (in module wads.licence_check)</a>
 </li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeBuild.cargo_test_args">cargo_test_args (wads.native_build.NativeBuild attribute)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.cargo_test_args">cargo_test_args() (in module wads.native_build)</a>
+</li>
         <li><a href="_autosummary/wads.migration.html#wads.migration.carry_ci_env_into_pyproject">carry_ci_env_into_pyproject() (in module wads.migration)</a>
 </li>
         <li><a href="_autosummary/wads.agents.test_analyzer.html#wads.agents.test_analyzer.categorize_failure">categorize_failure() (in module wads.agents.test_analyzer)</a>
@@ -412,10 +418,10 @@
         </ul></li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.CILocalReport">CILocalReport (class in wads.ci_local)</a>
 </li>
-        <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.classify_ci_workflow">classify_ci_workflow() (in module wads.ci_trigger)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.classify_ci_workflow">classify_ci_workflow() (in module wads.ci_trigger)</a>
+</li>
         <li><a href="_autosummary/wads.repo_audit.html#wads.repo_audit.classify_workflow">classify_workflow() (in module wads.repo_audit)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.CLEAN_STATUSES">CLEAN_STATUSES (in module wads.licence_check)</a>
@@ -950,11 +956,15 @@
 </li>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.ManagerFlags">ManagerFlags (class in wads.npm_trust)</a>
 </li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeBuild.manifest_path">manifest_path (wads.native_build.NativeBuild attribute)</a>
+</li>
         <li><a href="_autosummary/wads.scripts.export_ci_env.html#wads.scripts.export_ci_env.ExportPlan.mask_values">mask_values (wads.scripts.export_ci_env.ExportPlan attribute)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LicencePolicy.matched_allowed">matched_allowed() (wads.licence_check.LicencePolicy method)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LicencePolicy.matched_forbidden">matched_forbidden() (wads.licence_check.LicencePolicy method)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeBuild.matrix">matrix() (wads.native_build.NativeBuild method)</a>
 </li>
         <li><a href="_autosummary/wads.scripts.export_ci_env.html#wads.scripts.export_ci_env.merge_transported_secrets">merge_transported_secrets() (in module wads.scripts.export_ci_env)</a>
 </li>
@@ -1030,6 +1040,8 @@
 </li>
           <li><a href="_autosummary/wads.migration.html#module-wads.migration">wads.migration</a>
 </li>
+          <li><a href="_autosummary/wads.native_build.html#module-wads.native_build">wads.native_build</a>
+</li>
           <li><a href="_autosummary/wads.npm_config.html#module-wads.npm_config">wads.npm_config</a>
 </li>
           <li><a href="_autosummary/wads.npm_trust.html#module-wads.npm_trust">wads.npm_trust</a>
@@ -1047,6 +1059,8 @@
           <li><a href="_autosummary/wads.scripts.html#module-wads.scripts">wads.scripts</a>
 </li>
           <li><a href="_autosummary/wads.scripts.build_dist.html#module-wads.scripts.build_dist">wads.scripts.build_dist</a>
+</li>
+          <li><a href="_autosummary/wads.scripts.cargo_test_args.html#module-wads.scripts.cargo_test_args">wads.scripts.cargo_test_args</a>
 </li>
           <li><a href="_autosummary/wads.scripts.export_ci_env.html#module-wads.scripts.export_ci_env">wads.scripts.export_ci_env</a>
 </li>
@@ -1089,14 +1103,24 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.ClosureWalk.names">names (wads.licence_check.ClosureWalk attribute)</a>
 </li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NATIVE_BACKENDS">NATIVE_BACKENDS (in module wads.native_build)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.native_build_config">native_build_config() (in module wads.native_build)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NATIVE_TARGETS">NATIVE_TARGETS (in module wads.native_build)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeBuild">NativeBuild (class in wads.native_build)</a>
+</li>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeTarget">NativeTarget (class in wads.native_build)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.normalise">normalise() (in module wads.licence_check)</a>
 </li>
         <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.normalize_secret_name">normalize_secret_name() (in module wads.ci_secrets)</a>
 </li>
         <li><a href="_autosummary/wads.npm_config.html#wads.npm_config.NPM_CI_DEFAULTS">NPM_CI_DEFAULTS (in module wads.npm_config)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.profiles.html#wads.profiles.npm_overlay_artifacts">npm_overlay_artifacts() (in module wads.profiles)</a>
 </li>
         <li><a href="_autosummary/wads.profiles.html#wads.profiles.npm_overlay_context">npm_overlay_context() (in module wads.profiles)</a>
@@ -1121,9 +1145,11 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LicenceReport.ok">ok (wads.licence_check.LicenceReport property)</a>
 </li>
+        <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.ops">ops (wads.ci_config.CIConfig property)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.ops">ops (wads.ci_config.CIConfig property)</a>
+        <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeBuild.options">options() (wads.native_build.NativeBuild method)</a>
 </li>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.Outcome">Outcome (class in wads.npm_trust)</a>
 </li>
@@ -1704,6 +1730,13 @@
 </li>
         </ul></li>
         <li>
+    wads.native_build
+
+        <ul>
+          <li><a href="_autosummary/wads.native_build.html#module-wads.native_build">module</a>
+</li>
+        </ul></li>
+        <li>
     wads.npm_config
 
         <ul>
@@ -1766,6 +1799,13 @@
 
         <ul>
           <li><a href="_autosummary/wads.scripts.build_dist.html#module-wads.scripts.build_dist">module</a>
+</li>
+        </ul></li>
+        <li>
+    wads.scripts.cargo_test_args
+
+        <ul>
+          <li><a href="_autosummary/wads.scripts.cargo_test_args.html#module-wads.scripts.cargo_test_args">module</a>
 </li>
         </ul></li>
         <li>
@@ -1921,7 +1961,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=a6311ccf"></script>
+</div><script src="_static/documentation_options.js?v=86808624"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

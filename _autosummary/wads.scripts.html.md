@@ -21,5 +21,6 @@ Available scripts:
 | [`read_ci_config`](wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                            |
 | [`set_env_vars`](wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                 |
 | [`validate_ci_env`](wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                              |
+| [`cargo_test_args`](wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)           | Print the `cargo test` arguments for a maturin package (issue #166).          |
 | [`export_ci_env`](wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                |
 | [`pytest_doctest_flags`](wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any. |

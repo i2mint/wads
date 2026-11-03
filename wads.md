@@ -1,4 +1,4 @@
-> built 2026-11-03 12:15 UTC from 7c9b9fd (master) · wads 0.2.75. Details: build_info.json
+> built 2026-11-03 12:31 UTC from f4e0093 (master) · wads 0.2.76. Details: build_info.json
 
 # index.html.md
 
@@ -491,6 +491,27 @@ Commit-subject markers narrow what a default-branch push does. wads matches them
 | `[publish]`           | runs                | forced when `enabled = false` | runs           | `[tool.wads.ci.publish].publish_marker`                                                                                    |
 
 `[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
+
+#### Native packages (Rust/PyO3 via maturin)
+
+A package built with [maturin](https://www.maturin.rs/) (`build-backend = "maturin"`) gets the native path automatically: one abi3 wheel per platform plus an sdist, instead of one `uv build`.
+
+- **Validation** (every run) adds, before the install, the Rust toolchain components and a cargo cache (written only on the default branch), and after it `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` on the pure-Rust crates (every workspace crate but the binding one maturin builds, which is tested through Python), once, on the first Python version. `wads ci-local` runs the same checks.
+- **Release** (default branch, publishing on): `native-version` computes the version once; `native-wheels` builds one wheel per target with that version (`PyO3/maturin-action`, `--release --locked`), imports it from outside the repo when the runner can run it, and uploads it; `publish-native` runs the publish job’s own steps with `uv build --sdist` plus those wheels in place of `uv build`, and refuses if a release that landed meanwhile moved the version. macOS and Windows minutes (about 10x and 2x Linux) are spent only on this path, never on a PR.
+- Default targets: `linux-x86_64`, `linux-aarch64` (native arm runner), `macos-arm64`, `macos-x86_64` (cross-compiled, not import-tested), `windows-x64`.
+
+```toml
+[tool.wads.ci.build]
+native = false            # opt out (e.g. you release from your own workflow), or "maturin" to opt in
+
+[tool.wads.ci.build.native]   # or the table form, for the details (all optional)
+targets = ["linux-x86_64", "macos-arm64", { name = "linux-musl", runner = "ubuntu-latest", target = "x86_64-unknown-linux-musl", manylinux = "musllinux_1_2", smoke = false }]   # a musl wheel cannot import on the glibc runner
+maturin_args = ["--release", "--locked"]
+smoke_import = "mypkg._core"        # default: [tool.maturin].module-name
+cargo_test_args = ["-p", "mypkg-core"]   # default: derived from cargo metadata; [] skips
+```
+
+Commit `Cargo.lock` (the default `--locked` refuses a build without it) and enable pyo3’s `abi3-py3X` feature (a non-abi3 wheel is refused). The Cargo workspace is found from `[tool.maturin].manifest-path`, so it may live below the repo root. If a release lands while the wheels are building, `publish-native` refuses (the wheels carry the old number): re-run **all** jobs, not only the failed one. A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow builds `ci-fixtures/native_pkg` through the same actions on every target whenever the native path changes.
 
 ### Licence Perimeter (`wads-licence-check`)
 
@@ -3220,6 +3241,7 @@ wads --help
 | [`licence_check`](_autosummary/wads.licence_check.html.md#module-wads.licence_check)             | Audit the licence perimeter of a package's installed dependency closure.                                                         |
 | [`licensing`](_autosummary/wads.licensing.html.md#module-wads.licensing)                     | Licensing                                                                                                                        |
 | [`migration`](_autosummary/wads.migration.html.md#module-wads.migration)                     | Migration tools for converting old setuptools/CI configurations to modern formats.                                               |
+| [`native_build`](_autosummary/wads.native_build.html.md#module-wads.native_build)               | Native (compiled-extension) builds: which repos get one, for which targets.                                                      |
 | [`npm_config`](_autosummary/wads.npm_config.html.md#module-wads.npm_config)                   | Read NPM CI configuration from a `package.json` `wads.ci` block.                                                                 |
 | [`npm_trust`](_autosummary/wads.npm_trust.html.md#module-wads.npm_trust)                     | `wads npm-trust`: find a repo's npm publishers and attach Trusted Publishers.                                                    |
 | [`pack`](_autosummary/wads.pack.html.md#module-wads.pack)                               | Utils to package and publish.                                                                                                    |
@@ -5083,6 +5105,155 @@ True
 ```
 
 
+# _autosummary/wads.native_build.html.md
+
+# wads.native_build
+
+Native (compiled-extension) builds: which repos get one, for which targets.
+
+A package built with [maturin](https://www.maturin.rs/) (a Rust/PyO3 extension) needs one
+wheel per platform, built on that platform’s runner, where a pure-Python package needs one
+`uv build`. The reusable workflow (`uv-ci.yml`) has a native path for it (issue #166),
+and every job on that path is gated on the setup job’s `native` output, so pure-Python
+repos run exactly what they ran before.
+
+The path is on when `[build-system].build-backend = "maturin"` (auto-detected) or when
+`[tool.wads.ci.build].native` says so. `native` takes a backend name, `false`, or a
+table for the details:
+
+```default
+[tool.wads.ci.build]
+native = "maturin"            # or false: no native path even with a maturin backend
+
+[tool.wads.ci.build.native]   # the table form (instead of the line above)
+targets = ["linux-x86_64", "macos-arm64"]     # names from NATIVE_TARGETS, or tables
+maturin_args = ["--release", "--locked"]
+smoke_import = "mypkg._core"                  # default: [tool.maturin].module-name
+cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
+```
+
+A target is a name from [`NATIVE_TARGETS`](_autosummary/wads.native_build.html.md#wads.native_build.NATIVE_TARGETS) or a table with the same keys (`name`,
+`runner`, `target`, and optionally `manylinux`, `python_arch`, `smoke`), for a
+platform the registry lacks (musllinux, Windows on ARM). Everything here is standard
+library only: the setup job loads this file by path, without installing wads.
+
+### Module Attributes
+
+| [`NATIVE_BACKENDS`](_autosummary/wads.native_build.html.md#wads.native_build.NATIVE_BACKENDS)   | Build backends with a native path.   |
+|--------------------------------------------------------------------|--------------------------------------|
+| [`NATIVE_TARGETS`](_autosummary/wads.native_build.html.md#wads.native_build.NATIVE_TARGETS)    | the platforms the fleet's users run. |
+
+### Functions
+
+| [`cargo_test_args`](_autosummary/wads.native_build.html.md#wads.native_build.cargo_test_args)(metadata, \*, binding_manifest)   | `cargo test` arguments for every workspace crate except the binding one.                                       |
+|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [`native_build_config`](_autosummary/wads.native_build.html.md#wads.native_build.native_build_config)(pyproject)                    | The repo's [`NativeBuild`](_autosummary/wads.native_build.html.md#wads.native_build.NativeBuild), or `None` when it has no native path. |
+
+### Classes
+
+| [`NativeBuild`](_autosummary/wads.native_build.html.md#wads.native_build.NativeBuild)(backend[, targets, ...])      | The resolved native-build settings of one repo.                       |
+|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`NativeTarget`](_autosummary/wads.native_build.html.md#wads.native_build.NativeTarget)(name, runner, target[, ...]) | One wheel to build: the runner it builds on and maturin's `--target`. |
+
+### wads.native_build.NATIVE_BACKENDS *= {'maturin': 'maturin'}*
+
+Build backends with a native path. The value is the backend’s `build-backend` string.
+
+### wads.native_build.NATIVE_TARGETS *= {'linux-aarch64': NativeTarget(name='linux-aarch64', runner='ubuntu-24.04-arm', target='aarch64', manylinux='auto', python_arch='', smoke=True), 'linux-x86_64': NativeTarget(name='linux-x86_64', runner='ubuntu-latest', target='x86_64', manylinux='auto', python_arch='', smoke=True), 'macos-arm64': NativeTarget(name='macos-arm64', runner='macos-latest', target='aarch64', manylinux='', python_arch='', smoke=True), 'macos-x86_64': NativeTarget(name='macos-x86_64', runner='macos-latest', target='x86_64', manylinux='', python_arch='', smoke=False), 'windows-x64': NativeTarget(name='windows-x64', runner='windows-latest', target='x64', manylinux='', python_arch='x64', smoke=True)}*
+
+the platforms the fleet’s users run. abi3 wheels, so one
+build per platform covers every supported CPython.
+
+* **Type:**
+  The default wheel matrix
+
+### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The resolved native-build settings of one repo.
+
+#### cargo_test_args *: [Optional](https://docs.python.org/3/library/typing.html#typing.Optional)[[tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)]* *= None*
+
+derive from cargo metadata (every crate but the binding one).
+
+* **Type:**
+  `None`
+
+#### manifest_path *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'Cargo.toml'*
+
+The binding crate’s Cargo.toml (`[tool.maturin].manifest-path`); cargo finds the
+workspace from it.
+
+#### matrix()
+
+The `native-wheels` job’s `matrix.include`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+#### options()
+
+Everything but the matrix, as the setup job’s `native-options` output.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### *class* wads.native_build.NativeTarget(name, runner, target, manylinux='', python_arch='', smoke=True)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One wheel to build: the runner it builds on and maturin’s `--target`.
+
+`smoke` says whether the runner can import the wheel it built (a cross-compiled
+wheel, macOS x86_64 on an arm64 runner, cannot).
+
+### wads.native_build.cargo_test_args(metadata, , binding_manifest)
+
+`cargo test` arguments for every workspace crate except the binding one.
+
+The binding crate (the `cdylib` maturin builds, at `binding_manifest`) is tested
+through Python: its own test binary needs libpython at link and load time. `metadata`
+is `cargo metadata --no-deps --format-version 1`. An empty list means there is no
+pure-Rust crate to test (a single-crate package).
+
+```pycon
+>>> meta = {"packages": [
+...     {"name": "pkg-core", "manifest_path": "/r/rust/core/Cargo.toml"},
+...     {"name": "pkg-py", "manifest_path": "/r/rust/py/Cargo.toml"},
+... ]}
+>>> cargo_test_args(meta, binding_manifest="/r/rust/py/Cargo.toml")
+['--workspace', '--exclude', 'pkg-py']
+>>> cargo_test_args({"packages": meta["packages"][1:]}, binding_manifest="/r/rust/py/Cargo.toml")
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.native_build.native_build_config(pyproject)
+
+The repo’s [`NativeBuild`](_autosummary/wads.native_build.html.md#wads.native_build.NativeBuild), or `None` when it has no native path.
+
+Raises `ValueError` on a setting that does not parse: only a repo that wrote native
+settings can hit it, and a red setup job beats a release that silently builds
+something else.
+
+```pycon
+>>> native_build_config({"build-system": {"build-backend": "hatchling.build"}}) is None
+True
+>>> nb = native_build_config({
+...     "build-system": {"build-backend": "maturin"},
+...     "tool": {"maturin": {"module-name": "pkg._core"}},
+... })
+>>> nb.backend, [t["name"] for t in nb.matrix()][:2], nb.smoke_import
+('maturin', ['linux-x86_64', 'linux-aarch64'], 'pkg._core')
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`NativeBuild`](_autosummary/wads.native_build.html.md#wads.native_build.NativeBuild)]
+
+
 # _autosummary/wads.npm_config.html.md
 
 # wads.npm_config
@@ -6674,6 +6845,30 @@ Build distribution packages.
 Main entry point.
 
 
+# _autosummary/wads.scripts.cargo_test_args.html.md
+
+# wads.scripts.cargo_test_args
+
+Print the `cargo test` arguments for a maturin package (issue #166).
+
+Usage (as the rust-checks action runs it):
+
+```default
+cargo metadata --manifest-path M --no-deps --format-version 1 \
+    | python3 -I cargo_test_args.py M
+```
+
+`M` is the binding crate’s `Cargo.toml` (`[tool.maturin].manifest-path`, resolved
+by the setup job). Prints the arguments on one line, or nothing when there is no
+pure-Rust crate to test. Standard library only: it runs from the action’s checkout
+without installing wads.
+
+### Functions
+
+| `main`([argv])   |    |
+|------------------|----|
+
+
 # _autosummary/wads.scripts.export_ci_env.html.md
 
 # wads.scripts.export_ci_env
@@ -6898,6 +7093,7 @@ Available scripts:
 | [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                            |
 | [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                 |
 | [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                              |
+| [`cargo_test_args`](_autosummary/wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)           | Print the `cargo test` arguments for a maturin package (issue #166).          |
 | [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                |
 | [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any. |
 
@@ -8213,18 +8409,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 12:15 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7c9b9fd95b7834cb46f550031f86646ad768dfd1"><code>7c9b9fd</code></a> on branch <code>master</code>, for **wads 0.2.75** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 12:31 UTC** from commit <a href="https://github.com/i2mint/wads/commit/f4e00937d9c1d98c7b05c6f06646356c51226f22"><code>f4e0093</code></a> on branch <code>master</code>, for **wads 0.2.76** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.75) is behind the latest release on PyPI (0.2.76): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/7c9b9fd95b7834cb46f550031f86646ad768dfd1"><code>7c9b9fd95b7834cb46f550031f86646ad768dfd1</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/f4e00937d9c1d98c7b05c6f06646356c51226f22"><code>f4e00937d9c1d98c7b05c6f06646356c51226f22</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8235,9 +8429,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41633728167">41633728167</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41635952921">41635952921</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>7c9b9fd95b7834cb46f550031f86646ad768dfd1</code> (in the history of the built commit) |
+| Event commit | <code>f4e00937d9c1d98c7b05c6f06646356c51226f22</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8262,13 +8456,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.76/">0.2.76</a>, newer than the documented version (0.2.75).
+Latest release: <a href="https://pypi.org/project/wads/0.2.76/">0.2.76</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 7c9b9fd95b7834cb46f550031f86646ad768dfd1
+git checkout f4e00937d9c1d98c7b05c6f06646356c51226f22
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

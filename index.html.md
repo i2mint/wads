@@ -488,6 +488,27 @@ Commit-subject markers narrow what a default-branch push does. wads matches them
 
 `[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
 
+#### Native packages (Rust/PyO3 via maturin)
+
+A package built with [maturin](https://www.maturin.rs/) (`build-backend = "maturin"`) gets the native path automatically: one abi3 wheel per platform plus an sdist, instead of one `uv build`.
+
+- **Validation** (every run) adds, before the install, the Rust toolchain components and a cargo cache (written only on the default branch), and after it `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` on the pure-Rust crates (every workspace crate but the binding one maturin builds, which is tested through Python), once, on the first Python version. `wads ci-local` runs the same checks.
+- **Release** (default branch, publishing on): `native-version` computes the version once; `native-wheels` builds one wheel per target with that version (`PyO3/maturin-action`, `--release --locked`), imports it from outside the repo when the runner can run it, and uploads it; `publish-native` runs the publish job’s own steps with `uv build --sdist` plus those wheels in place of `uv build`, and refuses if a release that landed meanwhile moved the version. macOS and Windows minutes (about 10x and 2x Linux) are spent only on this path, never on a PR.
+- Default targets: `linux-x86_64`, `linux-aarch64` (native arm runner), `macos-arm64`, `macos-x86_64` (cross-compiled, not import-tested), `windows-x64`.
+
+```toml
+[tool.wads.ci.build]
+native = false            # opt out (e.g. you release from your own workflow), or "maturin" to opt in
+
+[tool.wads.ci.build.native]   # or the table form, for the details (all optional)
+targets = ["linux-x86_64", "macos-arm64", { name = "linux-musl", runner = "ubuntu-latest", target = "x86_64-unknown-linux-musl", manylinux = "musllinux_1_2", smoke = false }]   # a musl wheel cannot import on the glibc runner
+maturin_args = ["--release", "--locked"]
+smoke_import = "mypkg._core"        # default: [tool.maturin].module-name
+cargo_test_args = ["-p", "mypkg-core"]   # default: derived from cargo metadata; [] skips
+```
+
+Commit `Cargo.lock` (the default `--locked` refuses a build without it) and enable pyo3’s `abi3-py3X` feature (a non-abi3 wheel is refused). The Cargo workspace is found from `[tool.maturin].manifest-path`, so it may live below the repo root. If a release lands while the wheels are building, `publish-native` refuses (the wheels carry the old number): re-run **all** jobs, not only the failed one. A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow builds `ci-fixtures/native_pkg` through the same actions on every target whenever the native path changes.
+
 ### Licence Perimeter (`wads-licence-check`)
 
 Fails the build when the **installed dependency closure** carries a licence the

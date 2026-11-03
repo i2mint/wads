@@ -29,6 +29,7 @@ wads --help
 | [`licence_check`](wads.licence_check.html.md#module-wads.licence_check)             | Audit the licence perimeter of a package's installed dependency closure.                                                         |
 | [`licensing`](wads.licensing.html.md#module-wads.licensing)                     | Licensing                                                                                                                        |
 | [`migration`](wads.migration.html.md#module-wads.migration)                     | Migration tools for converting old setuptools/CI configurations to modern formats.                                               |
+| [`native_build`](wads.native_build.html.md#module-wads.native_build)               | Native (compiled-extension) builds: which repos get one, for which targets.                                                      |
 | [`npm_config`](wads.npm_config.html.md#module-wads.npm_config)                   | Read NPM CI configuration from a `package.json` `wads.ci` block.                                                                 |
 | [`npm_trust`](wads.npm_trust.html.md#module-wads.npm_trust)                     | `wads npm-trust`: find a repo's npm publishers and attach Trusted Publishers.                                                    |
 | [`pack`](wads.pack.html.md#module-wads.pack)                               | Utils to package and publish.                                                                                                    |
