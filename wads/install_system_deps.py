@@ -142,6 +142,50 @@ def find_pyproject(path: str) -> Path:
     return p
 
 
+#: Commands a ``check.windows`` cannot rely on, with what to use instead. Checks run with
+#: ``shell=True``, which on Windows is cmd.exe: ``which`` exists there only when Git's
+#: ``usr\bin`` happens to be on PATH, so a good install reads as failed (issue #192).
+UNIX_ONLY_CHECK_COMMANDS = {
+    "which": "`where <name>` or `<name> -version`",
+}
+
+#: A command word: at the start of the line or after a shell operator.
+_COMMAND_WORD_RE = r"(?:^|&&|\|\||[;|(&])\s*{word}(?=\s|$)"
+
+
+def unix_only_check_warnings(
+    ops: Dict[str, dict], *, unix_only: Optional[Dict[str, str]] = None
+) -> List[str]:
+    """Warnings for ``check.windows`` commands that call a Unix-only command.
+
+    ``ops`` is the ``[tool.wads.ops]`` table; ``unix_only`` maps a command to its
+    suggested replacement (default :data:`UNIX_ONLY_CHECK_COMMANDS`). The commands are
+    reported, not rewritten: they are the user's.
+
+    >>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "which ffmpeg"}}})
+    ['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where <name>` or `<name> -version` (`which ffmpeg`)']
+    >>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "where ffmpeg", "linux": "which ffmpeg"}}})
+    []
+    """
+    unix_only = UNIX_ONLY_CHECK_COMMANDS if unix_only is None else unix_only
+    patterns = {
+        word: re.compile(_COMMAND_WORD_RE.format(word=re.escape(word)))
+        for word in unix_only
+    }
+    warnings = []
+    for dep_name, dep_config in ops.items():
+        if not isinstance(dep_config, dict):
+            continue
+        for line in _as_commands(_platform_value(dep_config, "check", "windows")):
+            for word, pattern in patterns.items():
+                if pattern.search(line):
+                    warnings.append(
+                        f"check.windows for {dep_name} uses `{word}`, which cmd.exe "
+                        f"lacks; use {unix_only[word]} (`{line}`)"
+                    )
+    return warnings
+
+
 def detect_platform() -> str:
     """Detect the current platform."""
     system = platform_module.system().lower()
@@ -764,6 +808,10 @@ def install_system_dependencies(
                 file=sys.stderr,
             )
         return True
+
+    if verbose and platform == "windows":
+        for warning in unix_only_check_warnings(ops):
+            print(f"Warning: {warning}", file=sys.stderr)
 
     # Process each dependency
     installed_count = 0

@@ -42,6 +42,7 @@ import urllib.request
 from pathlib import Path
 
 from wads.ci_trigger import inline_trigger_gate, stub_markers
+from wads.install_system_deps import unix_only_check_warnings
 
 try:  # Python 3.11+
     import tomllib  # type: ignore
@@ -248,6 +249,11 @@ def audit_pyproject(repo, rep):
             f"[project] metadata gaps: {', '.join(missing_meta)}",
             "wads-pypi-polish",
         )
+
+    # check.windows commands cmd.exe cannot run (issue #192)
+    ops = data.get("tool", {}).get("wads", {}).get("ops", {})
+    for warning in unix_only_check_warnings(ops if isinstance(ops, dict) else {}):
+        rep.add("MEDIUM", "ci", warning, "wads-ci-fix")
 
     # testpaths: declared but nonexistent paths are a real ecosystem bug
     testpaths = (

@@ -178,6 +178,19 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
                 f'"{package_dir}" to testpaths (see i2mint/wads#56).'
             )
 
+        # check.windows commands cmd.exe cannot run, e.g. `which` (i2mint/wads#192).
+        # Reported, never rewritten: the commands are the repo's own.
+        try:
+            unix_only = load_wads_module(
+                "install_system_deps"
+            ).unix_only_check_warnings(
+                config.data.get("tool", {}).get("wads", {}).get("ops", {})
+            )
+        except Exception:  # a diagnostic must never fail the setup job
+            unix_only = []
+        for warning in unix_only:
+            print(f"::warning title=Unix-only Windows check::{warning}")
+
         # Print summary
         print("[OK] CI configuration loaded successfully")
         print(f"   Project: {config.project_name}")
