@@ -48,7 +48,7 @@ runs:
         set -e
         if [ -z "$CARGO_TEST_ARGS" ] || [ "$CARGO_TEST_ARGS" = "null" ]; then
           ARGS=$(cargo metadata --manifest-path "$MANIFEST" --no-deps --format-version 1 \
-            | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/cargo_test_args.py" .)
+            | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/cargo_test_args.py" "$MANIFEST")
           read -ra args <<< "$ARGS"
         else
           mapfile -t args < <(python3 -I -c 'import json, os; print("\n".join(json.loads(os.environ["CARGO_TEST_ARGS"])))')

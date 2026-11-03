@@ -763,7 +763,6 @@ jobs:
           version: ${{ needs.native-version.outputs.version }}
           pyproject-artifact: wads-release-pyproject
           python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
-          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
 
   # Publishing job
   #

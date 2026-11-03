@@ -148,16 +148,13 @@ def test_the_binding_crate_is_excluded(tmp_path):
     assert args == ["--workspace", "--exclude", "pkg-py"]
 
 
-def test_the_script_reads_the_binding_from_tool_maturin(tmp_path):
-    (tmp_path / "pyproject.toml").write_text(
-        '[tool.maturin]\nmanifest-path = "rust/py/Cargo.toml"\n'
-    )
+def test_the_script_excludes_the_binding_manifest_it_is_given(tmp_path):
     result = subprocess.run(
         [
             sys.executable,
             "-I",
             str(ROOT / "wads/scripts/cargo_test_args.py"),
-            str(tmp_path),
+            str(tmp_path / "rust/py/Cargo.toml"),
         ],
         input=json.dumps(_metadata(tmp_path)),
         capture_output=True,

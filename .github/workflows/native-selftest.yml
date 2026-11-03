@@ -122,7 +122,6 @@ jobs:
           maturin-args: ${{ fromJson(needs.setup.outputs.native-options).maturin_args }}
           version: ${{ env.RELEASE_VERSION }}
           pyproject-artifact: wads-release-pyproject
-          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
           project-dir: ${{ env.FIXTURE }}
 
   collect:
