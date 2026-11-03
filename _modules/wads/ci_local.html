@@ -306,8 +306,10 @@
 <span class="sd">the default, a branch behind its remote, or missing PyPI credentials.</span>
 
 <span class="sd">Known differences from CI: the developer's environment passes through to the commands</span>
-<span class="sd">(minus PyPI credentials, which only the upload step sees, and minus the machine's install</span>
-<span class="sd">pins such as ``UV_CONSTRAINT``, which hosted CI does not have), where CI exports only the</span>
+<span class="sd">(minus PyPI credentials, which only the upload step sees, and minus what the dev shell has</span>
+<span class="sd">and hosted CI does not: install pins such as ``UV_CONSTRAINT``, and ``PYTHONSAFEPATH``,</span>
+<span class="sd">``PYTHONPATH``, ``PYTHONHOME``, ``PYTHONOPTIMIZE``; each leg's tests run with its venv</span>
+<span class="sd">activated, as CI's are), where CI exports only the</span>
 <span class="sd">variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not</span>
 <span class="sd">installed; and lint runs on the tree as it is, where CI formats first.</span>
 
@@ -389,14 +391,23 @@
 
 <span class="c1"># The dev machine's install pins. Hosted CI has none; inherited, they make ci-local test a</span>
 <span class="c1"># different environment (and the fleet's constraint file, which pins every local package</span>
-<span class="c1"># to its main checkout, breaks the install from a git worktree, issue #191). So every</span>
-<span class="c1"># step runs without them, by default: ``run_ci_local(host_pin_vars=())`` keeps them.</span>
+<span class="c1"># to its main checkout, breaks the install from a git worktree, issue #191).</span>
 <span class="n">HOST_INSTALL_PIN_VARS</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"UV_CONSTRAINT"</span><span class="p">,</span>
     <span class="s2">"UV_BUILD_CONSTRAINT"</span><span class="p">,</span>
     <span class="s2">"UV_OVERRIDE"</span><span class="p">,</span>
     <span class="s2">"PIP_CONSTRAINT"</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="c1"># The dev shell's interpreter path settings. CI's ``python -m pytest`` puts the cwd on</span>
+<span class="c1"># ``sys.path``; an inherited ``PYTHONSAFEPATH=1`` keeps it off (3.11+), and a</span>
+<span class="c1"># ``PYTHONPATH`` adds directories CI does not have (issue #194).</span>
+<span class="c1"># Likewise PYTHONHOME (a venv's activation unsets it; inherited, it breaks every venv</span>
+<span class="c1"># step) and PYTHONOPTIMIZE (strips asserts: a false green). Not every PYTHON*: CI sets</span>
+<span class="c1"># PYTHONIOENCODING and PYTHONUTF8 itself.</span>
+<span class="n">HOST_INTERPRETER_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"PYTHONSAFEPATH"</span><span class="p">,</span> <span class="s2">"PYTHONPATH"</span><span class="p">,</span> <span class="s2">"PYTHONHOME"</span><span class="p">,</span> <span class="s2">"PYTHONOPTIMIZE"</span><span class="p">)</span>
+<span class="c1">#: Everything of the dev shell hosted CI does not have; every step runs without it, by</span>
+<span class="c1">#: default (``run_ci_local(host_only_vars=())`` keeps it all).</span>
+<span class="n">HOST_ONLY_VARS</span> <span class="o">=</span> <span class="n">HOST_INSTALL_PIN_VARS</span> <span class="o">+</span> <span class="n">HOST_INTERPRETER_VARS</span>
 
 <span class="n">PASSED</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"FAIL"</span><span class="p">,</span> <span class="s2">"skip"</span>
 
@@ -423,7 +434,8 @@
 <span class="w">    </span><span class="sd">"""One thing CI would do: a command (``argv``) or an in-process ``check``.</span>
 
 <span class="sd">    ``argv`` and ``env`` values may hold ``&lt;&lt;workdir&gt;&gt;``, ``&lt;&lt;version&gt;&gt;``,</span>
-<span class="sd">    ``&lt;&lt;default_branch&gt;&gt;`` or ``&lt;&lt;pypi_token&gt;&gt;``, filled in at run time. A non-``blocking``</span>
+<span class="sd">    ``&lt;&lt;default_branch&gt;&gt;``, ``&lt;&lt;pypi_token&gt;&gt;`` or ``&lt;&lt;host_path_suffix&gt;&gt;`` (the run's PATH</span>
+<span class="sd">    after a path separator, or nothing when it has none), filled in at run time. A non-``blocking``</span>
 <span class="sd">    failure is reported without stopping the run. ``capture`` names the context value that</span>
 <span class="sd">    receives the command's last stdout line. A ``check`` takes the run context and returns</span>
 <span class="sd">    an error message, or ``None`` when it passes.</span>
@@ -746,9 +758,24 @@
                     <span class="n">PYTEST_BASETEMP</span><span class="p">,</span>
                     <span class="o">*</span><span class="n">pytest_argv</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">pytest_args</span><span class="o">=</span><span class="n">pytest_args</span><span class="p">),</span>
                 <span class="p">),</span>
+                <span class="c1"># The venv activated, as run-tests-uv does: a test that shells out to</span>
+                <span class="c1"># `python` or `uv pip` reaches this venv, not the dev shell's (#194).</span>
+                <span class="n">env</span><span class="o">=</span><span class="n">_activated</span><span class="p">(</span><span class="n">venv</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">),</span>
             <span class="p">),</span>
         <span class="p">]</span>
     <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_activated</span><span class="p">(</span><span class="n">venv</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A Step's ``env`` for running inside ``venv``: its bin directory first on PATH.</span>
+
+<span class="sd">    &gt;&gt;&gt; _activated("/w/py3.12", platform="posix")</span>
+<span class="sd">    (('VIRTUAL_ENV', '/w/py3.12'), ('PATH', '/w/py3.12/bin&lt;&lt;host_path_suffix&gt;&gt;'))</span>
+<span class="sd">    &gt;&gt;&gt; _activated("/w/py3.12", platform="nt")[1]</span>
+<span class="sd">    ('PATH', '/w/py3.12/Scripts&lt;&lt;host_path_suffix&gt;&gt;')</span>
+<span class="sd">    """</span>
+    <span class="n">bin_dir</span> <span class="o">=</span> <span class="n">venv_python</span><span class="p">(</span><span class="n">venv</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">((</span><span class="s2">"VIRTUAL_ENV"</span><span class="p">,</span> <span class="n">venv</span><span class="p">),</span> <span class="p">(</span><span class="s2">"PATH"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bin_dir</span><span class="si">}</span><span class="s2">&lt;&lt;host_path_suffix&gt;&gt;"</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_rust_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
@@ -1218,7 +1245,7 @@
     <span class="n">source_env</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">defaults</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
-    <span class="n">withheld</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span> <span class="o">+</span> <span class="n">HOST_INSTALL_PIN_VARS</span><span class="p">,</span>
+    <span class="n">withheld</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span> <span class="o">+</span> <span class="n">HOST_ONLY_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""The environment the steps run in, and the names of ``source_env`` it left out.</span>
 
@@ -1249,7 +1276,7 @@
     <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keep_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">workdir_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">host_pin_vars</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">HOST_INSTALL_PIN_VARS</span><span class="p">,</span>
+    <span class="n">host_only_vars</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">HOST_ONLY_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CILocalReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.</span>
 
@@ -1258,8 +1285,10 @@
 <span class="sd">    that the filesystem has room for this run (issue #159).</span>
 
 <span class="sd">    ``environ`` (default ``os.environ``) reaches every step minus the PyPI credentials</span>
-<span class="sd">    (only the upload sees them) and minus ``host_pin_vars``, the dev machine's install</span>
-<span class="sd">    constraints that hosted CI does not have (issue #191).</span>
+<span class="sd">    (only the upload sees them) and minus ``host_only_vars``, what the dev shell has and</span>
+<span class="sd">    hosted CI does not: install constraints (#191), ``PYTHONSAFEPATH`` / ``PYTHONPATH``</span>
+<span class="sd">    (#194). Each leg's tests run with its venv activated (``VIRTUAL_ENV``, its ``bin``</span>
+<span class="sd">    first on ``PATH``), as in CI.</span>
 <span class="sd">    """</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
@@ -1268,12 +1297,12 @@
     <span class="k">if</span> <span class="n">n_venvs</span> <span class="o">:=</span> <span class="n">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
         <span class="n">steps</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_temp_space_step</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">))</span>
     <span class="n">source_env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span><span class="p">)</span>
-    <span class="n">env</span><span class="p">,</span> <span class="n">dropped_pins</span> <span class="o">=</span> <span class="n">steps_env</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">,</span> <span class="n">dropped_host</span> <span class="o">=</span> <span class="n">steps_env</span><span class="p">(</span>
         <span class="n">source_env</span><span class="p">,</span>
         <span class="n">defaults</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">,</span>
-        <span class="n">withheld</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">host_pin_vars</span><span class="p">),</span>
+        <span class="n">withheld</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">host_only_vars</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">dropped_pins</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dropped_pins</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">host_pin_vars</span><span class="p">]</span>
+    <span class="n">dropped_host</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dropped_host</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">host_only_vars</span><span class="p">]</span>
     <span class="c1"># A killed run never reaches the cleanup below; remove what earlier ones left.</span>
     <span class="c1"># Best effort: a sweep that fails must not stop the run it was clearing room for.</span>
     <span class="k">try</span><span class="p">:</span>
@@ -1288,11 +1317,15 @@
         <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
         <span class="n">runner</span><span class="o">=</span><span class="n">runner</span><span class="p">,</span>
         <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
-        <span class="n">values</span><span class="o">=</span><span class="p">{</span><span class="s2">"workdir"</span><span class="p">:</span> <span class="n">workdir</span><span class="p">},</span>
+        <span class="c1"># No trailing separator for an empty PATH: on POSIX an empty entry is the cwd.</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"workdir"</span><span class="p">:</span> <span class="n">workdir</span><span class="p">,</span>
+            <span class="s2">"host_path_suffix"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">env</span><span class="p">[</span><span class="s2">"PATH"</span><span class="p">]</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="p">},</span>
         <span class="n">source_env</span><span class="o">=</span><span class="n">source_env</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="n">dropped_pins</span><span class="p">:</span>
-        <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ran without </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped_pins</span><span class="p">)</span><span class="si">}</span><span class="s2"> (hosted CI has none)"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dropped_host</span><span class="p">:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ran without </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped_host</span><span class="p">)</span><span class="si">}</span><span class="s2"> (hosted CI has none)"</span><span class="p">)</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">CILocalReport</span><span class="p">(</span>
         <span class="n">project</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
         <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span>
@@ -1416,7 +1449,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=86808624"></script>
+</div><script src="../../_static/documentation_options.js?v=2fc0f242"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

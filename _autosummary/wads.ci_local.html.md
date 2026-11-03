@@ -23,8 +23,10 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer’s environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees, and minus the machine’s install
-pins such as `UV_CONSTRAINT`, which hosted CI does not have), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus what the dev shell has
+and hosted CI does not: install pins such as `UV_CONSTRAINT`, and `PYTHONSAFEPATH`,
+`PYTHONPATH`, `PYTHONHOME`, `PYTHONOPTIMIZE`; each leg’s tests run with its venv
+activated, as CI’s are), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -48,10 +50,11 @@ can ever spend or publish.
 
 ### Module Attributes
 
-| [`WORKDIR_PREFIX`](#wads.ci_local.WORKDIR_PREFIX)            | Prefix of the temporary work directory each run makes (and sweeps when left behind).                                 |
-|----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [`WORKDIR_BYTES_PER_PYTHON`](#wads.ci_local.WORKDIR_BYTES_PER_PYTHON)  | one venv with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.                       |
-| [`WORKDIR_INODES_PER_PYTHON`](#wads.ci_local.WORKDIR_INODES_PER_PYTHON) | a workdir held ~22k and a pytest basetemp up to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159). |
+| [`HOST_ONLY_VARS`](#wads.ci_local.HOST_ONLY_VARS)            | Everything of the dev shell hosted CI does not have; every step runs without it, by default (`run_ci_local(host_only_vars=())` keeps it all).   |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`WORKDIR_PREFIX`](#wads.ci_local.WORKDIR_PREFIX)            | Prefix of the temporary work directory each run makes (and sweeps when left behind).                                                            |
+| [`WORKDIR_BYTES_PER_PYTHON`](#wads.ci_local.WORKDIR_BYTES_PER_PYTHON)  | one venv with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.                                                  |
+| [`WORKDIR_INODES_PER_PYTHON`](#wads.ci_local.WORKDIR_INODES_PER_PYTHON) | a workdir held ~22k and a pytest basetemp up to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).                            |
 
 ### Functions
 
@@ -84,6 +87,11 @@ The outcome of a `wads ci-local` run, rendered the way CI would summarise it.
 
 The blocking step that failed, if any.
 
+### wads.ci_local.HOST_ONLY_VARS *= ('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE')*
+
+Everything of the dev shell hosted CI does not have; every step runs without it, by
+default (`run_ci_local(host_only_vars=())` keeps it all).
+
 ### *class* wads.ci_local.RunResult(returncode, stdout='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -97,7 +105,8 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 One thing CI would do: a command (`argv`) or an in-process `check`.
 
 `argv` and `env` values may hold `<<workdir>>`, `<<version>>`,
-`<<default_branch>>` or `<<pypi_token>>`, filled in at run time. A non-`blocking`
+`<<default_branch>>`, `<<pypi_token>>` or `<<host_path_suffix>>` (the run’s PATH
+after a path separator, or nothing when it has none), filled in at run time. A non-`blocking`
 failure is reported without stopping the run. `capture` names the context value that
 receives the command’s last stdout line. A `check` takes the run context and returns
 an error message, or `None` when it passes.
@@ -188,7 +197,7 @@ Token-only, like CI. The token itself is never printed.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_pin_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
+### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_only_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE'))
 
 Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)’s steps, stop at the first blocking failure, and report.
 
@@ -197,13 +206,15 @@ temp directory), after removing the stale ones killed runs left there and checki
 that the filesystem has room for this run (issue #159).
 
 `environ` (default `os.environ`) reaches every step minus the PyPI credentials
-(only the upload sees them) and minus `host_pin_vars`, the dev machine’s install
-constraints that hosted CI does not have (issue #191).
+(only the upload sees them) and minus `host_only_vars`, what the dev shell has and
+hosted CI does not: install constraints (#191), `PYTHONSAFEPATH` / `PYTHONPATH`
+(#194). Each leg’s tests run with its venv activated (`VIRTUAL_ENV`, its `bin`
+first on `PATH`), as in CI.
 
 * **Return type:**
   [`CILocalReport`](#wads.ci_local.CILocalReport)
 
-### wads.ci_local.steps_env(source_env, , defaults=(), withheld=('PYPI_PASSWORD', 'UV_PUBLISH_TOKEN', 'UV_PUBLISH_USERNAME', 'UV_PUBLISH_PASSWORD', 'UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
+### wads.ci_local.steps_env(source_env, , defaults=(), withheld=('PYPI_PASSWORD', 'UV_PUBLISH_TOKEN', 'UV_PUBLISH_USERNAME', 'UV_PUBLISH_PASSWORD', 'UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE'))
 
 The environment the steps run in, and the names of `source_env` it left out.
 
