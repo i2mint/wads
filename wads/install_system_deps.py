@@ -80,10 +80,8 @@ if sys.version_info >= (3, 11):
 else:
     try:
         import tomli as tomllib
-    except ImportError:
-        print("ERROR: tomli package required for Python < 3.11", file=sys.stderr)
-        print("Install with: pip install tomli", file=sys.stderr)
-        sys.exit(1)
+    except ImportError:  # reported when a pyproject is read, not at import
+        tomllib = None
 
 
 # Seconds allowed for a single command. Install commands get a generous ceiling
@@ -142,6 +140,67 @@ def find_pyproject(path: str) -> Path:
     return p
 
 
+#: Commands a ``check.windows`` cannot rely on, with what to use instead. Checks run with
+#: ``shell=True``, which on Windows is cmd.exe: ``which`` exists there only when Git's
+#: ``usr\bin`` happens to be on PATH, so a good install reads as failed (issue #192).
+UNIX_ONLY_CHECK_COMMANDS = {
+    "which": "`where <name>` or `<name> -version`",
+}
+
+#: cmd.exe's command separators (``&&``, ``||``, ``&``, ``|``, ``(``), not ``^``-escaped.
+#: ``;`` is not one in cmd.exe.
+_CMD_SEPARATOR = r"(?:^|(?<!\^)(?:&&|\|\||[&|(]))"
+#: How cmd.exe may introduce a command: ``@``, ``call``, ``cmd /c`` (and quotes).
+_CMD_PREFIX = r"""\s*(?:@\s*)?(?:call\s+)?(?:cmd(?:\.exe)?\s+/[ck]\s+"?)?"?"""
+
+
+def _command_word_pattern(word: str) -> "re.Pattern":
+    """``word`` in command position for cmd.exe, case-insensitive, ``.exe`` optional.
+
+    >>> bool(_command_word_pattern("which").search('cmd /c "WHICH.exe" ffmpeg'))
+    True
+    >>> bool(_command_word_pattern("which").search("echo hi;which x ^&^& findstr which y"))
+    False
+    """
+    return re.compile(
+        rf"{_CMD_SEPARATOR}{_CMD_PREFIX}{re.escape(word)}(?:\.exe)?\"?(?=\s|$)",
+        re.IGNORECASE,
+    )
+
+
+_UNIX_ONLY_PATTERNS = {
+    word: _command_word_pattern(word) for word in UNIX_ONLY_CHECK_COMMANDS
+}
+
+
+def unix_only_check_warnings(ops) -> List[str]:
+    """Warnings for ``check.windows`` commands that call a Unix-only command.
+
+    ``ops`` is the ``[tool.wads.ops]`` table (anything else declares nothing); the
+    commands and their suggested replacements are :data:`UNIX_ONLY_CHECK_COMMANDS`.
+    The commands are reported, not rewritten: they are the user's.
+
+    >>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "which ffmpeg"}}})
+    ['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where <name>` or `<name> -version` (`which ffmpeg`)']
+    >>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "where ffmpeg", "linux": "which ffmpeg"}}})
+    []
+    """
+    if not isinstance(ops, dict):
+        return []
+    warnings = []
+    for dep_name, dep_config in ops.items():
+        if not isinstance(dep_config, dict):
+            continue
+        for line in _as_commands(_platform_value(dep_config, "check", "windows")):
+            for word, pattern in _UNIX_ONLY_PATTERNS.items():
+                if pattern.search(line):
+                    warnings.append(
+                        f"check.windows for {dep_name} uses `{word}`, which cmd.exe "
+                        f"lacks; use {UNIX_ONLY_CHECK_COMMANDS[word]} (`{line}`)"
+                    )
+    return warnings
+
+
 def detect_platform() -> str:
     """Detect the current platform."""
     system = platform_module.system().lower()
@@ -157,6 +216,10 @@ def detect_platform() -> str:
 
 def read_system_deps(pyproject_path: Path) -> Dict[str, dict]:
     """Read [tool.wads.ops.*] sections from pyproject.toml."""
+    if tomllib is None:
+        raise ImportError(
+            "tomli package required for Python < 3.11 (pip install tomli)"
+        )
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
 
@@ -853,6 +916,9 @@ def install_system_dependencies(
         else:
             if verbose:
                 print(f"✗ Installation failed for {dep_name}: {error}", file=sys.stderr)
+                if platform == "windows":
+                    for hint in unix_only_check_warnings({dep_name: dep_config}):
+                        print(f"  Hint: {hint}", file=sys.stderr)
             failed_count += 1
 
         # Show note if present

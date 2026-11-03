@@ -52,7 +52,12 @@ def test_read_ci_config_emits_outputs_and_test_extra_warning(tmp_path):
     (tmp_path / "pyproject.toml").write_text(PYPROJECT)
     out = tmp_path / "out.txt"
     result = subprocess.run(
-        [sys.executable, "-I", str(ROOT / "wads" / "scripts" / "read_ci_config.py"), "."],
+        [
+            sys.executable,
+            "-I",
+            str(ROOT / "wads" / "scripts" / "read_ci_config.py"),
+            ".",
+        ],
         cwd=tmp_path,
         env={**_BASE_ENV, "GITHUB_OUTPUT": str(out), "PATH": ""},
         capture_output=True,
@@ -61,3 +66,27 @@ def test_read_ci_config_emits_outputs_and_test_extra_warning(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
     assert "project-name=demo" in out.read_text()
     assert "Test extra not installed" in result.stdout + result.stderr
+
+
+def test_read_ci_config_isolated_reports_a_unix_only_windows_check(tmp_path):
+    """i2mint/wads#192: the setup job loads install_system_deps by path under `-I`;
+    a broken load would silently drop the warning, so run it the way CI does."""
+    (tmp_path / "pyproject.toml").write_text(
+        PYPROJECT + '\n[tool.wads.ops.ffmpeg]\ncheck.windows = "which ffmpeg"\n'
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            str(ROOT / "wads" / "scripts" / "read_ci_config.py"),
+            ".",
+        ],
+        cwd=tmp_path,
+        env={**_BASE_ENV, "GITHUB_OUTPUT": str(tmp_path / "out.txt"), "PATH": ""},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "::warning title=Unix-only Windows check::check.windows for ffmpeg" in (
+        result.stdout
+    )

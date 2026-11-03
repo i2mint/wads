@@ -24,7 +24,9 @@ url = "https://ffmpeg.org/"
 #   4. Empty string "" or empty list [] means "skip check" (not applicable)
 #
 # STRATEGY:
-#   - For executables: use "which {name}" or "command -v {name}"
+#   - For executables: use "which {name}" or "command -v {name}" (Unix only: on
+#     Windows the check runs in cmd.exe, which has no `which`; use "where {name}"
+#     or "{name} -version")
 #   - For libraries: use package manager queries (dpkg, rpm, brew)
 #   - For virtual deps: check for any implementation
 
