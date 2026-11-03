@@ -9,7 +9,9 @@ the object the reusable workflow's setup job reads, and runs in order:
 2. **tests**: for each ``python_versions`` entry, a fresh ``uv`` venv in a temporary
    directory, ``uv pip install -e .[extras]``, then pytest with the arguments
    ``actions/run-tests-uv`` builds (coverage, ``--doctest-modules`` and its option flags,
-   one ``--ignore`` per excluded path, then ``pytest_args``).
+   one ``--ignore`` per excluded path, then ``pytest_args``). Then one more such leg per
+   ``[[tool.wads.ci.testing.pinned]]`` entry, the project and its pins installed in one
+   resolve and checked with ``uv pip check``, as the validation job's pinned legs do.
 3. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a
    stale artifact can never be uploaded.
 
@@ -196,29 +198,36 @@ def subprocess_runner(
 # What CI runs, as data
 
 
-def pytest_argv(config: CIConfig, *, repo=None) -> list[str]:
+def pytest_argv(
+    config: CIConfig,
+    *,
+    repo=None,
+    pytest_args: Optional[Sequence[str]] = None,
+) -> list[str]:
     """The pytest arguments ``actions/run-tests-uv`` builds, in its order.
 
     The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config
-    sets them (``repo=None``: not checked, defaults passed).
+    sets them (``repo=None``: not checked, defaults passed). ``pytest_args`` defaults
+    to the config's (a pinned leg passes its own, issue #189).
 
     >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE
     ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
      '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',
      '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']
     """
+    pytest_args = config.pytest_args if pytest_args is None else pytest_args
     argv = []
     if config.coverage_enabled:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
     argv += ["--doctest-modules"]
-    extra = " ".join(config.pytest_args)
+    extra = " ".join(pytest_args)
     if flags_arg := doctest_optionflags_arg(
         None if repo is None else str(repo), pytest_args=extra
     ):
         argv += ["-o", flags_arg]
     argv += [f"--ignore={p.strip()}" for p in config.exclude_paths if p.strip()]
     # The action joins pytest_args with spaces and `eval`s the result.
-    argv += shlex.split(" ".join(config.pytest_args))
+    argv += shlex.split(extra)
     return argv
 
 
@@ -267,6 +276,7 @@ def plan_ci_local(
         steps.append(_required_env_step(config.env_vars_required))
     steps += _quality_steps(config)
     steps += _test_steps(config, platform=platform, repo=repo)
+    steps += _pinned_steps(config, platform=platform, repo=repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
     return steps
 
@@ -353,58 +363,121 @@ def _quality_steps(config: CIConfig) -> list[Step]:
     return steps
 
 
+def _install_target(config: CIConfig) -> str:
+    """What ``install-deps-uv`` installs: the project, with its CI extras."""
+    return f".[{config.install_extras}]" if config.install_extras else "."
+
+
+def _leg_steps(
+    config: CIConfig,
+    *,
+    label: str,
+    venv: str,
+    version: str,
+    platform: str,
+    repo=None,
+    pins: Sequence[str] = (),
+    pytest_args: Optional[Sequence[str]] = None,
+    licence: bool = False,
+) -> list[Step]:
+    """One validation leg: a venv on ``version``, the project installed (with ``pins``
+    in the same resolve, then ``uv pip check``), optionally the licence gate, then
+    pytest with ``pytest_args`` (default: the config's) when tests are on."""
+    python = venv_python(venv, platform=platform)
+    runner_deps = ("pytest", "pytest-cov") if config.coverage_enabled else ("pytest",)
+    install = (
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        python,
+        "-e",
+        _install_target(config),
+    )
+    steps = [
+        Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
+        # A pinned leg resolves pytest with the pins, so the later pytest install is a
+        # no-op and cannot re-upgrade a pin in pytest's own closure (pluggy, ...).
+        Step(f"{label}: install", (*install, *pins, *(runner_deps if pins else ()))),
+    ]
+    if pins:
+        steps.append(
+            Step(f"{label}: pip check", ("uv", "pip", "check", "--python", python))
+        )
+    if licence:
+        steps.append(
+            Step(
+                f"{label}: licence perimeter",
+                (
+                    "uvx",
+                    "--from",
+                    "wads",
+                    "wads-licence-check",
+                    ".",
+                    "--python",
+                    python,
+                ),
+            )
+        )
+    if config.tests_enabled:
+        steps += [
+            Step(
+                f"{label}: install pytest",
+                ("uv", "pip", "install", "--python", python, *runner_deps),
+            ),
+            Step(
+                f"{label}: tests",
+                (
+                    python,
+                    "-m",
+                    "pytest",
+                    # First, so a `--` in the user's pytest_args cannot turn it
+                    # into a test path.
+                    "--basetemp",
+                    PYTEST_BASETEMP,
+                    *pytest_argv(config, repo=repo, pytest_args=pytest_args),
+                ),
+            ),
+        ]
+    return steps
+
+
 def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
     if not (config.tests_enabled or config.licence_enabled):
         return []
-    target = f".[{config.install_extras}]" if config.install_extras else "."
-    runner_deps = ("pytest", "pytest-cov") if config.coverage_enabled else ("pytest",)
     steps = []
     for index, version in enumerate(config.python_versions):
-        venv = f"{WORKDIR}/py{version}"
-        python = venv_python(venv, platform=platform)
-        label = f"python {version}"
-        steps += [
-            Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
-            Step(
-                f"{label}: install",
-                ("uv", "pip", "install", "--python", python, "-e", target),
-            ),
-        ]
-        if config.licence_enabled and index == 0:
-            steps.append(
-                Step(
-                    f"{label}: licence perimeter",
-                    (
-                        "uvx",
-                        "--from",
-                        "wads",
-                        "wads-licence-check",
-                        ".",
-                        "--python",
-                        python,
-                    ),
-                )
-            )
-        if config.tests_enabled:
-            steps += [
-                Step(
-                    f"{label}: install pytest",
-                    ("uv", "pip", "install", "--python", python, *runner_deps),
-                ),
-                Step(
-                    f"{label}: tests",
-                    (
-                        python,
-                        "-m",
-                        "pytest",
-                        # First, so a `--` in the user's pytest_args cannot turn it
-                        # into a test path.
-                        "--basetemp",
-                        PYTEST_BASETEMP,
-                        *pytest_argv(config, repo=repo),
-                    ),
-                ),
-            ]
+        steps += _leg_steps(
+            config,
+            label=f"python {version}",
+            venv=f"{WORKDIR}/py{version}",
+            version=version,
+            platform=platform,
+            repo=repo,
+            licence=config.licence_enabled and index == 0,
+        )
+    return steps
+
+
+def _pinned_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
+    """The validation job's pinned legs (issue #189): per ``[[tool.wads.ci.testing.pinned]]``
+    entry, a venv on its ``python_version``, the project and the pins in one resolve,
+    ``uv pip check``, then pytest with the entry's ``pytest_args``."""
+    runs = config.pinned_test_runs  # validated even when tests are off: fail closed
+    if not config.tests_enabled:
+        return []
+    steps = []
+    for run in runs:
+        steps += _leg_steps(
+            config,
+            label=f"pinned {run.name}",
+            venv=f"{WORKDIR}/pinned-{run.name}",
+            version=run.python_version,
+            platform=platform,
+            repo=repo,
+            pins=run.requirements,
+            pytest_args=run.pytest_args,
+        )
     return steps
 
 

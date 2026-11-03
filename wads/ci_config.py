@@ -6,6 +6,7 @@ source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.
 """
 
+from dataclasses import dataclass
 from typing import Any, Optional
 from pathlib import Path
 import json
@@ -38,6 +39,12 @@ DFLT_TRIGGER_MODE = "auto"
 #: healthy run should hit it; lower it per repo with
 #: ``[tool.wads.ci.testing].job_timeout_minutes``.
 DFLT_JOB_TIMEOUT_MINUTES = 60
+#: What a ``[[tool.wads.ci.testing.pinned]]`` name may contain: it names a CI check and
+#: a ``wads ci-local`` venv directory.
+PINNED_RUN_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+#: What a pinned run's ``python_version`` may contain (``3.11``, ``3.13t``, ``pypy3.10``):
+#: it reaches ``setup-python-uv``, ``uv venv --python`` and a check name.
+PINNED_PYTHON_VERSION_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9.+-]*")
 DFLT_RUN_CI_MARKER = "[run ci]"
 #: The deploy rung of the on-demand ladder (i2mint/wads#131): validation, then the
 #: publish / Pages jobs. ``run_ci_publishes`` keeps today's behaviour by default
@@ -115,6 +122,104 @@ def _single_line_marker(trigger: dict, key: str, default: str) -> str:
             f"single-line string, got {marker!r}"
         )
     return marker
+
+
+def _str_list(value, *, field: str) -> tuple:
+    """``value`` as a tuple of non-blank strings (a lone string is a list of one)."""
+    items = [value] if isinstance(value, str) else value
+    if not isinstance(items, list) or not all(isinstance(i, str) for i in items):
+        raise ValueError(
+            f"{field} must be a string or a list of strings, got {value!r}"
+        )
+    return tuple(i.strip() for i in items if i.strip())
+
+
+def _requirement(text: str) -> str:
+    """``text`` if it is one PEP 508 requirement, else ``ValueError``.
+
+    The value reaches ``uv pip install`` as an argument, so an option (``--index-url``,
+    ``-e``) or a path is refused here rather than read by uv.
+
+    >>> _requirement("attrs>=22,<23")
+    'attrs>=22,<23'
+    >>> _requirement("--index-url=https://example.com")
+    Traceback (most recent call last):
+      ...
+    ValueError: requirements: '--index-url=https://example.com' is not a PEP 508 requirement
+    """
+    from packaging.requirements import InvalidRequirement, Requirement
+
+    try:
+        requirement = Requirement(text)
+    except InvalidRequirement:
+        raise ValueError(
+            f"requirements: {text!r} is not a PEP 508 requirement"
+        ) from None
+    if requirement.marker is not None:
+        # uv would skip it where the marker is false, leaving the leg silently unpinned;
+        # a pinned run picks its Python with python_version instead.
+        raise ValueError(
+            f"requirements: {text!r} has an environment marker; use the entry's "
+            "python_version instead"
+        )
+    return text
+
+
+@dataclass(frozen=True)
+class PinnedTestRun:
+    """One ``[[tool.wads.ci.testing.pinned]]`` entry: one more test leg of the validation
+    job, with ``requirements`` resolved together with the project, on ``python_version``.
+    """
+
+    name: str
+    requirements: tuple
+    pytest_args: tuple
+    python_version: str
+
+    @classmethod
+    def from_entry(
+        cls, entry, *, default_name: str, pytest_args, python_version: str
+    ) -> "PinnedTestRun":
+        """Validate one declared entry, filling the defaults it leaves out.
+
+        ``pytest_args`` and ``python_version`` are the repo's, used when the entry has
+        none (an empty ``pytest_args`` list counts as none, as it does in CI).
+
+        >>> PinnedTestRun.from_entry(
+        ...     {"requirements": []}, default_name="p", pytest_args=[], python_version="3.12"
+        ... )
+        Traceback (most recent call last):
+          ...
+        ValueError: requirements is empty
+        """
+        if not isinstance(entry, dict):
+            raise ValueError(f"want a table, got {entry!r}")
+        name = entry.get("name", default_name)
+        if not isinstance(name, str) or not PINNED_RUN_NAME_RE.fullmatch(name):
+            raise ValueError(
+                f"name must match {PINNED_RUN_NAME_RE.pattern} (it names a CI check "
+                f"and a directory), got {name!r}"
+            )
+        requirements = _str_list(entry.get("requirements"), field="requirements")
+        if not requirements:
+            raise ValueError("requirements is empty")
+        requirements = tuple(_requirement(r) for r in requirements)
+        args = entry.get("pytest_args")
+        args = () if args is None else _str_list(args, field="pytest_args")
+        version = entry.get("python_version", python_version)
+        if not isinstance(version, str) or not PINNED_PYTHON_VERSION_RE.fullmatch(
+            version
+        ):
+            raise ValueError(
+                f'python_version must be a string such as "3.11" (quote it in TOML), '
+                f"got {version!r}"
+            )
+        return cls(
+            name=name,
+            requirements=requirements,
+            pytest_args=args or tuple(pytest_args),
+            python_version=version,
+        )
 
 
 class CIConfig:
@@ -454,6 +559,58 @@ class CIConfig:
             )
             return DFLT_JOB_TIMEOUT_MINUTES
         return value
+
+    @property
+    def pinned_test_runs(self) -> list["PinnedTestRun"]:
+        """Extra test legs with some dependencies pinned (``[[tool.wads.ci.testing.pinned]]``).
+
+        Each entry is one more leg of the Linux validation matrix: the normal install,
+        then the project reinstalled together with ``requirements`` in one resolve (so a
+        pin outside the package's declared range fails instead of being overridden),
+        ``uv pip check``, then pytest with the entry's ``pytest_args`` (default: the
+        repo's) on its ``python_version`` (default: the first ``python_versions``
+        entry). Use it to test the oldest supported release of a dependency next to the
+        latest one (issue #189)::
+
+            [[tool.wads.ci.testing.pinned]]
+            name = "oldest-sdk"
+            requirements = ["elevenlabs==2.58.0"]
+            pytest_args = ["voxy/tests/test_elevenlabs_model.py"]
+
+        Fails closed: an invalid entry, a repeated ``name``, or a ``pinned`` that is not
+        an array of tables raises ``ValueError``, which turns the CI setup job red.
+
+        >>> CIConfig({}).pinned_test_runs
+        []
+        >>> pinned = [{"requirements": "attrs==22.1.0"}]
+        >>> CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}}).pinned_test_runs
+        ... # doctest: +NORMALIZE_WHITESPACE
+        [PinnedTestRun(name='pinned-1', requirements=('attrs==22.1.0',),
+                       pytest_args=('-v', '--tb=short'), python_version='3.10')]
+        """
+        where = "[[tool.wads.ci.testing.pinned]]"
+        entries = self.testing_config.get("pinned", [])
+        if not isinstance(entries, list):
+            raise ValueError(f"{where} must be an array of tables, got {entries!r}")
+        versions = self.python_versions
+        default_version = versions[0] if versions else ""
+        runs = []
+        for index, entry in enumerate(entries, 1):
+            try:
+                run = PinnedTestRun.from_entry(
+                    entry,
+                    default_name=f"pinned-{index}",
+                    pytest_args=self.pytest_args,
+                    python_version=default_version,
+                )
+            except ValueError as e:
+                raise ValueError(f"{where} entry {index}: {e}") from None
+            if any(run.name == seen.name for seen in runs):
+                raise ValueError(
+                    f"{where} entry {index}: the name {run.name!r} is already used"
+                )
+            runs.append(run)
+        return runs
 
     @property
     def system_dependencies(self) -> dict | list:

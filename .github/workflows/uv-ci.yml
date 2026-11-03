@@ -198,6 +198,7 @@ jobs:
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
       windows-blocking: ${{ steps.config.outputs.windows-blocking }}
       job-timeout-minutes: ${{ steps.config.outputs.job-timeout-minutes }}
+      pinned-runs: ${{ steps.config.outputs.pinned-runs }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -416,9 +417,24 @@ jobs:
   # subject, is the decision: a marker quoted only in a squash-merged PR body
   # costs the setup job and runs nothing else.
 
-  # Second job: Validation using the config
+  # Second job: Validation using the config.
+  #
+  # Pinned-dependency legs (issue #189): each [[tool.wads.ci.testing.pinned]]
+  # entry is one more matrix leg, added by `include` from the setup job's
+  # `pinned-runs` output ({"python-version", "pinned": {name, requirements,
+  # pytest_args}}). The base `pinned: [false]` is what makes an include object
+  # a NEW leg: its `pinned` overwrites an original value, so GitHub cannot
+  # merge it into an existing combination. A pinned leg reinstalls the project
+  # with the pins in one resolve, runs `uv pip check`, then the tests with the
+  # entry's pytest_args; lint, format, type check, licence and metrics run on
+  # the normal legs only. Pinned legs are legs of THIS job, so a failing one
+  # blocks publish like any other validation leg. That is intended: a release
+  # must pass on the oldest dependency it claims to support. A repo that
+  # declares nothing gets `include: []` and exactly the legs and check names
+  # it had before (`Validation (3.10)`, ...); the explicit `name:` keeps the
+  # `pinned: false` key out of them.
   validation:
-    name: Validation
+    name: ${{ matrix.pinned && format('Validation (pinned {0})', matrix.pinned.name) || matrix.python-version && format('Validation ({0})', matrix.python-version) || 'Validation' }}
     # Least privilege (#113): this job runs the repo's code or reads config;
     # it never pushes, so its GITHUB_TOKEN cannot write either.
     permissions:
@@ -431,8 +447,14 @@ jobs:
     # `|| '60'` keeps the job startable if the output is ever missing.
     timeout-minutes: ${{ fromJSON(needs.setup.outputs.job-timeout-minutes || '60') }}
     strategy:
+      # GitHub's default (true) unless pinned legs exist: then a failing old-dependency
+      # leg must not cancel the legs that say whether the current dependencies pass.
+      fail-fast: ${{ needs.setup.outputs.pinned-runs == '[]' || needs.setup.outputs.pinned-runs == '' }}
       matrix:
         python-version: ${{ fromJson(needs.setup.outputs.python-versions) }}
+        pinned: [false]
+        # '' from a read-ci-config older than the output: no pinned legs.
+        include: ${{ fromJson(needs.setup.outputs.pinned-runs || '[]') }}
 
     steps:
       - uses: actions/checkout@v6
@@ -460,6 +482,37 @@ jobs:
         with:
           extras: ${{ needs.setup.outputs.install-extras }}
 
+      # Pinned legs only (issue #189). The project and the pins go in ONE
+      # resolve, so a pin outside the package's declared ranges fails here
+      # instead of being overridden or silently downgrading something else;
+      # `uv pip check` then fails on any broken requirement left in the env.
+      # The requirements travel as JSON in an env var, never spliced into the
+      # script, so a specifier's `<`, `>` or `;` is never read by the shell.
+      - name: Install Pinned Requirements
+        if: matrix.pinned
+        env:
+          PINNED_REQUIREMENTS: ${{ toJSON(matrix.pinned.requirements) }}
+          INSTALL_EXTRAS: ${{ needs.setup.outputs.install-extras }}
+          COVERAGE: ${{ needs.setup.outputs.coverage-enabled }}
+        run: |
+          source .venv/bin/activate
+          target=.
+          if [ -n "$INSTALL_EXTRAS" ]; then target=".[$INSTALL_EXTRAS]"; fi
+          reqs=()
+          while IFS= read -r req; do reqs+=("$req"); done < <(python -I -c 'import json, os; print("\n".join(json.loads(os.environ["PINNED_REQUIREMENTS"])))')
+          if [ "${#reqs[@]}" -eq 0 ]; then
+            echo "::error::no pinned requirements reached this step (PINNED_REQUIREMENTS: $PINNED_REQUIREMENTS)"
+            exit 1
+          fi
+          # pytest joins the resolve, so run-tests-uv's later pytest install is a no-op
+          # and cannot re-upgrade a pin in pytest's own closure (pluggy, packaging, ...).
+          runner=(pytest)
+          if [ "$COVERAGE" = "true" ]; then runner+=(pytest-cov); fi
+          echo "Resolving $target with: ${reqs[*]}"
+          uv pip install -e "$target" "${reqs[@]}" "${runner[@]}"
+          uv pip check
+          uv pip list
+
       # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast
       # if a required secret is missing). Driven by [tool.wads.ci.env].
       # `vars` resolves to the CALLER repo's configuration variables, so a
@@ -476,15 +529,15 @@ jobs:
           vars-json: ${{ toJSON(vars) }}
 
       - name: Format Source Code
-        if: needs.setup.outputs.ruff-enabled != 'false'
+        if: needs.setup.outputs.ruff-enabled != 'false' && !matrix.pinned
         run: uvx ruff format .
 
       - name: Format Source Code (black)
-        if: needs.setup.outputs.black-enabled == 'true'
+        if: needs.setup.outputs.black-enabled == 'true' && !matrix.pinned
         run: uvx black .
 
       - name: Lint Validation
-        if: needs.setup.outputs.ruff-enabled != 'false'
+        if: needs.setup.outputs.ruff-enabled != 'false' && !matrix.pinned
         run: uvx ruff check --output-format=github ${{ needs.setup.outputs.project-name }}
 
       # Licence perimeter: fail the build if the INSTALLED dependency closure
@@ -501,7 +554,7 @@ jobs:
       # pointing it at the project's .venv the check would read the wrong
       # closure and report a confident, wrong green.
       - name: Licence Perimeter
-        if: needs.setup.outputs.licence-enabled == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
+        if: needs.setup.outputs.licence-enabled == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0] && !matrix.pinned
         run: |
           if [ ! -f ".venv/bin/activate" ]; then
             echo "::error::no .venv found; the licence gate must read the project's own installed closure, not uvx's isolated one"
@@ -511,7 +564,7 @@ jobs:
           uvx --from wads wads-licence-check . --python "$VIRTUAL_ENV/bin/python"
 
       - name: Type Check (mypy)
-        if: needs.setup.outputs.mypy-enabled == 'true'
+        if: needs.setup.outputs.mypy-enabled == 'true' && !matrix.pinned
         run: uvx mypy ${{ needs.setup.outputs.project-name }}
 
       - name: Run Tests
@@ -519,12 +572,12 @@ jobs:
         uses: i2mint/wads/actions/run-tests-uv@master
         with:
           root-dir: ${{ needs.setup.outputs.project-name }}
-          pytest-args: ${{ needs.setup.outputs.pytest-args }}
+          pytest-args: ${{ matrix.pinned && matrix.pinned.pytest_args || needs.setup.outputs.pytest-args }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
 
       - name: Track Code Metrics
-        if: needs.setup.outputs.metrics-enabled == 'true'
+        if: needs.setup.outputs.metrics-enabled == 'true' && !matrix.pinned
         uses: i2mint/umpyre/actions/track-metrics@master
         continue-on-error: true
         with:

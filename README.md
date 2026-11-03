@@ -422,6 +422,20 @@ leg there stays informational regardless of this setting. Repos on the legacy
 template should migrate to the uv stub (`wads-migrate ci-to-stub`) to pick it
 up (see i2mint/wads#90).
 
+#### Pinned-dependency runs (oldest supported release)
+
+To also test against an older release of a dependency (the oldest one you support, say), declare a pinned run:
+
+```toml
+[[tool.wads.ci.testing.pinned]]
+name = "oldest-sdk"                                     # names the leg; letters, digits, . _ -
+requirements = ["elevenlabs==2.58.0"]                   # PEP 508 requirements
+pytest_args = ["voxy/tests/test_elevenlabs_model.py"]   # default: the repo's pytest_args
+python_version = "3.10"                                 # default: the first python_versions entry
+```
+
+Each entry adds one leg to the Linux validation matrix, checked as `Validation (pinned <name>)`: the normal install (with `[tool.wads.ci.install].extras`), then the project and the requirements installed **in one resolve** followed by `uv pip check`, so a pin outside your package's declared range fails instead of being silently overridden; then pytest with the entry's `pytest_args` (coverage as configured). Lint, format, type check, licence and metrics run on the normal legs only. A pinned leg is a leg of `validation`, so a failing one **blocks publish**, like any other validation leg: a release must pass on the oldest dependency it claims to support. An invalid entry (no `requirements`, a requirement that is not PEP 508, a bad or repeated `name`, an unquoted `python_version`) turns the setup job red rather than being skipped. Repos that declare nothing keep exactly their legs and check names (`Validation (3.10)`, ...). `wads ci-local` runs the same legs. Only the reusable `uv-ci.yml` workflow (the default stub) runs them.
+
 ### Code Quality Tools
 
 ```toml
