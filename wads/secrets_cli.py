@@ -34,6 +34,7 @@ Names are forced to ``UPPER_SNAKE`` and value-looking inputs are rejected, so
 you can't accidentally commit a secret *value* as a name.
 """
 
+import getpass
 import os
 import re
 import subprocess
@@ -64,7 +65,7 @@ _JSON_TRANSPORT_LINE_RE = re.compile(rf"(?m)^\s*{re.escape(JSON_TRANSPORT_SECRET
 _MASK_HAZARD_VALUE_LEN = 8
 
 # `--value -` reads the value from stdin (the usual CLI convention).
-STDIN_VALUE = "-"
+_STDIN_VALUE = "-"
 
 
 def _err(msg: str):
@@ -263,18 +264,46 @@ def set_github_secret(repo, secret_name, value, *, variable=False) -> bool:
         return True
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or b"").decode(errors="replace").strip()
+        if value:
+            detail = detail.replace(value, "***")
         _err(f"gh {kind} set {secret_name} failed (exit {e.returncode}): {detail}")
         return False
 
 
-def read_value_from_stdin(stream=None) -> str:
-    """Read a secret value from ``stream`` (default ``sys.stdin``).
+def _read_value(name, stream=None) -> str:
+    """Read ``name``'s value from ``stream`` (default ``sys.stdin``).
 
-    Trailing CR/LF is dropped, as ``gh secret set`` does with a stdin body, so
-    ``printf '%s\\n' "$TOKEN" | wads-secrets add X --value -`` stores the token,
-    not the token plus a newline.
+    On a terminal it prompts without echo (as ``gh`` does), so a pasted secret never
+    shows on screen or in scrollback; from a pipe it reads everything and drops the
+    trailing newline that ``echo``/``printf`` add.
     """
-    return (stream or sys.stdin).read().rstrip("\r\n")
+    stream = stream or sys.stdin
+    if stream.isatty():
+        return getpass.getpass(f"{name}: ", stream=sys.stderr)
+    return stream.read().rstrip("\r\n")
+
+
+def _cli_value(args):
+    """The value ``add`` should push, from ``--value`` (``-`` = stdin), or ``None``.
+
+    Raises ``ValueError`` when stdin was asked for and gave nothing (a failed upstream
+    command in the pipe), before any file is edited.
+    """
+    if not args.github:
+        return None  # nothing is sent, so neither read stdin nor warn
+    if args.value == _STDIN_VALUE:
+        value = _read_value(args.secret_name or args.var_name)
+        if not value:
+            raise ValueError("--value -: stdin gave no value; nothing was changed")
+        return value
+    if args.value is not None and not args.variable:
+        print(
+            "⚠ --value: a secret given on the command line is kept in shell "
+            "history and visible in the process table; next time pipe it in "
+            "with `--value -` or export it as the env var.",
+            file=sys.stderr,
+        )
+    return args.value
 
 
 def add(
@@ -568,16 +597,11 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
     if args.command == "add":
-        value = args.value
-        if value == STDIN_VALUE:
-            value = read_value_from_stdin()
-        elif value is not None and not args.variable:
-            print(
-                "⚠ --value: a secret given on the command line is kept in "
-                "shell history and visible in the process table; next time "
-                "pipe it in with `--value -` or export it as the env var.",
-                file=sys.stderr,
-            )
+        try:
+            value = _cli_value(args)
+        except ValueError as e:
+            _err(str(e))
+            return 1
         return add(
             args.var_name,
             args.secret_name,

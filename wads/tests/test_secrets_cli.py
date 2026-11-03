@@ -419,7 +419,7 @@ def test_set_github_secret_never_puts_value_in_argv(monkeypatch):
     assert calls[1][0][:3] == ["gh", "variable", "set"]
 
 
-def test_set_github_secret_failure_reports_gh_stderr_not_value(monkeypatch, capsys):
+def test_set_github_secret_failure_reports_gh_stderr_redacted(monkeypatch, capsys):
     import subprocess
 
     import wads.secrets_cli as m
@@ -427,25 +427,96 @@ def test_set_github_secret_failure_reports_gh_stderr_not_value(monkeypatch, caps
     value = "sk-very-secret-0123456789"
 
     def fake_run(cmd, **kwargs):
-        raise subprocess.CalledProcessError(1, cmd, b"", b"HTTP 404: Not Found")
+        stderr = f"HTTP 422: rejected body {value}".encode()
+        raise subprocess.CalledProcessError(1, cmd, b"", stderr)
 
     monkeypatch.setattr(m.subprocess, "run", fake_run)
     assert not m.set_github_secret("org/repo", "API_KEY", value)
     err = capsys.readouterr().err
-    assert "HTTP 404" in err and value not in err
+    assert "HTTP 422" in err and "***" in err and value not in err
 
 
-def test_cli_value_dash_reads_stdin(monkeypatch, tmp_path):
-    """`--value -` takes the value from stdin, trailing newline dropped."""
-    import io
+class _Stdin:
+    def __init__(self, text, tty=False):
+        self.text, self.tty = text, tty
 
+    def isatty(self):
+        return self.tty
+
+    def read(self):
+        return self.text
+
+
+def _record_gh(monkeypatch, m, tmp_path):
+    """Run `add` for real against tmp files, recording every subprocess.run."""
+    import subprocess
+
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "demo"\n')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(m, "_gh_available", lambda: True)
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, b"", b"")
+
+    monkeypatch.setattr(m.subprocess, "run", fake_run)
+    return calls
+
+
+def test_cli_value_dash_pipes_stdin_to_gh_stdin(monkeypatch, tmp_path):
+    """End to end: `--value -` from a pipe reaches gh on stdin, never in argv."""
+    import wads.secrets_cli as m
+
+    calls = _record_gh(monkeypatch, m, tmp_path)
+    monkeypatch.setattr(m.sys, "stdin", _Stdin("sk-from-stdin-0123\n"))
+    assert m.main(["add", "API_KEY", "--repo", "org/r", "--value", "-"]) == 0
+    ((cmd, kwargs),) = calls
+    assert kwargs["input"] == b"sk-from-stdin-0123"
+    assert all("sk-from-stdin" not in arg for arg in cmd)
+
+
+def test_cli_env_var_value_goes_to_gh_stdin(monkeypatch, tmp_path):
+    """The default path ($VAR_NAME) also keeps the value out of argv."""
+    import wads.secrets_cli as m
+
+    calls = _record_gh(monkeypatch, m, tmp_path)
+    monkeypatch.setenv("API_KEY", "sk-from-env-0123456")
+    assert m.main(["add", "API_KEY", "--repo", "org/r"]) == 0
+    ((cmd, kwargs),) = calls
+    assert kwargs["input"] == b"sk-from-env-0123456"
+    assert all("sk-from-env" not in arg for arg in cmd)
+
+
+def test_cli_value_dash_on_a_tty_prompts_without_echo(monkeypatch):
     import wads.secrets_cli as m
 
     seen = {}
     monkeypatch.setattr(m, "add", lambda *a, **k: seen.update(k) or 0)
-    monkeypatch.setattr(m.sys, "stdin", io.StringIO("sk-from-stdin\n"))
+    monkeypatch.setattr(m.sys, "stdin", _Stdin("", tty=True))
+    monkeypatch.setattr(m.getpass, "getpass", lambda prompt, stream=None: "sk-typed")
     assert m.main(["add", "API_KEY", "--value", "-"]) == 0
-    assert seen["value"] == "sk-from-stdin"
+    assert seen["value"] == "sk-typed"
+
+
+def test_cli_value_dash_with_empty_stdin_fails_before_editing(monkeypatch, capsys):
+    import wads.secrets_cli as m
+
+    monkeypatch.setattr(m, "add", lambda *a, **k: pytest.fail("add must not run"))
+    monkeypatch.setattr(m.sys, "stdin", _Stdin(""))
+    assert m.main(["add", "API_KEY", "--value", "-"]) == 1
+    assert "stdin gave no value" in capsys.readouterr().err
+
+
+def test_cli_no_github_neither_reads_stdin_nor_warns(monkeypatch, capsys):
+    import wads.secrets_cli as m
+
+    seen = {}
+    monkeypatch.setattr(m, "add", lambda *a, **k: seen.update(k) or 0)
+    monkeypatch.setattr(m.sys, "stdin", _Stdin("", tty=True))  # reading would block
+    assert m.main(["add", "API_KEY", "--value", "-", "--no-github"]) == 0
+    assert m.main(["add", "API_KEY", "--value", "sk-lit", "--no-github"]) == 0
+    assert seen["value"] is None and "⚠" not in capsys.readouterr().err
 
 
 def test_cli_literal_value_warns(monkeypatch, capsys):
