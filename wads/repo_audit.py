@@ -250,10 +250,12 @@ def audit_pyproject(repo, rep):
             "wads-pypi-polish",
         )
 
-    # check.windows commands cmd.exe cannot run (issue #192)
-    ops = data.get("tool", {}).get("wads", {}).get("ops", {})
-    for warning in unix_only_check_warnings(ops if isinstance(ops, dict) else {}):
-        rep.add("MEDIUM", "ci", warning, "wads-ci-fix")
+    # check.windows commands cmd.exe cannot run (issue #192): MEDIUM when CI's
+    # Windows job runs them, LOW when Windows testing is off.
+    wads_tool = data.get("tool", {}).get("wads", {})
+    on_windows = wads_tool.get("ci", {}).get("testing", {}).get("test_on_windows", True)
+    for warning in unix_only_check_warnings(wads_tool.get("ops", {})):
+        rep.add("MEDIUM" if on_windows else "LOW", "ci", warning, "wads-ci-fix")
 
     # testpaths: declared but nonexistent paths are a real ecosystem bug
     testpaths = (

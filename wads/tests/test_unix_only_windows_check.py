@@ -27,6 +27,13 @@ from wads.scripts.read_ci_config import read_and_export_ci_config
         "(which ffmpeg)",
         ["where ffmpeg", "which ffmpeg"],
         [["which", "ffmpeg"]],
+        "WHICH ffmpeg",
+        "which.exe ffmpeg",
+        '"which" ffmpeg',
+        "@which ffmpeg",
+        "call which ffmpeg",
+        'cmd /c "which ffmpeg"',
+        "where ffmpeg & which ffprobe",
     ],
 )
 def test_which_as_a_command_is_reported(check):
@@ -42,6 +49,9 @@ def test_which_as_a_command_is_reported(check):
         "ffmpeg -version",
         "echo which-one",  # not in command position
         "findstr which notes.txt",  # an argument, not the command
+        "echo hi;which x",  # `;` does not separate commands in cmd.exe
+        "echo a ^&^& which-ish",  # escaped operators
+        "whichever --version",
         "",
         [],
     ],
@@ -59,11 +69,9 @@ def test_only_the_windows_check_is_inspected():
     assert unix_only_check_warnings(ops) == []
 
 
-def test_the_command_table_is_a_seam():
-    ops = {"x": {"check": {"windows": "command -v x"}}}
-    assert unix_only_check_warnings(ops) == []
-    (warning,) = unix_only_check_warnings(ops, unix_only={"command": "`where x`"})
-    assert "uses `command`" in warning and "`where x`" in warning
+def test_a_non_table_ops_declares_nothing():
+    assert unix_only_check_warnings(None) == []
+    assert unix_only_check_warnings(["which x"]) == []
 
 
 _PYPROJECT = textwrap.dedent(
@@ -89,18 +97,49 @@ def test_the_setup_job_prints_a_github_warning(tmp_path, monkeypatch, capsys):
     assert "::warning title=Unix-only Windows check::check.windows for ffmpeg" in out
 
 
+def test_no_setup_warning_when_windows_is_not_tested(tmp_path, monkeypatch, capsys):
+    """A repo with test_on_windows = false never runs check.windows in CI."""
+    for var in ("GITHUB_OUTPUT", "GITHUB_ENV", "GITHUB_STEP_SUMMARY"):
+        monkeypatch.delenv(var, raising=False)
+    (tmp_path / "pyproject.toml").write_text(
+        _PYPROJECT + "\n[tool.wads.ci.testing]\ntest_on_windows = false\n"
+    )
+    assert read_and_export_ci_config(str(tmp_path)) == 0
+    assert "Unix-only Windows check" not in capsys.readouterr().out
+
+
+def _which_findings(repo):
+    findings = audit_repo(repo, network=False)["findings"]
+    return [f for f in findings if "uses `which`" in f["summary"]]
+
+
 def test_the_repo_audit_flags_it(tmp_path):
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
-    findings = audit_repo(tmp_path, network=False)["findings"]
-    assert any("uses `which`" in f["summary"] for f in findings)
+    assert [f["severity"] for f in _which_findings(tmp_path)] == ["MEDIUM"]
+    (tmp_path / "pyproject.toml").write_text(
+        _PYPROJECT + "\n[tool.wads.ci.testing]\ntest_on_windows = false\n"
+    )
+    assert [f["severity"] for f in _which_findings(tmp_path)] == ["LOW"]
 
 
-def test_the_install_step_warns_on_windows(tmp_path, capsys):
+def _install_on_windows(tmp_path, *, check_passes):
     (tmp_path / "pyproject.toml").write_text(_PYPROJECT)
-    install_system_dependencies(
+    return install_system_dependencies(
         str(tmp_path),
         platform="windows",
         install=lambda *a, **k: (True, ""),
-        is_installed=lambda *a, **k: True,
+        is_installed=lambda *a, **k: check_passes,
     )
-    assert "Warning: check.windows for ffmpeg uses `which`" in capsys.readouterr().err
+
+
+def test_the_install_step_hints_next_to_a_failed_windows_check(tmp_path, capsys):
+    _, _, failed = _install_on_windows(tmp_path, check_passes=False)
+    err = capsys.readouterr().err
+    assert failed == 1
+    assert "Hint: check.windows for ffmpeg uses `which`" in err
+    assert err.index("Installation failed for ffmpeg") < err.index("Hint:")
+
+
+def test_no_install_hint_when_the_check_passes(tmp_path, capsys):
+    _install_on_windows(tmp_path, check_passes=True)
+    assert "Hint:" not in capsys.readouterr().err
