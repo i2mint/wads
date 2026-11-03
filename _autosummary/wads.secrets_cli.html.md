@@ -30,6 +30,7 @@ wads-secrets add HF_TOKEN HF_WRITE_TOKEN         # env var <- aliased secret
 wads-secrets add DB_URL --kind required          # fail CI if unset
 wads-secrets add COSMO_TEST_LEVEL --variable     # non-sensitive: repo var
 wads-secrets add OPENAI_API_KEY --no-github      # edit files only
+pass show openai | wads-secrets add OPENAI_API_KEY --value -   # value on stdin
 wads-secrets list                                # show configured env vars
 ```
 
@@ -58,6 +59,7 @@ Configure a CI value: declare it in pyproject, transport it, set its value.
   * **repo** – `org/repo` to set the secret on (default: git origin here).
   * **kind** – `extra` (default), `test`, or `required`.
   * **value** – secret value to push to GitHub (default: `$VAR_NAME` in env).
+    It reaches `gh` on stdin, never in argv (see [`set_github_secret()`](#wads.secrets_cli.set_github_secret)).
   * **github** – also set the value on GitHub via `gh` (default True).
   * **variable** – store as a repository *variable* instead of a secret —
     for non-sensitive values (a test verbosity level, a flag). Variables
@@ -93,6 +95,11 @@ List the env vars configured in `[tool.wads.ci.env]`.
 ### wads.secrets_cli.set_github_secret(repo, secret_name, value, , variable=False)
 
 Set a secret (or, with `variable=True`, a repo variable) via `gh`.
+
+The value goes to `gh` on **stdin** (`gh {secret,variable} set` reads
+the body from stdin when `--body` is absent), never in argv: an argv
+sits in the process table, readable by every local process with `ps`,
+and ends up in any log that records the command (issue #190).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)

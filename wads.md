@@ -1,4 +1,4 @@
-> built 2026-11-02 01:51 UTC from 109e34a (master) · wads 0.2.71. Details: build_info.json
+> built 2026-11-03 10:52 UTC from 845a7a3 (master) · wads 0.2.72. Details: build_info.json
 
 # index.html.md
 
@@ -187,10 +187,11 @@ wads-secrets add OPENAI_API_KEY            # env var == GitHub secret name
 wads-secrets add HF_TOKEN HF_WRITE_TOKEN    # env var <- differently-named secret
 wads-secrets add DATABASE_URL --kind required   # fail CI if the secret is unset
 wads-secrets add TEST_LEVEL --variable      # non-sensitive value -> repo variable
+pass show openai | wads-secrets add OPENAI_API_KEY --value -   # value from stdin
 wads-secrets list                           # show what's configured
 ```
 
-`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME` or `--value`). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. With `--variable`, the name is also recorded in `[tool.wads.ci.env].variables`, so stub rendering never counts it as a secret to transport. A named stub leaves out any name outside the wads secrets superset, with a note, instead of writing a line that would make the workflow unstartable. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
+`wads-secrets add` (a) records the variable in `[tool.wads.ci.env]`, (b) adds its secret to the stub’s `secrets:` list, and (c) runs `gh secret set` (or `gh variable set` with `--variable`) if `gh` is installed (value taken from `$VAR_NAME`, or from stdin with `--value -`; it reaches `gh` on stdin, never on the command line). Under the hood there are two layers: a **transport**, where the stub passes secrets to the reusable workflow by name (`PYPI_PASSWORD` plus each declared one), and an **env policy** (`[tool.wads.ci.env]`: `required_envvars` / `test_envvars` / `extra_envvars` / `defaults` / `secret_aliases`) that decides which values become job env vars. Each declared name resolves against secrets first, then repository *variables* (the right home for non-sensitive values); committed constants can go straight into `[tool.wads.ci.env].defaults`. With `--variable`, the name is also recorded in `[tool.wads.ci.env].variables`, so stub rendering never counts it as a secret to transport. A named stub leaves out any name outside the wads secrets superset, with a note, instead of writing a line that would make the workflow unstartable. A `required` name that resolves to nothing fails the build; an undeclared secret is never written to the environment.
 
 Named secrets must be in the superset in `wads.ci_secrets.DEFAULT_CI_SECRETS`, or GitHub rejects the workflow at parse time; `wads-secrets` and `wads-migrate` warn about such names, and the superset grows additively (adding a name never breaks a stub). The opt-in alternative, `wads-migrate ci-to-stub --transport json`, passes the repo’s whole secrets context as one `WADS_CI_SECRETS_JSON` secret, so any name works. It is not the default because it hands every secret the repo can read to the called workflow, and GitHub’s malicious-workflow scanner holds its runs: the run ends `action_required` with zero jobs and no log ([#74](https://github.com/i2mint/wads/issues/74), [#101](https://github.com/i2mint/wads/issues/101)). Re-rendering a stub (`wads-migrate ci-to-stub`, `ci-on-demand`, `fleet-stub`) writes the named transport, converting a JSON stub, unless `--transport json` is given or a declared name is outside the superset.
 
@@ -7051,6 +7052,7 @@ wads-secrets add HF_TOKEN HF_WRITE_TOKEN         # env var <- aliased secret
 wads-secrets add DB_URL --kind required          # fail CI if unset
 wads-secrets add COSMO_TEST_LEVEL --variable     # non-sensitive: repo var
 wads-secrets add OPENAI_API_KEY --no-github      # edit files only
+pass show openai | wads-secrets add OPENAI_API_KEY --value -   # value on stdin
 wads-secrets list                                # show configured env vars
 ```
 
@@ -7079,6 +7081,7 @@ Configure a CI value: declare it in pyproject, transport it, set its value.
   * **repo** – `org/repo` to set the secret on (default: git origin here).
   * **kind** – `extra` (default), `test`, or `required`.
   * **value** – secret value to push to GitHub (default: `$VAR_NAME` in env).
+    It reaches `gh` on stdin, never in argv (see [`set_github_secret()`](_autosummary/wads.secrets_cli.html.md#wads.secrets_cli.set_github_secret)).
   * **github** – also set the value on GitHub via `gh` (default True).
   * **variable** – store as a repository *variable* instead of a secret —
     for non-sensitive values (a test verbosity level, a flag). Variables
@@ -7114,6 +7117,11 @@ List the env vars configured in `[tool.wads.ci.env]`.
 ### wads.secrets_cli.set_github_secret(repo, secret_name, value, , variable=False)
 
 Set a secret (or, with `variable=True`, a repo variable) via `gh`.
+
+The value goes to `gh` on **stdin** (`gh {secret,variable} set` reads
+the body from stdin when `--body` is absent), never in argv: an argv
+sits in the process table, readable by every local process with `ps`,
+and ends up in any log that records the command (issue #190).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
@@ -8041,18 +8049,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-02 01:51 UTC** from commit <a href="https://github.com/i2mint/wads/commit/109e34af7fcc64a2fac9d160f8a829031d220d03"><code>109e34a</code></a> on branch <code>master</code>, for **wads 0.2.71** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 10:52 UTC** from commit <a href="https://github.com/i2mint/wads/commit/845a7a3d9cf7c030fd559b1f47a7bf41cbee400d"><code>845a7a3</code></a> on branch <code>master</code>, for **wads 0.2.72** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.71) is behind the latest release on PyPI (0.2.72): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/109e34af7fcc64a2fac9d160f8a829031d220d03"><code>109e34af7fcc64a2fac9d160f8a829031d220d03</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/845a7a3d9cf7c030fd559b1f47a7bf41cbee400d"><code>845a7a3d9cf7c030fd559b1f47a7bf41cbee400d</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8063,9 +8069,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41374340076">41374340076</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41622427522">41622427522</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>109e34af7fcc64a2fac9d160f8a829031d220d03</code> (in the history of the built commit) |
+| Event commit | <code>845a7a3d9cf7c030fd559b1f47a7bf41cbee400d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8090,13 +8096,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.72/">0.2.72</a>, newer than the documented version (0.2.71).
+Latest release: <a href="https://pypi.org/project/wads/0.2.72/">0.2.72</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 109e34af7fcc64a2fac9d160f8a829031d220d03
+git checkout 845a7a3d9cf7c030fd559b1f47a7bf41cbee400d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
