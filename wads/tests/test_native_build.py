@@ -9,6 +9,7 @@ evaluations live in ``test_ci_trigger.py``, the permission rules in
 
 import io
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -320,6 +321,9 @@ def test_ci_local_has_no_rust_steps_for_a_pure_python_repo(tmp_path):
     assert not any(s.name.startswith("rust:") for s in plan_ci_local(tmp_path))
 
 
+@pytest.mark.skipif(
+    os.name != "posix", reason="POSIX bash (Windows may resolve WSL's bash.exe)"
+)
 def test_the_wheel_check_refuses_a_non_abi3_wheel():
     """One wheel per platform covers every CPython only when it is abi3 (#166 review)."""
     action = yaml.safe_load(
