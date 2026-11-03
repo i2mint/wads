@@ -310,7 +310,8 @@ format in place, bump the version with <code class="docutils literal notranslate
 commit, tag and push. Before any of that it refuses on a dirty tree, a branch other than
 the default, a branch behind its remote, or missing PyPI credentials.</p>
 <p>Known differences from CI: the developer’s environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus the machine’s install
+pins such as <code class="docutils literal notranslate"><span class="pre">UV_CONSTRAINT</span></code>, which hosted CI does not have), where CI exports only the
 variables <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.env]</span></code> declares; <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.</p>
 <p>Each run works in a fresh <code class="docutils literal notranslate"><span class="pre">wads-ci-local-*</span></code> temporary directory that records its owner’s
@@ -366,13 +367,16 @@ can ever spend or publish.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.run_ci_local" title="wads.ci_local.run_ci_local"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_ci_local</span></code></a>([repo, publish, config, ...])</p></td>
 <td><p>Run <a class="reference internal" href="#wads.ci_local.plan_ci_local" title="wads.ci_local.plan_ci_local"><code class="xref py py-func docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a>'s steps, stop at the first blocking failure, and report.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.subprocess_runner" title="wads.ci_local.subprocess_runner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_runner</span></code></a>(argv, *, cwd, env[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.steps_env" title="wads.ci_local.steps_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">steps_env</span></code></a>(source_env, *[, defaults, withheld])</p></td>
+<td><p>The environment the steps run in, and the names of <code class="docutils literal notranslate"><span class="pre">source_env</span></code> it left out.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.subprocess_runner" title="wads.ci_local.subprocess_runner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_runner</span></code></a>(argv, *, cwd, env[, ...])</p></td>
 <td><p>The default runner: really run <code class="docutils literal notranslate"><span class="pre">argv</span></code>, streaming its output.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.uv_build_args" title="wads.ci_local.uv_build_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uv_build_args</span></code></a>(*[, sdist, wheel])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.uv_build_args" title="wads.ci_local.uv_build_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uv_build_args</span></code></a>(*[, sdist, wheel])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">build</span></code> selection flags for <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.build]</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_local.venv_python" title="wads.ci_local.venv_python"><code class="xref py py-obj docutils literal notranslate"><span class="pre">venv_python</span></code></a>(venv, *[, platform])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_local.venv_python" title="wads.ci_local.venv_python"><code class="xref py py-obj docutils literal notranslate"><span class="pre">venv_python</span></code></a>(venv, *[, platform])</p></td>
 <td><p>Path of the interpreter inside a venv directory.</p></td>
 </tr>
 </tbody>
@@ -544,14 +548,37 @@ workdirs and check the temp filesystem has room.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.ci_local.run_ci_local">
-<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">run_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_runner&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#run_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.run_ci_local" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">run_ci_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_runner&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host_pin_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('UV_CONSTRAINT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'UV_BUILD_CONSTRAINT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'UV_OVERRIDE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'PIP_CONSTRAINT')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#run_ci_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.run_ci_local" title="Link to this definition">¶</a></dt>
 <dd><p>Run <a class="reference internal" href="#wads.ci_local.plan_ci_local" title="wads.ci_local.plan_ci_local"><code class="xref py py-func docutils literal notranslate"><span class="pre">plan_ci_local()</span></code></a>’s steps, stop at the first blocking failure, and report.</p>
 <p>The steps run in a fresh work directory under <code class="docutils literal notranslate"><span class="pre">workdir_root</span></code> (default: the system
 temp directory), after removing the stale ones killed runs left there and checking
 that the filesystem has room for this run (issue #159).</p>
+<p><code class="docutils literal notranslate"><span class="pre">environ</span></code> (default <code class="docutils literal notranslate"><span class="pre">os.environ</span></code>) reaches every step minus the PyPI credentials
+(only the upload sees them) and minus <code class="docutils literal notranslate"><span class="pre">host_pin_vars</span></code>, the dev machine’s install
+constraints that hosted CI does not have (issue #191).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.ci_local.CILocalReport" title="wads.ci_local.CILocalReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CILocalReport</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_local.steps_env">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_local.</span></span><span class="sig-name descname"><span class="pre">steps_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_env</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withheld</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('PYPI_PASSWORD',</span> <span class="pre">'UV_PUBLISH_TOKEN',</span> <span class="pre">'UV_PUBLISH_USERNAME',</span> <span class="pre">'UV_PUBLISH_PASSWORD',</span> <span class="pre">'UV_CONSTRAINT',</span> <span class="pre">'UV_BUILD_CONSTRAINT',</span> <span class="pre">'UV_OVERRIDE',</span> <span class="pre">'PIP_CONSTRAINT')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_local.html#steps_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_local.steps_env" title="Link to this definition">¶</a></dt>
+<dd><p>The environment the steps run in, and the names of <code class="docutils literal notranslate"><span class="pre">source_env</span></code> it left out.</p>
+<p><code class="docutils literal notranslate"><span class="pre">source_env</span></code> minus <code class="docutils literal notranslate"><span class="pre">withheld</span></code>, then the committed <code class="docutils literal notranslate"><span class="pre">defaults</span></code>, which are
+authoritative as in CI’s export-ci-env (so a withheld name a default sets is back,
+and is not reported as left out).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">steps_env</span><span class="p">({</span><span class="s2">"HOME"</span><span class="p">:</span> <span class="s2">"/h"</span><span class="p">,</span> <span class="s2">"UV_CONSTRAINT"</span><span class="p">:</span> <span class="s2">"/c.txt"</span><span class="p">,</span> <span class="s2">"PYPI_PASSWORD"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">})</span>
+<span class="go">({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">steps_env</span><span class="p">({</span><span class="s2">"UV_CONSTRAINT"</span><span class="p">:</span> <span class="s2">"/c.txt"</span><span class="p">},</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"UV_CONSTRAINT"</span><span class="p">:</span> <span class="s2">"/repo.txt"</span><span class="p">})</span>
+<span class="go">({'UV_CONSTRAINT': '/repo.txt'}, [])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -673,6 +700,7 @@ that the filesystem has room for this run (issue #159).</p>
 <li><a class="reference internal" href="#wads.ci_local.render_plan"><code class="docutils literal notranslate"><span class="pre">render_plan()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.resolve_pypi_token"><code class="docutils literal notranslate"><span class="pre">resolve_pypi_token()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.run_ci_local"><code class="docutils literal notranslate"><span class="pre">run_ci_local()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_local.steps_env"><code class="docutils literal notranslate"><span class="pre">steps_env()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.subprocess_runner"><code class="docutils literal notranslate"><span class="pre">subprocess_runner()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.uv_build_args"><code class="docutils literal notranslate"><span class="pre">uv_build_args()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_local.venv_python"><code class="docutils literal notranslate"><span class="pre">venv_python()</span></code></a></li>
@@ -687,7 +715,7 @@ that the filesystem has room for this run (issue #159).</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=4e125d7f"></script>
+</div><script src="../_static/documentation_options.js?v=e7522919"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

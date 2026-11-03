@@ -1,4 +1,4 @@
-> built 2026-11-03 10:52 UTC from 845a7a3 (master) · wads 0.2.72. Details: build_info.json
+> built 2026-11-03 11:02 UTC from 63c8149 (master) · wads 0.2.73. Details: build_info.json
 
 # index.html.md
 
@@ -370,7 +370,7 @@ wads ci-local --dry-run   # print the plan, run nothing
 wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
 ```
 
-`--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages.
+`--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages. Your shell environment reaches the steps, except PyPI credentials (only the upload sees them) and the machine’s install pins (`UV_CONSTRAINT`, `UV_BUILD_CONSTRAINT`, `UV_OVERRIDE`, `PIP_CONSTRAINT`), which hosted CI does not have; so fleet packages resolve from PyPI as they do in CI, and ci-local works from a git worktree.
 
 To go back, set `mode = "auto"` and run `wads-migrate ci-to-stub`. Workflow files other than `ci.yml` (cron jobs, Pages, npm) are not governed by the trigger; `ci-on-demand` lists any that still run unasked.
 
@@ -1957,7 +1957,8 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer’s environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus the machine’s install
+pins such as `UV_CONSTRAINT`, which hosted CI does not have), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -1995,6 +1996,7 @@ can ever spend or publish.
 | [`render_plan`](_autosummary/wads.ci_local.html.md#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
+| [`steps_env`](_autosummary/wads.ci_local.html.md#wads.ci_local.steps_env)(source_env, \*[, defaults, withheld])  | The environment the steps run in, and the names of `source_env` it left out.                                                  |
 | [`subprocess_runner`](_autosummary/wads.ci_local.html.md#wads.ci_local.subprocess_runner)(argv, \*, cwd, env[, ...])     | The default runner: really run `argv`, streaming its output.                                                                  |
 | [`uv_build_args`](_autosummary/wads.ci_local.html.md#wads.ci_local.uv_build_args)(\*[, sdist, wheel])                | `uv build` selection flags for `[tool.wads.ci.build]`.                                                                        |
 | [`venv_python`](_autosummary/wads.ci_local.html.md#wads.ci_local.venv_python)(venv, \*[, platform])                | Path of the interpreter inside a venv directory.                                                                              |
@@ -2119,7 +2121,7 @@ Token-only, like CI. The token itself is never printed.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None)
+### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_pin_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
 
 Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)’s steps, stop at the first blocking failure, and report.
 
@@ -2127,8 +2129,30 @@ The steps run in a fresh work directory under `workdir_root` (default: the syste
 temp directory), after removing the stale ones killed runs left there and checking
 that the filesystem has room for this run (issue #159).
 
+`environ` (default `os.environ`) reaches every step minus the PyPI credentials
+(only the upload sees them) and minus `host_pin_vars`, the dev machine’s install
+constraints that hosted CI does not have (issue #191).
+
 * **Return type:**
   [`CILocalReport`](_autosummary/wads.ci_local.html.md#wads.ci_local.CILocalReport)
+
+### wads.ci_local.steps_env(source_env, , defaults=(), withheld=('PYPI_PASSWORD', 'UV_PUBLISH_TOKEN', 'UV_PUBLISH_USERNAME', 'UV_PUBLISH_PASSWORD', 'UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
+
+The environment the steps run in, and the names of `source_env` it left out.
+
+`source_env` minus `withheld`, then the committed `defaults`, which are
+authoritative as in CI’s export-ci-env (so a withheld name a default sets is back,
+and is not reported as left out).
+
+```pycon
+>>> steps_env({"HOME": "/h", "UV_CONSTRAINT": "/c.txt", "PYPI_PASSWORD": "t"})
+({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])
+>>> steps_env({"UV_CONSTRAINT": "/c.txt"}, defaults={"UV_CONSTRAINT": "/repo.txt"})
+({'UV_CONSTRAINT': '/repo.txt'}, [])
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.ci_local.subprocess_runner(argv, , cwd, env, capture=False, side_effect='')
 
@@ -8049,16 +8073,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 10:52 UTC** from commit <a href="https://github.com/i2mint/wads/commit/845a7a3d9cf7c030fd559b1f47a7bf41cbee400d"><code>845a7a3</code></a> on branch <code>master</code>, for **wads 0.2.72** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 11:02 UTC** from commit <a href="https://github.com/i2mint/wads/commit/63c81497bb0abb38158b5fb26532c92bef8eba1d"><code>63c8149</code></a> on branch <code>master</code>, for **wads 0.2.73** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.73) is behind the latest release on PyPI (0.2.74): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/845a7a3d9cf7c030fd559b1f47a7bf41cbee400d"><code>845a7a3d9cf7c030fd559b1f47a7bf41cbee400d</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/63c81497bb0abb38158b5fb26532c92bef8eba1d"><code>63c81497bb0abb38158b5fb26532c92bef8eba1d</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8069,9 +8095,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41622427522">41622427522</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41623732791">41623732791</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>845a7a3d9cf7c030fd559b1f47a7bf41cbee400d</code> (in the history of the built commit) |
+| Event commit | <code>63c81497bb0abb38158b5fb26532c92bef8eba1d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8096,13 +8122,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.72/">0.2.72</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.74/">0.2.74</a>, newer than the documented version (0.2.73).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 845a7a3d9cf7c030fd559b1f47a7bf41cbee400d
+git checkout 63c81497bb0abb38158b5fb26532c92bef8eba1d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

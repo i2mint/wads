@@ -302,7 +302,8 @@
 <span class="sd">the default, a branch behind its remote, or missing PyPI credentials.</span>
 
 <span class="sd">Known differences from CI: the developer's environment passes through to the commands</span>
-<span class="sd">(minus PyPI credentials, which only the upload step sees), where CI exports only the</span>
+<span class="sd">(minus PyPI credentials, which only the upload step sees, and minus the machine's install</span>
+<span class="sd">pins such as ``UV_CONSTRAINT``, which hosted CI does not have), where CI exports only the</span>
 <span class="sd">variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not</span>
 <span class="sd">installed; and lint runs on the tree as it is, where CI formats first.</span>
 
@@ -378,6 +379,17 @@
     <span class="s2">"UV_PUBLISH_TOKEN"</span><span class="p">,</span>
     <span class="s2">"UV_PUBLISH_USERNAME"</span><span class="p">,</span>
     <span class="s2">"UV_PUBLISH_PASSWORD"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># The dev machine's install pins. Hosted CI has none; inherited, they make ci-local test a</span>
+<span class="c1"># different environment (and the fleet's constraint file, which pins every local package</span>
+<span class="c1"># to its main checkout, breaks the install from a git worktree, issue #191). So every</span>
+<span class="c1"># step runs without them, by default: ``run_ci_local(host_pin_vars=())`` keeps them.</span>
+<span class="n">HOST_INSTALL_PIN_VARS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"UV_CONSTRAINT"</span><span class="p">,</span>
+    <span class="s2">"UV_BUILD_CONSTRAINT"</span><span class="p">,</span>
+    <span class="s2">"UV_OVERRIDE"</span><span class="p">,</span>
+    <span class="s2">"PIP_CONSTRAINT"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">PASSED</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="n">SKIPPED</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"FAIL"</span><span class="p">,</span> <span class="s2">"skip"</span>
@@ -1081,6 +1093,31 @@
 
 
 
+<div class="viewcode-block" id="steps_env">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.steps_env">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">steps_env</span><span class="p">(</span>
+    <span class="n">source_env</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">defaults</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">withheld</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span> <span class="o">+</span> <span class="n">HOST_INSTALL_PIN_VARS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""The environment the steps run in, and the names of ``source_env`` it left out.</span>
+
+<span class="sd">    ``source_env`` minus ``withheld``, then the committed ``defaults``, which are</span>
+<span class="sd">    authoritative as in CI's export-ci-env (so a withheld name a default sets is back,</span>
+<span class="sd">    and is not reported as left out).</span>
+
+<span class="sd">    &gt;&gt;&gt; steps_env({"HOME": "/h", "UV_CONSTRAINT": "/c.txt", "PYPI_PASSWORD": "t"})</span>
+<span class="sd">    ({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])</span>
+<span class="sd">    &gt;&gt;&gt; steps_env({"UV_CONSTRAINT": "/c.txt"}, defaults={"UV_CONSTRAINT": "/repo.txt"})</span>
+<span class="sd">    ({'UV_CONSTRAINT': '/repo.txt'}, [])</span>
+<span class="sd">    """</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">source_env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">withheld</span><span class="p">}</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">env</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">source_env</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="run_ci_local">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.run_ci_local">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_ci_local</span><span class="p">(</span>
@@ -1093,12 +1130,17 @@
     <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">keep_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">workdir_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">host_pin_vars</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">HOST_INSTALL_PIN_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CILocalReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.</span>
 
 <span class="sd">    The steps run in a fresh work directory under ``workdir_root`` (default: the system</span>
 <span class="sd">    temp directory), after removing the stale ones killed runs left there and checking</span>
 <span class="sd">    that the filesystem has room for this run (issue #159).</span>
+
+<span class="sd">    ``environ`` (default ``os.environ``) reaches every step minus the PyPI credentials</span>
+<span class="sd">    (only the upload sees them) and minus ``host_pin_vars``, the dev machine's install</span>
+<span class="sd">    constraints that hosted CI does not have (issue #191).</span>
 <span class="sd">    """</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
@@ -1107,9 +1149,12 @@
     <span class="k">if</span> <span class="n">n_venvs</span> <span class="o">:=</span> <span class="n">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
         <span class="n">steps</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_temp_space_step</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">))</span>
     <span class="n">source_env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span><span class="p">)</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">source_env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">}</span>
-    <span class="c1"># Committed defaults are authoritative, as in CI's export-ci-env.</span>
-    <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="n">env</span><span class="p">,</span> <span class="n">dropped_pins</span> <span class="o">=</span> <span class="n">steps_env</span><span class="p">(</span>
+        <span class="n">source_env</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">env_vars_defaults</span><span class="p">,</span>
+        <span class="n">withheld</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">PUBLISH_CREDENTIAL_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">host_pin_vars</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">dropped_pins</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dropped_pins</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">host_pin_vars</span><span class="p">]</span>
     <span class="c1"># A killed run never reaches the cleanup below; remove what earlier ones left.</span>
     <span class="c1"># Best effort: a sweep that fails must not stop the run it was clearing room for.</span>
     <span class="k">try</span><span class="p">:</span>
@@ -1127,6 +1172,8 @@
         <span class="n">values</span><span class="o">=</span><span class="p">{</span><span class="s2">"workdir"</span><span class="p">:</span> <span class="n">workdir</span><span class="p">},</span>
         <span class="n">source_env</span><span class="o">=</span><span class="n">source_env</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="k">if</span> <span class="n">dropped_pins</span><span class="p">:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ran without </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped_pins</span><span class="p">)</span><span class="si">}</span><span class="s2"> (hosted CI has none)"</span><span class="p">)</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">CILocalReport</span><span class="p">(</span>
         <span class="n">project</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
         <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span>
@@ -1250,7 +1297,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=4e125d7f"></script>
+</div><script src="../../_static/documentation_options.js?v=e7522919"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

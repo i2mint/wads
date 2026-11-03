@@ -21,7 +21,8 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer’s environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus the machine’s install
+pins such as `UV_CONSTRAINT`, which hosted CI does not have), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -59,6 +60,7 @@ can ever spend or publish.
 | [`render_plan`](#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
+| [`steps_env`](#wads.ci_local.steps_env)(source_env, \*[, defaults, withheld])  | The environment the steps run in, and the names of `source_env` it left out.                                                  |
 | [`subprocess_runner`](#wads.ci_local.subprocess_runner)(argv, \*, cwd, env[, ...])     | The default runner: really run `argv`, streaming its output.                                                                  |
 | [`uv_build_args`](#wads.ci_local.uv_build_args)(\*[, sdist, wheel])                | `uv build` selection flags for `[tool.wads.ci.build]`.                                                                        |
 | [`venv_python`](#wads.ci_local.venv_python)(venv, \*[, platform])                | Path of the interpreter inside a venv directory.                                                                              |
@@ -183,7 +185,7 @@ Token-only, like CI. The token itself is never printed.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None)
+### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_pin_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
 
 Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)’s steps, stop at the first blocking failure, and report.
 
@@ -191,8 +193,30 @@ The steps run in a fresh work directory under `workdir_root` (default: the syste
 temp directory), after removing the stale ones killed runs left there and checking
 that the filesystem has room for this run (issue #159).
 
+`environ` (default `os.environ`) reaches every step minus the PyPI credentials
+(only the upload sees them) and minus `host_pin_vars`, the dev machine’s install
+constraints that hosted CI does not have (issue #191).
+
 * **Return type:**
   [`CILocalReport`](#wads.ci_local.CILocalReport)
+
+### wads.ci_local.steps_env(source_env, , defaults=(), withheld=('PYPI_PASSWORD', 'UV_PUBLISH_TOKEN', 'UV_PUBLISH_USERNAME', 'UV_PUBLISH_PASSWORD', 'UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT'))
+
+The environment the steps run in, and the names of `source_env` it left out.
+
+`source_env` minus `withheld`, then the committed `defaults`, which are
+authoritative as in CI’s export-ci-env (so a withheld name a default sets is back,
+and is not reported as left out).
+
+```pycon
+>>> steps_env({"HOME": "/h", "UV_CONSTRAINT": "/c.txt", "PYPI_PASSWORD": "t"})
+({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])
+>>> steps_env({"UV_CONSTRAINT": "/c.txt"}, defaults={"UV_CONSTRAINT": "/repo.txt"})
+({'UV_CONSTRAINT': '/repo.txt'}, [])
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.ci_local.subprocess_runner(argv, , cwd, env, capture=False, side_effect='')
 
