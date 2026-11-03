@@ -1,4 +1,4 @@
-> built 2026-11-03 11:02 UTC from 63c8149 (master) · wads 0.2.73. Details: build_info.json
+> built 2026-11-03 11:12 UTC from 695dd6c (master) · wads 0.2.74. Details: build_info.json
 
 # index.html.md
 
@@ -3280,6 +3280,7 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`DFLT_APT_LOCK_TIMEOUT`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                                   |
 | [`DFLT_KILL_GRACE`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                           |
 | [`DFLT_VERIFY_RETRIES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).            |
+| [`UNIX_ONLY_CHECK_COMMANDS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS)    | Commands a `check.windows` cannot rely on, with what to use instead.                                                                                                                                               |
 | [`INSTALL_RECIPES`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.INSTALL_RECIPES)             | Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.                                                                                                                                     |
 
 ### Functions
@@ -3294,6 +3295,7 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`main`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
 | [`read_system_deps`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.                           |
 | [`static_ffmpeg_commands`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.static_ffmpeg_commands)(params)                    | Commands installing a static ffmpeg build: download, verify, extract, else apt. |
+| [`unix_only_check_warnings`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.unix_only_check_warnings)(ops)                     | Warnings for `check.windows` commands that call a Unix-only command.            |
 | [`with_apt_lock_timeout`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.with_apt_lock_timeout)(cmd, seconds)               | `cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock. |
 
 ### Classes
@@ -3348,6 +3350,12 @@ floors the latter (only a per-dependency `install_timeout` goes below it).
 Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
 BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
 2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.
+
+### wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS *= {'which': '\`where <name>\` or \`<name> -version\`'}*
+
+Commands a `check.windows` cannot rely on, with what to use instead. Checks run with
+`shell=True`, which on Windows is cmd.exe: `which` exists there only when Git’s
+`usr\bin` happens to be on PATH, so a good install reads as failed (issue #192).
 
 ### wads.install_system_deps.check_if_installed(dep_name, check_cmds, timeout=10)
 
@@ -3464,6 +3472,24 @@ ffmpeg from apt (`--no-install-recommends`) with a warning.
 >>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
 >>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
 True
+```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.install_system_deps.unix_only_check_warnings(ops)
+
+Warnings for `check.windows` commands that call a Unix-only command.
+
+`ops` is the `[tool.wads.ops]` table (anything else declares nothing); the
+commands and their suggested replacements are [`UNIX_ONLY_CHECK_COMMANDS`](_autosummary/wads.install_system_deps.html.md#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS).
+The commands are reported, not rewritten: they are the user’s.
+
+```pycon
+>>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "which ffmpeg"}}})
+['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where <name>` or `<name> -version` (`which ffmpeg`)']
+>>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "where ffmpeg", "linux": "which ffmpeg"}}})
+[]
 ```
 
 * **Return type:**
@@ -8073,18 +8099,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 11:02 UTC** from commit <a href="https://github.com/i2mint/wads/commit/63c81497bb0abb38158b5fb26532c92bef8eba1d"><code>63c8149</code></a> on branch <code>master</code>, for **wads 0.2.73** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 11:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/695dd6cdbf3dbc7aae6706a14eb85511275ab6e3"><code>695dd6c</code></a> on branch <code>master</code>, for **wads 0.2.74** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.73) is behind the latest release on PyPI (0.2.74): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.74) is behind the latest release on PyPI (0.2.75): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/63c81497bb0abb38158b5fb26532c92bef8eba1d"><code>63c81497bb0abb38158b5fb26532c92bef8eba1d</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/695dd6cdbf3dbc7aae6706a14eb85511275ab6e3"><code>695dd6cdbf3dbc7aae6706a14eb85511275ab6e3</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8095,9 +8121,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41623732791">41623732791</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41625089295">41625089295</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>63c81497bb0abb38158b5fb26532c92bef8eba1d</code> (in the history of the built commit) |
+| Event commit | <code>695dd6cdbf3dbc7aae6706a14eb85511275ab6e3</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8122,13 +8148,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.74/">0.2.74</a>, newer than the documented version (0.2.73).
+Latest release: <a href="https://pypi.org/project/wads/0.2.75/">0.2.75</a>, newer than the documented version (0.2.74).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 63c81497bb0abb38158b5fb26532c92bef8eba1d
+git checkout 695dd6cdbf3dbc7aae6706a14eb85511275ab6e3
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

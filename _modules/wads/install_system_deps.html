@@ -363,10 +363,8 @@
 <span class="k">else</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"ERROR: tomli package required for Python &lt; 3.11"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Install with: pip install tomli"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># reported when a pyproject is read, not at import</span>
+        <span class="n">tomllib</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="c1"># Seconds allowed for a single command. Install commands get a generous ceiling</span>
@@ -428,6 +426,70 @@
 
 
 
+<span class="c1">#: Commands a ``check.windows`` cannot rely on, with what to use instead. Checks run with</span>
+<span class="c1">#: ``shell=True``, which on Windows is cmd.exe: ``which`` exists there only when Git's</span>
+<span class="c1">#: ``usr\bin`` happens to be on PATH, so a good install reads as failed (issue #192).</span>
+<span class="n">UNIX_ONLY_CHECK_COMMANDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"which"</span><span class="p">:</span> <span class="s2">"`where &lt;name&gt;` or `&lt;name&gt; -version`"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: cmd.exe's command separators (``&amp;&amp;``, ``||``, ``&amp;``, ``|``, ``(``), not ``^``-escaped.</span>
+<span class="c1">#: ``;`` is not one in cmd.exe.</span>
+<span class="n">_CMD_SEPARATOR</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"(?:^|(?&lt;!\^)(?:&amp;&amp;|\|\||[&amp;|(]))"</span>
+<span class="c1">#: How cmd.exe may introduce a command: ``@``, ``call``, ``cmd /c`` (and quotes).</span>
+<span class="n">_CMD_PREFIX</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"""\s*(?:@\s*)?(?:call\s+)?(?:cmd(?:\.exe)?\s+/[ck]\s+"?)?"?"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_command_word_pattern</span><span class="p">(</span><span class="n">word</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"re.Pattern"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``word`` in command position for cmd.exe, case-insensitive, ``.exe`` optional.</span>
+
+<span class="sd">    &gt;&gt;&gt; bool(_command_word_pattern("which").search('cmd /c "WHICH.exe" ffmpeg'))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bool(_command_word_pattern("which").search("echo hi;which x ^&amp;^&amp; findstr which y"))</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="sa">rf</span><span class="s2">"</span><span class="si">{</span><span class="n">_CMD_SEPARATOR</span><span class="si">}{</span><span class="n">_CMD_PREFIX</span><span class="si">}{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="si">}</span><span class="s2">(?:\.exe)?</span><span class="se">\"</span><span class="s2">?(?=\s|$)"</span><span class="p">,</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="n">_UNIX_ONLY_PATTERNS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">word</span><span class="p">:</span> <span class="n">_command_word_pattern</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">UNIX_ONLY_CHECK_COMMANDS</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="unix_only_check_warnings">
+<a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.unix_only_check_warnings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unix_only_check_warnings</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Warnings for ``check.windows`` commands that call a Unix-only command.</span>
+
+<span class="sd">    ``ops`` is the ``[tool.wads.ops]`` table (anything else declares nothing); the</span>
+<span class="sd">    commands and their suggested replacements are :data:`UNIX_ONLY_CHECK_COMMANDS`.</span>
+<span class="sd">    The commands are reported, not rewritten: they are the user's.</span>
+
+<span class="sd">    &gt;&gt;&gt; unix_only_check_warnings({"ffmpeg": {"check": {"windows": "which ffmpeg"}}})</span>
+<span class="sd">    ['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where &lt;name&gt;` or `&lt;name&gt; -version` (`which ffmpeg`)']</span>
+<span class="sd">    &gt;&gt;&gt; unix_only_check_warnings({"ffmpeg": {"check": {"windows": "where ffmpeg", "linux": "which ffmpeg"}}})</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dep_name</span><span class="p">,</span> <span class="n">dep_config</span> <span class="ow">in</span> <span class="n">ops</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_as_commands</span><span class="p">(</span><span class="n">_platform_value</span><span class="p">(</span><span class="n">dep_config</span><span class="p">,</span> <span class="s2">"check"</span><span class="p">,</span> <span class="s2">"windows"</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_UNIX_ONLY_PATTERNS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"check.windows for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2"> uses `</span><span class="si">{</span><span class="n">word</span><span class="si">}</span><span class="s2">`, which cmd.exe "</span>
+                        <span class="sa">f</span><span class="s2">"lacks; use </span><span class="si">{</span><span class="n">UNIX_ONLY_CHECK_COMMANDS</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="si">}</span><span class="s2"> (`</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">`)"</span>
+                    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">warnings</span></div>
+
+
+
 <div class="viewcode-block" id="detect_platform">
 <a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.detect_platform">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">detect_platform</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -448,6 +510,10 @@
 <a class="viewcode-back" href="../../_autosummary/wads.install_system_deps.html#wads.install_system_deps.read_system_deps">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_system_deps</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Read [tool.wads.ops.*] sections from pyproject.toml."""</span>
+    <span class="k">if</span> <span class="n">tomllib</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">"tomli package required for Python &lt; 3.11 (pip install tomli)"</span>
+        <span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
@@ -1165,6 +1231,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✗ Installation failed for </span><span class="si">{</span><span class="n">dep_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">"windows"</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">hint</span> <span class="ow">in</span> <span class="n">unix_only_check_warnings</span><span class="p">({</span><span class="n">dep_name</span><span class="p">:</span> <span class="n">dep_config</span><span class="p">}):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Hint: </span><span class="si">{</span><span class="n">hint</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
             <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1"># Show note if present</span>
@@ -1312,7 +1381,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=e7522919"></script>
+</div><script src="../../_static/documentation_options.js?v=0f7168a9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

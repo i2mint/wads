@@ -325,6 +325,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">inline_trigger_gate</span><span class="p">,</span> <span class="n">stub_markers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.install_system_deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">unix_only_check_warnings</span>
 
 <span class="k">try</span><span class="p">:</span>  <span class="c1"># Python 3.11+</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>  <span class="c1"># type: ignore</span>
@@ -534,6 +535,13 @@
             <span class="sa">f</span><span class="s2">"[project] metadata gaps: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_meta</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="s2">"wads-pypi-polish"</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="c1"># check.windows commands cmd.exe cannot run (issue #192): MEDIUM when CI's</span>
+    <span class="c1"># Windows job runs them, LOW when Windows testing is off.</span>
+    <span class="n">wads_tool</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">on_windows</span> <span class="o">=</span> <span class="n">wads_tool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"testing"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"test_on_windows"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">unix_only_check_warnings</span><span class="p">(</span><span class="n">wads_tool</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ops"</span><span class="p">,</span> <span class="p">{})):</span>
+        <span class="n">rep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"MEDIUM"</span> <span class="k">if</span> <span class="n">on_windows</span> <span class="k">else</span> <span class="s2">"LOW"</span><span class="p">,</span> <span class="s2">"ci"</span><span class="p">,</span> <span class="n">warning</span><span class="p">,</span> <span class="s2">"wads-ci-fix"</span><span class="p">)</span>
 
     <span class="c1"># testpaths: declared but nonexistent paths are a real ecosystem bug</span>
     <span class="n">testpaths</span> <span class="o">=</span> <span class="p">(</span>
@@ -1362,7 +1370,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=e7522919"></script>
+</div><script src="../../_static/documentation_options.js?v=0f7168a9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

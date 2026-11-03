@@ -366,7 +366,10 @@ one means installed); install commands are AND-ed (run in order, all must succee
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.DFLT_VERIFY_RETRIES" title="wads.install_system_deps.DFLT_VERIFY_RETRIES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_VERIFY_RETRIES</span></code></a></p></td>
 <td><p>Extra install rounds for a dependency whose commands succeeded but whose declared <code class="docutils literal notranslate"><span class="pre">check</span></code> still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.INSTALL_RECIPES" title="wads.install_system_deps.INSTALL_RECIPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">INSTALL_RECIPES</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS" title="wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNIX_ONLY_CHECK_COMMANDS</span></code></a></p></td>
+<td><p>Commands a <code class="docutils literal notranslate"><span class="pre">check.windows</span></code> cannot rely on, with what to use instead.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.INSTALL_RECIPES" title="wads.install_system_deps.INSTALL_RECIPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">INSTALL_RECIPES</span></code></a></p></td>
 <td><p>Recipes <code class="docutils literal notranslate"><span class="pre">install.&lt;platform&gt;</span> <span class="pre">=</span> <span class="pre">&quot;wads:&lt;name&gt;&quot;</span></code> may name; extend by adding to it.</p></td>
 </tr>
 </tbody>
@@ -403,7 +406,10 @@ one means installed); install commands are AND-ed (run in order, all must succee
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.static_ffmpeg_commands" title="wads.install_system_deps.static_ffmpeg_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">static_ffmpeg_commands</span></code></a>(params)</p></td>
 <td><p>Commands installing a static ffmpeg build: download, verify, extract, else apt.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout" title="wads.install_system_deps.with_apt_lock_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_apt_lock_timeout</span></code></a>(cmd, seconds)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.install_system_deps.unix_only_check_warnings" title="wads.install_system_deps.unix_only_check_warnings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unix_only_check_warnings</span></code></a>(ops)</p></td>
+<td><p>Warnings for <code class="docutils literal notranslate"><span class="pre">check.windows</span></code> commands that call a Unix-only command.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout" title="wads.install_system_deps.with_apt_lock_timeout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_apt_lock_timeout</span></code></a>(cmd, seconds)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p></td>
 </tr>
 </tbody>
@@ -481,6 +487,14 @@ floors the latter (only a per-dependency <code class="docutils literal notransla
 <dd><p>Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
 BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
 2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">UNIX_ONLY_CHECK_COMMANDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'which':</span> <span class="pre">'`where</span> <span class="pre">&lt;name&gt;`</span> <span class="pre">or</span> <span class="pre">`&lt;name&gt;</span> <span class="pre">-version`'}</span></span><a class="headerlink" href="#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS" title="Link to this definition">¶</a></dt>
+<dd><p>Commands a <code class="docutils literal notranslate"><span class="pre">check.windows</span></code> cannot rely on, with what to use instead. Checks run with
+<code class="docutils literal notranslate"><span class="pre">shell=True</span></code>, which on Windows is cmd.exe: <code class="docutils literal notranslate"><span class="pre">which</span></code> exists there only when Git’s
+<code class="docutils literal notranslate"><span class="pre">usr\bin</span></code> happens to be on PATH, so a good install reads as failed (issue #192).</p>
 </dd></dl>
 
 <dl class="py function">
@@ -646,6 +660,26 @@ ffmpeg from apt (<code class="docutils literal notranslate"><span class="pre">--
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.install_system_deps.unix_only_check_warnings">
+<span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">unix_only_check_warnings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ops</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#unix_only_check_warnings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.unix_only_check_warnings" title="Link to this definition">¶</a></dt>
+<dd><p>Warnings for <code class="docutils literal notranslate"><span class="pre">check.windows</span></code> commands that call a Unix-only command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ops</span></code> is the <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops]</span></code> table (anything else declares nothing); the
+commands and their suggested replacements are <a class="reference internal" href="#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS" title="wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNIX_ONLY_CHECK_COMMANDS</span></code></a>.
+The commands are reported, not rewritten: they are the user’s.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">unix_only_check_warnings</span><span class="p">({</span><span class="s2">"ffmpeg"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"check"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"windows"</span><span class="p">:</span> <span class="s2">"which ffmpeg"</span><span class="p">}}})</span>
+<span class="go">['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where &lt;name&gt;` or `&lt;name&gt; -version` (`which ffmpeg`)']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unix_only_check_warnings</span><span class="p">({</span><span class="s2">"ffmpeg"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"check"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"windows"</span><span class="p">:</span> <span class="s2">"where ffmpeg"</span><span class="p">,</span> <span class="s2">"linux"</span><span class="p">:</span> <span class="s2">"which ffmpeg"</span><span class="p">}}})</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.install_system_deps.with_apt_lock_timeout">
 <span class="sig-prename descclassname"><span class="pre">wads.install_system_deps.</span></span><span class="sig-name descname"><span class="pre">with_apt_lock_timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/install_system_deps.html#with_apt_lock_timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.install_system_deps.with_apt_lock_timeout" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> with every <code class="docutils literal notranslate"><span class="pre">apt</span></code>/<code class="docutils literal notranslate"><span class="pre">apt-get</span></code> call told to wait <code class="docutils literal notranslate"><span class="pre">seconds</span></code> for the dpkg lock.</p>
@@ -724,6 +758,7 @@ ffmpeg from apt (<code class="docutils literal notranslate"><span class="pre">--
 <li><a class="reference internal" href="#wads.install_system_deps.RECIPE_PREFIX"><code class="docutils literal notranslate"><span class="pre">RECIPE_PREFIX</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.SLOW_DEP_INSTALL_TIMEOUTS"><code class="docutils literal notranslate"><span class="pre">SLOW_DEP_INSTALL_TIMEOUTS</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">STATIC_FFMPEG_DEFAULTS</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS"><code class="docutils literal notranslate"><span class="pre">UNIX_ONLY_CHECK_COMMANDS</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.check_if_installed"><code class="docutils literal notranslate"><span class="pre">check_if_installed()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.detect_platform"><code class="docutils literal notranslate"><span class="pre">detect_platform()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.find_pyproject"><code class="docutils literal notranslate"><span class="pre">find_pyproject()</span></code></a></li>
@@ -733,6 +768,7 @@ ffmpeg from apt (<code class="docutils literal notranslate"><span class="pre">--
 <li><a class="reference internal" href="#wads.install_system_deps.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.read_system_deps"><code class="docutils literal notranslate"><span class="pre">read_system_deps()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.static_ffmpeg_commands"><code class="docutils literal notranslate"><span class="pre">static_ffmpeg_commands()</span></code></a></li>
+<li><a class="reference internal" href="#wads.install_system_deps.unix_only_check_warnings"><code class="docutils literal notranslate"><span class="pre">unix_only_check_warnings()</span></code></a></li>
 <li><a class="reference internal" href="#wads.install_system_deps.with_apt_lock_timeout"><code class="docutils literal notranslate"><span class="pre">with_apt_lock_timeout()</span></code></a></li>
 </ul>
 </li>
@@ -745,7 +781,7 @@ ffmpeg from apt (<code class="docutils literal notranslate"><span class="pre">--
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=e7522919"></script>
+</div><script src="../_static/documentation_options.js?v=0f7168a9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

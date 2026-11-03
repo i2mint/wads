@@ -463,6 +463,19 @@
                 <span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">package_dir</span><span class="si">}</span><span class="s1">" to testpaths (see i2mint/wads#56).'</span>
             <span class="p">)</span>
 
+        <span class="c1"># check.windows commands cmd.exe cannot run, e.g. `which` (i2mint/wads#192),</span>
+        <span class="c1"># when a Windows job will run them. Reported, never rewritten.</span>
+        <span class="n">unix_only</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">test_on_windows</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">deps_module</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"install_system_deps"</span><span class="p">)</span>
+                <span class="n">ops</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ops"</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">unix_only</span> <span class="o">=</span> <span class="n">deps_module</span><span class="o">.</span><span class="n">unix_only_check_warnings</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># a diagnostic must never fail the setup job</span>
+                <span class="k">pass</span>
+        <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">unix_only</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"::warning title=Unix-only Windows check::</span><span class="si">{</span><span class="n">warning</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
         <span class="c1"># Print summary</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"[OK] CI configuration loaded successfully"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   Project: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">project_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -544,7 +557,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=e7522919"></script>
+</div><script src="../../../_static/documentation_options.js?v=0f7168a9"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

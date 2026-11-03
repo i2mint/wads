@@ -74,6 +74,7 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`DFLT_APT_LOCK_TIMEOUT`](#wads.install_system_deps.DFLT_APT_LOCK_TIMEOUT)       | Seconds apt waits for the dpkg lock before giving up (`-o DPkg::Lock::Timeout`).                                                                                                                                   |
 | [`DFLT_KILL_GRACE`](#wads.install_system_deps.DFLT_KILL_GRACE)             | Seconds between SIGTERM and SIGKILL when a timed-out install is stopped.                                                                                                                                           |
 | [`DFLT_VERIFY_RETRIES`](#wads.install_system_deps.DFLT_VERIFY_RETRIES)         | Extra install rounds for a dependency whose commands succeeded but whose declared `check` still fails afterwards (a package manager that reported success for nothing — e.g. Chocolatey on a feed 5xx).            |
+| [`UNIX_ONLY_CHECK_COMMANDS`](#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS)    | Commands a `check.windows` cannot rely on, with what to use instead.                                                                                                                                               |
 | [`INSTALL_RECIPES`](#wads.install_system_deps.INSTALL_RECIPES)             | Recipes `install.<platform> = "wads:<name>"` may name; extend by adding to it.                                                                                                                                     |
 
 ### Functions
@@ -88,6 +89,7 @@ one means installed); install commands are AND-ed (run in order, all must succee
 | [`main`](#wads.install_system_deps.main)()                                            | CLI entry point.                                                                |
 | [`read_system_deps`](#wads.install_system_deps.read_system_deps)(pyproject_path)                  | Read [tool.wads.ops.\*] sections from pyproject.toml.                           |
 | [`static_ffmpeg_commands`](#wads.install_system_deps.static_ffmpeg_commands)(params)                    | Commands installing a static ffmpeg build: download, verify, extract, else apt. |
+| [`unix_only_check_warnings`](#wads.install_system_deps.unix_only_check_warnings)(ops)                     | Warnings for `check.windows` commands that call a Unix-only command.            |
 | [`with_apt_lock_timeout`](#wads.install_system_deps.with_apt_lock_timeout)(cmd, seconds)               | `cmd` with every `apt`/`apt-get` call told to wait `seconds` for the dpkg lock. |
 
 ### Classes
@@ -142,6 +144,12 @@ floors the latter (only a per-dependency `install_timeout` goes below it).
 Static ffmpeg + ffprobe for linux64 (x86_64), checked against its sha256.
 BtbN/FFmpeg-Builds keeps the last autobuild of each month for two years, so this
 2026-09-30 pin expires around 2028-09: re-pin (url + sha256) before then.
+
+### wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS *= {'which': '\`where <name>\` or \`<name> -version\`'}*
+
+Commands a `check.windows` cannot rely on, with what to use instead. Checks run with
+`shell=True`, which on Windows is cmd.exe: `which` exists there only when Git’s
+`usr\bin` happens to be on PATH, so a good install reads as failed (issue #192).
 
 ### wads.install_system_deps.check_if_installed(dep_name, check_cmds, timeout=10)
 
@@ -258,6 +266,24 @@ ffmpeg from apt (`--no-install-recommends`) with a warning.
 >>> [cmd] = static_ffmpeg_commands({"apt_fallback": False})
 >>> "sha256sum -c -" in cmd and "'*/bin/ffprobe'" in cmd and "apt-get" not in cmd
 True
+```
+
+* **Return type:**
+  [`List`](https://docs.python.org/3/library/typing.html#typing.List)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.install_system_deps.unix_only_check_warnings(ops)
+
+Warnings for `check.windows` commands that call a Unix-only command.
+
+`ops` is the `[tool.wads.ops]` table (anything else declares nothing); the
+commands and their suggested replacements are [`UNIX_ONLY_CHECK_COMMANDS`](#wads.install_system_deps.UNIX_ONLY_CHECK_COMMANDS).
+The commands are reported, not rewritten: they are the user’s.
+
+```pycon
+>>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "which ffmpeg"}}})
+['check.windows for ffmpeg uses `which`, which cmd.exe lacks; use `where <name>` or `<name> -version` (`which ffmpeg`)']
+>>> unix_only_check_warnings({"ffmpeg": {"check": {"windows": "where ffmpeg", "linux": "which ffmpeg"}}})
+[]
 ```
 
 * **Return type:**
