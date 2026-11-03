@@ -206,6 +206,7 @@ def _context(
     run_ci_publishes="true",
     level="",
     workflow=UV_CI,
+    native="false",
 ):
     head_commit = message if event == "push" else ""
     subject = _run_extraction(workflow, head_commit)
@@ -236,6 +237,7 @@ def _context(
         "needs.setup.outputs.test-on-windows": "true",
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
+        "needs.setup.outputs.native": native,
     }
 
 
@@ -497,10 +499,19 @@ def test_stub_level_input_defaults_to_config_so_pyproject_stays_the_source():
     assert on(texts[True]) == on(texts[False])
 
 
+#: The reusable workflow's publish gate hands native (maturin) repos to publish-native
+#: (#166); the inline template has no native path, so it is the only allowed difference.
+NATIVE_PUBLISH_CLAUSE = " && needs.setup.outputs.native != 'true'"
+
+
 def test_the_gated_jobs_read_the_same_verdicts_in_both_workflows():
     jobs = lambda path: yaml.safe_load(path.read_text())["jobs"]
     for name in GATED_JOBS:
-        assert jobs(UV_CI)[name]["if"] == jobs(INLINE)[name]["if"]
+        reusable = jobs(UV_CI)[name]["if"]
+        if name == "publish":
+            assert reusable.endswith(NATIVE_PUBLISH_CLAUSE)
+            reusable = reusable[: -len(NATIVE_PUBLISH_CLAUSE)]
+        assert reusable == jobs(INLINE)[name]["if"]
 
 
 @pytest.mark.parametrize(
@@ -914,3 +925,31 @@ def test_the_on_demand_header_explains_the_ladder():
     assert "Only the pushed HEAD" in text
     only = render_stub_trigger(STUB_TEMPLATE, mode="on-demand", run_ci_publishes=False)
     assert "validates only" in only
+
+
+NATIVE_JOBS = ("native-version", "publish-native")
+
+
+@bash_required
+@pytest.mark.parametrize("native", ["false", ""])
+def test_a_pure_python_repo_publishes_through_publish_only(native):
+    """i2mint/wads#166: '' (an older read-ci-config) and 'false' keep today's path."""
+    jobs = yaml.safe_load(UV_CI.read_text())["jobs"]
+    context = _context("fix: x", mode="auto", native=native)
+    assert evaluate(jobs["publish"]["if"], context)
+    assert not any(evaluate(jobs[name]["if"], context) for name in NATIVE_JOBS)
+
+
+@bash_required
+def test_a_native_repo_publishes_through_publish_native_only():
+    jobs = yaml.safe_load(UV_CI.read_text())["jobs"]
+    context = _context("fix: x", mode="auto", native="true")
+    assert not evaluate(jobs["publish"]["if"], context)
+    assert all(evaluate(jobs[name]["if"], context) for name in NATIVE_JOBS)
+
+
+@bash_required
+def test_the_native_release_path_never_runs_off_the_default_branch():
+    jobs = yaml.safe_load(UV_CI.read_text())["jobs"]
+    context = _context("fix: x", mode="auto", native="true", ref="refs/heads/feature")
+    assert not any(evaluate(jobs[name]["if"], context) for name in NATIVE_JOBS)

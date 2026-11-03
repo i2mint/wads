@@ -24,7 +24,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 | `[tool.wads.ci.commands]` | Pre-test, test, post-test, lint, format commands |
 | `[tool.wads.ci.env]` | Environment variables (required, test, extra, defaults) |
 | `[tool.wads.ci.quality]` | Ruff/Black/Mypy settings |
-| `[tool.wads.ci.build]` | sdist/wheel build settings |
+| `[tool.wads.ci.build]` | sdist/wheel build settings; `native` (maturin wheel path, auto-detected from `build-backend = "maturin"`; `wads/native_build.py`, jobs `native-version` / `native-wheels` / `publish-native`, actions `setup-rust` / `rust-checks` / `build-native-wheel`, self-test `native-selftest.yml` on `ci-fixtures/native_pkg`) |
 | `[tool.wads.ci.publish]` | PyPI publishing settings |
 | `[tool.wads.ci.trigger]` | `mode = "auto"` (default) or `"on-demand"`: nothing runs unless the commit subject has `run_ci_marker` (default `[run ci]`: validate, and also deploy while `run_ci_publishes = true`, the default) or `deploy_marker` (default `[run deploy]`: validate then publish/Pages), or the run is a `workflow_dispatch` (`level` input `config`\|`validate`\|`deploy`; `config`, the default, follows `run_ci_publishes`). `run_ci_publishes = false` makes `[run ci]` validate only. The level is decided by the setup job's "Decide trigger level" step (`validate`/`deploy` outputs). Stub rendering + the `ci-on-demand` flip live in `wads/ci_trigger.py`; `wads ci-local` (`wads/ci_local.py`) runs the same config locally |
 | `[tool.wads.ci.docs]` | Documentation generation (epythet) |
@@ -171,6 +171,7 @@ The CI workflow has 4-5 jobs:
 3. **windows-validation** (optional) - Same tests on Windows, `continue-on-error: true` (never blocks publish)
 4. **publish** - Runs **only on the repo's default branch**, **only if `validation` succeeded** (the Linux matrix; the `if:` has no `!cancelled()`/`always()` escape hatch), not `[skip ci]`, and publishing enabled. Format → Bump version → Build → PyPI upload → Commit → Tag (push-back via `GITHUB_TOKEN`; the tag names the built bump commit even when the push had to replay it onto a moved branch, #161)
 5. **github-pages** (optional) - Publish docs via epythet (also default-branch-gated)
+6. **native path** (maturin packages only, gated on setup's `native` output): Rust checks inside `validation`; on release `native-version` → `native-wheels` (matrix) → `publish-native` (the publish steps via YAML anchors, sdist + downloaded wheels instead of `uv build`); `publish` carries `native != 'true'`
 
 ### Migration Flow
 

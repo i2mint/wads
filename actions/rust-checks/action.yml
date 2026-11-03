@@ -1,0 +1,50 @@
+name: "Rust checks"
+description: >-
+  cargo fmt --check, cargo clippy with warnings denied, and cargo test on the pure-Rust
+  crates of a native (maturin) package (issue #166). Run after setup-rust.
+
+inputs:
+  project-dir:
+    description: "Directory holding pyproject.toml and the Cargo workspace"
+    required: false
+    default: "."
+  cargo-test-args:
+    description: >-
+      JSON list of `cargo test` arguments ([] skips the tests). Empty or "null": every
+      workspace crate except the binding one maturin builds, from cargo metadata.
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: cargo fmt
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      run: cargo fmt --all --check
+
+    - name: cargo clippy
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      run: cargo clippy --workspace --all-targets -- -D warnings
+
+    - name: cargo test
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      env:
+        CARGO_TEST_ARGS: ${{ inputs.cargo-test-args }}
+      run: |
+        set -e
+        if [ -z "$CARGO_TEST_ARGS" ] || [ "$CARGO_TEST_ARGS" = "null" ]; then
+          ARGS=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/cargo_test_args.py" .)
+          read -ra args <<< "$ARGS"
+        else
+          mapfile -t args < <(python3 -I -c 'import json, os; print("\n".join(json.loads(os.environ["CARGO_TEST_ARGS"])))')
+        fi
+        if [ "${#args[@]}" -eq 0 ]; then
+          echo "No pure-Rust crate to test (the binding crate is tested through Python)."
+          exit 0
+        fi
+        echo "Running: cargo test ${args[*]}"
+        cargo test "${args[@]}"

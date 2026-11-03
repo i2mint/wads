@@ -175,6 +175,7 @@ def _verdicts(workflow, message, *, ref="refs/heads/main", publish_enabled="true
         "needs.setup.outputs.test-on-windows": "true",
         "needs.setup.outputs.tests-enabled": "true",
         "needs.setup.outputs.docs-enabled": "true",
+        "needs.setup.outputs.native": "false",  # a pure-Python repo (#166)
         **{f"needs.setup.outputs.{k}": v for k, v in run_gates(workflow, subject).items()},
         **{
             f"needs.setup.outputs.{k}": v

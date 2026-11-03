@@ -199,6 +199,9 @@ jobs:
       windows-blocking: ${{ steps.config.outputs.windows-blocking }}
       job-timeout-minutes: ${{ steps.config.outputs.job-timeout-minutes }}
       pinned-runs: ${{ steps.config.outputs.pinned-runs }}
+      native: ${{ steps.config.outputs.native }}
+      native-targets: ${{ steps.config.outputs.native-targets }}
+      native-options: ${{ steps.config.outputs.native-options }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -477,6 +480,15 @@ jobs:
         with:
           pyproject-path: .
 
+      # Native (maturin) packages only (issue #166): the install below builds the
+      # extension, so Rust and its cache come first. The cache is written only on
+      # the default branch, so a PR cannot plant what a default-branch run restores.
+      - name: Set up Rust
+        if: needs.setup.outputs.native == 'true'
+        uses: i2mint/wads/actions/setup-rust@master
+        with:
+          save-cache: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
       - name: Install Dependencies
         uses: i2mint/wads/actions/install-deps-uv@master
         with:
@@ -512,6 +524,14 @@ jobs:
           uv pip install -e "$target" "${reqs[@]}" "${runner[@]}"
           uv pip check
           uv pip list
+
+      # fmt, clippy (warnings denied) and cargo test on the pure-Rust crates, once:
+      # the answer does not vary with the Python version.
+      - name: Rust Checks
+        if: needs.setup.outputs.native == 'true' && matrix.python-version == fromJson(needs.setup.outputs.python-versions)[0]
+        uses: i2mint/wads/actions/rust-checks@master
+        with:
+          cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options || '{}').cargo_test_args) }}
 
       # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast
       # if a required secret is missing). Driven by [tool.wads.ci.env].
@@ -657,6 +677,90 @@ jobs:
           pytest-args: ${{ needs.setup.outputs.pytest-args }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
 
+  # ------------------------------------------------------------------
+  # NATIVE PATH (issue #166): a maturin (Rust/PyO3) package needs one wheel per
+  # platform, built on that platform. Every job below is gated on the setup
+  # job's `native` output, so a pure-Python repo runs exactly the jobs it ran
+  # before; `publish` above carries `native != 'true'` (fail-closed: an older
+  # read-ci-config that emits no `native` output publishes as before).
+  #
+  #   native-version  computes the release version ONCE (isee, as publish does)
+  #                   and hands the bumped pyproject.toml to every wheel leg;
+  #   native-wheels   one abi3 wheel per [tool.wads.ci.build.native] target;
+  #   publish-native  the publish job's own steps (YAML anchors), with
+  #                   `uv build --sdist` plus the downloaded wheels in place of
+  #                   `uv build`, and a check that the version it bumps to is
+  #                   the one the wheels carry.
+  # The macOS and Windows legs (about 10x and 2x Linux minutes) run only on
+  # this release path, never on a PR.
+  native-version:
+    name: Native Version
+    permissions:
+      contents: read
+    if: "needs.setup.outputs.native == 'true' && needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
+    needs: [setup, validation]
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
+
+      - name: Set up Python
+        uses: i2mint/wads/actions/setup-python-uv@master
+        with:
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+          create-venv: "false"
+
+      - name: Update Version Number
+        id: version
+        uses: i2mint/isee/actions/bump-version-number@master
+
+      - name: Hand the release pyproject.toml to the wheel builds
+        uses: actions/upload-artifact@v6
+        with:
+          name: wads-release-pyproject
+          path: pyproject.toml
+          if-no-files-found: error
+
+  native-wheels:
+    name: Native Wheel (${{ matrix.name }})
+    permissions:
+      contents: read
+    needs: [setup, native-version]
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJson(needs.setup.outputs.native-targets || '[]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ fromJSON(needs.setup.outputs.job-timeout-minutes || '60') }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # No cargo cache: these are the release artifacts (#113's reasoning for
+      # the publish job applies).
+      - name: Build the wheel
+        uses: i2mint/wads/actions/build-native-wheel@master
+        with:
+          name: ${{ matrix.name }}
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          python-arch: ${{ matrix.python_arch }}
+          smoke: ${{ matrix.smoke }}
+          smoke-import: ${{ fromJson(needs.setup.outputs.native-options).smoke_import }}
+          maturin-args: ${{ fromJson(needs.setup.outputs.native-options).maturin_args }}
+          version: ${{ needs.native-version.outputs.version }}
+          pyproject-artifact: wads-release-pyproject
+
   # Publishing job
   #
   # Gated by [tool.wads.ci.publish] in pyproject.toml (read via the setup job):
@@ -691,7 +795,7 @@ jobs:
     name: Publish
     permissions:
       contents: write
-    if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
+    if: "needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true' && needs.setup.outputs.native != 'true'"
     needs: [setup, validation]
     runs-on: ubuntu-latest
     # One publish at a time per repo and branch (issue #174). Two merges seconds
@@ -714,7 +818,8 @@ jobs:
       # HTTPS auth in .git/config using `secrets.GITHUB_TOKEN`. Together with the
       # job-level `permissions: contents: write`, this is exactly what the
       # post-publish push-back needs — no per-repo SSH deploy key required.
-      - uses: actions/checkout@v6
+      - &publish-checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -726,7 +831,8 @@ jobs:
       # can carry the previous queued run's `[skip ci]` bump. So a re-run is
       # refused only when a commit other than such a CI bump landed after the
       # built one: those changes are released, or will be, by a later run.
-      - name: Refuse a re-run of an old commit
+      - &publish-rerun-guard
+        name: Refuse a re-run of an old commit
         env:
           RUN_ATTEMPT: ${{ github.run_attempt }}
           BUILT_SHA: ${{ github.sha }}
@@ -741,7 +847,8 @@ jobs:
             exit 1
           fi
 
-      - name: Set up uv
+      - &publish-setup-uv
+        name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
           # No shared cache here: test jobs on the default branch write it, so
@@ -749,21 +856,25 @@ jobs:
           # write token and the PyPI token (#113).
           enable-cache: false
 
-      - name: Set up Python
+      - &publish-setup-python
+        name: Set up Python
         uses: i2mint/wads/actions/setup-python-uv@master
         with:
           python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
           create-venv: "false"
 
-      - name: Format Source Code
+      - &publish-format
+        name: Format Source Code
         if: needs.setup.outputs.ruff-enabled != 'false'
         run: uvx ruff format .
 
-      - name: Format Source Code (black)
+      - &publish-format-black
+        name: Format Source Code (black)
         if: needs.setup.outputs.black-enabled == 'true'
         run: uvx black .
 
-      - name: Update Version Number
+      - &publish-bump
+        name: Update Version Number
         id: version
         uses: i2mint/isee/actions/bump-version-number@master
 
@@ -782,7 +893,8 @@ jobs:
       # committed default (BASH_ENV, say) must not reach the steps that hold
       # the token (#112). Also deliberately placed AFTER the version bump and
       # build, so those steps run with no secrets in the environment at all.
-      - name: Resolve PyPI token
+      - &publish-resolve-token
+        name: Resolve PyPI token
         uses: i2mint/wads/actions/export-ci-env@master
         with:
           required: '[]'
@@ -796,7 +908,8 @@ jobs:
       # env.PYPI_PASSWORD is written by the resolve step above (it resolves
       # the token from either transport); the direct secrets reference is a
       # belt-and-braces path for named-transport stubs.
-      - name: Publish to PyPI
+      - &publish-upload
+        name: Publish to PyPI
         uses: i2mint/wads/actions/pypi-publish-uv@master
         with:
           pypi-token: ${{ secrets.PYPI_PASSWORD || env.PYPI_PASSWORD }}
@@ -808,7 +921,8 @@ jobs:
       # (see its `push-rebase-retries` input). With publish runs queued (the
       # job's `concurrency` above), a queued run's commit predates the previous
       # run's bump, so this replay is now the normal path for a queued run.
-      - name: Commit Changes
+      - &publish-commit
+        name: Commit Changes
         id: bump
         uses: i2mint/wads/actions/git-commit@master
         with:
@@ -818,13 +932,69 @@ jobs:
       # Tag the commit that was built and uploaded, not the branch tip: when a
       # merge landed during the run, the push above replayed the bump onto it,
       # and that tip holds code this release does not (issue #161).
-      - name: Tag Repository
+      - &publish-tag
+        name: Tag Repository
         uses: i2mint/wads/actions/git-tag@master
         with:
           tag: ${{ env.VERSION }}
           message: "Release version ${{ env.VERSION }}"
           ref: ${{ steps.bump.outputs.commit-sha }}
           push: true
+
+  publish-native:
+    name: Publish (native)
+    permissions:
+      contents: write
+    if: "needs.setup.outputs.native == 'true' && needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
+    needs: [setup, validation, native-version, native-wheels]
+    runs-on: ubuntu-latest
+    # Same queue as `publish` (a repo is one or the other).
+    concurrency:
+      group: wads-publish-${{ github.repository }}-${{ github.ref }}
+      queue: max
+
+    steps:
+      - *publish-checkout
+      - *publish-rerun-guard
+      - *publish-setup-uv
+      - *publish-setup-python
+      - *publish-format
+      - *publish-format-black
+      - *publish-bump
+
+      # The wheels were built for native-version's number. A release that landed
+      # while they were building (this job waited in the publish queue) moves the
+      # number this bump computes, and those wheels would ship under a version
+      # they do not carry: refuse instead.
+      - name: Check the wheels carry this release's version
+        env:
+          WHEELS_VERSION: ${{ needs.native-version.outputs.version }}
+        run: |
+          if [ "$VERSION" != "$WHEELS_VERSION" ]; then
+            echo "::error::The wheels were built as $WHEELS_VERSION but this release bumps to $VERSION (another release landed while they were building). Re-run this workflow to rebuild them."
+            exit 1
+          fi
+
+      - name: Build the sdist
+        uses: i2mint/wads/actions/build-dist-uv@master
+        with:
+          sdist: "true"
+          wheel: "false"
+
+      - name: Collect the wheels
+        uses: actions/download-artifact@v7
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: List the distributions
+        run: ls -la dist/
+
+      - *publish-resolve-token
+      - *publish-upload
+      - *publish-commit
+      - *publish-tag
 
   # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false, or
   # when the subject carries the skip-ci or skip-pages marker: setup's

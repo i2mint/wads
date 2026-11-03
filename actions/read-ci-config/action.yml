@@ -38,6 +38,15 @@ outputs:
   pinned-runs:
     description: 'JSON list of validation-matrix include entries, one per pinned-dependency test run ([[tool.wads.ci.testing.pinned]]), each {"python-version", "pinned": {name, requirements, pytest_args}}; [] when none are declared or tests are off. An invalid entry fails this step.'
     value: ${{ steps.config.outputs.pinned-runs }}
+  native:
+    description: 'Whether the repo is a native (maturin) package with the native wheel path (true/false): build-backend = "maturin", or [tool.wads.ci.build].native.'
+    value: ${{ steps.config.outputs.native }}
+  native-targets:
+    description: 'JSON list of wheel targets for the native-wheels matrix ({name, runner, target, manylinux, python_arch, smoke}); [] when not native.'
+    value: ${{ steps.config.outputs.native-targets }}
+  native-options:
+    description: 'JSON object of native build options ({maturin_args, smoke_import, cargo_test_args}); {} when not native.'
+    value: ${{ steps.config.outputs.native-options }}
   tests-enabled:
     description: 'Whether the CI test step should run (true/false). Defaults to true; set [tool.wads.ci.testing].enabled = false in pyproject.toml to skip the pytest/doctest step.'
     value: ${{ steps.config.outputs.tests-enabled }}

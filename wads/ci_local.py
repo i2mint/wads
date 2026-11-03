@@ -46,6 +46,7 @@ can ever spend or publish.
 from __future__ import annotations
 
 import configparser
+import json
 import os
 import re
 import shlex
@@ -57,6 +58,7 @@ from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import TRIGGER_LEVELS, CIConfig
+from wads.native_build import cargo_test_args, native_build_config
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
 from wads.workdirs import (
     BYTES_PER_GB,
@@ -275,6 +277,7 @@ def plan_ci_local(
     if config.env_vars_required:
         steps.append(_required_env_step(config.env_vars_required))
     steps += _quality_steps(config)
+    steps += _rust_steps(config, repo=repo)
     steps += _test_steps(config, platform=platform, repo=repo)
     steps += _pinned_steps(config, platform=platform, repo=repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
@@ -440,6 +443,46 @@ def _leg_steps(
             ),
         ]
     return steps
+
+
+def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
+    """The validation job's Rust checks for a native (maturin) package (issue #166)."""
+    native = native_build_config(config.data)
+    if native is None:
+        return []
+
+    def cargo_test(ctx):
+        args = native.cargo_test_args
+        if args is None:
+            meta = ctx.run(
+                ["cargo", "metadata", "--no-deps", "--format-version", "1"],
+                capture=True,
+            )
+            if meta.returncode != 0:
+                return f"cargo metadata failed (exit {meta.returncode})"
+            maturin = config.data.get("tool", {}).get("maturin", {})
+            binding = repo / maturin.get("manifest-path", "Cargo.toml")
+            args = cargo_test_args(
+                json.loads(meta.stdout), binding_manifest=str(binding)
+            )
+        if not args:
+            ctx.notes.append("no pure-Rust crate to cargo test")
+            return None
+        result = ctx.run(["cargo", "test", *args])
+        return f"exit {result.returncode}" if result.returncode else None
+
+    return [
+        Step("rust: fmt", ("cargo", "fmt", "--all", "--check")),
+        Step(
+            "rust: clippy",
+            ("cargo", "clippy", "--workspace", "--all-targets", "--", "-D", "warnings"),
+        ),
+        Step(
+            "rust: test",
+            check=cargo_test,
+            description="cargo test on the pure-Rust crates (not the binding one)",
+        ),
+    ]
 
 
 def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:

@@ -129,6 +129,13 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("tests-enabled", config.tests_enabled)
         _set_output("pinned-runs", pinned_runs_matrix_include(config))
 
+        # Native (maturin) builds (i2mint/wads#166). An invalid native setting raises:
+        # the setup job goes red rather than release something else.
+        native = load_wads_module("native_build").native_build_config(config.data)
+        _set_output("native", native is not None)
+        _set_output("native-targets", native.matrix() if native else [])
+        _set_output("native-options", native.options() if native else {})
+
         # Build configuration
         _set_output("build-sdist", config.build_sdist)
         _set_output("build-wheel", config.build_wheel)

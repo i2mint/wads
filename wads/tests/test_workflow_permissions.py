@@ -17,7 +17,9 @@ WORKFLOWS = {
     "inline": REPO_ROOT / "wads" / "data" / "github_ci_uv.yml",
 }
 READ_ONLY_JOBS = ("setup", "validation", "windows-validation")
-WRITING_JOBS = {"publish", "github-pages"}
+WRITING_JOBS = {"publish", "publish-native", "github-pages"}
+#: The native (maturin) path's jobs that build, and must not push (issue #166).
+NATIVE_READ_ONLY_JOBS = ("native-version", "native-wheels")
 
 
 def _jobs(path):
@@ -60,3 +62,17 @@ def test_publish_job_does_not_restore_the_shared_uv_cache(which):
     assert uv_setups
     for step in uv_setups:
         assert (step.get("with") or {}).get("enable-cache") is False
+
+
+@pytest.mark.parametrize("job_name", NATIVE_READ_ONLY_JOBS)
+def test_native_build_jobs_are_read_only(job_name):
+    job = _jobs(WORKFLOWS["reusable"])[job_name]
+    assert job.get("permissions") == {"contents": "read"}
+    for step in _checkouts(job):
+        assert (step.get("with") or {}).get("persist-credentials") is False
+
+
+def test_publish_native_does_not_restore_the_shared_uv_cache():
+    steps = _jobs(WORKFLOWS["reusable"])["publish-native"]["steps"]
+    uv_setups = [s for s in steps if str(s.get("uses", "")).startswith("astral-sh/setup-uv@")]
+    assert uv_setups and all(s["with"]["enable-cache"] is False for s in uv_setups)
