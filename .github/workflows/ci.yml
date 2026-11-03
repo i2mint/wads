@@ -1,41 +1,28 @@
-# wads CI — calls the reusable workflow hosted in i2mint/wads.
+# wads' own CI: it calls the reusable workflow that THIS repo hosts, at this commit
+# (`./.github/workflows/uv-ci.yml`), so a PR that edits uv-ci.yml runs its own version
+# (i2mint/wads#198). Consumers call `i2mint/wads/.github/workflows/uv-ci.yml@master`
+# through the stub wads ships (wads/data/github_ci_uv_stub.yml); keep this file off
+# `wads-migrate ci-to-stub` / `fleet-stub`, which would point it back at @master.
 #
-# All configuration comes from this repo's pyproject.toml [tool.wads.ci.*].
-# To customize the workflow itself (rare), replace this file with the
-# full inline template `wads/data/github_ci_uv.yml` from i2mint/wads.
-#
-# Pinning: `@master` floats with wads. If you need version stability for
-# a release-sensitive repo, change `@master` to a wads tag (e.g. `@v0.1.81`).
-# CI failure does not block a published release — it blocks the publish
-# step itself — so floating master is generally safe.
-#
-# Permissions: GitHub validates that the caller grants AT LEAST the
-# permissions any job in the called workflow requests — at workflow-parse
-# time, not at run-time, even if the job would be skipped via `if:`.
-# The reusable workflow needs:
-#   contents: write   for the publish job's version-bump push-back
-#   pages: write      for the github-pages publish (if enabled)
-#   id-token: write   for the github-pages OIDC handshake (if enabled)
-# Granting these in the stub keeps it working on any caller, including
-# personal-account repos where id-token is not write-by-default.
+# All configuration comes from pyproject.toml [tool.wads.ci.*]. The permissions below
+# are the most any job in uv-ci.yml requests (GitHub checks them at parse time, even for
+# skipped jobs): contents: write (publish push-back), pages: write and id-token: write
+# (Pages).
 name: Continuous Integration
 on: [push, pull_request]
 jobs:
   ci:
-    uses: i2mint/wads/.github/workflows/uv-ci.yml@master
+    # wads dogfoods its own reusable workflow AT THIS COMMIT (not @master, as the
+    # stub it ships does), so a PR that edits uv-ci.yml runs its own version in PR
+    # CI (i2mint/wads#198). The actions it calls still float on @master: a PR that
+    # edits an action needs the throwaway-branch check in skills/wads-dev-workflow.
+    uses: ./.github/workflows/uv-ci.yml
     permissions:
       contents: write
       pages: write
       id-token: write
-    # Explicit pass-through (not `secrets: inherit`) because `inherit` does
-    # not reliably propagate caller-repo secrets to a reusable workflow
-    # owned by a different account (verified empirically: caller in a
-    # personal account, called in i2mint org → `${{ secrets.PYPI_PASSWORD }}`
-    # resolved to empty inside the reusable workflow despite the secret
-    # being set on the caller repo). Listing each secret here makes the
-    # propagation unambiguous regardless of caller-vs-called ownership.
-    # Missing secrets on the caller resolve to empty strings, harmless for
-    # the optional ones; PYPI_PASSWORD must be set for the publish job.
+    # Named pass-through, as in the stub consumers get (a called workflow sees only
+    # the secrets passed to it); PYPI_PASSWORD must be set for the publish job.
     secrets:
       PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

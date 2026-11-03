@@ -183,6 +183,10 @@ def _has_tracked_changes(repo_path: str) -> bool:
     )
 
 
+#: How a repo that hosts the reusable workflow calls it at its own commit.
+LOCAL_REUSABLE_CALL = "./.github/workflows/uv-ci.yml"
+
+
 def migrate_one_to_stub(
     repo_path: str,
     *,
@@ -198,6 +202,11 @@ def migrate_one_to_stub(
     name = os.path.basename(repo_path.rstrip("/"))
     if not Path(repo_path, ".git").is_dir():
         return RepoResult(name, repo_path, "skip", "not a git repo")
+    ci_file = Path(repo_path) / workflow_path
+    if ci_file.is_file() and LOCAL_REUSABLE_CALL in ci_file.read_text():
+        # The repo hosts uv-ci.yml and calls it at its own commit (wads itself,
+        # i2mint/wads#198): re-rendering the stub would point it back at @master.
+        return RepoResult(name, repo_path, "skip", "calls its own uv-ci.yml")
 
     # Check tracked-changes BEFORE attempting sync — `git pull --rebase`
     # refuses to run with a dirty working tree, and previously surfaced as
