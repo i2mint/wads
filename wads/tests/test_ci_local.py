@@ -17,6 +17,7 @@ from wads.ci_config import CIConfig
 from wads.scripts.pytest_doctest_flags import DOCTEST_OPTIONFLAGS
 from wads.ci_local import (
     HOST_INSTALL_PIN_VARS,
+    HOST_ONLY_VARS,
     PUSHES,
     RELEASE_COMMIT_MESSAGE,
     RELEASE_TAG_MESSAGE,
@@ -374,7 +375,7 @@ def test_host_install_pins_are_kept_out_of_every_step(repo):
     # The seam keeps them for a caller who wants the dev machine's pins.
     runner = FakeRunner()
     run_ci_local(
-        repo, runner=runner, environ=environ, out=io.StringIO(), host_pin_vars=()
+        repo, runner=runner, environ=environ, out=io.StringIO(), host_only_vars=()
     )
     assert all(
         call["env"]["UV_CONSTRAINT"] == "/x/UV_CONSTRAINT.txt" for call in runner.calls
@@ -743,3 +744,29 @@ def test_a_corrupt_owner_file_is_judged_by_age(tmp_path):
         (d / OWNER_FILE).write_text(junk)
         os.utime(d, (0, 0))
     assert len(sweep_stale_workdirs("wads-ci-local-", root=str(tmp_path))) == 4
+
+
+def test_the_dev_shell_s_python_path_settings_are_kept_out(repo):
+    """Issue #194: PYTHONSAFEPATH=1 keeps the cwd off sys.path, which CI's
+    `python -m pytest` puts on it; PYTHONPATH adds what CI does not have."""
+    runner = FakeRunner()
+    environ = {"PYTHONSAFEPATH": "1", "PYTHONPATH": "/dev/src", "HOME": "/h"}
+    run_ci_local(repo, runner=runner, environ=environ, out=io.StringIO())
+    assert all(not set(HOST_ONLY_VARS) & c["env"].keys() for c in runner.calls)
+
+
+def test_each_leg_s_tests_run_with_its_venv_activated(repo):
+    """As run-tests-uv activates .venv: VIRTUAL_ENV and the venv's bin first on PATH."""
+    runner = FakeRunner()
+    run_ci_local(repo, runner=runner, environ={"PATH": "/usr/bin"}, out=io.StringIO())
+    legs = [c for c in runner.calls if c["argv"][1:3] == ["-m", "pytest"]]
+    assert len(legs) == 2  # 3.10 and 3.12, each in its own venv
+    for tests in legs:
+        venv = tests["env"]["VIRTUAL_ENV"]
+        assert tests["argv"][0].startswith(venv)
+        bin_dir = f"{venv}/Scripts" if os.name == "nt" else f"{venv}/bin"
+        assert tests["env"]["PATH"].split(os.pathsep)[0] == bin_dir
+        assert tests["env"]["PATH"].endswith("/usr/bin")
+    # ...and only the test steps: installs keep the plain environment
+    others = [c for c in runner.calls if c not in legs]
+    assert all("VIRTUAL_ENV" not in c["env"] for c in others)

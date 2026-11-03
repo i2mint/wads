@@ -104,14 +104,20 @@ PUBLISH_CREDENTIAL_VARS = (
 
 # The dev machine's install pins. Hosted CI has none; inherited, they make ci-local test a
 # different environment (and the fleet's constraint file, which pins every local package
-# to its main checkout, breaks the install from a git worktree, issue #191). So every
-# step runs without them, by default: ``run_ci_local(host_pin_vars=())`` keeps them.
+# to its main checkout, breaks the install from a git worktree, issue #191).
 HOST_INSTALL_PIN_VARS = (
     "UV_CONSTRAINT",
     "UV_BUILD_CONSTRAINT",
     "UV_OVERRIDE",
     "PIP_CONSTRAINT",
 )
+# The dev shell's interpreter path settings. CI's ``python -m pytest`` puts the cwd on
+# ``sys.path``; an inherited ``PYTHONSAFEPATH=1`` keeps it off (3.11+), and a
+# ``PYTHONPATH`` adds directories CI does not have (issue #194).
+HOST_INTERPRETER_VARS = ("PYTHONSAFEPATH", "PYTHONPATH")
+#: Everything of the dev shell hosted CI does not have; every step runs without it, by
+#: default (``run_ci_local(host_only_vars=())`` keeps it all).
+HOST_ONLY_VARS = HOST_INSTALL_PIN_VARS + HOST_INTERPRETER_VARS
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
 
@@ -440,9 +446,19 @@ def _leg_steps(
                     PYTEST_BASETEMP,
                     *pytest_argv(config, repo=repo, pytest_args=pytest_args),
                 ),
+                # The venv activated, as run-tests-uv does: a test that shells out to
+                # `python` or `uv pip` reaches this venv, not the dev shell's (#194).
+                env=_activated(venv, platform=platform),
             ),
         ]
     return steps
+
+
+def _activated(venv: str, *, platform: str) -> tuple:
+    """A Step's ``env`` for running inside ``venv`` (``<<host_path>>``: the run's PATH)."""
+    bin_dir = f"{venv}/Scripts" if platform == "nt" else f"{venv}/bin"
+    sep = ";" if platform == "nt" else ":"
+    return (("VIRTUAL_ENV", venv), ("PATH", f"{bin_dir}{sep}<<host_path>>"))
 
 
 def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
@@ -904,7 +920,7 @@ def steps_env(
     source_env: Mapping[str, str],
     *,
     defaults: Mapping[str, object] = (),
-    withheld: Sequence[str] = PUBLISH_CREDENTIAL_VARS + HOST_INSTALL_PIN_VARS,
+    withheld: Sequence[str] = PUBLISH_CREDENTIAL_VARS + HOST_ONLY_VARS,
 ) -> tuple[dict, list[str]]:
     """The environment the steps run in, and the names of ``source_env`` it left out.
 
@@ -932,7 +948,7 @@ def run_ci_local(
     out=None,
     keep_workdir: bool = False,
     workdir_root: Optional[str] = None,
-    host_pin_vars: Sequence[str] = HOST_INSTALL_PIN_VARS,
+    host_only_vars: Sequence[str] = HOST_ONLY_VARS,
 ) -> CILocalReport:
     """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
 
@@ -941,8 +957,10 @@ def run_ci_local(
     that the filesystem has room for this run (issue #159).
 
     ``environ`` (default ``os.environ``) reaches every step minus the PyPI credentials
-    (only the upload sees them) and minus ``host_pin_vars``, the dev machine's install
-    constraints that hosted CI does not have (issue #191).
+    (only the upload sees them) and minus ``host_only_vars``, what the dev shell has and
+    hosted CI does not: install constraints (#191), ``PYTHONSAFEPATH`` / ``PYTHONPATH``
+    (#194). Each leg's tests run with its venv activated (``VIRTUAL_ENV``, its ``bin``
+    first on ``PATH``), as in CI.
     """
     repo = Path(repo).resolve()
     out = out or sys.stdout
@@ -954,9 +972,9 @@ def run_ci_local(
     env, dropped_pins = steps_env(
         source_env,
         defaults=config.env_vars_defaults,
-        withheld=(*PUBLISH_CREDENTIAL_VARS, *host_pin_vars),
+        withheld=(*PUBLISH_CREDENTIAL_VARS, *host_only_vars),
     )
-    dropped_pins = [name for name in dropped_pins if name in host_pin_vars]
+    dropped_pins = [name for name in dropped_pins if name in host_only_vars]
     # A killed run never reaches the cleanup below; remove what earlier ones left.
     # Best effort: a sweep that fails must not stop the run it was clearing room for.
     try:
@@ -971,7 +989,7 @@ def run_ci_local(
         repo=repo,
         runner=runner,
         env=env,
-        values={"workdir": workdir},
+        values={"workdir": workdir, "host_path": env.get("PATH", "")},
         source_env=source_env,
     )
     if dropped_pins:
