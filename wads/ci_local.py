@@ -783,6 +783,28 @@ class CILocalReport:
         return "\n".join(lines)
 
 
+def steps_env(
+    source_env: Mapping[str, str],
+    *,
+    defaults: Mapping[str, object] = (),
+    withheld: Sequence[str] = PUBLISH_CREDENTIAL_VARS + HOST_INSTALL_PIN_VARS,
+) -> tuple[dict, list[str]]:
+    """The environment the steps run in, and the names of ``source_env`` it left out.
+
+    ``source_env`` minus ``withheld``, then the committed ``defaults``, which are
+    authoritative as in CI's export-ci-env (so a withheld name a default sets is back,
+    and is not reported as left out).
+
+    >>> steps_env({"HOME": "/h", "UV_CONSTRAINT": "/c.txt", "PYPI_PASSWORD": "t"})
+    ({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])
+    >>> steps_env({"UV_CONSTRAINT": "/c.txt"}, defaults={"UV_CONSTRAINT": "/repo.txt"})
+    ({'UV_CONSTRAINT': '/repo.txt'}, [])
+    """
+    env = {k: v for k, v in source_env.items() if k not in withheld}
+    env.update({key: str(value) for key, value in dict(defaults).items()})
+    return env, sorted(k for k in source_env if k not in env)
+
+
 def run_ci_local(
     repo=".",
     *,
@@ -812,11 +834,12 @@ def run_ci_local(
     if n_venvs := _venv_count(steps):
         steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
-    dropped_pins = sorted(set(host_pin_vars) & source_env.keys())
-    withheld = {*PUBLISH_CREDENTIAL_VARS, *dropped_pins}
-    env = {k: v for k, v in source_env.items() if k not in withheld}
-    # Committed defaults are authoritative, as in CI's export-ci-env.
-    env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
+    env, dropped_pins = steps_env(
+        source_env,
+        defaults=config.env_vars_defaults,
+        withheld=(*PUBLISH_CREDENTIAL_VARS, *host_pin_vars),
+    )
+    dropped_pins = [name for name in dropped_pins if name in host_pin_vars]
     # A killed run never reaches the cleanup below; remove what earlier ones left.
     # Best effort: a sweep that fails must not stop the run it was clearing room for.
     try:

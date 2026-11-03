@@ -16,6 +16,7 @@ import wads.ci_local as ci_local_module
 from wads.ci_config import CIConfig
 from wads.scripts.pytest_doctest_flags import DOCTEST_OPTIONFLAGS
 from wads.ci_local import (
+    HOST_INSTALL_PIN_VARS,
     PUSHES,
     RELEASE_COMMIT_MESSAGE,
     RELEASE_TAG_MESSAGE,
@@ -363,12 +364,12 @@ def test_host_install_pins_are_kept_out_of_every_step(repo):
     """Issue #191: the dev machine's UV_CONSTRAINT (which pins fleet packages to their
     main checkouts) must not reach ci-local's installs; hosted CI has no such file."""
     runner, out = FakeRunner(), io.StringIO()
-    environ = {"UV_CONSTRAINT": "/x/constraints.txt", "PIP_CONSTRAINT": "/x/c.txt"}
+    environ = {name: f"/x/{name}.txt" for name in HOST_INSTALL_PIN_VARS}
     report = run_ci_local(repo, runner=runner, environ=environ, out=out)
     assert report.ok and runner.calls
     for call in runner.calls:
-        assert not {"UV_CONSTRAINT", "PIP_CONSTRAINT"} & call["env"].keys()
-    assert "ran without PIP_CONSTRAINT, UV_CONSTRAINT" in out.getvalue()
+        assert not set(HOST_INSTALL_PIN_VARS) & call["env"].keys()
+    assert f"ran without {', '.join(sorted(HOST_INSTALL_PIN_VARS))}" in out.getvalue()
 
     # The seam keeps them for a caller who wants the dev machine's pins.
     runner = FakeRunner()
@@ -376,8 +377,21 @@ def test_host_install_pins_are_kept_out_of_every_step(repo):
         repo, runner=runner, environ=environ, out=io.StringIO(), host_pin_vars=()
     )
     assert all(
-        call["env"]["UV_CONSTRAINT"] == "/x/constraints.txt" for call in runner.calls
+        call["env"]["UV_CONSTRAINT"] == "/x/UV_CONSTRAINT.txt" for call in runner.calls
     )
+
+
+def test_a_committed_default_wins_over_a_dropped_pin_and_is_not_reported(repo):
+    (repo / "pyproject.toml").write_text(
+        '[project]\nname = "pkg"\n\n[tool.wads.ci.env]\n'
+        'defaults = {UV_CONSTRAINT = "repo-constraints.txt"}\n'
+    )
+    runner, out = FakeRunner(), io.StringIO()
+    run_ci_local(repo, runner=runner, environ={"UV_CONSTRAINT": "/x/c.txt"}, out=out)
+    assert all(
+        c["env"]["UV_CONSTRAINT"] == "repo-constraints.txt" for c in runner.calls
+    )
+    assert "ran without" not in out.getvalue()
 
 
 def test_no_pin_note_when_no_pin_was_set(repo):
