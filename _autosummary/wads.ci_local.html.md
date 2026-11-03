@@ -11,7 +11,9 @@ the object the reusable workflow’s setup job reads, and runs in order:
 2. **tests**: for each `python_versions` entry, a fresh `uv` venv in a temporary
    directory, `uv pip install -e .[extras]`, then pytest with the arguments
    `actions/run-tests-uv` builds (coverage, `--doctest-modules` and its option flags,
-   one `--ignore` per excluded path, then `pytest_args`).
+   one `--ignore` per excluded path, then `pytest_args`). Then one more such leg per
+   `[[tool.wads.ci.testing.pinned]]` entry, the project and its pins installed in one
+   resolve and checked with `uv pip check`, as the validation job’s pinned legs do.
 3. **build**: `uv build` into the temporary directory, never the repo’s `dist/`, so a
    stale artifact can never be uploaded.
 
@@ -56,7 +58,7 @@ can ever spend or publish.
 | [`ci_local`](#wads.ci_local.ci_local)([repo, publish, dry_run, level])        | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
-| [`pytest_argv`](#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
+| [`pytest_argv`](#wads.ci_local.pytest_argv)(config, \*[, repo, pytest_args])     | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
 | [`render_plan`](#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
@@ -137,12 +139,13 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Step`](#wads.ci_local.Step)]
 
-### wads.ci_local.pytest_argv(config, , repo=None)
+### wads.ci_local.pytest_argv(config, , repo=None, pytest_args=None)
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
 
 The default `doctest_optionflags` are passed unless `repo`’s own pytest config
-sets them (`repo=None`: not checked, defaults passed).
+sets them (`repo=None`: not checked, defaults passed). `pytest_args` defaults
+to the config’s (a pinned leg passes its own, issue #189).
 
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))

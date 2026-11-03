@@ -696,6 +696,18 @@ still hardcode <code class="docutils literal notranslate"><span class="pre">cont
 leg there stays informational regardless of this setting. Repos on the legacy
 template should migrate to the uv stub (<code class="docutils literal notranslate"><span class="pre">wads-migrate</span> <span class="pre">ci-to-stub</span></code>) to pick it
 up (see i2mint/wads#90).</p>
+<section id="pinned-dependency-runs-oldest-supported-release">
+<h4>Pinned-dependency runs (oldest supported release)<a class="headerlink" href="#pinned-dependency-runs-oldest-supported-release" title="Link to this heading">¶</a></h4>
+<p>To also test against an older release of a dependency (the oldest one you support, say), declare a pinned run:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[tool.wads.ci.testing.pinned]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"oldest-sdk"</span><span class="w">                                     </span><span class="c1"># names the leg; letters, digits, . _ -</span>
+<span class="n">requirements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"elevenlabs==2.58.0"</span><span class="p">]</span><span class="w">                   </span><span class="c1"># PEP 508 requirements</span>
+<span class="n">pytest_args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"voxy/tests/test_elevenlabs_model.py"</span><span class="p">]</span><span class="w">   </span><span class="c1"># default: the repo's pytest_args</span>
+<span class="n">python_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"3.10"</span><span class="w">                                 </span><span class="c1"># default: the first python_versions entry</span>
+</pre></div>
+</div>
+<p>Each entry adds one leg to the Linux validation matrix, checked as <code class="docutils literal notranslate"><span class="pre">Validation</span> <span class="pre">(pinned</span> <span class="pre">&lt;name&gt;)</span></code>: the normal install (with <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.install].extras</span></code>), then the project and the requirements installed <strong>in one resolve</strong> followed by <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">pip</span> <span class="pre">check</span></code>, so a pin outside your package’s declared range fails instead of being silently overridden; then pytest with the entry’s <code class="docutils literal notranslate"><span class="pre">pytest_args</span></code> (coverage as configured). Lint, format, type check, licence and metrics run on the normal legs only. A pinned leg is a leg of <code class="docutils literal notranslate"><span class="pre">validation</span></code>, so a failing one <strong>blocks publish</strong>, like any other validation leg: a release must pass on the oldest dependency it claims to support. An invalid entry (no <code class="docutils literal notranslate"><span class="pre">requirements</span></code>, a requirement that is not PEP 508, a bad or repeated <code class="docutils literal notranslate"><span class="pre">name</span></code>, an unquoted <code class="docutils literal notranslate"><span class="pre">python_version</span></code>) turns the setup job red rather than being skipped. Repos that declare nothing keep exactly their legs and check names (<code class="docutils literal notranslate"><span class="pre">Validation</span> <span class="pre">(3.10)</span></code>, …). <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> runs the same legs. Only the reusable <code class="docutils literal notranslate"><span class="pre">uv-ci.yml</span></code> workflow (the default stub) runs them.</p>
+</section>
 </section>
 <section id="code-quality-tools">
 <h3>Code Quality Tools<a class="headerlink" href="#code-quality-tools" title="Link to this heading">¶</a></h3>
@@ -1003,7 +1015,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-03 11:12 UTC from <a href="https://github.com/i2mint/wads/commit/695dd6cdbf3dbc7aae6706a14eb85511275ab6e3">695dd6c</a> (master) · wads 0.2.74 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-03 12:15 UTC from <a href="https://github.com/i2mint/wads/commit/7c9b9fd95b7834cb46f550031f86646ad768dfd1">7c9b9fd</a> (master) · wads 0.2.75 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1068,7 +1080,10 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 <li><a class="reference internal" href="#npm-trusted-publishing-wads-npm-trust">npm trusted publishing: <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">npm-trust</span></code></a></li>
 <li><a class="reference internal" href="#ci-configuration-reference">CI Configuration Reference</a><ul>
 <li><a class="reference internal" href="#install-extras">Install Extras</a></li>
-<li><a class="reference internal" href="#python-versions-and-testing">Python Versions and Testing</a></li>
+<li><a class="reference internal" href="#python-versions-and-testing">Python Versions and Testing</a><ul>
+<li><a class="reference internal" href="#pinned-dependency-runs-oldest-supported-release">Pinned-dependency runs (oldest supported release)</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#code-quality-tools">Code Quality Tools</a></li>
 <li><a class="reference internal" href="#custom-commands">Custom Commands</a></li>
 <li><a class="reference internal" href="#build-and-publish">Build and Publish</a></li>
@@ -1100,7 +1115,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=0f7168a9"></script>
+</div><script src="_static/documentation_options.js?v=a6311ccf"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

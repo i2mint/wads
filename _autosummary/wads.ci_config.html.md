@@ -8,11 +8,13 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_JOB_TIMEOUT_MINUTES`](#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.   |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| [`DFLT_DEPLOY_MARKER`](#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                         |
-| [`TRIGGER_LEVELS`](#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                  |
-| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                           |
+| [`DFLT_JOB_TIMEOUT_MINUTES`](#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.                                                                   |
+|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`PINNED_RUN_NAME_RE`](#wads.ci_config.PINNED_RUN_NAME_RE)         | it names a CI check and a `wads ci-local` venv directory.                                                                                          |
+| [`PINNED_PYTHON_VERSION_RE`](#wads.ci_config.PINNED_PYTHON_VERSION_RE)   | What a pinned run's `python_version` may contain (`3.11`, `3.13t`, `pypy3.10`): it reaches `setup-python-uv`, `uv venv --python` and a check name. |
+| [`DFLT_DEPLOY_MARKER`](#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                                                                                         |
+| [`TRIGGER_LEVELS`](#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                                                                                  |
+| [`DFLT_SKIP_PUBLISH_MARKER`](#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                                                                                           |
 
 ### Functions
 
@@ -24,8 +26,9 @@ settings in CI workflow files.
 
 ### Classes
 
-| [`CIConfig`](#wads.ci_config.CIConfig)(pyproject_data[, project_name])   | Represents CI configuration extracted from pyproject.toml.   |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| [`CIConfig`](#wads.ci_config.CIConfig)(pyproject_data[, project_name])   | Represents CI configuration extracted from pyproject.toml.                                                                                                         |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`PinnedTestRun`](#wads.ci_config.PinnedTestRun)(name, requirements, ...)     | One `[[tool.wads.ci.testing.pinned]]` entry: one more test leg of the validation job, with `requirements` resolved together with the project, on `python_version`. |
 
 ### *class* wads.ci_config.CIConfig(pyproject_data, project_name=None)
 
@@ -404,6 +407,38 @@ Get system dependencies configuration from [tool.wads.ops.\*] sections.
 * **Returns:**
   Dictionary mapping dependency names to their configuration
 
+#### *property* pinned_test_runs *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[PinnedTestRun](#wads.ci_config.PinnedTestRun)]*
+
+Extra test legs with some dependencies pinned (`[[tool.wads.ci.testing.pinned]]`).
+
+Each entry is one more leg of the Linux validation matrix: the normal install,
+then the project reinstalled together with `requirements` in one resolve (so a
+pin outside the package’s declared range fails instead of being overridden),
+`uv pip check`, then pytest with the entry’s `pytest_args` (default: the
+repo’s) on its `python_version` (default: the first `python_versions`
+entry). Use it to test the oldest supported release of a dependency next to the
+latest one (issue #189):
+
+```default
+[[tool.wads.ci.testing.pinned]]
+name = "oldest-sdk"
+requirements = ["elevenlabs==2.58.0"]
+pytest_args = ["voxy/tests/test_elevenlabs_model.py"]
+```
+
+Fails closed: an invalid entry, a repeated `name`, or a `pinned` that is not
+an array of tables raises `ValueError`, which turns the CI setup job red.
+
+```pycon
+>>> CIConfig({}).pinned_test_runs
+[]
+>>> pinned = [{"requirements": "attrs==22.1.0"}]
+>>> CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}}).pinned_test_runs
+...
+[PinnedTestRun(name='pinned-1', requirements=('attrs==22.1.0',),
+               pytest_args=('-v', '--tb=short'), python_version='3.10')]
+```
+
 #### *property* project_name *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 Get the project name for CI.
@@ -641,6 +676,45 @@ read-ci-config’s wads is too old to emit them.
 
 * **Type:**
   Narrow skip markers (i2mint/wads#62)
+
+### wads.ci_config.PINNED_PYTHON_VERSION_RE *= re.compile('[A-Za-z0-9][A-Za-z0-9.+-]\*')*
+
+What a pinned run’s `python_version` may contain (`3.11`, `3.13t`, `pypy3.10`):
+it reaches `setup-python-uv`, `uv venv --python` and a check name.
+
+### wads.ci_config.PINNED_RUN_NAME_RE *= re.compile('[A-Za-z0-9][A-Za-z0-9._-]\*')*
+
+it names a CI check and
+a `wads ci-local` venv directory.
+
+* **Type:**
+  What a `[[tool.wads.ci.testing.pinned]]` name may contain
+
+### *class* wads.ci_config.PinnedTestRun(name, requirements, pytest_args, python_version)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One `[[tool.wads.ci.testing.pinned]]` entry: one more test leg of the validation
+job, with `requirements` resolved together with the project, on `python_version`.
+
+#### *classmethod* from_entry(entry, , default_name, pytest_args, python_version)
+
+Validate one declared entry, filling the defaults it leaves out.
+
+`pytest_args` and `python_version` are the repo’s, used when the entry has
+none (an empty `pytest_args` list counts as none, as it does in CI).
+
+```pycon
+>>> PinnedTestRun.from_entry(
+...     {"requirements": []}, default_name="p", pytest_args=[], python_version="3.12"
+... )
+Traceback (most recent call last):
+  ...
+ValueError: requirements is empty
+```
+
+* **Return type:**
+  [`PinnedTestRun`](#wads.ci_config.PinnedTestRun)
 
 ### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
 

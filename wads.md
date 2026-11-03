@@ -1,4 +1,4 @@
-> built 2026-11-03 11:12 UTC from 695dd6c (master) · wads 0.2.74. Details: build_info.json
+> built 2026-11-03 12:15 UTC from 7c9b9fd (master) · wads 0.2.75. Details: build_info.json
 
 # index.html.md
 
@@ -431,6 +431,20 @@ still hardcode `continue-on-error: true` unconditionally — a failing Windows
 leg there stays informational regardless of this setting. Repos on the legacy
 template should migrate to the uv stub (`wads-migrate ci-to-stub`) to pick it
 up (see i2mint/wads#90).
+
+#### Pinned-dependency runs (oldest supported release)
+
+To also test against an older release of a dependency (the oldest one you support, say), declare a pinned run:
+
+```toml
+[[tool.wads.ci.testing.pinned]]
+name = "oldest-sdk"                                     # names the leg; letters, digits, . _ -
+requirements = ["elevenlabs==2.58.0"]                   # PEP 508 requirements
+pytest_args = ["voxy/tests/test_elevenlabs_model.py"]   # default: the repo's pytest_args
+python_version = "3.10"                                 # default: the first python_versions entry
+```
+
+Each entry adds one leg to the Linux validation matrix, checked as `Validation (pinned <name>)`: the normal install (with `[tool.wads.ci.install].extras`), then the project and the requirements installed **in one resolve** followed by `uv pip check`, so a pin outside your package’s declared range fails instead of being silently overridden; then pytest with the entry’s `pytest_args` (coverage as configured). Lint, format, type check, licence and metrics run on the normal legs only. A pinned leg is a leg of `validation`, so a failing one **blocks publish**, like any other validation leg: a release must pass on the oldest dependency it claims to support. An invalid entry (no `requirements`, a requirement that is not PEP 508, a bad or repeated `name`, an unquoted `python_version`) turns the setup job red rather than being skipped. Repos that declare nothing keep exactly their legs and check names (`Validation (3.10)`, …). `wads ci-local` runs the same legs. Only the reusable `uv-ci.yml` workflow (the default stub) runs them.
 
 ### Code Quality Tools
 
@@ -1222,11 +1236,13 @@ settings in CI workflow files.
 
 ### Module Attributes
 
-| [`DFLT_JOB_TIMEOUT_MINUTES`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.   |
-|-----------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                         |
-| [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                  |
-| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                           |
+| [`DFLT_JOB_TIMEOUT_MINUTES`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES)   | Minutes a validation job (Linux matrix, Windows) may run before GitHub kills it.                                                                   |
+|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`PINNED_RUN_NAME_RE`](_autosummary/wads.ci_config.html.md#wads.ci_config.PINNED_RUN_NAME_RE)         | it names a CI check and a `wads ci-local` venv directory.                                                                                          |
+| [`PINNED_PYTHON_VERSION_RE`](_autosummary/wads.ci_config.html.md#wads.ci_config.PINNED_PYTHON_VERSION_RE)   | What a pinned run's `python_version` may contain (`3.11`, `3.13t`, `pypy3.10`): it reaches `setup-python-uv`, `uv venv --python` and a check name. |
+| [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                                                                                         |
+| [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                                                                                  |
+| [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                                                                                           |
 
 ### Functions
 
@@ -1238,8 +1254,9 @@ settings in CI workflow files.
 
 ### Classes
 
-| [`CIConfig`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig)(pyproject_data[, project_name])   | Represents CI configuration extracted from pyproject.toml.   |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| [`CIConfig`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig)(pyproject_data[, project_name])   | Represents CI configuration extracted from pyproject.toml.                                                                                                         |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`PinnedTestRun`](_autosummary/wads.ci_config.html.md#wads.ci_config.PinnedTestRun)(name, requirements, ...)     | One `[[tool.wads.ci.testing.pinned]]` entry: one more test leg of the validation job, with `requirements` resolved together with the project, on `python_version`. |
 
 ### *class* wads.ci_config.CIConfig(pyproject_data, project_name=None)
 
@@ -1618,6 +1635,38 @@ Get system dependencies configuration from [tool.wads.ops.\*] sections.
 * **Returns:**
   Dictionary mapping dependency names to their configuration
 
+#### *property* pinned_test_runs *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[PinnedTestRun](_autosummary/wads.ci_config.html.md#wads.ci_config.PinnedTestRun)]*
+
+Extra test legs with some dependencies pinned (`[[tool.wads.ci.testing.pinned]]`).
+
+Each entry is one more leg of the Linux validation matrix: the normal install,
+then the project reinstalled together with `requirements` in one resolve (so a
+pin outside the package’s declared range fails instead of being overridden),
+`uv pip check`, then pytest with the entry’s `pytest_args` (default: the
+repo’s) on its `python_version` (default: the first `python_versions`
+entry). Use it to test the oldest supported release of a dependency next to the
+latest one (issue #189):
+
+```default
+[[tool.wads.ci.testing.pinned]]
+name = "oldest-sdk"
+requirements = ["elevenlabs==2.58.0"]
+pytest_args = ["voxy/tests/test_elevenlabs_model.py"]
+```
+
+Fails closed: an invalid entry, a repeated `name`, or a `pinned` that is not
+an array of tables raises `ValueError`, which turns the CI setup job red.
+
+```pycon
+>>> CIConfig({}).pinned_test_runs
+[]
+>>> pinned = [{"requirements": "attrs==22.1.0"}]
+>>> CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}}).pinned_test_runs
+...
+[PinnedTestRun(name='pinned-1', requirements=('attrs==22.1.0',),
+               pytest_args=('-v', '--tb=short'), python_version='3.10')]
+```
+
 #### *property* project_name *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 Get the project name for CI.
@@ -1856,6 +1905,45 @@ read-ci-config’s wads is too old to emit them.
 * **Type:**
   Narrow skip markers (i2mint/wads#62)
 
+### wads.ci_config.PINNED_PYTHON_VERSION_RE *= re.compile('[A-Za-z0-9][A-Za-z0-9.+-]\*')*
+
+What a pinned run’s `python_version` may contain (`3.11`, `3.13t`, `pypy3.10`):
+it reaches `setup-python-uv`, `uv venv --python` and a check name.
+
+### wads.ci_config.PINNED_RUN_NAME_RE *= re.compile('[A-Za-z0-9][A-Za-z0-9._-]\*')*
+
+it names a CI check and
+a `wads ci-local` venv directory.
+
+* **Type:**
+  What a `[[tool.wads.ci.testing.pinned]]` name may contain
+
+### *class* wads.ci_config.PinnedTestRun(name, requirements, pytest_args, python_version)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One `[[tool.wads.ci.testing.pinned]]` entry: one more test leg of the validation
+job, with `requirements` resolved together with the project, on `python_version`.
+
+#### *classmethod* from_entry(entry, , default_name, pytest_args, python_version)
+
+Validate one declared entry, filling the defaults it leaves out.
+
+`pytest_args` and `python_version` are the repo’s, used when the entry has
+none (an empty `pytest_args` list counts as none, as it does in CI).
+
+```pycon
+>>> PinnedTestRun.from_entry(
+...     {"requirements": []}, default_name="p", pytest_args=[], python_version="3.12"
+... )
+Traceback (most recent call last):
+  ...
+ValueError: requirements is empty
+```
+
+* **Return type:**
+  [`PinnedTestRun`](_autosummary/wads.ci_config.html.md#wads.ci_config.PinnedTestRun)
+
 ### wads.ci_config.TRIGGER_LEVELS *= ('validate', 'deploy')*
 
 The levels a manual run (or `wads ci-local --level`) can ask for.
@@ -1947,7 +2035,9 @@ the object the reusable workflow’s setup job reads, and runs in order:
 2. **tests**: for each `python_versions` entry, a fresh `uv` venv in a temporary
    directory, `uv pip install -e .[extras]`, then pytest with the arguments
    `actions/run-tests-uv` builds (coverage, `--doctest-modules` and its option flags,
-   one `--ignore` per excluded path, then `pytest_args`).
+   one `--ignore` per excluded path, then `pytest_args`). Then one more such leg per
+   `[[tool.wads.ci.testing.pinned]]` entry, the project and its pins installed in one
+   resolve and checked with `uv pip check`, as the validation job’s pinned legs do.
 3. **build**: `uv build` into the temporary directory, never the repo’s `dist/`, so a
    stale artifact can never be uploaded.
 
@@ -1992,7 +2082,7 @@ can ever spend or publish.
 | [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run, level])        | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | [`plan_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
-| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo])                  | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
+| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo, pytest_args])     | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
 | [`render_plan`](_autosummary/wads.ci_local.html.md#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
 | [`resolve_pypi_token`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
 | [`run_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
@@ -2073,12 +2163,13 @@ Everything `wads ci-local` would run for `repo`, in order, without running it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Step`](_autosummary/wads.ci_local.html.md#wads.ci_local.Step)]
 
-### wads.ci_local.pytest_argv(config, , repo=None)
+### wads.ci_local.pytest_argv(config, , repo=None, pytest_args=None)
 
 The pytest arguments `actions/run-tests-uv` builds, in its order.
 
 The default `doctest_optionflags` are passed unless `repo`’s own pytest config
-sets them (`repo=None`: not checked, defaults passed).
+sets them (`repo=None`: not checked, defaults passed). `pytest_args` defaults
+to the config’s (a pinned leg passes its own, issue #189).
 
 ```pycon
 >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))
@@ -6968,13 +7059,36 @@ Environment:
 
 ### Functions
 
-| [`main`](_autosummary/wads.scripts.read_ci_config.html.md#wads.scripts.read_ci_config.main)()                                      | Main entry point.                                   |
-|----------------------------------------------------------------------------------------------|-----------------------------------------------------|
-| [`read_and_export_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#wads.scripts.read_ci_config.read_and_export_ci_config)([pyproject_path]) | Read CI configuration and export to GitHub Actions. |
+| [`main`](_autosummary/wads.scripts.read_ci_config.html.md#wads.scripts.read_ci_config.main)()                                      | Main entry point.                                                           |
+|----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`pinned_runs_matrix_include`](_autosummary/wads.scripts.read_ci_config.html.md#wads.scripts.read_ci_config.pinned_runs_matrix_include)(config)          | The validation matrix's `include` entries, one per pinned run (issue #189). |
+| [`read_and_export_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#wads.scripts.read_ci_config.read_and_export_ci_config)([pyproject_path]) | Read CI configuration and export to GitHub Actions.                         |
 
 ### wads.scripts.read_ci_config.main()
 
 Main entry point.
+
+### wads.scripts.read_ci_config.pinned_runs_matrix_include(config)
+
+The validation matrix’s `include` entries, one per pinned run (issue #189).
+
+Each is self-contained, `{"python-version": ..., "pinned": {name, requirements,
+pytest_args}}`: the `pinned` object overwrites the matrix’s base `pinned: false`,
+so GitHub adds it as a new leg instead of merging it into an existing one.
+`pytest_args` is joined, as `run-tests-uv` takes it. Invalid entries raise
+(`CIConfig.pinned_test_runs` fails closed); nothing runs when tests are off.
+
+```pycon
+>>> from wads.ci_config import CIConfig
+>>> pinned = [{"name": "old", "requirements": ["attrs==22.1.0"], "pytest_args": ["-x", "t"]}]
+>>> config = CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}})
+>>> pinned_runs_matrix_include(config)
+[{'python-version': '3.10',
+  'pinned': {'name': 'old', 'requirements': ['attrs==22.1.0'], 'pytest_args': '-x t'}}]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### wads.scripts.read_ci_config.read_and_export_ci_config(pyproject_path='.')
 
@@ -8099,18 +8213,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 11:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/695dd6cdbf3dbc7aae6706a14eb85511275ab6e3"><code>695dd6c</code></a> on branch <code>master</code>, for **wads 0.2.74** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 12:15 UTC** from commit <a href="https://github.com/i2mint/wads/commit/7c9b9fd95b7834cb46f550031f86646ad768dfd1"><code>7c9b9fd</code></a> on branch <code>master</code>, for **wads 0.2.75** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.74) is behind the latest release on PyPI (0.2.75): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.75) is behind the latest release on PyPI (0.2.76): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/695dd6cdbf3dbc7aae6706a14eb85511275ab6e3"><code>695dd6cdbf3dbc7aae6706a14eb85511275ab6e3</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/7c9b9fd95b7834cb46f550031f86646ad768dfd1"><code>7c9b9fd95b7834cb46f550031f86646ad768dfd1</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8121,9 +8235,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41625089295">41625089295</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41633728167">41633728167</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>695dd6cdbf3dbc7aae6706a14eb85511275ab6e3</code> (in the history of the built commit) |
+| Event commit | <code>7c9b9fd95b7834cb46f550031f86646ad768dfd1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8148,13 +8262,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.75/">0.2.75</a>, newer than the documented version (0.2.74).
+Latest release: <a href="https://pypi.org/project/wads/0.2.76/">0.2.76</a>, newer than the documented version (0.2.75).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 695dd6cdbf3dbc7aae6706a14eb85511275ab6e3
+git checkout 7c9b9fd95b7834cb46f550031f86646ad768dfd1
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

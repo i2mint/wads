@@ -345,6 +345,41 @@
     <span class="k">return</span> <span class="n">path</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">path</span><span class="o">.</span><span class="n">parent</span>
 
 
+<div class="viewcode-block" id="pinned_runs_matrix_include">
+<a class="viewcode-back" href="../../../_autosummary/wads.scripts.read_ci_config.html#wads.scripts.read_ci_config.pinned_runs_matrix_include">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pinned_runs_matrix_include</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The validation matrix's ``include`` entries, one per pinned run (issue #189).</span>
+
+<span class="sd">    Each is self-contained, ``{"python-version": ..., "pinned": {name, requirements,</span>
+<span class="sd">    pytest_args}}``: the ``pinned`` object overwrites the matrix's base ``pinned: false``,</span>
+<span class="sd">    so GitHub adds it as a new leg instead of merging it into an existing one.</span>
+<span class="sd">    ``pytest_args`` is joined, as ``run-tests-uv`` takes it. Invalid entries raise</span>
+<span class="sd">    (``CIConfig.pinned_test_runs`` fails closed); nothing runs when tests are off.</span>
+
+<span class="sd">    &gt;&gt;&gt; from wads.ci_config import CIConfig</span>
+<span class="sd">    &gt;&gt;&gt; pinned = [{"name": "old", "requirements": ["attrs==22.1.0"], "pytest_args": ["-x", "t"]}]</span>
+<span class="sd">    &gt;&gt;&gt; config = CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}})</span>
+<span class="sd">    &gt;&gt;&gt; pinned_runs_matrix_include(config)  # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">    [{'python-version': '3.10',</span>
+<span class="sd">      'pinned': {'name': 'old', 'requirements': ['attrs==22.1.0'], 'pytest_args': '-x t'}}]</span>
+<span class="sd">    """</span>
+    <span class="n">runs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pinned_test_runs</span>  <span class="c1"># validated even when tests are off: fail closed</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"python-version"</span><span class="p">:</span> <span class="n">run</span><span class="o">.</span><span class="n">python_version</span><span class="p">,</span>
+            <span class="s2">"pinned"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">run</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"requirements"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">requirements</span><span class="p">),</span>
+                <span class="s2">"pytest_args"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">pytest_args</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span>
+    <span class="p">]</span></div>
+
+
+
 <div class="viewcode-block" id="read_and_export_ci_config">
 <a class="viewcode-back" href="../../../_autosummary/wads.scripts.read_ci_config.html#wads.scripts.read_ci_config.read_and_export_ci_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_and_export_ci_config</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -380,6 +415,7 @@
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"windows-blocking"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">windows_blocking</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"job-timeout-minutes"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">job_timeout_minutes</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"tests-enabled"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">tests_enabled</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"pinned-runs"</span><span class="p">,</span> <span class="n">pinned_runs_matrix_include</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
 
         <span class="c1"># Build configuration</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"build-sdist"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
@@ -557,7 +593,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=0f7168a9"></script>
+</div><script src="../../../_static/documentation_options.js?v=a6311ccf"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
