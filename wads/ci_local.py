@@ -9,7 +9,9 @@ the object the reusable workflow's setup job reads, and runs in order:
 2. **tests**: for each ``python_versions`` entry, a fresh ``uv`` venv in a temporary
    directory, ``uv pip install -e .[extras]``, then pytest with the arguments
    ``actions/run-tests-uv`` builds (coverage, ``--doctest-modules`` and its option flags,
-   one ``--ignore`` per excluded path, then ``pytest_args``).
+   one ``--ignore`` per excluded path, then ``pytest_args``). Then one more such leg per
+   ``[[tool.wads.ci.testing.pinned]]`` entry, the project and its pins installed in one
+   resolve and checked with ``uv pip check``, as the validation job's pinned legs do.
 3. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a
    stale artifact can never be uploaded.
 
@@ -207,7 +209,8 @@ def pytest_argv(
 
     The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config
     sets them (``repo=None``: not checked, defaults passed). ``pytest_args`` and
-    ``coverage`` default to the config's; a pinned run passes its own (issue #189).
+    ``coverage`` default to the config's (a pinned leg passes its own ``pytest_args``,
+    issue #189).
 
     >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE
     ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
@@ -368,95 +371,114 @@ def _install_target(config: CIConfig) -> str:
     return f".[{config.install_extras}]" if config.install_extras else "."
 
 
+def _leg_steps(
+    config: CIConfig,
+    *,
+    label: str,
+    venv: str,
+    version: str,
+    platform: str,
+    repo=None,
+    pins: Sequence[str] = (),
+    pytest_args: Optional[Sequence[str]] = None,
+    licence: bool = False,
+) -> list[Step]:
+    """One validation leg: a venv on ``version``, the project installed (with ``pins``
+    in the same resolve, then ``uv pip check``), optionally the licence gate, then
+    pytest with ``pytest_args`` (default: the config's) when tests are on."""
+    python = venv_python(venv, platform=platform)
+    runner_deps = ("pytest", "pytest-cov") if config.coverage_enabled else ("pytest",)
+    install = (
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        python,
+        "-e",
+        _install_target(config),
+    )
+    steps = [
+        Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
+        Step(f"{label}: install", (*install, *pins)),
+    ]
+    if pins:
+        steps.append(
+            Step(f"{label}: pip check", ("uv", "pip", "check", "--python", python))
+        )
+    if licence:
+        steps.append(
+            Step(
+                f"{label}: licence perimeter",
+                (
+                    "uvx",
+                    "--from",
+                    "wads",
+                    "wads-licence-check",
+                    ".",
+                    "--python",
+                    python,
+                ),
+            )
+        )
+    if config.tests_enabled:
+        steps += [
+            Step(
+                f"{label}: install pytest",
+                ("uv", "pip", "install", "--python", python, *runner_deps),
+            ),
+            Step(
+                f"{label}: tests",
+                (
+                    python,
+                    "-m",
+                    "pytest",
+                    # First, so a `--` in the user's pytest_args cannot turn it
+                    # into a test path.
+                    "--basetemp",
+                    PYTEST_BASETEMP,
+                    *pytest_argv(config, repo=repo, pytest_args=pytest_args),
+                ),
+            ),
+        ]
+    return steps
+
+
 def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
     if not (config.tests_enabled or config.licence_enabled):
         return []
-    target = _install_target(config)
-    runner_deps = ("pytest", "pytest-cov") if config.coverage_enabled else ("pytest",)
     steps = []
     for index, version in enumerate(config.python_versions):
-        venv = f"{WORKDIR}/py{version}"
-        python = venv_python(venv, platform=platform)
-        label = f"python {version}"
-        steps += [
-            Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
-            Step(
-                f"{label}: install",
-                ("uv", "pip", "install", "--python", python, "-e", target),
-            ),
-        ]
-        if config.licence_enabled and index == 0:
-            steps.append(
-                Step(
-                    f"{label}: licence perimeter",
-                    (
-                        "uvx",
-                        "--from",
-                        "wads",
-                        "wads-licence-check",
-                        ".",
-                        "--python",
-                        python,
-                    ),
-                )
-            )
-        if config.tests_enabled:
-            steps += [
-                Step(
-                    f"{label}: install pytest",
-                    ("uv", "pip", "install", "--python", python, *runner_deps),
-                ),
-                Step(
-                    f"{label}: tests",
-                    (
-                        python,
-                        "-m",
-                        "pytest",
-                        # First, so a `--` in the user's pytest_args cannot turn it
-                        # into a test path.
-                        "--basetemp",
-                        PYTEST_BASETEMP,
-                        *pytest_argv(config, repo=repo),
-                    ),
-                ),
-            ]
+        steps += _leg_steps(
+            config,
+            label=f"python {version}",
+            venv=f"{WORKDIR}/py{version}",
+            version=version,
+            platform=platform,
+            repo=repo,
+            licence=config.licence_enabled and index == 0,
+        )
     return steps
 
 
 def _pinned_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
-    """The ``pinned-validation`` jobs: per ``[[tool.wads.ci.testing.pinned]]`` entry, a
-    venv on the first Python, the normal install, the pins on top, then pytest."""
-    if not config.tests_enabled or not config.python_versions:
+    """The validation job's pinned legs (issue #189): per ``[[tool.wads.ci.testing.pinned]]``
+    entry, a venv on its ``python_version``, the project and the pins in one resolve,
+    ``uv pip check``, then pytest with the entry's ``pytest_args``."""
+    runs = config.pinned_test_runs  # validated even when tests are off: fail closed
+    if not config.tests_enabled:
         return []
-    target = _install_target(config)
-    version = config.python_versions[0]
     steps = []
-    for run in config.pinned_test_runs:
-        venv = f"{WORKDIR}/pinned-{run.name}"
-        python = venv_python(venv, platform=platform)
-        label = f"pinned {run.name}"
-        argv = pytest_argv(
-            config, repo=repo, pytest_args=run.pytest_args, coverage=False
+    for run in runs:
+        steps += _leg_steps(
+            config,
+            label=f"pinned {run.name}",
+            venv=f"{WORKDIR}/pinned-{run.name}",
+            version=run.python_version,
+            platform=platform,
+            repo=repo,
+            pins=run.requirements,
+            pytest_args=run.pytest_args,
         )
-        steps += [
-            Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
-            Step(
-                f"{label}: install",
-                ("uv", "pip", "install", "--python", python, "-e", target),
-            ),
-            Step(
-                f"{label}: pins",
-                ("uv", "pip", "install", "--python", python, *run.requirements),
-            ),
-            Step(
-                f"{label}: install pytest",
-                ("uv", "pip", "install", "--python", python, "pytest"),
-            ),
-            Step(
-                f"{label}: tests",
-                (python, "-m", "pytest", "--basetemp", PYTEST_BASETEMP, *argv),
-            ),
-        ]
     return steps
 
 

@@ -62,6 +62,38 @@ def _project_dir(pyproject_path: str | Path) -> Path:
     return path if path.is_dir() else path.parent
 
 
+def pinned_runs_matrix_include(config) -> list[dict]:
+    """The validation matrix's ``include`` entries, one per pinned run (issue #189).
+
+    Each is self-contained, ``{"python-version": ..., "pinned": {name, requirements,
+    pytest_args}}``: the ``pinned`` object overwrites the matrix's base ``pinned: false``,
+    so GitHub adds it as a new leg instead of merging it into an existing one.
+    ``pytest_args`` is joined, as ``run-tests-uv`` takes it. Invalid entries raise
+    (``CIConfig.pinned_test_runs`` fails closed); nothing runs when tests are off.
+
+    >>> from wads.ci_config import CIConfig
+    >>> pinned = [{"name": "old", "requirements": ["attrs==22.1.0"], "pytest_args": ["-x", "t"]}]
+    >>> config = CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}})
+    >>> pinned_runs_matrix_include(config)  # doctest: +NORMALIZE_WHITESPACE
+    [{'python-version': '3.10',
+      'pinned': {'name': 'old', 'requirements': ['attrs==22.1.0'], 'pytest_args': '-x t'}}]
+    """
+    runs = config.pinned_test_runs  # validated even when tests are off: fail closed
+    if not config.tests_enabled:
+        return []
+    return [
+        {
+            "python-version": run.python_version,
+            "pinned": {
+                "name": run.name,
+                "requirements": list(run.requirements),
+                "pytest_args": " ".join(run.pytest_args),
+            },
+        }
+        for run in runs
+    ]
+
+
 def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
     """
     Read CI configuration and export to GitHub Actions.
@@ -95,7 +127,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("windows-blocking", config.windows_blocking)
         _set_output("job-timeout-minutes", config.job_timeout_minutes)
         _set_output("tests-enabled", config.tests_enabled)
-        _set_output("pinned-runs", [run.as_output() for run in config.pinned_test_runs])
+        _set_output("pinned-runs", pinned_runs_matrix_include(config))
 
         # Build configuration
         _set_output("build-sdist", config.build_sdist)

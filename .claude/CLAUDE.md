@@ -20,7 +20,7 @@ The core design principle: **all project configuration lives in `pyproject.toml`
 |---------|---------|
 | `[project]` | Standard Python project metadata |
 | `[tool.wads.ci.install]` | `extras` — package extras CI installs (`.[extras]`); empty = core deps only |
-| `[tool.wads.ci.testing]` | Python versions, pytest args, coverage, Windows testing, `job_timeout_minutes` (validation jobs' `timeout-minutes`, default 60), `[[pinned]]` (extra Linux job per entry: `requirements` installed on top, own `pytest_args`; `pinned-validation`, not a publish need) |
+| `[tool.wads.ci.testing]` | Python versions, pytest args, coverage, Windows testing, `job_timeout_minutes` (validation jobs' `timeout-minutes`, default 60), `[[pinned]]` (extra validation-matrix leg per entry via `include` (`pinned-runs` output): project + `requirements` in one resolve, `uv pip check`, own `pytest_args`/`python_version`; gates publish; invalid entry fails setup; no pins = unchanged legs and check names) |
 | `[tool.wads.ci.commands]` | Pre-test, test, post-test, lint, format commands |
 | `[tool.wads.ci.env]` | Environment variables (required, test, extra, defaults) |
 | `[tool.wads.ci.quality]` | Ruff/Black/Mypy settings |
