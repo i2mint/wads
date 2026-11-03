@@ -267,7 +267,6 @@ def set_github_secret(repo, secret_name, value, *, variable=False) -> bool:
         return False
 
 
-
 def read_value_from_stdin(stream=None) -> str:
     """Read a secret value from ``stream`` (default ``sys.stdin``).
 
