@@ -35,6 +35,9 @@ outputs:
   job-timeout-minutes:
     description: 'Minutes a validation job may run before GitHub stops it ([tool.wads.ci.testing].job_timeout_minutes; default 60).'
     value: ${{ steps.config.outputs.job-timeout-minutes }}
+  pinned-runs:
+    description: 'JSON list of extra test runs with pinned dependencies ([[tool.wads.ci.testing.pinned]]), each {name, requirements, pytest_args}; [] when none are declared.'
+    value: ${{ steps.config.outputs.pinned-runs }}
   tests-enabled:
     description: 'Whether the CI test step should run (true/false). Defaults to true; set [tool.wads.ci.testing].enabled = false in pyproject.toml to skip the pytest/doctest step.'
     value: ${{ steps.config.outputs.tests-enabled }}

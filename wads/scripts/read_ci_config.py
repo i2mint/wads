@@ -95,6 +95,7 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("windows-blocking", config.windows_blocking)
         _set_output("job-timeout-minutes", config.job_timeout_minutes)
         _set_output("tests-enabled", config.tests_enabled)
+        _set_output("pinned-runs", [run.as_output() for run in config.pinned_test_runs])
 
         # Build configuration
         _set_output("build-sdist", config.build_sdist)

@@ -196,29 +196,38 @@ def subprocess_runner(
 # What CI runs, as data
 
 
-def pytest_argv(config: CIConfig, *, repo=None) -> list[str]:
+def pytest_argv(
+    config: CIConfig,
+    *,
+    repo=None,
+    pytest_args: Optional[Sequence[str]] = None,
+    coverage: Optional[bool] = None,
+) -> list[str]:
     """The pytest arguments ``actions/run-tests-uv`` builds, in its order.
 
     The default ``doctest_optionflags`` are passed unless ``repo``'s own pytest config
-    sets them (``repo=None``: not checked, defaults passed).
+    sets them (``repo=None``: not checked, defaults passed). ``pytest_args`` and
+    ``coverage`` default to the config's; a pinned run passes its own (issue #189).
 
     >>> pytest_argv(CIConfig({"project": {"name": "pkg"}}))  # doctest: +NORMALIZE_WHITESPACE
     ['--cov=pkg', '--cov-report=term-missing', '--doctest-modules',
      '-o', 'doctest_optionflags=ELLIPSIS IGNORE_EXCEPTION_DETAIL',
      '--ignore=examples', '--ignore=scrap', '-v', '--tb=short']
     """
+    pytest_args = config.pytest_args if pytest_args is None else pytest_args
+    coverage = config.coverage_enabled if coverage is None else coverage
     argv = []
-    if config.coverage_enabled:
+    if coverage:
         argv += [f"--cov={config.project_name}", "--cov-report=term-missing"]
     argv += ["--doctest-modules"]
-    extra = " ".join(config.pytest_args)
+    extra = " ".join(pytest_args)
     if flags_arg := doctest_optionflags_arg(
         None if repo is None else str(repo), pytest_args=extra
     ):
         argv += ["-o", flags_arg]
     argv += [f"--ignore={p.strip()}" for p in config.exclude_paths if p.strip()]
     # The action joins pytest_args with spaces and `eval`s the result.
-    argv += shlex.split(" ".join(config.pytest_args))
+    argv += shlex.split(extra)
     return argv
 
 
@@ -267,6 +276,7 @@ def plan_ci_local(
         steps.append(_required_env_step(config.env_vars_required))
     steps += _quality_steps(config)
     steps += _test_steps(config, platform=platform, repo=repo)
+    steps += _pinned_steps(config, platform=platform, repo=repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
     return steps
 
@@ -353,10 +363,15 @@ def _quality_steps(config: CIConfig) -> list[Step]:
     return steps
 
 
+def _install_target(config: CIConfig) -> str:
+    """What ``install-deps-uv`` installs: the project, with its CI extras."""
+    return f".[{config.install_extras}]" if config.install_extras else "."
+
+
 def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
     if not (config.tests_enabled or config.licence_enabled):
         return []
-    target = f".[{config.install_extras}]" if config.install_extras else "."
+    target = _install_target(config)
     runner_deps = ("pytest", "pytest-cov") if config.coverage_enabled else ("pytest",)
     steps = []
     for index, version in enumerate(config.python_versions):
@@ -405,6 +420,43 @@ def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
                     ),
                 ),
             ]
+    return steps
+
+
+def _pinned_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
+    """The ``pinned-validation`` jobs: per ``[[tool.wads.ci.testing.pinned]]`` entry, a
+    venv on the first Python, the normal install, the pins on top, then pytest."""
+    if not config.tests_enabled or not config.python_versions:
+        return []
+    target = _install_target(config)
+    version = config.python_versions[0]
+    steps = []
+    for run in config.pinned_test_runs:
+        venv = f"{WORKDIR}/pinned-{run.name}"
+        python = venv_python(venv, platform=platform)
+        label = f"pinned {run.name}"
+        argv = pytest_argv(
+            config, repo=repo, pytest_args=run.pytest_args, coverage=False
+        )
+        steps += [
+            Step(f"{label}: venv", ("uv", "venv", venv, "--python", version)),
+            Step(
+                f"{label}: install",
+                ("uv", "pip", "install", "--python", python, "-e", target),
+            ),
+            Step(
+                f"{label}: pins",
+                ("uv", "pip", "install", "--python", python, *run.requirements),
+            ),
+            Step(
+                f"{label}: install pytest",
+                ("uv", "pip", "install", "--python", python, "pytest"),
+            ),
+            Step(
+                f"{label}: tests",
+                (python, "-m", "pytest", "--basetemp", PYTEST_BASETEMP, *argv),
+            ),
+        ]
     return steps
 
 

@@ -6,6 +6,7 @@ source of truth for CI configuration, eliminating hardcoded project-specific
 settings in CI workflow files.
 """
 
+from dataclasses import dataclass
 from typing import Any, Optional
 from pathlib import Path
 import json
@@ -38,6 +39,9 @@ DFLT_TRIGGER_MODE = "auto"
 #: healthy run should hit it; lower it per repo with
 #: ``[tool.wads.ci.testing].job_timeout_minutes``.
 DFLT_JOB_TIMEOUT_MINUTES = 60
+#: What a ``[[tool.wads.ci.testing.pinned]]`` name may contain: it names a CI job and a
+#: ``wads ci-local`` venv directory.
+PINNED_RUN_NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 DFLT_RUN_CI_MARKER = "[run ci]"
 #: The deploy rung of the on-demand ladder (i2mint/wads#131): validation, then the
 #: publish / Pages jobs. ``run_ci_publishes`` keeps today's behaviour by default
@@ -115,6 +119,60 @@ def _single_line_marker(trigger: dict, key: str, default: str) -> str:
             f"single-line string, got {marker!r}"
         )
     return marker
+
+
+def _str_list(value, *, field: str) -> tuple:
+    """``value`` as a tuple of non-blank strings (a lone string is a list of one)."""
+    items = [value] if isinstance(value, str) else value
+    if not isinstance(items, list) or not all(isinstance(i, str) for i in items):
+        raise ValueError(
+            f"{field} must be a string or a list of strings, got {value!r}"
+        )
+    return tuple(i.strip() for i in items if i.strip())
+
+
+@dataclass(frozen=True)
+class PinnedTestRun:
+    """One ``[[tool.wads.ci.testing.pinned]]`` entry: pins installed on top, then pytest."""
+
+    name: str
+    requirements: tuple
+    pytest_args: tuple
+
+    @classmethod
+    def from_entry(cls, entry, *, default_name: str, pytest_args) -> "PinnedTestRun":
+        """Validate one declared entry; ``pytest_args`` is the default when it has none.
+
+        >>> PinnedTestRun.from_entry({"requirements": []}, default_name="p", pytest_args=[])
+        Traceback (most recent call last):
+          ...
+        ValueError: requirements is empty
+        """
+        if not isinstance(entry, dict):
+            raise ValueError(f"want a table, got {entry!r}")
+        name = entry.get("name", default_name)
+        if not isinstance(name, str) or not PINNED_RUN_NAME_RE.fullmatch(name):
+            raise ValueError(
+                f"name must match {PINNED_RUN_NAME_RE.pattern} (it names a CI job "
+                f"and a directory), got {name!r}"
+            )
+        requirements = _str_list(entry.get("requirements"), field="requirements")
+        if not requirements:
+            raise ValueError("requirements is empty")
+        args = entry.get("pytest_args")
+        args = (
+            tuple(pytest_args) if args is None else _str_list(args, field="pytest_args")
+        )
+        return cls(name=name, requirements=requirements, pytest_args=args)
+
+    def as_output(self) -> dict:
+        """The shape the workflow's pinned-validation matrix reads (pytest args joined,
+        as the run-tests-uv action takes them)."""
+        return {
+            "name": self.name,
+            "requirements": list(self.requirements),
+            "pytest_args": " ".join(self.pytest_args),
+        }
 
 
 class CIConfig:
@@ -454,6 +512,57 @@ class CIConfig:
             )
             return DFLT_JOB_TIMEOUT_MINUTES
         return value
+
+    @property
+    def pinned_test_runs(self) -> list["PinnedTestRun"]:
+        """Extra test runs with some dependencies pinned (``[[tool.wads.ci.testing.pinned]]``).
+
+        Each entry is one more Linux job on the first ``python_versions`` entry: the
+        normal install, then ``requirements`` installed on top (``uv pip install``),
+        then pytest with the entry's ``pytest_args`` (default: the repo's). Use it to
+        test the oldest supported release of a dependency next to the latest one
+        (issue #189)::
+
+            [[tool.wads.ci.testing.pinned]]
+            name = "oldest-sdk"
+            requirements = ["elevenlabs==2.58.0"]
+            pytest_args = ["voxy/tests/test_elevenlabs_model.py"]
+
+        A single table is read as a list of one. An entry without usable
+        ``requirements``, with an invalid or repeated ``name``, or with ``pytest_args``
+        that are not strings, is skipped with a warning naming it.
+
+        >>> CIConfig({}).pinned_test_runs
+        []
+        >>> pinned = {"requirements": "attrs==22.1.0"}
+        >>> CIConfig({"tool": {"wads": {"ci": {"testing": {"pinned": pinned}}}}}).pinned_test_runs
+        [PinnedTestRun(name='pinned-1', requirements=('attrs==22.1.0',), pytest_args=('-v', '--tb=short'))]
+        """
+        declared = self.testing_config.get("pinned", [])
+        entries = [declared] if isinstance(declared, dict) else declared
+        if not isinstance(entries, list):
+            entries = [entries]
+        runs = []
+        for index, entry in enumerate(entries, 1):
+            try:
+                run = PinnedTestRun.from_entry(
+                    entry, default_name=f"pinned-{index}", pytest_args=self.pytest_args
+                )
+            except ValueError as e:
+                warnings.warn(
+                    f"ignoring [tool.wads.ci.testing].pinned entry {index}: {e}",
+                    stacklevel=2,
+                )
+                continue
+            if any(run.name == seen.name for seen in runs):
+                warnings.warn(
+                    f"ignoring [tool.wads.ci.testing].pinned entry {index}: the name "
+                    f"{run.name!r} is already used",
+                    stacklevel=2,
+                )
+                continue
+            runs.append(run)
+        return runs
 
     @property
     def system_dependencies(self) -> dict | list:

@@ -422,6 +422,19 @@ leg there stays informational regardless of this setting. Repos on the legacy
 template should migrate to the uv stub (`wads-migrate ci-to-stub`) to pick it
 up (see i2mint/wads#90).
 
+#### Pinned-dependency runs (oldest supported release)
+
+To also test against an older release of a dependency (the oldest one you support, say), declare a pinned run:
+
+```toml
+[[tool.wads.ci.testing.pinned]]
+name = "oldest-sdk"                                     # names the job; letters, digits, . _ -
+requirements = ["elevenlabs==2.58.0"]                   # installed on top of the normal install
+pytest_args = ["voxy/tests/test_elevenlabs_model.py"]   # default: the repo's pytest_args
+```
+
+Each entry adds one Linux job on the first `python_versions` entry, `Pinned deps (<name>)`: the normal install (with `[tool.wads.ci.install].extras`), then `uv pip install` of the requirements, then pytest without coverage. `wads ci-local` runs the same steps. Like `windows_blocking`, a failing pinned run reddens the **run**, not the release: `publish` does not depend on it. Only the reusable `uv-ci.yml` workflow (the default stub) runs it.
+
 ### Code Quality Tools
 
 ```toml

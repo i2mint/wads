@@ -198,6 +198,7 @@ jobs:
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
       windows-blocking: ${{ steps.config.outputs.windows-blocking }}
       job-timeout-minutes: ${{ steps.config.outputs.job-timeout-minutes }}
+      pinned-runs: ${{ steps.config.outputs.pinned-runs }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -533,6 +534,87 @@ jobs:
           storage-branch: ${{ needs.setup.outputs.metrics-storage-branch }}
           python-version: ${{ needs.setup.outputs.metrics-python-version }}
           force-run: ${{ needs.setup.outputs.metrics-force-run }}
+
+  # Extra test runs with some dependencies pinned (issue #189), one job per
+  # [[tool.wads.ci.testing.pinned]] entry: the normal install, the entry's
+  # `requirements` installed on top, then pytest with its `pytest_args`. Use it to
+  # test the oldest supported release of a dependency beside the latest one.
+  # Linux, first python-versions entry. Skipped when nothing is declared (the
+  # output is '[]', or '' from an older read-ci-config: fail-closed).
+  # A failure reddens the RUN; like windows-validation it is not in publish's
+  # `needs` (a skipped need would skip every release of every repo that declares
+  # nothing, and the publish gate admits no status function; test_workflow_gates.py).
+  pinned-validation:
+    name: Pinned deps (${{ matrix.pinned.name }})
+    # Least privilege (#113): this job runs the repo's code or reads config;
+    # it never pushes, so its GITHUB_TOKEN cannot write either.
+    permissions:
+      contents: read
+    if: "!contains(needs.setup.outputs.commit-subject, '[skip ci]') && needs.setup.outputs.validate == 'true' && needs.setup.outputs.tests-enabled != 'false' && needs.setup.outputs.pinned-runs != '[]' && needs.setup.outputs.pinned-runs != ''"
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(needs.setup.outputs.job-timeout-minutes || '60') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pinned: ${{ fromJson(needs.setup.outputs.pinned-runs || '[]') }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Read-only jobs keep no git credentials on disk (#113).
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: i2mint/wads/actions/setup-python-uv@master
+        with:
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+
+      - name: Install System Dependencies
+        uses: i2mint/wads/actions/install-system-deps@master
+        with:
+          pyproject-path: .
+
+      - name: Install Dependencies
+        uses: i2mint/wads/actions/install-deps-uv@master
+        with:
+          extras: ${{ needs.setup.outputs.install-extras }}
+
+      # The requirements travel as JSON in an env var, never spliced into the
+      # script, so a specifier's `<`, `>` or `;` is never read by the shell.
+      - name: Install the pinned requirements
+        env:
+          PINNED_REQUIREMENTS: ${{ toJSON(matrix.pinned.requirements) }}
+        run: |
+          source .venv/bin/activate
+          mapfile -t reqs < <(python -I -c 'import json, os; print("\n".join(json.loads(os.environ["PINNED_REQUIREMENTS"])))')
+          echo "Pinning on top of the normal install: ${reqs[*]}"
+          uv pip install "${reqs[@]}"
+          uv pip list
+
+      - name: Export CI Environment
+        uses: i2mint/wads/actions/export-ci-env@master
+        with:
+          required: ${{ needs.setup.outputs.env-required }}
+          test: ${{ needs.setup.outputs.env-test }}
+          extra: ${{ needs.setup.outputs.env-extra }}
+          defaults: ${{ needs.setup.outputs.env-defaults }}
+          aliases: ${{ needs.setup.outputs.env-aliases }}
+          secrets-json: ${{ toJSON(secrets) }}
+          vars-json: ${{ toJSON(vars) }}
+
+      - name: Run Tests
+        uses: i2mint/wads/actions/run-tests-uv@master
+        with:
+          root-dir: ${{ needs.setup.outputs.project-name }}
+          pytest-args: ${{ matrix.pinned.pytest_args }}
+          exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
+          coverage: "false"
 
   # Optional Windows testing (if enabled in config)
   windows-validation:
