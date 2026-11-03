@@ -750,7 +750,7 @@ def test_the_dev_shell_s_python_path_settings_are_kept_out(repo):
     """Issue #194: PYTHONSAFEPATH=1 keeps the cwd off sys.path, which CI's
     `python -m pytest` puts on it; PYTHONPATH adds what CI does not have."""
     runner = FakeRunner()
-    environ = {"PYTHONSAFEPATH": "1", "PYTHONPATH": "/dev/src", "HOME": "/h"}
+    environ = {name: "1" for name in HOST_ONLY_VARS} | {"HOME": "/h"}
     run_ci_local(repo, runner=runner, environ=environ, out=io.StringIO())
     assert all(not set(HOST_ONLY_VARS) & c["env"].keys() for c in runner.calls)
 
@@ -770,3 +770,11 @@ def test_each_leg_s_tests_run_with_its_venv_activated(repo):
     # ...and only the test steps: installs keep the plain environment
     others = [c for c in runner.calls if c not in legs]
     assert all("VIRTUAL_ENV" not in c["env"] for c in others)
+
+
+def test_an_empty_path_does_not_put_the_cwd_on_the_tests_path(repo):
+    """On POSIX an empty PATH entry is the cwd: no trailing separator without a PATH."""
+    runner = FakeRunner()
+    run_ci_local(repo, runner=runner, environ={}, out=io.StringIO())
+    legs = [c for c in runner.calls if c["argv"][1:3] == ["-m", "pytest"]]
+    assert legs and all(not c["env"]["PATH"].endswith(os.pathsep) for c in legs)

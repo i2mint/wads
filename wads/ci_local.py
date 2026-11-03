@@ -21,8 +21,10 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer's environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees, and minus the machine's install
-pins such as ``UV_CONSTRAINT``, which hosted CI does not have), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus what the dev shell has
+and hosted CI does not: install pins such as ``UV_CONSTRAINT``, and ``PYTHONSAFEPATH``,
+``PYTHONPATH``, ``PYTHONHOME``, ``PYTHONOPTIMIZE``; each leg's tests run with its venv
+activated, as CI's are), where CI exports only the
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -114,7 +116,10 @@ HOST_INSTALL_PIN_VARS = (
 # The dev shell's interpreter path settings. CI's ``python -m pytest`` puts the cwd on
 # ``sys.path``; an inherited ``PYTHONSAFEPATH=1`` keeps it off (3.11+), and a
 # ``PYTHONPATH`` adds directories CI does not have (issue #194).
-HOST_INTERPRETER_VARS = ("PYTHONSAFEPATH", "PYTHONPATH")
+# Likewise PYTHONHOME (a venv's activation unsets it; inherited, it breaks every venv
+# step) and PYTHONOPTIMIZE (strips asserts: a false green). Not every PYTHON*: CI sets
+# PYTHONIOENCODING and PYTHONUTF8 itself.
+HOST_INTERPRETER_VARS = ("PYTHONSAFEPATH", "PYTHONPATH", "PYTHONHOME", "PYTHONOPTIMIZE")
 #: Everything of the dev shell hosted CI does not have; every step runs without it, by
 #: default (``run_ci_local(host_only_vars=())`` keeps it all).
 HOST_ONLY_VARS = HOST_INSTALL_PIN_VARS + HOST_INTERPRETER_VARS
@@ -142,7 +147,8 @@ class Step:
     """One thing CI would do: a command (``argv``) or an in-process ``check``.
 
     ``argv`` and ``env`` values may hold ``<<workdir>>``, ``<<version>>``,
-    ``<<default_branch>>`` or ``<<pypi_token>>``, filled in at run time. A non-``blocking``
+    ``<<default_branch>>``, ``<<pypi_token>>`` or ``<<host_path_suffix>>`` (the run's PATH
+    after a path separator, or nothing when it has none), filled in at run time. A non-``blocking``
     failure is reported without stopping the run. ``capture`` names the context value that
     receives the command's last stdout line. A ``check`` takes the run context and returns
     an error message, or ``None`` when it passes.
@@ -455,10 +461,15 @@ def _leg_steps(
 
 
 def _activated(venv: str, *, platform: str) -> tuple:
-    """A Step's ``env`` for running inside ``venv`` (``<<host_path>>``: the run's PATH)."""
-    bin_dir = f"{venv}/Scripts" if platform == "nt" else f"{venv}/bin"
-    sep = ";" if platform == "nt" else ":"
-    return (("VIRTUAL_ENV", venv), ("PATH", f"{bin_dir}{sep}<<host_path>>"))
+    """A Step's ``env`` for running inside ``venv``: its bin directory first on PATH.
+
+    >>> _activated("/w/py3.12", platform="posix")
+    (('VIRTUAL_ENV', '/w/py3.12'), ('PATH', '/w/py3.12/bin<<host_path_suffix>>'))
+    >>> _activated("/w/py3.12", platform="nt")[1]
+    ('PATH', '/w/py3.12/Scripts<<host_path_suffix>>')
+    """
+    bin_dir = venv_python(venv, platform=platform).rsplit("/", 1)[0]
+    return (("VIRTUAL_ENV", venv), ("PATH", f"{bin_dir}<<host_path_suffix>>"))
 
 
 def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
@@ -969,12 +980,12 @@ def run_ci_local(
     if n_venvs := _venv_count(steps):
         steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
-    env, dropped_pins = steps_env(
+    env, dropped_host = steps_env(
         source_env,
         defaults=config.env_vars_defaults,
         withheld=(*PUBLISH_CREDENTIAL_VARS, *host_only_vars),
     )
-    dropped_pins = [name for name in dropped_pins if name in host_only_vars]
+    dropped_host = [name for name in dropped_host if name in host_only_vars]
     # A killed run never reaches the cleanup below; remove what earlier ones left.
     # Best effort: a sweep that fails must not stop the run it was clearing room for.
     try:
@@ -989,11 +1000,15 @@ def run_ci_local(
         repo=repo,
         runner=runner,
         env=env,
-        values={"workdir": workdir, "host_path": env.get("PATH", "")},
+        # No trailing separator for an empty PATH: on POSIX an empty entry is the cwd.
+        values={
+            "workdir": workdir,
+            "host_path_suffix": os.pathsep + env["PATH"] if env.get("PATH") else "",
+        },
         source_env=source_env,
     )
-    if dropped_pins:
-        ctx.notes.append(f"ran without {', '.join(dropped_pins)} (hosted CI has none)")
+    if dropped_host:
+        ctx.notes.append(f"ran without {', '.join(dropped_host)} (hosted CI has none)")
     report = CILocalReport(
         project=config.project_name,
         publish=publish,
