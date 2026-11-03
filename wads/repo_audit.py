@@ -73,6 +73,9 @@ _SKIP_DIRS = {
 }
 
 _RE_REUSABLE = re.compile(r"i2mint/wads/\.github/workflows/uv-ci\.yml@([\w.\-]+)")
+#: A repo that hosts the reusable workflow and calls it at its own commit (wads itself,
+#: i2mint/wads#198).
+_RE_LOCAL_REUSABLE = re.compile(r"uses:\s*\./\.github/workflows/uv-ci\.yml\b")
 _RE_NPM_STUB = re.compile(
     r"i2mint/wads/\.github/workflows/(npm-ci[\w\-]*)\.yml@([\w.\-]+)"
 )
@@ -354,7 +357,9 @@ def classify_workflow(text):
         "setup_python": _uniq(_RE_SETUP_PYTHON, text),
         "names": _uniq(_RE_WORKFLOW_NAME, text),
     }
-    if info["reusable_pins"]:
+    if _RE_LOCAL_REUSABLE.search(text):  # first: its comments may name the remote stub
+        info["format"] = "uv-stub-local"
+    elif info["reusable_pins"]:
         info["format"] = "uv-stub"
     elif info["setup_uv"] or _RE_RUN_TESTS_UV.search(text):
         info["format"] = "uv-inline"
@@ -520,6 +525,8 @@ def audit_ci(repo, rep):
         # On the SSOT stub: a tag pin is a sanctioned choice. What is flagged is a stub
         # whose trigger pre-filter disagrees with pyproject (rendered before a change).
         audit_trigger_drift(repo, rep, text)
+    elif info["format"] == "uv-stub-local":
+        pass  # calls its own uv-ci.yml at this commit: the workflow is the SSOT itself
     elif info["format"] == "uv-inline":
         audit_inline_trigger_gate(repo, rep, text)
         if info.get("stale_pins"):
