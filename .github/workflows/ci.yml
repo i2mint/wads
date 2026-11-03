@@ -22,7 +22,11 @@ name: Continuous Integration
 on: [push, pull_request]
 jobs:
   ci:
-    uses: i2mint/wads/.github/workflows/uv-ci.yml@master
+    # wads dogfoods its own reusable workflow AT THIS COMMIT (not @master, as the
+    # stub it ships does), so a PR that edits uv-ci.yml runs its own version in PR
+    # CI (i2mint/wads#198). The actions it calls still float on @master: a PR that
+    # edits an action needs the throwaway-branch check in skills/wads-dev-workflow.
+    uses: ./.github/workflows/uv-ci.yml
     permissions:
       contents: write
       pages: write

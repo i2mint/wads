@@ -86,6 +86,10 @@ with tempfile.TemporaryDirectory() as d:
 - **`export-ci-env`** runs `wads/scripts/export_ci_env.py` from the action's own checkout with `python -I -S`: keep that script standard-library only.
 - **A new `read-ci-config` output** is empty until a wads release carrying it reaches PyPI (the action `pip install`s wads), while `uv-ci.yml@master` changes go live at merge. Guard new `if:` clauses against an empty output.
 
+## Exercising a workflow or action change before merge
+
+wads' own `ci.yml` calls `./.github/workflows/uv-ci.yml`, so a PR that edits the reusable workflow runs it in PR CI. The actions it calls are still `i2mint/wads/actions/*@master`, so a PR that edits an action is not exercised by its own CI (i2mint/wads#198). For that, push a throwaway branch (never merged, deleted after) whose `uv-ci.yml` has every `i2mint/wads/actions/<name>@master` rewritten to `./actions/<name>` (`re.sub(r"i2mint/wads/actions/([\w-]+)@master", r"./actions/\1", text)`). Its push-triggered run exercises the branch's workflow and actions on wads itself; publish and Pages are default-branch-gated, so nothing ships. `test_export_ci_env.py::test_publish_job_exports_only_the_pypi_token` fails there by construction (it looks for the `i2mint/wads/actions/export-ci-env@` ref). Run `uvx --from actionlint-py actionlint -shellcheck= .github/workflows/uv-ci.yml` too (only `queue: max` is expected: actionlint lags that key). The native (maturin) path has its own harness, `native-selftest.yml`, which builds `ci-fixtures/native_pkg` with `./actions/*` on every target.
+
 ## Before merging
 
 1. The CI-exact command passes on 3.10, 3.11 and 3.12.
