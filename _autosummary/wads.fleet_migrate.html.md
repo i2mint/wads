@@ -13,6 +13,11 @@ failures are isolated — the batch never aborts midway.
 See: wads-ci-sweep skill at `~/.claude/skills/wads-ci-sweep/` for the
 ecosystem inventory + state-tracking it relies on.
 
+### Module Attributes
+
+| [`LOCAL_REUSABLE_CALL`](#wads.fleet_migrate.LOCAL_REUSABLE_CALL)   | How a repo that hosts the reusable workflow calls it at its own commit.   |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------|
+
 ### Functions
 
 | [`fleet_stub`](#wads.fleet_migrate.fleet_stub)(\*[, limit, select_category, ...])   | Stub-migrate up to `limit` repos, picked from the sweep state file.   |
@@ -25,6 +30,10 @@ ecosystem inventory + state-tracking it relies on.
 
 | [`RepoResult`](#wads.fleet_migrate.RepoResult)(name, path, status[, detail])   | Outcome of attempting to stub-migrate one repo.   |
 |---------------------------------------------------------------------------------------------|---------------------------------------------------|
+
+### wads.fleet_migrate.LOCAL_REUSABLE_CALL *= './.github/workflows/uv-ci.yml'*
+
+How a repo that hosts the reusable workflow calls it at its own commit.
 
 ### *class* wads.fleet_migrate.RepoResult(name, path, status, detail='')
 

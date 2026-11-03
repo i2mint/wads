@@ -358,6 +358,9 @@
 <span class="p">}</span>
 
 <span class="n">_RE_REUSABLE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"i2mint/wads/\.github/workflows/uv-ci\.yml@([\w.\-]+)"</span><span class="p">)</span>
+<span class="c1">#: A repo that hosts the reusable workflow and calls it at its own commit (wads itself,</span>
+<span class="c1">#: i2mint/wads#198).</span>
+<span class="n">_RE_LOCAL_REUSABLE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"uses:\s*\./\.github/workflows/uv-ci\.yml\b"</span><span class="p">)</span>
 <span class="n">_RE_NPM_STUB</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
     <span class="sa">r</span><span class="s2">"i2mint/wads/\.github/workflows/(npm-ci[\w\-]*)\.yml@([\w.\-]+)"</span>
 <span class="p">)</span>
@@ -644,7 +647,9 @@
         <span class="s2">"setup_python"</span><span class="p">:</span> <span class="n">_uniq</span><span class="p">(</span><span class="n">_RE_SETUP_PYTHON</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
         <span class="s2">"names"</span><span class="p">:</span> <span class="n">_uniq</span><span class="p">(</span><span class="n">_RE_WORKFLOW_NAME</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">"reusable_pins"</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">_RE_LOCAL_REUSABLE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>  <span class="c1"># first: its comments may name the remote stub</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"format"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"uv-stub-local"</span>
+    <span class="k">elif</span> <span class="n">info</span><span class="p">[</span><span class="s2">"reusable_pins"</span><span class="p">]:</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">"format"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"uv-stub"</span>
     <span class="k">elif</span> <span class="n">info</span><span class="p">[</span><span class="s2">"setup_uv"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">_RE_RUN_TESTS_UV</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">"format"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"uv-inline"</span>
@@ -817,6 +822,8 @@
         <span class="c1"># On the SSOT stub: a tag pin is a sanctioned choice. What is flagged is a stub</span>
         <span class="c1"># whose trigger pre-filter disagrees with pyproject (rendered before a change).</span>
         <span class="n">audit_trigger_drift</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">info</span><span class="p">[</span><span class="s2">"format"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"uv-stub-local"</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c1"># calls its own uv-ci.yml at this commit: the workflow is the SSOT itself</span>
     <span class="k">elif</span> <span class="n">info</span><span class="p">[</span><span class="s2">"format"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"uv-inline"</span><span class="p">:</span>
         <span class="n">audit_inline_trigger_gate</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stale_pins"</span><span class="p">):</span>
@@ -1372,7 +1379,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2fc0f242"></script>
+</div><script src="../../_static/documentation_options.js?v=8db70305"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

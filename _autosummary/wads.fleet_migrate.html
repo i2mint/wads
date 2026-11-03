@@ -302,6 +302,16 @@ last-commit recency, and applies <code class="docutils literal notranslate"><spa
 failures are isolated — the batch never aborts midway.</p>
 <p>See: wads-ci-sweep skill at <code class="docutils literal notranslate"><span class="pre">~/.claude/skills/wads-ci-sweep/</span></code> for the
 ecosystem inventory + state-tracking it relies on.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.fleet_migrate.LOCAL_REUSABLE_CALL" title="wads.fleet_migrate.LOCAL_REUSABLE_CALL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LOCAL_REUSABLE_CALL</span></code></a></p></td>
+<td><p>How a repo that hosts the reusable workflow calls it at its own commit.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -331,6 +341,12 @@ ecosystem inventory + state-tracking it relies on.</p>
 </tbody>
 </table>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.fleet_migrate.LOCAL_REUSABLE_CALL">
+<span class="sig-prename descclassname"><span class="pre">wads.fleet_migrate.</span></span><span class="sig-name descname"><span class="pre">LOCAL_REUSABLE_CALL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'./.github/workflows/uv-ci.yml'</span></span><a class="headerlink" href="#wads.fleet_migrate.LOCAL_REUSABLE_CALL" title="Link to this definition">¶</a></dt>
+<dd><p>How a repo that hosts the reusable workflow calls it at its own commit.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.fleet_migrate.RepoResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.fleet_migrate.</span></span><span class="sig-name descname"><span class="pre">RepoResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/fleet_migrate.html#RepoResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.fleet_migrate.RepoResult" title="Link to this definition">¶</a></dt>
@@ -477,6 +493,7 @@ chosen order.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">wads.fleet_migrate</a><ul>
+<li><a class="reference internal" href="#wads.fleet_migrate.LOCAL_REUSABLE_CALL"><code class="docutils literal notranslate"><span class="pre">LOCAL_REUSABLE_CALL</span></code></a></li>
 <li><a class="reference internal" href="#wads.fleet_migrate.RepoResult"><code class="docutils literal notranslate"><span class="pre">RepoResult</span></code></a></li>
 <li><a class="reference internal" href="#wads.fleet_migrate.fleet_stub"><code class="docutils literal notranslate"><span class="pre">fleet_stub()</span></code></a></li>
 <li><a class="reference internal" href="#wads.fleet_migrate.migrate_one_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_one_to_stub()</span></code></a></li>
@@ -493,7 +510,7 @@ chosen order.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=2fc0f242"></script>
+</div><script src="../_static/documentation_options.js?v=8db70305"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

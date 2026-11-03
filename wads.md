@@ -1,4 +1,4 @@
-> built 2026-11-03 12:45 UTC from 39370e8 (master) · wads 0.2.77. Details: build_info.json
+> built 2026-11-03 12:53 UTC from ca7d192 (master) · wads 0.2.78. Details: build_info.json
 
 # index.html.md
 
@@ -3140,6 +3140,11 @@ failures are isolated — the batch never aborts midway.
 See: wads-ci-sweep skill at `~/.claude/skills/wads-ci-sweep/` for the
 ecosystem inventory + state-tracking it relies on.
 
+### Module Attributes
+
+| [`LOCAL_REUSABLE_CALL`](_autosummary/wads.fleet_migrate.html.md#wads.fleet_migrate.LOCAL_REUSABLE_CALL)   | How a repo that hosts the reusable workflow calls it at its own commit.   |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------|
+
 ### Functions
 
 | [`fleet_stub`](_autosummary/wads.fleet_migrate.html.md#wads.fleet_migrate.fleet_stub)(\*[, limit, select_category, ...])   | Stub-migrate up to `limit` repos, picked from the sweep state file.   |
@@ -3152,6 +3157,10 @@ ecosystem inventory + state-tracking it relies on.
 
 | [`RepoResult`](_autosummary/wads.fleet_migrate.html.md#wads.fleet_migrate.RepoResult)(name, path, status[, detail])   | Outcome of attempting to stub-migrate one repo.   |
 |---------------------------------------------------------------------------------------------|---------------------------------------------------|
+
+### wads.fleet_migrate.LOCAL_REUSABLE_CALL *= './.github/workflows/uv-ci.yml'*
+
+How a repo that hosts the reusable workflow calls it at its own commit.
 
 ### *class* wads.fleet_migrate.RepoResult(name, path, status, detail='')
 
@@ -8420,18 +8429,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 12:45 UTC** from commit <a href="https://github.com/i2mint/wads/commit/39370e84fe315021d069d64276c37821cf02c5a2"><code>39370e8</code></a> on branch <code>master</code>, for **wads 0.2.77** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 12:53 UTC** from commit <a href="https://github.com/i2mint/wads/commit/ca7d192876bc22c8cccfd19815c6fd6e896d7b30"><code>ca7d192</code></a> on branch <code>master</code>, for **wads 0.2.78** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.77) is behind the latest release on PyPI (0.2.78): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/39370e84fe315021d069d64276c37821cf02c5a2"><code>39370e84fe315021d069d64276c37821cf02c5a2</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/ca7d192876bc22c8cccfd19815c6fd6e896d7b30"><code>ca7d192876bc22c8cccfd19815c6fd6e896d7b30</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8442,9 +8449,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41637776400">41637776400</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41638994455">41638994455</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>39370e84fe315021d069d64276c37821cf02c5a2</code> (in the history of the built commit) |
+| Event commit | <code>ca7d192876bc22c8cccfd19815c6fd6e896d7b30</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8469,13 +8476,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.78/">0.2.78</a>, newer than the documented version (0.2.77).
+Latest release: <a href="https://pypi.org/project/wads/0.2.78/">0.2.78</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 39370e84fe315021d069d64276c37821cf02c5a2
+git checkout ca7d192876bc22c8cccfd19815c6fd6e896d7b30
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -477,6 +477,10 @@
     <span class="p">)</span>
 
 
+<span class="c1">#: How a repo that hosts the reusable workflow calls it at its own commit.</span>
+<span class="n">LOCAL_REUSABLE_CALL</span> <span class="o">=</span> <span class="s2">"./.github/workflows/uv-ci.yml"</span>
+
+
 <div class="viewcode-block" id="migrate_one_to_stub">
 <a class="viewcode-back" href="../../_autosummary/wads.fleet_migrate.html#wads.fleet_migrate.migrate_one_to_stub">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">migrate_one_to_stub</span><span class="p">(</span>
@@ -494,6 +498,11 @@
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">repo_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">,</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">"skip"</span><span class="p">,</span> <span class="s2">"not a git repo"</span><span class="p">)</span>
+    <span class="n">ci_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">workflow_path</span>
+    <span class="k">if</span> <span class="n">ci_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">LOCAL_REUSABLE_CALL</span> <span class="ow">in</span> <span class="n">ci_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">():</span>
+        <span class="c1"># The repo hosts uv-ci.yml and calls it at its own commit (wads itself,</span>
+        <span class="c1"># i2mint/wads#198): re-rendering the stub would point it back at @master.</span>
+        <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="s2">"skip"</span><span class="p">,</span> <span class="s2">"calls its own uv-ci.yml"</span><span class="p">)</span>
 
     <span class="c1"># Check tracked-changes BEFORE attempting sync — `git pull --rebase`</span>
     <span class="c1"># refuses to run with a dirty working tree, and previously surfaced as</span>
@@ -664,7 +673,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2fc0f242"></script>
+</div><script src="../../_static/documentation_options.js?v=8db70305"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
