@@ -360,7 +360,7 @@ wads ci-local --dry-run   # print the plan, run nothing
 wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
 ```
 
-`--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages.
+`--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages. Your shell environment reaches the steps, except PyPI credentials (only the upload sees them) and the machine's install pins (`UV_CONSTRAINT`, `UV_BUILD_CONSTRAINT`, `UV_OVERRIDE`, `PIP_CONSTRAINT`), which hosted CI does not have; so fleet packages resolve from PyPI as they do in CI, and ci-local works from a git worktree.
 
 To go back, set `mode = "auto"` and run `wads-migrate ci-to-stub`. Workflow files other than `ci.yml` (cron jobs, Pages, npm) are not governed by the trigger; `ci-on-demand` lists any that still run unasked.
 

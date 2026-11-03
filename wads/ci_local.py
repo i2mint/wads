@@ -19,7 +19,8 @@ commit, tag and push. Before any of that it refuses on a dirty tree, a branch ot
 the default, a branch behind its remote, or missing PyPI credentials.
 
 Known differences from CI: the developer's environment passes through to the commands
-(minus PyPI credentials, which only the upload step sees), where CI exports only the
+(minus PyPI credentials, which only the upload step sees, and minus the machine's install
+pins such as ``UV_CONSTRAINT``, which hosted CI does not have), where CI exports only the
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; and lint runs on the tree as it is, where CI formats first.
 
@@ -95,6 +96,17 @@ PUBLISH_CREDENTIAL_VARS = (
     "UV_PUBLISH_TOKEN",
     "UV_PUBLISH_USERNAME",
     "UV_PUBLISH_PASSWORD",
+)
+
+# The dev machine's install pins. Hosted CI has none; inherited, they make ci-local test a
+# different environment (and the fleet's constraint file, which pins every local package
+# to its main checkout, breaks the install from a git worktree, issue #191). So every
+# step runs without them, by default: ``run_ci_local(host_pin_vars=())`` keeps them.
+HOST_INSTALL_PIN_VARS = (
+    "UV_CONSTRAINT",
+    "UV_BUILD_CONSTRAINT",
+    "UV_OVERRIDE",
+    "PIP_CONSTRAINT",
 )
 
 PASSED, FAILED, SKIPPED = "ok", "FAIL", "skip"
@@ -771,6 +783,28 @@ class CILocalReport:
         return "\n".join(lines)
 
 
+def steps_env(
+    source_env: Mapping[str, str],
+    *,
+    defaults: Mapping[str, object] = (),
+    withheld: Sequence[str] = PUBLISH_CREDENTIAL_VARS + HOST_INSTALL_PIN_VARS,
+) -> tuple[dict, list[str]]:
+    """The environment the steps run in, and the names of ``source_env`` it left out.
+
+    ``source_env`` minus ``withheld``, then the committed ``defaults``, which are
+    authoritative as in CI's export-ci-env (so a withheld name a default sets is back,
+    and is not reported as left out).
+
+    >>> steps_env({"HOME": "/h", "UV_CONSTRAINT": "/c.txt", "PYPI_PASSWORD": "t"})
+    ({'HOME': '/h'}, ['PYPI_PASSWORD', 'UV_CONSTRAINT'])
+    >>> steps_env({"UV_CONSTRAINT": "/c.txt"}, defaults={"UV_CONSTRAINT": "/repo.txt"})
+    ({'UV_CONSTRAINT': '/repo.txt'}, [])
+    """
+    env = {k: v for k, v in source_env.items() if k not in withheld}
+    env.update({key: str(value) for key, value in dict(defaults).items()})
+    return env, sorted(k for k in source_env if k not in env)
+
+
 def run_ci_local(
     repo=".",
     *,
@@ -781,12 +815,17 @@ def run_ci_local(
     out=None,
     keep_workdir: bool = False,
     workdir_root: Optional[str] = None,
+    host_pin_vars: Sequence[str] = HOST_INSTALL_PIN_VARS,
 ) -> CILocalReport:
     """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
 
     The steps run in a fresh work directory under ``workdir_root`` (default: the system
     temp directory), after removing the stale ones killed runs left there and checking
     that the filesystem has room for this run (issue #159).
+
+    ``environ`` (default ``os.environ``) reaches every step minus the PyPI credentials
+    (only the upload sees them) and minus ``host_pin_vars``, the dev machine's install
+    constraints that hosted CI does not have (issue #191).
     """
     repo = Path(repo).resolve()
     out = out or sys.stdout
@@ -795,9 +834,12 @@ def run_ci_local(
     if n_venvs := _venv_count(steps):
         steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
-    env = {k: v for k, v in source_env.items() if k not in PUBLISH_CREDENTIAL_VARS}
-    # Committed defaults are authoritative, as in CI's export-ci-env.
-    env.update({key: str(value) for key, value in config.env_vars_defaults.items()})
+    env, dropped_pins = steps_env(
+        source_env,
+        defaults=config.env_vars_defaults,
+        withheld=(*PUBLISH_CREDENTIAL_VARS, *host_pin_vars),
+    )
+    dropped_pins = [name for name in dropped_pins if name in host_pin_vars]
     # A killed run never reaches the cleanup below; remove what earlier ones left.
     # Best effort: a sweep that fails must not stop the run it was clearing room for.
     try:
@@ -815,6 +857,8 @@ def run_ci_local(
         values={"workdir": workdir},
         source_env=source_env,
     )
+    if dropped_pins:
+        ctx.notes.append(f"ran without {', '.join(dropped_pins)} (hosted CI has none)")
     report = CILocalReport(
         project=config.project_name,
         publish=publish,
