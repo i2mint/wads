@@ -226,27 +226,37 @@ class TestEnsurePypiSecret:
 
     @pytest.fixture
     def gh(self, monkeypatch):
-        """Fake ``subprocess.run``: records calls; ``present`` = names ``gh secret list`` returns."""
-        import json
+        """Fake ``subprocess.run`` for ``gh api`` / ``gh secret set``; records calls.
+
+        ``repo_secrets`` / ``org_secrets``: names listed, or None to make that call fail.
+        ``owner``: the repo owner's type.
+        """
         import subprocess
 
         class Gh:
             calls: list = []
-            present: dict = {"repo": [], "org": None}  # org None -> listing fails
+            repo_secrets: list | None = []
+            org_secrets: list | None = []
+            owner = "User"
 
         def fake_run(cmd, **kw):
             Gh.calls.append((list(cmd), kw.get("input")))
-            if cmd[:3] == ["gh", "secret", "list"]:
-                key = "org" if "--org" in cmd else "repo"
-                names = Gh.present[key]
+            if cmd[:2] == ["gh", "api"]:
+                endpoint = cmd[2]
+                if endpoint.endswith("/actions/organization-secrets"):
+                    names = Gh.org_secrets
+                elif endpoint.endswith("/actions/secrets"):
+                    names = Gh.repo_secrets
+                else:
+                    names = [Gh.owner]
                 if names is None:
                     raise subprocess.CalledProcessError(1, cmd)
-                out = json.dumps([{"name": n} for n in names])
+                out = "\n".join(names)
                 return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
             return subprocess.CompletedProcess(cmd, 0, stdout=b"", stderr=b"")
 
         Gh.calls = []
-        Gh.present = {"repo": [], "org": None}
+        Gh.repo_secrets, Gh.org_secrets, Gh.owner = [], [], "User"
         monkeypatch.setattr(subprocess, "run", fake_run)
         return Gh
 
@@ -290,14 +300,53 @@ class TestEnsurePypiSecret:
         )
         assert self._sets(gh)[0][1] == b"pypi-env"
 
-    @pytest.mark.parametrize("where", ["repo", "org"])
-    def test_existing_secret_is_left_alone(self, gh, project, pypirc, where):
+    def test_existing_repo_secret_is_left_alone(self, gh, project, pypirc):
         from wads.project_setup import ensure_pypi_secret
 
-        gh.present[where] = ["pypi_password"]  # GitHub names are case-insensitive
+        gh.repo_secrets = ["pypi_password"]  # GitHub names are case-insensitive
         out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
         assert out["status"] == "already_present"
         assert not self._sets(gh)
+
+    def test_org_secret_visible_to_repo_is_left_alone(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner, gh.org_secrets = "Organization", ["PYPI_PASSWORD"]
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "already_present"
+        assert not self._sets(gh)
+
+    def test_org_secret_lookup_failure_never_sets(self, gh, project, pypirc):
+        """An org member's 403 must not be read as 'no org secret' (it would shadow it)."""
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner, gh.org_secrets = "Organization", None
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "unknown"
+        assert not self._sets(gh)
+
+    def test_repo_secret_lookup_failure_never_sets(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.repo_secrets = None
+        out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "unknown"
+        assert not self._sets(gh)
+
+    def test_org_repo_without_org_secret_gets_one(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner = "Organization"
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "set"
+
+    def test_malformed_ci_table_does_not_raise(self, gh, tmp_path, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        pp = tmp_path / "pyproject.toml"
+        pp.write_text('[project]\nname = "x"\n[tool.wads.ci]\npublish = true\n')
+        out = ensure_pypi_secret("me/pkg", pyproject=pp, environ={}, pypirc=pypirc)
+        assert out["status"] == "no_pyproject"
 
     def test_publish_disabled_does_nothing(self, gh, project, pypirc):
         from wads.project_setup import ensure_pypi_secret
@@ -330,6 +379,9 @@ class TestEnsurePypiSecret:
         with patch("wads.secrets_cli.set_github_secret", return_value=False):
             out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
         assert out["status"] == "failed"
+        with patch("wads.secrets_cli.set_github_secret", side_effect=FileNotFoundError(self.FAKE)):
+            out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "failed"
         assert self.FAKE not in repr(out)
 
 
@@ -356,6 +408,17 @@ class TestSetupProjectPypiSecret:
     def test_warning_when_no_token(self, tmp_path):
         res, _ = self._run(tmp_path, {"status": "no_token", "message": "remedy"})
         assert "pypi_secret_no_token" in res["warnings"]
+
+    def test_pre_existing_repo_is_left_alone(self, tmp_path):
+        from wads import project_setup as ps
+
+        with (
+            patch.object(ps, "repo_exists", return_value=True),
+            patch("wads.populate.populate_pkg_dir"),
+            patch.object(ps, "ensure_pypi_secret") as ens,
+        ):
+            ps.setup_project("pkg", org="me", proj_rootdir=str(tmp_path / "pkg"), verbose=False)
+        ens.assert_not_called()
 
     def test_opt_out_and_no_repo(self, tmp_path):
         _, ens = self._run(tmp_path, {"status": "set", "message": ""}, set_pypi_secret=False)
