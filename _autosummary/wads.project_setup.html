@@ -323,34 +323,37 @@ a Claude skill.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.detect_github_username" title="wads.project_setup.detect_github_username"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detect_github_username</span></code></a>()</p></td>
 <td><p>Detect the current GitHub username.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.github_repo_url" title="wads.project_setup.github_repo_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">github_repo_url</span></code></a>(name, *[, org])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.ensure_pypi_secret" title="wads.project_setup.ensure_pypi_secret"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_pypi_secret</span></code></a>(repo, *, pyproject[, ...])</p></td>
+<td><p>Give <code class="docutils literal notranslate"><span class="pre">repo</span></code> a <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code> Actions secret when its CI will need one.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.github_repo_url" title="wads.project_setup.github_repo_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">github_repo_url</span></code></a>(name, *[, org])</p></td>
 <td><p>Return the GitHub repository URL for org/name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_github" title="wads.project_setup.is_available_on_github"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_github</span></code></a>(name, *[, org])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_github" title="wads.project_setup.is_available_on_github"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_github</span></code></a>(name, *[, org])</p></td>
 <td><p>Check if a repository name is available on GitHub.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_npm" title="wads.project_setup.is_available_on_npm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_npm</span></code></a>(name, *[, timeout])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_npm" title="wads.project_setup.is_available_on_npm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_npm</span></code></a>(name, *[, timeout])</p></td>
 <td><p>Check if a package name is unclaimed on the npm registry (HTTP 404 = free).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_pypi" title="wads.project_setup.is_available_on_pypi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_pypi</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.is_available_on_pypi" title="wads.project_setup.is_available_on_pypi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_available_on_pypi</span></code></a>(name)</p></td>
 <td><p>Check if a package name is unclaimed on PyPI.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.list_name_candidate_files" title="wads.project_setup.list_name_candidate_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_name_candidate_files</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.list_name_candidate_files" title="wads.project_setup.list_name_candidate_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_name_candidate_files</span></code></a>()</p></td>
 <td><p>List all name candidate files in the name_candidates directory.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.load_name_candidates" title="wads.project_setup.load_name_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_name_candidates</span></code></a>([filepath])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.load_name_candidates" title="wads.project_setup.load_name_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_name_candidates</span></code></a>([filepath])</p></td>
 <td><p>Load name candidates from a file or all files in the name_candidates directory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.pypi_project_url" title="wads.project_setup.pypi_project_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_project_url</span></code></a>(name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.pypi_project_url" title="wads.project_setup.pypi_project_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_project_url</span></code></a>(name)</p></td>
 <td><p>Return the PyPI project page URL for a package name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.repo_exists" title="wads.project_setup.repo_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_exists</span></code></a>(name, *[, org])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.repo_exists" title="wads.project_setup.repo_exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_exists</span></code></a>(name, *[, org])</p></td>
 <td><p>Check if a GitHub repository exists at org/name.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.setup_opsward_for_project" title="wads.project_setup.setup_opsward_for_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_opsward_for_project</span></code></a>(pkg_dir)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.setup_opsward_for_project" title="wads.project_setup.setup_opsward_for_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_opsward_for_project</span></code></a>(pkg_dir)</p></td>
 <td><p>Set up AI agent configuration using opsward, if available.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.project_setup.setup_project" title="wads.project_setup.setup_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_project</span></code></a>(name, *[, description, org, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.project_setup.setup_project" title="wads.project_setup.setup_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_project</span></code></a>(name, *[, description, org, ...])</p></td>
 <td><p>Orchestrate full project creation.</p></td>
 </tr>
 </tbody>
@@ -453,6 +456,31 @@ Returns None if detection fails.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.project_setup.ensure_pypi_secret">
+<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">ensure_pypi_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyproject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pypirc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secret_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PYPI_PASSWORD'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#ensure_pypi_secret"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.ensure_pypi_secret" title="Link to this definition">¶</a></dt>
+<dd><p>Give <code class="docutils literal notranslate"><span class="pre">repo</span></code> a <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code> Actions secret when its CI will need one.</p>
+<p>Org repos usually inherit an org secret; personal ones do not, and the first
+merge’s publish job then fails with “Required CI values are missing” (#205).
+The secret is set only if <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.publish].enabled</span></code> is true in
+<code class="docutils literal notranslate"><span class="pre">pyproject</span></code> and the repo cannot already see one (its own, or an org secret
+shared with it). If that cannot be established, nothing is set: a repo-level
+copy would shadow an org secret. The token comes from
+<a class="reference internal" href="wads.ci_local.html#wads.ci_local.resolve_pypi_token" title="wads.ci_local.resolve_pypi_token"><code class="xref py py-func docutils literal notranslate"><span class="pre">wads.ci_local.resolve_pypi_token()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">$PYPI_PASSWORD</span></code>,
+<code class="docutils literal notranslate"><span class="pre">$UV_PUBLISH_TOKEN</span></code>, then <code class="docutils literal notranslate"><span class="pre">~/.pypirc</span></code> <code class="docutils literal notranslate"><span class="pre">[pypi]</span></code>) and reaches <code class="docutils literal notranslate"><span class="pre">gh</span></code> on
+stdin via <a class="reference internal" href="wads.secrets_cli.html#wads.secrets_cli.set_github_secret" title="wads.secrets_cli.set_github_secret"><code class="xref py py-func docutils literal notranslate"><span class="pre">wads.secrets_cli.set_github_secret()</span></code></a>. It is never returned,
+printed or put in a message.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;status&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">...}</span></code>; <code class="docutils literal notranslate"><span class="pre">status</span></code> is one of <code class="docutils literal notranslate"><span class="pre">set</span></code>,
+<code class="docutils literal notranslate"><span class="pre">already_present</span></code>, <code class="docutils literal notranslate"><span class="pre">publish_disabled</span></code>, <code class="docutils literal notranslate"><span class="pre">no_token</span></code>, <code class="docutils literal notranslate"><span class="pre">no_pyproject</span></code>,
+<code class="docutils literal notranslate"><span class="pre">unknown</span></code>, <code class="docutils literal notranslate"><span class="pre">failed</span></code>. <code class="docutils literal notranslate"><span class="pre">message</span></code> is a one-line account (the remedy, when
+not <code class="docutils literal notranslate"><span class="pre">set</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -582,15 +610,23 @@ in the name_candidates directory.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.project_setup.setup_project">
-<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">setup_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_rootdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_devdocs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_opsward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#setup_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.setup_project" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.project_setup.</span></span><span class="sig-name descname"><span class="pre">setup_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_rootdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_devdocs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup_opsward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_pypi_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/project_setup.html#setup_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.project_setup.setup_project" title="Link to this definition">¶</a></dt>
 <dd><p>Orchestrate full project creation.</p>
 <p>Steps (each independently skippable via keyword args):</p>
-<ol class="arabic simple">
+<ol class="arabic">
 <li><p>Validate name</p></li>
 <li><p>Create GitHub repo (if create_repo)</p></li>
 <li><p>Populate project files (if populate)</p></li>
 <li><p>Create misc/docs/ (if create_devdocs)</p></li>
 <li><p>Run opsward generate (if setup_opsward and opsward is available)</p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code> Actions secret (if this call created the repo, and
+populate and set_pypi_secret, and publishing is enabled, and the repo cannot
+already see one; a pre-existing repo is left alone); see
+<a class="reference internal" href="#wads.project_setup.ensure_pypi_secret" title="wads.project_setup.ensure_pypi_secret"><code class="xref py py-func docutils literal notranslate"><span class="pre">ensure_pypi_secret()</span></code></a>. If no token is found, a warning with the</p>
+<blockquote>
+<div><p>one-line remedy is returned and printed; project creation still succeeds.</p>
+</div></blockquote>
+</li>
 </ol>
 <p>Returns a summary dict with keys: path, steps_completed, warnings.</p>
 <dl class="field-list simple">
@@ -659,6 +695,7 @@ in the name_candidates directory.</p>
 <li><a class="reference internal" href="#wads.project_setup.create_github_repo"><code class="docutils literal notranslate"><span class="pre">create_github_repo()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.create_misc_docs"><code class="docutils literal notranslate"><span class="pre">create_misc_docs()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.detect_github_username"><code class="docutils literal notranslate"><span class="pre">detect_github_username()</span></code></a></li>
+<li><a class="reference internal" href="#wads.project_setup.ensure_pypi_secret"><code class="docutils literal notranslate"><span class="pre">ensure_pypi_secret()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.github_repo_url"><code class="docutils literal notranslate"><span class="pre">github_repo_url()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.is_available_on_github"><code class="docutils literal notranslate"><span class="pre">is_available_on_github()</span></code></a></li>
 <li><a class="reference internal" href="#wads.project_setup.is_available_on_npm"><code class="docutils literal notranslate"><span class="pre">is_available_on_npm()</span></code></a></li>
@@ -680,7 +717,7 @@ in the name_candidates directory.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=8db70305"></script>
+</div><script src="../_static/documentation_options.js?v=24f77763"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

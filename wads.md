@@ -1,4 +1,4 @@
-> built 2026-11-03 12:53 UTC from ca7d192 (master) · wads 0.2.78. Details: build_info.json
+> built 2026-11-08 16:59 UTC from 14788ac (master) · wads 0.2.79. Details: build_info.json
 
 # index.html.md
 
@@ -6517,6 +6517,7 @@ Key capabilities:
 | [`create_github_repo`](_autosummary/wads.project_setup.html.md#wads.project_setup.create_github_repo)(name, \*[, org, ...])             | Create a GitHub repository via the `gh` CLI.                                                    |
 | [`create_misc_docs`](_autosummary/wads.project_setup.html.md#wads.project_setup.create_misc_docs)(pkg_dir, \*[, sections])            | Create misc/docs/ directory with template markdown files.                                       |
 | [`detect_github_username`](_autosummary/wads.project_setup.html.md#wads.project_setup.detect_github_username)()                             | Detect the current GitHub username.                                                             |
+| [`ensure_pypi_secret`](_autosummary/wads.project_setup.html.md#wads.project_setup.ensure_pypi_secret)(repo, \*, pyproject[, ...])       | Give `repo` a `PYPI_PASSWORD` Actions secret when its CI will need one.                         |
 | [`github_repo_url`](_autosummary/wads.project_setup.html.md#wads.project_setup.github_repo_url)(name, \*[, org])                     | Return the GitHub repository URL for org/name.                                                  |
 | [`is_available_on_github`](_autosummary/wads.project_setup.html.md#wads.project_setup.is_available_on_github)(name, \*[, org])              | Check if a repository name is available on GitHub.                                              |
 | [`is_available_on_npm`](_autosummary/wads.project_setup.html.md#wads.project_setup.is_available_on_npm)(name, \*[, timeout])             | Check if a package name is unclaimed on the npm registry (HTTP 404 = free).                     |
@@ -6600,6 +6601,29 @@ Returns None if detection fails.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.project_setup.ensure_pypi_secret(repo, , pyproject, environ=None, pypirc=None, secret_name='PYPI_PASSWORD')
+
+Give `repo` a `PYPI_PASSWORD` Actions secret when its CI will need one.
+
+Org repos usually inherit an org secret; personal ones do not, and the first
+merge’s publish job then fails with “Required CI values are missing” (#205).
+The secret is set only if `[tool.wads.ci.publish].enabled` is true in
+`pyproject` and the repo cannot already see one (its own, or an org secret
+shared with it). If that cannot be established, nothing is set: a repo-level
+copy would shadow an org secret. The token comes from
+[`wads.ci_local.resolve_pypi_token()`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token) (`$PYPI_PASSWORD`,
+`$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]`) and reaches `gh` on
+stdin via [`wads.secrets_cli.set_github_secret()`](_autosummary/wads.secrets_cli.html.md#wads.secrets_cli.set_github_secret). It is never returned,
+printed or put in a message.
+
+Returns `{"status": ..., "message": ...}`; `status` is one of `set`,
+`already_present`, `publish_disabled`, `no_token`, `no_pyproject`,
+`unknown`, `failed`. `message` is a one-line account (the remedy, when
+not `set`).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.project_setup.github_repo_url(name, , org=None)
 
@@ -6693,7 +6717,7 @@ Returns True if opsward ran successfully, False if not available.
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
-### wads.project_setup.setup_project(name, , description='', org=None, author=None, license='mit', root_url=None, proj_rootdir=None, create_repo=True, populate=True, create_devdocs=False, setup_opsward=False, verbose=True)
+### wads.project_setup.setup_project(name, , description='', org=None, author=None, license='mit', root_url=None, proj_rootdir=None, create_repo=True, populate=True, create_devdocs=False, setup_opsward=False, set_pypi_secret=True, verbose=True)
 
 Orchestrate full project creation.
 
@@ -6704,6 +6728,11 @@ Steps (each independently skippable via keyword args):
 3. Populate project files (if populate)
 4. Create misc/docs/ (if create_devdocs)
 5. Run opsward generate (if setup_opsward and opsward is available)
+6. Set the `PYPI_PASSWORD` Actions secret (if this call created the repo, and
+   populate and set_pypi_secret, and publishing is enabled, and the repo cannot
+   already see one; a pre-existing repo is left alone); see
+   [`ensure_pypi_secret()`](_autosummary/wads.project_setup.html.md#wads.project_setup.ensure_pypi_secret). If no token is found, a warning with the
+   > one-line remedy is returned and printed; project creation still succeeds.
 
 Returns a summary dict with keys: path, steps_completed, warnings.
 
@@ -8429,16 +8458,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-03 12:53 UTC** from commit <a href="https://github.com/i2mint/wads/commit/ca7d192876bc22c8cccfd19815c6fd6e896d7b30"><code>ca7d192</code></a> on branch <code>master</code>, for **wads 0.2.78** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-08 16:59 UTC** from commit <a href="https://github.com/i2mint/wads/commit/14788ac31f391b6dcc2140c54071a8049a9e9167"><code>14788ac</code></a> on branch <code>master</code>, for **wads 0.2.79** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.79) is behind the latest release on PyPI (0.2.80): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/ca7d192876bc22c8cccfd19815c6fd6e896d7b30"><code>ca7d192876bc22c8cccfd19815c6fd6e896d7b30</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/14788ac31f391b6dcc2140c54071a8049a9e9167"><code>14788ac31f391b6dcc2140c54071a8049a9e9167</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8449,9 +8480,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/41638994455">41638994455</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42502465973">42502465973</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>ca7d192876bc22c8cccfd19815c6fd6e896d7b30</code> (in the history of the built commit) |
+| Event commit | <code>14788ac31f391b6dcc2140c54071a8049a9e9167</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8460,7 +8491,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 | epythet  | 0.2.22  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
-| Python   | 3.12.15 |
+| Python   | 3.12.16 |
 
 ## Configuration as resolved
 
@@ -8476,13 +8507,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.78/">0.2.78</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.80/">0.2.80</a>, newer than the documented version (0.2.79).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout ca7d192876bc22c8cccfd19815c6fd6e896d7b30
+git checkout 14788ac31f391b6dcc2140c54071a8049a9e9167
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

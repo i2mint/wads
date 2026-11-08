@@ -650,6 +650,143 @@
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># PyPI publish secret</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">PYPI_SECRET_NAME</span> <span class="o">=</span> <span class="s2">"PYPI_PASSWORD"</span>
+
+
+<span class="n">GH_TIMEOUT_SEC</span> <span class="o">=</span> <span class="mi">60</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gh_api_lines</span><span class="p">(</span><span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">jq</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Lines printed by ``gh api &lt;endpoint&gt; --jq &lt;jq&gt;``; None if the call failed.</span>
+
+<span class="sd">    Used for names and types only, never secret values. A failure is "unknown",</span>
+<span class="sd">    never "empty": callers must not read it as proof that something is absent.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"gh"</span><span class="p">,</span> <span class="s2">"api"</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="s2">"--jq"</span><span class="p">,</span> <span class="n">jq</span><span class="p">],</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">GH_TIMEOUT_SEC</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_visible_secret_names</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Names of the Actions secrets ``repo``'s workflows can see; None if unsure.</span>
+
+<span class="sd">    Repo-level secrets, plus (for an org-owned repo) the org secrets visible *to</span>
+<span class="sd">    this repo* (an org secret limited to other repos does not count). Asks about</span>
+<span class="sd">    the repo, not the org, so it works for ordinary org members, who get a 403</span>
+<span class="sd">    from ``gh secret list --org``.</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_gh_api_lines</span><span class="p">(</span><span class="sa">f</span><span class="s2">"repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/actions/secrets"</span><span class="p">,</span> <span class="s2">".secrets[].name"</span><span class="p">)</span>
+    <span class="n">owner_type</span> <span class="o">=</span> <span class="n">_gh_api_lines</span><span class="p">(</span><span class="sa">f</span><span class="s2">"repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">".owner.type"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">owner_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">present</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">owner_type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"User"</span><span class="p">:</span>
+        <span class="n">shared</span> <span class="o">=</span> <span class="n">_gh_api_lines</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"repos/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/actions/organization-secrets"</span><span class="p">,</span> <span class="s2">".secrets[].name"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">shared</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">present</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">shared</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">present</span>
+
+
+<div class="viewcode-block" id="ensure_pypi_secret">
+<a class="viewcode-back" href="../../_autosummary/wads.project_setup.html#wads.project_setup.ensure_pypi_secret">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_pypi_secret</span><span class="p">(</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">pyproject</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">environ</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">pypirc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">secret_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PYPI_SECRET_NAME</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Give ``repo`` a ``PYPI_PASSWORD`` Actions secret when its CI will need one.</span>
+
+<span class="sd">    Org repos usually inherit an org secret; personal ones do not, and the first</span>
+<span class="sd">    merge's publish job then fails with "Required CI values are missing" (#205).</span>
+<span class="sd">    The secret is set only if ``[tool.wads.ci.publish].enabled`` is true in</span>
+<span class="sd">    ``pyproject`` and the repo cannot already see one (its own, or an org secret</span>
+<span class="sd">    shared with it). If that cannot be established, nothing is set: a repo-level</span>
+<span class="sd">    copy would shadow an org secret. The token comes from</span>
+<span class="sd">    :func:`wads.ci_local.resolve_pypi_token` (``$PYPI_PASSWORD``,</span>
+<span class="sd">    ``$UV_PUBLISH_TOKEN``, then ``~/.pypirc`` ``[pypi]``) and reaches ``gh`` on</span>
+<span class="sd">    stdin via :func:`wads.secrets_cli.set_github_secret`. It is never returned,</span>
+<span class="sd">    printed or put in a message.</span>
+
+<span class="sd">    Returns ``{"status": ..., "message": ...}``; ``status`` is one of ``set``,</span>
+<span class="sd">    ``already_present``, ``publish_disabled``, ``no_token``, ``no_pyproject``,</span>
+<span class="sd">    ``unknown``, ``failed``. ``message`` is a one-line account (the remedy, when</span>
+<span class="sd">    not ``set``).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIConfig</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_local</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_pypi_token</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.secrets_cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_github_secret</span>
+
+    <span class="n">remedy</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"set it with: wads-secrets add </span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">publish_enabled</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span><span class="o">.</span><span class="n">publish_enabled</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># unreadable or malformed pyproject, whatever the parser raises</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"no_pyproject"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"no usable pyproject.toml; </span><span class="si">{</span><span class="n">remedy</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">publish_enabled</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"publish_disabled"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"publishing is disabled in pyproject.toml"</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">present</span> <span class="o">=</span> <span class="n">_visible_secret_names</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">present</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"unknown"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"could not tell whether </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> already has </span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(gh api failed); not setting it. </span><span class="si">{</span><span class="n">remedy</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">if</span> <span class="n">secret_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">present</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"already_present"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2"> already available to </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">token</span><span class="p">,</span> <span class="n">source</span> <span class="o">=</span> <span class="n">resolve_pypi_token</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="n">environ</span><span class="p">,</span> <span class="n">pypirc</span><span class="o">=</span><span class="n">pypirc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">token</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"no_token"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2"> is not set on </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> and no PyPI token was found "</span>
+                <span class="sa">f</span><span class="s2">"($</span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2">, $UV_PUBLISH_TOKEN, ~/.pypirc [pypi]); the first "</span>
+                <span class="sa">f</span><span class="s2">"publish will fail. </span><span class="si">{</span><span class="n">remedy</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="n">set_github_secret</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">secret_name</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># e.g. gh vanished; the message could carry the value</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"gh could not set </span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">remedy</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()),</span> <span class="s2">"~"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"set"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"set </span><span class="si">{</span><span class="n">secret_name</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Orchestration</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
@@ -669,6 +806,7 @@
     <span class="n">populate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">create_devdocs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">setup_opsward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">set_pypi_secret</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Orchestrate full project creation.</span>
@@ -679,6 +817,11 @@
 <span class="sd">    3. Populate project files (if populate)</span>
 <span class="sd">    4. Create misc/docs/ (if create_devdocs)</span>
 <span class="sd">    5. Run opsward generate (if setup_opsward and opsward is available)</span>
+<span class="sd">    6. Set the ``PYPI_PASSWORD`` Actions secret (if this call created the repo, and</span>
+<span class="sd">       populate and set_pypi_secret, and publishing is enabled, and the repo cannot</span>
+<span class="sd">       already see one; a pre-existing repo is left alone); see</span>
+<span class="sd">       :func:`ensure_pypi_secret`. If no token is found, a warning with the</span>
+<span class="sd">       one-line remedy is returned and printed; project creation still succeeds.</span>
 
 <span class="sd">    Returns a summary dict with keys: path, steps_completed, warnings.</span>
 <span class="sd">    """</span>
@@ -700,6 +843,7 @@
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">proj_rootdir</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
     <span class="c1"># 2. Create GitHub repo</span>
+    <span class="n">repo_created</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="n">create_repo</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">repo_exists</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">):</span>
             <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Repository </span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists, skipping creation"</span><span class="p">)</span>
@@ -715,6 +859,7 @@
                 <span class="n">clone_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
             <span class="p">)</span>
             <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"repo_created"</span><span class="p">)</span>
+            <span class="n">repo_created</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Repository created at </span><span class="si">{</span><span class="n">github_repo_url</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">org</span><span class="o">=</span><span class="n">resolved_org</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Ensure local dir exists</span>
@@ -753,6 +898,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"opsward_not_available"</span><span class="p">)</span>
             <span class="n">log</span><span class="p">(</span><span class="s2">"Opsward not available — skipping AI agent setup"</span><span class="p">)</span>
+
+    <span class="c1"># 6. PyPI publish secret (personal repos do not inherit an org secret)</span>
+    <span class="k">if</span> <span class="n">repo_created</span> <span class="ow">and</span> <span class="n">set_pypi_secret</span> <span class="ow">and</span> <span class="n">populate</span><span class="p">:</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="n">ensure_pypi_secret</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">resolved_org</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">pyproject</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">"pyproject.toml"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PyPI secret: </span><span class="si">{</span><span class="n">outcome</span><span class="p">[</span><span class="s1">'message'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"set"</span><span class="p">:</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"pypi_secret_set"</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"no_token"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">,</span> <span class="s2">"no_pyproject"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"pypi_secret_</span><span class="si">{</span><span class="n">outcome</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"path"</span><span class="p">:</span> <span class="n">pkg_dir</span><span class="p">,</span>
@@ -878,7 +1034,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=8db70305"></script>
+</div><script src="../../_static/documentation_options.js?v=24f77763"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
