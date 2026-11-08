@@ -225,7 +225,24 @@ After the main setup, offer (don't force) these extras:
 7. **Enable GitHub Discussions**: **Do this automatically** unless the user
    explicitly asked not to. See the procedure below.
 
-8. **Ensure the `manual-task` label exists**: **Do this automatically.** GitHub
+8. **Set the `PYPI_PASSWORD` secret, or the first merge's publish job fails.** **Do this
+   automatically** for a wads-managed repo (publishing is on by default). The reusable
+   workflow's "Resolve PyPI token" step fails with `Required CI values are missing` when the
+   repo (or its org) has no `PYPI_PASSWORD`; a new personal repo has none. Take the value
+   from the local `~/.pypirc` (`[pypi]`, `username = __token__`) and pipe it, never print it:
+   ```bash
+   python - <<'PY' | gh secret set PYPI_PASSWORD --repo ORG/REPO
+   import configparser, os, sys
+   c = configparser.ConfigParser(); c.read(os.path.expanduser('~/.pypirc'))
+   tok = c['pypi']['password'].strip(); assert tok.startswith('pypi-'), 'not an API token'
+   sys.stdout.write(tok)
+   PY
+   ```
+   Org-owned repos (`i2mint`, …) usually inherit an org-level secret; check with
+   `gh secret list --repo ORG/REPO` first. If the first publish already failed, set the
+   secret and `gh run rerun <run-id> --failed`.
+
+9. **Ensure the `manual-task` label exists**: **Do this automatically.** GitHub
    has no default-labels feature for personal accounts, so each new repo needs
    the label created explicitly. It marks issues that are blocked on a human —
    an agent files one instead of burying the blocker in a message nobody
