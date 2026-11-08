@@ -219,6 +219,214 @@ class TestCreateMiscDocs:
         assert (docs_dir / "research.md").read_text() == "existing content"
 
 
+class TestEnsurePypiSecret:
+    """``ensure_pypi_secret`` (issue #205). Fake pypirc files only; ``gh`` is faked."""
+
+    FAKE = "pypi-fake-token-for-tests"
+
+    @pytest.fixture
+    def gh(self, monkeypatch):
+        """Fake ``subprocess.run`` for ``gh api`` / ``gh secret set``; records calls.
+
+        ``repo_secrets`` / ``org_secrets``: names listed, or None to make that call fail.
+        ``owner``: the repo owner's type.
+        """
+        import subprocess
+
+        class Gh:
+            calls: list = []
+            repo_secrets: list | None = []
+            org_secrets: list | None = []
+            owner = "User"
+
+        def fake_run(cmd, **kw):
+            Gh.calls.append((list(cmd), kw.get("input")))
+            if cmd[:2] == ["gh", "api"]:
+                endpoint = cmd[2]
+                if endpoint.endswith("/actions/organization-secrets"):
+                    names = Gh.org_secrets
+                elif endpoint.endswith("/actions/secrets"):
+                    names = Gh.repo_secrets
+                else:
+                    names = [Gh.owner]
+                if names is None:
+                    raise subprocess.CalledProcessError(1, cmd)
+                out = "\n".join(names)
+                return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout=b"", stderr=b"")
+
+        Gh.calls = []
+        Gh.repo_secrets, Gh.org_secrets, Gh.owner = [], [], "User"
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        return Gh
+
+    @pytest.fixture
+    def project(self, tmp_path):
+        def make(enabled=True):
+            pp = tmp_path / "pyproject.toml"
+            pp.write_text(
+                '[project]\nname = "x"\nversion = "0.0.1"\n'
+                f"[tool.wads.ci.publish]\nenabled = {str(enabled).lower()}\n"
+            )
+            return pp
+
+        return make
+
+    @pytest.fixture
+    def pypirc(self, tmp_path):
+        rc = tmp_path / ".pypirc"
+        rc.write_text(f"[pypi]\nusername = __token__\npassword = {self.FAKE}\n")
+        return rc
+
+    def _sets(self, gh):
+        return [c for c in gh.calls if c[0][:3] == ["gh", "secret", "set"]]
+
+    def test_sets_secret_from_pypirc_via_stdin(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "set"
+        (cmd, stdin), = self._sets(gh)
+        assert cmd == ["gh", "secret", "set", "PYPI_PASSWORD", "--repo", "me/pkg"]
+        assert stdin == self.FAKE.encode()
+        assert all(self.FAKE not in " ".join(c) for c, _ in gh.calls)
+        assert self.FAKE not in repr(out)
+
+    def test_env_beats_pypirc(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        ensure_pypi_secret(
+            "me/pkg", pyproject=project(), environ={"PYPI_PASSWORD": "pypi-env"}, pypirc=pypirc
+        )
+        assert self._sets(gh)[0][1] == b"pypi-env"
+
+    def test_existing_repo_secret_is_left_alone(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.repo_secrets = ["pypi_password"]  # GitHub names are case-insensitive
+        out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "already_present"
+        assert not self._sets(gh)
+
+    def test_org_secret_visible_to_repo_is_left_alone(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner, gh.org_secrets = "Organization", ["PYPI_PASSWORD"]
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "already_present"
+        assert not self._sets(gh)
+
+    def test_org_secret_lookup_failure_never_sets(self, gh, project, pypirc):
+        """An org member's 403 must not be read as 'no org secret' (it would shadow it)."""
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner, gh.org_secrets = "Organization", None
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "unknown"
+        assert not self._sets(gh)
+
+    def test_repo_secret_lookup_failure_never_sets(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.repo_secrets = None
+        out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "unknown"
+        assert not self._sets(gh)
+
+    def test_org_repo_without_org_secret_gets_one(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        gh.owner = "Organization"
+        out = ensure_pypi_secret("org/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "set"
+
+    def test_malformed_ci_table_does_not_raise(self, gh, tmp_path, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        pp = tmp_path / "pyproject.toml"
+        pp.write_text('[project]\nname = "x"\n[tool.wads.ci]\npublish = true\n')
+        out = ensure_pypi_secret("me/pkg", pyproject=pp, environ={}, pypirc=pypirc)
+        assert out["status"] == "no_pyproject"
+
+    def test_publish_disabled_does_nothing(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        out = ensure_pypi_secret(
+            "me/pkg", pyproject=project(enabled=False), environ={}, pypirc=pypirc
+        )
+        assert out["status"] == "publish_disabled"
+        assert not gh.calls
+
+    def test_no_token_gives_remedy_and_sets_nothing(self, gh, project, tmp_path):
+        from wads.project_setup import ensure_pypi_secret
+
+        out = ensure_pypi_secret(
+            "me/pkg", pyproject=project(), environ={}, pypirc=tmp_path / "missing"
+        )
+        assert out["status"] == "no_token"
+        assert "wads-secrets add PYPI_PASSWORD" in out["message"]
+        assert not self._sets(gh)
+
+    def test_missing_pyproject(self, gh, tmp_path):
+        from wads.project_setup import ensure_pypi_secret
+
+        out = ensure_pypi_secret("me/pkg", pyproject=tmp_path / "nope.toml")
+        assert out["status"] == "no_pyproject"
+
+    def test_gh_set_failure_is_reported_without_the_value(self, gh, project, pypirc):
+        from wads.project_setup import ensure_pypi_secret
+
+        with patch("wads.secrets_cli.set_github_secret", return_value=False):
+            out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "failed"
+        with patch("wads.secrets_cli.set_github_secret", side_effect=FileNotFoundError(self.FAKE)):
+            out = ensure_pypi_secret("me/pkg", pyproject=project(), environ={}, pypirc=pypirc)
+        assert out["status"] == "failed"
+        assert self.FAKE not in repr(out)
+
+
+class TestSetupProjectPypiSecret:
+    def _run(self, tmp_path, outcome, **kw):
+        from wads import project_setup as ps
+
+        with (
+            patch.object(ps, "repo_exists", return_value=False),
+            patch.object(ps, "create_github_repo"),
+            patch("wads.populate.populate_pkg_dir"),
+            patch.object(ps, "ensure_pypi_secret", return_value=outcome) as ens,
+        ):
+            res = ps.setup_project(
+                "pkg", org="me", proj_rootdir=str(tmp_path / "pkg"), verbose=False, **kw
+            )
+        return res, ens
+
+    def test_step_recorded_when_set(self, tmp_path):
+        res, ens = self._run(tmp_path, {"status": "set", "message": "ok"})
+        assert "pypi_secret_set" in res["steps_completed"]
+        assert ens.call_args.args[0] == "me/pkg"
+
+    def test_warning_when_no_token(self, tmp_path):
+        res, _ = self._run(tmp_path, {"status": "no_token", "message": "remedy"})
+        assert "pypi_secret_no_token" in res["warnings"]
+
+    def test_pre_existing_repo_is_left_alone(self, tmp_path):
+        from wads import project_setup as ps
+
+        with (
+            patch.object(ps, "repo_exists", return_value=True),
+            patch("wads.populate.populate_pkg_dir"),
+            patch.object(ps, "ensure_pypi_secret") as ens,
+        ):
+            ps.setup_project("pkg", org="me", proj_rootdir=str(tmp_path / "pkg"), verbose=False)
+        ens.assert_not_called()
+
+    def test_opt_out_and_no_repo(self, tmp_path):
+        _, ens = self._run(tmp_path, {"status": "set", "message": ""}, set_pypi_secret=False)
+        ens.assert_not_called()
+        _, ens = self._run(tmp_path, {"status": "set", "message": ""}, create_repo=False)
+        ens.assert_not_called()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
