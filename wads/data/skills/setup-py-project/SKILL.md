@@ -225,8 +225,14 @@ After the main setup, offer (don't force) these extras:
 7. **Enable GitHub Discussions**: **Do this automatically** unless the user
    explicitly asked not to. See the procedure below.
 
-8. **Set the `PYPI_PASSWORD` secret, or the first merge's publish job fails.** **Do this
-   automatically** for a wads-managed repo (publishing is on by default). The reusable
+8. **Set the `PYPI_PASSWORD` secret, or the first merge's publish job fails.**
+   `setup_project(create_repo=True)` now does this itself (`ensure_pypi_secret`): when
+   publishing is enabled and neither the repo nor its owner has the secret, it sets it from
+   `$PYPI_PASSWORD`, `$UV_PUBLISH_TOKEN` or `~/.pypirc` `[pypi]`, via stdin, and says so;
+   with no token it warns (`pypi_secret_no_token`) and you do the manual step below
+   (`wads-secrets add PYPI_PASSWORD` is the same thing). Pass `set_pypi_secret=False` to opt
+   out. **Do the manual step automatically** when `setup_project` was not used (or
+   `create_repo=False`) for a wads-managed repo (publishing is on by default). The reusable
    workflow's "Resolve PyPI token" step fails with `Required CI values are missing` when the
    repo (or its org) has no `PYPI_PASSWORD`; a new personal repo has none. Take the value
    from the local `~/.pypirc` (`[pypi]`, `username = __token__`) and pipe it, never print it:

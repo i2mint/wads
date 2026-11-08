@@ -329,6 +329,101 @@ def create_github_repo(
 
 
 # ---------------------------------------------------------------------------
+# PyPI publish secret
+# ---------------------------------------------------------------------------
+
+PYPI_SECRET_NAME = "PYPI_PASSWORD"
+
+
+def _github_secret_names(args: Iterable[str]) -> set[str] | None:
+    """Names (never values) listed by ``gh secret list <args>``; None if it failed.
+
+    A failure (no access, or ``--org`` on a personal account) is "unknown", not
+    "absent": callers must not treat it as proof that a secret is missing.
+    """
+    import json
+
+    try:
+        out = subprocess.run(
+            ["gh", "secret", "list", *args, "--json", "name"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        return {row["name"] for row in json.loads(out or "[]")}
+    except (subprocess.CalledProcessError, FileNotFoundError, ValueError, KeyError):
+        return None
+
+
+def ensure_pypi_secret(
+    repo: str,
+    *,
+    pyproject: str | Path,
+    environ=None,
+    pypirc=None,
+    secret_name: str = PYPI_SECRET_NAME,
+) -> dict:
+    """Give ``repo`` a ``PYPI_PASSWORD`` Actions secret when its CI will need one.
+
+    Org repos usually inherit an org secret; personal ones do not, and the first
+    merge's publish job then fails with "Required CI values are missing" (#205).
+    The secret is set only if ``[tool.wads.ci.publish].enabled`` is true in
+    ``pyproject`` and neither the repo nor its owner already has one. The token
+    comes from :func:`wads.ci_local.resolve_pypi_token` (``$PYPI_PASSWORD``,
+    ``$UV_PUBLISH_TOKEN``, then ``~/.pypirc`` ``[pypi]``) and reaches ``gh`` on
+    stdin via :func:`wads.secrets_cli.set_github_secret`. It is never returned,
+    printed or put in a message.
+
+    Returns ``{"status": ..., "message": ...}``; ``status`` is one of ``set``,
+    ``already_present``, ``publish_disabled``, ``no_token``, ``no_pyproject``,
+    ``failed``. ``message`` is a one-line account (the remedy, when not ``set``).
+    """
+    from wads.ci_config import CIConfig
+    from wads.ci_local import resolve_pypi_token
+    from wads.secrets_cli import set_github_secret
+
+    remedy = f"set it with: wads-secrets add {secret_name}"
+    try:
+        publish_enabled = CIConfig.from_file(pyproject).publish_enabled
+    except (OSError, ValueError, KeyError):
+        return {
+            "status": "no_pyproject",
+            "message": f"no readable pyproject.toml; {remedy}",
+        }
+    if not publish_enabled:
+        return {
+            "status": "publish_disabled",
+            "message": "publishing is disabled in pyproject.toml",
+        }
+
+    owner = repo.split("/", 1)[0]
+    present = _github_secret_names(["--repo", repo]) or set()
+    present |= _github_secret_names(["--org", owner]) or set()
+    if secret_name.upper() in {n.upper() for n in present}:
+        return {
+            "status": "already_present",
+            "message": f"{secret_name} already set for {repo}",
+        }
+
+    token, source = resolve_pypi_token(environ=environ, pypirc=pypirc)
+    if not token:
+        return {
+            "status": "no_token",
+            "message": (
+                f"{secret_name} is not set on {repo} and no PyPI token was found "
+                f"(${secret_name}, $UV_PUBLISH_TOKEN, ~/.pypirc [pypi]); the first "
+                f"publish will fail. {remedy}"
+            ),
+        }
+    if not set_github_secret(repo, secret_name, token):
+        return {
+            "status": "failed",
+            "message": f"gh could not set {secret_name} on {repo}; {remedy}",
+        }
+    return {"status": "set", "message": f"set {secret_name} on {repo} from {source}"}
+
+
+# ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
 
@@ -346,6 +441,7 @@ def setup_project(
     populate: bool = True,
     create_devdocs: bool = False,
     setup_opsward: bool = False,
+    set_pypi_secret: bool = True,
     verbose: bool = True,
 ) -> dict:
     """Orchestrate full project creation.
@@ -356,6 +452,10 @@ def setup_project(
     3. Populate project files (if populate)
     4. Create misc/docs/ (if create_devdocs)
     5. Run opsward generate (if setup_opsward and opsward is available)
+    6. Set the ``PYPI_PASSWORD`` Actions secret (if create_repo and set_pypi_secret
+       and publishing is enabled and neither the repo nor its owner has one); see
+       :func:`ensure_pypi_secret`. If no token is found, a warning with the
+       one-line remedy is returned and printed; project creation still succeeds.
 
     Returns a summary dict with keys: path, steps_completed, warnings.
     """
@@ -430,6 +530,17 @@ def setup_project(
         else:
             warnings.append("opsward_not_available")
             log("Opsward not available — skipping AI agent setup")
+
+    # 6. PyPI publish secret (personal repos do not inherit an org secret)
+    if create_repo and set_pypi_secret and populate:
+        outcome = ensure_pypi_secret(
+            f"{resolved_org}/{name}", pyproject=os.path.join(pkg_dir, "pyproject.toml")
+        )
+        log(f"PyPI secret: {outcome['message']}")
+        if outcome["status"] == "set":
+            steps.append("pypi_secret_set")
+        elif outcome["status"] in ("no_token", "failed", "no_pyproject"):
+            warnings.append(f"pypi_secret_{outcome['status']}")
 
     return {
         "path": pkg_dir,
