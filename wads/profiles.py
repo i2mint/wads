@@ -124,7 +124,7 @@ def frontend_context(
     package_manager: str = "npm",
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
-    license_text: Optional[str] = None,
+    license_file: Optional[tuple] = None,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -152,18 +152,36 @@ def frontend_context(
         # Monorepo-only context (ignored by single-package templates):
         "npm_workspace_glob": workspace_glob,
         "example_package_name": example_package_name or (package_name or project_name),
-        # The repo's root LICENSE, copied next to each published package.json
-        # (npm packs a LICENSE found there; the root one is outside the tarball).
-        "license_text": license_text,
+        # The repo's root licence as ``(file name, text)``, copied next to each
+        # published package.json (npm packs a LICENSE found there; the root one
+        # is outside the tarball). ``None`` when the repo has none.
+        "license_file": license_file,
     }
 
 
-def _read_text_if_file(path: str) -> Optional[str]:
-    """The text of ``path``, or ``None`` when it is not a file."""
-    if not os.path.isfile(path):
-        return None
-    with open(path, encoding="utf-8") as f:
-        return f.read()
+#: Root licence file names a frontend component copies, in order of preference.
+LICENSE_FILENAMES = ("LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "COPYING")
+
+
+def find_license_file(
+    repo_dir: str, *, names: tuple = LICENSE_FILENAMES
+) -> Optional[tuple]:
+    """``(file name, text)`` of the repo's root licence, or ``None`` if it has none.
+
+    >>> import tempfile
+    >>> d = tempfile.mkdtemp()
+    >>> find_license_file(d) is None
+    True
+    >>> _ = open(os.path.join(d, "LICENSE.md"), "w").write("MIT")
+    >>> find_license_file(d)
+    ('LICENSE.md', 'MIT')
+    """
+    for name in names:
+        path = os.path.join(repo_dir, name)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as f:
+                return name, f.read()
+    return None
 
 
 def _src(tpl_path: str) -> FilesystemTemplateSource:
@@ -179,19 +197,17 @@ def _copy(target: str, tpl_path: str) -> Artifact:
     return Artifact.from_copy(target, os.path.basename(tpl_path), _src(tpl_path))
 
 
-#: The file a frontend component copies from the repo root into its package dir.
-LICENSE_FILENAME = "LICENSE"
-
-
-def _license_artifact(package_dir: str) -> Artifact:
-    """Copy the repo's root LICENSE into ``package_dir`` (skipped when there is none).
+def _license_artifacts(package_dir: str, ctx: Mapping) -> list:
+    """Copy the repo's root licence into ``package_dir`` (nothing when there is none).
 
     npm always packs a LICENSE that sits next to ``package.json``, but a component
     in a subdir does not see the repo root's, so its tarball shipped without one.
+    The copy is derived: :func:`apply_frontend` rewrites it whenever it differs.
     """
-    return Artifact(
-        f"{package_dir}/{LICENSE_FILENAME}", lambda ctx: ctx.get("license_text")
-    )
+    if not ctx.get("license_file"):
+        return []
+    name, text = ctx["license_file"]
+    return [Artifact(f"{package_dir}/{name}", lambda _ctx: text)]
 
 
 def _stub_artifact(subdir: str) -> Artifact:
@@ -214,7 +230,7 @@ def _js_artifacts(ctx: Mapping) -> list:
     subdir = ctx["npm_subdir"]
     return [
         _jinja(f"{subdir}/package.json", package_json_tpl_path),
-        _license_artifact(subdir),
+        *_license_artifacts(subdir, ctx),
         _stub_artifact(subdir),
     ]
 
@@ -226,7 +242,7 @@ def _ts_artifacts(ctx: Mapping) -> list:
         _jinja(f"{subdir}/package.json", package_json_ts_tpl_path),
         _copy(f"{subdir}/tsconfig.json", tsconfig_tpl_path),
         _copy(f"{subdir}/tsconfig.test.json", tsconfig_test_tpl_path),
-        _license_artifact(subdir),
+        *_license_artifacts(subdir, ctx),
         _copy(f"{subdir}/src/index.ts", ts_index_tpl_path),
         # Ship a passing starter test so the `test` step is green out of the
         # box: `vitest run` exits 1 when it finds *no* test files (issue #41).
@@ -252,7 +268,7 @@ def _ts_monorepo_artifacts(ctx: Mapping) -> list:
         _jinja(f"{pkg_dir}/package.json", package_json_monorepo_pkg_tpl_path),
         _copy(f"{pkg_dir}/tsconfig.json", tsconfig_monorepo_pkg_tpl_path),
         _copy(f"{pkg_dir}/tsconfig.test.json", tsconfig_test_tpl_path),
-        _license_artifact(pkg_dir),
+        *_license_artifacts(pkg_dir, ctx),
         _copy(f"{pkg_dir}/src/index.ts", ts_index_tpl_path),
         # Passing starter test so `turbo run test` is green out of the box (#41).
         _copy(f"{pkg_dir}/src/index.test.ts", ts_index_test_tpl_path),
@@ -371,16 +387,33 @@ def apply_frontend(
         package_manager=package_manager,
         workspace_glob=workspace_glob,
         example_package_name=example_package_name,
-        license_text=_read_text_if_file(os.path.join(pkg_dir, LICENSE_FILENAME)),
+        license_file=find_license_file(pkg_dir),
     )
+    artifacts = prof.artifacts(context)
     return generate(
         pkg_dir,
-        prof.artifacts(context),
+        artifacts,
         context,
-        overwrite=overwrite,
+        overwrite=_with_stale_license_copies(pkg_dir, artifacts, context, overwrite),
         on_add=on_add,
         on_skip=on_skip,
     )
+
+
+def _with_stale_license_copies(pkg_dir, artifacts, context, overwrite) -> set:
+    """``overwrite`` plus every package licence copy that no longer matches the root."""
+    overwrite = {overwrite} if isinstance(overwrite, str) else set(overwrite)
+    if not context.get("license_file"):
+        return overwrite
+    name, text = context["license_file"]
+    for art in artifacts:
+        if os.path.basename(art.target) == name:
+            path = os.path.join(pkg_dir, art.target)
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as f:
+                    if f.read() != text:
+                        overwrite.add(art.target)
+    return overwrite
 
 
 # --- back-compat shims (the pre-#39 npm-overlay surface) -----------------------

@@ -102,7 +102,7 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 | `ts` | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest) | `ts/` | single-package `npm-ci.yml` |
 | `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core` | `ts/` | matrixed `npm-ci-monorepo.yml` |
 
-Each publishable package also gets a copy of the repo's root `LICENSE` (npm packs the one beside `package.json`). The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
+The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo's root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
 
 ```bash
 # A single TypeScript component:

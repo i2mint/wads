@@ -195,18 +195,34 @@ def test_ts_tests_typechecked_apart_from_library(tmp_path, profile, pkg_dir):
 )
 def test_root_license_lands_in_the_published_package_dir(tmp_path, profile, pkg_dir):
     """npm packs the LICENSE beside package.json; the root one is outside it (#215)."""
+    result = apply_frontend(str(tmp_path), profile=profile, project_name="widget")
+    assert f"{pkg_dir}/LICENSE" not in result.added  # no root licence, no copy
+
     (tmp_path / "LICENSE").write_text("MIT License\n\nCopyright (c) someone\n")
     result = apply_frontend(str(tmp_path), profile=profile, project_name="widget")
-    assert f"{pkg_dir}/LICENSE" in result.added
+    assert result.added == [f"{pkg_dir}/LICENSE"]  # everything else already there
     assert (tmp_path / pkg_dir / "LICENSE").read_text() == (
         tmp_path / "LICENSE"
     ).read_text()
 
 
-def test_no_root_license_writes_none(tmp_path):
+def test_package_license_follows_a_changed_root_license(tmp_path):
+    """The copy is derived: a re-run rewrites it, never ships the old licence."""
+    (tmp_path / "LICENSE").write_text("MIT License\n")
+    apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    (tmp_path / "LICENSE").write_text("Apache License 2.0\n")
     result = apply_frontend(str(tmp_path), profile="ts", project_name="widget")
-    assert "ts/LICENSE" not in result.added
-    assert not (tmp_path / "ts" / "LICENSE").exists()
+    assert "ts/LICENSE" in result.added
+    assert (tmp_path / "ts" / "LICENSE").read_text() == "Apache License 2.0\n"
+    # an unchanged copy is left alone
+    result = apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    assert "ts/LICENSE" in result.skipped
+
+
+def test_root_license_under_another_name_is_copied_as_is(tmp_path):
+    (tmp_path / "LICENSE.md").write_text("MIT\n")
+    result = apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    assert "ts/LICENSE.md" in result.added
 
 
 # --- ts-monorepo profile -------------------------------------------------------
