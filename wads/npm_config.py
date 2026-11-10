@@ -20,6 +20,11 @@ so wads namespaces its config under a top-level ``"wads"`` key:
 The reusable workflow (``i2mint/wads/.github/workflows/npm-ci.yml``) parses the
 same block in CI via ``node``; this class is the parsing/validation surface used
 from Python (tests, ``populate`` validation, inspection tooling).
+
+:func:`npm_component_dirs` finds a repo's npm components (the subdirs whose
+``package.json`` carries a ``wads.ci`` key), and :func:`npm_validate_commands` says
+what the validate job of ``npm-ci.yml`` (or ``npm-ci-monorepo.yml``, for a pnpm
+workspace root) runs in one of them: ``wads ci-local`` runs exactly that.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Union
 
 #: Defaults applied when a field is absent from ``wads.ci``.
@@ -44,6 +50,24 @@ NPM_CI_DEFAULTS = {
     "testCommand": "npm test --if-present",
     "buildCommand": "npm run build --if-present",
 }
+
+#: Command defaults of ``npm-ci-monorepo.yml``, used for a pnpm workspace root.
+NPM_MONOREPO_COMMAND_DEFAULTS = {
+    "lintCommand": "pnpm turbo run lint",
+    "testCommand": "pnpm turbo run test",
+    "buildCommand": "pnpm turbo run build",
+}
+
+#: The files the CI workflows look for in a component's directory.
+PACKAGE_JSON = "package.json"
+PNPM_LOCKFILE = "pnpm-lock.yaml"
+#: Marks a pnpm workspace root, the component kind ``npm-ci-monorepo.yml`` drives.
+PNPM_WORKSPACE_FILE = "pnpm-workspace.yaml"
+
+#: Directories never searched for components (besides hidden ones).
+NPM_COMPONENT_SKIP_DIRS = frozenset({"node_modules"})
+#: How deep below the repo root a component named by its ``wads.ci.subdir`` may live.
+DFLT_NPM_COMPONENT_MAX_DEPTH = 3
 
 #: Package managers the reusable npm CI workflow knows how to drive.
 SUPPORTED_PACKAGE_MANAGERS = ("npm", "pnpm")
@@ -207,3 +231,135 @@ class NpmCIConfig:
                 f"string, got {marker!r}"
             )
         return marker
+
+
+# --------------------------------------------------------------------------------------
+# Components in a (polyglot) repo, and what CI validates in each
+
+
+def _read_package_json(path: Path):
+    """The parsed ``package.json`` at ``path``, or ``None`` if absent or not JSON."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _wads_ci_block(data):
+    """``data["wads"]["ci"]`` when ``data`` declares that key (even empty), else ``None``."""
+    if not isinstance(data, dict):
+        return None
+    wads = data.get("wads")
+    if isinstance(wads, dict) and isinstance(wads.get("ci"), dict):
+        return wads["ci"]
+    return None
+
+
+def npm_component_dirs(
+    repo_root: Union[str, Path] = ".",
+    *,
+    max_depth: int = DFLT_NPM_COMPONENT_MAX_DEPTH,
+) -> list:
+    """The repo's npm components: repo-relative POSIX subdirs, sorted.
+
+    A component is a directory whose ``package.json`` has a ``wads.ci`` key: any
+    direct subdirectory of ``repo_root``, or a deeper one (down to ``max_depth``
+    levels) whose ``wads.ci.subdir`` names its own location, as ``populate
+    --frontend`` writes it for a nested subdir. ``node_modules`` and hidden
+    directories are never searched, and the members of a pnpm workspace (no
+    ``wads.ci`` key of their own) are not components: their workspace root is.
+
+    >>> import tempfile
+    >>> root = Path(tempfile.mkdtemp())
+    >>> for sub, data in [
+    ...     ("ts", {"wads": {"ci": {"subdir": "ts"}}}),
+    ...     ("docs", {"name": "no-wads-ci"}),
+    ...     ("web/app", {"wads": {"ci": {"subdir": "web/app"}}}),
+    ...     ("web/other", {"wads": {"ci": {"subdir": "elsewhere"}}}),
+    ... ]:
+    ...     (root / sub).mkdir(parents=True)
+    ...     _ = (root / sub / "package.json").write_text(json.dumps(data))
+    >>> npm_component_dirs(root)
+    ['ts', 'web/app']
+    """
+    root = Path(repo_root)
+    found = []
+
+    def walk(directory: Path, depth: int):
+        try:
+            children = sorted(p for p in directory.iterdir() if p.is_dir())
+        except OSError:
+            return
+        for child in children:
+            if child.name.startswith(".") or child.name in NPM_COMPONENT_SKIP_DIRS:
+                continue
+            rel = child.relative_to(root).as_posix()
+            ci = _wads_ci_block(_read_package_json(child / PACKAGE_JSON))
+            if ci is not None and (depth == 1 or ci.get("subdir") == rel):
+                found.append(rel)
+            if depth < max_depth:
+                walk(child, depth + 1)
+
+    walk(root, 1)
+    return sorted(found)
+
+
+@dataclass(frozen=True)
+class NpmValidateCommands:
+    """The shell commands the npm validate job runs in a component, in order."""
+
+    package_manager: str
+    install: str
+    lint: str
+    test: str
+    build: str
+    monorepo: bool = False
+
+
+def npm_validate_commands(package_dir: Union[str, Path]) -> NpmValidateCommands:
+    """What the validate job of the npm CI workflow runs in ``package_dir``.
+
+    Mirrors ``npm-ci.yml``: the package manager is ``wads.ci.packageManager`` when
+    set, else pnpm when a ``pnpm-lock.yaml`` is present, else npm; pnpm installs with
+    a frozen lockfile when one is committed and without one otherwise, npm runs
+    ``npm ci || npm install``. A pnpm workspace root (``pnpm-workspace.yaml``
+    present) is validated as ``npm-ci-monorepo.yml`` does it: always pnpm, with
+    turbo command defaults.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = (d / "package.json").write_text('{"wads": {"ci": {"testCommand": "vitest"}}}')
+    >>> npm_validate_commands(d)  # doctest: +NORMALIZE_WHITESPACE
+    NpmValidateCommands(package_manager='npm', install='npm ci || npm install',
+        lint='npm run lint --if-present', test='vitest',
+        build='npm run build --if-present', monorepo=False)
+    >>> _ = (d / "pnpm-lock.yaml").write_text("")
+    >>> npm_validate_commands(d).install
+    'pnpm install --frozen-lockfile'
+    """
+    directory = Path(package_dir)
+    ci = _wads_ci_block(_read_package_json(directory / PACKAGE_JSON)) or {}
+    monorepo = (directory / PNPM_WORKSPACE_FILE).is_file()
+    has_pnpm_lock = (directory / PNPM_LOCKFILE).is_file()
+    if monorepo:
+        manager = "pnpm"
+        defaults = {**NPM_CI_DEFAULTS, **NPM_MONOREPO_COMMAND_DEFAULTS}
+    else:
+        declared = ci.get("packageManager") or ("pnpm" if has_pnpm_lock else "npm")
+        # The workflow's install step takes the npm branch for anything but pnpm.
+        manager = "pnpm" if declared == "pnpm" else "npm"
+        defaults = NPM_CI_DEFAULTS
+    if manager == "pnpm":
+        frozen = "--frozen-lockfile" if has_pnpm_lock else "--no-frozen-lockfile"
+        install = f"pnpm install {frozen}"
+    else:
+        install = "npm ci || npm install"
+    # `value || default`, as the workflows' node parser reads it: empty means unset.
+    return NpmValidateCommands(
+        package_manager=manager,
+        install=install,
+        lint=ci.get("lintCommand") or defaults["lintCommand"],
+        test=ci.get("testCommand") or defaults["testCommand"],
+        build=ci.get("buildCommand") or defaults["buildCommand"],
+        monorepo=monorepo,
+    )

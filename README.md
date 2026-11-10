@@ -355,10 +355,12 @@ wads-migrate ci-on-demand --commit    # apply and commit; then `git push`
 Do locally what CI would have done, from the same `[tool.wads.ci]` config:
 
 ```bash
-wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), build
+wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), npm components, build
 wads ci-local --dry-run   # print the plan, run nothing
 wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
 ```
+
+In a polyglot repo, every subdir whose `package.json` has a `wads.ci` key (as `populate --frontend` writes it) also gets what the npm CI workflow's validate job runs, in that subdir: the install (`npm ci || npm install`, or `pnpm install`, frozen when `pnpm-lock.yaml` is committed), then `lintCommand`, `testCommand`, `buildCommand`. Without node, bash or the package manager on `PATH`, those steps are skipped, not failed; `--publish` leaves them out, as CI's PyPI publish does not wait on npm CI.
 
 `--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages. Your shell environment reaches the steps, except PyPI credentials (only the upload sees them) the machine's install pins (`UV_CONSTRAINT`, `UV_BUILD_CONSTRAINT`, `UV_OVERRIDE`, `PIP_CONSTRAINT`), and `PYTHONSAFEPATH` / `PYTHONPATH`, none of which hosted CI has; so fleet packages resolve from PyPI as they do in CI, ci-local works from a git worktree, and `python -m pytest` puts the repo on `sys.path` as in CI. Each leg's tests run with its venv activated (`VIRTUAL_ENV`, its `bin` first on `PATH`), as `run-tests-uv` does.
 
