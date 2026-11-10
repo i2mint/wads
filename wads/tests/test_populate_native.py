@@ -183,9 +183,16 @@ def test_combines_with_frontend_ts_as_two_independent_overlays(tmp_path, no_carg
     # Every file is the one its own overlay writes, pyproject.toml included (maturin).
     for rel, content in native_files.items():
         assert both_files[rel] == content, rel
-    for rel in set(ts_files) - set(native_files):
+    stub = ".github/workflows/npm-ci-ts.yml"
+    for rel in set(ts_files) - set(native_files) - {stub}:
         assert both_files[rel] == ts_files[rel], rel
     assert any(rel.startswith("ts/") for rel in both_files)
+    # The one coupling, by design (#209): the npm component's CI also watches the
+    # Rust core it may be built from, so the stub gains exactly that path.
+    added = set(both_files[stub].decode().splitlines()) - set(
+        ts_files[stub].decode().splitlines()
+    )
+    assert added and all("rust/**" in line for line in added), added
 
 
 # --- an existing package ------------------------------------------------------------
