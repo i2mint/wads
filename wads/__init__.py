@@ -62,6 +62,10 @@ tsconfig_monorepo_pkg_tpl_path = rjoin(data_dir, "tsconfig_monorepo_pkg_tpl.json
 tests_init_tpl_path = rjoin(data_dir, "tests_init_tpl.py")
 test_smoke_tpl_path = rjoin(data_dir, "test_smoke_tpl.py")
 tests_util_tpl_path = rjoin(data_dir, "tests_util_tpl.py")
+# Native-core templates (opt-in `populate --native <backend>`, #214): one folder per
+# backend holding the files at their target paths (`tmpl_pkg` / `tmpl-pkg` tokens), plus
+# `<backend>_pyproject.toml`, the pyproject tables that backend needs.
+native_tpl_dir = rjoin(data_dir, "native")
 bug_report_tpl_path = rjoin(data_dir, "bug_report_tpl.md")
 feature_request_tpl_path = rjoin(data_dir, "feature_request_tpl.md")
 pull_request_template_tpl_path = rjoin(data_dir, "pull_request_template_tpl.md")

@@ -16,6 +16,8 @@ This module hosts two opt-in overlays added *on top of* an existing project:
   alias for ``--frontend js``). Profiles are extensible through
   :func:`register_frontend_profile`.
 - The **tests-folder overlay** (issue #4): scaffolds a ``tests/`` package.
+- The **native-core registry** (issue #214): a Rust core built by maturin behind
+  a Python facade (``populate --native maturin``); see :func:`apply_native`.
 
 Nothing here runs by default; the Python ``populate`` path and the
 ``name/name/`` root layout are untouched.
@@ -573,3 +575,356 @@ def apply_tests_overlay(
         on_add=on_add,
         on_skip=on_skip,
     )
+
+
+# --------------------------------------------------------------------------------------
+# Native-core overlay (issue #214): a Python package whose hot path is a compiled Rust
+# extension. The layout is the one wads' native CI path builds (issue #166,
+# ``wads.native_build``): a Cargo workspace at the root (``rust/core`` pure Rust,
+# ``rust/py`` the PyO3 binding cdylib that maturin builds as ``<pkg>._core``), a pinned
+# ``rust-toolchain.toml``, abi3 wheels, and ``[tool.maturin]`` in pyproject.toml.
+#
+# A backend's templates are a folder holding the files at their target paths, named with
+# the tokens ``tmpl_pkg`` (import name, Rust identifiers) and ``tmpl-pkg`` (Cargo package
+# names), so the folder is itself a buildable project. pyproject.toml is not in it: the
+# tables a backend needs are a fragment (``<backend>_pyproject.toml``) that is merged into
+# a NEW pyproject and only *reported* for an existing one.
+# --------------------------------------------------------------------------------------
+
+import copy
+import re
+import shutil
+import subprocess
+import warnings
+
+from wads import native_tpl_dir
+from wads.templating import apply_placeholders
+
+_SNAKE_TOKEN, _KEBAB_TOKEN = "tmpl_pkg", "tmpl-pkg"
+# Build and cache residue never copied out of a template folder.
+_RESIDUE_PARTS = {"__pycache__", "target", ".pytest_cache", ".hypothesis", ".venv"}
+_RESIDUE_SUFFIXES = (".pyc", ".so", ".pyd", ".dylib")
+_NATIVE_NAME_RE = re.compile(r"[a-z][a-z0-9_]*")
+
+
+@dataclass(frozen=True)
+class NativeProfile:
+    """A native (compiled-extension) backend that ``populate --native`` can scaffold.
+
+    :param name: registry key; also the backend name ``wads.native_build`` knows.
+    :param template_dir: folder of files written at their (token-substituted) paths.
+    :param pyproject_fragment: TOML file of the pyproject tables the backend needs.
+    :param gitignore_patterns: ``.gitignore`` entries the layout relies on (build output,
+        compiled modules an editable build drops into the package).
+    :param lockfile: lockfile the build needs (``--locked``), generated when missing.
+    :param lockfile_command: command generating ``lockfile``, run in the project root.
+    :param description: one-line human summary.
+    """
+
+    name: str
+    template_dir: str
+    pyproject_fragment: str
+    gitignore_patterns: tuple = ()
+    lockfile: str = ""
+    lockfile_command: tuple = ()
+    description: str = ""
+
+
+#: The native-backend registry. Extend it via :func:`register_native_profile`.
+NATIVE_PROFILES: dict = {}
+
+
+def register_native_profile(profile: NativeProfile) -> NativeProfile:
+    """Register (or override) a native profile by name. Returns the profile."""
+    NATIVE_PROFILES[profile.name] = profile
+    return profile
+
+
+def get_native_profile(name: str) -> NativeProfile:
+    """Look up a registered native profile, with an informative error if unknown."""
+    try:
+        return NATIVE_PROFILES[name]
+    except KeyError:
+        available = ", ".join(sorted(NATIVE_PROFILES)) or "(none registered)"
+        raise ValueError(
+            f"Unknown native backend {name!r}. Available: {available}."
+        ) from None
+
+
+register_native_profile(
+    NativeProfile(
+        name="maturin",
+        template_dir=os.path.join(native_tpl_dir, "maturin"),
+        pyproject_fragment=os.path.join(native_tpl_dir, "maturin_pyproject.toml"),
+        gitignore_patterns=("target", "*.so"),
+        lockfile="Cargo.lock",
+        lockfile_command=("cargo", "generate-lockfile", "--quiet"),
+        description="Rust core (rust/core) + PyO3 binding (rust/py) built by maturin.",
+    )
+)
+
+
+def native_names(project_name: str) -> dict:
+    """Map the template tokens to their values for ``project_name``.
+
+    The project name is the import name (``populate`` makes ``<name>/<name>/``), so it
+    must be a lowercase identifier; Cargo package names are its kebab-case form.
+
+    >>> native_names("fast_thing")
+    {'tmpl_pkg': 'fast_thing', 'tmpl-pkg': 'fast-thing'}
+    """
+    if not _NATIVE_NAME_RE.fullmatch(project_name):
+        raise ValueError(
+            f"A native package needs a lowercase importable name (letters, digits, '_', "
+            f"starting with a letter), got {project_name!r}: it becomes the Python import "
+            f"name, the extension module <name>._core and the Cargo crate names."
+        )
+    return {_SNAKE_TOKEN: project_name, _KEBAB_TOKEN: project_name.replace("_", "-")}
+
+
+def native_artifacts(backend: str, project_name: str) -> list:
+    """The :class:`Artifact` list a native backend writes for ``project_name``.
+
+    >>> sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:4]
+    ['.cargo/config.toml', 'Cargo.toml', 'clippy.toml', 'deny.toml']
+    """
+    profile = get_native_profile(backend)
+    names = native_names(project_name)
+    src = FilesystemTemplateSource(profile.template_dir)
+
+    def is_residue(rel: str) -> bool:
+        return bool(_RESIDUE_PARTS.intersection(rel.split("/"))) or rel.endswith(
+            _RESIDUE_SUFFIXES
+        )
+
+    return [
+        Artifact.from_placeholder(
+            apply_placeholders(rel, names), rel, src, placeholders=lambda ctx: ctx
+        )
+        for rel in sorted(src)
+        if not is_residue(rel)
+    ]
+
+
+def _load_toml_text(text: str) -> dict:
+    try:
+        import tomllib
+    except ImportError:  # Python < 3.11
+        import tomli as tomllib
+    return tomllib.loads(text)
+
+
+def native_pyproject_fragment(project_name: str, *, backend: str = "maturin") -> dict:
+    """The pyproject tables ``backend`` needs, for ``project_name``.
+
+    >>> frag = native_pyproject_fragment("fast_thing")
+    >>> frag["build-system"]["build-backend"], frag["tool"]["maturin"]["module-name"]
+    ('maturin', 'fast_thing._core')
+    """
+    profile = get_native_profile(backend)
+    with open(profile.pyproject_fragment, encoding="utf-8") as f:
+        text = f.read()
+    return _load_toml_text(apply_placeholders(text, native_names(project_name)))
+
+
+def _merge_into(dst: dict, src: dict) -> None:
+    """Merge ``src`` into ``dst``: tables recursively, lists gain missing items."""
+    for key, value in src.items():
+        have = dst.get(key)
+        if isinstance(value, dict) and isinstance(have, dict):
+            _merge_into(have, value)
+        elif isinstance(value, list) and isinstance(have, list):
+            have.extend(copy.deepcopy(v) for v in value if v not in have)
+        else:
+            dst[key] = copy.deepcopy(value)
+
+
+def merge_native_pyproject(pyproject: dict, fragment: dict) -> dict:
+    """A copy of ``pyproject`` with a native ``fragment`` merged in (for a NEW package).
+
+    ``[build-system]`` is replaced, and ``[tool.hatch]`` (hatchling-only settings) is
+    dropped with it; the other tables merge, lists gaining the items they lack.
+
+    >>> new = merge_native_pyproject(
+    ...     {"build-system": {"requires": ["hatchling"], "build-backend": "hatchling.build"},
+    ...      "project": {"optional-dependencies": {"dev": ["pytest"]}},
+    ...      "tool": {"hatch": {"build": {}}, "ruff": {}}},
+    ...     native_pyproject_fragment("fast_thing"),
+    ... )
+    >>> new["build-system"]["build-backend"], sorted(new["tool"])
+    ('maturin', ['maturin', 'ruff', 'uv', 'wads'])
+    >>> new["project"]["optional-dependencies"]["dev"]
+    ['pytest', 'hypothesis']
+    """
+    out = copy.deepcopy(pyproject)
+    out["build-system"] = copy.deepcopy(fragment["build-system"])
+    out.get("tool", {}).pop("hatch", None)
+    _merge_into(out, {k: v for k, v in fragment.items() if k != "build-system"})
+    return out
+
+
+def _missing_part(have: dict, want: dict) -> dict:
+    """The part of ``want`` that ``have`` lacks (for lists: the missing items)."""
+    out = {}
+    for key, value in want.items():
+        current = have.get(key) if isinstance(have, dict) else None
+        if isinstance(value, dict) and isinstance(current, dict):
+            sub = _missing_part(current, value)
+            if sub:
+                out[key] = sub
+        elif isinstance(value, list) and isinstance(current, list):
+            items = [v for v in value if v not in current]
+            if items:
+                out[key] = items
+        elif current != value:
+            out[key] = value
+    return out
+
+
+def native_pyproject_todo(
+    pyproject: dict, project_name: str, *, backend: str = "maturin"
+) -> str:
+    """What an EXISTING pyproject lacks for ``backend``, as TOML text ('' if nothing).
+
+    ``populate`` never rewrites an existing pyproject.toml; it reports this instead.
+    ``[build-system]`` is given whole (it replaces the old one); a list shows only the
+    items to add.
+
+    >>> print(native_pyproject_todo({}, "fast_thing"))  # doctest: +ELLIPSIS
+    # Replace [build-system]; add the rest (lists: append the items shown).
+    [build-system]
+    requires = [...]
+    build-backend = "maturin"
+    ...
+    module-name = "fast_thing._core"
+    ...
+    >>> pyproject = merge_native_pyproject({}, native_pyproject_fragment("fast_thing"))
+    >>> native_pyproject_todo(pyproject, "fast_thing")
+    ''
+    """
+    import tomli_w
+
+    fragment = native_pyproject_fragment(project_name, backend=backend)
+    missing = _missing_part(pyproject, fragment)
+    if not missing:
+        return ""
+    header = ["# Replace [build-system]; add the rest (lists: append the items shown)."]
+    if "build-system" in missing:
+        missing["build-system"] = fragment["build-system"]
+        if "hatch" in pyproject.get("tool", {}):
+            header.append(
+                "# Move [tool.hatch.*] include/exclude rules to [tool.maturin] "
+                "include/exclude."
+            )
+    # In the fragment's order, so [build-system] leads.
+    ordered = {k: missing[k] for k in fragment if k in missing}
+    return "\n".join(header) + "\n" + tomli_w.dumps(ordered)
+
+
+def _gitignore_todo(pkg_dir: str, patterns) -> list:
+    """The ``patterns`` the project's ``.gitignore`` lacks (``/x``, ``x/``, ``x`` agree)."""
+    try:
+        with open(os.path.join(pkg_dir, ".gitignore"), encoding="utf-8") as f:
+            lines = {line.strip().strip("/") for line in f}
+    except FileNotFoundError:
+        lines = set()
+    return [p for p in patterns if p.strip("/") not in lines]
+
+
+def _find_executable(name: str) -> Optional[str]:
+    """``name`` on PATH, else in ``~/.cargo/bin`` (rustup may not have edited PATH)."""
+    found = shutil.which(name)
+    if found:
+        return found
+    fallback = os.path.join(os.path.expanduser("~"), ".cargo", "bin", name)
+    return fallback if os.path.isfile(fallback) else None
+
+
+def _generate_lockfile(pkg_dir: str, profile: NativeProfile, *, timeout: float):
+    """Run the profile's lockfile command; ``None`` on success, else the reason."""
+    tool, *args = profile.lockfile_command
+    command = " ".join(profile.lockfile_command)
+    exe = _find_executable(tool)
+    if exe is None:
+        return (
+            f"{tool} not found: run `{command}` once it is installed, and commit "
+            f"{profile.lockfile} (CI builds with --locked)"
+        )
+    try:
+        proc = subprocess.run(
+            [exe, *args],
+            cwd=pkg_dir,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return f"`{command}` did not complete: {e}"
+    if proc.returncode != 0:
+        tail = (proc.stderr.strip().splitlines() or ["(no output)"])[-1]
+        return f"`{command}` failed: {tail}"
+    return None
+
+
+def _warn_attention(filename: str, reason: str) -> None:
+    warnings.warn(f"{filename}: {reason}", stacklevel=3)
+
+
+def apply_native(
+    pkg_dir: str,
+    *,
+    backend: str = "maturin",
+    project_name: str,
+    overwrite=(),
+    generate_lockfile: bool = True,
+    lockfile_timeout: float = 300,
+    on_add=None,
+    on_skip=None,
+    on_attention: Optional[Callable[[str, str], None]] = _warn_attention,
+) -> GenerationResult:
+    """Scaffold a native core (``backend``) into the project at ``pkg_dir``.
+
+    Writes the backend's template files that do not exist yet (``overwrite`` names the
+    ones to replace), then reports through ``on_attention(filename, reason)`` what it
+    cannot settle itself: missing ``.gitignore`` entries, and the lockfile when it could
+    not generate it. pyproject.toml is not touched here: ``populate`` merges
+    :func:`native_pyproject_fragment` into a new one and reports
+    :func:`native_pyproject_todo` for an existing one.
+
+    >>> import tempfile
+    >>> d = tempfile.mkdtemp()
+    >>> res = apply_native(
+    ...     d, project_name="fast_thing", generate_lockfile=False, on_attention=None
+    ... )
+    >>> [t for t in res.added if t.startswith("rust/")]  # doctest: +NORMALIZE_WHITESPACE
+    ['rust/core/Cargo.toml', 'rust/core/src/lib.rs', 'rust/py/Cargo.toml',
+     'rust/py/src/lib.rs']
+    """
+    profile = get_native_profile(backend)
+    on_attention = on_attention or (lambda filename, reason: None)
+    result = generate(
+        pkg_dir,
+        native_artifacts(backend, project_name),
+        native_names(project_name),
+        overwrite=overwrite,
+        on_add=on_add,
+        on_skip=on_skip,
+    )
+    lacking = _gitignore_todo(pkg_dir, profile.gitignore_patterns)
+    if lacking:
+        on_attention(
+            ".gitignore",
+            f"add {', '.join(lacking)} (build output and compiled modules of a "
+            f"{backend} build must never be committed)",
+        )
+    if generate_lockfile and profile.lockfile:
+        if not os.path.isfile(os.path.join(pkg_dir, profile.lockfile)):
+            problem = _generate_lockfile(pkg_dir, profile, timeout=lockfile_timeout)
+            if problem is None:
+                result.added.append(profile.lockfile)
+                if on_add:
+                    on_add(profile.lockfile)
+            else:
+                on_attention(profile.lockfile, problem)
+    return result

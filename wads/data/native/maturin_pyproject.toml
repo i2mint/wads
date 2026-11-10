@@ -1,0 +1,37 @@
+# What `populate --native maturin` adds to (or, for a new package, merges into) the
+# pyproject.toml of package `tmpl_pkg`. `[build-system]` replaces the hatchling one; the other
+# tables merge (lists gain the missing items). Rendered by wads.profiles.native_pyproject_fragment.
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project.optional-dependencies]
+dev = ["hypothesis"]  # tests/test_differential.py
+
+[tool.maturin]
+manifest-path = "rust/py/Cargo.toml"  # the binding crate
+module-name = "tmpl_pkg._core"        # flat layout: the extension lands inside the facade package
+bindings = "pyo3"
+locked = true                         # fail if Cargo.lock is stale (CI and sdist builds)
+strip = true
+exclude = [
+  "**/__pycache__",                   # not a default for a hand-written [tool.maturin]
+  "**/*.pyc",
+  { path = ".claude/**", format = "sdist" },
+  { path = "scrap/**", format = "sdist" },
+]
+
+[tool.uv]
+# Without these, `uv run` / `uv sync` never rebuild after a Rust edit and silently test a stale binary.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "rust/**/Cargo.toml" },
+  { file = "rust/**/*.rs" },
+]
+
+# wads' native CI path (wads.native_build): Rust checks on PRs, one abi3 wheel per target on
+# release. Auto-detected from the maturin backend; the table is where targets etc. go.
+[tool.wads.ci.build.native]
+backend = "maturin"
