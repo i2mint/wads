@@ -1,16 +1,17 @@
 # Cargo workspace for the Rust half of the tmpl_pkg Python package.
 # rust/core: pure Rust (no PyO3), tested with `cargo test -p tmpl-pkg-core`.
 # rust/py:   the binding cdylib built by maturin into tmpl_pkg/_core.
+# Every crate under rust/ is a member, so another one (say rust/wasm) needs no edit here.
 [workspace]
 resolver = "3"
-members = ["rust/core", "rust/py"]
+members = ["rust/*"]
 
 [workspace.package]
 version = "0.0.0"      # not the release version: pyproject.toml [project].version is the SSOT
 edition = "2024"
 rust-version = "1.85"  # PyO3 0.30's MSRV; also the floor for users building from the sdist
 publish = false
-license = "MIT"        # same licence as the Python package (pyproject.toml [project].license)
+license = "tmpl-license"  # SPDX id of the Python package's licence (pyproject.toml [project].license)
 
 [workspace.dependencies]
 # abi3-py310: one wheel per platform for CPython >= 3.10. No "extension-module" feature:

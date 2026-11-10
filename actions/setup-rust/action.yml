@@ -1,8 +1,8 @@
 name: "Set up Rust"
 description: >-
   Rust for a native (maturin) package, before its install builds the extension: the
-  components the rust-checks action needs, and a cargo cache. The runner's rustup is used
-  as is, so a rust-toolchain.toml in the repo picks the toolchain (issue #166).
+  components the rust-checks action needs, and a cargo cache. A rust-toolchain.toml in
+  project-dir picks the toolchain, installed here explicitly (issues #166, #214).
 
 inputs:
   project-dir:
@@ -24,6 +24,11 @@ runs:
       working-directory: ${{ inputs.project-dir }}
       run: |
         set -e
+        if [ -f rust-toolchain.toml ] || [ -f rust-toolchain ]; then
+          # Install the pinned toolchain (and the components the file lists) explicitly,
+          # rather than relying on rustup installing it on first use.
+          rustup toolchain install
+        fi
         rustup show active-toolchain || rustup default stable
         rustup component add rustfmt clippy
         cargo --version

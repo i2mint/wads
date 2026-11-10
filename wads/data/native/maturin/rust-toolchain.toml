@@ -1,5 +1,6 @@
 # Extension repos pin the toolchain so local builds, CI wheels and rust-analyzer agree.
-# Bump deliberately (see rust-coding's references/baseline.md).
+# Bump deliberately, in its own commit: a new stable can add clippy lints that CI denies.
+# Install it with `rustup toolchain install` (reads this file).
 [toolchain]
 channel = "1.99"
 components = ["rustfmt", "clippy"]

@@ -1,6 +1,7 @@
-# What `populate --native maturin` adds to (or, for a new package, merges into) the
-# pyproject.toml of package `tmpl_pkg`. `[build-system]` replaces the hatchling one; the other
-# tables merge (lists gain the missing items). Rendered by wads.profiles.native_pyproject_fragment.
+# The pyproject.toml tables a maturin package `tmpl_pkg` needs. `populate --native maturin`
+# merges them into a NEW pyproject (the tables the profile names in `replaces` replace the
+# template's, the others merge and lists gain their missing items) and only reports them
+# for an existing one. wads' CI detects the native path from `build-backend = "maturin"`.
 [build-system]
 requires = ["maturin>=1.16,<2"]
 build-backend = "maturin"
@@ -31,7 +32,6 @@ cache-keys = [
   { file = "rust/**/*.rs" },
 ]
 
-# wads' native CI path (wads.native_build): Rust checks on PRs, one abi3 wheel per target on
-# release. Auto-detected from the maturin backend; the table is where targets etc. go.
-[tool.wads.ci.build.native]
-backend = "maturin"
+[tool.pytest.ini_options]
+testpaths = ["tests", "tmpl_pkg"]     # the facade's docstring examples are tests too
+addopts = "--doctest-modules"

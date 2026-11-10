@@ -2,8 +2,8 @@
 
 PLACEHOLDER: one property per ported function. Generate the inputs where Rust
 and Python differ (non-ASCII text, empty input, huge integers, NaN and signed
-zero, ...) and compare results AND exception types. The full method and more
-templates are in the pyo3-port skill.
+zero, ...) and compare results AND exception types: the exceptions a function
+raises are part of its contract.
 """
 
 from hypothesis import given

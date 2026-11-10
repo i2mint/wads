@@ -261,7 +261,7 @@ def write_pyproject_configs(pkg_dir: str, configs: dict, *, native: str = ""):
         from wads.profiles import merge_native_pyproject, native_pyproject_fragment
 
         data = merge_native_pyproject(
-            data, native_pyproject_fragment(name, backend=native)
+            data, native_pyproject_fragment(name, backend=native), backend=native
         )
 
     # Write the pyproject.toml
@@ -421,7 +421,6 @@ def populate_pkg_dir(
 
         get_native_profile(native)
         native_names(name)
-    created_init = False  # the native facade may replace an __init__ made just now
 
     if name not in os.listdir(pkg_dir):
         f = pjoin(name)
@@ -432,7 +431,6 @@ def populate_pkg_dir(
         _clog(f"... making an empty {f}")
         with open(f, "w") as fp:
             fp.write("")
-        created_init = True
 
     # Note: Overkill since we just made those things...
     if name not in os.listdir(pkg_dir) or "__init__.py" not in os.listdir(pjoin(name)):
@@ -894,25 +892,32 @@ def populate_pkg_dir(
         from wads.toml_util import read_pyproject_toml as _read_pyproject
 
         _clog(f"\n... adding native core '{native}'")
+        pyproject_data = (
+            _read_pyproject(pjoin(""))
+            if os.path.isfile(pjoin("pyproject.toml"))
+            else {}
+        )
+        # The crates carry the package's licence: the pyproject's, else the configured one.
+        project_license = pyproject_data.get("project", {}).get("license")
+        if isinstance(project_license, dict):
+            project_license = project_license.get("text")
         apply_native(
             pkg_dir,
             backend=native,
             project_name=name,
-            # The facade replaces the empty __init__.py made above, never an existing one.
-            overwrite=overwrite | ({f"{name}/__init__.py"} if created_init else set()),
+            license=project_license or configs.get("license"),
+            overwrite=overwrite,
             on_add=tracker.add,
             on_skip=tracker.skip,
+            on_error=lambda filename, e: tracker.error(filename, str(e)),
             on_attention=tracker.attention,
         )
-        if os.path.isfile(pjoin("pyproject.toml")):
-            todo = native_pyproject_todo(
-                _read_pyproject(pjoin("")), name, backend=native
-            )
+        if pyproject_data:
+            todo = native_pyproject_todo(pyproject_data, name, backend=native)
             if todo:
                 tracker.attention(
                     "pyproject.toml",
-                    f"--native {native} needs these tables (not rewritten: it existed):\n"
-                    + todo,
+                    f"kept as it was; --native {native} needs these tables:\n" + todo,
                 )
 
     # Tests-folder overlay (opt-in, #4): scaffold tests/ with a smoke test.
