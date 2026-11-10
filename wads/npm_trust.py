@@ -691,17 +691,43 @@ def _environment(job: dict) -> str:
     return str(environment) if environment else ""
 
 
+def is_monorepo_reusable(workflow: str) -> bool:
+    """Whether a wads reusable workflow is the pnpm + turbo monorepo one."""
+    return "monorepo" in workflow
+
+
+def wads_reusable_call(job: dict) -> Optional[tuple[str, str]]:
+    """``(reusable workflow, package dir)`` when ``job`` calls a wads ``npm-ci*.yml``.
+
+    The dir is the job's ``package-dir`` input, else the reusable workflow's default.
+
+    >>> wads_reusable_call({"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"})
+    ('npm-ci.yml', 'js')
+    >>> wads_reusable_call({"runs-on": "ubuntu-latest"}) is None
+    True
+    """
+    match = _WADS_REUSABLE_RE.search(str(job.get("uses", "")))
+    if not match:
+        return None
+    workflow = match.group(1)
+    inputs = job.get("with") or {}
+    directory = str(
+        inputs.get("package-dir") or WADS_REUSABLE_DEFAULT_DIR.get(workflow, ".")
+    )
+    return workflow, directory
+
+
 def job_calls(job: dict, scripts: dict) -> list[PublishCall]:
     """The publish calls of a workflow job: its ``run`` steps, changesets, a wads caller."""
-    match = _WADS_REUSABLE_RE.search(str(job.get("uses", "")))
-    if match:
-        workflow = match.group(1)
-        inputs = job.get("with") or {}
-        directory = str(
-            inputs.get("package-dir") or WADS_REUSABLE_DEFAULT_DIR.get(workflow, ".")
-        )
+    wads_call = wads_reusable_call(job)
+    if wads_call:
+        workflow, directory = wads_call
         return [
-            PublishCall(directory, everything="monorepo" in workflow, wads_caller=True)
+            PublishCall(
+                directory,
+                everything=is_monorepo_reusable(workflow),
+                wads_caller=True,
+            )
         ]
     defaults = (job.get("defaults") or {}).get("run") or {}
     calls = []
