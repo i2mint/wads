@@ -73,9 +73,29 @@ _TEMPLATE_TRIGGERS = (
 DISPATCH_LEVEL_OPTIONS = ["config", *TRIGGER_LEVELS]
 
 
-def _is_template_trigger(triggers) -> bool:
-    """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""
+def _is_rendered_paths(value, paths: Sequence[str] = ()) -> bool:
+    """Whether a push/PR entry is what a render writes: bare, or exactly ``paths``."""
+    if value is None:
+        return True
+    return bool(paths) and value == {"paths": list(paths)}
+
+
+def _is_template_trigger(triggers, paths: Sequence[str] = ()) -> bool:
+    """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is).
+
+    A ``paths:`` filter counts only when it equals ``paths``, the filter a re-render
+    derives from the repo (:func:`stub_paths_for_workflow`); any other filter is a
+    customization a re-render would drop.
+    """
     if triggers in _TEMPLATE_TRIGGERS:
+        return True
+    if (
+        isinstance(triggers, dict)
+        and set(triggers) == {"push", "pull_request"}
+        and triggers["push"] is not None
+        and _is_rendered_paths(triggers["push"], paths)
+        and triggers["pull_request"] == triggers["push"]
+    ):
         return True
     if not (
         isinstance(triggers, dict) and set(triggers) == {"push", "workflow_dispatch"}
@@ -85,7 +105,7 @@ def _is_template_trigger(triggers) -> bool:
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     level = inputs.get("level") if isinstance(inputs, dict) else None
     return (
-        triggers["push"] is None
+        _is_rendered_paths(triggers["push"], paths)
         and isinstance(inputs, dict)
         and set(dispatch) == {"inputs"}
         and set(inputs) == {"level"}
@@ -304,6 +324,84 @@ def render_stub_trigger(
     return stub.replace(AUTO_ON_LINE, header).replace(CI_JOB_ANCHOR, gated_job)
 
 
+# --------------------------------------------------------------------------------------
+# Path filters: the Python CI ignores the npm components of a polyglot repo (#209)
+
+#: The first entry of a rendered ``paths:`` filter; ``!`` entries then carve out.
+WATCH_ALL = "**"
+#: The on-demand header's trigger lines, which a paths filter is inserted into.
+ON_DEMAND_PUSH = "on:\n  push:\n  workflow_dispatch:\n"
+
+
+def python_ci_paths(repo_root, *, include: Sequence[str] = ()) -> list:
+    """The ``paths:`` filter for the Python CI stub of ``repo_root``; ``[]`` for none.
+
+    Every npm component an ``npm-ci*.yml`` stub runs (its directory and its own
+    workflow file) is left out, so a change only there runs the npm CI alone and
+    never cuts a PyPI release. ``include`` re-adds paths after the exclusions
+    (``[tool.wads.ci.trigger].include_paths``), e.g. a file the Python tests
+    generate into the npm component. A component at the repo root cannot be
+    carved out and is skipped. Shared inputs (``fixtures/``, ``rust/``) stay
+    watched, since both sides test them.
+    """
+    from wads.npm_config import npm_components
+
+    components = [c for c in npm_components(repo_root) if c.dir not in ("", ".")]
+    if not components:
+        return []
+    paths = [WATCH_ALL]
+    for component in components:
+        for path in (f"!{component.dir}/**", f"!.github/workflows/{component.workflow}"):
+            if path not in paths:
+                paths.append(path)
+    return paths + [p for p in include if p not in paths]
+
+
+def render_stub_paths(stub: str, paths: Sequence[str]) -> str:
+    r"""Put a ``paths:`` filter on the push (and pull-request) trigger of a rendered stub.
+
+    ``paths`` empty returns ``stub`` unchanged. Works on both trigger modes.
+
+    >>> print(render_stub_paths("on: [push, pull_request]\njobs:\n", ["**", "!ts/**"]), end="")
+    on:
+      push:
+        paths: ["**", "!ts/**"]
+      pull_request:
+        paths: ["**", "!ts/**"]
+    jobs:
+    """
+    if not paths:
+        return stub
+    flow = json.dumps(list(paths))
+    if stub.count(AUTO_ON_LINE) == 1:
+        block = f"on:\n  push:\n    paths: {flow}\n  pull_request:\n    paths: {flow}\n"
+        return stub.replace(AUTO_ON_LINE, block)
+    if stub.count(ON_DEMAND_PUSH) == 1:
+        block = f"on:\n  push:\n    paths: {flow}\n  workflow_dispatch:\n"
+        return stub.replace(ON_DEMAND_PUSH, block)
+    raise ValueError(
+        "stub template changed shape: found neither the auto nor the on-demand trigger"
+    )
+
+
+def repo_root_of_workflow(ci_path) -> Path:
+    """The repo holding ``.github/workflows/<file>``: the nearest parent with ``.git``,
+    else the directory above ``.github``."""
+    path = Path(ci_path).resolve()
+    for parent in path.parents:
+        if (parent / ".git").exists():
+            return parent
+    return path.parents[2]
+
+
+def stub_paths_for_workflow(ci_path) -> list:
+    """The ``paths:`` filter the Python stub at ``ci_path`` should carry."""
+    root = repo_root_of_workflow(ci_path)
+    pyproject = repo_pyproject_for(ci_path)
+    config = CIConfig({}) if pyproject is None else CIConfig.from_file(pyproject)
+    return python_ci_paths(root, include=config.trigger_include_paths)
+
+
 def repo_pyproject_for(ci_path) -> Optional[Path]:
     """The ``pyproject.toml`` of the repo holding workflow file ``ci_path``, if any.
 
@@ -502,11 +600,15 @@ def stub_shape(ci_text: Optional[str]) -> dict:
     }
 
 
-def stub_customizations(text: str) -> tuple[dict, list]:
+def stub_customizations(
+    text: str, *, paths: Sequence[str] = ()
+) -> tuple[dict, list]:
     r"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.
 
     ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a
     re-render; ``dropped`` names everything else a re-render would silently lose.
+    ``paths`` is the ``paths:`` filter the re-render will write
+    (:func:`stub_paths_for_workflow`); a different filter is reported as dropped.
     Raises ``yaml.YAMLError`` when the text does not parse.
 
     >>> stub_customizations(
@@ -523,8 +625,8 @@ def stub_customizations(text: str) -> tuple[dict, list]:
     dropped = [
         f"top-level `{key}`" for key in doc if key not in ("name", "on", True, "jobs")
     ]
-    triggers = doc.get("on", doc.get(True))  # PyYAML reads a bare `on:` as True
-    if not _is_template_trigger(triggers):
+    triggers = workflow_triggers(doc)
+    if not _is_template_trigger(triggers, paths):
         dropped.append(f"`on: {json.dumps(triggers)}`")
     jobs = doc.get("jobs") or {}
     dropped += [f"job `{name}`" for name in jobs if name != "ci"]
@@ -540,6 +642,21 @@ def stub_customizations(text: str) -> tuple[dict, list]:
         dropped.append("`jobs.ci.with` (not a flat mapping)")
         inputs = {}
     return dict(inputs), dropped
+
+
+def workflow_triggers(workflow):
+    r"""The ``on:`` of a workflow (its text or its parsed mapping).
+
+    PyYAML reads a bare ``on:`` key as ``True``, so both keys are looked up.
+
+    >>> workflow_triggers("on: [push]\njobs: {}\n")
+    ['push']
+    """
+    import yaml
+
+    doc = yaml.safe_load(workflow) if isinstance(workflow, str) else workflow
+    doc = doc or {}
+    return doc.get("on", doc.get(True))
 
 
 def stub_inputs_of(ci_path) -> dict:
@@ -654,7 +771,9 @@ def flip_to_on_demand(
         import yaml
 
         try:
-            _, dropped = stub_customizations(old_ci)
+            _, dropped = stub_customizations(
+                old_ci, paths=stub_paths_for_workflow(ci_path)
+            )
         except yaml.YAMLError as exc:
             dropped = [f"YAML that does not parse ({type(exc).__name__})"]
         if dropped:
@@ -664,10 +783,14 @@ def flip_to_on_demand(
             result.status = "refused"
             result.notes.append(
                 f"{workflow} has customizations a re-render would drop: "
-                f"{', '.join(dropped)}. Flip it by hand: in pyproject.toml set "
+                f"{', '.join(dropped)}. If only its `paths:` filter differs, put the "
+                "extra entries in [tool.wads.ci.trigger].include_paths, run "
+                "`wads-migrate ci-to-stub` once, and flip again. Otherwise flip it by "
+                "hand: in pyproject.toml set "
                 '[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '
                 "workflow use `on: [push, workflow_dispatch]` (a `level` input of "
-                "`config`, `validate`, `deploy` is optional) and give the job that calls "
+                "`config`, `validate`, `deploy` is optional; keep any `paths:` filter "
+                "on push) and give the job that calls "
                 f"uv-ci.yml `if: {json.dumps(expression)}`."
             )
             return result
@@ -712,7 +835,12 @@ def flip_to_on_demand(
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
             # transport=None: named, converting a JSON stub (see migrate_ci_to_stub).
-            new_ci = migrate_ci_to_stub(str(shadow_ci), pin=shape["pin"])
+            # The npm components live in the real repo, not in the shadow copy.
+            new_ci = migrate_ci_to_stub(
+                str(shadow_ci),
+                pin=shape["pin"],
+                paths=stub_paths_for_workflow(ci_path),
+            )
             if shape["pin"] != "@master":
                 result.notes.append(
                     f"the stub stays pinned to {shape['pin']}. Its pre-filter works on "

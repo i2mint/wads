@@ -755,6 +755,24 @@ class CIConfig:
         return mode
 
     @property
+    def trigger_include_paths(self) -> list:
+        """Paths the Python CI watches although an npm component holds them (#209).
+
+        ``[tool.wads.ci.trigger].include_paths``: re-added after the stub's
+        exclusions, e.g. a TypeScript file the Python side generates and its tests
+        check. Default ``[]``.
+        """
+        paths = self.trigger_config.get("include_paths", [])
+        if not isinstance(paths, (list, tuple)) or not all(
+            isinstance(p, str) for p in paths
+        ):
+            raise ValueError(
+                "[tool.wads.ci.trigger].include_paths must be a list of path "
+                f"patterns, got {paths!r}"
+            )
+        return list(paths)
+
+    @property
     def run_ci_marker(self) -> str:
         """Commit-subject substring that runs CI in ``"on-demand"`` mode.
 

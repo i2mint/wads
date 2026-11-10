@@ -919,6 +919,7 @@ def migrate_ci_to_stub(
     transport: Optional[str] = None,
     trigger_mode: Optional[str] = None,
     run_ci_marker: Optional[str] = None,
+    paths: Optional[list] = None,
 ) -> str:
     """Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.
 
@@ -963,6 +964,9 @@ def migrate_ci_to_stub(
             the run is a ``workflow_dispatch``; see :mod:`wads.ci_trigger`.
         run_ci_marker: The on-demand marker; ``None`` takes it from the same
             pyproject (default ``"[run ci]"``).
+        paths: The ``paths:`` filter that keeps the repo's npm components out of
+            the Python CI (i2mint/wads#209); ``None`` derives it from the repo
+            holding ``old_ci`` (none when ``old_ci`` is not a file).
 
     Returns:
         The stub workflow content as a string.
@@ -1047,8 +1051,10 @@ def migrate_ci_to_stub(
     # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
     from wads.ci_trigger import (
         render_stub_inputs,
+        render_stub_paths,
         render_stub_trigger,
         stub_inputs_of,
+        stub_paths_for_workflow,
         trigger_settings_for_workflow,
     )
 
@@ -1056,6 +1062,12 @@ def migrate_ci_to_stub(
     declared["mode"] = trigger_mode or declared["mode"]
     declared["run_ci_marker"] = run_ci_marker or declared["run_ci_marker"]
     stub = render_stub_trigger(stub, **declared)
+    # The repo's npm components stay out of the Python CI (#209): derived from the
+    # repo each time, so a re-render keeps the filter up to date. (``old_ci`` may
+    # be the workflow's content rather than its path: no repo to read then.)
+    if paths is None and old_ci and os.path.isfile(str(old_ci)):
+        paths = stub_paths_for_workflow(old_ci)
+    stub = render_stub_paths(stub, paths or [])
     # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
     return render_stub_inputs(stub, stub_inputs_of(old_ci))
 
@@ -1715,7 +1727,11 @@ def main():
             transport = args.transport
             if classify_ci_workflow(existing) == "stub":
                 try:
-                    _, dropped = stub_customizations(existing)
+                    from wads.ci_trigger import stub_paths_for_workflow
+
+                    _, dropped = stub_customizations(
+                        existing, paths=stub_paths_for_workflow(input_path)
+                    )
                 except Exception:
                     dropped = []
                 if dropped:

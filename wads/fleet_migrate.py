@@ -224,6 +224,29 @@ def migrate_one_to_stub(
 
     old_content = ci_path.read_text()
 
+    # A stub with hand-made customizations (an extra job, a custom trigger or
+    # paths filter) would be silently stripped by the re-render: leave it alone.
+    from wads.ci_trigger import (
+        classify_ci_workflow,
+        stub_customizations,
+        stub_paths_for_workflow,
+    )
+
+    if classify_ci_workflow(old_content) == "stub":
+        try:
+            _, dropped = stub_customizations(
+                old_content, paths=stub_paths_for_workflow(ci_path)
+            )
+        except Exception as e:  # unparseable YAML: do not overwrite it blindly
+            dropped = [f"YAML that does not parse ({type(e).__name__})"]
+        if dropped:
+            return RepoResult(
+                name,
+                repo_path,
+                "skip",
+                f"a re-render would drop: {', '.join(dropped)}",
+            )
+
     # Carry secret-backed env vars from the existing workflow into
     # [tool.wads.ci.env] so the migration is lossless (and so the stub's
     # transport list is generated to include them). Must run before

@@ -1,8 +1,10 @@
 # wads NPM CI — calls the reusable workflow hosted in i2mint/wads.
 #
 # All configuration lives in << npm_subdir >>/package.json under the "wads"
-# key (wads.ci.*). This workflow only runs when the JS subdirectory changes,
-# so it never collides with the Python ci.yml.
+# key (wads.ci.*). This workflow runs when the JS subdirectory changes, or an
+# input it shares with the Python side (golden fixtures, a Rust core) does;
+# the Python ci.yml ignores the JS subdirectory, so a JS-only change never cuts
+# a PyPI release.
 #
 # Publishing to npm is OPT-IN: set wads.ci.publish.enabled=true in package.json
 # and include the marker (default "[publish-npm]") in your commit message.
@@ -24,10 +26,17 @@ on:
   push:
     paths:
       - "<< npm_subdir >>/**"
+<%- for path in npm_watch_paths %>
+      - "<< path >>"
+<%- endfor %>
       - ".github/workflows/<< npm_workflow_file >>"
   pull_request:
     paths:
       - "<< npm_subdir >>/**"
+<%- for path in npm_watch_paths %>
+      - "<< path >>"
+<%- endfor %>
+      - ".github/workflows/<< npm_workflow_file >>"
 jobs:
   npm-ci:
     uses: i2mint/wads/.github/workflows/<< reusable_workflow >>@master

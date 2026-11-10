@@ -913,6 +913,8 @@ def populate_pkg_dir(
                 on_skip=tracker.skip,
             )
 
+        _keep_npm_components_out_of_python_ci(pkg_dir, tracker, _clog)
+
     # Print summary
     if verbose:
         tracker.print_summary(verbose=True)
@@ -924,6 +926,50 @@ def populate_pkg_dir(
         raise ci_error
 
     return name
+
+
+def _keep_npm_components_out_of_python_ci(pkg_dir, tracker, clog):
+    """Give the Python CI stub the path filter that leaves the npm components out (#209).
+
+    A stub written in this run gets it now; an existing stub is never rewritten
+    here, but is flagged when it lacks the filter (``wads-migrate ci-to-stub``
+    re-renders it with the filter).
+    """
+    from wads.ci_trigger import (
+        classify_ci_workflow,
+        render_stub_paths,
+        stub_paths_for_workflow,
+    )
+
+    rel = ".github/workflows/ci.yml"
+    ci_path = os.path.join(pkg_dir, rel)
+    if not os.path.isfile(ci_path):
+        return
+    with open(ci_path) as f:
+        text = f.read()
+    paths = stub_paths_for_workflow(ci_path)
+    if classify_ci_workflow(text) != "stub" or _push_paths(text) == (paths or None):
+        return
+    if rel in tracker.added:
+        clog("... keeping the npm components out of the Python CI (paths filter)")
+        with open(ci_path, "w") as f:
+            f.write(render_stub_paths(text, paths))
+    else:
+        tracker.attention(
+            rel,
+            "its paths filter does not match the repo's npm components (a change "
+            "only there would run the Python CI and cut a PyPI release): run "
+            "`wads-migrate ci-to-stub` to re-render it",
+        )
+
+
+def _push_paths(workflow_text: str):
+    """The ``paths:`` filter on a workflow's push trigger, or ``None``."""
+    from wads.ci_trigger import workflow_triggers
+
+    triggers = workflow_triggers(workflow_text) or {}
+    push = triggers.get("push") if isinstance(triggers, dict) else None
+    return push.get("paths") if isinstance(push, dict) else None
 
 
 _unknown_version_control_system = object()

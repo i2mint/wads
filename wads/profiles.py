@@ -83,6 +83,29 @@ def _to_spdx(license_name: Optional[str]) -> str:
 # owns its own subdir and a per-subdir workflow file.
 # --------------------------------------------------------------------------------------
 
+#: Where a Python package and its npm twin keep the golden cases both test suites
+#: run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
+DFLT_SHARED_FIXTURES_DIR = "fixtures"
+#: Where a Rust core lives in the native (maturin) layout; when present, a change
+#: there runs the npm CI too (a wasm build may compile it).
+DFLT_RUST_DIR = "rust"
+
+
+def default_npm_watch_paths(repo_dir: Optional[str] = None) -> list:
+    """Inputs outside its subdir an npm component's CI should run on.
+
+    The shared fixtures directory always (a pattern that matches nothing costs
+    nothing), and the Rust core when ``repo_dir`` has one.
+
+    >>> default_npm_watch_paths()
+    ['fixtures/**']
+    """
+    paths = [f"{DFLT_SHARED_FIXTURES_DIR}/**"]
+    if repo_dir and os.path.isdir(os.path.join(repo_dir, DFLT_RUST_DIR)):
+        paths.append(f"{DFLT_RUST_DIR}/**")
+    return paths
+
+
 # The reusable workflow each profile's stub calls (hosted in this repo).
 _SINGLE_PACKAGE_REUSABLE = "npm-ci.yml"
 _MONOREPO_REUSABLE = "npm-ci-monorepo.yml"
@@ -125,6 +148,7 @@ def frontend_context(
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
     license_file: Optional[tuple] = None,
+    watch_paths: Optional[list] = None,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -148,6 +172,10 @@ def frontend_context(
         # Stub workflow wiring (per-component, collision-free):
         "npm_workflow_name": _workflow_name(subdir),
         "npm_workflow_file": _workflow_basename(subdir),
+        # Shared inputs outside the subdir that also run this component's CI:
+        "npm_watch_paths": (
+            default_npm_watch_paths() if watch_paths is None else list(watch_paths)
+        ),
         "reusable_workflow": reusable,
         # Monorepo-only context (ignored by single-package templates):
         "npm_workspace_glob": workspace_glob,
@@ -357,6 +385,7 @@ def apply_frontend(
     package_manager: Optional[str] = None,
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
+    watch_paths: Optional[list] = None,
     overwrite=(),
     on_add=None,
     on_skip=None,
@@ -364,7 +393,9 @@ def apply_frontend(
     """Apply one frontend profile component to an existing project directory.
 
     ``subdir`` and ``package_manager`` default to the selected profile's
-    defaults. Returns the :class:`wads.templating.GenerationResult`.
+    defaults. ``watch_paths`` are the inputs outside the subdir that also run the
+    component's CI (default :func:`default_npm_watch_paths` of ``pkg_dir``).
+    Returns the :class:`wads.templating.GenerationResult`.
 
     >>> import tempfile
     >>> d = tempfile.mkdtemp()
@@ -388,6 +419,9 @@ def apply_frontend(
         workspace_glob=workspace_glob,
         example_package_name=example_package_name,
         license_file=find_license_file(pkg_dir),
+        watch_paths=(
+            default_npm_watch_paths(pkg_dir) if watch_paths is None else watch_paths
+        ),
     )
     artifacts = prof.artifacts(context)
     return generate(
