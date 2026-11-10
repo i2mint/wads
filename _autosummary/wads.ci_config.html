@@ -238,7 +238,9 @@
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="wads.secrets_cli.html">wads.secrets_cli</a></li>
@@ -247,6 +249,7 @@
 <li class="toctree-l3"><a class="reference internal" href="wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.version_sync.html">wads.version_sync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
@@ -910,6 +913,14 @@ contains <a class="reference internal" href="#wads.ci_config.CIConfig.publish_ma
 only. A squash-merge folds the entire PR body into the squash commit
 message, so a full-message match fires on a PR that merely writes
 about a marker.</p>
+<p>Must be a boolean: a string such as <code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code> would be true here while
+the workflow, which compares its text, reads it as false.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"publish"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"enabled"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">}}}}})</span><span class="o">.</span><span class="n">publish_enabled</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.publish].enabled must be true or false, got 'false'</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py property">
@@ -1478,7 +1489,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=86b96456"></script>
+</div><script src="../_static/documentation_options.js?v=a608febd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

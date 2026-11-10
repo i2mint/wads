@@ -44,4 +44,5 @@ wads --help
 | [`toml_util`](wads.toml_util.html.md#module-wads.toml_util)                     | Utilities for reading and writing pyproject.toml files.                                                                          |
 | [`user_dirs`](wads.user_dirs.html.md#module-wads.user_dirs)                     | Platform-appropriate user directories for wads configuration and data.                                                           |
 | [`util`](wads.util.html.md#module-wads.util)                               | wads util                                                                                                                        |
+| [`version_sync`](wads.version_sync.html.md#module-wads.version_sync)               | One version number for a Python package and its npm twin (i2mint/wads#210).                                                      |
 | [`workdirs`](wads.workdirs.html.md#module-wads.workdirs)                       | Temporary work directories that record their owner, and a sweep for the ones left behind.                                        |

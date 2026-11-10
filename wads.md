@@ -1,4 +1,4 @@
-> built 2026-11-10 10:25 UTC from d37f4b1 (master) · wads 0.2.81. Details: build_info.json
+> built 2026-11-10 10:29 UTC from c7c3b52 (master) · wads 0.2.82. Details: build_info.json
 
 # index.html.md
 
@@ -496,6 +496,19 @@ Commit-subject markers narrow what a default-branch push does. wads matches them
 | `[publish]`           | runs                | forced when `enabled = false` | runs           | `[tool.wads.ci.publish].publish_marker`                                                                                    |
 
 `[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
+
+#### One version for PyPI and npm
+
+A repo that also publishes an npm twin (`populate --frontend ts`) can keep one version number on both registries:
+
+```toml
+[tool.wads.ci.version]
+sync = ["ts/package.json"]   # manifests that carry [project].version too
+```
+
+The publish job writes each release’s bumped version into the listed `package.json` files (and the `package-lock.json` beside each, keeping their layout as `npm version` does), so the `**CI** ... Updated version` commit carries them all. The setup job fails when a listed file’s version differs from `[project].version`: set them equal by hand once when you turn this on. The version then moves only with a PyPI release, so a PR that bumps only the TS version turns setup red; leave the TS version alone and let the release write it. It needs a static `[project].version` (not `dynamic`, `setup.cfg` or a maturin-derived one); otherwise remove the `sync` key. Only `package.json` is accepted (npm requires semver, and a PEP 440 version such as `1.0rc1` fails the publish before anything is uploaded); a Rust crate keeps its own version line.
+
+On the npm side, npm-ci packs the commit that was pushed, which comes before the bump commit of a PyPI release cut by the same push. So when `sync` lists the npm package’s `package.json`, npm-ci refuses (before anything is installed or uploaded) a publish from a push that also releases the Python package and changes files outside the npm package directory: npm would get the previous release’s number with newer code. Publish npm from a commit that changes only that directory, or one whose subject carries the skip-publish marker. A release that orders npm after PyPI in one run is still open ([#210](https://github.com/i2mint/wads/issues/210)). A push carrying the npm publish marker that publishes nothing because every version is already on npm fails instead of staying green; a re-run passes only when npm already holds this run’s exact tarballs.
 
 #### Native packages (Rust/PyO3 via maturin)
 
@@ -1714,6 +1727,16 @@ Both markers are matched against the first line of the commit message
 only. A squash-merge folds the entire PR body into the squash commit
 message, so a full-message match fires on a PR that merely writes
 about a marker.
+
+Must be a boolean: a string such as `"false"` would be true here while
+the workflow, which compares its text, reads it as false.
+
+```pycon
+>>> CIConfig({"tool": {"wads": {"ci": {"publish": {"enabled": "false"}}}}}).publish_enabled
+Traceback (most recent call last):
+  ...
+ValueError: [tool.wads.ci.publish].enabled must be true or false, got 'false'
+```
 
 #### *property* publish_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
@@ -3344,6 +3367,7 @@ wads --help
 | [`toml_util`](_autosummary/wads.toml_util.html.md#module-wads.toml_util)                     | Utilities for reading and writing pyproject.toml files.                                                                          |
 | [`user_dirs`](_autosummary/wads.user_dirs.html.md#module-wads.user_dirs)                     | Platform-appropriate user directories for wads configuration and data.                                                           |
 | [`util`](_autosummary/wads.util.html.md#module-wads.util)                               | wads util                                                                                                                        |
+| [`version_sync`](_autosummary/wads.version_sync.html.md#module-wads.version_sync)               | One version number for a Python package and its npm twin (i2mint/wads#210).                                                      |
 | [`workdirs`](_autosummary/wads.workdirs.html.md#module-wads.workdirs)                       | Temporary work directories that record their owner, and a sweep for the ones left behind.                                        |
 
 
@@ -7372,15 +7396,17 @@ Available scripts:
 
 ### Modules
 
-| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)                     | Build Python Distribution Packages                                            |
-|----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)                 | Install Dependencies                                                          |
-| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                            |
-| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                 |
-| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                              |
-| [`cargo_test_args`](_autosummary/wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)           | Print the `cargo test` arguments for a maturin package (issue #166).          |
-| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                |
-| [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any. |
+| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)                     | Build Python Distribution Packages                                                           |
+|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)                 | Install Dependencies                                                                         |
+| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                                           |
+| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                                |
+| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                                             |
+| [`cargo_test_args`](_autosummary/wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)           | Print the `cargo test` arguments for a maturin package (issue #166).                         |
+| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                               |
+| [`npm_publish_guard`](_autosummary/wads.scripts.npm_publish_guard.html.md#module-wads.scripts.npm_publish_guard)       | Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210). |
+| [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.                |
+| [`sync_version`](_autosummary/wads.scripts.sync_version.html.md#module-wads.scripts.sync_version)                 | Write the release version into the manifests `[tool.wads.ci.version].sync` lists.            |
 
 
 # _autosummary/wads.scripts.install_deps.html.md
@@ -7430,6 +7456,41 @@ Install packages from PyPI.
 ### wads.scripts.install_deps.main()
 
 Main entry point.
+
+
+# _autosummary/wads.scripts.npm_publish_guard.html.md
+
+# wads.scripts.npm_publish_guard
+
+Refuse an npm publish that would reuse the previous PyPI release’s number (i2mint/wads#210).
+
+Run by the `npm-publish-guard` action in npm-ci’s pack job, before anything is
+installed or uploaded. A no-op when the repo has no `pyproject.toml` or its
+`[tool.wads.ci.version].sync` lists no manifest in the npm package; otherwise the
+decision is `wads.version_sync.npm_publish_refusal`.
+
+Usage:
+
+```default
+SUBJECT='<commit subject>' [WORKFLOW_REF=<github.workflow_ref>] \
+    python3 -I npm_publish_guard.py PACKAGE_DIR CHANGED_FILES [REPO_DIR]
+```
+
+`CHANGED_FILES` holds the push’s changed paths, repo relative, NUL separated
+(`git diff --name-only -z`). `WORKFLOW_REF` names the calling npm stub, whose
+own file counts as part of the npm package.
+
+### Functions
+
+| [`main`](_autosummary/wads.scripts.npm_publish_guard.html.md#wads.scripts.npm_publish_guard.main)([argv])   | 0 when npm may publish, 1 with an error annotation when it must not.   |
+|-----------------------------------------------------------------|------------------------------------------------------------------------|
+
+### wads.scripts.npm_publish_guard.main(argv=None)
+
+0 when npm may publish, 1 with an error annotation when it must not.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 
 # _autosummary/wads.scripts.pytest_doctest_flags.html.md
@@ -7623,6 +7684,38 @@ Set environment variables from GitHub Secrets based on CI config.
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 * **Returns:**
   Exit code (0 for success, 1 for failure)
+
+
+# _autosummary/wads.scripts.sync_version.html.md
+
+# wads.scripts.sync_version
+
+Write the release version into the manifests `[tool.wads.ci.version].sync` lists.
+
+Run by the `sync-version` action in uv-ci’s publish jobs, right after the version
+bump, so the bump commit carries every manifest (i2mint/wads#210). The `--file`
+form writes one `package.json` or `package-lock.json`; the `git-commit`
+action’s push-back conflict resolver uses it to put this run’s version on top of
+upstream’s file.
+
+Usage:
+
+```default
+python3 -I sync_version.py VERSION FILES_JSON [REPO_DIR]
+python3 -I sync_version.py --file PATH VERSION
+```
+
+### Functions
+
+| [`main`](_autosummary/wads.scripts.sync_version.html.md#wads.scripts.sync_version.main)([argv])   | Sync `VERSION` into each file of `FILES_JSON`; 1 with an error annotation on failure.   |
+|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+
+### wads.scripts.sync_version.main(argv=None)
+
+Sync `VERSION` into each file of `FILES_JSON`; 1 with an error annotation on failure.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 
 # _autosummary/wads.scripts.validate_ci_env.html.md
@@ -8562,6 +8655,236 @@ For examples, see the mk_import_root_replacer helper function.
 * **Returns:**
 
 
+# _autosummary/wads.version_sync.html.md
+
+# wads.version_sync
+
+One version number for a Python package and its npm twin (i2mint/wads#210).
+
+A repo that publishes the same code to PyPI and npm lists, in `pyproject.toml`,
+the manifests that carry the Python version too:
+
+```default
+[tool.wads.ci.version]
+sync = ["ts/package.json"]
+```
+
+Two things follow, both in uv-ci:
+
+- **Release:** right after the publish job bumps `[project].version`, it writes
+  that version into each listed manifest (and the `package-lock.json` beside
+  it), so the bump commit carries all of them.
+- **Check:** the setup job fails when a listed manifest’s version differs from
+  `[project].version`, so a hand edit on one side shows up before a release.
+
+And one in npm-ci: npm packs the commit that was pushed, which comes *before* the
+bump commit of the Python release the same push cuts, so it would carry the
+previous release’s number with newer code. [`npm_publish_refusal()`](_autosummary/wads.version_sync.html.md#wads.version_sync.npm_publish_refusal) refuses
+that publish (see its docstring).
+
+Only `package.json` is supported: a Rust crate usually keeps its own version
+line. This module imports only the standard library (and `wads.ci_config`, which
+does too), because the CI scripts load it by path from the wads checkout
+(`wads/scripts/_checkout_import.py`).
+
+### Module Attributes
+
+| [`SYNCABLE_MANIFESTS`](_autosummary/wads.version_sync.html.md#wads.version_sync.SYNCABLE_MANIFESTS)   | Manifest file names `[tool.wads.ci.version].sync` may list.                        |
+|-----------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`NPM_LOCKFILE`](_autosummary/wads.version_sync.html.md#wads.version_sync.NPM_LOCKFILE)         | The lockfile npm keeps beside a `package.json`; its own version fields follow.     |
+| [`SEMVER`](_autosummary/wads.version_sync.html.md#wads.version_sync.SEMVER)               | A semver version, the only kind npm accepts (PEP 440 forms like `1.0rc1` are not). |
+
+### Functions
+
+| [`caller_workflow_path`](_autosummary/wads.version_sync.html.md#wads.version_sync.caller_workflow_path)(workflow_ref)              | The repo-relative workflow file in `github.workflow_ref`; `None` if there is none.   |
+|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`check_versions_agree`](_autosummary/wads.version_sync.html.md#wads.version_sync.check_versions_agree)(repo_dir, pyproject_data)  | Raise `ValueError` naming every listed manifest whose version differs.               |
+| [`npm_publish_refusal`](_autosummary/wads.version_sync.html.md#wads.version_sync.npm_publish_refusal)(pyproject_data, ...[, ...]) | Why npm-ci must not publish `package_dir` from this push, or `None` when it may.     |
+| [`pypi_release_expected`](_autosummary/wads.version_sync.html.md#wads.version_sync.pypi_release_expected)(pyproject_data, subject)  | Whether uv-ci's publish job releases to PyPI for a push with this commit `subject`.  |
+| [`set_json_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_json_version)(path, version)                 | Write `version` into one `package.json` or `package-lock.json`, as npm would.        |
+| [`set_manifest_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_manifest_version)(manifest, version)         | Write `version` into `manifest` and the npm lockfile beside it.                      |
+| [`static_project_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.static_project_version)(pyproject_data)          | `[project].version`, which `sync` needs: CI bumps and copies that line.              |
+| [`sync_files`](_autosummary/wads.version_sync.html.md#wads.version_sync.sync_files)(pyproject_data)                      | The manifests `[tool.wads.ci.version].sync` lists, validated.                        |
+| [`sync_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.sync_version)(repo_dir, files, version)          | Write `version` into every listed manifest under `repo_dir`.                         |
+| [`version_mismatches`](_autosummary/wads.version_sync.html.md#wads.version_sync.version_mismatches)(repo_dir, pyproject_data)    | `(path, its version, [project].version)` for each listed manifest that differs.      |
+
+### wads.version_sync.NPM_LOCKFILE *= 'package-lock.json'*
+
+The lockfile npm keeps beside a `package.json`; its own version fields follow.
+
+### wads.version_sync.SEMVER *= re.compile('^(0|[1-9]\\\\d\*)\\\\.(0|[1-9]\\\\d\*)\\\\.(0|[1-9]\\\\d\*)(?:-[0-9A-Za-z-]+(?:\\\\.[0-9A-Za-z-]+)\*)?(?:\\\\+[0-9A-Za-z-]+(?:\\\\.[0-9A-Za-z-]+)\*)?$')*
+
+A semver version, the only kind npm accepts (PEP 440 forms like `1.0rc1` are not).
+
+### wads.version_sync.SYNCABLE_MANIFESTS *= ('package.json',)*
+
+Manifest file names `[tool.wads.ci.version].sync` may list.
+
+### wads.version_sync.caller_workflow_path(workflow_ref)
+
+The repo-relative workflow file in `github.workflow_ref`; `None` if there is none.
+
+In a reusable workflow, `github.workflow_ref` names the *caller’s* file
+(`owner/repo/.github/workflows/npm-ci.yml@refs/heads/main`): the npm stub.
+
+```pycon
+>>> caller_workflow_path("i2mint/demo/.github/workflows/npm-ci.yml@refs/heads/main")
+'.github/workflows/npm-ci.yml'
+>>> caller_workflow_path("") is None
+True
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.version_sync.check_versions_agree(repo_dir, pyproject_data)
+
+Raise `ValueError` naming every listed manifest whose version differs.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.version_sync.npm_publish_refusal(pyproject_data, package_dir, changed_files, subject, , also_inside=())
+
+Why npm-ci must not publish `package_dir` from this push, or `None` when it may.
+
+It refuses only when all of these hold:
+
+- `[tool.wads.ci.version].sync` lists a manifest inside `package_dir` (so
+  its version comes from the Python release);
+- this push also cuts a PyPI release ([`pypi_release_expected()`](_autosummary/wads.version_sync.html.md#wads.version_sync.pypi_release_expected)), whose
+  bump commit comes after the commit npm packs;
+- the push changes files outside `package_dir` (`changed_files`, repo
+  relative). A push that changes only the npm package publishes the version
+  the last Python release wrote. When the npm package is the repo root,
+  every change counts as outside it. Files in `also_inside` (the npm stub’s
+  own workflow file, which the Python stub’s paths filter ignores) count as
+  inside.
+
+```pycon
+>>> data = {"project": {"version": "1.2.3"},
+...         "tool": {"wads": {"ci": {"version": {"sync": ["ts/package.json"]}}}}}
+>>> npm_publish_refusal(data, "ts", ["ts/src/a.ts"], "Release [publish-npm]") is None
+True
+>>> print(npm_publish_refusal(data, "ts", ["ts/src/a.ts", "pkg/b.py"], "Release [publish-npm]"))
+This push also releases the Python package, so npm would get the previous release's number (1.2.3) with newer code: uv-ci writes the new number into ts/package.json in its bump commit, after this one. Publish npm from a commit that changes only ts/ (or carries the skip-publish marker '[skip publish]'). Changed outside ts/: pkg/b.py
+>>> npm_publish_refusal(data, "ts", ["pkg/b.py"], "Release [publish-npm] [skip publish]") is None
+True
+>>> npm_publish_refusal({}, "ts", ["pkg/b.py"], "Release [publish-npm]") is None
+True
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.version_sync.pypi_release_expected(pyproject_data, subject)
+
+Whether uv-ci’s publish job releases to PyPI for a push with this commit `subject`.
+
+Mirrors uv-ci’s gates (markers match the subject case-insensitively, like
+GitHub’s `contains()`): the skip-ci and skip-publish markers suppress the
+release; with `[tool.wads.ci.publish].enabled = false` only the publish
+marker cuts one; in on-demand trigger mode only the deploy marker does, or
+the run-ci marker when `run_ci_publishes` is on.
+
+```pycon
+>>> pypi_release_expected({}, "Fix a typo")
+True
+>>> pypi_release_expected({}, "Fix a typo [Skip Publish]")
+False
+>>> off = {"tool": {"wads": {"ci": {"publish": {"enabled": False}}}}}
+>>> pypi_release_expected(off, "Fix a typo"), pypi_release_expected(off, "Fix [publish]")
+(False, True)
+```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### wads.version_sync.set_json_version(path, version)
+
+Write `version` into one `package.json` or `package-lock.json`, as npm would.
+
+A lockfile carries the version twice: at the top and on its root package
+(`packages[""]`); dependencies’ versions are left alone. Everything else in
+the file, and its layout, is kept. Used by the release ([`set_manifest_version()`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_manifest_version))
+and by the git-commit action’s push-back conflict resolver.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.version_sync.set_manifest_version(manifest, version)
+
+Write `version` into `manifest` and the npm lockfile beside it.
+
+Returns the files written. Refuses a version npm would reject, before writing.
+
+```pycon
+>>> import tempfile
+>>> d = Path(tempfile.mkdtemp())
+>>> _ = (d / "package.json").write_text('{\n  "name": "x",\n  "version": "0.0.1"\n}\n')
+>>> [p.name for p in set_manifest_version(d / "package.json", "0.0.2")]
+['package.json']
+>>> print((d / "package.json").read_text(), end="")
+{
+  "name": "x",
+  "version": "0.0.2"
+}
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
+
+### wads.version_sync.static_project_version(pyproject_data)
+
+`[project].version`, which `sync` needs: CI bumps and copies that line.
+
+```pycon
+>>> static_project_version({"project": {"version": "1.2.3"}})
+'1.2.3'
+>>> static_project_version({"project": {"dynamic": ["version"]}})
+Traceback (most recent call last):
+  ...
+ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.version_sync.sync_files(pyproject_data)
+
+The manifests `[tool.wads.ci.version].sync` lists, validated.
+
+```pycon
+>>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["ts/package.json"]}}}}})
+['ts/package.json']
+>>> sync_files({})
+[]
+>>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/Cargo.toml"]}}}}})
+Traceback (most recent call last):
+  ...
+ValueError: [tool.wads.ci.version].sync: 'rust/core/Cargo.toml' is not one of ('package.json',); a Rust crate keeps its own version line.
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.version_sync.sync_version(repo_dir, files, version)
+
+Write `version` into every listed manifest under `repo_dir`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
+
+### wads.version_sync.version_mismatches(repo_dir, pyproject_data)
+
+`(path, its version, [project].version)` for each listed manifest that differs.
+
+A missing manifest counts as a mismatch (its version is `None`).
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
+
+
 # _autosummary/wads.workdirs.html.md
 
 # wads.workdirs
@@ -8694,16 +9017,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-10 10:25 UTC** from commit <a href="https://github.com/i2mint/wads/commit/d37f4b13270328f393835549bf0577bf3d21602a"><code>d37f4b1</code></a> on branch <code>master</code>, for **wads 0.2.81** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 10:29 UTC** from commit <a href="https://github.com/i2mint/wads/commit/c7c3b525fb503ea04e1e2097f0aba739fb9d5317"><code>c7c3b52</code></a> on branch <code>master</code>, for **wads 0.2.82** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.82) is ahead of the latest release on PyPI (0.2.81): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/d37f4b13270328f393835549bf0577bf3d21602a"><code>d37f4b13270328f393835549bf0577bf3d21602a</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/c7c3b525fb503ea04e1e2097f0aba739fb9d5317"><code>c7c3b525fb503ea04e1e2097f0aba739fb9d5317</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8714,9 +9039,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42798422762">42798422762</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42799110566">42799110566</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>d37f4b13270328f393835549bf0577bf3d21602a</code> (in the history of the built commit) |
+| Event commit | <code>c7c3b525fb503ea04e1e2097f0aba739fb9d5317</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8741,13 +9066,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, older than the documented version (0.2.82).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout d37f4b13270328f393835549bf0577bf3d21602a
+git checkout c7c3b525fb503ea04e1e2097f0aba739fb9d5317
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

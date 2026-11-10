@@ -235,7 +235,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
@@ -244,6 +246,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.version_sync.html">wads.version_sync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
@@ -426,6 +429,13 @@
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"native-targets"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">matrix</span><span class="p">()</span> <span class="k">if</span> <span class="n">native</span> <span class="k">else</span> <span class="p">[])</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"native-options"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">options</span><span class="p">()</span> <span class="k">if</span> <span class="n">native</span> <span class="k">else</span> <span class="p">{})</span>
 
+        <span class="c1"># One version across PyPI and npm (i2mint/wads#210): the manifests the</span>
+        <span class="c1"># publish job writes the bumped version into. Versions that already</span>
+        <span class="c1"># disagree fail here, before any release.</span>
+        <span class="n">version_sync</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"version_sync"</span><span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span><span class="s2">"version-sync"</span><span class="p">,</span> <span class="n">version_sync</span><span class="o">.</span><span class="n">sync_files</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">version_sync</span><span class="o">.</span><span class="n">check_versions_agree</span><span class="p">(</span><span class="n">_project_dir</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">),</span> <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
         <span class="c1"># Build configuration</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"build-sdist"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_sdist</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"build-wheel"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">build_wheel</span><span class="p">)</span>
@@ -602,7 +612,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=86b96456"></script>
+</div><script src="../../../_static/documentation_options.js?v=a608febd"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

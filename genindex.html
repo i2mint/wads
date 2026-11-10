@@ -234,7 +234,9 @@
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
@@ -243,6 +245,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.version_sync.html">wads.version_sync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
@@ -372,6 +375,8 @@
 </li>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.CALL_TIMEOUT">CALL_TIMEOUT (in module wads.npm_trust)</a>
 </li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.caller_workflow_path">caller_workflow_path() (in module wads.version_sync)</a>
+</li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.Canary">Canary (class in wads.licence_check)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.CANARY_FAMILIES">CANARY_FAMILIES (in module wads.licence_check)</a>
@@ -404,6 +409,8 @@
 </li>
         <li><a href="_autosummary/wads.setup_utils.html#wads.setup_utils.check_system_dependency">check_system_dependency() (in module wads.setup_utils)</a>
 </li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.check_versions_agree">check_versions_agree() (in module wads.version_sync)</a>
+</li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.ci_local">ci_local() (in module wads.ci_local)</a>
 </li>
         <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.CI_PROVIDED_PACKAGES">CI_PROVIDED_PACKAGES (wads.ci_config.CIConfig attribute)</a>
@@ -416,10 +423,10 @@
           <li><a href="_autosummary/wads.agents.ci_debug_agent.html#wads.agents.ci_debug_agent.CIDiagnosis">(class in wads.agents.ci_debug_agent)</a>
 </li>
         </ul></li>
-        <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.CILocalReport">CILocalReport (class in wads.ci_local)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.CILocalReport">CILocalReport (class in wads.ci_local)</a>
+</li>
         <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.classify_ci_workflow">classify_ci_workflow() (in module wads.ci_trigger)</a>
 </li>
         <li><a href="_autosummary/wads.repo_audit.html#wads.repo_audit.classify_workflow">classify_workflow() (in module wads.repo_audit)</a>
@@ -953,9 +960,13 @@
 </li>
           <li><a href="_autosummary/wads.scripts.install_deps.html#wads.scripts.install_deps.main">(in module wads.scripts.install_deps)</a>
 </li>
+          <li><a href="_autosummary/wads.scripts.npm_publish_guard.html#wads.scripts.npm_publish_guard.main">(in module wads.scripts.npm_publish_guard)</a>
+</li>
           <li><a href="_autosummary/wads.scripts.read_ci_config.html#wads.scripts.read_ci_config.main">(in module wads.scripts.read_ci_config)</a>
 </li>
           <li><a href="_autosummary/wads.scripts.set_env_vars.html#wads.scripts.set_env_vars.main">(in module wads.scripts.set_env_vars)</a>
+</li>
+          <li><a href="_autosummary/wads.scripts.sync_version.html#wads.scripts.sync_version.main">(in module wads.scripts.sync_version)</a>
 </li>
           <li><a href="_autosummary/wads.scripts.validate_ci_env.html#wads.scripts.validate_ci_env.main">(in module wads.scripts.validate_ci_env)</a>
 </li>
@@ -1080,11 +1091,15 @@
 </li>
           <li><a href="_autosummary/wads.scripts.install_deps.html#module-wads.scripts.install_deps">wads.scripts.install_deps</a>
 </li>
+          <li><a href="_autosummary/wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard">wads.scripts.npm_publish_guard</a>
+</li>
           <li><a href="_autosummary/wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags">wads.scripts.pytest_doctest_flags</a>
 </li>
           <li><a href="_autosummary/wads.scripts.read_ci_config.html#module-wads.scripts.read_ci_config">wads.scripts.read_ci_config</a>
 </li>
           <li><a href="_autosummary/wads.scripts.set_env_vars.html#module-wads.scripts.set_env_vars">wads.scripts.set_env_vars</a>
+</li>
+          <li><a href="_autosummary/wads.scripts.sync_version.html#module-wads.scripts.sync_version">wads.scripts.sync_version</a>
 </li>
           <li><a href="_autosummary/wads.scripts.validate_ci_env.html#module-wads.scripts.validate_ci_env">wads.scripts.validate_ci_env</a>
 </li>
@@ -1099,6 +1114,8 @@
           <li><a href="_autosummary/wads.user_dirs.html#module-wads.user_dirs">wads.user_dirs</a>
 </li>
           <li><a href="_autosummary/wads.util.html#module-wads.util">wads.util</a>
+</li>
+          <li><a href="_autosummary/wads.version_sync.html#module-wads.version_sync">wads.version_sync</a>
 </li>
           <li><a href="_autosummary/wads.workdirs.html#module-wads.workdirs">wads.workdirs</a>
 </li>
@@ -1135,11 +1152,13 @@
 </li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.NPM_COMMAND_SHELL">NPM_COMMAND_SHELL (in module wads.ci_local)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.npm_config.html#wads.npm_config.npm_components">npm_components() (in module wads.npm_config)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.NPM_COPY_IGNORE">NPM_COPY_IGNORE (in module wads.ci_local)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.NPM_LOCKFILE">NPM_LOCKFILE (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.npm_config.html#wads.npm_config.NPM_MONOREPO_COMMAND_DEFAULTS">NPM_MONOREPO_COMMAND_DEFAULTS (in module wads.npm_config)</a>
 </li>
@@ -1148,6 +1167,8 @@
         <li><a href="_autosummary/wads.profiles.html#wads.profiles.npm_overlay_context">npm_overlay_context() (in module wads.profiles)</a>
 </li>
         <li><a href="_autosummary/wads.npm_config.html#wads.npm_config.NPM_PUBLISH_DEFAULTS">NPM_PUBLISH_DEFAULTS (in module wads.npm_config)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.npm_publish_refusal">npm_publish_refusal() (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.NPM_STEP_KINDS">NPM_STEP_KINDS (in module wads.ci_local)</a>
 </li>
@@ -1284,6 +1305,8 @@
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.Publisher">Publisher (class in wads.npm_trust)</a>
 </li>
         <li><a href="_autosummary/wads.project_setup.html#wads.project_setup.pypi_project_url">pypi_project_url() (in module wads.project_setup)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.pypi_release_expected">pypi_release_expected() (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.pack.html#wads.pack.pyproject_toml_version">pyproject_toml_version() (in module wads.pack)</a>
 </li>
@@ -1431,9 +1454,15 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.SelfCheck">SelfCheck (class in wads.licence_check)</a>
 </li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.SEMVER">SEMVER (in module wads.version_sync)</a>
+</li>
         <li><a href="_autosummary/wads.scripts.set_env_vars.html#wads.scripts.set_env_vars.set_environment_variables">set_environment_variables() (in module wads.scripts.set_env_vars)</a>
 </li>
         <li><a href="_autosummary/wads.secrets_cli.html#wads.secrets_cli.set_github_secret">set_github_secret() (in module wads.secrets_cli)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.set_json_version">set_json_version() (in module wads.version_sync)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.set_manifest_version">set_manifest_version() (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.set_on_demand_in_pyproject">set_on_demand_in_pyproject() (in module wads.ci_trigger)</a>
 </li>
@@ -1462,6 +1491,8 @@
         <li><a href="_autosummary/wads.install_system_deps.html#wads.install_system_deps.static_ffmpeg_commands">static_ffmpeg_commands() (in module wads.install_system_deps)</a>
 </li>
         <li><a href="_autosummary/wads.install_system_deps.html#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS">STATIC_FFMPEG_DEFAULTS (in module wads.install_system_deps)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.static_project_version">static_project_version() (in module wads.version_sync)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
@@ -1508,6 +1539,12 @@
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.survey">survey() (in module wads.npm_trust)</a>
 </li>
         <li><a href="_autosummary/wads.workdirs.html#wads.workdirs.sweep_stale_workdirs">sweep_stale_workdirs() (in module wads.workdirs)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.sync_files">sync_files() (in module wads.version_sync)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.sync_version">sync_version() (in module wads.version_sync)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.SYNCABLE_MANIFESTS">SYNCABLE_MANIFESTS (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.system_dependencies">system_dependencies (wads.ci_config.CIConfig property)</a>
 </li>
@@ -1633,15 +1670,17 @@
 </li>
         <li><a href="_autosummary/wads.pack.html#wads.pack.validate_versions">validate_versions() (in module wads.pack)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.ManagerFlags.value">value (wads.npm_trust.ManagerFlags property)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.venv_python">venv_python() (in module wads.ci_local)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.Verdict">Verdict (class in wads.licence_check)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.verdict">verdict() (in module wads.licence_check)</a>
+</li>
+        <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.version_mismatches">version_mismatches() (in module wads.version_sync)</a>
 </li>
         <li><a href="_autosummary/wads.pack.html#wads.pack.versions_from_pypi">versions_from_pypi() (in module wads.pack)</a>
 </li>
@@ -1821,8 +1860,6 @@
           <li><a href="_autosummary/wads.repo_audit.html#module-wads.repo_audit">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     wads.scripts
 
@@ -1837,6 +1874,8 @@
           <li><a href="_autosummary/wads.scripts.build_dist.html#module-wads.scripts.build_dist">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     wads.scripts.cargo_test_args
 
@@ -1859,6 +1898,13 @@
 </li>
         </ul></li>
         <li>
+    wads.scripts.npm_publish_guard
+
+        <ul>
+          <li><a href="_autosummary/wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard">module</a>
+</li>
+        </ul></li>
+        <li>
     wads.scripts.pytest_doctest_flags
 
         <ul>
@@ -1877,6 +1923,13 @@
 
         <ul>
           <li><a href="_autosummary/wads.scripts.set_env_vars.html#module-wads.scripts.set_env_vars">module</a>
+</li>
+        </ul></li>
+        <li>
+    wads.scripts.sync_version
+
+        <ul>
+          <li><a href="_autosummary/wads.scripts.sync_version.html#module-wads.scripts.sync_version">module</a>
 </li>
         </ul></li>
         <li>
@@ -1926,6 +1979,13 @@
 
         <ul>
           <li><a href="_autosummary/wads.util.html#module-wads.util">module</a>
+</li>
+        </ul></li>
+        <li>
+    wads.version_sync
+
+        <ul>
+          <li><a href="_autosummary/wads.version_sync.html#module-wads.version_sync">module</a>
 </li>
         </ul></li>
         <li>
@@ -1999,7 +2059,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=86b96456"></script>
+</div><script src="_static/documentation_options.js?v=a608febd"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

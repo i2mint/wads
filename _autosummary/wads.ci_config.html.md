@@ -461,6 +461,16 @@ only. A squash-merge folds the entire PR body into the squash commit
 message, so a full-message match fires on a PR that merely writes
 about a marker.
 
+Must be a boolean: a string such as `"false"` would be true here while
+the workflow, which compares its text, reads it as false.
+
+```pycon
+>>> CIConfig({"tool": {"wads": {"ci": {"publish": {"enabled": "false"}}}}}).publish_enabled
+Traceback (most recent call last):
+  ...
+ValueError: [tool.wads.ci.publish].enabled must be true or false, got 'false'
+```
+
 #### *property* publish_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 Commit-subject substring that forces publishing.

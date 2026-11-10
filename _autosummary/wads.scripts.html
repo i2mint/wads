@@ -238,7 +238,9 @@
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.validate_ci_env.html">wads.scripts.validate_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="wads.secrets_cli.html">wads.secrets_cli</a></li>
@@ -247,6 +249,7 @@
 <li class="toctree-l3"><a class="reference internal" href="wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.user_dirs.html">wads.user_dirs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.util.html">wads.util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.version_sync.html">wads.version_sync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.workdirs.html">wads.workdirs</a></li>
 </ul>
 </li>
@@ -331,8 +334,14 @@ making them easier to test, maintain, and reuse.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.export_ci_env.html#module-wads.scripts.export_ci_env" title="wads.scripts.export_ci_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_ci_env</span></code></a></p></td>
 <td><p>Export the pyproject-declared CI environment to <code class="docutils literal notranslate"><span class="pre">$GITHUB_ENV</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags" title="wads.scripts.pytest_doctest_flags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_doctest_flags</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard" title="wads.scripts.npm_publish_guard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_publish_guard</span></code></a></p></td>
+<td><p>Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags" title="wads.scripts.pytest_doctest_flags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_doctest_flags</span></code></a></p></td>
 <td><p>Print the <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">doctest_optionflags=...</span></code> pytest argument CI should add, if any.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.sync_version.html#module-wads.scripts.sync_version" title="wads.scripts.sync_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sync_version</span></code></a></p></td>
+<td><p>Write the release version into the manifests <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.version].sync</span></code> lists.</p></td>
 </tr>
 </tbody>
 </table>
@@ -384,7 +393,7 @@ making them easier to test, maintain, and reuse.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=86b96456"></script>
+</div><script src="../_static/documentation_options.js?v=a608febd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
