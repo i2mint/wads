@@ -606,6 +606,14 @@ Generate YAML step for pre-test commands.
 
 Get the `[tool.wads.ci.trigger]` table.
 
+#### *property* trigger_include_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)*
+
+Paths the Python CI watches although an npm component holds them (#209).
+
+`[tool.wads.ci.trigger].include_paths`: re-added after the stub’s
+exclusions, e.g. a TypeScript file the Python side generates and its tests
+check. Default `[]`.
+
 #### *property* trigger_mode *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 `"auto"` (the default) or `"on-demand"`.

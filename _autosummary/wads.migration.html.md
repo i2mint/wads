@@ -205,7 +205,7 @@ True
 
 CLI entry point for wads migration tools.
 
-### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None)
+### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None, paths=None)
 
 Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.
 
@@ -250,6 +250,9 @@ configuration continues to come from `[tool.wads.ci.*]` in
     the run is a `workflow_dispatch`; see [`wads.ci_trigger`](wads.ci_trigger.html.md#module-wads.ci_trigger).
   * **run_ci_marker** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – The on-demand marker; `None` takes it from the same
     pyproject (default `"[run ci]"`).
+  * **paths** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – The `paths:` filter that keeps the repo’s npm components out of
+    the Python CI (i2mint/wads#209); `None` derives it from the repo
+    holding `old_ci` (none when `old_ci` is not a file).
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 * **Returns:**

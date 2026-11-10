@@ -29,6 +29,12 @@ The flip ([`flip_to_on_demand()`](#wads.ci_trigger.flip_to_on_demand), CLI `wads
 plus a cheap test matrix and re-renders the stub. Everything is computed in a shadow
 copy of the repo first, so a dry run and a real run take the same path.
 
+### Module Attributes
+
+| [`WATCH_ALL`](#wads.ci_trigger.WATCH_ALL)      | The first entry of a rendered `paths:` filter; `!` entries then carve out.   |
+|-----------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`ON_DEMAND_PUSH`](#wads.ci_trigger.ON_DEMAND_PUSH) | The on-demand header's trigger lines, which a paths filter is inserted into. |
+
 ### Functions
 
 | [`classify_ci_workflow`](#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.                                                                                           |
@@ -37,21 +43,26 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`flip_to_on_demand`](#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
 | [`inline_trigger_gate`](#wads.ci_trigger.inline_trigger_gate)(text)                       | Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.                                                                               |
 | [`parse_stub_if`](#wads.ci_trigger.parse_stub_if)(condition)                        | The markers a stub's pre-filter `if:` tests, or `None` if it is not that shape.                                                                                   |
+| [`python_ci_paths`](#wads.ci_trigger.python_ci_paths)(repo_root, \*[, include])       | The `paths:` filter for the Python CI stub of `repo_root`; `[]` for none.                                                                                         |
 | [`render_stub_inputs`](#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
+| [`render_stub_paths`](#wads.ci_trigger.render_stub_paths)(stub, paths)                  | Put a `paths:` filter on the push (and pull-request) trigger of a rendered stub.                                                                                  |
 | [`render_stub_trigger`](#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
 | [`repo_pyproject_for`](#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
+| [`repo_root_of_workflow`](#wads.ci_trigger.repo_root_of_workflow)(ci_path)                  | The repo holding `.github/workflows/<file>`: the nearest parent with `.git`, else the directory above `.github`.                                                  |
 | [`run_ci_on_demand`](#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                                                                                                     |
 | [`set_on_demand_in_pyproject`](#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.                                                                                                 |
-| [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
+| [`stub_customizations`](#wads.ci_trigger.stub_customizations)(text, \*[, paths])          | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
 | [`stub_if_expression`](#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
 | [`stub_inputs_of`](#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
 | [`stub_markers`](#wads.ci_trigger.stub_markers)(text)                              | The markers the pre-filter of the stub `text` tests; `[]` if it has none.                                                                                         |
+| [`stub_paths_for_workflow`](#wads.ci_trigger.stub_paths_for_workflow)(ci_path)                | The `paths:` filter the Python stub at `ci_path` should carry.                                                                                                    |
 | [`stub_shape`](#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
 | [`trigger_for_workflow`](#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
 | [`trigger_settings_for_workflow`](#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](#wads.ci_trigger.render_stub_trigger) keyword arguments. |
 | [`unasked_workflows`](#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron).                                                                                   |
 | [`uncommitted`](#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).                                                                                       |
 | [`validate_trigger`](#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.                                                                                      |
+| [`workflow_triggers`](#wads.ci_trigger.workflow_triggers)(workflow)                     | The `on:` of a workflow (its text or its parsed mapping).                                                                                                         |
 
 ### Classes
 
@@ -74,6 +85,14 @@ Unified diff of every change.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.ON_DEMAND_PUSH *= 'on:\\n  push:\\n  workflow_dispatch:\\n'*
+
+The on-demand header’s trigger lines, which a paths filter is inserted into.
+
+### wads.ci_trigger.WATCH_ALL *= '\*\*'*
+
+The first entry of a rendered `paths:` filter; `!` entries then carve out.
 
 ### wads.ci_trigger.classify_ci_workflow(text)
 
@@ -155,9 +174,43 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
+### wads.ci_trigger.python_ci_paths(repo_root, , include=())
+
+The `paths:` filter for the Python CI stub of `repo_root`; `[]` for none.
+
+Every npm component an `npm-ci*.yml` stub runs (its directory and its own
+workflow file) is left out, so a change only there runs the npm CI alone and
+never cuts a PyPI release. `include` re-adds paths after the exclusions
+(`[tool.wads.ci.trigger].include_paths`), e.g. a file the Python tests
+generate into the npm component. A component at the repo root cannot be
+carved out and is skipped. Shared inputs (`fixtures/`, `rust/`) stay
+watched, since both sides test them.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### wads.ci_trigger.render_stub_inputs(stub, inputs)
 
 Add a `with:` block (the reusable workflow’s inputs) under the stub’s `uses:`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.render_stub_paths(stub, paths)
+
+Put a `paths:` filter on the push (and pull-request) trigger of a rendered stub.
+
+`paths` empty returns `stub` unchanged. Works on both trigger modes.
+
+```pycon
+>>> print(render_stub_paths("on: [push, pull_request]\njobs:\n", ["**", "!ts/**"]), end="")
+on:
+  push:
+    paths: ["**", "!ts/**"]
+  pull_request:
+    paths: ["**", "!ts/**"]
+jobs:
+```
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -184,6 +237,14 @@ so an enclosing project’s pyproject is never mistaken for this repo’s.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
 
+### wads.ci_trigger.repo_root_of_workflow(ci_path)
+
+The repo holding `.github/workflows/<file>`: the nearest parent with `.git`,
+else the directory above `.github`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
 ### wads.ci_trigger.run_ci_on_demand(repo='.', , dry_run=False, python_versions=('3.12',), test_on_windows=False, run_ci_marker=None, workflow='.github/workflows/ci.yml', commit=False, out=None, err=None)
 
 `wads-migrate ci-on-demand`: flip, report, optionally commit. Returns an exit code.
@@ -205,12 +266,14 @@ is not touched, so applying this twice returns the first result unchanged.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### wads.ci_trigger.stub_customizations(text)
+### wads.ci_trigger.stub_customizations(text, , paths=())
 
 Split what a stub holds beyond the template into `(with_inputs, dropped)`.
 
 `with_inputs` (a flat `with:` mapping, e.g. `project-name`) survives a
 re-render; `dropped` names everything else a re-render would silently lose.
+`paths` is the `paths:` filter the re-render will write
+([`stub_paths_for_workflow()`](#wads.ci_trigger.stub_paths_for_workflow)); a different filter is reported as dropped.
 Raises `yaml.YAMLError` when the text does not parse.
 
 ```pycon
@@ -266,6 +329,13 @@ The markers the pre-filter of the stub `text` tests; `[]` if it has none.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.stub_paths_for_workflow(ci_path)
+
+The `paths:` filter the Python stub at `ci_path` should carry.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ### wads.ci_trigger.stub_shape(ci_text)
 
@@ -335,3 +405,14 @@ ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), go
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.workflow_triggers(workflow)
+
+The `on:` of a workflow (its text or its parsed mapping).
+
+PyYAML reads a bare `on:` key as `True`, so both keys are looked up.
+
+```pycon
+>>> workflow_triggers("on: [push]\njobs: {}\n")
+['push']
+```

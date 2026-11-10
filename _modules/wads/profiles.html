@@ -371,6 +371,32 @@
 <span class="c1"># owns its own subdir and a per-subdir workflow file.</span>
 <span class="c1"># --------------------------------------------------------------------------------------</span>
 
+<span class="c1">#: Where a Python package and its npm twin keep the golden cases both test suites</span>
+<span class="c1">#: run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.</span>
+<span class="n">DFLT_SHARED_FIXTURES_DIR</span> <span class="o">=</span> <span class="s2">"fixtures"</span>
+<span class="c1">#: Where a Rust core lives in the native (maturin) layout; when present, a change</span>
+<span class="c1">#: there runs the npm CI too (a wasm build may compile it).</span>
+<span class="n">DFLT_RUST_DIR</span> <span class="o">=</span> <span class="s2">"rust"</span>
+
+
+<div class="viewcode-block" id="default_npm_watch_paths">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.default_npm_watch_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_npm_watch_paths</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Inputs outside its subdir an npm component's CI should run on.</span>
+
+<span class="sd">    The shared fixtures directory always (a pattern that matches nothing costs</span>
+<span class="sd">    nothing), and the Rust core when ``repo_dir`` has one.</span>
+
+<span class="sd">    &gt;&gt;&gt; default_npm_watch_paths()</span>
+<span class="sd">    ['fixtures/**']</span>
+<span class="sd">    """</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DFLT_SHARED_FIXTURES_DIR</span><span class="si">}</span><span class="s2">/**"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">repo_dir</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">,</span> <span class="n">DFLT_RUST_DIR</span><span class="p">)):</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">DFLT_RUST_DIR</span><span class="si">}</span><span class="s2">/**"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paths</span></div>
+
+
+
 <span class="c1"># The reusable workflow each profile's stub calls (hosted in this repo).</span>
 <span class="n">_SINGLE_PACKAGE_REUSABLE</span> <span class="o">=</span> <span class="s2">"npm-ci.yml"</span>
 <span class="n">_MONOREPO_REUSABLE</span> <span class="o">=</span> <span class="s2">"npm-ci-monorepo.yml"</span>
@@ -415,6 +441,7 @@
     <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"packages/*"</span><span class="p">,</span>
     <span class="n">example_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">license_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">watch_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build the render context shared by all frontend-profile templates.</span>
 
@@ -438,6 +465,10 @@
         <span class="c1"># Stub workflow wiring (per-component, collision-free):</span>
         <span class="s2">"npm_workflow_name"</span><span class="p">:</span> <span class="n">_workflow_name</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
         <span class="s2">"npm_workflow_file"</span><span class="p">:</span> <span class="n">_workflow_basename</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
+        <span class="c1"># Shared inputs outside the subdir that also run this component's CI:</span>
+        <span class="s2">"npm_watch_paths"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">default_npm_watch_paths</span><span class="p">()</span> <span class="k">if</span> <span class="n">watch_paths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">watch_paths</span><span class="p">)</span>
+        <span class="p">),</span>
         <span class="s2">"reusable_workflow"</span><span class="p">:</span> <span class="n">reusable</span><span class="p">,</span>
         <span class="c1"># Monorepo-only context (ignored by single-package templates):</span>
         <span class="s2">"npm_workspace_glob"</span><span class="p">:</span> <span class="n">workspace_glob</span><span class="p">,</span>
@@ -662,6 +693,7 @@
     <span class="n">package_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"packages/*"</span><span class="p">,</span>
     <span class="n">example_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">watch_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -669,7 +701,9 @@
 <span class="w">    </span><span class="sd">"""Apply one frontend profile component to an existing project directory.</span>
 
 <span class="sd">    ``subdir`` and ``package_manager`` default to the selected profile's</span>
-<span class="sd">    defaults. Returns the :class:`wads.templating.GenerationResult`.</span>
+<span class="sd">    defaults. ``watch_paths`` are the inputs outside the subdir that also run the</span>
+<span class="sd">    component's CI (default :func:`default_npm_watch_paths` of ``pkg_dir``).</span>
+<span class="sd">    Returns the :class:`wads.templating.GenerationResult`.</span>
 
 <span class="sd">    &gt;&gt;&gt; import tempfile</span>
 <span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
@@ -693,6 +727,9 @@
         <span class="n">workspace_glob</span><span class="o">=</span><span class="n">workspace_glob</span><span class="p">,</span>
         <span class="n">example_package_name</span><span class="o">=</span><span class="n">example_package_name</span><span class="p">,</span>
         <span class="n">license_file</span><span class="o">=</span><span class="n">find_license_file</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">),</span>
+        <span class="n">watch_paths</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">default_npm_watch_paths</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">watch_paths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">watch_paths</span>
+        <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">artifacts</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">artifacts</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">generate</span><span class="p">(</span>
@@ -888,7 +925,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

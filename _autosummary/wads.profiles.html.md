@@ -24,9 +24,11 @@ Nothing here runs by default; the Python `populate` path and the
 
 ### Module Attributes
 
-| [`LICENSE_FILENAMES`](#wads.profiles.LICENSE_FILENAMES)   | Root licence file names a frontend component copies, in order of preference.   |
-|----------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.                                                 |
+| [`DFLT_SHARED_FIXTURES_DIR`](#wads.profiles.DFLT_SHARED_FIXTURES_DIR)   | Where a Python package and its npm twin keep the golden cases both test suites run (i2mint/wads#209).                                   |
+|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_RUST_DIR`](#wads.profiles.DFLT_RUST_DIR)              | Where a Rust core lives in the native (maturin) layout; when present, a change there runs the npm CI too (a wasm build may compile it). |
+| [`LICENSE_FILENAMES`](#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
+| [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
 
 ### Functions
 
@@ -34,6 +36,7 @@ Nothing here runs by default; the Python `populate` path and the
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [`apply_npm_overlay`](#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)     | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
 | [`apply_tests_overlay`](#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)   | Scaffold a `tests/` folder in an existing project (issue #4).                 |
+| [`default_npm_watch_paths`](#wads.profiles.default_npm_watch_paths)([repo_dir])              | Inputs outside its subdir an npm component's CI should run on.                |
 | [`find_license_file`](#wads.profiles.find_license_file)(repo_dir, \*[, names])         | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
 | [`frontend_context`](#wads.profiles.frontend_context)(\*, profile_name, project_name) | Build the render context shared by all frontend-profile templates.            |
 | [`get_frontend_profile`](#wads.profiles.get_frontend_profile)(name)                       | Look up a registered profile, with an informative error if unknown.           |
@@ -46,6 +49,16 @@ Nothing here runs by default; the Python `populate` path and the
 
 | [`FrontendProfile`](#wads.profiles.FrontendProfile)(name, default_subdir, ...[, ...])   | A declarative frontend language/toolchain profile.   |
 |------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+
+### wads.profiles.DFLT_RUST_DIR *= 'rust'*
+
+Where a Rust core lives in the native (maturin) layout; when present, a change
+there runs the npm CI too (a wasm build may compile it).
+
+### wads.profiles.DFLT_SHARED_FIXTURES_DIR *= 'fixtures'*
+
+Where a Python package and its npm twin keep the golden cases both test suites
+run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
 
 ### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).'), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).'), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).')}*
 
@@ -68,12 +81,14 @@ A declarative frontend language/toolchain profile.
 
 Root licence file names a frontend component copies, in order of preference.
 
-### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, overwrite=(), on_add=None, on_skip=None)
+### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
 
 `subdir` and `package_manager` default to the selected profile’s
-defaults. Returns the [`wads.templating.GenerationResult`](wads.templating.html.md#wads.templating.GenerationResult).
+defaults. `watch_paths` are the inputs outside the subdir that also run the
+component’s CI (default [`default_npm_watch_paths()`](#wads.profiles.default_npm_watch_paths) of `pkg_dir`).
+Returns the [`wads.templating.GenerationResult`](wads.templating.html.md#wads.templating.GenerationResult).
 
 ```pycon
 >>> import tempfile
@@ -98,6 +113,21 @@ Kept so existing callers and tests keep working; new code should call
 
 Scaffold a `tests/` folder in an existing project (issue #4).
 
+### wads.profiles.default_npm_watch_paths(repo_dir=None)
+
+Inputs outside its subdir an npm component’s CI should run on.
+
+The shared fixtures directory always (a pattern that matches nothing costs
+nothing), and the Rust core when `repo_dir` has one.
+
+```pycon
+>>> default_npm_watch_paths()
+['fixtures/**']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### wads.profiles.find_license_file(repo_dir, , names=('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING'))
 
 `(file name, text)` of the repo’s root licence, or `None` if it has none.
@@ -115,7 +145,7 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None)
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None)
 
 Build the render context shared by all frontend-profile templates.
 

@@ -523,6 +523,29 @@
 
     <span class="n">old_content</span> <span class="o">=</span> <span class="n">ci_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
 
+    <span class="c1"># A stub with hand-made customizations (an extra job, a custom trigger or</span>
+    <span class="c1"># paths filter) would be silently stripped by the re-render: leave it alone.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">classify_ci_workflow</span><span class="p">,</span>
+        <span class="n">stub_customizations</span><span class="p">,</span>
+        <span class="n">stub_paths_for_workflow</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">old_content</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"stub"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span>
+                <span class="n">old_content</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># unparseable YAML: do not overwrite it blindly</span>
+            <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"YAML that does not parse (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RepoResult</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">repo_path</span><span class="p">,</span>
+                <span class="s2">"skip"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"a re-render would drop: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+
     <span class="c1"># Carry secret-backed env vars from the existing workflow into</span>
     <span class="c1"># [tool.wads.ci.env] so the migration is lossless (and so the stub's</span>
     <span class="c1"># transport list is generated to include them). Must run before</span>
@@ -676,7 +699,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

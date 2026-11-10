@@ -1,4 +1,4 @@
-> built 2026-11-10 10:29 UTC from c7c3b52 (master) · wads 0.2.82. Details: build_info.json
+> built 2026-11-10 10:40 UTC from 399e729 (master) · wads 0.2.83. Details: build_info.json
 
 # index.html.md
 
@@ -111,6 +111,8 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 | `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`        | `ts/`    | matrixed `npm-ci-monorepo.yml` |
 
 The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo’s root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
+
+The two CIs run on their own inputs. The Python `ci.yml` carries a `paths:` filter that leaves out each npm component and its workflow file, so a change only under `ts/` runs the npm CI alone and never cuts a PyPI release. The npm stub also watches the inputs it shares with the Python side: `fixtures/**` (the golden cases both test suites run) and `rust/**` when there is a Rust core; pass `watch_paths=` to `apply_frontend` for others. The filter is derived from the repo’s `npm-ci*.yml` stubs each time the Python stub is rendered (`populate`, `wads-migrate ci-to-stub`, the on-demand flip), so re-rendering keeps it; `populate --frontend` on a repo whose stub predates it says to re-render. A file under the npm component that the Python tests check (one the Python side generates, say) goes back in with `[tool.wads.ci.trigger] include_paths = ["ts/src/grammar.generated.ts"]`. A hand-written filter that differs from the derived one is reported as a customization a re-render would drop (so `ci-on-demand` refuses and `ci-to-stub` warns); move its extra entries into `include_paths` and run `wads-migrate ci-to-stub` once (the filter is compared entry by entry, in order). `wads-migrate fleet-stub` skips such a stub instead of stripping it. GitHub’s path filters have edges worth knowing: a workflow skipped by its filter leaves a *required* status check pending forever, so do not make the Python CI a required check in a polyglot repo; a diff of more than 300 files is judged on the first 300 only; tag pushes ignore the filter. The npm stub’s watch paths are written when the component is scaffolded (a `rust/` added later needs `rust/**` added to that stub by hand).
 
 ```bash
 # A single TypeScript component:
@@ -1873,6 +1875,14 @@ Generate YAML step for pre-test commands.
 
 Get the `[tool.wads.ci.trigger]` table.
 
+#### *property* trigger_include_paths *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)*
+
+Paths the Python CI watches although an npm component holds them (#209).
+
+`[tool.wads.ci.trigger].include_paths`: re-added after the stub’s
+exclusions, e.g. a TypeScript file the Python side generates and its tests
+check. Default `[]`.
+
 #### *property* trigger_mode *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 `"auto"` (the default) or `"on-demand"`.
@@ -2755,6 +2765,12 @@ The flip ([`flip_to_on_demand()`](_autosummary/wads.ci_trigger.html.md#wads.ci_t
 plus a cheap test matrix and re-renders the stub. Everything is computed in a shadow
 copy of the repo first, so a dry run and a real run take the same path.
 
+### Module Attributes
+
+| [`WATCH_ALL`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.WATCH_ALL)      | The first entry of a rendered `paths:` filter; `!` entries then carve out.   |
+|-----------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`ON_DEMAND_PUSH`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.ON_DEMAND_PUSH) | The on-demand header's trigger lines, which a paths filter is inserted into. |
+
 ### Functions
 
 | [`classify_ci_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.classify_ci_workflow)(text)                      | Classify a `ci.yml`: `'missing'`, `'stub'`, `'inline-uv'` or `'other'`.                                                                                           |
@@ -2763,21 +2779,26 @@ copy of the repo first, so a dry run and a real run take the same path.
 | [`flip_to_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.flip_to_on_demand)([repo, python_versions, ...]) | Flip a repo to on-demand CI: pyproject settings plus a re-rendered stub.                                                                                          |
 | [`inline_trigger_gate`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.inline_trigger_gate)(text)                       | Which trigger gate an inline workflow copy has: `"level"`, `"markers"` or `"none"`.                                                                               |
 | [`parse_stub_if`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.parse_stub_if)(condition)                        | The markers a stub's pre-filter `if:` tests, or `None` if it is not that shape.                                                                                   |
+| [`python_ci_paths`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.python_ci_paths)(repo_root, \*[, include])       | The `paths:` filter for the Python CI stub of `repo_root`; `[]` for none.                                                                                         |
 | [`render_stub_inputs`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_inputs)(stub, inputs)                | Add a `with:` block (the reusable workflow's inputs) under the stub's `uses:`.                                                                                    |
+| [`render_stub_paths`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_paths)(stub, paths)                  | Put a `paths:` filter on the push (and pull-request) trigger of a rendered stub.                                                                                  |
 | [`render_stub_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger)(stub, \*[, mode, ...])      | Render the caller stub for a trigger mode.                                                                                                                        |
 | [`repo_pyproject_for`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.repo_pyproject_for)(ci_path)                     | The `pyproject.toml` of the repo holding workflow file `ci_path`, if any.                                                                                         |
+| [`repo_root_of_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.repo_root_of_workflow)(ci_path)                  | The repo holding `.github/workflows/<file>`: the nearest parent with `.git`, else the directory above `.github`.                                                  |
 | [`run_ci_on_demand`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.run_ci_on_demand)([repo, dry_run, ...])          | `wads-migrate ci-on-demand`: flip, report, optionally commit.                                                                                                     |
 | [`set_on_demand_in_pyproject`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.set_on_demand_in_pyproject)(text, \*[, ...])     | Return pyproject.toml `text` with the on-demand settings applied.                                                                                                 |
-| [`stub_customizations`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_customizations)(text)                       | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
+| [`stub_customizations`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_customizations)(text, \*[, paths])          | Split what a stub holds beyond the template into `(with_inputs, dropped)`.                                                                                        |
 | [`stub_if_expression`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_if_expression)([run_ci_marker, ...])        | The on-demand stub's job-level pre-filter, as a workflow expression.                                                                                              |
 | [`stub_inputs_of`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_inputs_of)(ci_path)                         | The `with:` inputs an existing stub file passes; `{}` if none or not a stub.                                                                                      |
 | [`stub_markers`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_markers)(text)                              | The markers the pre-filter of the stub `text` tests; `[]` if it has none.                                                                                         |
+| [`stub_paths_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_paths_for_workflow)(ci_path)                | The `paths:` filter the Python stub at `ci_path` should carry.                                                                                                    |
 | [`stub_shape`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_shape)(ci_text)                             | The `pin` (which a re-render keeps) and secrets `transport` of a stub.                                                                                            |
 | [`trigger_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_for_workflow)(ci_path)                   | The `(mode, run_ci_marker)` declared by the repo holding `ci_path`.                                                                                               |
 | [`trigger_settings_for_workflow`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.trigger_settings_for_workflow)(ci_path)          | The `[tool.wads.ci.trigger]` settings of the repo holding `ci_path`, as [`render_stub_trigger()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.render_stub_trigger) keyword arguments. |
 | [`unasked_workflows`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.unasked_workflows)(repo, \*[, workflow])         | Other workflow files in `repo` that run without anyone asking (push, PR, cron).                                                                                   |
 | [`uncommitted`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.uncommitted)(repo, paths)                        | Which of `paths` have uncommitted changes (`git status --porcelain` lines).                                                                                       |
 | [`validate_trigger`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.validate_trigger)(mode, run_ci_marker)           | Validate a (mode, marker) pair with the same rules the CI setup job applies.                                                                                      |
+| [`workflow_triggers`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.workflow_triggers)(workflow)                     | The `on:` of a workflow (its text or its parsed mapping).                                                                                                         |
 
 ### Classes
 
@@ -2800,6 +2821,14 @@ Unified diff of every change.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.ON_DEMAND_PUSH *= 'on:\\n  push:\\n  workflow_dispatch:\\n'*
+
+The on-demand header’s trigger lines, which a paths filter is inserted into.
+
+### wads.ci_trigger.WATCH_ALL *= '\*\*'*
+
+The first entry of a rendered `paths:` filter; `!` entries then carve out.
 
 ### wads.ci_trigger.classify_ci_workflow(text)
 
@@ -2881,9 +2910,43 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
+### wads.ci_trigger.python_ci_paths(repo_root, , include=())
+
+The `paths:` filter for the Python CI stub of `repo_root`; `[]` for none.
+
+Every npm component an `npm-ci*.yml` stub runs (its directory and its own
+workflow file) is left out, so a change only there runs the npm CI alone and
+never cuts a PyPI release. `include` re-adds paths after the exclusions
+(`[tool.wads.ci.trigger].include_paths`), e.g. a file the Python tests
+generate into the npm component. A component at the repo root cannot be
+carved out and is skipped. Shared inputs (`fixtures/`, `rust/`) stay
+watched, since both sides test them.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### wads.ci_trigger.render_stub_inputs(stub, inputs)
 
 Add a `with:` block (the reusable workflow’s inputs) under the stub’s `uses:`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.ci_trigger.render_stub_paths(stub, paths)
+
+Put a `paths:` filter on the push (and pull-request) trigger of a rendered stub.
+
+`paths` empty returns `stub` unchanged. Works on both trigger modes.
+
+```pycon
+>>> print(render_stub_paths("on: [push, pull_request]\njobs:\n", ["**", "!ts/**"]), end="")
+on:
+  push:
+    paths: ["**", "!ts/**"]
+  pull_request:
+    paths: ["**", "!ts/**"]
+jobs:
+```
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -2910,6 +2973,14 @@ so an enclosing project’s pyproject is never mistaken for this repo’s.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
 
+### wads.ci_trigger.repo_root_of_workflow(ci_path)
+
+The repo holding `.github/workflows/<file>`: the nearest parent with `.git`,
+else the directory above `.github`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
 ### wads.ci_trigger.run_ci_on_demand(repo='.', , dry_run=False, python_versions=('3.12',), test_on_windows=False, run_ci_marker=None, workflow='.github/workflows/ci.yml', commit=False, out=None, err=None)
 
 `wads-migrate ci-on-demand`: flip, report, optionally commit. Returns an exit code.
@@ -2931,12 +3002,14 @@ is not touched, so applying this twice returns the first result unchanged.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### wads.ci_trigger.stub_customizations(text)
+### wads.ci_trigger.stub_customizations(text, , paths=())
 
 Split what a stub holds beyond the template into `(with_inputs, dropped)`.
 
 `with_inputs` (a flat `with:` mapping, e.g. `project-name`) survives a
 re-render; `dropped` names everything else a re-render would silently lose.
+`paths` is the `paths:` filter the re-render will write
+([`stub_paths_for_workflow()`](_autosummary/wads.ci_trigger.html.md#wads.ci_trigger.stub_paths_for_workflow)); a different filter is reported as dropped.
 Raises `yaml.YAMLError` when the text does not parse.
 
 ```pycon
@@ -2992,6 +3065,13 @@ The markers the pre-filter of the stub `text` tests; `[]` if it has none.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.stub_paths_for_workflow(ci_path)
+
+The `paths:` filter the Python stub at `ci_path` should carry.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ### wads.ci_trigger.stub_shape(ci_text)
 
@@ -3061,6 +3141,17 @@ ValueError: [tool.wads.ci.trigger].mode must be one of ('auto', 'on-demand'), go
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.ci_trigger.workflow_triggers(workflow)
+
+The `on:` of a workflow (its text or its parsed mapping).
+
+PyYAML reads a bare `on:` key as `True`, so both keys are looked up.
+
+```pycon
+>>> workflow_triggers("on: [push]\njobs: {}\n")
+['push']
+```
 
 
 # _autosummary/wads.config_comparison.html.md
@@ -5041,7 +5132,7 @@ True
 
 CLI entry point for wads migration tools.
 
-### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None)
+### wads.migration.migrate_ci_to_stub(old_ci=None, , pin='@master', transport=None, trigger_mode=None, run_ci_marker=None, paths=None)
 
 Return the SSOT stub CI workflow that calls i2mint/wads’s reusable uv-ci.
 
@@ -5086,6 +5177,9 @@ configuration continues to come from `[tool.wads.ci.*]` in
     the run is a `workflow_dispatch`; see [`wads.ci_trigger`](_autosummary/wads.ci_trigger.html.md#module-wads.ci_trigger).
   * **run_ci_marker** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – The on-demand marker; `None` takes it from the same
     pyproject (default `"[run ci]"`).
+  * **paths** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – The `paths:` filter that keeps the repo’s npm components out of
+    the Python CI (i2mint/wads#209); `None` derives it from the repo
+    holding `old_ci` (none when `old_ci` is not a file).
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 * **Returns:**
@@ -6608,9 +6702,11 @@ Nothing here runs by default; the Python `populate` path and the
 
 ### Module Attributes
 
-| [`LICENSE_FILENAMES`](_autosummary/wads.profiles.html.md#wads.profiles.LICENSE_FILENAMES)   | Root licence file names a frontend component copies, in order of preference.   |
-|----------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.                                                 |
+| [`DFLT_SHARED_FIXTURES_DIR`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_SHARED_FIXTURES_DIR)   | Where a Python package and its npm twin keep the golden cases both test suites run (i2mint/wads#209).                                   |
+|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_RUST_DIR`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_RUST_DIR)              | Where a Rust core lives in the native (maturin) layout; when present, a change there runs the npm CI too (a wasm build may compile it). |
+| [`LICENSE_FILENAMES`](_autosummary/wads.profiles.html.md#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
+| [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
 
 ### Functions
 
@@ -6618,6 +6714,7 @@ Nothing here runs by default; the Python `populate` path and the
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [`apply_npm_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)     | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
 | [`apply_tests_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)   | Scaffold a `tests/` folder in an existing project (issue #4).                 |
+| [`default_npm_watch_paths`](_autosummary/wads.profiles.html.md#wads.profiles.default_npm_watch_paths)([repo_dir])              | Inputs outside its subdir an npm component's CI should run on.                |
 | [`find_license_file`](_autosummary/wads.profiles.html.md#wads.profiles.find_license_file)(repo_dir, \*[, names])         | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
 | [`frontend_context`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context)(\*, profile_name, project_name) | Build the render context shared by all frontend-profile templates.            |
 | [`get_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.get_frontend_profile)(name)                       | Look up a registered profile, with an informative error if unknown.           |
@@ -6630,6 +6727,16 @@ Nothing here runs by default; the Python `populate` path and the
 
 | [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)(name, default_subdir, ...[, ...])   | A declarative frontend language/toolchain profile.   |
 |------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+
+### wads.profiles.DFLT_RUST_DIR *= 'rust'*
+
+Where a Rust core lives in the native (maturin) layout; when present, a change
+there runs the npm CI too (a wasm build may compile it).
+
+### wads.profiles.DFLT_SHARED_FIXTURES_DIR *= 'fixtures'*
+
+Where a Python package and its npm twin keep the golden cases both test suites
+run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
 
 ### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).'), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).'), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).')}*
 
@@ -6652,12 +6759,14 @@ A declarative frontend language/toolchain profile.
 
 Root licence file names a frontend component copies, in order of preference.
 
-### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, overwrite=(), on_add=None, on_skip=None)
+### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
 
 `subdir` and `package_manager` default to the selected profile’s
-defaults. Returns the [`wads.templating.GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult).
+defaults. `watch_paths` are the inputs outside the subdir that also run the
+component’s CI (default [`default_npm_watch_paths()`](_autosummary/wads.profiles.html.md#wads.profiles.default_npm_watch_paths) of `pkg_dir`).
+Returns the [`wads.templating.GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult).
 
 ```pycon
 >>> import tempfile
@@ -6682,6 +6791,21 @@ Kept so existing callers and tests keep working; new code should call
 
 Scaffold a `tests/` folder in an existing project (issue #4).
 
+### wads.profiles.default_npm_watch_paths(repo_dir=None)
+
+Inputs outside its subdir an npm component’s CI should run on.
+
+The shared fixtures directory always (a pattern that matches nothing costs
+nothing), and the Rust core when `repo_dir` has one.
+
+```pycon
+>>> default_npm_watch_paths()
+['fixtures/**']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### wads.profiles.find_license_file(repo_dir, , names=('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING'))
 
 `(file name, text)` of the repo’s root licence, or `None` if it has none.
@@ -6699,7 +6823,7 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None)
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None)
 
 Build the render context shared by all frontend-profile templates.
 
@@ -9017,18 +9141,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-10 10:29 UTC** from commit <a href="https://github.com/i2mint/wads/commit/c7c3b525fb503ea04e1e2097f0aba739fb9d5317"><code>c7c3b52</code></a> on branch <code>master</code>, for **wads 0.2.82** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 10:40 UTC** from commit <a href="https://github.com/i2mint/wads/commit/399e7294f38b56df11764270be3af25d72090c41"><code>399e729</code></a> on branch <code>master</code>, for **wads 0.2.83** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.82) is ahead of the latest release on PyPI (0.2.81): these docs describe unreleased code.
+- The documented version (0.2.83) is behind the latest release on PyPI (0.2.84): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/c7c3b525fb503ea04e1e2097f0aba739fb9d5317"><code>c7c3b525fb503ea04e1e2097f0aba739fb9d5317</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/399e7294f38b56df11764270be3af25d72090c41"><code>399e7294f38b56df11764270be3af25d72090c41</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9039,9 +9163,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42799110566">42799110566</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42800587723">42800587723</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>c7c3b525fb503ea04e1e2097f0aba739fb9d5317</code> (in the history of the built commit) |
+| Event commit | <code>399e7294f38b56df11764270be3af25d72090c41</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9066,13 +9190,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, older than the documented version (0.2.82).
+Latest release: <a href="https://pypi.org/project/wads/0.2.84/">0.2.84</a>, newer than the documented version (0.2.83).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout c7c3b525fb503ea04e1e2097f0aba739fb9d5317
+git checkout 399e7294f38b56df11764270be3af25d72090c41
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

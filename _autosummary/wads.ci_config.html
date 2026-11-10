@@ -1095,6 +1095,15 @@ no real test suite and whose modules are not import-clean.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.trigger_include_paths">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_include_paths</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.trigger_include_paths" title="Link to this definition">¶</a></dt>
+<dd><p>Paths the Python CI watches although an npm component holds them (#209).</p>
+<p><code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger].include_paths</span></code>: re-added after the stub’s
+exclusions, e.g. a TypeScript file the Python side generates and its tests
+check. Default <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.trigger_mode">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trigger_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#wads.ci_config.CIConfig.trigger_mode" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) or <code class="docutils literal notranslate"><span class="pre">&quot;on-demand&quot;</span></code>.</p>
@@ -1459,6 +1468,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.to_ci_template_substitutions"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_ci_template_substitutions()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.to_pre_test_step"><code class="docutils literal notranslate"><span class="pre">CIConfig.to_pre_test_step()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_config</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_include_paths"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_include_paths</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.trigger_mode"><code class="docutils literal notranslate"><span class="pre">CIConfig.trigger_mode</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.uninstalled_test_extras"><code class="docutils literal notranslate"><span class="pre">CIConfig.uninstalled_test_extras</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.windows_blocking"><code class="docutils literal notranslate"><span class="pre">CIConfig.windows_blocking</span></code></a></li>
@@ -1489,7 +1499,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

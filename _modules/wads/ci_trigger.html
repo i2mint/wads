@@ -361,9 +361,29 @@
 <span class="n">DISPATCH_LEVEL_OPTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"config"</span><span class="p">,</span> <span class="o">*</span><span class="n">TRIGGER_LEVELS</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_rendered_paths</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a push/PR entry is what a render writes: bare, or exactly ``paths``."""</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"paths"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">paths</span><span class="p">)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is).</span>
+
+<span class="sd">    A ``paths:`` filter counts only when it equals ``paths``, the filter a re-render</span>
+<span class="sd">    derives from the repo (:func:`stub_paths_for_workflow`); any other filter is a</span>
+<span class="sd">    customization a re-render would drop.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">triggers</span> <span class="ow">in</span> <span class="n">_TEMPLATE_TRIGGERS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"pull_request"</span><span class="p">}</span>
+        <span class="ow">and</span> <span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">_is_rendered_paths</span><span class="p">(</span><span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">],</span> <span class="n">paths</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">triggers</span><span class="p">[</span><span class="s2">"pull_request"</span><span class="p">]</span> <span class="o">==</span> <span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">]</span>
+    <span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"workflow_dispatch"</span><span class="p">}</span>
@@ -373,7 +393,7 @@
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">dispatch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"inputs"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dispatch</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">level</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"level"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="n">_is_rendered_paths</span><span class="p">(</span><span class="n">triggers</span><span class="p">[</span><span class="s2">"push"</span><span class="p">],</span> <span class="n">paths</span><span class="p">)</span>
         <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
         <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">dispatch</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"inputs"</span><span class="p">}</span>
         <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"level"</span><span class="p">}</span>
@@ -610,6 +630,96 @@
 
 
 
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Path filters: the Python CI ignores the npm components of a polyglot repo (#209)</span>
+
+<span class="c1">#: The first entry of a rendered ``paths:`` filter; ``!`` entries then carve out.</span>
+<span class="n">WATCH_ALL</span> <span class="o">=</span> <span class="s2">"**"</span>
+<span class="c1">#: The on-demand header's trigger lines, which a paths filter is inserted into.</span>
+<span class="n">ON_DEMAND_PUSH</span> <span class="o">=</span> <span class="s2">"on:</span><span class="se">\n</span><span class="s2">  push:</span><span class="se">\n</span><span class="s2">  workflow_dispatch:</span><span class="se">\n</span><span class="s2">"</span>
+
+
+<div class="viewcode-block" id="python_ci_paths">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.python_ci_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">python_ci_paths</span><span class="p">(</span><span class="n">repo_root</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``paths:`` filter for the Python CI stub of ``repo_root``; ``[]`` for none.</span>
+
+<span class="sd">    Every npm component an ``npm-ci*.yml`` stub runs (its directory and its own</span>
+<span class="sd">    workflow file) is left out, so a change only there runs the npm CI alone and</span>
+<span class="sd">    never cuts a PyPI release. ``include`` re-adds paths after the exclusions</span>
+<span class="sd">    (``[tool.wads.ci.trigger].include_paths``), e.g. a file the Python tests</span>
+<span class="sd">    generate into the npm component. A component at the repo root cannot be</span>
+<span class="sd">    carved out and is skipped. Shared inputs (``fixtures/``, ``rust/``) stay</span>
+<span class="sd">    watched, since both sides test them.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.npm_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">npm_components</span>
+
+    <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">npm_components</span><span class="p">(</span><span class="n">repo_root</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">dir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">WATCH_ALL</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">components</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"!</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s2">/**"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"!.github/workflows/</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">workflow</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paths</span> <span class="o">+</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">include</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="render_stub_paths">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.render_stub_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_stub_paths</span><span class="p">(</span><span class="n">stub</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Put a ``paths:`` filter on the push (and pull-request) trigger of a rendered stub.</span>
+
+<span class="sd">    ``paths`` empty returns ``stub`` unchanged. Works on both trigger modes.</span>
+
+<span class="sd">    &gt;&gt;&gt; print(render_stub_paths("on: [push, pull_request]\njobs:\n", ["**", "!ts/**"]), end="")</span>
+<span class="sd">    on:</span>
+<span class="sd">      push:</span>
+<span class="sd">        paths: ["**", "!ts/**"]</span>
+<span class="sd">      pull_request:</span>
+<span class="sd">        paths: ["**", "!ts/**"]</span>
+<span class="sd">    jobs:</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stub</span>
+    <span class="n">flow</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">paths</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">stub</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"on:</span><span class="se">\n</span><span class="s2">  push:</span><span class="se">\n</span><span class="s2">    paths: </span><span class="si">{</span><span class="n">flow</span><span class="si">}</span><span class="se">\n</span><span class="s2">  pull_request:</span><span class="se">\n</span><span class="s2">    paths: </span><span class="si">{</span><span class="n">flow</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">AUTO_ON_LINE</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stub</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ON_DEMAND_PUSH</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"on:</span><span class="se">\n</span><span class="s2">  push:</span><span class="se">\n</span><span class="s2">    paths: </span><span class="si">{</span><span class="n">flow</span><span class="si">}</span><span class="se">\n</span><span class="s2">  workflow_dispatch:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="n">stub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ON_DEMAND_PUSH</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">"stub template changed shape: found neither the auto nor the on-demand trigger"</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="repo_root_of_workflow">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.repo_root_of_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">repo_root_of_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The repo holding ``.github/workflows/&lt;file&gt;``: the nearest parent with ``.git``,</span>
+<span class="sd">    else the directory above ``.github``."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">parents</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">".git"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">parent</span>
+    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="stub_paths_for_workflow">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.stub_paths_for_workflow">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_paths_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``paths:`` filter the Python stub at ``ci_path`` should carry."""</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">repo_root_of_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="n">pyproject</span> <span class="o">=</span> <span class="n">repo_pyproject_for</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">CIConfig</span><span class="p">({})</span> <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">python_ci_paths</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">trigger_include_paths</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="repo_pyproject_for">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.repo_pyproject_for">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">repo_pyproject_for</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
@@ -834,11 +944,15 @@
 
 <div class="viewcode-block" id="stub_customizations">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.stub_customizations">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stub_customizations</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_customizations</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.</span>
 
 <span class="sd">    ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a</span>
 <span class="sd">    re-render; ``dropped`` names everything else a re-render would silently lose.</span>
+<span class="sd">    ``paths`` is the ``paths:`` filter the re-render will write</span>
+<span class="sd">    (:func:`stub_paths_for_workflow`); a different filter is reported as dropped.</span>
 <span class="sd">    Raises ``yaml.YAMLError`` when the text does not parse.</span>
 
 <span class="sd">    &gt;&gt;&gt; stub_customizations(</span>
@@ -855,8 +969,8 @@
     <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span>
         <span class="sa">f</span><span class="s2">"top-level `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">doc</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"on"</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"jobs"</span><span class="p">)</span>
     <span class="p">]</span>
-    <span class="n">triggers</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on"</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>  <span class="c1"># PyYAML reads a bare `on:` as True</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">):</span>
+    <span class="n">triggers</span> <span class="o">=</span> <span class="n">workflow_triggers</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_template_trigger</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="n">paths</span><span class="p">):</span>
         <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`on: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">triggers</span><span class="p">)</span><span class="si">}</span><span class="s2">`"</span><span class="p">)</span>
     <span class="n">jobs</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">dropped</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"job `</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">jobs</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"ci"</span><span class="p">]</span>
@@ -872,6 +986,24 @@
         <span class="n">dropped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"`jobs.ci.with` (not a flat mapping)"</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">dropped</span></div>
+
+
+
+<div class="viewcode-block" id="workflow_triggers">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.workflow_triggers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">workflow_triggers</span><span class="p">(</span><span class="n">workflow</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The ``on:`` of a workflow (its text or its parsed mapping).</span>
+
+<span class="sd">    PyYAML reads a bare ``on:`` key as ``True``, so both keys are looked up.</span>
+
+<span class="sd">    &gt;&gt;&gt; workflow_triggers("on: [push]\njobs: {}\n")</span>
+<span class="sd">    ['push']</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">workflow</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on"</span><span class="p">,</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span></div>
 
 
 
@@ -998,7 +1130,9 @@
         <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span>
+                <span class="n">old_ci</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">dropped</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"YAML that does not parse (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
@@ -1008,10 +1142,14 @@
             <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"refused"</span>
             <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> has customizations a re-render would drop: "</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">. Flip it by hand: in pyproject.toml set "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dropped</span><span class="p">)</span><span class="si">}</span><span class="s2">. If only its `paths:` filter differs, put the "</span>
+                <span class="s2">"extra entries in [tool.wads.ci.trigger].include_paths, run "</span>
+                <span class="s2">"`wads-migrate ci-to-stub` once, and flip again. Otherwise flip it by "</span>
+                <span class="s2">"hand: in pyproject.toml set "</span>
                 <span class="s1">'[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '</span>
                 <span class="s2">"workflow use `on: [push, workflow_dispatch]` (a `level` input of "</span>
-                <span class="s2">"`config`, `validate`, `deploy` is optional) and give the job that calls "</span>
+                <span class="s2">"`config`, `validate`, `deploy` is optional; keep any `paths:` filter "</span>
+                <span class="s2">"on push) and give the job that calls "</span>
                 <span class="sa">f</span><span class="s2">"uv-ci.yml `if: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span><span class="si">}</span><span class="s2">`."</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">result</span>
@@ -1056,7 +1194,12 @@
             <span class="n">shadow_ci</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="n">stub_shape</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
             <span class="c1"># transport=None: named, converting a JSON stub (see migrate_ci_to_stub).</span>
-            <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">shadow_ci</span><span class="p">),</span> <span class="n">pin</span><span class="o">=</span><span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">])</span>
+            <span class="c1"># The npm components live in the real repo, not in the shadow copy.</span>
+            <span class="n">new_ci</span> <span class="o">=</span> <span class="n">migrate_ci_to_stub</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">shadow_ci</span><span class="p">),</span>
+                <span class="n">pin</span><span class="o">=</span><span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">],</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">),</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="s2">"pin"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"@master"</span><span class="p">:</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"the stub stays pinned to </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="s1">'pin'</span><span class="p">]</span><span class="si">}</span><span class="s2">. Its pre-filter works on "</span>
@@ -1226,7 +1369,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

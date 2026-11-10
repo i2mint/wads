@@ -1072,6 +1072,24 @@
         <span class="k">return</span> <span class="n">mode</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trigger_include_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Paths the Python CI watches although an npm component holds them (#209).</span>
+
+<span class="sd">        ``[tool.wads.ci.trigger].include_paths``: re-added after the stub's</span>
+<span class="sd">        exclusions, e.g. a TypeScript file the Python side generates and its tests</span>
+<span class="sd">        check. Default ``[]``.</span>
+<span class="sd">        """</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"include_paths"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"[tool.wads.ci.trigger].include_paths must be a list of path "</span>
+                <span class="sa">f</span><span class="s2">"patterns, got </span><span class="si">{</span><span class="n">paths</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">run_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Commit-subject substring that runs CI in ``"on-demand"`` mode.</span>
 
@@ -1753,7 +1771,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -1224,6 +1224,8 @@
                 <span class="n">on_skip</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="n">_keep_npm_components_out_of_python_ci</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">tracker</span><span class="p">,</span> <span class="n">_clog</span><span class="p">)</span>
+
     <span class="c1"># Print summary</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">tracker</span><span class="o">.</span><span class="n">print_summary</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1236,6 +1238,50 @@
 
     <span class="k">return</span> <span class="n">name</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_keep_npm_components_out_of_python_ci</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">tracker</span><span class="p">,</span> <span class="n">clog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Give the Python CI stub the path filter that leaves the npm components out (#209).</span>
+
+<span class="sd">    A stub written in this run gets it now; an existing stub is never rewritten</span>
+<span class="sd">    here, but is flagged when it lacks the filter (``wads-migrate ci-to-stub``</span>
+<span class="sd">    re-renders it with the filter).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">classify_ci_workflow</span><span class="p">,</span>
+        <span class="n">render_stub_paths</span><span class="p">,</span>
+        <span class="n">stub_paths_for_workflow</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">rel</span> <span class="o">=</span> <span class="s2">".github/workflows/ci.yml"</span>
+    <span class="n">ci_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">ci_path</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">ci_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"stub"</span> <span class="ow">or</span> <span class="n">_push_paths</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">paths</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">tracker</span><span class="o">.</span><span class="n">added</span><span class="p">:</span>
+        <span class="n">clog</span><span class="p">(</span><span class="s2">"... keeping the npm components out of the Python CI (paths filter)"</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ci_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">render_stub_paths</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">paths</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+            <span class="n">rel</span><span class="p">,</span>
+            <span class="s2">"its paths filter does not match the repo's npm components (a change "</span>
+            <span class="s2">"only there would run the Python CI and cut a PyPI release): run "</span>
+            <span class="s2">"`wads-migrate ci-to-stub` to re-render it"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_push_paths</span><span class="p">(</span><span class="n">workflow_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``paths:`` filter on a workflow's push trigger, or ``None``."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">workflow_triggers</span>
+
+    <span class="n">triggers</span> <span class="o">=</span> <span class="n">workflow_triggers</span><span class="p">(</span><span class="n">workflow_text</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">push</span> <span class="o">=</span> <span class="n">triggers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"push"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">triggers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">push</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"paths"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
 
 
 <span class="n">_unknown_version_control_system</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
@@ -1822,7 +1868,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

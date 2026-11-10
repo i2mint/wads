@@ -1224,6 +1224,7 @@
     <span class="n">transport</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">trigger_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">run_ci_marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.</span>
 
@@ -1268,6 +1269,9 @@
 <span class="sd">            the run is a ``workflow_dispatch``; see :mod:`wads.ci_trigger`.</span>
 <span class="sd">        run_ci_marker: The on-demand marker; ``None`` takes it from the same</span>
 <span class="sd">            pyproject (default ``"[run ci]"``).</span>
+<span class="sd">        paths: The ``paths:`` filter that keeps the repo's npm components out of</span>
+<span class="sd">            the Python CI (i2mint/wads#209); ``None`` derives it from the repo</span>
+<span class="sd">            holding ``old_ci`` (none when ``old_ci`` is not a file).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The stub workflow content as a string.</span>
@@ -1352,8 +1356,10 @@
     <span class="c1"># on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">render_stub_inputs</span><span class="p">,</span>
+        <span class="n">render_stub_paths</span><span class="p">,</span>
         <span class="n">render_stub_trigger</span><span class="p">,</span>
         <span class="n">stub_inputs_of</span><span class="p">,</span>
+        <span class="n">stub_paths_for_workflow</span><span class="p">,</span>
         <span class="n">trigger_settings_for_workflow</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -1361,6 +1367,12 @@
     <span class="n">declared</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="n">trigger_mode</span> <span class="ow">or</span> <span class="n">declared</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span>
     <span class="n">declared</span><span class="p">[</span><span class="s2">"run_ci_marker"</span><span class="p">]</span> <span class="o">=</span> <span class="n">run_ci_marker</span> <span class="ow">or</span> <span class="n">declared</span><span class="p">[</span><span class="s2">"run_ci_marker"</span><span class="p">]</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">render_stub_trigger</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="o">**</span><span class="n">declared</span><span class="p">)</span>
+    <span class="c1"># The repo's npm components stay out of the Python CI (#209): derived from the</span>
+    <span class="c1"># repo each time, so a re-render keeps the filter up to date. (``old_ci`` may</span>
+    <span class="c1"># be the workflow's content rather than its path: no repo to read then.)</span>
+    <span class="k">if</span> <span class="n">paths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">old_ci</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)):</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">old_ci</span><span class="p">)</span>
+    <span class="n">stub</span> <span class="o">=</span> <span class="n">render_stub_paths</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">paths</span> <span class="ow">or</span> <span class="p">[])</span>
     <span class="c1"># Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.</span>
     <span class="k">return</span> <span class="n">render_stub_inputs</span><span class="p">(</span><span class="n">stub</span><span class="p">,</span> <span class="n">stub_inputs_of</span><span class="p">(</span><span class="n">old_ci</span><span class="p">))</span></div>
 
@@ -2035,7 +2047,11 @@
             <span class="n">transport</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">transport</span>
             <span class="k">if</span> <span class="n">classify_ci_workflow</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"stub"</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_trigger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stub_paths_for_workflow</span>
+
+                    <span class="n">_</span><span class="p">,</span> <span class="n">dropped</span> <span class="o">=</span> <span class="n">stub_customizations</span><span class="p">(</span>
+                        <span class="n">existing</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="n">stub_paths_for_workflow</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
+                    <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="n">dropped</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
@@ -2119,7 +2135,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=a608febd"></script>
+</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
