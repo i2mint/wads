@@ -659,8 +659,21 @@ class CIConfig:
         only. A squash-merge folds the entire PR body into the squash commit
         message, so a full-message match fires on a PR that merely writes
         about a marker.
+
+        Must be a boolean: a string such as ``"false"`` would be true here while
+        the workflow, which compares its text, reads it as false.
+
+        >>> CIConfig({"tool": {"wads": {"ci": {"publish": {"enabled": "false"}}}}}).publish_enabled
+        Traceback (most recent call last):
+          ...
+        ValueError: [tool.wads.ci.publish].enabled must be true or false, got 'false'
         """
-        return self.publish_config.get("enabled", True)
+        enabled = self.publish_config.get("enabled", True)
+        if not isinstance(enabled, bool):
+            raise ValueError(
+                f"[tool.wads.ci.publish].enabled must be true or false, got {enabled!r}"
+            )
+        return enabled
 
     @property
     def publish_skip_ci_marker(self) -> str:
@@ -671,7 +684,12 @@ class CIConfig:
         Defaults to ``"[skip ci]"`` (which GitHub also natively recognises to
         skip the whole workflow).
         """
-        return self.publish_config.get("skip_ci_marker", "[skip ci]")
+        return _marker(
+            self.publish_config,
+            "skip_ci_marker",
+            "[skip ci]",
+            table="[tool.wads.ci.publish]",
+        )
 
     @property
     def publish_marker(self) -> str:
@@ -681,7 +699,12 @@ class CIConfig:
         first line of its message) contains this marker still runs the publish
         job. Defaults to ``"[publish]"``.
         """
-        return self.publish_config.get("publish_marker", "[publish]")
+        return _marker(
+            self.publish_config,
+            "publish_marker",
+            "[publish]",
+            table="[tool.wads.ci.publish]",
+        )
 
     @property
     def publish_skip_publish_marker(self) -> str:

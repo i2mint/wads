@@ -295,16 +295,25 @@ def pypi_release_expected(pyproject_data: Mapping, subject: str) -> bool:
     (False, True)
     """
     config = _ci_config(pyproject_data)
+    # Read (and so validate) every setting up front, like the setup job does:
+    # malformed config fails here whatever the subject, never decides silently.
+    enabled = config.publish_enabled
+    skip_ci, skip_publish = (
+        config.publish_skip_ci_marker,
+        config.publish_skip_publish_marker,
+    )
+    publish = config.publish_marker
+    mode = config.trigger_mode
     lowered = subject.lower()
 
-    def has(marker) -> bool:
-        return isinstance(marker, str) and bool(marker) and marker.lower() in lowered
+    def has(marker: str) -> bool:
+        return marker.lower() in lowered
 
-    if has(config.publish_skip_ci_marker) or has(config.publish_skip_publish_marker):
+    if has(skip_ci) or has(skip_publish):
         return False
-    if not (config.publish_enabled or has(config.publish_marker)):
+    if not (enabled or has(publish)):
         return False
-    if config.trigger_mode == "on-demand":
+    if mode == "on-demand":
         return has(config.deploy_marker) or (
             has(config.run_ci_marker) and config.run_ci_publishes
         )
@@ -322,6 +331,23 @@ def _inside(path: str, directory: str) -> bool:
     return not directory or path.startswith(directory + "/")
 
 
+def caller_workflow_path(workflow_ref: str) -> "str | None":
+    """The repo-relative workflow file in ``github.workflow_ref``; ``None`` if there is none.
+
+    In a reusable workflow, ``github.workflow_ref`` names the *caller's* file
+    (``owner/repo/.github/workflows/npm-ci.yml@refs/heads/main``): the npm stub.
+
+    >>> caller_workflow_path("i2mint/demo/.github/workflows/npm-ci.yml@refs/heads/main")
+    '.github/workflows/npm-ci.yml'
+    >>> caller_workflow_path("") is None
+    True
+    """
+    path = workflow_ref.rpartition("@")[0] if "@" in workflow_ref else workflow_ref
+    marker = ".github/workflows/"
+    index = path.find(marker)
+    return path[index:] if index >= 0 else None
+
+
 #: How many of the files changed outside the npm package a refusal names.
 _SHOWN_CHANGES = 5
 
@@ -331,6 +357,8 @@ def npm_publish_refusal(
     package_dir: str,
     changed_files: Sequence[str],
     subject: str,
+    *,
+    also_inside: Sequence[str] = (),
 ) -> "str | None":
     """Why npm-ci must not publish ``package_dir`` from this push, or ``None`` when it may.
 
@@ -343,7 +371,9 @@ def npm_publish_refusal(
     - the push changes files outside ``package_dir`` (``changed_files``, repo
       relative). A push that changes only the npm package publishes the version
       the last Python release wrote. When the npm package is the repo root,
-      every change counts as outside it.
+      every change counts as outside it. Files in ``also_inside`` (the npm stub's
+      own workflow file, which the Python stub's paths filter ignores) count as
+      inside.
 
     >>> data = {"project": {"version": "1.2.3"},
     ...         "tool": {"wads": {"ci": {"version": {"sync": ["ts/package.json"]}}}}}
@@ -362,10 +392,13 @@ def npm_publish_refusal(
         return None
     # At the repo root nothing is outside the npm package, and everything ships
     # with the Python release too.
+    extra = {_posix_dir(f) for f in also_inside if f}
     outside = [
         f
         for f in changed_files
-        if not (directory and _inside(_posix_dir(f), directory))
+        if not (
+            directory and (_inside(_posix_dir(f), directory) or _posix_dir(f) in extra)
+        )
     ]
     if not outside:
         return None

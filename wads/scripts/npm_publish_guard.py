@@ -7,10 +7,12 @@ installed or uploaded. A no-op when the repo has no ``pyproject.toml`` or its
 decision is ``wads.version_sync.npm_publish_refusal``.
 
 Usage:
-    SUBJECT='<commit subject>' python3 -I npm_publish_guard.py PACKAGE_DIR CHANGED_FILES [REPO_DIR]
+    SUBJECT='<commit subject>' [WORKFLOW_REF=<github.workflow_ref>] \\
+        python3 -I npm_publish_guard.py PACKAGE_DIR CHANGED_FILES [REPO_DIR]
 
 ``CHANGED_FILES`` holds the push's changed paths, repo relative, NUL separated
-(``git diff --name-only -z``).
+(``git diff --name-only -z``). ``WORKFLOW_REF`` names the calling npm stub, whose
+own file counts as part of the npm package.
 """
 
 import os
@@ -37,8 +39,14 @@ def main(argv=None) -> int:
 
         data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
         changed = [p for p in Path(changed_path).read_text().split("\0") if p]
-        refusal = load_wads_module("version_sync").npm_publish_refusal(
-            data, package_dir, changed, os.environ.get("SUBJECT", "")
+        version_sync = load_wads_module("version_sync")
+        stub = version_sync.caller_workflow_path(os.environ.get("WORKFLOW_REF", ""))
+        refusal = version_sync.npm_publish_refusal(
+            data,
+            package_dir,
+            changed,
+            os.environ.get("SUBJECT", ""),
+            also_inside=[stub] if stub else [],
         )
     except (ValueError, OSError, ImportError) as e:
         print(f"::error::npm publish guard failed: {e}", file=sys.stderr)

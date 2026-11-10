@@ -635,6 +635,49 @@ class TestPushBackRecovery:
         ).stdout
         assert shown == self._npm_files("0.0.3", deps={"zod": "^3"})["ts/package.json"]
 
+    def test_an_npm_conflict_this_commit_did_not_bump_still_aborts(
+        self, remote_and_clone, tmp_path
+    ):
+        """An unsynced package.json touched by this commit but not bumped is a real conflict.
+
+        Upstream released web/ at 1.1.0 while this commit changed another line of
+        it at 1.0.0: resolving it as a version file would push 1.0.0 over 1.1.0.
+        """
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        web = {"name": "web", "version": "1.0.0", "private": True}
+        dump = lambda d: json.dumps(d, indent=2) + "\n"
+        self._commit_files(seed, {"web/package.json": dump(web)}, "add web")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+
+        self._commit_files(
+            clone,
+            {
+                "pyproject.toml": 'version = "0.0.3"\n',
+                "web/package.json": dump({**web, "private": False}),
+            },
+            "**CI** bump to 0.0.3",
+        )
+        other = tmp_path / "web-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(
+            other, {"web/package.json": dump({**web, "version": "1.1.0"})}, "web 1.1.0"
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert "conflict with it" in result.stdout
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:web/package.json", cwd=clone
+        ).stdout
+        assert json.loads(shown)["version"] == "1.1.0"
+        assert not (clone / ".git" / "rebase-merge").exists()
+        assert not (clone / ".git" / "rebase-apply").exists()
+
     def test_an_unwritable_npm_version_fails_loudly(self, remote_and_clone, tmp_path):
         """A version npm rejects is never pushed half-written: the rebase is aborted."""
         origin, clone = remote_and_clone

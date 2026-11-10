@@ -228,6 +228,8 @@ jobs:
           package-dir: ${{ inputs.package-dir }}
           subject: ${{ needs.setup.outputs.commit_subject }}
           before: ${{ github.event.before }}
+          # The caller's file (the npm stub), not this reusable workflow.
+          workflow-ref: ${{ github.workflow_ref }}
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: ${{ inputs.package-dir }}/package.json

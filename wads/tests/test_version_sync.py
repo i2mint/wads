@@ -19,7 +19,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+from wads.ci_config import CIConfig
 from wads.version_sync import (
+    caller_workflow_path,
     check_versions_agree,
     npm_publish_refusal,
     pypi_release_expected,
@@ -387,6 +389,54 @@ def test_the_guard_follows_uv_ci_publish_gates(ci, subject, refused):
     assert (msg is not None) is refused
 
 
+def test_the_npm_stub_workflow_counts_as_inside_the_package():
+    """The Python stub's paths filter ignores the npm stub, so no PyPI release follows."""
+    stub = caller_workflow_path("o/r/.github/workflows/npm-ci.yml@refs/heads/main")
+    changed = ["ts/a.ts", ".github/workflows/npm-ci.yml"]
+    assert (
+        npm_publish_refusal(_guard_data(), "ts", changed, NPM, also_inside=[stub])
+        is None
+    )
+    assert npm_publish_refusal(_guard_data(), "ts", changed, NPM)  # without it
+    other = ["ts/a.ts", ".github/workflows/ci.yml"]  # the Python stub is not inside
+    assert npm_publish_refusal(_guard_data(), "ts", other, NPM, also_inside=[stub])
+
+
+@pytest.mark.parametrize(
+    "ref, path",
+    [
+        (
+            "o/r/.github/workflows/npm-ci.yml@refs/heads/main",
+            ".github/workflows/npm-ci.yml",
+        ),
+        (
+            "o/r/.github/workflows/npm-ci-ts.yml@refs/pull/3/merge",
+            ".github/workflows/npm-ci-ts.yml",
+        ),
+        ("", None),
+        ("something-else", None),
+    ],
+)
+def test_caller_workflow_path(ref, path):
+    assert caller_workflow_path(ref) == path
+
+
+@pytest.mark.parametrize(
+    "publish, match",
+    [
+        ({"enabled": "false"}, "enabled must be true or false"),
+        ({"enabled": 0}, "enabled must be true or false"),
+        ({"publish_marker": ""}, "publish_marker must be a non-empty"),
+        ({"skip_ci_marker": False}, "skip_ci_marker must be a non-empty"),
+        ({"skip_publish_marker": "  "}, "skip_publish_marker must be a non-empty"),
+    ],
+)
+def test_malformed_publish_config_is_an_error_for_the_guard_and_uv_ci(publish, match):
+    """uv-ci compares the text of these settings; the guard must not read them differently."""
+    with pytest.raises(ValueError, match=match):
+        pypi_release_expected(_guard_data(publish=publish), NPM)
+
+
 def test_the_refusal_names_the_configured_skip_publish_marker():
     data = _guard_data(publish={"skip_publish_marker": "[no pypi]"})
     assert "'[no pypi]'" in npm_publish_refusal(data, "ts", ["pkg/a.py"], NPM)
@@ -395,6 +445,154 @@ def test_the_refusal_names_the_configured_skip_publish_marker():
 def test_a_bad_sync_list_is_an_error_not_a_pass():
     with pytest.raises(ValueError, match="sync"):
         npm_publish_refusal(_guard_data(sync=["../x/package.json"]), "ts", [], NPM)
+
+
+# --- parity: the guard's PyPI decision is uv-ci's own -------------------------
+#
+# Runs uv-ci.yml's "Decide skip markers" and "Decide trigger level" bash, fed by
+# read_ci_config.py's real outputs, and evaluates the publish job's `if:` over
+# them, next to pypi_release_expected, over a grid of configs and subjects.
+
+PARITY_CONFIGS = {
+    "defaults": {},
+    "publish off": {"publish": {"enabled": False}},
+    "custom markers": {
+        "publish": {
+            "enabled": False,
+            "publish_marker": "[pypi]",
+            "skip_ci_marker": "[ci skip]",
+            "skip_publish_marker": "[no pypi]",
+        }
+    },
+    "custom skips, publish on": {
+        "publish": {"skip_ci_marker": "[ci skip]", "skip_publish_marker": "[no pypi]"}
+    },
+    "on-demand": {"trigger": {"mode": "on-demand"}},
+    "on-demand, run-ci validates only": {
+        "trigger": {"mode": "on-demand", "run_ci_publishes": False}
+    },
+    "on-demand, publish off": {
+        "trigger": {"mode": "on-demand"},
+        "publish": {"enabled": False},
+    },
+    "on-demand, custom trigger markers": {
+        "trigger": {
+            "mode": "on-demand",
+            "run_ci_marker": "[ci]",
+            "deploy_marker": "[ship]",
+        }
+    },
+}
+PARITY_SUBJECTS = [
+    "Fix",
+    "Fix [skip publish]",
+    "Fix [SKIP CI]",
+    "Fix [publish]",
+    "Fix [pypi]",
+    "Fix [no pypi]",
+    "Fix [ci skip]",
+    "Fix [run ci]",
+    "Fix [Run Deploy]",
+    "Fix [run ci] [publish]",
+    "Fix [ci]",
+    "Fix [ship] [no pypi]",
+]
+
+
+def _toml_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return json.dumps(value)
+
+
+def _uv_ci_gate_steps():
+    wf = yaml.safe_load((WORKFLOWS / "uv-ci.yml").read_text())
+    steps = {s.get("name"): s for s in wf["jobs"]["setup"]["steps"]}
+    publish_if = wf["jobs"]["publish"]["if"]
+    return [steps["Decide skip markers"], steps["Decide trigger level"]], publish_if
+
+
+def _step_env(step, outputs, subject):
+    """A step's env with its ${{ }} expressions resolved as on a push."""
+    env = {}
+    for key, expr in step["env"].items():
+        inner = expr.strip().removeprefix("${{").removesuffix("}}").strip()
+        if inner == "steps.commit.outputs.subject":
+            env[key] = subject
+        elif inner.startswith("steps.config.outputs."):
+            env[key] = outputs.get(inner.removeprefix("steps.config.outputs."), "")
+        elif inner == "github.event_name":
+            env[key] = "push"
+        elif inner == "github.event.inputs.level":
+            env[key] = ""
+        else:
+            raise AssertionError(f"unknown expression in the gate step: {expr}")
+    return env
+
+
+@_NEEDS_TOMLLIB
+@_NEEDS_BASH
+@pytest.mark.parametrize("config", list(PARITY_CONFIGS))
+def test_the_guard_decides_pypi_releases_exactly_as_uv_ci(tmp_path, config):
+    gate_steps, publish_if = _uv_ci_gate_steps()
+    # The publish job's `if:` evaluated below, clause by clause.
+    for clause in (
+        "needs.setup.outputs.skip-publish == 'false'",
+        "(needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker))",
+        "needs.setup.outputs.deploy == 'true'",
+    ):
+        assert clause in publish_if
+
+    ci = PARITY_CONFIGS[config]
+    lines = ['[project]\nname = "demo"\nversion = "1.2.3"\n']
+    for table, values in ci.items():
+        lines.append(f"[tool.wads.ci.{table}]\n")
+        lines += [f"{k} = {_toml_value(v)}\n" for k, v in values.items()]
+    (tmp_path / "pyproject.toml").write_text("".join(lines))
+    read = _run_script(
+        "read_ci_config.py", ".", cwd=tmp_path, env={"GITHUB_OUTPUT": "config.txt"}
+    )
+    assert read.returncode == 0, read.stderr
+    outputs = dict(
+        line.split("=", 1)
+        for line in (tmp_path / "config.txt").read_text().splitlines()
+        if "=" in line
+    )
+    data = {
+        "project": {"name": "demo", "version": "1.2.3"},
+        "tool": {"wads": {"ci": ci}},
+    }
+
+    for subject in PARITY_SUBJECTS:
+        gates = tmp_path / "gates.txt"
+        gates.write_text("")
+        verdicts = {}
+        for step in gate_steps:
+            env = {
+                "PATH": os.environ["PATH"],
+                "GITHUB_OUTPUT": str(gates),
+                **_step_env(step, outputs, subject),
+            }
+            result = subprocess.run(
+                ["bash", "-eo", "pipefail", "-c", step["run"]],
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            assert result.returncode == 0, result.stderr
+        verdicts = dict(line.split("=", 1) for line in gates.read_text().splitlines())
+        uv_ci_publishes = (
+            verdicts["skip-publish"] == "false"
+            and (
+                outputs["publish-enabled"] == "true"
+                or outputs["publish-marker"].lower() in subject.lower()
+            )
+            and verdicts["deploy"] == "true"
+        )
+        assert pypi_release_expected(data, subject) is uv_ci_publishes, (
+            config,
+            subject,
+        )
 
 
 # --- the CI scripts, run as the actions run them ------------------------------
@@ -576,7 +774,7 @@ def guarded_repo(tmp_path, monkeypatch):
     (shim / "python3").chmod(0o755)
     run_script = _guard_action()["runs"]["steps"][0]["run"]
 
-    def run(before, subject=NPM):
+    def run(before, subject=NPM, workflow_ref=""):
         env = {
             **os.environ,
             "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}",
@@ -585,6 +783,7 @@ def guarded_repo(tmp_path, monkeypatch):
             "PACKAGE_DIR": "ts",
             "SUBJECT": subject,
             "BEFORE": before,
+            "WORKFLOW_REF": workflow_ref,
         }
         return subprocess.run(
             ["bash", "-c", run_script],
@@ -646,6 +845,33 @@ def test_guard_action_falls_back_to_the_last_commit(guarded_repo, before):
         assert "::warning::" in result.stdout
     _commit_file(repo, "pkg/core.py", "x = 3\n", "python change on top")
     assert run(before).returncode == 1
+
+
+@_NEEDS_BASH
+@_NEEDS_TOMLLIB
+def test_guard_action_sees_a_move_into_the_package_as_a_change_outside(guarded_repo):
+    """A rename from pkg/ to ts/ also removes pkg/core.py: that ships with PyPI too."""
+    repo, run = guarded_repo
+    before = _git(repo, "rev-parse", "HEAD")
+    (repo / "ts" / "src").mkdir(parents=True)
+    _git(repo, "mv", "pkg/core.py", "ts/src/core.py")
+    _git(repo, "commit", "-q", "-m", "move")
+    result = run(before)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "Changed outside ts/: pkg/core.py" in result.stderr
+
+
+@_NEEDS_BASH
+@_NEEDS_TOMLLIB
+def test_guard_action_counts_the_calling_npm_stub_as_inside(guarded_repo):
+    repo, run = guarded_repo
+    before = _git(repo, "rev-parse", "HEAD")
+    _commit_file(repo, ".github/workflows/npm-ci.yml", "name: npm\n", "stub")
+    _commit_file(repo, "ts/src/a.ts", "export {}\n", "ts change")
+    assert run(before).returncode == 1
+    ref = "o/r/.github/workflows/npm-ci.yml@refs/heads/main"
+    result = run(before, workflow_ref=ref)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 @_NEEDS_BASH
@@ -717,6 +943,7 @@ def test_npm_pack_job_runs_the_guard_before_any_repo_code(name):
         "package-dir": "${{ inputs.package-dir }}",
         "subject": "${{ needs.setup.outputs.commit_subject }}",
         "before": "${{ github.event.before }}",
+        "workflow-ref": "${{ github.workflow_ref }}",
     }
     assert set(_guard_action()["inputs"]) == set(guard["with"])
 

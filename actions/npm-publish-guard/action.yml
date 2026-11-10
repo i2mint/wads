@@ -15,6 +15,10 @@ inputs:
     description: 'github.event.before: the branch tip before this push. Empty or all zeros (a new branch) compares with HEAD^ instead.'
     required: false
     default: ''
+  workflow-ref:
+    description: 'github.workflow_ref, which in a reusable workflow names the calling npm stub: its own file counts as part of the npm package.'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -28,6 +32,7 @@ runs:
         PACKAGE_DIR: ${{ inputs.package-dir }}
         SUBJECT: ${{ inputs.subject }}
         BEFORE: ${{ inputs.before }}
+        WORKFLOW_REF: ${{ inputs.workflow-ref }}
       run: |
         set -eo pipefail
         if [ ! -f pyproject.toml ]; then
@@ -47,5 +52,6 @@ runs:
           fi
         fi
         changed="${RUNNER_TEMP:-/tmp}/npm-publish-guard-changed"
-        git diff --name-only -z "$base" HEAD > "$changed"
+        # --no-renames: a file moved into the package from outside counts on both sides.
+        git diff --name-only --no-renames -z "$base" HEAD > "$changed"
         python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/npm_publish_guard.py" "$PACKAGE_DIR" "$changed"

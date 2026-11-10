@@ -175,13 +175,28 @@ runs:
             # (git conflict stage 3, ":3:<path>") rather than trusting any
             # particular whole-file side.
             conflicted=$(git diff --name-only --diff-filter=U)
+            # The top-level "version" of a package.json / package-lock.json,
+            # read from stdin; empty when there is none.
+            json_version() {
+              python3 -I -c 'import json, sys; v = json.load(sys.stdin).get("version"); print(v if isinstance(v, str) else "")' 2>/dev/null || true
+            }
             only_version_files=1
             for path in $conflicted; do
               case "$path" in
                 pyproject.toml|setup.cfg|setup.py) ;;
                 # [tool.wads.ci.version].sync (i2mint/wads#210): the bump commit
                 # also carries the npm twin's version, in its manifest and lockfile.
-                package.json|*/package.json|package-lock.json|*/package-lock.json) ;;
+                # Only when this commit actually bumped it (stage 3 differs from
+                # the merge base, stage 1): any other package.json conflict is a
+                # real one, and resolving it would put this commit's stale version
+                # over upstream's.
+                package.json|*/package.json|package-lock.json|*/package-lock.json)
+                  ours_bump=$(git show ":3:$path" 2>/dev/null | json_version)
+                  base_version=$(git show ":1:$path" 2>/dev/null | json_version)
+                  if [ -z "$ours_bump" ] || [ "$ours_bump" = "$base_version" ]; then
+                    only_version_files=0
+                  fi
+                  ;;
                 *) only_version_files=0 ;;
               esac
             done
@@ -215,11 +230,6 @@ runs:
               # The project's X.Y.Z in file $1's section, read from stdin.
               project_version() {
                 awk -v sec="$(version_section "$1")" -v nv="" "$version_awk" || true
-              }
-              # The top-level "version" of a package.json / package-lock.json,
-              # read from stdin; empty when there is none.
-              json_version() {
-                python3 -I -c 'import json, sys; v = json.load(sys.stdin).get("version"); print(v if isinstance(v, str) else "")' || true
               }
               is_json() {
                 case "$1" in *.json) return 0 ;; *) return 1 ;; esac
