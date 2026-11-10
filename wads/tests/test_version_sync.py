@@ -3,9 +3,11 @@
 ``[tool.wads.ci.version].sync`` lists manifests the publish job writes the bumped
 version into; the setup job fails when they disagree with ``[project].version``;
 and an npm publish that was asked for but released nothing fails instead of
-staying green.
+staying green, or would reuse the previous PyPI release's number.
 """
 
+import base64
+import hashlib
 import json
 import os
 import shutil
@@ -19,7 +21,11 @@ import yaml
 
 from wads.version_sync import (
     check_versions_agree,
+    npm_publish_refusal,
+    pypi_release_expected,
+    set_json_version,
     set_manifest_version,
+    static_project_version,
     sync_files,
     sync_version,
     version_mismatches,
@@ -28,7 +34,15 @@ from wads.version_sync import (
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "wads" / "scripts"
 WORKFLOWS = ROOT / ".github" / "workflows"
+UV_WORKFLOWS = [WORKFLOWS / "uv-ci.yml", ROOT / "wads" / "data" / "github_ci_uv.yml"]
+NPM_WORKFLOWS = ["npm-ci.yml", "npm-ci-monorepo.yml"]
 _NO_SITE = ["-S"] if sys.version_info >= (3, 11) else []
+_NEEDS_TOMLLIB = pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="the guard reads pyproject.toml with tomllib"
+)
+_NEEDS_BASH = pytest.mark.skipif(
+    shutil.which("bash") is None or os.name == "nt", reason="bash step"
+)
 
 
 def _pyproject(version="0.1.0", sync=None):
@@ -77,6 +91,83 @@ def test_write_keeps_the_manifest_format_and_other_fields(tmp_path, indent):
     set_manifest_version(manifest, "0.2.0")
     expected = {"name": "demo", "version": "0.2.0", "files": ["dist"]}
     assert manifest.read_text() == json.dumps(expected, indent=indent) + "\n"
+
+
+# What `npm version 0.2.0 --no-git-tag-version --ignore-scripts` writes (npm 10),
+# checked against a real npm below when one is installed.
+LAYOUTS = {
+    "crlf": (
+        b'{\r\n  "name": "demo",\r\n  "version": "0.1.0",\r\n  "files": [\r\n    "dist"\r\n  ]\r\n}\r\n',
+        b'{\r\n  "name": "demo",\r\n  "version": "0.2.0",\r\n  "files": [\r\n    "dist"\r\n  ]\r\n}\r\n',
+    ),
+    "minified": (
+        b'{"name":"demo","version":"0.1.0","files":["dist"]}',
+        b'{"name":"demo","version":"0.2.0","files":["dist"]}',
+    ),
+    "minified, final newline": (  # npm drops it: a minified file stays one line
+        b'{"name":"demo","version":"0.1.0","files":["dist"]}\n',
+        b'{"name":"demo","version":"0.2.0","files":["dist"]}',
+    ),
+    "indented, no final newline": (  # npm adds one
+        b'{\n  "name": "demo",\n  "version": "0.1.0"\n}',
+        b'{\n  "name": "demo",\n  "version": "0.2.0"\n}\n',
+    ),
+    "tab, non-ascii": (
+        '{\n\t"name": "demo",\n\t"version": "0.1.0",\n\t"description": "caf\u00e9"\n}\n'.encode(),
+        '{\n\t"name": "demo",\n\t"version": "0.2.0",\n\t"description": "caf\u00e9"\n}\n'.encode(),
+    ),
+}
+
+
+@pytest.mark.parametrize("layout", list(LAYOUTS))
+def test_write_matches_npm_version_byte_for_byte(tmp_path, layout):
+    before, expected = LAYOUTS[layout]
+    manifest = tmp_path / "package.json"
+    manifest.write_bytes(before)
+    set_manifest_version(manifest, "0.2.0")
+    assert manifest.read_bytes() == expected
+
+
+@pytest.mark.skipif(shutil.which("npm") is None, reason="needs a real npm")
+@pytest.mark.parametrize("layout", list(LAYOUTS))
+def test_the_expected_bytes_are_what_npm_writes(tmp_path, layout):
+    before, expected = LAYOUTS[layout]
+    (tmp_path / "package.json").write_bytes(before)
+    subprocess.run(
+        ["npm", "version", "0.2.0", "--no-git-tag-version", "--ignore-scripts"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        shell=os.name == "nt",
+    )
+    assert (tmp_path / "package.json").read_bytes() == expected
+
+
+def test_a_crlf_lockfile_keeps_its_line_endings(tmp_path):
+    manifest = tmp_path / "package.json"
+    manifest.write_bytes(b'{\r\n  "name": "demo",\r\n  "version": "0.1.0"\r\n}\r\n')
+    lock = tmp_path / "package-lock.json"
+    lock.write_bytes(
+        b'{\r\n  "name": "demo",\r\n  "version": "0.1.0",\r\n  "lockfileVersion": 3,\r\n'
+        b'  "packages": {\r\n    "": {\r\n      "version": "0.1.0"\r\n    }\r\n  }\r\n}\r\n'
+    )
+    set_manifest_version(manifest, "0.2.0")
+    assert lock.read_bytes() == (
+        b'{\r\n  "name": "demo",\r\n  "version": "0.2.0",\r\n  "lockfileVersion": 3,\r\n'
+        b'  "packages": {\r\n    "": {\r\n      "version": "0.2.0"\r\n    }\r\n  }\r\n}\r\n'
+    )
+
+
+def test_one_json_file_can_be_written_alone(tmp_path):
+    """The push-back resolver writes the manifest and the lockfile one at a time."""
+    lock = tmp_path / "package-lock.json"
+    lock.write_text('{"version": "0.1.0", "packages": {"": {"version": "0.1.0"}}}')
+    set_json_version(lock, "0.3.0")
+    assert json.loads(lock.read_text()) == {
+        "version": "0.3.0",
+        "packages": {"": {"version": "0.3.0"}},
+    }
+    assert not (tmp_path / "package.json").exists()
 
 
 def test_write_updates_the_npm_lockfile_beside_it(tmp_path):
@@ -140,6 +231,172 @@ def test_disagreeing_or_missing_manifests_are_named(tmp_path):
         check_versions_agree(tmp_path, data)
 
 
+@pytest.mark.parametrize(
+    "project, says",
+    [
+        ({"name": "demo", "dynamic": ["version"]}, "dynamic"),
+        ({}, "setup.cfg"),  # no [project] table: setup.cfg / setup.py metadata
+        ({"name": "demo"}, "missing"),
+    ],
+)
+def test_sync_needs_a_static_project_version(tmp_path, project, says):
+    _package_json(tmp_path / "ts" / "package.json", "0.3.0")
+    data = {"tool": {"wads": {"ci": {"version": {"sync": ["ts/package.json"]}}}}}
+    if project:
+        data["project"] = project
+    with pytest.raises(ValueError, match="static \\[project\\]\\.version") as info:
+        check_versions_agree(tmp_path, data)
+    assert says in str(info.value)
+    assert "remove the sync key" in str(info.value)
+
+
+def test_a_non_static_version_is_fine_without_sync(tmp_path):
+    check_versions_agree(tmp_path, {"project": {"dynamic": ["version"]}})
+    assert static_project_version({"project": {"version": "1.0.0"}}) == "1.0.0"
+
+
+# --- npm publish guard: npm must not get the previous release's number --------
+
+
+def _guard_data(sync=("ts/package.json",), version="1.2.3", **ci):
+    data = _pyproject(version, list(sync))
+    data["tool"]["wads"]["ci"].update(ci)
+    return data
+
+
+NPM = "Release the TS side [publish-npm]"
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        ["ts/src/index.ts"],
+        ["ts/package.json", "ts/src/index.ts"],
+        [],  # an empty commit
+    ],
+)
+def test_a_push_inside_the_npm_package_may_publish(changed):
+    assert npm_publish_refusal(_guard_data(), "ts", changed, NPM) is None
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        ["pkg/core.py"],
+        ["ts/src/index.ts", "pkg/core.py"],
+        ["README.md"],  # anything outside counts: the Python release ships it
+        ["ts-old/index.ts"],  # a sibling with the same prefix is outside
+        ["ts"],  # a file named like the directory is not inside it
+    ],
+)
+def test_a_push_that_also_releases_python_is_refused(changed):
+    msg = npm_publish_refusal(_guard_data(), "ts", changed, NPM)
+    assert msg.startswith("This push also releases the Python package")
+    assert "previous release's number (1.2.3)" in msg
+    assert "changes only ts/" in msg
+    assert "'[skip publish]'" in msg
+    outside = [f for f in changed if not f.startswith("ts/")]
+    assert f"Changed outside ts/: {', '.join(outside)}" in msg
+
+
+def test_the_refusal_names_a_few_files_and_counts_the_rest():
+    changed = [f"pkg/m{i}.py" for i in range(8)]
+    msg = npm_publish_refusal(_guard_data(), "ts", changed, NPM)
+    assert msg.endswith(
+        "pkg/m0.py, pkg/m1.py, pkg/m2.py, pkg/m3.py, pkg/m4.py and 3 more"
+    )
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        _pyproject("1.2.3"),  # no sync
+        _guard_data(sync=["js/package.json"]),  # another npm package is synced
+        _guard_data(sync=[]),
+    ],
+)
+def test_no_synced_manifest_in_the_package_means_no_guard(data):
+    assert npm_publish_refusal(data, "ts", ["pkg/core.py"], NPM) is None
+
+
+@pytest.mark.parametrize("package_dir", ["ts", "ts/", "./ts", "./ts/"])
+def test_the_package_dir_is_normalized(package_dir):
+    assert npm_publish_refusal(_guard_data(), package_dir, ["ts/a.ts"], NPM) is None
+    assert npm_publish_refusal(_guard_data(), package_dir, ["pkg/a.py"], NPM)
+
+
+def test_a_monorepo_workspace_package_under_the_root_is_guarded():
+    data = _guard_data(sync=["ts/packages/core/package.json"])
+    assert npm_publish_refusal(data, "ts", ["ts/packages/core/src/a.ts"], NPM) is None
+    msg = npm_publish_refusal(data, "ts", ["pkg/a.py"], NPM)
+    assert "ts/packages/core/package.json" in msg
+
+
+@pytest.mark.parametrize("package_dir", [".", "", "./"])
+def test_an_npm_package_at_the_repo_root_needs_the_skip_publish_marker(package_dir):
+    data = _guard_data(sync=["package.json"])
+    msg = npm_publish_refusal(data, package_dir, ["src/index.ts"], NPM)
+    assert "npm package is the repo root" in msg
+    assert msg.endswith("Changed: src/index.ts")
+    assert (
+        npm_publish_refusal(
+            data, package_dir, ["src/index.ts"], NPM + " [skip publish]"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    "ci, subject, refused",
+    [
+        ({}, NPM, True),
+        ({}, NPM + " [skip publish]", False),
+        ({}, NPM + " [SKIP PUBLISH]", False),  # case-insensitive, like contains()
+        ({}, NPM + " [skip ci]", False),
+        # configured markers replace the defaults
+        ({"publish": {"skip_publish_marker": "[no pypi]"}}, NPM + " [no pypi]", False),
+        (
+            {"publish": {"skip_publish_marker": "[no pypi]"}},
+            NPM + " [skip publish]",
+            True,
+        ),
+        ({"publish": {"skip_ci_marker": "[ci skip]"}}, NPM + " [ci skip]", False),
+        # PyPI publishing off: only the publish marker releases
+        ({"publish": {"enabled": False}}, NPM, False),
+        ({"publish": {"enabled": False}}, NPM + " [publish]", True),
+        (
+            {"publish": {"enabled": False, "publish_marker": "[pypi]"}},
+            NPM + " [pypi]",
+            True,
+        ),
+        # on-demand trigger: uv-ci runs (and releases) only when asked
+        ({"trigger": {"mode": "on-demand"}}, NPM, False),
+        ({"trigger": {"mode": "on-demand"}}, NPM + " [run ci]", True),
+        ({"trigger": {"mode": "on-demand"}}, NPM + " [run deploy]", True),
+        (
+            {"trigger": {"mode": "on-demand", "run_ci_publishes": False}},
+            NPM + " [run ci]",
+            False,
+        ),
+    ],
+)
+def test_the_guard_follows_uv_ci_publish_gates(ci, subject, refused):
+    data = _guard_data(**ci)
+    assert pypi_release_expected(data, subject) is refused
+    msg = npm_publish_refusal(data, "ts", ["pkg/core.py"], subject)
+    assert (msg is not None) is refused
+
+
+def test_the_refusal_names_the_configured_skip_publish_marker():
+    data = _guard_data(publish={"skip_publish_marker": "[no pypi]"})
+    assert "'[no pypi]'" in npm_publish_refusal(data, "ts", ["pkg/a.py"], NPM)
+
+
+def test_a_bad_sync_list_is_an_error_not_a_pass():
+    with pytest.raises(ValueError, match="sync"):
+        npm_publish_refusal(_guard_data(sync=["../x/package.json"]), "ts", [], NPM)
+
+
 # --- the CI scripts, run as the actions run them ------------------------------
 
 
@@ -147,7 +404,10 @@ def _run_script(script, *args, cwd, env=None):
     return subprocess.run(
         [sys.executable, "-I", *_NO_SITE, str(SCRIPTS / script), *args],
         cwd=cwd,
-        env={**{k: os.environ[k] for k in ("SYSTEMROOT",) if k in os.environ}, **(env or {})},
+        env={
+            **{k: os.environ[k] for k in ("SYSTEMROOT",) if k in os.environ},
+            **(env or {}),
+        },
         capture_output=True,
         text=True,
     )
@@ -192,19 +452,225 @@ def test_sync_script_writes_the_release_version(tmp_path):
     assert json.loads(manifest.read_text())["version"] == "0.3.1"
 
 
+def test_sync_script_writes_one_file(tmp_path):
+    lock = tmp_path / "package-lock.json"
+    lock.write_bytes(b'{\r\n  "version": "0.1.0"\r\n}\r\n')
+    result = _run_script("sync_version.py", "--file", str(lock), "0.2.0", cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    assert lock.read_bytes() == b'{\r\n  "version": "0.2.0"\r\n}\r\n'
+    bad = _run_script("sync_version.py", "--file", str(lock), "1.0rc1", cwd=tmp_path)
+    assert bad.returncode == 1 and "::error::" in bad.stderr
+
+
 def test_sync_script_fails_with_an_annotation(tmp_path):
     _package_json(tmp_path / "ts" / "package.json", "0.3.0")
-    result = _run_script("sync_version.py", "1.0rc1", '["ts/package.json"]', cwd=tmp_path)
+    result = _run_script(
+        "sync_version.py", "1.0rc1", '["ts/package.json"]', cwd=tmp_path
+    )
     assert result.returncode == 1
     assert result.stderr.startswith("::error::Version sync failed")
+
+
+def _changed(tmp_path, *paths):
+    listing = tmp_path / "changed"
+    listing.write_text("".join(p + "\0" for p in paths))
+    return str(listing)
+
+
+def test_guard_script_is_a_no_op_without_pyproject(tmp_path):
+    result = _run_script(
+        "npm_publish_guard.py",
+        "ts",
+        _changed(tmp_path, "pkg/a.py"),
+        cwd=tmp_path,
+        env={"SUBJECT": NPM},
+    )
+    assert result.returncode == 0, result.stderr
+    assert "nothing to check" in result.stdout
+
+
+@_NEEDS_TOMLLIB
+@pytest.mark.parametrize(
+    "changed, subject, rc",
+    [
+        (["ts/src/a.ts"], NPM, 0),
+        (["ts/src/a.ts", "pkg/a.py"], NPM, 1),
+        (["ts/src/a.ts", "pkg/a.py"], NPM + " [skip publish]", 0),
+    ],
+)
+def test_guard_script_decides_from_the_repo_pyproject(tmp_path, changed, subject, rc):
+    _write_pyproject(tmp_path, "1.2.3", ["ts/package.json"])
+    result = _run_script(
+        "npm_publish_guard.py",
+        "ts",
+        _changed(tmp_path, *changed),
+        cwd=tmp_path,
+        env={"SUBJECT": subject},
+    )
+    assert result.returncode == rc, result.stdout + result.stderr
+    if rc:
+        assert result.stderr.startswith(
+            "::error::This push also releases the Python package"
+        )
+
+
+@_NEEDS_TOMLLIB
+def test_guard_script_fails_on_a_bad_config(tmp_path):
+    _write_pyproject(tmp_path, "1.2.3", ["../x/package.json"])
+    result = _run_script(
+        "npm_publish_guard.py",
+        "ts",
+        _changed(tmp_path),
+        cwd=tmp_path,
+        env={"SUBJECT": NPM},
+    )
+    assert result.returncode == 1
+    assert result.stderr.startswith("::error::npm publish guard failed")
+
+
+# --- the guard action's bash, against a real git history -----------------------
+
+
+def _git(repo, *args):
+    return subprocess.run(
+        ["git", *args], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+
+def _guard_action():
+    return yaml.safe_load(
+        (ROOT / "actions" / "npm-publish-guard" / "action.yml").read_text()
+    )
+
+
+@pytest.fixture
+def guarded_repo(tmp_path, monkeypatch):
+    """A repo syncing ts/package.json: a first commit, then a push of two commits.
+
+    Returns ``(repo, run)``, where ``run(before)`` runs the action's step there.
+    """
+    if shutil.which("git") is None:
+        pytest.skip("needs git")
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(home / "gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_SYSTEM", os.devnull)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "config", "user.email", "ci@example.invalid")
+    _git(repo, "config", "user.name", "CI")
+    _write_pyproject(repo, "1.2.3", ["ts/package.json"])
+    _package_json(repo / "ts" / "package.json", "1.2.3")
+    (repo / "pkg").mkdir()
+    (repo / "pkg" / "core.py").write_text("x = 1\n")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-q", "-m", "first")
+    # `python3 -I` in the action: this interpreter, whatever python3 is on PATH
+    shim = tmp_path / "bin"
+    shim.mkdir()
+    (shim / "python3").write_text(
+        f'#!/usr/bin/env bash\nexec "{sys.executable}" "$@"\n'
+    )
+    (shim / "python3").chmod(0o755)
+    run_script = _guard_action()["runs"]["steps"][0]["run"]
+
+    def run(before, subject=NPM):
+        env = {
+            **os.environ,
+            "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}",
+            "GITHUB_ACTION_PATH": str(ROOT / "actions" / "npm-publish-guard"),
+            "RUNNER_TEMP": str(tmp_path),
+            "PACKAGE_DIR": "ts",
+            "SUBJECT": subject,
+            "BEFORE": before,
+        }
+        return subprocess.run(
+            ["bash", "-c", run_script],
+            cwd=repo,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+
+    return repo, run
+
+
+def _commit_file(repo, rel, text, message):
+    path = repo / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+    _git(repo, "add", rel)
+    _git(repo, "commit", "-q", "-m", message)
+
+
+@_NEEDS_BASH
+@_NEEDS_TOMLLIB
+def test_guard_action_looks_at_every_commit_of_the_push(guarded_repo):
+    repo, run = guarded_repo
+    before = _git(repo, "rev-parse", "HEAD")
+    _commit_file(repo, "pkg/core.py", "x = 2\n", "python change")
+    _commit_file(repo, "ts/src/a.ts", "export {}\n", "ts change")
+    result = run(before)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "Changed outside ts/: pkg/core.py" in result.stderr
+    # the skip-publish marker lets it through
+    assert run(before, NPM + " [skip publish]").returncode == 0
+
+
+@_NEEDS_BASH
+@_NEEDS_TOMLLIB
+def test_guard_action_passes_a_push_that_changes_only_the_npm_package(guarded_repo):
+    repo, run = guarded_repo
+    _commit_file(repo, "pkg/core.py", "x = 2\n", "earlier python change")
+    before = _git(repo, "rev-parse", "HEAD")
+    _commit_file(repo, "ts/src/a.ts", "export {}\n", "ts change")
+    result = run(before)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@_NEEDS_BASH
+@_NEEDS_TOMLLIB
+@pytest.mark.parametrize(
+    "before", ["", "0" * 40, "1234567890abcdef1234567890abcdef12345678"]
+)
+def test_guard_action_falls_back_to_the_last_commit(guarded_repo, before):
+    """A new branch (zeros), no `before`, or one this checkout lacks: HEAD^..HEAD."""
+    repo, run = guarded_repo
+    _commit_file(repo, "pkg/core.py", "x = 2\n", "python change")
+    _commit_file(repo, "ts/src/a.ts", "export {}\n", "ts change")
+    result = run(before)
+    assert result.returncode == 0, result.stdout + result.stderr
+    if before.strip("0"):
+        assert "::warning::" in result.stdout
+    _commit_file(repo, "pkg/core.py", "x = 3\n", "python change on top")
+    assert run(before).returncode == 1
+
+
+@_NEEDS_BASH
+def test_guard_action_is_a_no_op_without_pyproject(guarded_repo):
+    repo, run = guarded_repo
+    (repo / "pyproject.toml").unlink()
+    result = run("")
+    assert result.returncode == 0, result.stderr
+    assert "nothing to check" in result.stdout
 
 
 # --- uv-ci wiring -------------------------------------------------------------
 
 
-@pytest.mark.parametrize("job", ["publish", "publish-native"])
-def test_publish_jobs_sync_between_the_bump_and_the_bump_commit(job):
-    steps = yaml.safe_load((WORKFLOWS / "uv-ci.yml").read_text())["jobs"][job]["steps"]
+@pytest.mark.parametrize(
+    "workflow, job",
+    [
+        (UV_WORKFLOWS[0], "publish"),
+        (UV_WORKFLOWS[0], "publish-native"),
+        (UV_WORKFLOWS[1], "publish"),
+    ],
+    ids=["uv-ci:publish", "uv-ci:publish-native", "inline-template:publish"],
+)
+def test_publish_jobs_sync_between_the_bump_and_the_bump_commit(workflow, job):
+    steps = yaml.safe_load(workflow.read_text())["jobs"][job]["steps"]
     names = [s.get("name", "") for s in steps]
     bump = names.index("Update Version Number")
     sync = names.index("Sync the version into other manifests")
@@ -220,14 +686,39 @@ def test_publish_jobs_sync_between_the_bump_and_the_bump_commit(job):
     assert "version-sync != '[]'" in step["if"]
 
 
-def test_setup_job_exports_the_sync_list():
-    wf = yaml.safe_load((WORKFLOWS / "uv-ci.yml").read_text())
+@pytest.mark.parametrize("workflow", UV_WORKFLOWS, ids=["uv-ci", "inline-template"])
+def test_setup_job_exports_the_sync_list(workflow):
+    wf = yaml.safe_load(workflow.read_text())
     outputs = wf["jobs"]["setup"]["outputs"]
     assert outputs["version-sync"] == "${{ steps.config.outputs.version-sync }}"
-    action = yaml.safe_load((ROOT / "actions" / "read-ci-config" / "action.yml").read_text())
+
+
+def test_the_actions_take_the_documented_inputs():
+    action = yaml.safe_load(
+        (ROOT / "actions" / "read-ci-config" / "action.yml").read_text()
+    )
     assert "version-sync" in action["outputs"]
-    sync_action = yaml.safe_load((ROOT / "actions" / "sync-version" / "action.yml").read_text())
+    sync_action = yaml.safe_load(
+        (ROOT / "actions" / "sync-version" / "action.yml").read_text()
+    )
     assert set(sync_action["inputs"]) == {"version", "files"}
+
+
+@pytest.mark.parametrize("name", NPM_WORKFLOWS)
+def test_npm_pack_job_runs_the_guard_before_any_repo_code(name):
+    steps = yaml.safe_load((WORKFLOWS / name).read_text())["jobs"]["pack"]["steps"]
+    checkout = steps[0]
+    assert checkout["uses"].startswith("actions/checkout@")
+    assert checkout["with"]["fetch-depth"] == 0
+    assert checkout["with"]["persist-credentials"] is False
+    guard = steps[1]
+    assert guard["uses"] == "i2mint/wads/actions/npm-publish-guard@master"
+    assert guard["with"] == {
+        "package-dir": "${{ inputs.package-dir }}",
+        "subject": "${{ needs.setup.outputs.commit_subject }}",
+        "before": "${{ github.event.before }}",
+    }
+    assert set(_guard_action()["inputs"]) == set(guard["with"])
 
 
 # --- npm publish: asked for a release, released nothing -> fail ---------------
@@ -244,18 +735,24 @@ def _fake_tool(bin_dir: Path, name: str, body: str):
     path.chmod(0o755)
 
 
-@pytest.mark.skipif(shutil.which("bash") is None or os.name == "nt", reason="bash step")
-@pytest.mark.parametrize("name", ["npm-ci.yml", "npm-ci-monorepo.yml"])
+@_NEEDS_BASH
+@pytest.mark.skipif(
+    shutil.which("openssl") is None, reason="the step hashes with openssl"
+)
+@pytest.mark.parametrize("name", NPM_WORKFLOWS)
 @pytest.mark.parametrize(
-    "on_npm, attempt, expect_rc, expect_text",
+    "on_npm, attempt, registry_bytes, expect_rc, expect_text",
     [
-        ("", "1", 0, "PUBLISH demo-0.1.0.tgz"),  # new version: published
-        ("demo@0.1.0", "1", 1, "::error::nothing published: demo@0.1.0"),
-        ("demo@0.1.0", "2", 0, "::warning::nothing published"),  # a re-run
+        ("", "1", "", 0, "PUBLISH demo-0.1.0.tgz"),  # new version: published
+        ("demo@0.1.0", "1", "same", 1, "::error::nothing published: demo@0.1.0"),
+        # a re-run of the attempt that published these very bytes
+        ("demo@0.1.0", "2", "same", 0, "::warning::nothing published"),
+        # a re-run, but npm holds other bytes: someone else's release
+        ("demo@0.1.0", "2", "other", 1, "::error::nothing published: demo@0.1.0"),
     ],
 )
 def test_publish_fails_when_it_releases_nothing(
-    tmp_path, name, on_npm, attempt, expect_rc, expect_text
+    tmp_path, name, on_npm, attempt, registry_bytes, expect_rc, expect_text
 ):
     step = _publish_run(name)
     art = tmp_path / "npm-pack"
@@ -265,15 +762,24 @@ def test_publish_fails_when_it_releases_nothing(
     with tarfile.open(art / "demo-0.1.0.tgz", "w:gz") as tar:
         tar.add(pkg_json, arcname="package/package.json")
     (art / "publish-order.txt").write_text("demo-0.1.0.tgz\n")
+    tgz = (art / "demo-0.1.0.tgz").read_bytes()
+    if registry_bytes == "other":
+        tgz += b"something else"
+    integrity = "sha512-" + base64.b64encode(hashlib.sha512(tgz).digest()).decode()
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    # node: the manifest check prints "name version"; npm: view says whether
-    # the version exists, publish records what it would upload.
+    # node: the manifest check prints "name version"; npm: `view -- NAME@VER
+    # version` says whether the version exists, `view ... dist.integrity` prints
+    # the registry's hash, publish records what it would upload.
     _fake_tool(bin_dir, "node", 'echo "demo 0.1.0"\n')
     _fake_tool(
         bin_dir,
         "npm",
-        'if [ "$1" = view ]; then [ "$3" = "$ON_NPM" ]; exit; fi\n'
+        'if [ "$1" = view ]; then\n'
+        '  [ "$3" = "$ON_NPM" ] || exit 1\n'
+        '  if [ "$4" = dist.integrity ]; then echo "$INTEGRITY"; fi\n'
+        "  exit 0\n"
+        "fi\n"
         'if [ "$1" = publish ]; then echo "PUBLISH $(basename "$2")"; exit 0; fi\n'
         "exit 0\n",
     )
@@ -282,6 +788,7 @@ def test_publish_fails_when_it_releases_nothing(
         "RUNNER_TEMP": str(tmp_path),
         "GITHUB_RUN_ATTEMPT": attempt,
         "ON_NPM": on_npm,
+        "INTEGRITY": integrity,
         "PROVENANCE": "false",
         "ACCESS": "public",
         "REGISTRY": "https://registry.npmjs.org",
@@ -292,3 +799,11 @@ def test_publish_fails_when_it_releases_nothing(
     )
     assert result.returncode == expect_rc, result.stdout + result.stderr
     assert expect_text in result.stdout + result.stderr
+    if registry_bytes == "other" and attempt == "2":
+        assert "on npm is not this run's tarball" in result.stdout
+
+
+@pytest.mark.parametrize("name", NPM_WORKFLOWS)
+def test_the_npm_hint_mentions_pypi_sync_only_as_a_condition(name):
+    run = _publish_run(name)["run"]
+    assert "if this repo also publishes to PyPI, [tool.wads.ci.version].sync" in run

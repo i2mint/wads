@@ -101,6 +101,9 @@ runs:
       env:
         TARGET_BRANCH: ${{ inputs.branch }}
         REBASE_RETRIES: ${{ inputs.push-rebase-retries }}
+      # A package.json / package-lock.json version conflict is resolved with
+      # wads' own JSON writer (wads/scripts/sync_version.py --file, standard
+      # library only), from this action's checkout ($GITHUB_ACTION_PATH).
       run: |
         set -eo pipefail
 
@@ -176,6 +179,9 @@ runs:
             for path in $conflicted; do
               case "$path" in
                 pyproject.toml|setup.cfg|setup.py) ;;
+                # [tool.wads.ci.version].sync (i2mint/wads#210): the bump commit
+                # also carries the npm twin's version, in its manifest and lockfile.
+                package.json|*/package.json|package-lock.json|*/package-lock.json) ;;
                 *) only_version_files=0 ;;
               esac
             done
@@ -210,8 +216,19 @@ runs:
               project_version() {
                 awk -v sec="$(version_section "$1")" -v nv="" "$version_awk" || true
               }
+              # The top-level "version" of a package.json / package-lock.json,
+              # read from stdin; empty when there is none.
+              json_version() {
+                python3 -I -c 'import json, sys; v = json.load(sys.stdin).get("version"); print(v if isinstance(v, str) else "")' || true
+              }
+              is_json() {
+                case "$1" in *.json) return 0 ;; *) return 1 ;; esac
+              }
+              file_version() {
+                if is_json "$1"; then json_version; else project_version "$1"; fi
+              }
               for path in $conflicted; do
-                new_version=$(git show ":3:$path" 2>/dev/null | project_version "$path" || true)
+                new_version=$(git show ":3:$path" 2>/dev/null | file_version "$path" || true)
                 if ! git checkout --ours -- "$path" 2>/dev/null; then
                   # Modify/delete conflict: upstream removed the file, so there
                   # is no upstream content to keep (i2mint/wads#98).
@@ -247,6 +264,19 @@ runs:
                       # No fixed version-field syntax to target safely; skip --
                       # the next publish run's own bump step corrects it, and
                       # skipping never loses data (unlike the old --theirs).
+                      ;;
+                    *.json)
+                      # Upstream's file, with this run's version in its version
+                      # field(s) (a lockfile's root package too), in the file's
+                      # own layout, as `npm version` writes it.
+                      sync_script="$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py"
+                      python3 -I "$sync_script" --file "$path" "$new_version" || true
+                      landed=$(json_version < "$path")
+                      if [ "$landed" != "$new_version" ]; then
+                        git rebase --abort || true
+                        echo "::error::Could not write version $new_version (just released) into '$path' on top of 'origin/$branch' (found '${landed:-no version}'). Resolve by hand."
+                        exit 1
+                      fi
                       ;;
                   esac
                 else

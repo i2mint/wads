@@ -2,10 +2,14 @@
 """Write the release version into the manifests ``[tool.wads.ci.version].sync`` lists.
 
 Run by the ``sync-version`` action in uv-ci's publish jobs, right after the version
-bump, so the bump commit carries every manifest (i2mint/wads#210).
+bump, so the bump commit carries every manifest (i2mint/wads#210). The ``--file``
+form writes one ``package.json`` or ``package-lock.json``; the ``git-commit``
+action's push-back conflict resolver uses it to put this run's version on top of
+upstream's file.
 
 Usage:
     python3 -I sync_version.py VERSION FILES_JSON [REPO_DIR]
+    python3 -I sync_version.py --file PATH VERSION
 """
 
 import json
@@ -19,6 +23,19 @@ from _checkout_import import load_wads_module  # noqa: E402
 def main(argv=None) -> int:
     """Sync ``VERSION`` into each file of ``FILES_JSON``; 1 with an error annotation on failure."""
     argv = sys.argv[1:] if argv is None else argv
+    version_sync = load_wads_module("version_sync")
+    if argv[:1] == ["--file"]:
+        if len(argv) != 3:
+            print(__doc__, file=sys.stderr)
+            return 2
+        _, path, version = argv
+        try:
+            version_sync.set_json_version(Path(path), version)
+        except (ValueError, OSError) as e:
+            print(f"::error::Version sync failed: {e}", file=sys.stderr)
+            return 1
+        print(f"{path} -> {version}")
+        return 0
     if len(argv) not in (2, 3):
         print(__doc__, file=sys.stderr)
         return 2
@@ -26,7 +43,7 @@ def main(argv=None) -> int:
     repo_dir = rest[0] if rest else "."
     try:
         files = json.loads(files_json)
-        written = load_wads_module("version_sync").sync_version(repo_dir, files, version)
+        written = version_sync.sync_version(repo_dir, files, version)
     except (ValueError, OSError) as e:
         print(f"::error::Version sync failed: {e}", file=sys.stderr)
         return 1
