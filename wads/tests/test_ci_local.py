@@ -972,7 +972,9 @@ def test_npm_steps_run_in_a_copy_and_leave_the_tree_alone(repo, tmp_path):
     report, runner, _, copy = _run_npm(repo, tmp_path, ignored=("notes.txt",))
     assert report.ok
     assert _tree(repo) == before, "the developer's tree is untouched"
-    copied = sorted(str(p.relative_to(copy)) for p in copy.rglob("*") if p.is_file())
+    copied = sorted(
+        p.relative_to(copy).as_posix() for p in copy.rglob("*") if p.is_file()
+    )
     assert "ts/package.json" in copied and "pyproject.toml" in copied
     assert not [n for n in copied if "node_modules" in n or n == "notes.txt"]
     calls = _npm_calls(runner)
