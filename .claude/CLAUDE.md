@@ -227,7 +227,8 @@ Built-in profiles:
 
 - **`js`** — the original #32 overlay. Back-compat anchor: `js`-alone output is
   **byte-identical** to pre-#39 (golden-pinned in
-  `wads/tests/data/golden/frontend_js/`). Subdir `js/`, single-package
+  `wads/tests/data/golden/frontend_js/`), plus, since #215, a copy of the root
+  `LICENSE` in `js/` when the repo has one. Subdir `js/`, single-package
   `npm-ci.yml`.
 - **`ts`** — single-package TypeScript: `tsconfig.json` + `src/index.ts`, tsup
   build + vitest, same `wads.ci` block + publish model. Subdir `ts/`.
