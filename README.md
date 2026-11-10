@@ -104,6 +104,8 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 
 The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo's root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
 
+The two CIs run on their own inputs. The Python `ci.yml` carries a `paths:` filter that leaves out each npm component and its workflow file, so a change only under `ts/` runs the npm CI alone and never cuts a PyPI release. The npm stub also watches the inputs it shares with the Python side: `fixtures/**` (the golden cases both test suites run) and `rust/**` when there is a Rust core; pass `watch_paths=` to `apply_frontend` for others. The filter is derived from the repo's `npm-ci*.yml` stubs each time the Python stub is rendered (`populate`, `wads-migrate ci-to-stub`, the on-demand flip), so re-rendering keeps it; `populate --frontend` on a repo whose stub predates it says to re-render. A file under the npm component that the Python tests check (one the Python side generates, say) goes back in with `[tool.wads.ci.trigger] include_paths = ["ts/src/grammar.generated.ts"]`.
+
 ```bash
 # A single TypeScript component:
 populate my-project --root-url https://github.com/user/my-project --frontend ts

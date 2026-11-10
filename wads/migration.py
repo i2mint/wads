@@ -1047,8 +1047,10 @@ def migrate_ci_to_stub(
     # on-demand repo's stub (ci-to-stub, fleet-stub) can never revert it to auto.
     from wads.ci_trigger import (
         render_stub_inputs,
+        render_stub_paths,
         render_stub_trigger,
         stub_inputs_of,
+        stub_paths_for_workflow,
         trigger_settings_for_workflow,
     )
 
@@ -1056,6 +1058,10 @@ def migrate_ci_to_stub(
     declared["mode"] = trigger_mode or declared["mode"]
     declared["run_ci_marker"] = run_ci_marker or declared["run_ci_marker"]
     stub = render_stub_trigger(stub, **declared)
+    # The repo's npm components stay out of the Python CI (#209): derived from the
+    # repo each time, so a re-render keeps the filter up to date.
+    if old_ci:
+        stub = render_stub_paths(stub, stub_paths_for_workflow(old_ci))
     # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
     return render_stub_inputs(stub, stub_inputs_of(old_ci))
 

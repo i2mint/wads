@@ -73,9 +73,34 @@ _TEMPLATE_TRIGGERS = (
 DISPATCH_LEVEL_OPTIONS = ["config", *TRIGGER_LEVELS]
 
 
+def _is_rendered_paths(value) -> bool:
+    """Whether a push/PR entry is ``None`` or the ``paths:`` filter a render writes."""
+    if value is None:
+        return True
+    paths = value.get("paths") if isinstance(value, dict) else None
+    return (
+        set(value) == {"paths"}
+        and isinstance(paths, list)
+        and paths[:1] == [WATCH_ALL]
+        and all(isinstance(p, str) for p in paths)
+    )
+
+
 def _is_template_trigger(triggers) -> bool:
-    """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is)."""
+    """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is).
+
+    The ``paths:`` filters are reproduced too: a re-render derives them from the
+    repo's npm components (:func:`python_ci_paths`).
+    """
     if triggers in _TEMPLATE_TRIGGERS:
+        return True
+    if (
+        isinstance(triggers, dict)
+        and set(triggers) == {"push", "pull_request"}
+        and _is_rendered_paths(triggers["push"])
+        and triggers["push"] is not None
+        and triggers["pull_request"] == triggers["push"]
+    ):
         return True
     if not (
         isinstance(triggers, dict) and set(triggers) == {"push", "workflow_dispatch"}
@@ -85,7 +110,7 @@ def _is_template_trigger(triggers) -> bool:
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     level = inputs.get("level") if isinstance(inputs, dict) else None
     return (
-        triggers["push"] is None
+        _is_rendered_paths(triggers["push"])
         and isinstance(inputs, dict)
         and set(dispatch) == {"inputs"}
         and set(inputs) == {"level"}
@@ -302,6 +327,82 @@ def render_stub_trigger(
     )
     header = _on_demand_header(run_ci_marker, deploy_marker, run_ci_publishes)
     return stub.replace(AUTO_ON_LINE, header).replace(CI_JOB_ANCHOR, gated_job)
+
+
+# --------------------------------------------------------------------------------------
+# Path filters: the Python CI ignores the npm components of a polyglot repo (#209)
+
+#: The first entry of a rendered ``paths:`` filter; ``!`` entries then carve out.
+WATCH_ALL = "**"
+#: The on-demand header's trigger lines, which a paths filter is inserted into.
+ON_DEMAND_PUSH = "on:\n  push:\n  workflow_dispatch:\n"
+
+
+def python_ci_paths(repo_root, *, include: Sequence[str] = ()) -> list:
+    """The ``paths:`` filter for the Python CI stub of ``repo_root``; ``[]`` for none.
+
+    Every npm component an ``npm-ci*.yml`` stub runs (its directory and its own
+    workflow file) is left out, so a change only there runs the npm CI alone and
+    never cuts a PyPI release. ``include`` re-adds paths after the exclusions
+    (``[tool.wads.ci.trigger].include_paths``), e.g. a file the Python tests
+    generate into the npm component. A component at the repo root cannot be
+    carved out and is skipped. Shared inputs (``fixtures/``, ``rust/``) stay
+    watched, since both sides test them.
+    """
+    from wads.npm_config import npm_components
+
+    components = [c for c in npm_components(repo_root) if c.dir not in ("", ".")]
+    if not components:
+        return []
+    paths = [WATCH_ALL]
+    for component in components:
+        paths += [f"!{component.dir}/**", f"!.github/workflows/{component.workflow}"]
+    return paths + [p for p in include if p not in paths]
+
+
+def render_stub_paths(stub: str, paths: Sequence[str]) -> str:
+    r"""Put a ``paths:`` filter on the push (and pull-request) trigger of a rendered stub.
+
+    ``paths`` empty returns ``stub`` unchanged. Works on both trigger modes.
+
+    >>> print(render_stub_paths("on: [push, pull_request]\njobs:\n", ["**", "!ts/**"]), end="")
+    on:
+      push:
+        paths: ["**", "!ts/**"]
+      pull_request:
+        paths: ["**", "!ts/**"]
+    jobs:
+    """
+    if not paths:
+        return stub
+    flow = json.dumps(list(paths))
+    if stub.count(AUTO_ON_LINE) == 1:
+        block = f"on:\n  push:\n    paths: {flow}\n  pull_request:\n    paths: {flow}\n"
+        return stub.replace(AUTO_ON_LINE, block)
+    if stub.count(ON_DEMAND_PUSH) == 1:
+        block = f"on:\n  push:\n    paths: {flow}\n  workflow_dispatch:\n"
+        return stub.replace(ON_DEMAND_PUSH, block)
+    raise ValueError(
+        "stub template changed shape: found neither the auto nor the on-demand trigger"
+    )
+
+
+def repo_root_of_workflow(ci_path) -> Path:
+    """The repo holding ``.github/workflows/<file>``: the nearest parent with ``.git``,
+    else the directory above ``.github``."""
+    path = Path(ci_path).resolve()
+    for parent in path.parents:
+        if (parent / ".git").exists():
+            return parent
+    return path.parents[2]
+
+
+def stub_paths_for_workflow(ci_path) -> list:
+    """The ``paths:`` filter the Python stub at ``ci_path`` should carry."""
+    root = repo_root_of_workflow(ci_path)
+    pyproject = repo_pyproject_for(ci_path)
+    config = CIConfig({}) if pyproject is None else CIConfig.from_file(pyproject)
+    return python_ci_paths(root, include=config.trigger_include_paths)
 
 
 def repo_pyproject_for(ci_path) -> Optional[Path]:
