@@ -315,3 +315,17 @@ def test_a_dir_called_by_two_stubs_is_excluded_once(tmp_path):
     paths = python_ci_paths(tmp_path)
     assert paths.count("!ts/**") == 1
     assert "!.github/workflows/npm-ci-ts2.yml" in paths
+
+
+def test_the_fleet_sweep_skips_a_stub_it_would_strip(polyglot, monkeypatch):
+    """fleet-stub re-renders, commits and pushes: it must not strip a hand filter."""
+    import wads.fleet_migrate as fm
+
+    monkeypatch.setattr(fm, "_has_tracked_changes", lambda path: False)
+    monkeypatch.setattr(fm, "_sync_default_branch", lambda path: "main")
+    ci_path = polyglot / ".github/workflows/ci.yml"
+    ci_path.write_text(_with_on(ci_path.read_text(), CHORDSYM_STYLE_ON))
+    before = ci_path.read_text()
+    result = fm.migrate_one_to_stub(str(polyglot))
+    assert result.status == "skip" and "would drop" in result.detail
+    assert ci_path.read_text() == before

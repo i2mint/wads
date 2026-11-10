@@ -783,10 +783,14 @@ def flip_to_on_demand(
             result.status = "refused"
             result.notes.append(
                 f"{workflow} has customizations a re-render would drop: "
-                f"{', '.join(dropped)}. Flip it by hand: in pyproject.toml set "
+                f"{', '.join(dropped)}. If only its `paths:` filter differs, put the "
+                "extra entries in [tool.wads.ci.trigger].include_paths, run "
+                "`wads-migrate ci-to-stub` once, and flip again. Otherwise flip it by "
+                "hand: in pyproject.toml set "
                 '[tool.wads.ci.trigger] mode = "on-demand" (and the test matrix); in the '
                 "workflow use `on: [push, workflow_dispatch]` (a `level` input of "
-                "`config`, `validate`, `deploy` is optional) and give the job that calls "
+                "`config`, `validate`, `deploy` is optional; keep any `paths:` filter "
+                "on push) and give the job that calls "
                 f"uv-ci.yml `if: {json.dumps(expression)}`."
             )
             return result
