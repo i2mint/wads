@@ -351,7 +351,10 @@ def python_ci_paths(repo_root, *, include: Sequence[str] = ()) -> list:
         return []
     paths = [WATCH_ALL]
     for component in components:
-        for path in (f"!{component.dir}/**", f"!.github/workflows/{component.workflow}"):
+        for path in (
+            f"!{component.dir}/**",
+            f"!.github/workflows/{component.workflow}",
+        ):
             if path not in paths:
                 paths.append(path)
     return paths + [p for p in include if p not in paths]
@@ -600,9 +603,7 @@ def stub_shape(ci_text: Optional[str]) -> dict:
     }
 
 
-def stub_customizations(
-    text: str, *, paths: Sequence[str] = ()
-) -> tuple[dict, list]:
+def stub_customizations(text: str, *, paths: Sequence[str] = ()) -> tuple[dict, list]:
     r"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.
 
     ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a
