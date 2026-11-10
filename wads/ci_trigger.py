@@ -73,32 +73,27 @@ _TEMPLATE_TRIGGERS = (
 DISPATCH_LEVEL_OPTIONS = ["config", *TRIGGER_LEVELS]
 
 
-def _is_rendered_paths(value) -> bool:
-    """Whether a push/PR entry is ``None`` or the ``paths:`` filter a render writes."""
+def _is_rendered_paths(value, paths: Sequence[str] = ()) -> bool:
+    """Whether a push/PR entry is what a render writes: bare, or exactly ``paths``."""
     if value is None:
         return True
-    paths = value.get("paths") if isinstance(value, dict) else None
-    return (
-        set(value) == {"paths"}
-        and isinstance(paths, list)
-        and paths[:1] == [WATCH_ALL]
-        and all(isinstance(p, str) for p in paths)
-    )
+    return bool(paths) and value == {"paths": list(paths)}
 
 
-def _is_template_trigger(triggers) -> bool:
+def _is_template_trigger(triggers, paths: Sequence[str] = ()) -> bool:
     """Whether ``on:`` is one a re-render reproduces (the dispatch ``level`` input is).
 
-    The ``paths:`` filters are reproduced too: a re-render derives them from the
-    repo's npm components (:func:`python_ci_paths`).
+    A ``paths:`` filter counts only when it equals ``paths``, the filter a re-render
+    derives from the repo (:func:`stub_paths_for_workflow`); any other filter is a
+    customization a re-render would drop.
     """
     if triggers in _TEMPLATE_TRIGGERS:
         return True
     if (
         isinstance(triggers, dict)
         and set(triggers) == {"push", "pull_request"}
-        and _is_rendered_paths(triggers["push"])
         and triggers["push"] is not None
+        and _is_rendered_paths(triggers["push"], paths)
         and triggers["pull_request"] == triggers["push"]
     ):
         return True
@@ -110,7 +105,7 @@ def _is_template_trigger(triggers) -> bool:
     inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
     level = inputs.get("level") if isinstance(inputs, dict) else None
     return (
-        _is_rendered_paths(triggers["push"])
+        _is_rendered_paths(triggers["push"], paths)
         and isinstance(inputs, dict)
         and set(dispatch) == {"inputs"}
         and set(inputs) == {"level"}
@@ -356,7 +351,9 @@ def python_ci_paths(repo_root, *, include: Sequence[str] = ()) -> list:
         return []
     paths = [WATCH_ALL]
     for component in components:
-        paths += [f"!{component.dir}/**", f"!.github/workflows/{component.workflow}"]
+        for path in (f"!{component.dir}/**", f"!.github/workflows/{component.workflow}"):
+            if path not in paths:
+                paths.append(path)
     return paths + [p for p in include if p not in paths]
 
 
@@ -603,11 +600,15 @@ def stub_shape(ci_text: Optional[str]) -> dict:
     }
 
 
-def stub_customizations(text: str) -> tuple[dict, list]:
+def stub_customizations(
+    text: str, *, paths: Sequence[str] = ()
+) -> tuple[dict, list]:
     r"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.
 
     ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a
     re-render; ``dropped`` names everything else a re-render would silently lose.
+    ``paths`` is the ``paths:`` filter the re-render will write
+    (:func:`stub_paths_for_workflow`); a different filter is reported as dropped.
     Raises ``yaml.YAMLError`` when the text does not parse.
 
     >>> stub_customizations(
@@ -624,8 +625,8 @@ def stub_customizations(text: str) -> tuple[dict, list]:
     dropped = [
         f"top-level `{key}`" for key in doc if key not in ("name", "on", True, "jobs")
     ]
-    triggers = doc.get("on", doc.get(True))  # PyYAML reads a bare `on:` as True
-    if not _is_template_trigger(triggers):
+    triggers = workflow_triggers(doc)
+    if not _is_template_trigger(triggers, paths):
         dropped.append(f"`on: {json.dumps(triggers)}`")
     jobs = doc.get("jobs") or {}
     dropped += [f"job `{name}`" for name in jobs if name != "ci"]
@@ -641,6 +642,21 @@ def stub_customizations(text: str) -> tuple[dict, list]:
         dropped.append("`jobs.ci.with` (not a flat mapping)")
         inputs = {}
     return dict(inputs), dropped
+
+
+def workflow_triggers(workflow):
+    r"""The ``on:`` of a workflow (its text or its parsed mapping).
+
+    PyYAML reads a bare ``on:`` key as ``True``, so both keys are looked up.
+
+    >>> workflow_triggers("on: [push]\njobs: {}\n")
+    ['push']
+    """
+    import yaml
+
+    doc = yaml.safe_load(workflow) if isinstance(workflow, str) else workflow
+    doc = doc or {}
+    return doc.get("on", doc.get(True))
 
 
 def stub_inputs_of(ci_path) -> dict:
@@ -755,7 +771,9 @@ def flip_to_on_demand(
         import yaml
 
         try:
-            _, dropped = stub_customizations(old_ci)
+            _, dropped = stub_customizations(
+                old_ci, paths=stub_paths_for_workflow(ci_path)
+            )
         except yaml.YAMLError as exc:
             dropped = [f"YAML that does not parse ({type(exc).__name__})"]
         if dropped:
@@ -813,7 +831,12 @@ def flip_to_on_demand(
             shadow_ci.write_text(old_ci)
             shape = stub_shape(old_ci)
             # transport=None: named, converting a JSON stub (see migrate_ci_to_stub).
-            new_ci = migrate_ci_to_stub(str(shadow_ci), pin=shape["pin"])
+            # The npm components live in the real repo, not in the shadow copy.
+            new_ci = migrate_ci_to_stub(
+                str(shadow_ci),
+                pin=shape["pin"],
+                paths=stub_paths_for_workflow(ci_path),
+            )
             if shape["pin"] != "@master":
                 result.notes.append(
                     f"the stub stays pinned to {shape['pin']}. Its pre-filter works on "

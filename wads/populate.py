@@ -965,11 +965,10 @@ def _keep_npm_components_out_of_python_ci(pkg_dir, tracker, clog):
 
 def _push_paths(workflow_text: str):
     """The ``paths:`` filter on a workflow's push trigger, or ``None``."""
-    import yaml
+    from wads.ci_trigger import workflow_triggers
 
-    doc = yaml.safe_load(workflow_text) or {}
-    push = (doc.get("on", doc.get(True)) or {})
-    push = push.get("push") if isinstance(push, dict) else None
+    triggers = workflow_triggers(workflow_text) or {}
+    push = triggers.get("push") if isinstance(triggers, dict) else None
     return push.get("paths") if isinstance(push, dict) else None
 
 

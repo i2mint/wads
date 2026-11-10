@@ -36,6 +36,7 @@ on:
 <%- for path in npm_watch_paths %>
       - "<< path >>"
 <%- endfor %>
+      - ".github/workflows/<< npm_workflow_file >>"
 jobs:
   npm-ci:
     uses: i2mint/wads/.github/workflows/<< reusable_workflow >>@master

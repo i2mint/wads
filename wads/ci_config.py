@@ -763,7 +763,9 @@ class CIConfig:
         check. Default ``[]``.
         """
         paths = self.trigger_config.get("include_paths", [])
-        if isinstance(paths, str) or not all(isinstance(p, str) for p in paths):
+        if not isinstance(paths, (list, tuple)) or not all(
+            isinstance(p, str) for p in paths
+        ):
             raise ValueError(
                 "[tool.wads.ci.trigger].include_paths must be a list of path "
                 f"patterns, got {paths!r}"

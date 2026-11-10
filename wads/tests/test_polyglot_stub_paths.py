@@ -18,6 +18,7 @@ import yaml
 
 from wads.ci_config import CIConfig
 from wads.ci_trigger import (
+    flip_to_on_demand,
     python_ci_paths,
     render_stub_paths,
     render_stub_trigger,
@@ -113,9 +114,8 @@ def test_populate_frontend_ts_routes_each_change_to_its_ci(
     assert ci["push"]["paths"] == ci["pull_request"]["paths"]
     assert runs_on(ci["push"]["paths"], changed) is python_runs
     assert runs_on(npm["push"]["paths"], changed) is npm_runs
-    assert runs_on(npm["pull_request"]["paths"], changed) is (
-        npm_runs and changed != [".github/workflows/npm-ci-ts.yml"]
-    )
+    # a PR that changes only the npm stub must still run some CI
+    assert runs_on(npm["pull_request"]["paths"], changed) is npm_runs
 
 
 def test_a_pure_python_repo_keeps_the_unfiltered_stub(tmp_path):
@@ -154,7 +154,10 @@ def test_ci_to_stub_re_render_keeps_the_filter(polyglot):
     ci_path = polyglot / ".github/workflows/ci.yml"
     rendered = migrate_ci_to_stub(str(ci_path))
     assert _triggers(rendered) == _triggers(ci_path.read_text())
-    assert stub_customizations(rendered)[1] == []  # nothing a re-render would drop
+    from wads.ci_trigger import stub_paths_for_workflow
+
+    paths = stub_paths_for_workflow(ci_path)
+    assert stub_customizations(rendered, paths=paths)[1] == []  # nothing dropped
 
 
 def test_on_demand_render_carries_the_filter_on_push(polyglot):
@@ -167,7 +170,6 @@ def test_on_demand_render_carries_the_filter_on_push(polyglot):
     triggers = _triggers(rendered)
     assert set(triggers) == {"push", "workflow_dispatch"}
     assert not runs_on(triggers["push"]["paths"], ["ts/src/index.ts"])
-    assert stub_customizations(rendered)[1] == []
 
 
 def test_include_paths_re_add_a_generated_file(polyglot):
@@ -182,11 +184,62 @@ def test_include_paths_re_add_a_generated_file(polyglot):
     assert not runs_on(paths, ["ts/src/index.ts"])
 
 
-def test_include_paths_must_be_a_list_of_strings():
+@pytest.mark.parametrize("bad", ["ts/x.ts", 3, {"a": 1}, [1]])
+def test_include_paths_must_be_a_list_of_strings(bad):
     with pytest.raises(ValueError, match="include_paths"):
         CIConfig(
-            {"tool": {"wads": {"ci": {"trigger": {"include_paths": "ts/x.ts"}}}}}
+            {"tool": {"wads": {"ci": {"trigger": {"include_paths": bad}}}}}
         ).trigger_include_paths
+
+
+def test_the_on_demand_flip_keeps_the_filter(polyglot):
+    """The flip renders in a shadow copy; the components are read from the repo."""
+    flip_to_on_demand(polyglot)
+    triggers = _triggers((polyglot / ".github/workflows/ci.yml").read_text())
+    assert set(triggers) == {"push", "workflow_dispatch"}
+    assert not runs_on(triggers["push"]["paths"], ["ts/src/index.ts"])
+    assert runs_on(triggers["push"]["paths"], ["widget/__init__.py"])
+
+
+CHORDSYM_STYLE_ON = (
+    'on:\n  push:\n    paths: ["**", "!ts/**", "ts/src/grammar.generated.ts", '
+    '"!.github/workflows/npm-ci-ts.yml"]\n  pull_request:\n    paths: ["**", '
+    '"!ts/**", "ts/src/grammar.generated.ts", "!.github/workflows/npm-ci-ts.yml"]\n'
+)
+
+
+def _with_on(stub_text: str, on_block: str) -> str:
+    start = stub_text.index("on:")
+    return stub_text[:start] + on_block + stub_text[stub_text.index("jobs:") :]
+
+
+def test_a_hand_written_filter_is_reported_not_silently_replaced(polyglot):
+    """chordsym's stub, before it declares include_paths: a re-render would drop
+    its generated-file exception, so that must be reported."""
+    ci_path = polyglot / ".github/workflows/ci.yml"
+    ci_path.write_text(_with_on(ci_path.read_text(), CHORDSYM_STYLE_ON))
+    derived = migrate_ci_to_stub(str(ci_path))
+    from wads.ci_trigger import stub_paths_for_workflow
+
+    dropped = stub_customizations(
+        ci_path.read_text(), paths=stub_paths_for_workflow(ci_path)
+    )[1]
+    assert dropped and dropped[0].startswith("`on:")
+    assert "grammar.generated.ts" not in derived
+
+
+def test_include_paths_make_a_hand_written_filter_reproducible(polyglot):
+    ci_path = polyglot / ".github/workflows/ci.yml"
+    (polyglot / "pyproject.toml").write_text(
+        (polyglot / "pyproject.toml").read_text()
+        + '\n[tool.wads.ci.trigger]\ninclude_paths = ["ts/src/grammar.generated.ts"]\n'
+    )
+    rendered = migrate_ci_to_stub(str(ci_path))
+    ci_path.write_text(rendered)
+    from wads.ci_trigger import stub_paths_for_workflow
+
+    assert stub_customizations(rendered, paths=stub_paths_for_workflow(ci_path))[1] == []
+    assert migrate_ci_to_stub(str(ci_path)) == rendered  # stable
 
 
 def test_an_existing_stub_is_flagged_not_rewritten(tmp_path, capsys):
@@ -248,4 +301,17 @@ def test_rendered_on_demand_stub_is_still_a_template_trigger():
         "on: [push, pull_request]\njobs:\n  ci:\n    uses: x\n", mode="on-demand"
     )
     stub = render_stub_paths(stub, ["**", "!ts/**"])
-    assert stub_customizations(stub)[1] == []
+    assert stub_customizations(stub, paths=["**", "!ts/**"])[1] == []
+    # without knowing the derived filter, a filter is never assumed reproducible
+    assert stub_customizations(stub)[1] != []
+
+
+def test_a_dir_called_by_two_stubs_is_excluded_once(tmp_path):
+    apply_frontend(str(tmp_path), profile="ts", project_name="w")
+    second = tmp_path / ".github/workflows/npm-ci-ts2.yml"
+    second.write_text(
+        (tmp_path / ".github/workflows/npm-ci-ts.yml").read_text()
+    )
+    paths = python_ci_paths(tmp_path)
+    assert paths.count("!ts/**") == 1
+    assert "!.github/workflows/npm-ci-ts2.yml" in paths
