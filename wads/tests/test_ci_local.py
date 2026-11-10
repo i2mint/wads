@@ -847,13 +847,18 @@ def _stub_package_dirs(root):
 
 
 def _fake_tools(tmp_path, *names):
-    """A PATH holding an executable stub for each of ``names``."""
+    """A PATH holding a stub per name that ``shutil.which`` resolves on any OS.
+
+    Nothing runs them: the runner is fake.
+    """
     bin_dir = tmp_path / "fake-bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
     for name in names:
         tool = bin_dir / name
         tool.write_text("#!/bin/sh\n")
         tool.chmod(0o755)
+        # On Windows `which` only finds a name with a PATHEXT extension.
+        (bin_dir / f"{name}.cmd").write_text("@exit /b 0\r\n")
     return str(bin_dir)
 
 
@@ -898,7 +903,7 @@ def _git_listing(repo, *, ignored=()):
     """What ``git ls-files --cached --others --exclude-standard -z`` would print for
     ``repo`` if ``.gitignore`` held ``ignored`` (repo-relative paths)."""
     names = sorted(
-        str(p.relative_to(repo))
+        p.relative_to(repo).as_posix()  # git prints POSIX paths on every OS
         for p in repo.rglob("*")
         if p.is_file() or p.is_symlink()
     )
@@ -957,7 +962,6 @@ def test_a_component_adds_the_npm_validate_job_before_the_build(tmp_path):
     )
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_npm_steps_run_in_a_copy_and_leave_the_tree_alone(repo, tmp_path):
     component = _scaffold(repo, "ts", lintCommand="npm run lint", testCommand="vitest")
     (component / "node_modules" / "dep").mkdir(parents=True)
@@ -981,7 +985,6 @@ def test_npm_steps_run_in_a_copy_and_leave_the_tree_alone(repo, tmp_path):
     assert all(c["cwd"] == copy / "ts" for c in calls)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_a_gitignored_lockfile_is_not_in_the_copy_so_npm_installs(repo, tmp_path):
     """As in CI's checkout: a lockfile git ignores does not exist there (no EUSAGE)."""
     component = _scaffold(repo, "ts")
@@ -994,7 +997,6 @@ def test_a_gitignored_lockfile_is_not_in_the_copy_so_npm_installs(repo, tmp_path
     assert _npm_calls(ignored_runner)[0]["argv"][-1] == "npm install"
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_a_gitignored_pnpm_lockfile_does_not_pick_pnpm(repo, tmp_path):
     component = _scaffold(repo, "ts", packageManager="")  # unset: auto-detect
     (component / "pnpm-lock.yaml").write_text("")
@@ -1004,7 +1006,9 @@ def test_a_gitignored_pnpm_lockfile_does_not_pick_pnpm(repo, tmp_path):
     assert report.ok and _npm_calls(runner)[0]["argv"][-1] == "npm install"
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+@pytest.mark.skipif(
+    os.name == "nt", reason="chmod cannot make a file unreadable on Windows"
+)
 @pytest.mark.skipif(
     hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads anything"
 )
@@ -1092,7 +1096,6 @@ def test_the_package_manager_and_install_mirror_npm_ci(
     assert (commands.package_manager, commands.install) == (manager, install)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_the_stub_s_workflow_decides_monorepo_not_the_files(repo, tmp_path):
     single = _package_json(repo / "a", {"buildCommand": ""})
     (single / "pnpm-workspace.yaml").write_text("")  # but called by npm-ci.yml
@@ -1127,7 +1130,6 @@ def test_an_invalid_wads_ci_block_fails_as_ci_s_setup_job_does(repo, tmp_path):
     assert "npm-ci-ts.yml: wads.ci.trigger.mode must be one of" in out
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_a_failing_npm_step_reads_as_red_ci(repo, tmp_path):
     _scaffold(repo, "ts", testCommand="vitest run")
     report, runner, _, _ = _run_npm(
@@ -1137,7 +1139,6 @@ def test_a_failing_npm_step_reads_as_red_ci(repo, tmp_path):
     assert not runner.ran("uv", "build")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
 def test_a_missing_package_manager_fails_the_gate_with_a_hint(repo, tmp_path):
     _scaffold(repo, "ts", packageManager="pnpm")
     report, runner, out, _ = _run_npm(repo, tmp_path)  # bash, node, npm: no pnpm
