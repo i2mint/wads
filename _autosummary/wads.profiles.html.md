@@ -24,8 +24,9 @@ Nothing here runs by default; the Python `populate` path and the
 
 ### Module Attributes
 
-| [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.   |
-|----------------------------------------------------------------------|----------------------------------|
+| [`LICENSE_FILENAMES`](#wads.profiles.LICENSE_FILENAMES)   | Root licence file names a frontend component copies, in order of preference.   |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.                                                 |
 
 ### Functions
 
@@ -33,6 +34,7 @@ Nothing here runs by default; the Python `populate` path and the
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [`apply_npm_overlay`](#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)     | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
 | [`apply_tests_overlay`](#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)   | Scaffold a `tests/` folder in an existing project (issue #4).                 |
+| [`find_license_file`](#wads.profiles.find_license_file)(repo_dir, \*[, names])         | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
 | [`frontend_context`](#wads.profiles.frontend_context)(\*, profile_name, project_name) | Build the render context shared by all frontend-profile templates.            |
 | [`get_frontend_profile`](#wads.profiles.get_frontend_profile)(name)                       | Look up a registered profile, with an informative error if unknown.           |
 | [`make_tests_overlay_artifacts`](#wads.profiles.make_tests_overlay_artifacts)(project_name, \*)   | Artifacts that scaffold a `tests/` folder for a project.                      |
@@ -62,6 +64,10 @@ A declarative frontend language/toolchain profile.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
 
+### wads.profiles.LICENSE_FILENAMES *= ('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING')*
+
+Root licence file names a frontend component copies, in order of preference.
+
 ### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
@@ -75,7 +81,7 @@ defaults. Returns the [`wads.templating.GenerationResult`](wads.templating.html.
 >>> res = apply_frontend(d, profile="ts", project_name="widget")
 >>> sorted(res.added)
 ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
- 'ts/src/index.ts', 'ts/tsconfig.json']
+ 'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
 ```
 
 * **Return type:**
@@ -92,7 +98,24 @@ Kept so existing callers and tests keep working; new code should call
 
 Scaffold a `tests/` folder in an existing project (issue #4).
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None)
+### wads.profiles.find_license_file(repo_dir, , names=('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING'))
+
+`(file name, text)` of the repo’s root licence, or `None` if it has none.
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> find_license_file(d) is None
+True
+>>> _ = open(os.path.join(d, "LICENSE.md"), "w").write("MIT")
+>>> find_license_file(d)
+('LICENSE.md', 'MIT')
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
+
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None)
 
 Build the render context shared by all frontend-profile templates.
 

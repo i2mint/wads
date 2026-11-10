@@ -316,7 +316,10 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.FRONTEND_PROFILES" title="wads.profiles.FRONTEND_PROFILES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.LICENSE_FILENAMES" title="wads.profiles.LICENSE_FILENAMES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LICENSE_FILENAMES</span></code></a></p></td>
+<td><p>Root licence file names a frontend component copies, in order of preference.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.FRONTEND_PROFILES" title="wads.profiles.FRONTEND_PROFILES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></p></td>
 <td><p>The frontend profile registry.</p></td>
 </tr>
 </tbody>
@@ -335,22 +338,25 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.apply_tests_overlay" title="wads.profiles.apply_tests_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_tests_overlay</span></code></a>(pkg_dir, *, project_name)</p></td>
 <td><p>Scaffold a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> folder in an existing project (issue #4).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.frontend_context" title="wads.profiles.frontend_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frontend_context</span></code></a>(*, profile_name, project_name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.find_license_file" title="wads.profiles.find_license_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_license_file</span></code></a>(repo_dir, *[, names])</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(file</span> <span class="pre">name,</span> <span class="pre">text)</span></code> of the repo's root licence, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it has none.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.frontend_context" title="wads.profiles.frontend_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frontend_context</span></code></a>(*, profile_name, project_name)</p></td>
 <td><p>Build the render context shared by all frontend-profile templates.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.get_frontend_profile" title="wads.profiles.get_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frontend_profile</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.get_frontend_profile" title="wads.profiles.get_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frontend_profile</span></code></a>(name)</p></td>
 <td><p>Look up a registered profile, with an informative error if unknown.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.make_tests_overlay_artifacts" title="wads.profiles.make_tests_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts</span></code></a>(project_name, *)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.make_tests_overlay_artifacts" title="wads.profiles.make_tests_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts</span></code></a>(project_name, *)</p></td>
 <td><p>Artifacts that scaffold a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> folder for a project.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.npm_overlay_artifacts" title="wads.profiles.npm_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_overlay_artifacts</span></code></a>([npm_subdir])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.npm_overlay_artifacts" title="wads.profiles.npm_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_overlay_artifacts</span></code></a>([npm_subdir])</p></td>
 <td><p>Deprecated: the <code class="docutils literal notranslate"><span class="pre">js</span></code> overlay artifacts.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.npm_overlay_context" title="wads.profiles.npm_overlay_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_overlay_context</span></code></a>(*, project_name[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.npm_overlay_context" title="wads.profiles.npm_overlay_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_overlay_context</span></code></a>(*, project_name[, ...])</p></td>
 <td><p>Deprecated: render context for the <code class="docutils literal notranslate"><span class="pre">js</span></code> overlay.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.register_frontend_profile" title="wads.profiles.register_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_frontend_profile</span></code></a>(profile)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.register_frontend_profile" title="wads.profiles.register_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_frontend_profile</span></code></a>(profile)</p></td>
 <td><p>Register (or override) a frontend profile by name.</p></td>
 </tr>
 </tbody>
@@ -390,6 +396,12 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 </dl>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.profiles.LICENSE_FILENAMES">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">LICENSE_FILENAMES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('LICENSE',</span> <span class="pre">'LICENSE.md',</span> <span class="pre">'LICENSE.txt',</span> <span class="pre">'LICENCE',</span> <span class="pre">'COPYING')</span></span><a class="headerlink" href="#wads.profiles.LICENSE_FILENAMES" title="Link to this definition">¶</a></dt>
+<dd><p>Root licence file names a frontend component copies, in order of preference.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.profiles.apply_frontend">
 <span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">apply_frontend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'js'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workspace_glob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'packages/*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#apply_frontend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.apply_frontend" title="Link to this definition">¶</a></dt>
@@ -401,7 +413,7 @@ defaults. Returns the <a class="reference internal" href="wads.templating.html#w
 <span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">apply_frontend</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="s2">"ts"</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="s2">"widget"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">added</span><span class="p">)</span>
 <span class="go">['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',</span>
-<span class="go"> 'ts/src/index.ts', 'ts/tsconfig.json']</span>
+<span class="go"> 'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -430,8 +442,28 @@ defaults. Returns the <a class="reference internal" href="wads.templating.html#w
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.find_license_file">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">find_license_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_dir</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('LICENSE',</span> <span class="pre">'LICENSE.md',</span> <span class="pre">'LICENSE.txt',</span> <span class="pre">'LICENCE',</span> <span class="pre">'COPYING')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#find_license_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.find_license_file" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(file</span> <span class="pre">name,</span> <span class="pre">text)</span></code> of the repo’s root licence, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it has none.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_license_file</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"LICENSE.md"</span><span class="p">),</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"MIT"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_license_file</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">('LICENSE.md', 'MIT')</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.profiles.frontend_context">
-<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">frontend_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'npm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workspace_glob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'packages/*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#frontend_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.frontend_context" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">frontend_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'npm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workspace_glob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'packages/*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#frontend_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.frontend_context" title="Link to this definition">¶</a></dt>
 <dd><p>Build the render context shared by all frontend-profile templates.</p>
 <p>The returned mapping is a superset: it carries the keys every profile’s
 templates may reference (single-package and monorepo). Unused keys are
@@ -559,9 +591,11 @@ the name is known.</p>
 <li><a class="reference internal" href="#">wads.profiles</a><ul>
 <li><a class="reference internal" href="#wads.profiles.FRONTEND_PROFILES"><code class="docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.FrontendProfile"><code class="docutils literal notranslate"><span class="pre">FrontendProfile</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.LICENSE_FILENAMES"><code class="docutils literal notranslate"><span class="pre">LICENSE_FILENAMES</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_frontend"><code class="docutils literal notranslate"><span class="pre">apply_frontend()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_npm_overlay"><code class="docutils literal notranslate"><span class="pre">apply_npm_overlay()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_tests_overlay"><code class="docutils literal notranslate"><span class="pre">apply_tests_overlay()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.find_license_file"><code class="docutils literal notranslate"><span class="pre">find_license_file()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.frontend_context"><code class="docutils literal notranslate"><span class="pre">frontend_context()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.get_frontend_profile"><code class="docutils literal notranslate"><span class="pre">get_frontend_profile()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.make_tests_overlay_artifacts"><code class="docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts()</span></code></a></li>
@@ -579,7 +613,7 @@ the name is known.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=24f77763"></script>
+</div><script src="../_static/documentation_options.js?v=2ff91030"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

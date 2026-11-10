@@ -1,4 +1,4 @@
-> built 2026-11-08 16:59 UTC from 14788ac (master) · wads 0.2.79. Details: build_info.json
+> built 2026-11-10 09:57 UTC from 13881d3 (master) · wads 0.2.80. Details: build_info.json
 
 # index.html.md
 
@@ -109,6 +109,9 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 | `js`          | `package.json` (npm)                                                   | `js/`    | single-package `npm-ci.yml`    |
 | `ts`          | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest) | `ts/`    | single-package `npm-ci.yml`    |
 | `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`        | `ts/`    | matrixed `npm-ci-monorepo.yml` |
+
+The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo’s root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
+
 ```bash
 # A single TypeScript component:
 populate my-project --root-url https://github.com/user/my-project --frontend ts
@@ -6371,8 +6374,9 @@ Nothing here runs by default; the Python `populate` path and the
 
 ### Module Attributes
 
-| [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.   |
-|----------------------------------------------------------------------|----------------------------------|
+| [`LICENSE_FILENAMES`](_autosummary/wads.profiles.html.md#wads.profiles.LICENSE_FILENAMES)   | Root licence file names a frontend component copies, in order of preference.   |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)   | The frontend profile registry.                                                 |
 
 ### Functions
 
@@ -6380,6 +6384,7 @@ Nothing here runs by default; the Python `populate` path and the
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [`apply_npm_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)     | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
 | [`apply_tests_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)   | Scaffold a `tests/` folder in an existing project (issue #4).                 |
+| [`find_license_file`](_autosummary/wads.profiles.html.md#wads.profiles.find_license_file)(repo_dir, \*[, names])         | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
 | [`frontend_context`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context)(\*, profile_name, project_name) | Build the render context shared by all frontend-profile templates.            |
 | [`get_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.get_frontend_profile)(name)                       | Look up a registered profile, with an informative error if unknown.           |
 | [`make_tests_overlay_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.make_tests_overlay_artifacts)(project_name, \*)   | Artifacts that scaffold a `tests/` folder for a project.                      |
@@ -6409,6 +6414,10 @@ A declarative frontend language/toolchain profile.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
 
+### wads.profiles.LICENSE_FILENAMES *= ('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING')*
+
+Root licence file names a frontend component copies, in order of preference.
+
 ### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
@@ -6422,7 +6431,7 @@ defaults. Returns the [`wads.templating.GenerationResult`](_autosummary/wads.tem
 >>> res = apply_frontend(d, profile="ts", project_name="widget")
 >>> sorted(res.added)
 ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
- 'ts/src/index.ts', 'ts/tsconfig.json']
+ 'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
 ```
 
 * **Return type:**
@@ -6439,7 +6448,24 @@ Kept so existing callers and tests keep working; new code should call
 
 Scaffold a `tests/` folder in an existing project (issue #4).
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None)
+### wads.profiles.find_license_file(repo_dir, , names=('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING'))
+
+`(file name, text)` of the repo’s root licence, or `None` if it has none.
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> find_license_file(d) is None
+True
+>>> _ = open(os.path.join(d, "LICENSE.md"), "w").write("MIT")
+>>> find_license_file(d)
+('LICENSE.md', 'MIT')
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
+
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None)
 
 Build the render context shared by all frontend-profile templates.
 
@@ -8458,18 +8484,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-08 16:59 UTC** from commit <a href="https://github.com/i2mint/wads/commit/14788ac31f391b6dcc2140c54071a8049a9e9167"><code>14788ac</code></a> on branch <code>master</code>, for **wads 0.2.79** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 09:57 UTC** from commit <a href="https://github.com/i2mint/wads/commit/13881d37a9b35c8eb703d3c735da7db7a3e55dce"><code>13881d3</code></a> on branch <code>master</code>, for **wads 0.2.80** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.79) is behind the latest release on PyPI (0.2.80): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.80) is behind the latest release on PyPI (0.2.81): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/14788ac31f391b6dcc2140c54071a8049a9e9167"><code>14788ac31f391b6dcc2140c54071a8049a9e9167</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/13881d37a9b35c8eb703d3c735da7db7a3e55dce"><code>13881d37a9b35c8eb703d3c735da7db7a3e55dce</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8480,9 +8506,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42502465973">42502465973</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42794539418">42794539418</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>14788ac31f391b6dcc2140c54071a8049a9e9167</code> (in the history of the built commit) |
+| Event commit | <code>13881d37a9b35c8eb703d3c735da7db7a3e55dce</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8507,13 +8533,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.80/">0.2.80</a>, newer than the documented version (0.2.79).
+Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, newer than the documented version (0.2.80).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 14788ac31f391b6dcc2140c54071a8049a9e9167
+git checkout 13881d37a9b35c8eb703d3c735da7db7a3e55dce
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
