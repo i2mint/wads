@@ -19,6 +19,7 @@ They need a POSIX shell, and skip where there is none — the publish job that
 runs this step is ubuntu-only.
 """
 
+import json
 import os
 import shutil
 import subprocess
@@ -134,7 +135,14 @@ def run_push_step(clone: Path, *, retries: str = "3", branch: str = ""):
         cwd=clone,
         capture_output=True,
         text=True,
-        env={**os.environ, "TARGET_BRANCH": branch, "REBASE_RETRIES": retries},
+        env={
+            **os.environ,
+            "TARGET_BRANCH": branch,
+            "REBASE_RETRIES": retries,
+            # The runner sets it for a composite action: the JSON resolver runs
+            # wads/scripts/sync_version.py from the action's own checkout.
+            "GITHUB_ACTION_PATH": str(_repo_root() / "actions" / "git-commit"),
+        },
     )
 
 
@@ -514,6 +522,183 @@ class TestPushBackRecovery:
         assert result.returncode == 1
         assert "::error::" in result.stdout
         assert "pyproject.toml" in result.stdout
+        assert not (clone / ".git" / "rebase-merge").exists()
+        assert not (clone / ".git" / "rebase-apply").exists()
+
+    @staticmethod
+    def _npm_files(version, *, deps=None, eol="\n"):
+        """A synced ts/package.json and its lockfile at ``version`` (i2mint/wads#210)."""
+        manifest = {"name": "demo", "version": version}
+        if deps:
+            manifest["dependencies"] = deps
+        lock = {
+            "name": "demo",
+            "version": version,
+            "lockfileVersion": 3,
+            "packages": {"": {"name": "demo", "version": version}},
+        }
+        dump = lambda d: (json.dumps(d, indent=2) + "\n").replace("\n", eol)
+        return {"ts/package.json": dump(manifest), "ts/package-lock.json": dump(lock)}
+
+    def _commit_files(self, repo: Path, files: dict, message: str):
+        for rel, text in files.items():
+            (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+            (repo / rel).write_bytes(text.encode())
+            _git("add", rel, cwd=repo)
+        _git("commit", "-m", message, cwd=repo)
+
+    @pytest.mark.parametrize("eol", ["\n", "\r\n"])
+    def test_npm_manifests_take_the_replayed_version_too(
+        self, remote_and_clone, tmp_path, eol
+    ):
+        """Two releases in flight under [tool.wads.ci.version].sync (i2mint/wads#210).
+
+        The bump commit also writes ts/package.json and its lockfile, so a queued
+        release conflicts on them as on pyproject.toml: they resolve the same way,
+        upstream's file with this run's version, in the file's own layout.
+        """
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        self._commit_files(seed, self._npm_files("0.0.2", eol=eol), "add the npm twin")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+
+        self._commit_files(
+            clone,
+            {
+                "pyproject.toml": 'version = "0.0.4"\n',
+                **self._npm_files("0.0.4", eol=eol),
+            },
+            "**CI** bump to 0.0.4",
+        )
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(
+            other,
+            {
+                "pyproject.toml": 'version = "0.0.3"\n',
+                **self._npm_files("0.0.3", eol=eol),
+            },
+            "**CI** bump to 0.0.3",
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "replaying only the version bump" in result.stdout
+        assert _subjects(clone, f"origin/{DEFAULT_BRANCH}")[:2] == [
+            "**CI** bump to 0.0.4",
+            "**CI** bump to 0.0.3",
+        ]
+        for rel, expected in self._npm_files("0.0.4", eol=eol).items():
+            shown = subprocess.run(
+                ["git", "show", f"origin/{DEFAULT_BRANCH}:{rel}"],
+                cwd=clone,
+                check=True,
+                capture_output=True,
+            ).stdout
+            assert shown == expected.encode(), rel
+        assert not (clone / ".git" / "rebase-merge").exists()
+
+    def test_a_dependency_merged_into_package_json_survives_the_replay(
+        self, remote_and_clone, tmp_path
+    ):
+        """i2mint/wads#89, npm side: upstream's new dependency is kept, our version lands."""
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        self._commit_files(seed, self._npm_files("0.0.2"), "add the npm twin")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+
+        self._commit_files(clone, self._npm_files("0.0.3"), "**CI** bump to 0.0.3")
+        other = tmp_path / "real-merge"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(
+            other,
+            {
+                "ts/package.json": self._npm_files("0.0.2", deps={"zod": "^3"})[
+                    "ts/package.json"
+                ]
+            },
+            "feat: depend on zod",
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:ts/package.json", cwd=clone
+        ).stdout
+        assert shown == self._npm_files("0.0.3", deps={"zod": "^3"})["ts/package.json"]
+
+    def test_an_npm_conflict_this_commit_did_not_bump_still_aborts(
+        self, remote_and_clone, tmp_path
+    ):
+        """An unsynced package.json touched by this commit but not bumped is a real conflict.
+
+        Upstream released web/ at 1.1.0 while this commit changed another line of
+        it at 1.0.0: resolving it as a version file would push 1.0.0 over 1.1.0.
+        """
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        web = {"name": "web", "version": "1.0.0", "private": True}
+        dump = lambda d: json.dumps(d, indent=2) + "\n"
+        self._commit_files(seed, {"web/package.json": dump(web)}, "add web")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+
+        self._commit_files(
+            clone,
+            {
+                "pyproject.toml": 'version = "0.0.3"\n',
+                "web/package.json": dump({**web, "private": False}),
+            },
+            "**CI** bump to 0.0.3",
+        )
+        other = tmp_path / "web-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(
+            other, {"web/package.json": dump({**web, "version": "1.1.0"})}, "web 1.1.0"
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert "conflict with it" in result.stdout
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:web/package.json", cwd=clone
+        ).stdout
+        assert json.loads(shown)["version"] == "1.1.0"
+        assert not (clone / ".git" / "rebase-merge").exists()
+        assert not (clone / ".git" / "rebase-apply").exists()
+
+    def test_an_unwritable_npm_version_fails_loudly(self, remote_and_clone, tmp_path):
+        """A version npm rejects is never pushed half-written: the rebase is aborted."""
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        self._commit_files(seed, self._npm_files("0.0.2"), "add the npm twin")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+
+        manifest = '{\n  "name": "demo",\n  "version": "1.0rc1"\n}\n'
+        self._commit_files(clone, {"ts/package.json": manifest}, "**CI** bump")
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(other, self._npm_files("0.0.3"), "**CI** bump to 0.0.3")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 1
+        assert "::error::Could not write version 1.0rc1" in result.stdout
+        assert "ts/package.json" in result.stdout
         assert not (clone / ".git" / "rebase-merge").exists()
         assert not (clone / ".git" / "rebase-apply").exists()
 

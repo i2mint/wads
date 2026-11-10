@@ -32,6 +32,7 @@ jobs:
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
       windows-blocking: ${{ steps.config.outputs.windows-blocking }}
       job-timeout-minutes: ${{ steps.config.outputs.job-timeout-minutes }}
+      version-sync: ${{ steps.config.outputs.version-sync }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -521,6 +522,15 @@ jobs:
       - name: Update Version Number
         id: version
         uses: i2mint/isee/actions/bump-version-number@master
+
+      # One version across PyPI and npm (i2mint/wads#210): write the bumped
+      # version into each manifest [tool.wads.ci.version].sync lists.
+      - name: Sync the version into other manifests
+        if: needs.setup.outputs.version-sync != '[]' && needs.setup.outputs.version-sync != ''
+        uses: i2mint/wads/actions/sync-version@master
+        with:
+          version: ${{ env.VERSION }}
+          files: ${{ needs.setup.outputs.version-sync }}
 
       - name: Build Distribution
         uses: i2mint/wads/actions/build-dist-uv@master

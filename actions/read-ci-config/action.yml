@@ -47,6 +47,9 @@ outputs:
   native-options:
     description: 'JSON object of native build options ({maturin_args, smoke_import, cargo_test_args}); {} when not native.'
     value: ${{ steps.config.outputs.native-options }}
+  version-sync:
+    description: 'JSON list of manifests (e.g. ["ts/package.json"]) the publish job writes the release version into ([tool.wads.ci.version].sync); [] when none. Fails when a listed manifest''s version differs from [project].version.'
+    value: ${{ steps.config.outputs.version-sync }}
   tests-enabled:
     description: 'Whether the CI test step should run (true/false). Defaults to true; set [tool.wads.ci.testing].enabled = false in pyproject.toml to skip the pytest/doctest step.'
     value: ${{ steps.config.outputs.tests-enabled }}

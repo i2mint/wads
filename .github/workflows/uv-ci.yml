@@ -202,6 +202,7 @@ jobs:
       native: ${{ steps.config.outputs.native }}
       native-targets: ${{ steps.config.outputs.native-targets }}
       native-options: ${{ steps.config.outputs.native-options }}
+      version-sync: ${{ steps.config.outputs.version-sync }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
       build-wheel: ${{ steps.config.outputs.build-wheel }}
@@ -881,6 +882,17 @@ jobs:
         id: version
         uses: i2mint/isee/actions/bump-version-number@master
 
+      # One version across PyPI and npm (#210): write the bumped version into
+      # each manifest [tool.wads.ci.version].sync lists (and its lockfile), so
+      # the bump commit below carries them all. Runs no repo code.
+      - &publish-version-sync
+        name: Sync the version into other manifests
+        if: needs.setup.outputs.version-sync != '[]' && needs.setup.outputs.version-sync != ''
+        uses: i2mint/wads/actions/sync-version@master
+        with:
+          version: ${{ env.VERSION }}
+          files: ${{ needs.setup.outputs.version-sync }}
+
       - name: Build Distribution
         uses: i2mint/wads/actions/build-dist-uv@master
         with:
@@ -964,6 +976,7 @@ jobs:
       - *publish-format
       - *publish-format-black
       - *publish-bump
+      - *publish-version-sync
 
       # The wheels were built for native-version's number. A release that landed
       # while they were building (this job waited in the publish queue) moves the

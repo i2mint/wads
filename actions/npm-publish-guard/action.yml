@@ -1,0 +1,57 @@
+name: 'npm publish guard'
+description: 'Fail an npm publish that would carry the previous PyPI release''s version: the push also cuts a PyPI release whose bump commit writes the new version into a [tool.wads.ci.version].sync package.json after the commit npm packs (i2mint/wads#210).'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  package-dir:
+    description: 'The npm package (or workspace root) directory, relative to the repo root.'
+    required: true
+  subject:
+    description: 'The pushed commit''s subject line (uv-ci''s publish markers are read from it).'
+    required: true
+  before:
+    description: 'github.event.before: the branch tip before this push. Empty or all zeros (a new branch) compares with HEAD^ instead.'
+    required: false
+    default: ''
+  workflow-ref:
+    description: 'github.workflow_ref, which in a reusable workflow names the calling npm stub: its own file counts as part of the npm package.'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    # Needs the checkout's history back to `before` (fetch-depth: 0). Runs no
+    # repo code: standard library only, from this action's own checkout, with
+    # the runner's python3.
+    - name: Check the push against the Python release
+      shell: bash
+      env:
+        PACKAGE_DIR: ${{ inputs.package-dir }}
+        SUBJECT: ${{ inputs.subject }}
+        BEFORE: ${{ inputs.before }}
+        WORKFLOW_REF: ${{ inputs.workflow-ref }}
+      run: |
+        set -eo pipefail
+        if [ ! -f pyproject.toml ]; then
+          echo "No pyproject.toml at the repo root: nothing to check."
+          exit 0
+        fi
+        base="$BEFORE"
+        if [ -z "$base" ] || [ -z "${base//0/}" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+          if [ -n "$base" ] && [ -n "${base//0/}" ]; then
+            echo "::warning::The pre-push commit $base is not in this checkout (a force push?); comparing with HEAD^ only."
+          fi
+          if git rev-parse -q --verify 'HEAD^' >/dev/null; then
+            base='HEAD^'
+          else
+            # The first commit, or a shallow checkout: count everything as changed.
+            base=$(git hash-object -t tree /dev/null)
+          fi
+        fi
+        changed="${RUNNER_TEMP:-/tmp}/npm-publish-guard-changed"
+        # --no-renames: a file moved into the package from outside counts on both sides.
+        git diff --name-only --no-renames -z "$base" HEAD > "$changed"
+        python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/npm_publish_guard.py" "$PACKAGE_DIR" "$changed"
