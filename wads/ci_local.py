@@ -19,7 +19,9 @@ the object the reusable workflow's setup job reads, and runs in order:
    lockfile, else ``npm install``; ``pnpm install``, frozen with a lockfile), then
    ``lintCommand``, ``testCommand`` and ``buildCommand``, each through ``bash -e -c`` as
    a ``run:`` step. They run in a copy of the repo's files git does not ignore, inside the
-   temporary directory, so the tree (``node_modules``, a new lockfile) is never touched. A
+   temporary directory, so the tree (``node_modules``, a new lockfile) is never touched;
+   the commands are read from that copy, as CI reads its checkout. The copy has no
+   ``.git``, so an npm script that calls git sees no repository there. A
    missing tool (bash, node, the package manager) fails the step with an install hint;
    ``npm=False`` (``--no-npm``) leaves the npm half out. Not run with ``publish=True``:
    CI's PyPI publish does not wait on the npm workflow either.
@@ -155,8 +157,10 @@ WORKDIR_INODES_PER_PYTHON = 100_000
 NPM_COMMAND_SHELL = ("bash", "-e", "-c")
 #: Lists the files to copy for the npm half: tracked, plus untracked but not ignored.
 GIT_LS_FILES = ("git", "ls-files", "-z", "--cached", "--others", "--exclude-standard")
-#: Left out of the copy when the repo is not a git checkout.
+#: Never copied for the npm half, even when git does not ignore them.
 NPM_COPY_IGNORE = (".git", "node_modules")
+#: The npm validate job's commands, in order (fields of ``NpmValidateCommands``).
+NPM_STEP_KINDS = ("install", "lint", "test", "build")
 
 _INSTALL_HINTS = {
     "uv": "install uv: https://docs.astral.sh/uv/getting-started/installation/",
@@ -554,10 +558,15 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
 
 def _npm_steps(repo: Path) -> list[Step]:
     """The npm CI workflows' validate job, per npm component of a polyglot repo (#213),
-    in a copy of the repo inside the workdir."""
+    in a copy of the repo inside the workdir.
+
+    The commands are read from the copy, at run time (``npm <dir>: config``), not from
+    the tree: a gitignored lockfile in the tree is not in the copy, nor in CI's checkout.
+    """
     components = {}
-    for component in npm_components(repo):  # one run per dir, however many stubs
-        components.setdefault(component.dir, component)
+    for component in npm_components(repo):
+        # One run per (dir, workflow kind), however many stubs call it.
+        components.setdefault((component.dir, component.monorepo), component)
     if not components:
         return []
     steps = [
@@ -567,39 +576,56 @@ def _npm_steps(repo: Path) -> list[Step]:
             description=f"copy the files git does not ignore to {NPM_SOURCE_DIR}",
         )
     ]
-    for directory, component in components.items():
+    dirs = [directory for directory, _ in components]
+    for index, ((directory, monorepo), component) in enumerate(components.items()):
         label = f"npm {directory}"
-        try:
-            commands = npm_validate_commands(
-                repo / directory, monorepo=component.monorepo
-            )
-        except (OSError, ValueError) as exc:
-            steps.append(
-                _failing_step(f"{label}: config", f"{component.workflow}: {exc}")
-            )
-            continue
+        if dirs.count(directory) > 1:  # one dir, called as single and as monorepo
+            label += " (monorepo)" if monorepo else " (single)"
         cwd = NPM_SOURCE_DIR if directory == "." else f"{NPM_SOURCE_DIR}/{directory}"
-        requires = ("bash", "node", commands.package_manager)
-        for kind, command in (
-            ("install", commands.install),
-            ("lint", commands.lint),
-            ("test", commands.test),
-            ("build", commands.build),
-        ):
+        key = f"npm{index}"
+        steps.append(
+            Step(
+                f"{label}: config",
+                check=_npm_config_check(component, cwd=cwd, key=key),
+                description=(
+                    f"read wads.ci from the copy's {directory}/package.json, "
+                    f"as {component.workflow} does"
+                ),
+            )
+        )
+        for kind in NPM_STEP_KINDS:
             steps.append(
                 Step(
                     f"{label}: {kind}",
-                    (*NPM_COMMAND_SHELL, command),
+                    (*NPM_COMMAND_SHELL, f"<<{key}_{kind}>>"),
                     cwd=cwd,
-                    requires=requires,
+                    requires=("bash", "node", f"<<{key}_manager>>"),
                 )
             )
     return steps
 
 
-def _failing_step(name: str, error: str) -> Step:
-    """A step that reports ``error`` when reached (a config CI would also reject)."""
-    return Step(name, check=lambda ctx: error, description=error)
+def _npm_config_check(component, *, cwd: str, key: str) -> Callable:
+    """A check reading ``component``'s commands from the copy into ``<<key_*>>`` values."""
+
+    def check(ctx) -> Optional[str]:
+        try:
+            commands = npm_validate_commands(
+                Path(_fill(cwd, ctx.values)), monorepo=component.monorepo
+            )
+        except (OSError, ValueError) as exc:
+            return f"{component.workflow}: {exc}"
+        ctx.values[f"{key}_manager"] = commands.package_manager
+        for kind in NPM_STEP_KINDS:
+            ctx.values[f"{key}_{kind}"] = getattr(commands, kind)
+        return None
+
+    return check
+
+
+def _ignored_for_npm(name: str) -> bool:
+    """Whether a repo-relative path lies under a ``NPM_COPY_IGNORE`` directory."""
+    return any(part in NPM_COPY_IGNORE for part in Path(name).parts[:-1])
 
 
 def _copy_repo_for_npm(ctx) -> Optional[str]:
@@ -607,28 +633,34 @@ def _copy_repo_for_npm(ctx) -> Optional[str]:
 
     The npm install and builds write in their directory; in the copy they cannot touch
     the developer's tree. Untracked files git does not ignore are included, as the
-    Python legs test the tree as it is. Outside git, everything but ``NPM_COPY_IGNORE``.
+    Python legs test the tree as it is; never anything under ``NPM_COPY_IGNORE`` (a
+    ``node_modules`` the repo forgot to ignore), and, outside git, everything else.
     """
     dest = Path(_fill(NPM_SOURCE_DIR, ctx.values))
-    dest.mkdir(parents=True, exist_ok=True)
-    listing = ctx.run(GIT_LS_FILES, capture=True)
-    if listing.returncode != 0:
-        shutil.copytree(
-            ctx.repo,
-            dest,
-            symlinks=True,
-            ignore=shutil.ignore_patterns(*NPM_COPY_IGNORE),
-            dirs_exist_ok=True,
-        )
-        ctx.notes.append("not a git checkout: the npm components ran in a full copy")
-        return None
-    for name in filter(None, listing.stdout.split("\0")):
-        source = ctx.repo / name
-        if not (source.is_file() or source.is_symlink()):
-            continue  # deleted from the tree, or a submodule
-        target = dest / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target, follow_symlinks=False)
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+        listing = ctx.run(GIT_LS_FILES, capture=True)
+        if listing.returncode != 0:
+            shutil.copytree(
+                ctx.repo,
+                dest,
+                symlinks=True,
+                ignore=shutil.ignore_patterns(*NPM_COPY_IGNORE),
+                dirs_exist_ok=True,
+            )
+            ctx.notes.append(
+                "not a git checkout: the npm components ran in a full copy"
+            )
+            return None
+        for name in filter(None, listing.stdout.split("\0")):
+            source = ctx.repo / name
+            if _ignored_for_npm(name) or not (source.is_file() or source.is_symlink()):
+                continue  # node_modules, deleted from the tree, or a submodule
+            target = dest / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target, follow_symlinks=False)
+    except (OSError, shutil.Error) as exc:
+        return f"could not copy the repo for the npm components: {exc}"
     return None
 
 
@@ -942,7 +974,7 @@ def _execute(step: Step, ctx: _Context) -> tuple[str, str]:
         return (FAILED, error) if error else (PASSED, "")
     env = dict(ctx.env)
     env.update({key: _fill(value, ctx.values) for key, value in step.env})
-    if problems := tool_problems(step.requires, env):
+    if problems := tool_problems([_fill(t, ctx.values) for t in step.requires], env):
         return FAILED, "; ".join(problems)
     argv = [_fill(item, ctx.values) for item in step.argv]
     result = ctx.runner(

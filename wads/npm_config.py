@@ -243,7 +243,8 @@ class NpmCIConfig:
         >>> NpmCIConfig({"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}).trigger_mode
         'on-demand'
         """
-        mode = self._trigger.get("mode", NPM_TRIGGER_DEFAULTS["mode"])
+        # `trig.mode || 'auto'`, as the workflows read it: empty means unset.
+        mode = self._trigger.get("mode") or NPM_TRIGGER_DEFAULTS["mode"]
         if mode not in TRIGGER_MODES:
             raise ValueError(
                 f"wads.ci.trigger.mode must be one of {TRIGGER_MODES}, got {mode!r}"
@@ -254,11 +255,15 @@ class NpmCIConfig:
     def run_ci_marker(self) -> str:
         """Commit-subject substring that runs CI in ``"on-demand"`` mode.
 
-        Defaults to ``"[run ci]"`` (same default as the Python side). Must be a
-        non-empty single line: an empty marker would match every subject and
-        silently turn on-demand back into auto.
+        Defaults to ``"[run ci]"`` (same default as the Python side), also when
+        empty, as the workflows' ``runCiMarker || '[run ci]'`` reads it. Must be a
+        single line, and not blank: a blank marker would match nearly every subject
+        and silently turn on-demand back into auto.
+
+        >>> NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": ""}}}}).run_ci_marker
+        '[run ci]'
         """
-        marker = self._trigger.get("runCiMarker", NPM_TRIGGER_DEFAULTS["runCiMarker"])
+        marker = self._trigger.get("runCiMarker") or NPM_TRIGGER_DEFAULTS["runCiMarker"]
         if not isinstance(marker, str) or not marker.strip() or "\n" in marker:
             raise ValueError(
                 "wads.ci.trigger.runCiMarker must be a non-empty, single-line "
@@ -291,7 +296,11 @@ def npm_components(repo_root: Union[str, Path] = ".") -> list:
     One per job, in a ``.github/workflows/*.yml`` (or ``.yaml``) file, that calls a
     wads ``npm-ci*.yml`` reusable workflow: its ``package-dir`` input, or the
     reusable workflow's default dir when absent (:func:`wads.npm_trust.wads_reusable_call`).
-    An unreadable or invalid workflow file is skipped.
+    An unreadable or invalid workflow file is skipped, and so is a ``package-dir``
+    holding a ``${{ }}`` expression (not a directory until Actions evaluates it).
+
+    Not deduplicated by dir: one entry per calling stub, so a dir two stubs call
+    appears twice (with their two ``workflow`` names).
 
     >>> import tempfile
     >>> root = Path(tempfile.mkdtemp())
@@ -314,7 +323,7 @@ def npm_components(repo_root: Union[str, Path] = ".") -> list:
         jobs = doc.get("jobs") if isinstance(doc, dict) else None
         for job in (jobs or {}).values():
             call = wads_reusable_call(job) if isinstance(job, dict) else None
-            if call:
+            if call and "${{" not in call[1]:
                 reusable, directory = call
                 found.add(
                     NpmComponent(

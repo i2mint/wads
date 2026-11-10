@@ -849,7 +849,7 @@ def _stub_package_dirs(root):
 def _fake_tools(tmp_path, *names):
     """A PATH holding an executable stub for each of ``names``."""
     bin_dir = tmp_path / "fake-bin"
-    bin_dir.mkdir(exist_ok=True)
+    bin_dir.mkdir(parents=True, exist_ok=True)
     for name in names:
         tool = bin_dir / name
         tool.write_text("#!/bin/sh\n")
@@ -894,37 +894,165 @@ def test_a_stub_without_package_dir_uses_the_reusable_workflow_s_default(tmp_pat
     ]
 
 
+def _git_listing(repo, *, ignored=()):
+    """What ``git ls-files --cached --others --exclude-standard -z`` would print for
+    ``repo`` if ``.gitignore`` held ``ignored`` (repo-relative paths)."""
+    names = sorted(
+        str(p.relative_to(repo))
+        for p in repo.rglob("*")
+        if p.is_file() or p.is_symlink()
+    )
+    kept = [n for n in names if n not in ignored]
+    return RunResult(0, "".join(f"{n}\0" for n in kept))
+
+
+def _run_npm(
+    repo, tmp_path, *, tools=("bash", "node", "npm"), ignored=(), responses=()
+):
+    """Run ci-local with fake tools and a git listing of ``repo``; keep the workdir.
+
+    Returns ``(report, runner, output, copy)``, ``copy`` being the npm source dir.
+    """
+    runner = FakeRunner(
+        *responses, (list(GIT_LS_FILES), _git_listing(repo, ignored=ignored))
+    )
+    out = io.StringIO()
+    workdirs = tmp_path / "workdirs"
+    workdirs.mkdir(parents=True, exist_ok=True)
+    report = run_ci_local(
+        repo,
+        runner=runner,
+        environ={"PATH": _fake_tools(tmp_path, *tools)},
+        out=out,
+        keep_workdir=True,
+        workdir_root=str(workdirs),
+    )
+    [workdir] = workdirs.iterdir()
+    return report, runner, out.getvalue(), workdir / "src"
+
+
+def _npm_calls(runner):
+    return [c for c in runner.calls if c["argv"][0] == "bash"]
+
+
 def test_a_component_adds_the_npm_validate_job_before_the_build(tmp_path):
-    _scaffold(tmp_path, "ts", testCommand="vitest run --x")
+    _scaffold(tmp_path, "ts")
     steps = plan_ci_local(tmp_path, config=_config(), platform="posix")
-    assert _names(steps)[-6:] == [
+    assert _names(steps)[-7:] == [
         "npm: copy the repo",
+        "npm ts: config",
         *(f"npm ts: {kind}" for kind in NPM_NAMES),
         "build",
     ]
     by_name = {step.name: step for step in steps}
-    shell = list(NPM_COMMAND_SHELL)
-    assert list(by_name["npm ts: install"].argv) == [*shell, "npm install"]
-    assert by_name["npm ts: lint"].argv[-1] == "npm run lint --if-present"
-    assert by_name["npm ts: test"].argv[-1] == "vitest run --x"  # wads.ci wins
-    assert by_name["npm ts: build"].argv[-1] == "npm run build --if-present"
     for kind in NPM_NAMES:
         step = by_name[f"npm ts: {kind}"]
+        # the command is read from the copy at run time, as CI reads its checkout
+        assert step.argv == (*NPM_COMMAND_SHELL, f"<<npm0_{kind}>>")
         assert step.cwd == "<<workdir>>/src/ts", "never in the developer's tree"
-        assert step.requires == ("bash", "node", "npm") and step.blocking
+        assert step.requires == ("bash", "node", "<<npm0_manager>>") and step.blocking
         assert not step.side_effect
-    assert (
-        by_name["npm ts: lint"]
-        .display()
-        .startswith("cd '<<workdir>>/src/ts' && bash -e -c ")
+    assert by_name["npm ts: lint"].display() == (
+        "cd '<<workdir>>/src/ts' && bash -e -c '<<npm0_lint>>'"
     )
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_npm_steps_run_in_a_copy_and_leave_the_tree_alone(repo, tmp_path):
+    component = _scaffold(repo, "ts", lintCommand="npm run lint", testCommand="vitest")
+    (component / "node_modules" / "dep").mkdir(parents=True)
+    (component / "node_modules" / "dep" / "index.js").write_text("")
+    (repo / "notes.txt").write_text("ignored")
+    before = _tree(repo)
+    # node_modules is not gitignored here: the copy still leaves it out
+    report, runner, _, copy = _run_npm(repo, tmp_path, ignored=("notes.txt",))
+    assert report.ok
+    assert _tree(repo) == before, "the developer's tree is untouched"
+    copied = sorted(str(p.relative_to(copy)) for p in copy.rglob("*") if p.is_file())
+    assert "ts/package.json" in copied and "pyproject.toml" in copied
+    assert not [n for n in copied if "node_modules" in n or n == "notes.txt"]
+    calls = _npm_calls(runner)
+    assert [c["argv"][-1] for c in calls] == [
+        "npm install",
+        "npm run lint",
+        "vitest",  # wads.ci wins over the default
+        "npm run build --if-present",
+    ]
+    assert all(c["cwd"] == copy / "ts" for c in calls)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_a_gitignored_lockfile_is_not_in_the_copy_so_npm_installs(repo, tmp_path):
+    """As in CI's checkout: a lockfile git ignores does not exist there (no EUSAGE)."""
+    component = _scaffold(repo, "ts")
+    (component / "package-lock.json").write_text("{}")
+    _, tracked_runner, _, _ = _run_npm(repo, tmp_path / "tracked")
+    assert _npm_calls(tracked_runner)[0]["argv"][-1] == "npm ci"
+    _, ignored_runner, _, _ = _run_npm(
+        repo, tmp_path / "ignored", ignored=("ts/package-lock.json",)
+    )
+    assert _npm_calls(ignored_runner)[0]["argv"][-1] == "npm install"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_a_gitignored_pnpm_lockfile_does_not_pick_pnpm(repo, tmp_path):
+    component = _scaffold(repo, "ts", packageManager="")  # unset: auto-detect
+    (component / "pnpm-lock.yaml").write_text("")
+    report, runner, _, _ = _run_npm(
+        repo, tmp_path, ignored=("ts/pnpm-lock.yaml",)
+    )  # no pnpm on PATH, and none needed
+    assert report.ok and _npm_calls(runner)[0]["argv"][-1] == "npm install"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+@pytest.mark.skipif(
+    hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads anything"
+)
+def test_a_file_that_cannot_be_copied_fails_the_step_not_the_run(repo, tmp_path):
+    _scaffold(repo, "ts")
+    secret = repo / "unreadable.txt"
+    secret.write_text("x")
+    secret.chmod(0)
+    try:
+        report, _, out, _ = _run_npm(repo, tmp_path)
+    finally:
+        secret.chmod(0o644)
+    assert not report.ok and report.failure.name == "npm: copy the repo"
+    assert "could not copy the repo for the npm components" in out
+
+
+def test_outside_git_the_copy_is_the_tree_minus_node_modules(repo, tmp_path):
+    component = _scaffold(repo, "ts")
+    (component / "node_modules").mkdir()
+    (component / "node_modules" / "x.js").write_text("")
+    report, _, _, copy = _run_npm(
+        repo, tmp_path, responses=[(list(GIT_LS_FILES), RunResult(128))]
+    )
+    assert report.ok and any("not a git checkout" in n for n in report.notes)
+    assert (copy / "ts" / "package.json").is_file()
+    assert not (copy / "ts" / "node_modules").exists()
 
 
 def test_two_stubs_on_one_dir_validate_it_once(tmp_path):
     _scaffold(tmp_path, "ts")
     _stub(tmp_path, "npm-ci-ts-again.yml", SINGLE, package_dir="./ts/")
+    assert len([c for c in npm_components(tmp_path) if c.dir == "ts"]) == 2
     steps = _npm_steps_of(plan_ci_local(tmp_path, config=_config()))
-    assert _names(steps) == ["npm: copy the repo"] + [f"npm ts: {k}" for k in NPM_NAMES]
+    assert _names(steps) == ["npm: copy the repo", "npm ts: config"] + [
+        f"npm ts: {k}" for k in NPM_NAMES
+    ]
+
+
+def test_one_dir_called_as_single_and_as_monorepo_runs_both(tmp_path):
+    _scaffold(tmp_path, "ts")
+    _stub(tmp_path, "npm-ci-ts-mono.yml", MONOREPO, package_dir="ts")
+    names = _names(_npm_steps_of(plan_ci_local(tmp_path, config=_config())))
+    assert "npm ts (single): lint" in names and "npm ts (monorepo): lint" in names
+
+
+def test_a_package_dir_expression_is_not_a_component(tmp_path):
+    _stub(tmp_path, "npm-ci-x.yml", SINGLE, package_dir="${{ inputs.dir }}")
+    assert npm_components(tmp_path) == []
 
 
 def test_no_stub_or_npm_false_means_no_npm_step(tmp_path):
@@ -960,36 +1088,78 @@ def test_the_package_manager_and_install_mirror_npm_ci(
     directory = _package_json(tmp_path / "ts", ci)
     for name in files:
         (directory / name).write_text("")
-    _stub(tmp_path, "npm-ci-ts.yml", SINGLE, package_dir="ts")
     commands = npm_validate_commands(directory)
     assert (commands.package_manager, commands.install) == (manager, install)
-    step = _npm_steps_of(plan_ci_local(tmp_path, config=_config()))[1]
-    assert step.argv[-1] == install and step.requires[-1] == manager
 
 
-def test_the_stub_s_workflow_decides_monorepo_not_the_files(tmp_path):
-    single = _package_json(tmp_path / "a", {"buildCommand": ""})
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_the_stub_s_workflow_decides_monorepo_not_the_files(repo, tmp_path):
+    single = _package_json(repo / "a", {"buildCommand": ""})
     (single / "pnpm-workspace.yaml").write_text("")  # but called by npm-ci.yml
-    _stub(tmp_path, "npm-ci-a.yml", SINGLE, package_dir="a")
-    _package_json(tmp_path / "b", {})  # no pnpm-workspace.yaml, monorepo workflow
-    _stub(tmp_path, "npm-ci-b.yml", MONOREPO, package_dir="b")
-    by_name = {s.name: s for s in plan_ci_local(tmp_path, config=_config())}
-    assert by_name["npm a: install"].argv[-1] == "npm install"
-    assert (
-        by_name["npm a: build"].argv[-1] == "npm run build --if-present"
-    )  # "" = unset
-    assert by_name["npm b: install"].argv[-1] == "pnpm install --no-frozen-lockfile"
-    assert by_name["npm b: lint"].argv[-1] == "pnpm turbo run lint"
-    assert by_name["npm b: lint"].requires == ("bash", "node", "pnpm")
+    _stub(repo, "npm-ci-a.yml", SINGLE, package_dir="a")
+    _package_json(repo / "b", {})  # no pnpm-workspace.yaml, monorepo workflow
+    _stub(repo, "npm-ci-b.yml", MONOREPO, package_dir="b")
+    report, runner, _, copy = _run_npm(
+        repo, tmp_path, tools=("bash", "node", "npm", "pnpm")
+    )
+    assert report.ok
+    by_dir = {}
+    for call in _npm_calls(runner):
+        by_dir.setdefault(call["cwd"].name, []).append(call["argv"][-1])
+    assert by_dir["a"] == [
+        "npm install",
+        "npm run lint --if-present",
+        "npm test --if-present",
+        "npm run build --if-present",  # "" means unset, as in CI
+    ]
+    assert by_dir["b"] == [
+        "pnpm install --no-frozen-lockfile",
+        "pnpm turbo run lint",
+        "pnpm turbo run test",
+        "pnpm turbo run build",
+    ]
 
 
 def test_an_invalid_wads_ci_block_fails_as_ci_s_setup_job_does(repo, tmp_path):
     _scaffold(repo, "ts", trigger={"mode": "sometimes"})
-    out = io.StringIO()
-    path = _fake_tools(tmp_path, "bash", "node", "npm")
-    report = run_ci_local(repo, runner=FakeRunner(), environ={"PATH": path}, out=out)
+    report, _, out, _ = _run_npm(repo, tmp_path)
     assert not report.ok and report.failure.name == "npm ts: config"
-    assert "npm-ci-ts.yml: wads.ci.trigger.mode must be one of" in out.getvalue()
+    assert "npm-ci-ts.yml: wads.ci.trigger.mode must be one of" in out
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_a_failing_npm_step_reads_as_red_ci(repo, tmp_path):
+    _scaffold(repo, "ts", testCommand="vitest run")
+    report, runner, _, _ = _run_npm(
+        repo, tmp_path, responses=[([*NPM_COMMAND_SHELL, "vitest run"], RunResult(1))]
+    )
+    assert not report.ok and report.failure.name == "npm ts: test"
+    assert not runner.ran("uv", "build")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
+def test_a_missing_package_manager_fails_the_gate_with_a_hint(repo, tmp_path):
+    _scaffold(repo, "ts", packageManager="pnpm")
+    report, runner, out, _ = _run_npm(repo, tmp_path)  # bash, node, npm: no pnpm
+    assert not report.ok and report.failure.name == "npm ts: install"
+    assert not _npm_calls(runner), "nothing ran"
+    assert not runner.ran("uv", "build")
+    assert "pnpm not on PATH: install pnpm: https://pnpm.io/installation" in out
+
+
+def test_the_steps_path_decides_not_the_developer_s(repo, tmp_path):
+    """An empty PATH for the steps finds no tools, even if the host has them."""
+    _scaffold(repo, "ts")
+    report, _, _, _ = _run_npm(repo, tmp_path, tools=())
+    assert not report.ok and report.failure.name == "npm ts: install"
+
+
+def test_npm_false_runs_no_npm_step(repo):
+    _scaffold(repo, "ts")
+    runner = FakeRunner()
+    report = run_ci_local(repo, runner=runner, environ={}, out=io.StringIO(), npm=False)
+    assert report.ok and not _npm_steps_of(s for s, _, _ in report.outcomes)
+    assert not runner.ran(*GIT_LS_FILES)
 
 
 def test_the_npm_semantics_match_the_reusable_workflows():
@@ -1015,105 +1185,6 @@ def test_the_npm_semantics_match_the_reusable_workflows():
     # No `shell:` anywhere, so every `run:` step is Actions' default `bash -e {0}`.
     assert NPM_COMMAND_SHELL == ("bash", "-e", "-c")
     assert "shell:" not in single and "shell:" not in monorepo
-
-
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
-def test_npm_steps_run_in_a_copy_and_leave_the_tree_alone(repo, tmp_path):
-    component = _scaffold(repo, "ts", lintCommand="npm run lint")
-    (component / "node_modules" / "dep").mkdir(parents=True)
-    (component / "node_modules" / "dep" / "index.js").write_text("")
-    listed = ["pyproject.toml", "ts/package.json", "ts/src/index.ts", "gone.txt"]
-    runner = FakeRunner((list(GIT_LS_FILES), RunResult(0, "\0".join(listed) + "\0")))
-    before = _tree(repo)
-    workdirs = tmp_path / "workdirs"
-    workdirs.mkdir()
-    report = run_ci_local(
-        repo,
-        runner=runner,
-        environ={"PATH": _fake_tools(tmp_path, "bash", "node", "npm")},
-        out=io.StringIO(),
-        keep_workdir=True,
-        workdir_root=str(workdirs),
-    )
-    assert report.ok
-    assert _tree(repo) == before, "the developer's tree is untouched"
-    [workdir] = workdirs.iterdir()
-    copy = workdir / "src"
-    assert sorted(str(p.relative_to(copy)) for p in copy.rglob("*") if p.is_file()) == [
-        "pyproject.toml",
-        "ts/package.json",
-        "ts/src/index.ts",
-    ], "what git lists (and still exists), so no node_modules"
-    npm_calls = [c for c in runner.calls if c["argv"][0] == "bash"]
-    assert [c["argv"][-1] for c in npm_calls] == [
-        "npm install",
-        "npm run lint",
-        "npm test --if-present",
-        "npm run build --if-present",
-    ]
-    assert all(c["cwd"] == copy / "ts" for c in npm_calls)
-
-
-def test_outside_git_the_copy_is_the_tree_minus_node_modules(repo, tmp_path):
-    component = _scaffold(repo, "ts")
-    (component / "node_modules").mkdir()
-    (component / "node_modules" / "x.js").write_text("")
-    runner = FakeRunner((list(GIT_LS_FILES), RunResult(128)))
-    workdirs = tmp_path / "workdirs"
-    workdirs.mkdir()
-    report = run_ci_local(
-        repo,
-        runner=runner,
-        environ={"PATH": _fake_tools(tmp_path, "bash", "node", "npm")},
-        out=io.StringIO(),
-        keep_workdir=True,
-        workdir_root=str(workdirs),
-    )
-    assert report.ok and any("not a git checkout" in n for n in report.notes)
-    [workdir] = workdirs.iterdir()
-    assert (workdir / "src" / "ts" / "package.json").is_file()
-    assert not (workdir / "src" / "ts" / "node_modules").exists()
-
-
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
-def test_a_failing_npm_step_reads_as_red_ci(repo, tmp_path):
-    _scaffold(repo, "ts", testCommand="vitest run")
-    runner = FakeRunner(([*NPM_COMMAND_SHELL, "vitest run"], RunResult(1)))
-    path = _fake_tools(tmp_path, "bash", "node", "npm")
-    report = run_ci_local(
-        repo, runner=runner, environ={"PATH": path}, out=io.StringIO()
-    )
-    assert not report.ok and report.failure.name == "npm ts: test"
-    assert not runner.ran("uv", "build")
-
-
-@pytest.mark.skipif(os.name == "nt", reason="fake tools are POSIX shell stubs")
-def test_a_missing_package_manager_fails_the_gate_with_a_hint(repo, tmp_path):
-    _scaffold(repo, "ts", packageManager="pnpm")
-    runner, out = FakeRunner(), io.StringIO()
-    path = _fake_tools(tmp_path, "bash", "node", "npm")  # no pnpm
-    report = run_ci_local(repo, runner=runner, environ={"PATH": path}, out=out)
-    assert not report.ok and report.failure.name == "npm ts: install"
-    assert not any(c["argv"][0] == "bash" for c in runner.calls), "nothing ran"
-    assert not runner.ran("uv", "build")
-    assert "pnpm not on PATH: install pnpm: https://pnpm.io/installation" in (
-        out.getvalue()
-    )
-
-
-def test_the_steps_path_decides_not_the_developer_s(repo):
-    """An empty PATH for the steps finds no tools, even if the host has them."""
-    _scaffold(repo, "ts")
-    report = run_ci_local(repo, runner=FakeRunner(), environ={}, out=io.StringIO())
-    assert not report.ok and report.failure.name == "npm ts: install"
-
-
-def test_npm_false_runs_no_npm_step(repo):
-    _scaffold(repo, "ts")
-    runner = FakeRunner()
-    report = run_ci_local(repo, runner=runner, environ={}, out=io.StringIO(), npm=False)
-    assert report.ok and not _npm_steps_of(s for s, _, _ in report.outcomes)
-    assert not runner.ran(*GIT_LS_FILES)
 
 
 def test_windows_bash_must_not_be_the_wsl_launcher():
