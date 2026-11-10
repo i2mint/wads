@@ -1059,8 +1059,9 @@ def migrate_ci_to_stub(
     declared["run_ci_marker"] = run_ci_marker or declared["run_ci_marker"]
     stub = render_stub_trigger(stub, **declared)
     # The repo's npm components stay out of the Python CI (#209): derived from the
-    # repo each time, so a re-render keeps the filter up to date.
-    if old_ci:
+    # repo each time, so a re-render keeps the filter up to date. (``old_ci`` may
+    # be the workflow's content rather than its path: no repo to read then.)
+    if old_ci and os.path.isfile(str(old_ci)):
         stub = render_stub_paths(stub, stub_paths_for_workflow(old_ci))
     # Keep the reusable workflow's inputs (e.g. `project-name`) an existing stub passes.
     return render_stub_inputs(stub, stub_inputs_of(old_ci))
