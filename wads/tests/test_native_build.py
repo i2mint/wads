@@ -4,7 +4,7 @@ Config (``wads.native_build``) -> setup outputs (``read_ci_config``) -> the gate
 ``uv-ci.yml``. A pure-Python repo must run exactly the jobs it ran before; the gate
 evaluations live in ``test_ci_trigger.py``, the permission rules in
 ``test_workflow_permissions.py``. The actions themselves run for real in the
-``native-selftest`` workflow, on the ``ci-fixtures/native_pkg`` fixture.
+``native-selftest`` workflow, on what ``populate --native maturin`` scaffolds.
 """
 
 import io
@@ -18,6 +18,7 @@ import pytest
 import yaml
 
 from wads.native_build import (
+    DFLT_MATURIN_ARGS,
     DFLT_NATIVE_TARGETS,
     NATIVE_TARGETS,
     cargo_test_args,
@@ -28,7 +29,7 @@ from wads.scripts.read_ci_config import read_and_export_ci_config
 ROOT = Path(__file__).resolve().parents[2]
 UV_CI = ROOT / ".github" / "workflows" / "uv-ci.yml"
 SELFTEST = ROOT / ".github" / "workflows" / "native-selftest.yml"
-FIXTURE = ROOT / "ci-fixtures" / "native_pkg"
+SCAFFOLD_NAME = "wads_native_scaffold"  # as in native-selftest.yml
 MATURIN = {"build-system": {"build-backend": "maturin"}}
 
 
@@ -174,6 +175,17 @@ def test_a_single_crate_package_has_nothing_to_cargo_test(tmp_path):
 # --- setup outputs -----------------------------------------------------------------
 
 
+def _scaffold_pyproject(tmp_path) -> str:
+    """The pyproject.toml ``populate --native maturin`` writes (what the self-test builds)."""
+    from wads.populate import write_pyproject_configs
+
+    d = tmp_path / "scaffold"
+    d.mkdir()
+    configs = {"name": SCAFFOLD_NAME, "url": "https://example.com/" + SCAFFOLD_NAME}
+    write_pyproject_configs(str(d), configs, native="maturin")
+    return (d / "pyproject.toml").read_text()
+
+
 def _outputs(tmp_path, monkeypatch, pyproject):
     (tmp_path / "pyproject.toml").write_text(pyproject)
     out = tmp_path / "gh_output"
@@ -191,14 +203,12 @@ def test_a_pure_python_repo_emits_native_false(tmp_path, monkeypatch):
     assert (outputs["native"], outputs["native-targets"]) == ("false", "[]")
 
 
-def test_the_fixture_emits_its_matrix(tmp_path, monkeypatch):
-    code, outputs = _outputs(
-        tmp_path, monkeypatch, (FIXTURE / "pyproject.toml").read_text()
-    )
+def test_the_scaffold_emits_its_matrix(tmp_path, monkeypatch):
+    code, outputs = _outputs(tmp_path, monkeypatch, _scaffold_pyproject(tmp_path))
     assert code == 0 and outputs["native"] == "true"
     assert len(json.loads(outputs["native-targets"])) == 5
     assert json.loads(outputs["native-options"])["smoke_import"] == (
-        "wads_native_fixture._core"
+        f"{SCAFFOLD_NAME}._core"
     )
 
 
@@ -257,7 +267,7 @@ def test_the_wheels_gate_the_native_release():
     assert "native-wheels" not in jobs["publish"]["needs"]
 
 
-def test_the_selftest_builds_the_fixture_with_this_commit_s_actions():
+def test_the_selftest_builds_the_scaffold_with_this_commit_s_actions():
     steps = [s for job in _jobs(SELFTEST).values() for s in job["steps"]]
     used = {s["uses"] for s in steps if str(s.get("uses", "")).startswith("./actions/")}
     assert used == {
@@ -281,7 +291,7 @@ def test_ci_local_runs_the_rust_checks_for_a_native_repo(tmp_path):
     from wads.ci_local import plan_ci_local, run_ci_local
     from wads.tests.test_ci_local import FakeRunner, RunResult
 
-    (tmp_path / "pyproject.toml").write_text((FIXTURE / "pyproject.toml").read_text())
+    (tmp_path / "pyproject.toml").write_text(_scaffold_pyproject(tmp_path))
     names = [s.name for s in plan_ci_local(tmp_path)]
     assert (
         names.index("lint (ruff)")
@@ -363,6 +373,18 @@ def test_the_release_artifacts_overwrite_on_a_full_rerun():
     assert upload["with"]["overwrite"] is True
 
 
-def test_the_fixture_commits_its_lockfile_so_the_locked_default_is_exercised():
-    assert (FIXTURE / "Cargo.lock").is_file()
-    assert "generate-lockfile" not in SELFTEST.read_text()
+def test_the_selftest_builds_populate_s_scaffold_with_a_lockfile():
+    """No hand-kept fixture: the self-test compiles the templates as populate renders them."""
+    workflow = yaml.safe_load(SELFTEST.read_text())
+    triggers = workflow[True]["pull_request"]["paths"]  # YAML 1.1 reads `on` as True
+    assert {"wads/data/native/**", "wads/profiles.py", "wads/populate.py"} <= set(
+        triggers
+    )
+    scaffold = "\n".join(
+        s.get("run", "") for s in workflow["jobs"]["scaffold"]["steps"]
+    )
+    assert "--native maturin" in scaffold
+    assert workflow["env"]["SCAFFOLD"].endswith("/" + SCAFFOLD_NAME)
+    # The lockfile exists before any build, and the builds use --locked.
+    assert "test -f Cargo.lock || cargo generate-lockfile" in scaffold
+    assert "--locked" in DFLT_MATURIN_ARGS

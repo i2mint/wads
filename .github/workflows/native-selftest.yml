@@ -1,8 +1,10 @@
-# Self-test of the reusable workflow's native (maturin) path (i2mint/wads#166), on this
-# repo's own runners: builds ci-fixtures/native_pkg through the SAME actions uv-ci.yml's
-# native jobs call, at this commit (./actions/*), so a change to them is exercised on
-# Linux x86_64/aarch64, macOS arm64/x86_64 and Windows before it reaches the fleet.
-# Publishes nothing. Runs on a PR touching the native path, and by hand.
+# Self-test of the reusable workflow's native (maturin) path (i2mint/wads#166) on what
+# `populate --native maturin` scaffolds (i2mint/wads#214), on this repo's own runners: the
+# scaffold job generates a package with wads at this commit, and every other job builds it
+# through the SAME actions uv-ci.yml's native jobs call, at this commit (./actions/*), on
+# Linux x86_64/aarch64, macOS arm64/x86_64 and Windows. So a change to the templates, the
+# overlay or the actions is compiled and tested before it reaches the fleet.
+# Publishes nothing. Runs on a PR touching any of those, and by hand.
 name: native-selftest
 on:
   pull_request:
@@ -13,7 +15,15 @@ on:
       - "wads/native_build.py"
       - "wads/scripts/cargo_test_args.py"
       - "wads/scripts/read_ci_config.py"
-      - "ci-fixtures/native_pkg/**"
+      - "wads/data/native/**"
+      - "wads/data/pyproject_toml_tpl.toml"
+      - "wads/profiles.py"
+      - "wads/populate.py"
+      - "wads/templating.py"
+      - "wads/licensing.py"
+      - "wads/__init__.py"
+      - "wads/toml_util.py"
+      - "pyproject.toml"
       - ".github/workflows/native-selftest.yml"
   workflow_dispatch:
 
@@ -21,13 +31,50 @@ permissions:
   contents: read
 
 env:
-  FIXTURE: ci-fixtures/native_pkg
+  # Where the scaffold job writes the package; the other jobs download it there.
+  SCAFFOLD: scaffold/wads_native_scaffold
   # The version the release path would stamp; the wheels must carry it.
   RELEASE_VERSION: "0.0.99"
 
 jobs:
+  scaffold:
+    name: Scaffold with populate --native maturin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: populate --native maturin, with wads at this commit
+        run: |
+          python -m pip install --quiet ".[create]"
+          mkdir -p "$SCAFFOLD"
+          populate "$SCAFFOLD" --native maturin --skip-ci-def-gen -r https://example.com/selftest
+      # populate leaves the lockfile to the developer when the pinned toolchain is not
+      # installed (it never downloads one); install it as setup-rust does in a real repo.
+      - uses: ./actions/setup-rust
+        with:
+          project-dir: ${{ env.SCAFFOLD }}
+      - name: Generate Cargo.lock if populate could not
+        working-directory: ${{ env.SCAFFOLD }}
+        run: test -f Cargo.lock || cargo generate-lockfile
+      - name: The scaffold has the native layout
+        working-directory: ${{ env.SCAFFOLD }}
+        run: |
+          ls -la . rust/core rust/py wads_native_scaffold tests
+          grep -q 'build-backend = "maturin"' pyproject.toml
+      - uses: actions/upload-artifact@v6
+        with:
+          name: native-scaffold
+          path: scaffold
+          include-hidden-files: true
+          if-no-files-found: error
+
   setup:
-    name: Read the fixture's native config
+    name: Read the scaffold's native config
+    needs: scaffold
     runs-on: ubuntu-latest
     outputs:
       native: ${{ steps.config.outputs.native }}
@@ -37,12 +84,16 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-scaffold
+          path: scaffold
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - id: config
-        run: python3 -I wads/scripts/read_ci_config.py "$FIXTURE"
-      - name: The fixture is detected as native
+        run: python3 -I wads/scripts/read_ci_config.py "$SCAFFOLD"
+      - name: The scaffold is detected as native
         env:
           NATIVE: ${{ steps.config.outputs.native }}
         run: test "$NATIVE" = "true"
@@ -55,40 +106,47 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-scaffold
+          path: scaffold
       - uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - uses: ./actions/setup-rust
         with:
-          project-dir: ${{ env.FIXTURE }}
-      - name: Editable install builds the extension; its tests pass
-        working-directory: ${{ env.FIXTURE }}
+          project-dir: ${{ env.SCAFFOLD }}
+          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
+      - name: Editable install builds the extension; its tests and doctests pass
+        working-directory: ${{ env.SCAFFOLD }}
         run: |
           uv venv -q
-          uv pip install -e . pytest
-          .venv/bin/python -m pytest -q tests
+          uv pip install -e ".[dev]"
+          .venv/bin/python -m pytest -q
       - uses: ./actions/rust-checks
         with:
-          project-dir: ${{ env.FIXTURE }}
+          project-dir: ${{ env.SCAFFOLD }}
           cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options).cargo_test_args) }}
           manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
 
   release-pyproject:
     name: Stamp the release version
+    needs: scaffold
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
         with:
-          persist-credentials: false
+          name: native-scaffold
+          path: scaffold
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       # isee's stamp, as the native-version job's bump action applies it (the version
       # itself comes from isee gen-semver there; here it is fixed so the wheels can be
       # checked against it).
-      - name: Stamp the fixture with isee, as the release path does
-        working-directory: ${{ env.FIXTURE }}
+      - name: Stamp the scaffold with isee, as the release path does
+        working-directory: ${{ env.SCAFFOLD }}
         run: |
           python -m pip install --quiet isee
           isee update-pyproject-toml --version "$RELEASE_VERSION"
@@ -96,7 +154,7 @@ jobs:
       - uses: actions/upload-artifact@v6
         with:
           name: wads-release-pyproject
-          path: ${{ env.FIXTURE }}/pyproject.toml
+          path: ${{ env.SCAFFOLD }}/pyproject.toml
           overwrite: true
 
   wheels:
@@ -111,6 +169,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-scaffold
+          path: scaffold
       - uses: ./actions/build-native-wheel
         with:
           name: ${{ matrix.name }}
@@ -122,19 +184,20 @@ jobs:
           maturin-args: ${{ fromJson(needs.setup.outputs.native-options).maturin_args }}
           version: ${{ env.RELEASE_VERSION }}
           pyproject-artifact: wads-release-pyproject
-          project-dir: ${{ env.FIXTURE }}
+          project-dir: ${{ env.SCAFFOLD }}
 
   collect:
     name: Wheels + sdist, as publish-native assembles them
     needs: [setup, wheels]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
         with:
-          persist-credentials: false
+          name: native-scaffold
+          path: scaffold
       - uses: astral-sh/setup-uv@v7
       - name: Build the sdist
-        working-directory: ${{ env.FIXTURE }}
+        working-directory: ${{ env.SCAFFOLD }}
         run: uv build --sdist --out-dir ../../dist
       - uses: actions/download-artifact@v7
         with:

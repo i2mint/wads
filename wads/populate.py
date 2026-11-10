@@ -150,13 +150,16 @@ def gen_readme_text(
 """
 
 
-def write_pyproject_configs(pkg_dir: str, configs: dict):
+def write_pyproject_configs(pkg_dir: str, configs: dict, *, native: str = ""):
     """
     Write pyproject.toml file from template and configs.
 
     Args:
         pkg_dir: Path to package directory
         configs: Dictionary of configuration values
+        native: Native backend (e.g. ``"maturin"``) whose pyproject tables replace the
+            hatchling build system (``wads.profiles.merge_native_pyproject``); ``""``
+            (default) keeps the template's hatchling setup.
     """
     import sys
 
@@ -254,6 +257,13 @@ def write_pyproject_configs(pkg_dir: str, configs: dict):
             deps = [d.strip() for d in deps.split(",") if d.strip()]
         data["project"]["dependencies"] = deps
 
+    if native:
+        from wads.profiles import merge_native_pyproject, native_pyproject_fragment
+
+        data = merge_native_pyproject(
+            data, native_pyproject_fragment(name, backend=native), backend=native
+        )
+
     # Write the pyproject.toml
     pyproject_path = os.path.join(pkg_dir, "pyproject.toml")
     with open(pyproject_path, "wb") as f:
@@ -297,6 +307,7 @@ def populate_pkg_dir(
     npm_version: str = "0.0.1",
     npm_package_manager: str = "npm",
     create_tests: bool = False,
+    native: str = "",
     **configs,
 ):
     """Populate project directory root with useful packaging files, if they're missing.
@@ -359,6 +370,14 @@ def populate_pkg_dir(
     :param create_tests: If True, scaffold a ``tests/`` folder (``__init__.py``,
         a ``test_<name>.py`` smoke test, and a ``tests/util.py`` data accessor).
         Off by default so default output is unchanged.
+    :param native: Native backend for a compiled core (issue #214); ``"maturin"`` is
+        the only one. Scaffolds a Cargo workspace (``rust/core`` pure Rust, ``rust/py``
+        the PyO3 binding built as ``<name>._core``, abi3), ``rust-toolchain.toml``, a
+        facade ``<name>/__init__.py`` with stub and reference, tests, and generates
+        ``Cargo.lock`` when cargo is available: the layout wads' native CI path builds.
+        A new pyproject.toml gets the maturin build system and ``[tool.maturin]``; an
+        existing one is never rewritten, and the tables it lacks are reported under
+        "Needs attention". Existing files are skipped as usual. Empty by default.
     :param configs: Extra configurations
     :return:
 
@@ -396,6 +415,12 @@ def populate_pkg_dir(
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
     name = os.path.basename(pkg_dir)
     pjoin = lambda *p: os.path.join(pkg_dir, *p)
+
+    if native:  # fail before writing anything
+        from wads.profiles import get_native_profile, native_names
+
+        get_native_profile(native)
+        native_names(name)
 
     if name not in os.listdir(pkg_dir):
         f = pjoin(name)
@@ -507,13 +532,13 @@ def populate_pkg_dir(
                     tracker.error("pyproject.toml", f"Migration failed: {e}")
                     if "pkg-dir" in configs:
                         del configs["pkg-dir"]
-                    write_pyproject_configs(pjoin(""), configs)
+                    write_pyproject_configs(pjoin(""), configs, native=native)
                     tracker.add("pyproject.toml")
             else:
                 _clog("... making a 'pyproject.toml'")
                 if "pkg-dir" in configs:
                     del configs["pkg-dir"]
-                write_pyproject_configs(pjoin(""), configs)
+                write_pyproject_configs(pjoin(""), configs, native=native)
                 tracker.add("pyproject.toml")
         else:
             tracker.skip("pyproject.toml")
@@ -860,6 +885,37 @@ def populate_pkg_dir(
                 _clog("  Issues found:")
                 for rec in ci_comparison.get("recommendations", []):
                     _clog(f"    • {rec}")
+
+    # Native-core overlay (opt-in, #214): Rust core + binding crate + facade.
+    if native:
+        from wads.profiles import apply_native, native_pyproject_todo
+        from wads.toml_util import read_pyproject_toml as _read_pyproject
+
+        _clog(f"\n... adding native core '{native}'")
+        pyproject_data = (
+            _read_pyproject(pjoin(""))
+            if os.path.isfile(pjoin("pyproject.toml"))
+            else {}
+        )
+        # The crates carry the package's licence, as apply_native reads it from the
+        # pyproject and LICENSE file; none (and a note) when nothing says which.
+        apply_native(
+            pkg_dir,
+            backend=native,
+            project_name=name,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+            on_error=lambda filename, e: tracker.error(filename, str(e)),
+            on_attention=tracker.attention,
+        )
+        if pyproject_data:
+            todo = native_pyproject_todo(pyproject_data, name, backend=native)
+            if todo:
+                tracker.attention(
+                    "pyproject.toml",
+                    f"kept as it was; --native {native} needs these tables:\n" + todo,
+                )
 
     # Tests-folder overlay (opt-in, #4): scaffold tests/ with a smoke test.
     if create_tests:

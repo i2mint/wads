@@ -1,0 +1,37 @@
+# The pyproject.toml tables a maturin package `tmpl_pkg` needs. `populate --native maturin`
+# merges them into a NEW pyproject (the tables the profile names in `replaces` replace the
+# template's, the others merge and lists gain their missing items) and only reports them
+# for an existing one. wads' CI detects the native path from `build-backend = "maturin"`.
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project.optional-dependencies]
+dev = ["hypothesis"]  # tests/test_differential.py
+
+[tool.maturin]
+manifest-path = "rust/py/Cargo.toml"  # the binding crate
+module-name = "tmpl_pkg._core"        # flat layout: the extension lands inside the facade package
+bindings = "pyo3"
+locked = true                         # fail if Cargo.lock is stale (CI and sdist builds)
+strip = true
+exclude = [
+  "**/__pycache__",                   # not a default for a hand-written [tool.maturin]
+  "**/*.pyc",
+  { path = ".claude/**", format = "sdist" },
+  { path = "scrap/**", format = "sdist" },
+]
+
+[tool.uv]
+# Without these, `uv run` / `uv sync` never rebuild after a Rust edit and silently test a stale binary.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "rust/**/Cargo.toml" },
+  { file = "rust/**/*.rs" },
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tmpl_pkg"]     # the facade's docstring examples are tests too
+addopts = "--doctest-modules"

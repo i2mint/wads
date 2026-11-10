@@ -1,0 +1,47 @@
+# Cargo workspace for the Rust half of the tmpl_pkg Python package.
+# rust/core: pure Rust (no PyO3), tested with `cargo test -p tmpl-pkg-core`.
+# rust/py:   the binding cdylib built by maturin into tmpl_pkg/_core.
+# Every crate under rust/ is a member, so another one (say rust/wasm) needs no edit here.
+[workspace]
+resolver = "3"
+members = ["rust/*"]
+
+[workspace.package]
+version = "0.0.0"      # not the release version: pyproject.toml [project].version is the SSOT
+edition = "2024"
+rust-version = "1.85"  # PyO3 0.30's MSRV; also the floor for users building from the sdist
+publish = false
+license = "tmpl-license"  # SPDX id of the Python package's licence (pyproject.toml [project].license)
+
+[workspace.dependencies]
+# abi3-py310: one wheel per platform for CPython >= 3.10. No "extension-module" feature:
+# maturin >= 1.9.4 sets PYO3_BUILD_EXTENSION_MODULE itself, and the feature breaks cargo test.
+pyo3 = { version = "0.30", features = ["abi3-py310"] }
+thiserror = "2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+must_use_candidate = "allow"
+unwrap_used = "warn"
+expect_used = "warn"
+dbg_macro = "warn"
+todo = "warn"
+allow_attributes_without_reason = "warn"
+undocumented_unsafe_blocks = "warn"
+redundant_clone = "warn"
+clone_on_ref_ptr = "warn"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+# Never panic = "abort": PyO3 turns a Rust panic into PanicException only when unwinding.

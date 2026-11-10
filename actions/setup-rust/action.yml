@@ -1,14 +1,21 @@
 name: "Set up Rust"
 description: >-
   Rust for a native (maturin) package, before its install builds the extension: the
-  components the rust-checks action needs, and a cargo cache. The runner's rustup is used
-  as is, so a rust-toolchain.toml in the repo picks the toolchain (issue #166).
+  components the rust-checks action needs, and a cargo cache. The rust-toolchain.toml
+  rustup would use for the Cargo workspace (the nearest one at or above the
+  manifest's directory) picks the toolchain, installed here explicitly (#166, #214).
 
 inputs:
   project-dir:
     description: "Directory holding the Cargo workspace (the repo root by default)"
     required: false
     default: "."
+  manifest-path:
+    description: >-
+      The binding crate's Cargo.toml, relative to project-dir ([tool.maturin].manifest-path):
+      the toolchain pin is looked up from its directory upwards, as rustup does.
+    required: false
+    default: "Cargo.toml"
   save-cache:
     description: >-
       Whether this run may write the cargo cache ("true"/"false"). Pass "true" only on
@@ -22,8 +29,28 @@ runs:
     - name: Rust toolchain and components
       shell: bash
       working-directory: ${{ inputs.project-dir }}
+      env:
+        MANIFEST: ${{ inputs.manifest-path }}
       run: |
         set -e
+        # rustup takes the pin from the nearest rust-toolchain(.toml) at or above the
+        # directory it runs in: look for it the same way, from the manifest's directory.
+        dir="$(cd "$(dirname "$MANIFEST")" 2>/dev/null && pwd || pwd)"
+        pin_dir=""
+        while :; do
+          if [ -f "$dir/rust-toolchain.toml" ] || [ -f "$dir/rust-toolchain" ]; then
+            pin_dir="$dir"; break
+          fi
+          parent="$(dirname "$dir")"
+          [ "$parent" = "$dir" ] && break
+          dir="$parent"
+        done
+        if [ -n "$pin_dir" ]; then
+          cd "$pin_dir"
+          # Install the pinned toolchain (and the components the file lists) explicitly,
+          # rather than relying on rustup installing it on first use; never update rustup.
+          rustup toolchain install --no-self-update
+        fi
         rustup show active-toolchain || rustup default stable
         rustup component add rustfmt clippy
         cargo --version
