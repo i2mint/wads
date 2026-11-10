@@ -364,10 +364,12 @@ wads-migrate ci-on-demand --commit    # apply and commit; then `git push`
 Do locally what CI would have done, from the same `[tool.wads.ci]` config:
 
 ```bash
-wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), build
+wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), npm components, build
 wads ci-local --dry-run   # print the plan, run nothing
 wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
 ```
+
+In a polyglot repo, every `.github/workflows` stub that calls a wads `npm-ci*.yml` workflow (as `populate --frontend` writes them) also gets what that workflow’s validate job runs in its `package-dir`: the install (`npm ci` with a lockfile, else `npm install`; `pnpm install`, frozen with a lockfile), then `lintCommand`, `testCommand`, `buildCommand`. They run in a copy of the repo inside the temporary directory, so your tree is never touched. A missing bash, node or package manager fails the run with an install hint; `--no-npm` leaves the npm half out, and `--publish` does too, as CI’s PyPI publish does not wait on npm CI.
 
 `--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages. Your shell environment reaches the steps, except PyPI credentials (only the upload sees them) the machine’s install pins (`UV_CONSTRAINT`, `UV_BUILD_CONSTRAINT`, `UV_OVERRIDE`, `PIP_CONSTRAINT`), and `PYTHONSAFEPATH` / `PYTHONPATH`, none of which hosted CI has; so fleet packages resolve from PyPI as they do in CI, ci-local works from a git worktree, and `python -m pytest` puts the repo on `sys.path` as in CI. Each leg’s tests run with its venv activated (`VIRTUAL_ENV`, its `bin` first on `PATH`), as `run-tests-uv` does.
 

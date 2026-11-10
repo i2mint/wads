@@ -358,50 +358,56 @@ continue past per-package failures, and verify with <code class="docutils litera
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.has_trust" title="wads.npm_trust.has_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_trust</span></code></a>(listing, publisher)</p></td>
 <td><p>Whether an <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">list</span></code> text has an entry naming exactly this repo and workflow.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.is_on_npm" title="wads.npm_trust.is_on_npm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_on_npm</span></code></a>(package, *[, run])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.is_monorepo_reusable" title="wads.npm_trust.is_monorepo_reusable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_monorepo_reusable</span></code></a>(workflow)</p></td>
+<td><p>Whether a wads reusable workflow is the pnpm + turbo monorepo one.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.is_on_npm" title="wads.npm_trust.is_on_npm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_on_npm</span></code></a>(package, *[, run])</p></td>
 <td><p>Whether <code class="docutils literal notranslate"><span class="pre">package</span></code> is published (<code class="docutils literal notranslate"><span class="pre">None</span></code>: could not tell, e.g. offline).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.job_calls" title="wads.npm_trust.job_calls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_calls</span></code></a>(job, scripts)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.job_calls" title="wads.npm_trust.job_calls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_calls</span></code></a>(job, scripts)</p></td>
 <td><p>The publish calls of a workflow job: its <code class="docutils literal notranslate"><span class="pre">run</span></code> steps, changesets, a wads caller.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.npm_trust" title="wads.npm_trust.npm_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_trust</span></code></a>([repo, apply, dry_run, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.npm_trust" title="wads.npm_trust.npm_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_trust</span></code></a>([repo, apply, dry_run, ...])</p></td>
 <td><p>Find the npm packages <code class="docutils literal notranslate"><span class="pre">repo</span></code> publishes and attach Trusted Publishers (dry run by default).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.packages_of" title="wads.npm_trust.packages_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">packages_of</span></code></a>(root, call)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.packages_of" title="wads.npm_trust.packages_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">packages_of</span></code></a>(root, call)</p></td>
 <td><p>Names of the non-private packages <code class="docutils literal notranslate"><span class="pre">call</span></code> publishes in the repo at <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.preflight" title="wads.npm_trust.preflight"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preflight</span></code></a>(*[, run])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.preflight" title="wads.npm_trust.preflight"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preflight</span></code></a>(*[, run])</p></td>
 <td><p>Problems that would make every attach fail: no npm, not logged in.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.publish_calls" title="wads.npm_trust.publish_calls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish_calls</span></code></a>(text[, scripts, directory, _depth])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.publish_calls" title="wads.npm_trust.publish_calls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish_calls</span></code></a>(text[, scripts, directory, _depth])</p></td>
 <td><p>The publish commands in a shell script text, following <code class="docutils literal notranslate"><span class="pre">cd</span></code> and package scripts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.render_rows" title="wads.npm_trust.render_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_rows</span></code></a>(rows[, fmt])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.render_rows" title="wads.npm_trust.render_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_rows</span></code></a>(rows[, fmt])</p></td>
 <td><p>Rows as an aligned <code class="docutils literal notranslate"><span class="pre">table</span></code>, <code class="docutils literal notranslate"><span class="pre">tsv</span></code> (the fleet rollout's format) or <code class="docutils literal notranslate"><span class="pre">json</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_fields</span></code>(row)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_fields</span></code>(row)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.run_npm_trust" title="wads.npm_trust.run_npm_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_npm_trust</span></code></a>([repo, apply, dry_run, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.run_npm_trust" title="wads.npm_trust.run_npm_trust"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_npm_trust</span></code></a>([repo, apply, dry_run, ...])</p></td>
 <td><p><a class="reference internal" href="#wads.npm_trust.npm_trust" title="wads.npm_trust.npm_trust"><code class="xref py py-func docutils literal notranslate"><span class="pre">npm_trust()</span></code></a> with injectable <code class="docutils literal notranslate"><span class="pre">run</span></code> (npm/git) and <code class="docutils literal notranslate"><span class="pre">out</span></code> (printing).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.select" title="wads.npm_trust.select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select</span></code></a>(items, patterns, matches, *, default_all)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.select" title="wads.npm_trust.select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select</span></code></a>(items, patterns, matches, *, default_all)</p></td>
 <td><p>Items picked by <code class="docutils literal notranslate"><span class="pre">patterns</span></code>, where a <code class="docutils literal notranslate"><span class="pre">!</span></code> prefix subtracts its matches.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.shared_packages" title="wads.npm_trust.shared_packages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_packages</span></code></a>(publishers)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.shared_packages" title="wads.npm_trust.shared_packages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_packages</span></code></a>(publishers)</p></td>
 <td><p>Packages that more than one workflow publishes, with those workflows.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.subprocess_run" title="wads.npm_trust.subprocess_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_run</span></code></a>(argv)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.subprocess_run" title="wads.npm_trust.subprocess_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subprocess_run</span></code></a>(argv)</p></td>
 <td><p>The default <code class="docutils literal notranslate"><span class="pre">run</span></code>: captured, no stdin, time-limited; a missing tool is rc 127.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.survey" title="wads.npm_trust.survey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">survey</span></code></a>(publishers, *[, run, check_npm])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.survey" title="wads.npm_trust.survey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">survey</span></code></a>(publishers, *[, run, check_npm])</p></td>
 <td><p><a class="reference internal" href="#wads.npm_trust.Row" title="wads.npm_trust.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a> per publisher, asking npm once per package unless <code class="docutils literal notranslate"><span class="pre">check_npm=False</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.trust_command" title="wads.npm_trust.trust_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_command</span></code></a>(publisher)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.trust_command" title="wads.npm_trust.trust_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_command</span></code></a>(publisher)</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">github</span></code> call that attaches this publisher.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.trust_listing" title="wads.npm_trust.trust_listing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_listing</span></code></a>(package, *[, run])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.trust_listing" title="wads.npm_trust.trust_listing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trust_listing</span></code></a>(package, *[, run])</p></td>
 <td><p>The text of <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">trust</span> <span class="pre">list</span> <span class="pre">&lt;package&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it cannot be read.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.npm_trust.wads_reusable_call" title="wads.npm_trust.wads_reusable_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wads_reusable_call</span></code></a>(job)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(reusable</span> <span class="pre">workflow,</span> <span class="pre">package</span> <span class="pre">dir)</span></code> when <code class="docutils literal notranslate"><span class="pre">job</span></code> calls a wads <code class="docutils literal notranslate"><span class="pre">npm-ci*.yml</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.npm_trust.workspace_globs" title="wads.npm_trust.workspace_globs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">workspace_globs</span></code></a>(root)</p></td>
 <td><p>The workspace patterns of the package at <code class="docutils literal notranslate"><span class="pre">root</span></code> (npm/yarn <code class="docutils literal notranslate"><span class="pre">workspaces</span></code> or pnpm).</p></td>
@@ -599,6 +605,17 @@ verified with <code class="docutils literal notranslate"><span class="pre">npm</
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.npm_trust.is_monorepo_reusable">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">is_monorepo_reusable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workflow</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#is_monorepo_reusable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.is_monorepo_reusable" title="Link to this definition">¶</a></dt>
+<dd><p>Whether a wads reusable workflow is the pnpm + turbo monorepo one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.npm_trust.is_on_npm">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">is_on_npm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">subprocess_run&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#is_on_npm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.is_on_npm" title="Link to this definition">¶</a></dt>
 <dd><p>Whether <code class="docutils literal notranslate"><span class="pre">package</span></code> is published (<code class="docutils literal notranslate"><span class="pre">None</span></code>: could not tell, e.g. offline).</p>
@@ -781,6 +798,24 @@ the exclusions: <code class="docutils literal notranslate"><span class="pre">pnp
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.npm_trust.wads_reusable_call">
+<span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">wads_reusable_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#wads_reusable_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.wads_reusable_call" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(reusable</span> <span class="pre">workflow,</span> <span class="pre">package</span> <span class="pre">dir)</span></code> when <code class="docutils literal notranslate"><span class="pre">job</span></code> calls a wads <code class="docutils literal notranslate"><span class="pre">npm-ci*.yml</span></code>.</p>
+<p>The dir is the job’s <code class="docutils literal notranslate"><span class="pre">package-dir</span></code> input, else the reusable workflow’s default.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wads_reusable_call</span><span class="p">({</span><span class="s2">"uses"</span><span class="p">:</span> <span class="s2">"i2mint/wads/.github/workflows/npm-ci.yml@master"</span><span class="p">})</span>
+<span class="go">('npm-ci.yml', 'js')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wads_reusable_call</span><span class="p">({</span><span class="s2">"runs-on"</span><span class="p">:</span> <span class="s2">"ubuntu-latest"</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.npm_trust.workspace_globs">
 <span class="sig-prename descclassname"><span class="pre">wads.npm_trust.</span></span><span class="sig-name descname"><span class="pre">workspace_globs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/npm_trust.html#workspace_globs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.npm_trust.workspace_globs" title="Link to this definition">¶</a></dt>
 <dd><p>The workspace patterns of the package at <code class="docutils literal notranslate"><span class="pre">root</span></code> (npm/yarn <code class="docutils literal notranslate"><span class="pre">workspaces</span></code> or pnpm).</p>
@@ -887,6 +922,7 @@ the exclusions: <code class="docutils literal notranslate"><span class="pre">pnp
 <li><a class="reference internal" href="#wads.npm_trust.github_slug"><code class="docutils literal notranslate"><span class="pre">github_slug()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.glob_dirs"><code class="docutils literal notranslate"><span class="pre">glob_dirs()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.has_trust"><code class="docutils literal notranslate"><span class="pre">has_trust()</span></code></a></li>
+<li><a class="reference internal" href="#wads.npm_trust.is_monorepo_reusable"><code class="docutils literal notranslate"><span class="pre">is_monorepo_reusable()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.is_on_npm"><code class="docutils literal notranslate"><span class="pre">is_on_npm()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.job_calls"><code class="docutils literal notranslate"><span class="pre">job_calls()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.npm_trust"><code class="docutils literal notranslate"><span class="pre">npm_trust()</span></code></a></li>
@@ -901,6 +937,7 @@ the exclusions: <code class="docutils literal notranslate"><span class="pre">pnp
 <li><a class="reference internal" href="#wads.npm_trust.survey"><code class="docutils literal notranslate"><span class="pre">survey()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.trust_command"><code class="docutils literal notranslate"><span class="pre">trust_command()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.trust_listing"><code class="docutils literal notranslate"><span class="pre">trust_listing()</span></code></a></li>
+<li><a class="reference internal" href="#wads.npm_trust.wads_reusable_call"><code class="docutils literal notranslate"><span class="pre">wads_reusable_call()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.workspace_globs"><code class="docutils literal notranslate"><span class="pre">workspace_globs()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.workspace_manifests"><code class="docutils literal notranslate"><span class="pre">workspace_manifests()</span></code></a></li>
 <li><a class="reference internal" href="#wads.npm_trust.workspace_root_of"><code class="docutils literal notranslate"><span class="pre">workspace_root_of()</span></code></a></li>
@@ -915,7 +952,7 @@ the exclusions: <code class="docutils literal notranslate"><span class="pre">pnp
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=2ff91030"></script>
+</div><script src="../_static/documentation_options.js?v=86b96456"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

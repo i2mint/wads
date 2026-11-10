@@ -1,4 +1,4 @@
-> built 2026-11-10 09:57 UTC from 13881d3 (master) · wads 0.2.80. Details: build_info.json
+> built 2026-11-10 10:25 UTC from d37f4b1 (master) · wads 0.2.81. Details: build_info.json
 
 # index.html.md
 
@@ -368,10 +368,12 @@ wads-migrate ci-on-demand --commit    # apply and commit; then `git push`
 Do locally what CI would have done, from the same `[tool.wads.ci]` config:
 
 ```bash
-wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), build
+wads ci-local             # lint (ruff), tests (a fresh uv venv per python_versions entry), npm components, build
 wads ci-local --dry-run   # print the plan, run nothing
 wads ci-local --publish   # instead of the plain build: format, bump version (isee), build, PyPI upload, commit, tag, push
 ```
+
+In a polyglot repo, every `.github/workflows` stub that calls a wads `npm-ci*.yml` workflow (as `populate --frontend` writes them) also gets what that workflow’s validate job runs in its `package-dir`: the install (`npm ci` with a lockfile, else `npm install`; `pnpm install`, frozen with a lockfile), then `lintCommand`, `testCommand`, `buildCommand`. They run in a copy of the repo inside the temporary directory, so your tree is never touched. A missing bash, node or package manager fails the run with an install hint; `--no-npm` leaves the npm half out, and `--publish` does too, as CI’s PyPI publish does not wait on npm CI.
 
 `--publish` refuses up front on a dirty tree, off the default branch, behind origin, or without a PyPI token (`$PYPI_PASSWORD`, then `$UV_PUBLISH_TOKEN`, then `~/.pypirc` `[pypi]` with `username = __token__`). `wads ci-local` needs [uv](https://docs.astral.sh/uv/getting-started/installation/) and git on `PATH`, and does not install `[tool.wads.ops.*]` system packages. Your shell environment reaches the steps, except PyPI credentials (only the upload sees them) the machine’s install pins (`UV_CONSTRAINT`, `UV_BUILD_CONSTRAINT`, `UV_OVERRIDE`, `PIP_CONSTRAINT`), and `PYTHONSAFEPATH` / `PYTHONPATH`, none of which hosted CI has; so fleet packages resolve from PyPI as they do in CI, ci-local works from a git worktree, and `python -m pytest` puts the repo on `sys.path` as in CI. Each leg’s tests run with its venv activated (`VIRTUAL_ENV`, its `bin` first on `PATH`), as `run-tests-uv` does.
 
@@ -2062,7 +2064,20 @@ the object the reusable workflow’s setup job reads, and runs in order:
    one `--ignore` per excluded path, then `pytest_args`). Then one more such leg per
    `[[tool.wads.ci.testing.pinned]]` entry, the project and its pins installed in one
    resolve and checked with `uv pip check`, as the validation job’s pinned legs do.
-3. **build**: `uv build` into the temporary directory, never the repo’s `dist/`, so a
+3. **npm components** (polyglot repos only): for each `.github/workflows` stub that
+   calls a wads `npm-ci*.yml` reusable workflow ([`wads.npm_config.npm_components()`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_components)),
+   what that workflow’s validate job runs in its `package-dir`
+   ([`wads.npm_config.npm_validate_commands()`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_validate_commands)): the install (`npm ci` with a
+   lockfile, else `npm install`; `pnpm install`, frozen with a lockfile), then
+   `lintCommand`, `testCommand` and `buildCommand`, each through `bash -e -c` as
+   a `run:` step. They run in a copy of the repo’s files git does not ignore, inside the
+   temporary directory, so the tree (`node_modules`, a new lockfile) is never touched;
+   the commands are read from that copy, as CI reads its checkout. The copy has no
+   `.git`, so an npm script that calls git sees no repository there. A
+   missing tool (bash, node, the package manager) fails the step with an install hint;
+   `npm=False` (`--no-npm`) leaves the npm half out. Not run with `publish=True`:
+   CI’s PyPI publish does not wait on the npm workflow either.
+4. **build**: `uv build` into the temporary directory, never the repo’s `dist/`, so a
    stale artifact can never be uploaded.
 
 With `publish=True` it does what the publish job does in place of the plain build:
@@ -2076,7 +2091,8 @@ and hosted CI does not: install pins such as `UV_CONSTRAINT`, and `PYTHONSAFEPAT
 `PYTHONPATH`, `PYTHONHOME`, `PYTHONOPTIMIZE`; each leg’s tests run with its venv
 activated, as CI’s are), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
-installed; and lint runs on the tree as it is, where CI formats first.
+installed; lint runs on the tree as it is, where CI formats first; and an npm component
+runs once, on the local node, where CI runs once per `nodeVersions` entry.
 
 Each run works in a fresh `wads-ci-local-*` temporary directory that records its owner’s
 PID ([`wads.workdirs`](_autosummary/wads.workdirs.html.md#module-wads.workdirs)), and gives pytest a private `--basetemp` inside it, so
@@ -2103,20 +2119,25 @@ can ever spend or publish.
 | [`WORKDIR_PREFIX`](_autosummary/wads.ci_local.html.md#wads.ci_local.WORKDIR_PREFIX)            | Prefix of the temporary work directory each run makes (and sweeps when left behind).                                                            |
 | [`WORKDIR_BYTES_PER_PYTHON`](_autosummary/wads.ci_local.html.md#wads.ci_local.WORKDIR_BYTES_PER_PYTHON)  | one venv with the project's deps installed (0.5-0.7 GB for a mid-size package), plus headroom.                                                  |
 | [`WORKDIR_INODES_PER_PYTHON`](_autosummary/wads.ci_local.html.md#wads.ci_local.WORKDIR_INODES_PER_PYTHON) | a workdir held ~22k and a pytest basetemp up to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).                            |
+| [`NPM_COMMAND_SHELL`](_autosummary/wads.ci_local.html.md#wads.ci_local.NPM_COMMAND_SHELL)         | as the npm workflows' `run:` steps, which set no `shell:`, so Actions runs them with `bash -e {0}` (no pipefail).                               |
+| [`GIT_LS_FILES`](_autosummary/wads.ci_local.html.md#wads.ci_local.GIT_LS_FILES)              | tracked, plus untracked but not ignored.                                                                                                        |
+| [`NPM_COPY_IGNORE`](_autosummary/wads.ci_local.html.md#wads.ci_local.NPM_COPY_IGNORE)           | Never copied for the npm half, even when git does not ignore them.                                                                              |
+| [`NPM_STEP_KINDS`](_autosummary/wads.ci_local.html.md#wads.ci_local.NPM_STEP_KINDS)            | The npm validate job's commands, in order (fields of `NpmValidateCommands`).                                                                    |
 
 ### Functions
 
-| [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run, level])        | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
-|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| [`plan_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)([repo, publish, config, platform]) | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
-| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo, pytest_args])     | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
-| [`render_plan`](_autosummary/wads.ci_local.html.md#wads.ci_local.render_plan)(steps)                               | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
-| [`resolve_pypi_token`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])        | Find a PyPI API token, most specific source first.                                                                            |
-| [`run_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.run_ci_local)([repo, publish, config, ...])       | Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
-| [`steps_env`](_autosummary/wads.ci_local.html.md#wads.ci_local.steps_env)(source_env, \*[, defaults, withheld])  | The environment the steps run in, and the names of `source_env` it left out.                                                  |
-| [`subprocess_runner`](_autosummary/wads.ci_local.html.md#wads.ci_local.subprocess_runner)(argv, \*, cwd, env[, ...])     | The default runner: really run `argv`, streaming its output.                                                                  |
-| [`uv_build_args`](_autosummary/wads.ci_local.html.md#wads.ci_local.uv_build_args)(\*[, sdist, wheel])                | `uv build` selection flags for `[tool.wads.ci.build]`.                                                                        |
-| [`venv_python`](_autosummary/wads.ci_local.html.md#wads.ci_local.venv_python)(venv, \*[, platform])                | Path of the interpreter inside a venv directory.                                                                              |
+| [`ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.ci_local)([repo, publish, dry_run, level, no_npm])   | Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.                                               |
+|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| [`plan_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)([repo, publish, config, ...])         | Everything `wads ci-local` would run for `repo`, in order, without running it.                                                |
+| [`pytest_argv`](_autosummary/wads.ci_local.html.md#wads.ci_local.pytest_argv)(config, \*[, repo, pytest_args])        | The pytest arguments `actions/run-tests-uv` builds, in its order.                                                             |
+| [`render_plan`](_autosummary/wads.ci_local.html.md#wads.ci_local.render_plan)(steps)                                  | The plan as numbered lines, flagging non-blocking and side-effecting steps.                                                   |
+| [`resolve_pypi_token`](_autosummary/wads.ci_local.html.md#wads.ci_local.resolve_pypi_token)(\*[, environ, pypirc])           | Find a PyPI API token, most specific source first.                                                                            |
+| [`run_ci_local`](_autosummary/wads.ci_local.html.md#wads.ci_local.run_ci_local)([repo, publish, config, ...])          | Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)'s steps, stop at the first blocking failure, and report. |
+| [`steps_env`](_autosummary/wads.ci_local.html.md#wads.ci_local.steps_env)(source_env, \*[, defaults, withheld])     | The environment the steps run in, and the names of `source_env` it left out.                                                  |
+| [`subprocess_runner`](_autosummary/wads.ci_local.html.md#wads.ci_local.subprocess_runner)(argv, \*, cwd, env[, ...])        | The default runner: really run `argv`, streaming its output.                                                                  |
+| [`tool_problems`](_autosummary/wads.ci_local.html.md#wads.ci_local.tool_problems)(tools, env, \*[, platform, which])    | Why `tools` cannot run with `env`'s `PATH` (the steps' own), with hints.                                                      |
+| [`uv_build_args`](_autosummary/wads.ci_local.html.md#wads.ci_local.uv_build_args)(\*[, sdist, wheel])                   | `uv build` selection flags for `[tool.wads.ci.build]`.                                                                        |
+| [`venv_python`](_autosummary/wads.ci_local.html.md#wads.ci_local.venv_python)(venv, \*[, platform])                   | Path of the interpreter inside a venv directory.                                                                              |
 
 ### Classes
 
@@ -2135,10 +2156,33 @@ The outcome of a `wads ci-local` run, rendered the way CI would summarise it.
 
 The blocking step that failed, if any.
 
+### wads.ci_local.GIT_LS_FILES *= ('git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard')*
+
+tracked, plus untracked but not ignored.
+
+* **Type:**
+  Lists the files to copy for the npm half
+
 ### wads.ci_local.HOST_ONLY_VARS *= ('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE')*
 
 Everything of the dev shell hosted CI does not have; every step runs without it, by
 default (`run_ci_local(host_only_vars=())` keeps it all).
+
+### wads.ci_local.NPM_COMMAND_SHELL *= ('bash', '-e', '-c')*
+
+as the npm workflows’ `run:` steps, which set
+no `shell:`, so Actions runs them with `bash -e {0}` (no pipefail).
+
+* **Type:**
+  How an npm component’s commands run
+
+### wads.ci_local.NPM_COPY_IGNORE *= ('.git', 'node_modules')*
+
+Never copied for the npm half, even when git does not ignore them.
+
+### wads.ci_local.NPM_STEP_KINDS *= ('install', 'lint', 'test', 'build')*
+
+The npm validate job’s commands, in order (fields of `NpmValidateCommands`).
 
 ### *class* wads.ci_local.RunResult(returncode, stdout='')
 
@@ -2146,7 +2190,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 What a runner reports back: the exit code, and stdout when it was captured.
 
-### *class* wads.ci_local.Step(name, argv=(), check=None, description='', blocking=True, side_effect='', capture='', env=())
+### *class* wads.ci_local.Step(name, argv=(), check=None, description='', blocking=True, side_effect='', capture='', env=(), cwd='', requires=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2157,7 +2201,10 @@ One thing CI would do: a command (`argv`) or an in-process `check`.
 after a path separator, or nothing when it has none), filled in at run time. A non-`blocking`
 failure is reported without stopping the run. `capture` names the context value that
 receives the command’s last stdout line. A `check` takes the run context and returns
-an error message, or `None` when it passes.
+an error message, or `None` when it passes. `cwd` is the directory the command
+runs in, relative to the repo (default: the repo); it may hold placeholders.
+`requires` names tools that must be on the steps’ `PATH`: without one, the step
+fails with an install hint, without running.
 
 ### wads.ci_local.WORKDIR_BYTES_PER_PYTHON *= 1000000000*
 
@@ -2179,19 +2226,23 @@ to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).
 
 Prefix of the temporary work directory each run makes (and sweeps when left behind).
 
-### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False, level=None)
+### wads.ci_local.ci_local(repo='.', , publish=False, dry_run=False, level=None, no_npm=False)
 
 Do locally what wads CI would have done, from the repo’s [tool.wads.ci] config.
 
-Lint, tests (a fresh uv venv per configured Python) and build. With –publish, the
+Lint, tests (a fresh uv venv per configured Python), each npm component’s
+install/lint/test/build (per npm-ci\*.yml stub; –no-npm skips them), and build. With
+–publish, the
 publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
 refusing on a dirty tree, off the default branch, or without PyPI credentials. With
 –dry-run, print the plan and run nothing. `--level validate|deploy` names the same
 choice as CI’s on-demand ladder (`deploy` is `--publish`).
 
-### wads.ci_local.plan_ci_local(repo='.', , publish=False, config=None, platform='posix')
+### wads.ci_local.plan_ci_local(repo='.', , publish=False, config=None, platform='posix', npm=True)
 
 Everything `wads ci-local` would run for `repo`, in order, without running it.
+
+`npm=False` leaves out the npm components’ validate steps.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Step`](_autosummary/wads.ci_local.html.md#wads.ci_local.Step)]
@@ -2245,7 +2296,7 @@ Token-only, like CI. The token itself is never printed.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
-### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_only_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE'))
+### wads.ci_local.run_ci_local(repo='.', \*, publish=False, config=None, runner=<function subprocess_runner>, environ=None, out=None, keep_workdir=False, workdir_root=None, host_only_vars=('UV_CONSTRAINT', 'UV_BUILD_CONSTRAINT', 'UV_OVERRIDE', 'PIP_CONSTRAINT', 'PYTHONSAFEPATH', 'PYTHONPATH', 'PYTHONHOME', 'PYTHONOPTIMIZE'), npm=True)
 
 Run [`plan_ci_local()`](_autosummary/wads.ci_local.html.md#wads.ci_local.plan_ci_local)’s steps, stop at the first blocking failure, and report.
 
@@ -2257,7 +2308,7 @@ that the filesystem has room for this run (issue #159).
 (only the upload sees them) and minus `host_only_vars`, what the dev shell has and
 hosted CI does not: install constraints (#191), `PYTHONSAFEPATH` / `PYTHONPATH`
 (#194). Each leg’s tests run with its venv activated (`VIRTUAL_ENV`, its `bin`
-first on `PATH`), as in CI.
+first on `PATH`), as in CI. `npm=False` leaves out the npm components.
 
 * **Return type:**
   [`CILocalReport`](_autosummary/wads.ci_local.html.md#wads.ci_local.CILocalReport)
@@ -2288,6 +2339,20 @@ Refuses outward side effects (upload, push) while pytest is running.
 
 * **Return type:**
   [`RunResult`](_autosummary/wads.ci_local.html.md#wads.ci_local.RunResult)
+
+### wads.ci_local.tool_problems(tools, env, \*, platform='posix', which=<function which>)
+
+Why `tools` cannot run with `env`’s `PATH` (the steps’ own), with hints.
+
+```pycon
+>>> tool_problems(["bash"], {"PATH": "/x"}, which=lambda tool, path: "/bin/bash")
+[]
+>>> tool_problems(["pnpm"], {}, which=lambda tool, path: None)
+['pnpm not on PATH: install pnpm: https://pnpm.io/installation']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.ci_local.uv_build_args(, sdist=True, wheel=True)
 
@@ -5304,19 +5369,34 @@ The reusable workflow (`i2mint/wads/.github/workflows/npm-ci.yml`) parses the
 same block in CI via `node`; this class is the parsing/validation surface used
 from Python (tests, `populate` validation, inspection tooling).
 
+[`npm_components()`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_components) finds a repo’s npm components the way CI does, from the
+`.github/workflows` stubs that call a wads `npm-ci*.yml` reusable workflow, and
+[`npm_validate_commands()`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_validate_commands) says what that workflow’s validate job runs in one of
+them: `wads ci-local` runs exactly that.
+
 ### Module Attributes
 
-| [`NPM_CI_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_CI_DEFAULTS)            | Defaults applied when a field is absent from `wads.ci`.           |
-|-----------------------------------------------------------------------------|-------------------------------------------------------------------|
-| [`SUPPORTED_PACKAGE_MANAGERS`](_autosummary/wads.npm_config.html.md#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS) | Package managers the reusable npm CI workflow knows how to drive. |
-| [`NPM_PUBLISH_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_PUBLISH_DEFAULTS)       | Defaults for the nested `wads.ci.publish` block.                  |
-| [`TRIGGER_MODES`](_autosummary/wads.npm_config.html.md#wads.npm_config.TRIGGER_MODES)              | `wads.ci.trigger.mode` values the reusable workflow understands.  |
-| [`NPM_TRIGGER_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_TRIGGER_DEFAULTS)       | Defaults for the nested `wads.ci.trigger` block.                  |
+| [`NPM_CI_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_CI_DEFAULTS)               | Defaults applied when a field is absent from `wads.ci`.                       |
+|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`NPM_MONOREPO_COMMAND_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_MONOREPO_COMMAND_DEFAULTS) | Command defaults of `npm-ci-monorepo.yml` (pnpm + turbo), which is pnpm-only. |
+| [`PACKAGE_JSON`](_autosummary/wads.npm_config.html.md#wads.npm_config.PACKAGE_JSON)                  | The files the CI workflows look for in a component's directory.               |
+| [`SUPPORTED_PACKAGE_MANAGERS`](_autosummary/wads.npm_config.html.md#wads.npm_config.SUPPORTED_PACKAGE_MANAGERS)    | Package managers the reusable npm CI workflow knows how to drive.             |
+| [`NPM_PUBLISH_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_PUBLISH_DEFAULTS)          | Defaults for the nested `wads.ci.publish` block.                              |
+| [`TRIGGER_MODES`](_autosummary/wads.npm_config.html.md#wads.npm_config.TRIGGER_MODES)                 | `wads.ci.trigger.mode` values the reusable workflow understands.              |
+| [`NPM_TRIGGER_DEFAULTS`](_autosummary/wads.npm_config.html.md#wads.npm_config.NPM_TRIGGER_DEFAULTS)          | Defaults for the nested `wads.ci.trigger` block.                              |
+
+### Functions
+
+| [`npm_components`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_components)([repo_root])                        | The repo's npm components, as CI finds them: sorted [`NpmComponent`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmComponent)s.            |
+|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [`npm_validate_commands`](_autosummary/wads.npm_config.html.md#wads.npm_config.npm_validate_commands)(package_dir, \*[, monorepo]) | What the npm CI validate job runs in `package_dir`, read through [`NpmCIConfig`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmCIConfig). |
 
 ### Classes
 
-| [`NpmCIConfig`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmCIConfig)(package_json_data)   | Typed accessors over a `package.json` `wads.ci` configuration block.   |
-|-----------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| [`NpmCIConfig`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmCIConfig)(package_json_data, \*[, monorepo])   | Typed accessors over a `package.json` `wads.ci` configuration block.        |
+|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`NpmComponent`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmComponent)(dir, workflow[, monorepo])          | An npm component CI validates: one caller of a wads `npm-ci*.yml` workflow. |
+| [`NpmValidateCommands`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmValidateCommands)(package_manager, ...)        | The shell commands the npm validate job runs in a component, in order.      |
 
 ### wads.npm_config.NPM_CI_DEFAULTS *= {'buildCommand': 'npm run build --if-present', 'lintCommand': 'npm run lint --if-present', 'nodeVersions': ['20', '22', '24'], 'packageManager': 'npm', 'publishNode': '24', 'subdir': 'js', 'testCommand': 'npm test --if-present'}*
 
@@ -5326,6 +5406,10 @@ Defaults applied when a field is absent from `wads.ci`.
 an *absent* field triggers auto-detection (a `pnpm-lock.yaml` in the
 package dir selects pnpm); an explicit value always wins. So existing npm
 consumers — no field, no `pnpm-lock.yaml` — keep byte-identical behavior.
+
+### wads.npm_config.NPM_MONOREPO_COMMAND_DEFAULTS *= {'buildCommand': 'pnpm turbo run build', 'lintCommand': 'pnpm turbo run lint', 'packageManager': 'pnpm', 'testCommand': 'pnpm turbo run test'}*
+
+Command defaults of `npm-ci-monorepo.yml` (pnpm + turbo), which is pnpm-only.
 
 ### wads.npm_config.NPM_PUBLISH_DEFAULTS *= {'access': 'public', 'enabled': False, 'marker': '[publish-npm]', 'provenance': True, 'registry': 'https://registry.npmjs.org', 'trustedPublishing': True}*
 
@@ -5337,13 +5421,13 @@ Defaults for the nested `wads.ci.trigger` block. Same values as the Python
 side (`wads.ci_config.DFLT_TRIGGER_MODE` / `DFLT_RUN_CI_MARKER`) so a repo
 with both a pyproject.toml and a package.json can use one marker convention.
 
-### *class* wads.npm_config.NpmCIConfig(package_json_data)
+### *class* wads.npm_config.NpmCIConfig(package_json_data, , monorepo=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Typed accessors over a `package.json` `wads.ci` configuration block.
 
-#### *classmethod* from_file(package_json_path)
+#### *classmethod* from_file(package_json_path, , monorepo=False)
 
 Build from a `package.json` file path (file or its directory).
 
@@ -5366,13 +5450,37 @@ Returns the explicit `wads.ci.packageManager` if set, else the default
 `pnpm-lock.yaml` when the field is absent — this accessor reports only
 the declared value.
 
+#### resolved_package_manager(package_dir)
+
+The package manager CI’s install step uses in `package_dir`.
+
+As the workflow: pnpm for a monorepo; else the declared `packageManager`,
+else pnpm when a `pnpm-lock.yaml` is present, else npm; and anything but
+pnpm takes the npm branch.
+
+```pycon
+>>> NpmCIConfig({}).resolved_package_manager("/nonexistent")
+'npm'
+>>> NpmCIConfig({"wads": {"ci": {"packageManager": "pnpm"}}}).resolved_package_manager(".")
+'pnpm'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 #### *property* run_ci_marker *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 Commit-subject substring that runs CI in `"on-demand"` mode.
 
-Defaults to `"[run ci]"` (same default as the Python side). Must be a
-non-empty single line: an empty marker would match every subject and
-silently turn on-demand back into auto.
+Defaults to `"[run ci]"` (same default as the Python side), also when
+empty, as the workflows’ `runCiMarker || '[run ci]'` reads it. Must be a
+single line, and not blank: a blank marker would match nearly every subject
+and silently turn on-demand back into auto.
+
+```pycon
+>>> NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": ""}}}}).run_ci_marker
+'[run ci]'
+```
 
 #### *property* trigger_mode *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
@@ -5392,6 +5500,26 @@ contains [`run_ci_marker`](_autosummary/wads.npm_config.html.md#wads.npm_config.
 * **Type:**
   When CI runs
 
+### *class* wads.npm_config.NpmComponent(dir, workflow, monorepo=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+An npm component CI validates: one caller of a wads `npm-ci*.yml` workflow.
+
+`dir` is repo-relative POSIX (`"."` for the repo root), `workflow` the
+caller stub’s file name (e.g. `"npm-ci-ts.yml"`), `monorepo` whether it calls
+`npm-ci-monorepo.yml` (pnpm + turbo) rather than `npm-ci.yml`.
+
+### *class* wads.npm_config.NpmValidateCommands(package_manager, install, lint, test, build)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The shell commands the npm validate job runs in a component, in order.
+
+### wads.npm_config.PACKAGE_JSON *= 'package.json'*
+
+The files the CI workflows look for in a component’s directory.
+
 ### wads.npm_config.SUPPORTED_PACKAGE_MANAGERS *= ('npm', 'pnpm')*
 
 Package managers the reusable npm CI workflow knows how to drive.
@@ -5400,6 +5528,63 @@ Package managers the reusable npm CI workflow knows how to drive.
 
 `wads.ci.trigger.mode` values the reusable workflow understands. Mirrors
 `wads.ci_config.TRIGGER_MODES` (the Python/pyproject.toml side).
+
+### wads.npm_config.npm_components(repo_root='.')
+
+The repo’s npm components, as CI finds them: sorted [`NpmComponent`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmComponent)s.
+
+One per job, in a `.github/workflows/*.yml` (or `.yaml`) file, that calls a
+wads `npm-ci*.yml` reusable workflow: its `package-dir` input, or the
+reusable workflow’s default dir when absent ([`wads.npm_trust.wads_reusable_call()`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.wads_reusable_call)).
+An unreadable or invalid workflow file is skipped, and so is a `package-dir`
+holding a `${{ }}` expression (not a directory until Actions evaluates it).
+
+Not deduplicated by dir: one entry per calling stub, so a dir two stubs call
+appears twice (with their two `workflow` names).
+
+```pycon
+>>> import tempfile
+>>> root = Path(tempfile.mkdtemp())
+>>> (root / ".github/workflows").mkdir(parents=True)
+>>> _ = (root / ".github/workflows/npm-ci-ts.yml").write_text(
+...     "jobs:\n  npm-ci:\n"
+...     "    uses: i2mint/wads/.github/workflows/npm-ci.yml@master\n"
+...     "    with:\n      package-dir: ./ts/\n"
+... )
+>>> npm_components(root)
+[NpmComponent(dir='ts', workflow='npm-ci-ts.yml', monorepo=False)]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.npm_config.npm_validate_commands(package_dir, , monorepo=False)
+
+What the npm CI validate job runs in `package_dir`, read through [`NpmCIConfig`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmCIConfig).
+
+`monorepo`: as `npm-ci-monorepo.yml` (pnpm, turbo defaults), else as
+`npm-ci.yml`. pnpm installs with a frozen lockfile when `pnpm-lock.yaml` is
+present and without one otherwise. npm uses `npm ci` when a
+`package-lock.json` is present, else `npm install`: the branch CI’s
+`npm ci || npm install` ends up taking. The trigger block is validated as the
+workflow’s setup job does, so an invalid config fails here as it fails CI
+(`ValueError`; `OSError` / `ValueError` for a missing or broken file).
+
+```pycon
+>>> import tempfile
+>>> d = Path(tempfile.mkdtemp())
+>>> _ = (d / "package.json").write_text('{"wads": {"ci": {"testCommand": "vitest"}}}')
+>>> npm_validate_commands(d)
+NpmValidateCommands(package_manager='npm', install='npm install',
+    lint='npm run lint --if-present', test='vitest',
+    build='npm run build --if-present')
+>>> _ = (d / "pnpm-lock.yaml").write_text("")
+>>> npm_validate_commands(d).install
+'pnpm install --frozen-lockfile'
+```
+
+* **Return type:**
+  [`NpmValidateCommands`](_autosummary/wads.npm_config.html.md#wads.npm_config.NpmValidateCommands)
 
 
 # _autosummary/wads.npm_trust.html.md
@@ -5454,6 +5639,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`github_slug`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.github_slug)([repo_dir, run])                       | `owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.                                                 |
 | [`glob_dirs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.glob_dirs)(root, pattern, \*[, directories])        | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
 | [`has_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.has_trust)(listing, publisher)                      | Whether an `npm trust list` text has an entry naming exactly this repo and workflow.                                      |
+| [`is_monorepo_reusable`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.is_monorepo_reusable)(workflow)                     | Whether a wads reusable workflow is the pnpm + turbo monorepo one.                                                        |
 | [`is_on_npm`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
 | [`job_calls`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
 | [`npm_trust`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.npm_trust)([repo, apply, dry_run, ...])             | Find the npm packages `repo` publishes and attach Trusted Publishers (dry run by default).                                |
@@ -5469,6 +5655,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`survey`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.survey)(publishers, \*[, run, check_npm])           | [`Row`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.Row) per publisher, asking npm once per package unless `check_npm=False`. |
 | [`trust_command`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.trust_command)(publisher)                           | The `npm trust github` call that attaches this publisher.                                                                 |
 | [`trust_listing`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.trust_listing)(package, \*[, run])                  | The text of `npm trust list <package>`, or `None` when it cannot be read.                                                 |
+| [`wads_reusable_call`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.wads_reusable_call)(job)                            | `(reusable workflow, package dir)` when `job` calls a wads `npm-ci*.yml`.                                                 |
 | [`workspace_globs`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_globs)(root)                              | The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).                                          |
 | [`workspace_manifests`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_manifests)(root)                          | `(directory, package.json)` of `root` itself and its workspace members.                                                   |
 | [`workspace_root_of`](_autosummary/wads.npm_trust.html.md#wads.npm_trust.workspace_root_of)(repo, directory)                 | The nearest directory from `directory` up to `repo` that declares workspaces.                                             |
@@ -5604,6 +5791,13 @@ False
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+### wads.npm_trust.is_monorepo_reusable(workflow)
+
+Whether a wads reusable workflow is the pnpm + turbo monorepo one.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 ### wads.npm_trust.is_on_npm(package, \*, run=<function subprocess_run>)
 
 Whether `package` is published (`None`: could not tell, e.g. offline).
@@ -5735,6 +5929,22 @@ The text of `npm trust list <package>`, or `None` when it cannot be read.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.wads_reusable_call(job)
+
+`(reusable workflow, package dir)` when `job` calls a wads `npm-ci*.yml`.
+
+The dir is the job’s `package-dir` input, else the reusable workflow’s default.
+
+```pycon
+>>> wads_reusable_call({"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"})
+('npm-ci.yml', 'js')
+>>> wads_reusable_call({"runs-on": "ubuntu-latest"}) is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.npm_trust.workspace_globs(root)
 
@@ -8484,18 +8694,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-10 09:57 UTC** from commit <a href="https://github.com/i2mint/wads/commit/13881d37a9b35c8eb703d3c735da7db7a3e55dce"><code>13881d3</code></a> on branch <code>master</code>, for **wads 0.2.80** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 10:25 UTC** from commit <a href="https://github.com/i2mint/wads/commit/d37f4b13270328f393835549bf0577bf3d21602a"><code>d37f4b1</code></a> on branch <code>master</code>, for **wads 0.2.81** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.80) is behind the latest release on PyPI (0.2.81): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/13881d37a9b35c8eb703d3c735da7db7a3e55dce"><code>13881d37a9b35c8eb703d3c735da7db7a3e55dce</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/d37f4b13270328f393835549bf0577bf3d21602a"><code>d37f4b13270328f393835549bf0577bf3d21602a</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -8506,9 +8714,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42794539418">42794539418</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42798422762">42798422762</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>13881d37a9b35c8eb703d3c735da7db7a3e55dce</code> (in the history of the built commit) |
+| Event commit | <code>d37f4b13270328f393835549bf0577bf3d21602a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8533,13 +8741,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, newer than the documented version (0.2.80).
+Latest release: <a href="https://pypi.org/project/wads/0.2.81/">0.2.81</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 13881d37a9b35c8eb703d3c735da7db7a3e55dce
+git checkout d37f4b13270328f393835549bf0577bf3d21602a
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

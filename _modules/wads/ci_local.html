@@ -297,7 +297,20 @@
 <span class="sd">   one ``--ignore`` per excluded path, then ``pytest_args``). Then one more such leg per</span>
 <span class="sd">   ``[[tool.wads.ci.testing.pinned]]`` entry, the project and its pins installed in one</span>
 <span class="sd">   resolve and checked with ``uv pip check``, as the validation job's pinned legs do.</span>
-<span class="sd">3. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a</span>
+<span class="sd">3. **npm components** (polyglot repos only): for each ``.github/workflows`` stub that</span>
+<span class="sd">   calls a wads ``npm-ci*.yml`` reusable workflow (:func:`wads.npm_config.npm_components`),</span>
+<span class="sd">   what that workflow's validate job runs in its ``package-dir``</span>
+<span class="sd">   (:func:`wads.npm_config.npm_validate_commands`): the install (``npm ci`` with a</span>
+<span class="sd">   lockfile, else ``npm install``; ``pnpm install``, frozen with a lockfile), then</span>
+<span class="sd">   ``lintCommand``, ``testCommand`` and ``buildCommand``, each through ``bash -e -c`` as</span>
+<span class="sd">   a ``run:`` step. They run in a copy of the repo's files git does not ignore, inside the</span>
+<span class="sd">   temporary directory, so the tree (``node_modules``, a new lockfile) is never touched;</span>
+<span class="sd">   the commands are read from that copy, as CI reads its checkout. The copy has no</span>
+<span class="sd">   ``.git``, so an npm script that calls git sees no repository there. A</span>
+<span class="sd">   missing tool (bash, node, the package manager) fails the step with an install hint;</span>
+<span class="sd">   ``npm=False`` (``--no-npm``) leaves the npm half out. Not run with ``publish=True``:</span>
+<span class="sd">   CI's PyPI publish does not wait on the npm workflow either.</span>
+<span class="sd">4. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a</span>
 <span class="sd">   stale artifact can never be uploaded.</span>
 
 <span class="sd">With ``publish=True`` it does what the publish job does in place of the plain build:</span>
@@ -311,7 +324,8 @@
 <span class="sd">``PYTHONPATH``, ``PYTHONHOME``, ``PYTHONOPTIMIZE``; each leg's tests run with its venv</span>
 <span class="sd">activated, as CI's are), where CI exports only the</span>
 <span class="sd">variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not</span>
-<span class="sd">installed; and lint runs on the tree as it is, where CI formats first.</span>
+<span class="sd">installed; lint runs on the tree as it is, where CI formats first; and an npm component</span>
+<span class="sd">runs once, on the local node, where CI runs once per ``nodeVersions`` entry.</span>
 
 <span class="sd">Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's</span>
 <span class="sd">PID (:mod:`wads.workdirs`), and gives pytest a private ``--basetemp`` inside it, so</span>
@@ -341,11 +355,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PureWindowsPath</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.ci_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRIGGER_LEVELS</span><span class="p">,</span> <span class="n">CIConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.native_build</span><span class="w"> </span><span class="kn">import</span> <span class="n">cargo_test_args</span><span class="p">,</span> <span class="n">native_build_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.npm_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">npm_components</span><span class="p">,</span> <span class="n">npm_validate_commands</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.scripts.pytest_doctest_flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">doctest_optionflags_arg</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.workdirs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BYTES_PER_GB</span><span class="p">,</span>
@@ -374,6 +389,8 @@
 <span class="c1"># ci-local's own pytest --basetemp: private to the run (pytest prunes the shared default</span>
 <span class="c1"># one on startup, deleting a concurrent run's live basetemp), and swept with the workdir.</span>
 <span class="n">PYTEST_BASETEMP</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/pytest"</span>
+<span class="c1"># The copy of the repo the npm components are validated in (never the tree itself).</span>
+<span class="n">NPM_SOURCE_DIR</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">WORKDIR</span><span class="si">}</span><span class="s2">/src"</span>
 <span class="n">_PLACEHOLDER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"&lt;&lt;(\w+)&gt;&gt;"</span><span class="p">)</span>
 
 <span class="c1"># Side-effect classes. The default runner refuses the outward ones under pytest.</span>
@@ -420,10 +437,24 @@
 <span class="c1">#: to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).</span>
 <span class="n">WORKDIR_INODES_PER_PYTHON</span> <span class="o">=</span> <span class="mi">100_000</span>
 
+<span class="c1">#: How an npm component's commands run: as the npm workflows' ``run:`` steps, which set</span>
+<span class="c1">#: no ``shell:``, so Actions runs them with ``bash -e {0}`` (no pipefail).</span>
+<span class="n">NPM_COMMAND_SHELL</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bash"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">)</span>
+<span class="c1">#: Lists the files to copy for the npm half: tracked, plus untracked but not ignored.</span>
+<span class="n">GIT_LS_FILES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"ls-files"</span><span class="p">,</span> <span class="s2">"-z"</span><span class="p">,</span> <span class="s2">"--cached"</span><span class="p">,</span> <span class="s2">"--others"</span><span class="p">,</span> <span class="s2">"--exclude-standard"</span><span class="p">)</span>
+<span class="c1">#: Never copied for the npm half, even when git does not ignore them.</span>
+<span class="n">NPM_COPY_IGNORE</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".git"</span><span class="p">,</span> <span class="s2">"node_modules"</span><span class="p">)</span>
+<span class="c1">#: The npm validate job's commands, in order (fields of ``NpmValidateCommands``).</span>
+<span class="n">NPM_STEP_KINDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="s2">"lint"</span><span class="p">,</span> <span class="s2">"test"</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">)</span>
+
 <span class="n">_INSTALL_HINTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"uv"</span><span class="p">:</span> <span class="s2">"install uv: https://docs.astral.sh/uv/getting-started/installation/"</span><span class="p">,</span>
     <span class="s2">"uvx"</span><span class="p">:</span> <span class="s2">"install uv (it provides uvx): https://docs.astral.sh/uv/getting-started/installation/"</span><span class="p">,</span>
     <span class="s2">"git"</span><span class="p">:</span> <span class="s2">"install git: https://git-scm.com/downloads"</span><span class="p">,</span>
+    <span class="s2">"node"</span><span class="p">:</span> <span class="s2">"install Node.js (it provides npm): https://nodejs.org/en/download"</span><span class="p">,</span>
+    <span class="s2">"npm"</span><span class="p">:</span> <span class="s2">"install Node.js (it provides npm): https://nodejs.org/en/download"</span><span class="p">,</span>
+    <span class="s2">"pnpm"</span><span class="p">:</span> <span class="s2">"install pnpm: https://pnpm.io/installation"</span><span class="p">,</span>
+    <span class="s2">"bash"</span><span class="p">:</span> <span class="s2">"install bash (on Windows, Git for Windows provides it: https://gitforwindows.org)"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -438,7 +469,10 @@
 <span class="sd">    after a path separator, or nothing when it has none), filled in at run time. A non-``blocking``</span>
 <span class="sd">    failure is reported without stopping the run. ``capture`` names the context value that</span>
 <span class="sd">    receives the command's last stdout line. A ``check`` takes the run context and returns</span>
-<span class="sd">    an error message, or ``None`` when it passes.</span>
+<span class="sd">    an error message, or ``None`` when it passes. ``cwd`` is the directory the command</span>
+<span class="sd">    runs in, relative to the repo (default: the repo); it may hold placeholders.</span>
+<span class="sd">    ``requires`` names tools that must be on the steps' ``PATH``: without one, the step</span>
+<span class="sd">    fails with an install hint, without running.</span>
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -449,11 +483,14 @@
     <span class="n">side_effect</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">capture</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">env</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">requires</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">"(check) </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">"</span>
-        <span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span></div>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"cd </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cwd</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="k">else</span> <span class="n">command</span></div>
 
 
 
@@ -586,8 +623,12 @@
     <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CIConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="n">npm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Everything ``wads ci-local`` would run for ``repo``, in order, without running it."""</span>
+<span class="w">    </span><span class="sd">"""Everything ``wads ci-local`` would run for ``repo``, in order, without running it.</span>
+
+<span class="sd">    ``npm=False`` leaves out the npm components' validate steps.</span>
+<span class="sd">    """</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">=</span> <span class="n">_publish_preconditions</span><span class="p">()</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="p">[]</span>
@@ -597,6 +638,8 @@
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_rust_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_pinned_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">platform</span><span class="o">=</span><span class="n">platform</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">npm</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">publish</span><span class="p">:</span>
+        <span class="n">steps</span> <span class="o">+=</span> <span class="n">_npm_steps</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">steps</span> <span class="o">+=</span> <span class="n">_release_steps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span> <span class="k">if</span> <span class="n">publish</span> <span class="k">else</span> <span class="n">_build_steps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">steps</span></div>
 
@@ -817,6 +860,114 @@
             <span class="n">description</span><span class="o">=</span><span class="s2">"cargo test on the pure-Rust crates (not the binding one)"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_npm_steps</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The npm CI workflows' validate job, per npm component of a polyglot repo (#213),</span>
+<span class="sd">    in a copy of the repo inside the workdir.</span>
+
+<span class="sd">    The commands are read from the copy, at run time (``npm &lt;dir&gt;: config``), not from</span>
+<span class="sd">    the tree: a gitignored lockfile in the tree is not in the copy, nor in CI's checkout.</span>
+<span class="sd">    """</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">npm_components</span><span class="p">(</span><span class="n">repo</span><span class="p">):</span>
+        <span class="c1"># One run per (dir, workflow kind), however many stubs call it.</span>
+        <span class="n">components</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">component</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="n">component</span><span class="o">.</span><span class="n">monorepo</span><span class="p">),</span> <span class="n">component</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"npm: copy the repo"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">_copy_repo_for_npm</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">"copy the files git does not ignore to </span><span class="si">{</span><span class="n">NPM_SOURCE_DIR</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">directory</span> <span class="k">for</span> <span class="n">directory</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">components</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">((</span><span class="n">directory</span><span class="p">,</span> <span class="n">monorepo</span><span class="p">),</span> <span class="n">component</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"npm </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">dirs</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># one dir, called as single and as monorepo</span>
+            <span class="n">label</span> <span class="o">+=</span> <span class="s2">" (monorepo)"</span> <span class="k">if</span> <span class="n">monorepo</span> <span class="k">else</span> <span class="s2">" (single)"</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">NPM_SOURCE_DIR</span> <span class="k">if</span> <span class="n">directory</span> <span class="o">==</span> <span class="s2">"."</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">NPM_SOURCE_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"npm</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Step</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: config"</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="n">_npm_config_check</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"read wads.ci from the copy's </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">/package.json, "</span>
+                    <span class="sa">f</span><span class="s2">"as </span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">workflow</span><span class="si">}</span><span class="s2"> does"</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">NPM_STEP_KINDS</span><span class="p">:</span>
+            <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Step</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="p">(</span><span class="o">*</span><span class="n">NPM_COMMAND_SHELL</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"&lt;&lt;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">&gt;&gt;"</span><span class="p">),</span>
+                    <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
+                    <span class="n">requires</span><span class="o">=</span><span class="p">(</span><span class="s2">"bash"</span><span class="p">,</span> <span class="s2">"node"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"&lt;&lt;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_manager&gt;&gt;"</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">steps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_npm_config_check</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A check reading ``component``'s commands from the copy into ``&lt;&lt;key_*&gt;&gt;`` values."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">commands</span> <span class="o">=</span> <span class="n">npm_validate_commands</span><span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="n">_fill</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)),</span> <span class="n">monorepo</span><span class="o">=</span><span class="n">component</span><span class="o">.</span><span class="n">monorepo</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">workflow</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_manager"</span><span class="p">]</span> <span class="o">=</span> <span class="n">commands</span><span class="o">.</span><span class="n">package_manager</span>
+        <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">NPM_STEP_KINDS</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">commands</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">check</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ignored_for_npm</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a repo-relative path lies under a ``NPM_COPY_IGNORE`` directory."""</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">part</span> <span class="ow">in</span> <span class="n">NPM_COPY_IGNORE</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_copy_repo_for_npm</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Copy what a checkout would hold (git's view of the tree) to ``NPM_SOURCE_DIR``.</span>
+
+<span class="sd">    The npm install and builds write in their directory; in the copy they cannot touch</span>
+<span class="sd">    the developer's tree. Untracked files git does not ignore are included, as the</span>
+<span class="sd">    Python legs test the tree as it is; never anything under ``NPM_COPY_IGNORE`` (a</span>
+<span class="sd">    ``node_modules`` the repo forgot to ignore), and, outside git, everything else.</span>
+<span class="sd">    """</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">_fill</span><span class="p">(</span><span class="n">NPM_SOURCE_DIR</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">listing</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">GIT_LS_FILES</span><span class="p">,</span> <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">listing</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+                <span class="n">dest</span><span class="p">,</span>
+                <span class="n">symlinks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">ignore</span><span class="o">=</span><span class="n">shutil</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">(</span><span class="o">*</span><span class="n">NPM_COPY_IGNORE</span><span class="p">),</span>
+                <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">"not a git checkout: the npm components ran in a full copy"</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">listing</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\0</span><span class="s2">"</span><span class="p">)):</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">repo</span> <span class="o">/</span> <span class="n">name</span>
+            <span class="k">if</span> <span class="n">_ignored_for_npm</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">source</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()):</span>
+                <span class="k">continue</span>  <span class="c1"># node_modules, deleted from the tree, or a submodule</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">dest</span> <span class="o">/</span> <span class="n">name</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">follow_symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">shutil</span><span class="o">.</span><span class="n">Error</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"could not copy the repo for the npm components: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_test_steps</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Step</span><span class="p">]:</span>
@@ -1092,16 +1243,55 @@
     <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">""</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_wsl_launcher</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a Windows ``bash`` is System32's WSL launcher, not a real bash."""</span>
+    <span class="k">return</span> <span class="s2">"system32"</span> <span class="ow">in</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">PureWindowsPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="tool_problems">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_local.html#wads.ci_local.tool_problems">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tool_problems</span><span class="p">(</span>
+    <span class="n">tools</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="n">which</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Why ``tools`` cannot run with ``env``'s ``PATH`` (the steps' own), with hints.</span>
+
+<span class="sd">    &gt;&gt;&gt; tool_problems(["bash"], {"PATH": "/x"}, which=lambda tool, path: "/bin/bash")</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; tool_problems(["pnpm"], {}, which=lambda tool, path: None)</span>
+<span class="sd">    ['pnpm not on PATH: install pnpm: https://pnpm.io/installation']</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>  <span class="c1"># not None: that would search the host's PATH instead</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">tools</span><span class="p">):</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">_INSTALL_HINTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tool</span><span class="si">}</span><span class="s2"> not on PATH"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">": </span><span class="si">{</span><span class="n">hint</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">hint</span> <span class="k">else</span> <span class="s2">""</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">tool</span> <span class="o">==</span> <span class="s2">"bash"</span> <span class="ow">and</span> <span class="n">platform</span> <span class="o">==</span> <span class="s2">"nt"</span> <span class="ow">and</span> <span class="n">_is_wsl_launcher</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"bash on PATH is the WSL launcher (</span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2">), not a bash: put Git "</span>
+                <span class="s2">"Bash first on PATH (https://gitforwindows.org)"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">problems</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_execute</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="n">Step</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">_Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">error</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">FAILED</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">if</span> <span class="n">error</span> <span class="k">else</span> <span class="p">(</span><span class="n">PASSED</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">_fill</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">argv</span><span class="p">]</span>
     <span class="n">env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
     <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">_fill</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">env</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">problems</span> <span class="o">:=</span> <span class="n">tool_problems</span><span class="p">([</span><span class="n">_fill</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">requires</span><span class="p">],</span> <span class="n">env</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FAILED</span><span class="p">,</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">_fill</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">argv</span><span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">runner</span><span class="p">(</span>
         <span class="n">argv</span><span class="p">,</span>
-        <span class="n">cwd</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">repo</span> <span class="o">/</span> <span class="n">_fill</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">cwd</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">cwd</span> <span class="k">else</span> <span class="n">ctx</span><span class="o">.</span><span class="n">repo</span><span class="p">,</span>
         <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
         <span class="n">capture</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">capture</span><span class="p">),</span>
         <span class="n">side_effect</span><span class="o">=</span><span class="n">step</span><span class="o">.</span><span class="n">side_effect</span><span class="p">,</span>
@@ -1277,6 +1467,7 @@
     <span class="n">keep_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">workdir_root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">host_only_vars</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">HOST_ONLY_VARS</span><span class="p">,</span>
+    <span class="n">npm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CILocalReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.</span>
 
@@ -1288,12 +1479,12 @@
 <span class="sd">    (only the upload sees them) and minus ``host_only_vars``, what the dev shell has and</span>
 <span class="sd">    hosted CI does not: install constraints (#191), ``PYTHONSAFEPATH`` / ``PYTHONPATH``</span>
 <span class="sd">    (#194). Each leg's tests run with its venv activated (``VIRTUAL_ENV``, its ``bin``</span>
-<span class="sd">    first on ``PATH``), as in CI.</span>
+<span class="sd">    first on ``PATH``), as in CI. ``npm=False`` leaves out the npm components.</span>
 <span class="sd">    """</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">CIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-    <span class="n">steps</span> <span class="o">=</span> <span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">npm</span><span class="o">=</span><span class="n">npm</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">n_venvs</span> <span class="o">:=</span> <span class="n">_venv_count</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
         <span class="n">steps</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_temp_space_step</span><span class="p">(</span><span class="n">n_venvs</span><span class="p">))</span>
     <span class="n">source_env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span><span class="p">)</span>
@@ -1397,10 +1588,13 @@
     <span class="n">publish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">no_npm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.</span>
 
-<span class="sd">    Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the</span>
+<span class="sd">    Lint, tests (a fresh uv venv per configured Python), each npm component's</span>
+<span class="sd">    install/lint/test/build (per npm-ci*.yml stub; --no-npm skips them), and build. With</span>
+<span class="sd">    --publish, the</span>
 <span class="sd">    publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,</span>
 <span class="sd">    refusing on a dirty tree, off the default branch, or without PyPI credentials. With</span>
 <span class="sd">    --dry-run, print the plan and run nothing. ``--level validate|deploy`` names the same</span>
@@ -1415,9 +1609,9 @@
             <span class="p">)</span>
         <span class="n">publish</span> <span class="o">=</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"deploy"</span>
     <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">render_plan</span><span class="p">(</span><span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">render_plan</span><span class="p">(</span><span class="n">plan_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">npm</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_npm</span><span class="p">)))</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">run_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">run_ci_local</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">publish</span><span class="o">=</span><span class="n">publish</span><span class="p">,</span> <span class="n">npm</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_npm</span><span class="p">)</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -1449,7 +1643,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2ff91030"></script>
+</div><script src="../../_static/documentation_options.js?v=86b96456"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

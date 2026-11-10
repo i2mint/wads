@@ -1015,19 +1015,51 @@
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span> <span class="k">if</span> <span class="n">environment</span> <span class="k">else</span> <span class="s2">""</span>
 
 
+<div class="viewcode-block" id="is_monorepo_reusable">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.is_monorepo_reusable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_monorepo_reusable</span><span class="p">(</span><span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a wads reusable workflow is the pnpm + turbo monorepo one."""</span>
+    <span class="k">return</span> <span class="s2">"monorepo"</span> <span class="ow">in</span> <span class="n">workflow</span></div>
+
+
+
+<div class="viewcode-block" id="wads_reusable_call">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.wads_reusable_call">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">wads_reusable_call</span><span class="p">(</span><span class="n">job</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(reusable workflow, package dir)`` when ``job`` calls a wads ``npm-ci*.yml``.</span>
+
+<span class="sd">    The dir is the job's ``package-dir`` input, else the reusable workflow's default.</span>
+
+<span class="sd">    &gt;&gt;&gt; wads_reusable_call({"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"})</span>
+<span class="sd">    ('npm-ci.yml', 'js')</span>
+<span class="sd">    &gt;&gt;&gt; wads_reusable_call({"runs-on": "ubuntu-latest"}) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_WADS_REUSABLE_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">workflow</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"package-dir"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">WADS_REUSABLE_DEFAULT_DIR</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">directory</span></div>
+
+
+
 <div class="viewcode-block" id="job_calls">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_trust.html#wads.npm_trust.job_calls">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">job_calls</span><span class="p">(</span><span class="n">job</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">scripts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PublishCall</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The publish calls of a workflow job: its ``run`` steps, changesets, a wads caller."""</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">_WADS_REUSABLE_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uses"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)))</span>
-    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-        <span class="n">workflow</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"with"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">directory</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"package-dir"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">WADS_REUSABLE_DEFAULT_DIR</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
-        <span class="p">)</span>
+    <span class="n">wads_call</span> <span class="o">=</span> <span class="n">wads_reusable_call</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wads_call</span><span class="p">:</span>
+        <span class="n">workflow</span><span class="p">,</span> <span class="n">directory</span> <span class="o">=</span> <span class="n">wads_call</span>
         <span class="k">return</span> <span class="p">[</span>
-            <span class="n">PublishCall</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">everything</span><span class="o">=</span><span class="s2">"monorepo"</span> <span class="ow">in</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">wads_caller</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">PublishCall</span><span class="p">(</span>
+                <span class="n">directory</span><span class="p">,</span>
+                <span class="n">everything</span><span class="o">=</span><span class="n">is_monorepo_reusable</span><span class="p">(</span><span class="n">workflow</span><span class="p">),</span>
+                <span class="n">wads_caller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">]</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"defaults"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">calls</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1520,7 +1552,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2ff91030"></script>
+</div><script src="../../_static/documentation_options.js?v=86b96456"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -48,6 +48,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`github_slug`](#wads.npm_trust.github_slug)([repo_dir, run])                       | `owner/name` of the `origin` remote of `repo_dir`, if it is a GitHub one.                                                 |
 | [`glob_dirs`](#wads.npm_trust.glob_dirs)(root, pattern, \*[, directories])        | Directories under `root` matching a workspace glob, never entering `node_modules`.                                        |
 | [`has_trust`](#wads.npm_trust.has_trust)(listing, publisher)                      | Whether an `npm trust list` text has an entry naming exactly this repo and workflow.                                      |
+| [`is_monorepo_reusable`](#wads.npm_trust.is_monorepo_reusable)(workflow)                     | Whether a wads reusable workflow is the pnpm + turbo monorepo one.                                                        |
 | [`is_on_npm`](#wads.npm_trust.is_on_npm)(package, \*[, run])                      | Whether `package` is published (`None`: could not tell, e.g. offline).                                                    |
 | [`job_calls`](#wads.npm_trust.job_calls)(job, scripts)                            | The publish calls of a workflow job: its `run` steps, changesets, a wads caller.                                          |
 | [`npm_trust`](#wads.npm_trust.npm_trust)([repo, apply, dry_run, ...])             | Find the npm packages `repo` publishes and attach Trusted Publishers (dry run by default).                                |
@@ -63,6 +64,7 @@ Everything that touches the world (`npm`, `git`) goes through one injectable
 | [`survey`](#wads.npm_trust.survey)(publishers, \*[, run, check_npm])           | [`Row`](#wads.npm_trust.Row) per publisher, asking npm once per package unless `check_npm=False`. |
 | [`trust_command`](#wads.npm_trust.trust_command)(publisher)                           | The `npm trust github` call that attaches this publisher.                                                                 |
 | [`trust_listing`](#wads.npm_trust.trust_listing)(package, \*[, run])                  | The text of `npm trust list <package>`, or `None` when it cannot be read.                                                 |
+| [`wads_reusable_call`](#wads.npm_trust.wads_reusable_call)(job)                            | `(reusable workflow, package dir)` when `job` calls a wads `npm-ci*.yml`.                                                 |
 | [`workspace_globs`](#wads.npm_trust.workspace_globs)(root)                              | The workspace patterns of the package at `root` (npm/yarn `workspaces` or pnpm).                                          |
 | [`workspace_manifests`](#wads.npm_trust.workspace_manifests)(root)                          | `(directory, package.json)` of `root` itself and its workspace members.                                                   |
 | [`workspace_root_of`](#wads.npm_trust.workspace_root_of)(repo, directory)                 | The nearest directory from `directory` up to `repo` that declares workspaces.                                             |
@@ -198,6 +200,13 @@ False
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+### wads.npm_trust.is_monorepo_reusable(workflow)
+
+Whether a wads reusable workflow is the pnpm + turbo monorepo one.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 ### wads.npm_trust.is_on_npm(package, \*, run=<function subprocess_run>)
 
 Whether `package` is published (`None`: could not tell, e.g. offline).
@@ -329,6 +338,22 @@ The text of `npm trust list <package>`, or `None` when it cannot be read.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.npm_trust.wads_reusable_call(job)
+
+`(reusable workflow, package dir)` when `job` calls a wads `npm-ci*.yml`.
+
+The dir is the job’s `package-dir` input, else the reusable workflow’s default.
+
+```pycon
+>>> wads_reusable_call({"uses": "i2mint/wads/.github/workflows/npm-ci.yml@master"})
+('npm-ci.yml', 'js')
+>>> wads_reusable_call({"runs-on": "ubuntu-latest"}) is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### wads.npm_trust.workspace_globs(root)
 

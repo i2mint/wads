@@ -305,14 +305,25 @@
 <span class="sd">The reusable workflow (``i2mint/wads/.github/workflows/npm-ci.yml``) parses the</span>
 <span class="sd">same block in CI via ``node``; this class is the parsing/validation surface used</span>
 <span class="sd">from Python (tests, ``populate`` validation, inspection tooling).</span>
+
+<span class="sd">:func:`npm_components` finds a repo's npm components the way CI does, from the</span>
+<span class="sd">``.github/workflows`` stubs that call a wads ``npm-ci*.yml`` reusable workflow, and</span>
+<span class="sd">:func:`npm_validate_commands` says what that workflow's validate job runs in one of</span>
+<span class="sd">them: ``wads ci-local`` runs exactly that.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.npm_trust</span><span class="w"> </span><span class="kn">import</span> <span class="n">WORKFLOWS_DIR</span><span class="p">,</span> <span class="n">is_monorepo_reusable</span><span class="p">,</span> <span class="n">wads_reusable_call</span>
 
 <span class="c1">#: Defaults applied when a field is absent from ``wads.ci``.</span>
 <span class="c1">#:</span>
@@ -329,6 +340,19 @@
     <span class="s2">"testCommand"</span><span class="p">:</span> <span class="s2">"npm test --if-present"</span><span class="p">,</span>
     <span class="s2">"buildCommand"</span><span class="p">:</span> <span class="s2">"npm run build --if-present"</span><span class="p">,</span>
 <span class="p">}</span>
+
+<span class="c1">#: Command defaults of ``npm-ci-monorepo.yml`` (pnpm + turbo), which is pnpm-only.</span>
+<span class="n">NPM_MONOREPO_COMMAND_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"packageManager"</span><span class="p">:</span> <span class="s2">"pnpm"</span><span class="p">,</span>
+    <span class="s2">"lintCommand"</span><span class="p">:</span> <span class="s2">"pnpm turbo run lint"</span><span class="p">,</span>
+    <span class="s2">"testCommand"</span><span class="p">:</span> <span class="s2">"pnpm turbo run test"</span><span class="p">,</span>
+    <span class="s2">"buildCommand"</span><span class="p">:</span> <span class="s2">"pnpm turbo run build"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: The files the CI workflows look for in a component's directory.</span>
+<span class="n">PACKAGE_JSON</span> <span class="o">=</span> <span class="s2">"package.json"</span>
+<span class="n">NPM_LOCKFILE</span> <span class="o">=</span> <span class="s2">"package-lock.json"</span>
+<span class="n">PNPM_LOCKFILE</span> <span class="o">=</span> <span class="s2">"pnpm-lock.yaml"</span>
 
 <span class="c1">#: Package managers the reusable npm CI workflow knows how to drive.</span>
 <span class="n">SUPPORTED_PACKAGE_MANAGERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"npm"</span><span class="p">,</span> <span class="s2">"pnpm"</span><span class="p">)</span>
@@ -361,8 +385,15 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">NpmCIConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Typed accessors over a ``package.json`` ``wads.ci`` configuration block."""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package_json_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package_json_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">monorepo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""``monorepo``: read as ``npm-ci-monorepo.yml`` does (pnpm, turbo commands)."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">package_json_data</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span><span class="o">**</span><span class="n">NPM_CI_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">NPM_MONOREPO_COMMAND_DEFAULTS</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">monorepo</span>
+            <span class="k">else</span> <span class="n">NPM_CI_DEFAULTS</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monorepo</span> <span class="o">=</span> <span class="n">monorepo</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_publish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trigger"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -370,14 +401,20 @@
 <div class="viewcode-block" id="NpmCIConfig.from_file">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.NpmCIConfig.from_file">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">package_json_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"NpmCIConfig"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">package_json_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">monorepo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"NpmCIConfig"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Build from a ``package.json`` file path (file or its directory)."""</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">package_json_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">"package.json"</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="n">PACKAGE_JSON</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span></div>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">monorepo</span><span class="o">=</span><span class="n">monorepo</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""``wads.ci.&lt;key&gt;``, or its default when absent or empty (CI's ``x || default``)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
 <div class="viewcode-block" id="NpmCIConfig.has_ci_config">
 <a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.NpmCIConfig.has_ci_config">[docs]</a>
@@ -411,7 +448,31 @@
 <span class="sd">        ``pnpm-lock.yaml`` when the field is absent — this accessor reports only</span>
 <span class="sd">        the declared value.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"packageManager"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"packageManager"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">monorepo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="p">[</span><span class="s2">"packageManager"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s2">"packageManager"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NpmCIConfig.resolved_package_manager">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.NpmCIConfig.resolved_package_manager">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolved_package_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The package manager CI's install step uses in ``package_dir``.</span>
+
+<span class="sd">        As the workflow: pnpm for a monorepo; else the declared ``packageManager``,</span>
+<span class="sd">        else pnpm when a ``pnpm-lock.yaml`` is present, else npm; and anything but</span>
+<span class="sd">        pnpm takes the npm branch.</span>
+
+<span class="sd">        &gt;&gt;&gt; NpmCIConfig({}).resolved_package_manager("/nonexistent")</span>
+<span class="sd">        'npm'</span>
+<span class="sd">        &gt;&gt;&gt; NpmCIConfig({"wads": {"ci": {"packageManager": "pnpm"}}}).resolved_package_manager(".")</span>
+<span class="sd">        'pnpm'</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">monorepo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"pnpm"</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"packageManager"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="s2">"pnpm"</span> <span class="k">if</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">PNPM_LOCKFILE</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"npm"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"pnpm"</span> <span class="k">if</span> <span class="n">declared</span> <span class="o">==</span> <span class="s2">"pnpm"</span> <span class="k">else</span> <span class="s2">"npm"</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
@@ -423,15 +484,15 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">lint_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lintCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"lintCommand"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s2">"lintCommand"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"testCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"testCommand"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s2">"testCommand"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ci</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"buildCommand"</span><span class="p">,</span> <span class="n">NPM_CI_DEFAULTS</span><span class="p">[</span><span class="s2">"buildCommand"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s2">"buildCommand"</span><span class="p">)</span>
 
     <span class="c1"># --- ci.publish.* ---</span>
 
@@ -478,7 +539,8 @@
 <span class="sd">        &gt;&gt;&gt; NpmCIConfig({"wads": {"ci": {"trigger": {"mode": "on-demand"}}}}).trigger_mode</span>
 <span class="sd">        'on-demand'</span>
 <span class="sd">        """</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">])</span>
+        <span class="c1"># `trig.mode || 'auto'`, as the workflows read it: empty means unset.</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRIGGER_MODES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"wads.ci.trigger.mode must be one of </span><span class="si">{</span><span class="n">TRIGGER_MODES</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2">"</span>
@@ -489,17 +551,151 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">run_ci_marker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Commit-subject substring that runs CI in ``"on-demand"`` mode.</span>
 
-<span class="sd">        Defaults to ``"[run ci]"`` (same default as the Python side). Must be a</span>
-<span class="sd">        non-empty single line: an empty marker would match every subject and</span>
-<span class="sd">        silently turn on-demand back into auto.</span>
+<span class="sd">        Defaults to ``"[run ci]"`` (same default as the Python side), also when</span>
+<span class="sd">        empty, as the workflows' ``runCiMarker || '[run ci]'`` reads it. Must be a</span>
+<span class="sd">        single line, and not blank: a blank marker would match nearly every subject</span>
+<span class="sd">        and silently turn on-demand back into auto.</span>
+
+<span class="sd">        &gt;&gt;&gt; NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": ""}}}}).run_ci_marker</span>
+<span class="sd">        '[run ci]'</span>
 <span class="sd">        """</span>
-        <span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"runCiMarker"</span><span class="p">,</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"runCiMarker"</span><span class="p">])</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trigger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"runCiMarker"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">NPM_TRIGGER_DEFAULTS</span><span class="p">[</span><span class="s2">"runCiMarker"</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">marker</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">marker</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">"wads.ci.trigger.runCiMarker must be a non-empty, single-line "</span>
                 <span class="sa">f</span><span class="s2">"string, got </span><span class="si">{</span><span class="n">marker</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">marker</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Components in a (polyglot) repo, and what CI validates in each</span>
+
+
+<div class="viewcode-block" id="NpmComponent">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.NpmComponent">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NpmComponent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An npm component CI validates: one caller of a wads ``npm-ci*.yml`` workflow.</span>
+
+<span class="sd">    ``dir`` is repo-relative POSIX (``"."`` for the repo root), ``workflow`` the</span>
+<span class="sd">    caller stub's file name (e.g. ``"npm-ci-ts.yml"``), ``monorepo`` whether it calls</span>
+<span class="sd">    ``npm-ci-monorepo.yml`` (pnpm + turbo) rather than ``npm-ci.yml``.</span>
+<span class="sd">    """</span>
+
+    <span class="nb">dir</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">workflow</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">monorepo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="npm_components">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.npm_components">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">npm_components</span><span class="p">(</span><span class="n">repo_root</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The repo's npm components, as CI finds them: sorted :class:`NpmComponent`\\ s.</span>
+
+<span class="sd">    One per job, in a ``.github/workflows/*.yml`` (or ``.yaml``) file, that calls a</span>
+<span class="sd">    wads ``npm-ci*.yml`` reusable workflow: its ``package-dir`` input, or the</span>
+<span class="sd">    reusable workflow's default dir when absent (:func:`wads.npm_trust.wads_reusable_call`).</span>
+<span class="sd">    An unreadable or invalid workflow file is skipped, and so is a ``package-dir``</span>
+<span class="sd">    holding a ``${{ }}`` expression (not a directory until Actions evaluates it).</span>
+
+<span class="sd">    Not deduplicated by dir: one entry per calling stub, so a dir two stubs call</span>
+<span class="sd">    appears twice (with their two ``workflow`` names).</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; root = Path(tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; (root / ".github/workflows").mkdir(parents=True)</span>
+<span class="sd">    &gt;&gt;&gt; _ = (root / ".github/workflows/npm-ci-ts.yml").write_text(</span>
+<span class="sd">    ...     "jobs:\\n  npm-ci:\\n"</span>
+<span class="sd">    ...     "    uses: i2mint/wads/.github/workflows/npm-ci.yml@master\\n"</span>
+<span class="sd">    ...     "    with:\\n      package-dir: ./ts/\\n"</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; npm_components(root)</span>
+<span class="sd">    [NpmComponent(dir='ts', workflow='npm-ci-ts.yml', monorepo=False)]</span>
+<span class="sd">    """</span>
+    <span class="n">workflows_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_root</span><span class="p">)</span> <span class="o">/</span> <span class="n">WORKFLOWS_DIR</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">workflows_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.yml"</span><span class="p">),</span> <span class="o">*</span><span class="n">workflows_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.yaml"</span><span class="p">)]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jobs"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="p">(</span><span class="n">jobs</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">call</span> <span class="o">=</span> <span class="n">wads_reusable_call</span><span class="p">(</span><span class="n">job</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">call</span> <span class="ow">and</span> <span class="s2">"${{"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">call</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">reusable</span><span class="p">,</span> <span class="n">directory</span> <span class="o">=</span> <span class="n">call</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">NpmComponent</span><span class="p">(</span>
+                        <span class="n">posixpath</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span>
+                        <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">is_monorepo_reusable</span><span class="p">(</span><span class="n">reusable</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">workflow</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="NpmValidateCommands">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.NpmValidateCommands">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NpmValidateCommands</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The shell commands the npm validate job runs in a component, in order."""</span>
+
+    <span class="n">package_manager</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">install</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">lint</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">test</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">build</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<div class="viewcode-block" id="npm_validate_commands">
+<a class="viewcode-back" href="../../_autosummary/wads.npm_config.html#wads.npm_config.npm_validate_commands">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">npm_validate_commands</span><span class="p">(</span>
+    <span class="n">package_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">monorepo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NpmValidateCommands</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the npm CI validate job runs in ``package_dir``, read through :class:`NpmCIConfig`.</span>
+
+<span class="sd">    ``monorepo``: as ``npm-ci-monorepo.yml`` (pnpm, turbo defaults), else as</span>
+<span class="sd">    ``npm-ci.yml``. pnpm installs with a frozen lockfile when ``pnpm-lock.yaml`` is</span>
+<span class="sd">    present and without one otherwise. npm uses ``npm ci`` when a</span>
+<span class="sd">    ``package-lock.json`` is present, else ``npm install``: the branch CI's</span>
+<span class="sd">    ``npm ci || npm install`` ends up taking. The trigger block is validated as the</span>
+<span class="sd">    workflow's setup job does, so an invalid config fails here as it fails CI</span>
+<span class="sd">    (``ValueError``; ``OSError`` / ``ValueError`` for a missing or broken file).</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = Path(tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; _ = (d / "package.json").write_text('{"wads": {"ci": {"testCommand": "vitest"}}}')</span>
+<span class="sd">    &gt;&gt;&gt; npm_validate_commands(d)  # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">    NpmValidateCommands(package_manager='npm', install='npm install',</span>
+<span class="sd">        lint='npm run lint --if-present', test='vitest',</span>
+<span class="sd">        build='npm run build --if-present')</span>
+<span class="sd">    &gt;&gt;&gt; _ = (d / "pnpm-lock.yaml").write_text("")</span>
+<span class="sd">    &gt;&gt;&gt; npm_validate_commands(d).install</span>
+<span class="sd">    'pnpm install --frozen-lockfile'</span>
+<span class="sd">    """</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">NpmCIConfig</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">monorepo</span><span class="o">=</span><span class="n">monorepo</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">trigger_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">run_ci_marker</span>  <span class="c1"># raise as CI's setup job would</span>
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">resolved_package_manager</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">manager</span> <span class="o">==</span> <span class="s2">"pnpm"</span><span class="p">:</span>
+        <span class="n">frozen</span> <span class="o">=</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">PNPM_LOCKFILE</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+        <span class="n">install</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"pnpm install </span><span class="si">{</span><span class="s1">'--frozen-lockfile'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">frozen</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'--no-frozen-lockfile'</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">install</span> <span class="o">=</span> <span class="s2">"npm ci"</span> <span class="k">if</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">NPM_LOCKFILE</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"npm install"</span>
+    <span class="k">return</span> <span class="n">NpmValidateCommands</span><span class="p">(</span>
+        <span class="n">package_manager</span><span class="o">=</span><span class="n">manager</span><span class="p">,</span>
+        <span class="n">install</span><span class="o">=</span><span class="n">install</span><span class="p">,</span>
+        <span class="n">lint</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">lint_command</span><span class="p">,</span>
+        <span class="n">test</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">test_command</span><span class="p">,</span>
+        <span class="n">build</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">build_command</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 </pre></div>
         </article>
@@ -529,7 +725,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=2ff91030"></script>
+</div><script src="../../_static/documentation_options.js?v=86b96456"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
