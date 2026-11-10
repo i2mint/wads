@@ -353,6 +353,8 @@ jobs:
           # npm runs in an empty directory, so no project config is picked up.
           WORK=$(mktemp -d)
           cd "$WORK"
+          PUBLISHED=0
+          SKIPPED=()
           for f in "${TGZS[@]}"; do
             # Defense in depth only (GNU tar can stop listing early); the real
             # guard is MANIFEST_CHECK, which reads the manifest with npm's own
@@ -367,11 +369,25 @@ jobs:
             fi
             read -r NAME VER < <(node -e "$MANIFEST_CHECK" "$ART/$f" "$REGISTRY")
             [ -n "$VER" ] || exit 1
-            # Idempotent: skip a version already on the registry (no 403 on
-            # re-run, no auto-bump), as before.
+            # Skip a version already on the registry (no 403 on re-run, no
+            # auto-bump): in a monorepo, unchanged packages keep their version.
             if npm view -- "$NAME@$VER" version >/dev/null 2>&1; then
               echo "Version $NAME@$VER already published; skipping."
+              SKIPPED+=("$NAME@$VER")
               continue
             fi
             npm publish "$ART/$f" --ignore-scripts $PROV --access "$ACCESS"
+            PUBLISHED=$((PUBLISHED + 1))
           done
+          # The commit asked for a release ([publish-npm]) and nothing was
+          # released: every version was already on npm, so someone forgot to
+          # bump. Fail rather than stay green (#210). A re-run of a run that
+          # did publish finds its own versions there, so it only warns.
+          if [ "$PUBLISHED" -eq 0 ]; then
+            MSG="nothing published: ${SKIPPED[*]} already on npm. Bump the version (or set [tool.wads.ci.version].sync in pyproject.toml so the Python release writes it) and push again with the publish marker."
+            if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then
+              echo "::warning::$MSG (re-run attempt $GITHUB_RUN_ATTEMPT)"
+            else
+              echo "::error::$MSG"; exit 1
+            fi
+          fi

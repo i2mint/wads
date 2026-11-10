@@ -1,0 +1,26 @@
+name: 'Sync version into other manifests'
+description: 'Write the release version into each manifest [tool.wads.ci.version].sync lists (e.g. ts/package.json and its package-lock.json), so the bump commit carries them all (i2mint/wads#210).'
+branding:
+  icon: 'link'
+  color: 'blue'
+
+inputs:
+  version:
+    description: 'The release version (the bump step exports it as env.VERSION).'
+    required: true
+  files:
+    description: 'JSON list of repo-relative manifests (the setup job''s version-sync output).'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Standard library only, run from this action's own checkout (never a PyPI
+    # wheel of wads), with the runner's python3: no setup-python, so the job's
+    # configured Python stays the one on PATH for the build that follows.
+    - name: Sync the version
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        FILES: ${{ inputs.files }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" "$VERSION" "$FILES"

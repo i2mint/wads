@@ -482,6 +482,17 @@ Commit-subject markers narrow what a default-branch push does. wads matches them
 
 `[skip publish]` is the one for a docs- or comment-only change: it is tested, and no PyPI version number is burned. The skip markers win over `[publish]`.
 
+#### One version for PyPI and npm
+
+A repo that also publishes an npm twin (`populate --frontend ts`) can keep one version number on both registries:
+
+```toml
+[tool.wads.ci.version]
+sync = ["ts/package.json"]   # manifests that carry [project].version too
+```
+
+The publish job writes each release's bumped version into the listed `package.json` files (and the `package-lock.json` beside each), so the `**CI** ... Updated version` commit carries them all. The setup job fails when a listed file's version differs from `[project].version`: set them equal by hand once when you turn this on. Only `package.json` is accepted (npm requires semver, and a PEP 440 version such as `1.0rc1` fails the publish before anything is uploaded); a Rust crate keeps its own version line. On the npm side, a `[publish-npm]` push that publishes nothing because every version is already on npm now fails instead of staying green (a re-run of a run that did publish only warns).
+
 #### Native packages (Rust/PyO3 via maturin)
 
 A package built with [maturin](https://www.maturin.rs/) (`build-backend = "maturin"`) gets the native path automatically: one abi3 wheel per platform plus an sdist, instead of one `uv build`.

@@ -136,6 +136,13 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("native-targets", native.matrix() if native else [])
         _set_output("native-options", native.options() if native else {})
 
+        # One version across PyPI and npm (i2mint/wads#210): the manifests the
+        # publish job writes the bumped version into. Versions that already
+        # disagree fail here, before any release.
+        version_sync = load_wads_module("version_sync")
+        _set_output("version-sync", version_sync.sync_files(config.data))
+        version_sync.check_versions_agree(_project_dir(pyproject_path), config.data)
+
         # Build configuration
         _set_output("build-sdist", config.build_sdist)
         _set_output("build-wheel", config.build_wheel)
