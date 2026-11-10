@@ -312,6 +312,8 @@ path-filtered workflow, so they never collide. Selected via
 alias for <code class="docutils literal notranslate"><span class="pre">--frontend</span> <span class="pre">js</span></code>). Profiles are extensible through
 <a class="reference internal" href="#wads.profiles.register_frontend_profile" title="wads.profiles.register_frontend_profile"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_frontend_profile()</span></code></a>.</p></li>
 <li><p>The <strong>tests-folder overlay</strong> (issue #4): scaffolds a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> package.</p></li>
+<li><p>The <strong>native-core registry</strong> (issue #214): a Rust core built by maturin behind
+a Python facade (<code class="docutils literal notranslate"><span class="pre">populate</span> <span class="pre">--native</span> <span class="pre">maturin</span></code>); see <a class="reference internal" href="#wads.profiles.apply_native" title="wads.profiles.apply_native"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_native()</span></code></a>.</p></li>
 </ul>
 <p>Nothing here runs by default; the Python <code class="docutils literal notranslate"><span class="pre">populate</span></code> path and the
 <code class="docutils literal notranslate"><span class="pre">name/name/</span></code> root layout are untouched.</p>
@@ -331,6 +333,9 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.FRONTEND_PROFILES" title="wads.profiles.FRONTEND_PROFILES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></p></td>
 <td><p>The frontend profile registry.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.NATIVE_PROFILES" title="wads.profiles.NATIVE_PROFILES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NATIVE_PROFILES</span></code></a></p></td>
+<td><p>The native-backend registry.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -341,26 +346,56 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.apply_frontend" title="wads.profiles.apply_frontend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_frontend</span></code></a>(pkg_dir, *[, profile, ...])</p></td>
 <td><p>Apply one frontend profile component to an existing project directory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.apply_npm_overlay" title="wads.profiles.apply_npm_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_npm_overlay</span></code></a>(pkg_dir, *, project_name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.apply_native" title="wads.profiles.apply_native"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_native</span></code></a>(pkg_dir, *[, backend, license, ...])</p></td>
+<td><p>Scaffold a native core (<code class="docutils literal notranslate"><span class="pre">backend</span></code>) into the project at <code class="docutils literal notranslate"><span class="pre">pkg_dir</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.apply_npm_overlay" title="wads.profiles.apply_npm_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_npm_overlay</span></code></a>(pkg_dir, *, project_name)</p></td>
 <td><p>Deprecated alias for <code class="docutils literal notranslate"><span class="pre">apply_frontend(profile=&quot;js&quot;,</span> <span class="pre">...)</span></code> (issue #32 surface).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.apply_tests_overlay" title="wads.profiles.apply_tests_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_tests_overlay</span></code></a>(pkg_dir, *, project_name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.apply_tests_overlay" title="wads.profiles.apply_tests_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_tests_overlay</span></code></a>(pkg_dir, *, project_name)</p></td>
 <td><p>Scaffold a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> folder in an existing project (issue #4).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.default_npm_watch_paths" title="wads.profiles.default_npm_watch_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_npm_watch_paths</span></code></a>([repo_dir])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.default_npm_watch_paths" title="wads.profiles.default_npm_watch_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_npm_watch_paths</span></code></a>([repo_dir])</p></td>
 <td><p>Inputs outside its subdir an npm component's CI should run on.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.find_license_file" title="wads.profiles.find_license_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_license_file</span></code></a>(repo_dir, *[, names])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.find_license_file" title="wads.profiles.find_license_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_license_file</span></code></a>(repo_dir, *[, names])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(file</span> <span class="pre">name,</span> <span class="pre">text)</span></code> of the repo's root licence, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it has none.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.frontend_context" title="wads.profiles.frontend_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frontend_context</span></code></a>(*, profile_name, project_name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.frontend_context" title="wads.profiles.frontend_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frontend_context</span></code></a>(*, profile_name, project_name)</p></td>
 <td><p>Build the render context shared by all frontend-profile templates.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.get_frontend_profile" title="wads.profiles.get_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frontend_profile</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.get_frontend_profile" title="wads.profiles.get_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_frontend_profile</span></code></a>(name)</p></td>
 <td><p>Look up a registered profile, with an informative error if unknown.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.get_native_profile" title="wads.profiles.get_native_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_native_profile</span></code></a>(name)</p></td>
+<td><p>Look up a registered native profile, with an informative error if unknown.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.make_tests_overlay_artifacts" title="wads.profiles.make_tests_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts</span></code></a>(project_name, *)</p></td>
 <td><p>Artifacts that scaffold a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> folder for a project.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.merge_native_pyproject" title="wads.profiles.merge_native_pyproject"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_native_pyproject</span></code></a>(pyproject, fragment, *)</p></td>
+<td><p>A copy of <code class="docutils literal notranslate"><span class="pre">pyproject</span></code> with a native <code class="docutils literal notranslate"><span class="pre">fragment</span></code> merged in (for a NEW package).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.native_artifacts" title="wads.profiles.native_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_artifacts</span></code></a>(backend, project_name, *[, ...])</p></td>
+<td><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code> list a native backend writes for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.native_facade_todo" title="wads.profiles.native_facade_todo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_facade_todo</span></code></a>(pkg_dir, project_name, *)</p></td>
+<td><p>The lines a kept (real) facade lacks for the template's tests ('' if none).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.native_licence" title="wads.profiles.native_licence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_licence</span></code></a>(pkg_dir)</p></td>
+<td><p>The SPDX expression the package at <code class="docutils literal notranslate"><span class="pre">pkg_dir</span></code> declares, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.native_names" title="wads.profiles.native_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_names</span></code></a>(project_name, *[, license, backend])</p></td>
+<td><p>Map the template tokens to their values for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.native_pyproject_fragment" title="wads.profiles.native_pyproject_fragment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_pyproject_fragment</span></code></a>(project_name, *[, ...])</p></td>
+<td><p>The pyproject tables <code class="docutils literal notranslate"><span class="pre">backend</span></code> needs, for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.native_pyproject_gaps" title="wads.profiles.native_pyproject_gaps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_pyproject_gaps</span></code></a>(pyproject, project_name, *)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(required,</span> <span class="pre">recommended)</span></code>: what an EXISTING pyproject lacks for <code class="docutils literal notranslate"><span class="pre">backend</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.native_pyproject_todo" title="wads.profiles.native_pyproject_todo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_pyproject_todo</span></code></a>(pyproject, project_name, *)</p></td>
+<td><p>What an EXISTING pyproject needs for <code class="docutils literal notranslate"><span class="pre">backend</span></code>, as TOML text ('' if nothing).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.npm_overlay_artifacts" title="wads.profiles.npm_overlay_artifacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_overlay_artifacts</span></code></a>([npm_subdir])</p></td>
 <td><p>Deprecated: the <code class="docutils literal notranslate"><span class="pre">js</span></code> overlay artifacts.</p></td>
@@ -371,6 +406,9 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.register_frontend_profile" title="wads.profiles.register_frontend_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_frontend_profile</span></code></a>(profile)</p></td>
 <td><p>Register (or override) a frontend profile by name.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.register_native_profile" title="wads.profiles.register_native_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_native_profile</span></code></a>(profile)</p></td>
+<td><p>Register (or override) a native profile by name.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -380,6 +418,9 @@ alias for <code class="docutils literal notranslate"><span class="pre">--fronten
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.profiles.FrontendProfile" title="wads.profiles.FrontendProfile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrontendProfile</span></code></a>(name, default_subdir, ...[, ...])</p></td>
 <td><p>A declarative frontend language/toolchain profile.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.profiles.NativeProfile" title="wads.profiles.NativeProfile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NativeProfile</span></code></a>(name, template_dir, ...[, ...])</p></td>
+<td><p>A native (compiled-extension) backend that <code class="docutils literal notranslate"><span class="pre">populate</span> <span class="pre">--native</span></code> can scaffold.</p></td>
 </tr>
 </tbody>
 </table>
@@ -428,6 +469,49 @@ run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.<
 <dd><p>Root licence file names a frontend component copies, in order of preference.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="wads.profiles.NATIVE_PROFILES">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">NATIVE_PROFILES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'maturin':</span> <span class="pre">NativeProfile(name='maturin',</span> <span class="pre">template_dir='/home/runner/work/wads/wads/wads/data/native/maturin',</span> <span class="pre">pyproject_fragment='/home/runner/work/wads/wads/wads/data/native/maturin_pyproject.toml',</span> <span class="pre">replaces=('build-system',),</span> <span class="pre">drops=('tool.hatch',),</span> <span class="pre">facade='tmpl_pkg/__init__.py',</span> <span class="pre">new_package_only=('tmpl_pkg/py.typed',),</span> <span class="pre">gitignore_patterns=('target',</span> <span class="pre">'*.so'),</span> <span class="pre">lockfile='Cargo.lock',</span> <span class="pre">lockfile_command=('cargo',</span> <span class="pre">'generate-lockfile',</span> <span class="pre">'--quiet'),</span> <span class="pre">lockfile_env=(('RUSTUP_AUTO_INSTALL',</span> <span class="pre">'0'),),</span> <span class="pre">missing_toolchain=('is</span> <span class="pre">not</span> <span class="pre">installed',</span> <span class="pre">'rustup</span> <span class="pre">toolchain</span> <span class="pre">install'),</span> <span class="pre">toolchain_pin=('rust-toolchain.toml',</span> <span class="pre">'toolchain',</span> <span class="pre">'channel'),</span> <span class="pre">toolchain_list=('rustup',</span> <span class="pre">'toolchain',</span> <span class="pre">'list'),</span> <span class="pre">unlicensed=(('license</span> <span class="pre">=</span> <span class="pre">&quot;tmpl-license&quot;',</span> <span class="pre">'#</span> <span class="pre">license</span> <span class="pre">=</span> <span class="pre">&quot;&lt;SPDX</span> <span class="pre">id&gt;&quot;'),</span> <span class="pre">('license.workspace</span> <span class="pre">=</span> <span class="pre">true',</span> <span class="pre">'#</span> <span class="pre">license.workspace</span> <span class="pre">=</span> <span class="pre">true')),</span> <span class="pre">description='Rust</span> <span class="pre">core</span> <span class="pre">(rust/core)</span> <span class="pre">+</span> <span class="pre">PyO3</span> <span class="pre">binding</span> <span class="pre">(rust/py)</span> <span class="pre">built</span> <span class="pre">by</span> <span class="pre">maturin.')}</span></span><a class="headerlink" href="#wads.profiles.NATIVE_PROFILES" title="Link to this definition">¶</a></dt>
+<dd><p>The native-backend registry. Extend it via <a class="reference internal" href="#wads.profiles.register_native_profile" title="wads.profiles.register_native_profile"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_native_profile()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wads.profiles.NativeProfile">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">NativeProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyproject_fragment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replaces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">facade</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_package_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gitignore_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockfile_command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockfile_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_toolchain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">toolchain_pin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">toolchain_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unlicensed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#NativeProfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.NativeProfile" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A native (compiled-extension) backend that <code class="docutils literal notranslate"><span class="pre">populate</span> <span class="pre">--native</span></code> can scaffold.</p>
+<p>Paths are template paths (with the tokens); pyproject tables are dotted
+(<code class="docutils literal notranslate"><span class="pre">&quot;tool.hatch&quot;</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – registry key; also the backend name <code class="docutils literal notranslate"><span class="pre">wads.native_build</span></code> knows.</p></li>
+<li><p><strong>template_dir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – folder of files written at their (token-substituted) paths.</p></li>
+<li><p><strong>pyproject_fragment</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – TOML file of the pyproject tables the backend needs.</p></li>
+<li><p><strong>replaces</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – fragment tables that replace the pyproject’s whole (rather than
+merge into it), e.g. <code class="docutils literal notranslate"><span class="pre">&quot;build-system&quot;</span></code>.</p></li>
+<li><p><strong>drops</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – tables a NEW pyproject loses, because they configure what
+<code class="docutils literal notranslate"><span class="pre">replaces</span></code> replaced (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;tool.hatch&quot;</span></code>); an existing one is told to.</p></li>
+<li><p><strong>facade</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – the package’s <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> template. A missing or blank one is
+written; a real one is kept and the lines the template tests need are reported.</p></li>
+<li><p><strong>new_package_only</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – files written only when the package is new (no real facade).</p></li>
+<li><p><strong>gitignore_patterns</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> entries the layout relies on.</p></li>
+<li><p><strong>lockfile</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – lockfile the build needs (<code class="docutils literal notranslate"><span class="pre">--locked</span></code>), generated when missing.</p></li>
+<li><p><strong>lockfile_command</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – command generating <code class="docutils literal notranslate"><span class="pre">lockfile</span></code>, run in the project root.</p></li>
+<li><p><strong>lockfile_env</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">value)</span></code> pairs added to that command’s environment.</p></li>
+<li><p><strong>missing_toolchain</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">(marker,</span> <span class="pre">command)</span></code>: when the lockfile command’s stderr
+has <code class="docutils literal notranslate"><span class="pre">marker</span></code>, the pinned toolchain is missing and <code class="docutils literal notranslate"><span class="pre">command</span></code> installs it.</p></li>
+<li><p><strong>toolchain_pin</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">(file,</span> <span class="pre">table,</span> <span class="pre">key)</span></code> naming the pinned toolchain channel
+(checked against <code class="docutils literal notranslate"><span class="pre">toolchain_list</span></code> before the lockfile command runs).</p></li>
+<li><p><strong>toolchain_list</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – command listing the installed toolchains, one per line.</p></li>
+<li><p><strong>unlicensed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span>) – <code class="docutils literal notranslate"><span class="pre">(text,</span> <span class="pre">replacement)</span></code> pairs applied to the templates when the
+package’s licence cannot be determined (the crates then declare none).</p></li>
+<li><p><strong>description</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – one-line human summary.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.profiles.apply_frontend">
 <span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">apply_frontend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'js'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workspace_glob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'packages/*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example_package_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">watch_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#apply_frontend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.apply_frontend" title="Link to this definition">¶</a></dt>
@@ -442,6 +526,34 @@ Returns the <a class="reference internal" href="wads.templating.html#wads.templa
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">added</span><span class="p">)</span>
 <span class="go">['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',</span>
 <span class="go"> 'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="wads.templating.html#wads.templating.GenerationResult" title="wads.templating.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenerationResult</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.apply_native">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">apply_native</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_lockfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lockfile_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_attention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_warn_attention&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#apply_native"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.apply_native" title="Link to this definition">¶</a></dt>
+<dd><p>Scaffold a native core (<code class="docutils literal notranslate"><span class="pre">backend</span></code>) into the project at <code class="docutils literal notranslate"><span class="pre">pkg_dir</span></code>.</p>
+<p>Writes the backend’s template files that do not exist yet (<code class="docutils literal notranslate"><span class="pre">overwrite</span></code> names the
+ones to replace). A missing or blank facade (<code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>) is written; a real one
+is kept, the files of a new package only (<code class="docutils literal notranslate"><span class="pre">py.typed</span></code>) are left out, and the lines
+the template’s tests need are reported. <code class="docutils literal notranslate"><span class="pre">on_attention(filename,</span> <span class="pre">reason)</span></code> also gets
+missing <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> entries and a lockfile it could not generate. pyproject.toml is
+not touched here: <code class="docutils literal notranslate"><span class="pre">populate</span></code> merges <a class="reference internal" href="#wads.profiles.native_pyproject_fragment" title="wads.profiles.native_pyproject_fragment"><code class="xref py py-func docutils literal notranslate"><span class="pre">native_pyproject_fragment()</span></code></a> into a new
+one and reports <a class="reference internal" href="#wads.profiles.native_pyproject_todo" title="wads.profiles.native_pyproject_todo"><code class="xref py py-func docutils literal notranslate"><span class="pre">native_pyproject_todo()</span></code></a> for an existing one.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">apply_native</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">d</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="s2">"fast_thing"</span><span class="p">,</span> <span class="n">generate_lockfile</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">on_attention</span><span class="o">=</span><span class="kc">None</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">added</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"rust/"</span><span class="p">)]</span>
+<span class="go">['rust/core/Cargo.toml', 'rust/core/src/lib.rs', 'rust/py/Cargo.toml',</span>
+<span class="go"> 'rust/py/src/lib.rs']</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -533,6 +645,17 @@ template <em>references</em> yet are missing.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.get_native_profile">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">get_native_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#get_native_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.get_native_profile" title="Link to this definition">¶</a></dt>
+<dd><p>Look up a registered native profile, with an informative error if unknown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.profiles.NativeProfile" title="wads.profiles.NativeProfile"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeProfile</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.profiles.make_tests_overlay_artifacts">
 <span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">make_tests_overlay_artifacts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_data_util</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#make_tests_overlay_artifacts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.make_tests_overlay_artifacts" title="Link to this definition">¶</a></dt>
 <dd><p>Artifacts that scaffold a <code class="docutils literal notranslate"><span class="pre">tests/</span></code> folder for a project.</p>
@@ -543,6 +666,186 @@ the name is known.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.merge_native_pyproject">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">merge_native_pyproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#merge_native_pyproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.merge_native_pyproject" title="Link to this definition">¶</a></dt>
+<dd><p>A copy of <code class="docutils literal notranslate"><span class="pre">pyproject</span></code> with a native <code class="docutils literal notranslate"><span class="pre">fragment</span></code> merged in (for a NEW package).</p>
+<p>The profile’s <code class="docutils literal notranslate"><span class="pre">replaces</span></code> tables are replaced and its <code class="docutils literal notranslate"><span class="pre">drops</span></code> tables removed; the
+other tables merge, lists gaining the items they lack.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new</span> <span class="o">=</span> <span class="n">merge_native_pyproject</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s2">"build-system"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"requires"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"hatchling"</span><span class="p">],</span> <span class="s2">"build-backend"</span><span class="p">:</span> <span class="s2">"hatchling.build"</span><span class="p">},</span>
+<span class="gp">... </span>     <span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"optional-dependencies"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"dev"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"pytest"</span><span class="p">]}},</span>
+<span class="gp">... </span>     <span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"hatch"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"build"</span><span class="p">:</span> <span class="p">{}},</span> <span class="s2">"ruff"</span><span class="p">:</span> <span class="p">{}}},</span>
+<span class="gp">... </span>    <span class="n">native_pyproject_fragment</span><span class="p">(</span><span class="s2">"fast_thing"</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new</span><span class="p">[</span><span class="s2">"build-system"</span><span class="p">][</span><span class="s2">"build-backend"</span><span class="p">],</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">new</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">])</span>
+<span class="go">('maturin', ['maturin', 'pytest', 'ruff', 'uv'])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new</span><span class="p">[</span><span class="s2">"project"</span><span class="p">][</span><span class="s2">"optional-dependencies"</span><span class="p">][</span><span class="s2">"dev"</span><span class="p">]</span>
+<span class="go">['pytest', 'hypothesis']</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_artifacts">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_artifacts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_artifacts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_artifacts" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code> list a native backend writes for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skip</span></code> names template paths to leave out.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">target</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">native_artifacts</span><span class="p">(</span><span class="s2">"maturin"</span><span class="p">,</span> <span class="s2">"fast_thing"</span><span class="p">))[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_facade_todo">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_facade_todo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_facade_todo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_facade_todo" title="Link to this definition">¶</a></dt>
+<dd><p>The lines a kept (real) facade lacks for the template’s tests (’’ if none).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"fast_thing"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"fast_thing"</span><span class="p">,</span> <span class="s2">"__init__.py"</span><span class="p">),</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"X = 1</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">native_facade_todo</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"fast_thing"</span><span class="p">))</span>
+<span class="go">from importlib.metadata import version as _version</span>
+
+<span class="go">from fast_thing import _core</span>
+<span class="go">...</span>
+<span class="go">def hamming(a: str, b: str) -&gt; int:</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_licence">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_licence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkg_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_licence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_licence" title="Link to this definition">¶</a></dt>
+<dd><p>The SPDX expression the package at <code class="docutils literal notranslate"><span class="pre">pkg_dir</span></code> declares, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Metadata only, never a guess from a licence document: <code class="docutils literal notranslate"><span class="pre">[project].license</span></code> as a
+string or <code class="docutils literal notranslate"><span class="pre">{text</span> <span class="pre">=</span> <span class="pre">...}</span></code>, canonicalised; else the <code class="docutils literal notranslate"><span class="pre">License</span> <span class="pre">::</span></code> classifiers,
+joined with <code class="docutils literal notranslate"><span class="pre">OR</span></code> (<code class="docutils literal notranslate"><span class="pre">None</span></code> if any is not recognised). <code class="docutils literal notranslate"><span class="pre">{file</span> <span class="pre">=</span> <span class="pre">...}</span></code> or
+<code class="docutils literal notranslate"><span class="pre">license-files</span></code> alone say no SPDX id, so <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">native_licence</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">"pyproject.toml"</span><span class="p">),</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">'[project]</span><span class="se">\n</span><span class="s1">classifiers = ["License :: OSI Approved :: MIT License",'</span>
+<span class="gp">... </span>    <span class="s1">' "License :: OSI Approved :: Apache Software License"]</span><span class="se">\n</span><span class="s1">'</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">native_licence</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">'MIT OR Apache-2.0'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_names">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_names" title="Link to this definition">¶</a></dt>
+<dd><p>Map the template tokens to their values for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p>
+<p>The project name is the import name (<code class="docutils literal notranslate"><span class="pre">populate</span></code> makes <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;/&lt;name&gt;/</span></code>), so it
+must be a lowercase identifier; Cargo package names are its kebab-case form.
+<code class="docutils literal notranslate"><span class="pre">license</span></code> is the package’s SPDX id; without one the crates declare no licence
+(the profile’s <code class="docutils literal notranslate"><span class="pre">unlicensed</span></code> edits) rather than a guessed one.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">native_names</span><span class="p">(</span><span class="s2">"fast_thing"</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="s2">"Apache-2.0"</span><span class="p">)</span>
+<span class="go">{'tmpl_pkg': 'fast_thing', 'tmpl-pkg': 'fast-thing', 'tmpl-license': 'Apache-2.0'}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">native_names</span><span class="p">(</span><span class="s2">"fast_thing"</span><span class="p">)[</span><span class="s1">'license = "tmpl-license"'</span><span class="p">]</span>
+<span class="go">'# license = "&lt;SPDX id&gt;"'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_pyproject_fragment">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_pyproject_fragment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_pyproject_fragment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_pyproject_fragment" title="Link to this definition">¶</a></dt>
+<dd><p>The pyproject tables <code class="docutils literal notranslate"><span class="pre">backend</span></code> needs, for <code class="docutils literal notranslate"><span class="pre">project_name</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frag</span> <span class="o">=</span> <span class="n">native_pyproject_fragment</span><span class="p">(</span><span class="s2">"fast_thing"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frag</span><span class="p">[</span><span class="s2">"build-system"</span><span class="p">][</span><span class="s2">"build-backend"</span><span class="p">],</span> <span class="n">frag</span><span class="p">[</span><span class="s2">"tool"</span><span class="p">][</span><span class="s2">"maturin"</span><span class="p">][</span><span class="s2">"module-name"</span><span class="p">]</span>
+<span class="go">('maturin', 'fast_thing._core')</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_pyproject_gaps">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_pyproject_gaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_pyproject_gaps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_pyproject_gaps" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(required,</span> <span class="pre">recommended)</span></code>: what an EXISTING pyproject lacks for <code class="docutils literal notranslate"><span class="pre">backend</span></code>.</p>
+<p>Required: absent keys and missing list items, and a <code class="docutils literal notranslate"><span class="pre">replaces</span></code> table whose
+scalars differ (another build backend) or are absent, given whole. Recommended:
+values set otherwise than the template’s (a deliberate choice stays yours), and a
+<code class="docutils literal notranslate"><span class="pre">replaces</span></code> table that only lacks list items (e.g. an older <code class="docutils literal notranslate"><span class="pre">requires</span></code> pin).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">required</span><span class="p">,</span> <span class="n">recommended</span> <span class="o">=</span> <span class="n">native_pyproject_gaps</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s2">"build-system"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"requires"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"maturin&gt;=1.9.4,&lt;2"</span><span class="p">],</span> <span class="s2">"build-backend"</span><span class="p">:</span> <span class="s2">"maturin"</span><span class="p">}},</span>
+<span class="gp">... </span>    <span class="s2">"fast_thing"</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"build-system"</span> <span class="ow">in</span> <span class="n">required</span><span class="p">,</span> <span class="n">recommended</span><span class="p">[</span><span class="s2">"build-system"</span><span class="p">][</span><span class="s2">"build-backend"</span><span class="p">]</span>
+<span class="go">(False, 'maturin')</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.native_pyproject_todo">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">native_pyproject_todo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pyproject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'maturin'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#native_pyproject_todo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.native_pyproject_todo" title="Link to this definition">¶</a></dt>
+<dd><p>What an EXISTING pyproject needs for <code class="docutils literal notranslate"><span class="pre">backend</span></code>, as TOML text (’’ if nothing).</p>
+<p><code class="docutils literal notranslate"><span class="pre">populate</span></code> never rewrites an existing pyproject.toml; it reports this instead. Two
+blocks, each valid TOML: <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">Required</span></code> and <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">Recommended</span></code>
+(<a class="reference internal" href="#wads.profiles.native_pyproject_gaps" title="wads.profiles.native_pyproject_gaps"><code class="xref py py-func docutils literal notranslate"><span class="pre">native_pyproject_gaps()</span></code></a>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">native_pyproject_todo</span><span class="p">({},</span> <span class="s2">"fast_thing"</span><span class="p">))</span>
+<span class="go"># Required: merge into pyproject.toml (lists: add the items shown).</span>
+<span class="go"># [build-system] replaces yours.</span>
+<span class="go">[build-system]</span>
+<span class="go">requires = [...]</span>
+<span class="go">build-backend = "maturin"</span>
+<span class="go">...</span>
+<span class="go">module-name = "fast_thing._core"</span>
+<span class="go">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyproject</span> <span class="o">=</span> <span class="n">merge_native_pyproject</span><span class="p">({},</span> <span class="n">native_pyproject_fragment</span><span class="p">(</span><span class="s2">"fast_thing"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">native_pyproject_todo</span><span class="p">(</span><span class="n">pyproject</span><span class="p">,</span> <span class="s2">"fast_thing"</span><span class="p">)</span>
+<span class="go">''</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -576,6 +879,17 @@ the name is known.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.profiles.FrontendProfile" title="wads.profiles.FrontendProfile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrontendProfile</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.profiles.register_native_profile">
+<span class="sig-prename descclassname"><span class="pre">wads.profiles.</span></span><span class="sig-name descname"><span class="pre">register_native_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/profiles.html#register_native_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.profiles.register_native_profile" title="Link to this definition">¶</a></dt>
+<dd><p>Register (or override) a native profile by name. Returns the profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#wads.profiles.NativeProfile" title="wads.profiles.NativeProfile"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeProfile</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -639,17 +953,30 @@ the name is known.</p>
 <li><a class="reference internal" href="#wads.profiles.FRONTEND_PROFILES"><code class="docutils literal notranslate"><span class="pre">FRONTEND_PROFILES</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.FrontendProfile"><code class="docutils literal notranslate"><span class="pre">FrontendProfile</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.LICENSE_FILENAMES"><code class="docutils literal notranslate"><span class="pre">LICENSE_FILENAMES</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.NATIVE_PROFILES"><code class="docutils literal notranslate"><span class="pre">NATIVE_PROFILES</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.NativeProfile"><code class="docutils literal notranslate"><span class="pre">NativeProfile</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_frontend"><code class="docutils literal notranslate"><span class="pre">apply_frontend()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.apply_native"><code class="docutils literal notranslate"><span class="pre">apply_native()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_npm_overlay"><code class="docutils literal notranslate"><span class="pre">apply_npm_overlay()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.apply_tests_overlay"><code class="docutils literal notranslate"><span class="pre">apply_tests_overlay()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.default_npm_watch_paths"><code class="docutils literal notranslate"><span class="pre">default_npm_watch_paths()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.find_license_file"><code class="docutils literal notranslate"><span class="pre">find_license_file()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.frontend_context"><code class="docutils literal notranslate"><span class="pre">frontend_context()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.get_frontend_profile"><code class="docutils literal notranslate"><span class="pre">get_frontend_profile()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.get_native_profile"><code class="docutils literal notranslate"><span class="pre">get_native_profile()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.make_tests_overlay_artifacts"><code class="docutils literal notranslate"><span class="pre">make_tests_overlay_artifacts()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.merge_native_pyproject"><code class="docutils literal notranslate"><span class="pre">merge_native_pyproject()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_artifacts"><code class="docutils literal notranslate"><span class="pre">native_artifacts()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_facade_todo"><code class="docutils literal notranslate"><span class="pre">native_facade_todo()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_licence"><code class="docutils literal notranslate"><span class="pre">native_licence()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_names"><code class="docutils literal notranslate"><span class="pre">native_names()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_pyproject_fragment"><code class="docutils literal notranslate"><span class="pre">native_pyproject_fragment()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_pyproject_gaps"><code class="docutils literal notranslate"><span class="pre">native_pyproject_gaps()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.native_pyproject_todo"><code class="docutils literal notranslate"><span class="pre">native_pyproject_todo()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.npm_overlay_artifacts"><code class="docutils literal notranslate"><span class="pre">npm_overlay_artifacts()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.npm_overlay_context"><code class="docutils literal notranslate"><span class="pre">npm_overlay_context()</span></code></a></li>
 <li><a class="reference internal" href="#wads.profiles.register_frontend_profile"><code class="docutils literal notranslate"><span class="pre">register_frontend_profile()</span></code></a></li>
+<li><a class="reference internal" href="#wads.profiles.register_native_profile"><code class="docutils literal notranslate"><span class="pre">register_native_profile()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -661,7 +988,7 @@ the name is known.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=0f488adb"></script>
+</div><script src="../_static/documentation_options.js?v=e76bcb6b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

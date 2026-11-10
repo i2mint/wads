@@ -659,7 +659,10 @@
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">WATCH_ALL</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">components</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"!</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s2">/**"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"!.github/workflows/</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">workflow</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"!</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s2">/**"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"!.github/workflows/</span><span class="si">{</span><span class="n">component</span><span class="o">.</span><span class="n">workflow</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">):</span>
             <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
                 <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">paths</span> <span class="o">+</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">include</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span></div>
@@ -944,9 +947,7 @@
 
 <div class="viewcode-block" id="stub_customizations">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_trigger.html#wads.ci_trigger.stub_customizations">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stub_customizations</span><span class="p">(</span>
-    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stub_customizations</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">paths</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Split what a stub holds beyond the template into ``(with_inputs, dropped)``.</span>
 
 <span class="sd">    ``with_inputs`` (a flat ``with:`` mapping, e.g. ``project-name``) survives a</span>
@@ -1369,7 +1370,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
+</div><script src="../../_static/documentation_options.js?v=e76bcb6b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -304,6 +304,8 @@
 <span class="sd">  alias for ``--frontend js``). Profiles are extensible through</span>
 <span class="sd">  :func:`register_frontend_profile`.</span>
 <span class="sd">- The **tests-folder overlay** (issue #4): scaffolds a ``tests/`` package.</span>
+<span class="sd">- The **native-core registry** (issue #214): a Rust core built by maturin behind</span>
+<span class="sd">  a Python facade (``populate --native maturin``); see :func:`apply_native`.</span>
 
 <span class="sd">Nothing here runs by default; the Python ``populate`` path and the</span>
 <span class="sd">``name/name/`` root layout are untouched.</span>
@@ -897,6 +899,730 @@
         <span class="n">on_skip</span><span class="o">=</span><span class="n">on_skip</span><span class="p">,</span>
     <span class="p">)</span></div>
 
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Native-core overlay (issue #214): a Python package whose hot path is a compiled Rust</span>
+<span class="c1"># extension. The layout is the one wads' native CI path builds (issue #166,</span>
+<span class="c1"># ``wads.native_build``): a Cargo workspace at the root (``rust/core`` pure Rust,</span>
+<span class="c1"># ``rust/py`` the PyO3 binding cdylib that maturin builds as ``&lt;pkg&gt;._core``), a pinned</span>
+<span class="c1"># ``rust-toolchain.toml``, abi3 wheels, and ``[tool.maturin]`` in pyproject.toml.</span>
+<span class="c1">#</span>
+<span class="c1"># A backend's templates are a folder holding the files at their target paths, named with</span>
+<span class="c1"># the tokens ``tmpl_pkg`` (import name, Rust identifiers), ``tmpl-pkg`` (Cargo package</span>
+<span class="c1"># names) and ``tmpl-license`` (SPDX licence id), so the folder is itself a Cargo</span>
+<span class="c1"># workspace. pyproject.toml is not in it: the tables a backend needs are a fragment</span>
+<span class="c1"># (``&lt;backend&gt;_pyproject.toml``) that is merged into a NEW pyproject and only *reported*</span>
+<span class="c1"># for an existing one. What the merge replaces or drops is declared by the profile.</span>
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">native_tpl_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wads.templating</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_placeholders</span>
+
+<span class="n">_SNAKE_TOKEN</span><span class="p">,</span> <span class="n">_KEBAB_TOKEN</span><span class="p">,</span> <span class="n">_LICENSE_TOKEN</span> <span class="o">=</span> <span class="s2">"tmpl_pkg"</span><span class="p">,</span> <span class="s2">"tmpl-pkg"</span><span class="p">,</span> <span class="s2">"tmpl-license"</span>
+<span class="c1"># Build and cache residue never copied out of a template folder.</span>
+<span class="n">_RESIDUE_PARTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"__pycache__"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">".pytest_cache"</span><span class="p">,</span> <span class="s2">".hypothesis"</span><span class="p">,</span> <span class="s2">".venv"</span><span class="p">}</span>
+<span class="n">_RESIDUE_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".pyc"</span><span class="p">,</span> <span class="s2">".so"</span><span class="p">,</span> <span class="s2">".pyd"</span><span class="p">,</span> <span class="s2">".dylib"</span><span class="p">,</span> <span class="s2">".lock"</span><span class="p">)</span>
+<span class="n">_NATIVE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[a-z][a-z0-9_]*"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="NativeProfile">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.NativeProfile">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NativeProfile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A native (compiled-extension) backend that ``populate --native`` can scaffold.</span>
+
+<span class="sd">    Paths are template paths (with the tokens); pyproject tables are dotted</span>
+<span class="sd">    (``"tool.hatch"``).</span>
+
+<span class="sd">    :param name: registry key; also the backend name ``wads.native_build`` knows.</span>
+<span class="sd">    :param template_dir: folder of files written at their (token-substituted) paths.</span>
+<span class="sd">    :param pyproject_fragment: TOML file of the pyproject tables the backend needs.</span>
+<span class="sd">    :param replaces: fragment tables that replace the pyproject's whole (rather than</span>
+<span class="sd">        merge into it), e.g. ``"build-system"``.</span>
+<span class="sd">    :param drops: tables a NEW pyproject loses, because they configure what</span>
+<span class="sd">        ``replaces`` replaced (e.g. ``"tool.hatch"``); an existing one is told to.</span>
+<span class="sd">    :param facade: the package's ``__init__.py`` template. A missing or blank one is</span>
+<span class="sd">        written; a real one is kept and the lines the template tests need are reported.</span>
+<span class="sd">    :param new_package_only: files written only when the package is new (no real facade).</span>
+<span class="sd">    :param gitignore_patterns: ``.gitignore`` entries the layout relies on.</span>
+<span class="sd">    :param lockfile: lockfile the build needs (``--locked``), generated when missing.</span>
+<span class="sd">    :param lockfile_command: command generating ``lockfile``, run in the project root.</span>
+<span class="sd">    :param lockfile_env: ``(name, value)`` pairs added to that command's environment.</span>
+<span class="sd">    :param missing_toolchain: ``(marker, command)``: when the lockfile command's stderr</span>
+<span class="sd">        has ``marker``, the pinned toolchain is missing and ``command`` installs it.</span>
+<span class="sd">    :param toolchain_pin: ``(file, table, key)`` naming the pinned toolchain channel</span>
+<span class="sd">        (checked against ``toolchain_list`` before the lockfile command runs).</span>
+<span class="sd">    :param toolchain_list: command listing the installed toolchains, one per line.</span>
+<span class="sd">    :param unlicensed: ``(text, replacement)`` pairs applied to the templates when the</span>
+<span class="sd">        package's licence cannot be determined (the crates then declare none).</span>
+<span class="sd">    :param description: one-line human summary.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">template_dir</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">pyproject_fragment</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">replaces</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">drops</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">facade</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">new_package_only</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">gitignore_patterns</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">lockfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">lockfile_command</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">lockfile_env</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">missing_toolchain</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">toolchain_pin</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">toolchain_list</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">unlicensed</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+
+
+
+<span class="c1">#: The native-backend registry. Extend it via :func:`register_native_profile`.</span>
+<span class="n">NATIVE_PROFILES</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="register_native_profile">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.register_native_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_native_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">:</span> <span class="n">NativeProfile</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NativeProfile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Register (or override) a native profile by name. Returns the profile."""</span>
+    <span class="n">NATIVE_PROFILES</span><span class="p">[</span><span class="n">profile</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile</span>
+    <span class="k">return</span> <span class="n">profile</span></div>
+
+
+
+<div class="viewcode-block" id="get_native_profile">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.get_native_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_native_profile</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NativeProfile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Look up a registered native profile, with an informative error if unknown."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">NATIVE_PROFILES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">NATIVE_PROFILES</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"(none registered)"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unknown native backend </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+
+
+
+<span class="n">register_native_profile</span><span class="p">(</span>
+    <span class="n">NativeProfile</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"maturin"</span><span class="p">,</span>
+        <span class="n">template_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">native_tpl_dir</span><span class="p">,</span> <span class="s2">"maturin"</span><span class="p">),</span>
+        <span class="n">pyproject_fragment</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">native_tpl_dir</span><span class="p">,</span> <span class="s2">"maturin_pyproject.toml"</span><span class="p">),</span>
+        <span class="n">replaces</span><span class="o">=</span><span class="p">(</span><span class="s2">"build-system"</span><span class="p">,),</span>
+        <span class="n">drops</span><span class="o">=</span><span class="p">(</span><span class="s2">"tool.hatch"</span><span class="p">,),</span>
+        <span class="n">facade</span><span class="o">=</span><span class="s2">"tmpl_pkg/__init__.py"</span><span class="p">,</span>
+        <span class="n">new_package_only</span><span class="o">=</span><span class="p">(</span><span class="s2">"tmpl_pkg/py.typed"</span><span class="p">,),</span>
+        <span class="n">gitignore_patterns</span><span class="o">=</span><span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="s2">"*.so"</span><span class="p">),</span>
+        <span class="n">lockfile</span><span class="o">=</span><span class="s2">"Cargo.lock"</span><span class="p">,</span>
+        <span class="n">lockfile_command</span><span class="o">=</span><span class="p">(</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"generate-lockfile"</span><span class="p">,</span> <span class="s2">"--quiet"</span><span class="p">),</span>
+        <span class="c1"># Never download a toolchain as a side effect of scaffolding.</span>
+        <span class="n">lockfile_env</span><span class="o">=</span><span class="p">((</span><span class="s2">"RUSTUP_AUTO_INSTALL"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">),),</span>
+        <span class="n">missing_toolchain</span><span class="o">=</span><span class="p">(</span><span class="s2">"is not installed"</span><span class="p">,</span> <span class="s2">"rustup toolchain install"</span><span class="p">),</span>
+        <span class="c1"># rustup &lt; 1.28 ignores RUSTUP_AUTO_INSTALL: look before running cargo.</span>
+        <span class="n">toolchain_pin</span><span class="o">=</span><span class="p">(</span><span class="s2">"rust-toolchain.toml"</span><span class="p">,</span> <span class="s2">"toolchain"</span><span class="p">,</span> <span class="s2">"channel"</span><span class="p">),</span>
+        <span class="n">toolchain_list</span><span class="o">=</span><span class="p">(</span><span class="s2">"rustup"</span><span class="p">,</span> <span class="s2">"toolchain"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">),</span>
+        <span class="n">unlicensed</span><span class="o">=</span><span class="p">(</span>
+            <span class="p">(</span><span class="s1">'license = "tmpl-license"'</span><span class="p">,</span> <span class="s1">'# license = "&lt;SPDX id&gt;"'</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"license.workspace = true"</span><span class="p">,</span> <span class="s2">"# license.workspace = true"</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Rust core (rust/core) + PyO3 binding (rust/py) built by maturin."</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="native_names">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_names</span><span class="p">(</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Map the template tokens to their values for ``project_name``.</span>
+
+<span class="sd">    The project name is the import name (``populate`` makes ``&lt;name&gt;/&lt;name&gt;/``), so it</span>
+<span class="sd">    must be a lowercase identifier; Cargo package names are its kebab-case form.</span>
+<span class="sd">    ``license`` is the package's SPDX id; without one the crates declare no licence</span>
+<span class="sd">    (the profile's ``unlicensed`` edits) rather than a guessed one.</span>
+
+<span class="sd">    &gt;&gt;&gt; native_names("fast_thing", license="Apache-2.0")</span>
+<span class="sd">    {'tmpl_pkg': 'fast_thing', 'tmpl-pkg': 'fast-thing', 'tmpl-license': 'Apache-2.0'}</span>
+<span class="sd">    &gt;&gt;&gt; native_names("fast_thing")['license = "tmpl-license"']</span>
+<span class="sd">    '# license = "&lt;SPDX id&gt;"'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_NATIVE_NAME_RE</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">project_name</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"A native package needs a lowercase importable name (letters, digits, '_', "</span>
+            <span class="sa">f</span><span class="s2">"starting with a letter), got </span><span class="si">{</span><span class="n">project_name</span><span class="si">!r}</span><span class="s2">: it becomes the Python import "</span>
+            <span class="sa">f</span><span class="s2">"name, the extension module &lt;name&gt;._core and the Cargo crate names."</span>
+        <span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">_SNAKE_TOKEN</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+        <span class="n">_KEBAB_TOKEN</span><span class="p">:</span> <span class="n">project_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">license</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">names</span><span class="p">,</span> <span class="n">_LICENSE_TOKEN</span><span class="p">:</span> <span class="n">license</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">unlicensed</span><span class="p">),</span> <span class="o">**</span><span class="n">names</span><span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spdx_expression</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``name`` as a canonical SPDX expression (wads' one alias map), else ``None``."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">pep639_license</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">pep639_license</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="native_licence">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_licence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_licence</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The SPDX expression the package at ``pkg_dir`` declares, or ``None``.</span>
+
+<span class="sd">    Metadata only, never a guess from a licence document: ``[project].license`` as a</span>
+<span class="sd">    string or ``{text = ...}``, canonicalised; else the ``License ::`` classifiers,</span>
+<span class="sd">    joined with ``OR`` (``None`` if any is not recognised). ``{file = ...}`` or</span>
+<span class="sd">    ``license-files`` alone say no SPDX id, so ``None``.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
+<span class="sd">    &gt;&gt;&gt; native_licence(d) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _ = open(os.path.join(d, "pyproject.toml"), "w").write(</span>
+<span class="sd">    ...     '[project]\\nclassifiers = ["License :: OSI Approved :: MIT License",'</span>
+<span class="sd">    ...     ' "License :: OSI Approved :: Apache Software License"]\\n'</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; native_licence(d)</span>
+<span class="sd">    'MIT OR Apache-2.0'</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">"pyproject.toml"</span><span class="p">))</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="n">_load_toml_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">text</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="n">declared</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"license"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_spdx_expression</span><span class="p">(</span><span class="n">declared</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_spdx_expression</span><span class="p">(</span><span class="n">declared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"license-files"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">classifiers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"::"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"classifiers"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"License ::"</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">_spdx_expression</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ids</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">_spdx_expression</span><span class="p">(</span><span class="s2">" OR "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">ids</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="native_artifacts">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_artifacts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_artifacts</span><span class="p">(</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The :class:`Artifact` list a native backend writes for ``project_name``.</span>
+
+<span class="sd">    ``skip`` names template paths to leave out.</span>
+
+<span class="sd">    &gt;&gt;&gt; sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:3]</span>
+<span class="sd">    ['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">native_names</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">template_dir</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_residue</span><span class="p">(</span><span class="n">rel</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_RESIDUE_PARTS</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">rel</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)))</span> <span class="ow">or</span> <span class="n">rel</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span>
+            <span class="n">_RESIDUE_SUFFIXES</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Artifact</span><span class="o">.</span><span class="n">from_placeholder</span><span class="p">(</span>
+            <span class="n">apply_placeholders</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="n">names</span><span class="p">),</span> <span class="n">rel</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">placeholders</span><span class="o">=</span><span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_residue</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span> <span class="ow">and</span> <span class="n">rel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_toml_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># Python &lt; 3.11</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">return</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="native_pyproject_fragment">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_pyproject_fragment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_pyproject_fragment</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The pyproject tables ``backend`` needs, for ``project_name``.</span>
+
+<span class="sd">    &gt;&gt;&gt; frag = native_pyproject_fragment("fast_thing")</span>
+<span class="sd">    &gt;&gt;&gt; frag["build-system"]["build-backend"], frag["tool"]["maturin"]["module-name"]</span>
+<span class="sd">    ('maturin', 'fast_thing._core')</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">pyproject_fragment</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_load_toml_text</span><span class="p">(</span><span class="n">apply_placeholders</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">native_names</span><span class="p">(</span><span class="n">project_name</span><span class="p">)))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dotted_get</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dotted</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dotted</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dotted_set</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dotted</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="o">*</span><span class="n">parents</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">dotted</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">last</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dotted_pop</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dotted</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="o">*</span><span class="n">parents</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">dotted</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">_dotted_get</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parents</span><span class="p">))</span> <span class="k">if</span> <span class="n">parents</span> <span class="k">else</span> <span class="n">data</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">parent</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_merge_into</span><span class="p">(</span><span class="n">dst</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Merge ``src`` into ``dst``: tables recursively, lists gain missing items."""</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">have</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">have</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">_merge_into</span><span class="p">(</span><span class="n">have</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">have</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">have</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">have</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dst</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_without</span><span class="p">(</span><span class="n">fragment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dotted_tables</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dotted</span> <span class="ow">in</span> <span class="n">dotted_tables</span><span class="p">:</span>
+        <span class="n">_dotted_pop</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="n">dotted</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rest</span>
+
+
+<div class="viewcode-block" id="merge_native_pyproject">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.merge_native_pyproject">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_native_pyproject</span><span class="p">(</span>
+    <span class="n">pyproject</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A copy of ``pyproject`` with a native ``fragment`` merged in (for a NEW package).</span>
+
+<span class="sd">    The profile's ``replaces`` tables are replaced and its ``drops`` tables removed; the</span>
+<span class="sd">    other tables merge, lists gaining the items they lack.</span>
+
+<span class="sd">    &gt;&gt;&gt; new = merge_native_pyproject(</span>
+<span class="sd">    ...     {"build-system": {"requires": ["hatchling"], "build-backend": "hatchling.build"},</span>
+<span class="sd">    ...      "project": {"optional-dependencies": {"dev": ["pytest"]}},</span>
+<span class="sd">    ...      "tool": {"hatch": {"build": {}}, "ruff": {}}},</span>
+<span class="sd">    ...     native_pyproject_fragment("fast_thing"),</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; new["build-system"]["build-backend"], sorted(new["tool"])</span>
+<span class="sd">    ('maturin', ['maturin', 'pytest', 'ruff', 'uv'])</span>
+<span class="sd">    &gt;&gt;&gt; new["project"]["optional-dependencies"]["dev"]</span>
+<span class="sd">    ['pytest', 'hypothesis']</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dotted</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">drops</span><span class="p">:</span>
+        <span class="n">_dotted_pop</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dotted</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dotted</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">replaces</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">_dotted_get</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">dotted</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_dotted_set</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">dotted</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+    <span class="n">_merge_into</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">_without</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">replaces</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gaps</span><span class="p">(</span><span class="n">have</span><span class="p">,</span> <span class="n">want</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``(missing, added, differing)``: what ``have`` lacks of ``want``, as trees.</span>
+
+<span class="sd">    ``missing``: keys ``have`` does not have; ``added``: list items it lacks;</span>
+<span class="sd">    ``differing``: values it set otherwise.</span>
+<span class="sd">    """</span>
+    <span class="n">missing</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">differing</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">want</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">have</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">have</span><span class="p">:</span>
+            <span class="n">missing</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">have</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">tree</span><span class="p">,</span> <span class="n">sub</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="n">missing</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">differing</span><span class="p">),</span> <span class="n">_gaps</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">sub</span><span class="p">:</span>
+                    <span class="n">tree</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">items</span><span class="p">:</span>
+                <span class="n">added</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span>
+        <span class="k">elif</span> <span class="n">current</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">differing</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">missing</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">differing</span>
+
+
+<div class="viewcode-block" id="native_pyproject_gaps">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_pyproject_gaps">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_pyproject_gaps</span><span class="p">(</span>
+    <span class="n">pyproject</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(required, recommended)``: what an EXISTING pyproject lacks for ``backend``.</span>
+
+<span class="sd">    Required: absent keys and missing list items, and a ``replaces`` table whose</span>
+<span class="sd">    scalars differ (another build backend) or are absent, given whole. Recommended:</span>
+<span class="sd">    values set otherwise than the template's (a deliberate choice stays yours), and a</span>
+<span class="sd">    ``replaces`` table that only lacks list items (e.g. an older ``requires`` pin).</span>
+
+<span class="sd">    &gt;&gt;&gt; required, recommended = native_pyproject_gaps(</span>
+<span class="sd">    ...     {"build-system": {"requires": ["maturin&gt;=1.9.4,&lt;2"], "build-backend": "maturin"}},</span>
+<span class="sd">    ...     "fast_thing",</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; "build-system" in required, recommended["build-system"]["build-backend"]</span>
+<span class="sd">    (False, 'maturin')</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">fragment</span> <span class="o">=</span> <span class="n">native_pyproject_fragment</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">required</span><span class="p">,</span> <span class="n">recommended</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">dotted</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">replaces</span><span class="p">:</span>
+        <span class="n">want</span> <span class="o">=</span> <span class="n">_dotted_get</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">dotted</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">want</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">missing</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">differing</span> <span class="o">=</span> <span class="n">_gaps</span><span class="p">(</span><span class="n">_dotted_get</span><span class="p">(</span><span class="n">pyproject</span><span class="p">,</span> <span class="n">dotted</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">want</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">missing</span> <span class="ow">or</span> <span class="n">differing</span><span class="p">:</span>
+            <span class="n">_dotted_set</span><span class="p">(</span><span class="n">required</span><span class="p">,</span> <span class="n">dotted</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">want</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">added</span><span class="p">:</span>
+            <span class="n">_dotted_set</span><span class="p">(</span><span class="n">recommended</span><span class="p">,</span> <span class="n">dotted</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">want</span><span class="p">))</span>
+    <span class="n">missing</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">differing</span> <span class="o">=</span> <span class="n">_gaps</span><span class="p">(</span><span class="n">pyproject</span><span class="p">,</span> <span class="n">_without</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">replaces</span><span class="p">))</span>
+    <span class="n">_merge_into</span><span class="p">(</span><span class="n">required</span><span class="p">,</span> <span class="n">missing</span><span class="p">)</span>
+    <span class="n">_merge_into</span><span class="p">(</span><span class="n">required</span><span class="p">,</span> <span class="n">added</span><span class="p">)</span>
+    <span class="n">_merge_into</span><span class="p">(</span><span class="n">recommended</span><span class="p">,</span> <span class="n">differing</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">required</span><span class="p">,</span> <span class="n">recommended</span></div>
+
+
+
+<div class="viewcode-block" id="native_pyproject_todo">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_pyproject_todo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_pyproject_todo</span><span class="p">(</span>
+    <span class="n">pyproject</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What an EXISTING pyproject needs for ``backend``, as TOML text ('' if nothing).</span>
+
+<span class="sd">    ``populate`` never rewrites an existing pyproject.toml; it reports this instead. Two</span>
+<span class="sd">    blocks, each valid TOML: ``# Required`` and ``# Recommended``</span>
+<span class="sd">    (:func:`native_pyproject_gaps`).</span>
+
+<span class="sd">    &gt;&gt;&gt; print(native_pyproject_todo({}, "fast_thing"))  # doctest: +ELLIPSIS</span>
+<span class="sd">    # Required: merge into pyproject.toml (lists: add the items shown).</span>
+<span class="sd">    # [build-system] replaces yours.</span>
+<span class="sd">    [build-system]</span>
+<span class="sd">    requires = [...]</span>
+<span class="sd">    build-backend = "maturin"</span>
+<span class="sd">    ...</span>
+<span class="sd">    module-name = "fast_thing._core"</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; pyproject = merge_native_pyproject({}, native_pyproject_fragment("fast_thing"))</span>
+<span class="sd">    &gt;&gt;&gt; native_pyproject_todo(pyproject, "fast_thing")</span>
+<span class="sd">    ''</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomli_w</span>
+
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">required</span><span class="p">,</span> <span class="n">recommended</span> <span class="o">=</span> <span class="n">native_pyproject_gaps</span><span class="p">(</span>
+        <span class="n">pyproject</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span>
+    <span class="p">)</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">required</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"# Required: merge into pyproject.toml (lists: add the items shown)."</span><span class="p">]</span>
+        <span class="n">replaced</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">replaces</span> <span class="k">if</span> <span class="n">_dotted_get</span><span class="p">(</span><span class="n">required</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"# [</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">] replaces yours."</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">replaced</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">replaced</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">"# [</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">] configures the build backend being replaced: carry its "</span>
+                <span class="sa">f</span><span class="s2">"include/exclude rules over to the new backend's table, then delete it."</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">drops</span>
+                <span class="k">if</span> <span class="n">_dotted_get</span><span class="p">(</span><span class="n">pyproject</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">]</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">tomli_w</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">required</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">recommended</span><span class="p">:</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">"# Recommended: these differ from the template's (keep yours if deliberate).</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="o">+</span> <span class="n">tomli_w</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">recommended</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_text</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_facade_body</span><span class="p">(</span><span class="n">template_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The template facade without its module docstring: the lines to add to a real one."""</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">template_text</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">template_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">body</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">is_docstring</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expr</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">end_lineno</span> <span class="k">if</span> <span class="n">is_docstring</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">start</span><span class="p">:])</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+
+
+<div class="viewcode-block" id="native_facade_todo">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.native_facade_todo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_facade_todo</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span><span class="p">,</span>
+    <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The lines a kept (real) facade lacks for the template's tests ('' if none).</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
+<span class="sd">    &gt;&gt;&gt; os.makedirs(os.path.join(d, "fast_thing"))</span>
+<span class="sd">    &gt;&gt;&gt; _ = open(os.path.join(d, "fast_thing", "__init__.py"), "w").write("X = 1\\n")</span>
+<span class="sd">    &gt;&gt;&gt; print(native_facade_todo(d, "fast_thing"))  # doctest: +ELLIPSIS</span>
+<span class="sd">    from importlib.metadata import version as _version</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    from fast_thing import _core</span>
+<span class="sd">    ...</span>
+<span class="sd">    def hamming(a: str, b: str) -&gt; int:</span>
+<span class="sd">    ...</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">profile</span><span class="o">.</span><span class="n">facade</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">native_names</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">apply_placeholders</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">facade</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">existing</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">FilesystemTemplateSource</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">template_dir</span><span class="p">)[</span><span class="n">profile</span><span class="o">.</span><span class="n">facade</span><span class="p">]</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">_facade_body</span><span class="p">(</span><span class="n">apply_placeholders</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span>
+    <span class="n">have</span> <span class="o">=</span> <span class="p">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">existing</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()}</span>
+    <span class="n">lacking</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">have</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">body</span> <span class="k">if</span> <span class="n">lacking</span> <span class="k">else</span> <span class="s2">""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gitignore_todo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">patterns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``patterns`` the project's ``.gitignore`` lacks (``/x``, ``x/``, ``x`` agree)."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="s2">".gitignore"</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_executable</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``name`` on PATH, else in ``~/.cargo/bin`` (rustup may not have edited PATH)."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">found</span>
+    <span class="n">fallback</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">"~"</span><span class="p">),</span> <span class="s2">".cargo"</span><span class="p">,</span> <span class="s2">"bin"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fallback</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fallback</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pinned_toolchain_missing</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">profile</span><span class="p">:</span> <span class="n">NativeProfile</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""True when the project pins a toolchain the toolchain manager lists as absent.</span>
+
+<span class="sd">    ``False`` whenever it cannot tell (no pin, no manager, a listing that fails): the</span>
+<span class="sd">    lockfile command then runs and its own error, if any, is reported.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">toolchain_pin</span> <span class="ow">and</span> <span class="n">profile</span><span class="o">.</span><span class="n">toolchain_list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">file</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">toolchain_pin</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+    <span class="n">channel</span> <span class="o">=</span> <span class="n">_load_toml_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">if</span> <span class="n">text</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">lister</span> <span class="o">=</span> <span class="n">_find_executable</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">toolchain_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">channel</span> <span class="ow">or</span> <span class="n">lister</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">lister</span><span class="p">,</span> <span class="o">*</span><span class="n">profile</span><span class="o">.</span><span class="n">toolchain_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">installed</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">t</span> <span class="o">==</span> <span class="n">channel</span> <span class="ow">or</span> <span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">-"</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">installed</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_lockfile</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">profile</span><span class="p">:</span> <span class="n">NativeProfile</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run the profile's lockfile command; ``None`` on success, else the reason."""</span>
+    <span class="n">tool</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">lockfile_command</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile_command</span><span class="p">)</span>
+    <span class="n">then_commit</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"commit </span><span class="si">{</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="si">}</span><span class="s2"> (CI builds with --locked)"</span>
+    <span class="n">exe</span> <span class="o">=</span> <span class="n">_find_executable</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tool</span><span class="si">}</span><span class="s2"> not found: run `</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">` once it is installed, and </span><span class="si">{</span><span class="n">then_commit</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span> <span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile_env</span><span class="p">)}</span>
+    <span class="n">missing_toolchain</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"the pinned toolchain is not installed: run "</span>
+        <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">missing_toolchain</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">(</span><span class="s1">''</span><span class="p">,</span><span class="w"> </span><span class="s1">'its installer'</span><span class="p">))[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">`, then "</span>
+        <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">`, and </span><span class="si">{</span><span class="n">then_commit</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">_pinned_toolchain_missing</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">missing_toolchain</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">exe</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">pkg_dir</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">` did not complete: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">profile</span><span class="o">.</span><span class="n">missing_toolchain</span> <span class="ow">and</span> <span class="n">profile</span><span class="o">.</span><span class="n">missing_toolchain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">missing_toolchain</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"(no output)"</span><span class="p">])[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">` failed: </span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_attention</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="apply_native">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.apply_native">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_native</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"maturin"</span><span class="p">,</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">generate_lockfile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">lockfile_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+    <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_error</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_attention</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_warn_attention</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenerationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Scaffold a native core (``backend``) into the project at ``pkg_dir``.</span>
+
+<span class="sd">    Writes the backend's template files that do not exist yet (``overwrite`` names the</span>
+<span class="sd">    ones to replace). A missing or blank facade (``__init__.py``) is written; a real one</span>
+<span class="sd">    is kept, the files of a new package only (``py.typed``) are left out, and the lines</span>
+<span class="sd">    the template's tests need are reported. ``on_attention(filename, reason)`` also gets</span>
+<span class="sd">    missing ``.gitignore`` entries and a lockfile it could not generate. pyproject.toml is</span>
+<span class="sd">    not touched here: ``populate`` merges :func:`native_pyproject_fragment` into a new</span>
+<span class="sd">    one and reports :func:`native_pyproject_todo` for an existing one.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = tempfile.mkdtemp()</span>
+<span class="sd">    &gt;&gt;&gt; res = apply_native(</span>
+<span class="sd">    ...     d, project_name="fast_thing", generate_lockfile=False, on_attention=None</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; [t for t in res.added if t.startswith("rust/")]  # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">    ['rust/core/Cargo.toml', 'rust/core/src/lib.rs', 'rust/py/Cargo.toml',</span>
+<span class="sd">     'rust/py/src/lib.rs']</span>
+<span class="sd">    """</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_native_profile</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">on_attention</span> <span class="o">=</span> <span class="n">on_attention</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">filename</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">license</span> <span class="o">=</span> <span class="n">license</span> <span class="ow">or</span> <span class="n">native_licence</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">native_names</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">overwrite</span> <span class="o">=</span> <span class="p">{</span><span class="n">overwrite</span><span class="p">}</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overwrite</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">set</span><span class="p">(</span><span class="n">overwrite</span><span class="p">)</span>
+
+    <span class="n">facade</span> <span class="o">=</span> <span class="n">apply_placeholders</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">facade</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="k">if</span> <span class="n">profile</span><span class="o">.</span><span class="n">facade</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">facade</span><span class="p">))</span> <span class="k">if</span> <span class="n">facade</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">new_package</span> <span class="o">=</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">existing</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">facade</span> <span class="ow">and</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">new_package</span><span class="p">:</span>
+        <span class="n">overwrite</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">facade</span><span class="p">)</span>  <span class="c1"># a blank __init__.py, e.g. the one populate just made</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">generate</span><span class="p">(</span>
+        <span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="n">native_artifacts</span><span class="p">(</span>
+            <span class="n">backend</span><span class="p">,</span>
+            <span class="n">project_name</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+            <span class="n">skip</span><span class="o">=</span><span class="p">()</span> <span class="k">if</span> <span class="n">new_package</span> <span class="k">else</span> <span class="n">profile</span><span class="o">.</span><span class="n">new_package_only</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">names</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+        <span class="n">on_add</span><span class="o">=</span><span class="n">on_add</span><span class="p">,</span>
+        <span class="n">on_skip</span><span class="o">=</span><span class="n">on_skip</span><span class="p">,</span>
+        <span class="n">on_error</span><span class="o">=</span><span class="n">on_error</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">native_facade_todo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">on_attention</span><span class="p">(</span>
+            <span class="n">facade</span><span class="p">,</span>
+            <span class="s2">"kept as it was; the template's tests (tests/) call the example API below. "</span>
+            <span class="s2">"Add it, then replace the example with your own functions:</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="n">lines</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">license</span><span class="p">:</span>
+        <span class="n">unlicensed</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">t</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">added</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">r</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">profile</span><span class="o">.</span><span class="n">unlicensed</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">unlicensed</span><span class="p">:</span>
+            <span class="n">on_attention</span><span class="p">(</span>
+                <span class="n">unlicensed</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">"pyproject.toml declares no SPDX licence ([project].license as an "</span>
+                <span class="s2">"SPDX expression, or License classifiers), so the crates declare "</span>
+                <span class="s2">"none: set [project].license to an SPDX expression, then set the "</span>
+                <span class="sa">f</span><span class="s2">"licence and uncomment the licence lines in </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unlicensed</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">lacking</span> <span class="o">=</span> <span class="n">_gitignore_todo</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">gitignore_patterns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lacking</span><span class="p">:</span>
+        <span class="n">on_attention</span><span class="p">(</span>
+            <span class="s2">".gitignore"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"add </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> (build output and compiled modules of a "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2"> build must never be committed)"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">generate_lockfile</span> <span class="ow">and</span> <span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)):</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="n">_generate_lockfile</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">lockfile_timeout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">on_add</span><span class="p">:</span>
+                    <span class="n">on_add</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">on_attention</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">lockfile</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -925,7 +1651,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=0f488adb"></script>
+</div><script src="../../_static/documentation_options.js?v=e76bcb6b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

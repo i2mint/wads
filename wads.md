@@ -1,4 +1,4 @@
-> built 2026-11-10 10:40 UTC from 399e729 (master) · wads 0.2.83. Details: build_info.json
+> built 2026-11-10 11:15 UTC from 595640e (master) · wads 0.2.84. Details: build_info.json
 
 # index.html.md
 
@@ -516,6 +516,8 @@ On the npm side, npm-ci packs the commit that was pushed, which comes before the
 
 A package built with [maturin](https://www.maturin.rs/) (`build-backend = "maturin"`) gets the native path automatically: one abi3 wheel per platform plus an sdist, instead of one `uv build`.
 
+**Scaffold one with `populate my_pkg --native maturin`** (combinable with `--frontend`). It writes the layout this path builds: a root Cargo workspace whose members are `rust/*`, with `rust/core` (pure Rust, `my-pkg-core`) and `rust/py` (the PyO3 binding, `my-pkg-py`, built as `my_pkg._core`, abi3), crates licensed like the package (the SPDX expression of `[project].license`, else of its `License ::` classifiers; a licence file is never guessed from, so without either the crates declare none and populate says so), a pinned `rust-toolchain.toml`, clippy and rustfmt configs, the Python facade `my_pkg/__init__.py` with its `_core.pyi` stub and a pure-Python `_reference.py` oracle, `tests/` (API and Hypothesis differential tests), and `Cargo.lock` when cargo and the pinned toolchain are installed (it never downloads a toolchain: otherwise it tells you to run `rustup toolchain install`). A new `pyproject.toml` gets the maturin `[build-system]`, `[tool.maturin]`, `[tool.uv] cache-keys` and pytest `testpaths` that include the package, so the facade’s doctests run. To add a Rust core to an existing package, run it in the repo: nothing existing is rewritten. Under “Needs attention” it prints the pyproject tables to add (`# Required`, then `# Recommended` for values you set otherwise) and, when your `__init__.py` is kept, the lines the template’s tests expect. The templates live in `wads/data/native/`; `wads.profiles.register_native_profile` adds a backend.
+
 - **Validation** (every run) adds, before the install, the Rust toolchain components and a cargo cache (written only on the default branch), and after it `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` on the pure-Rust crates (every workspace crate but the binding one maturin builds, which is tested through Python), once, on the first Python version. `wads ci-local` runs the same checks.
 - **Release** (default branch, publishing on): `native-version` computes the version once; `native-wheels` builds one wheel per target with that version (`PyO3/maturin-action`, `--release --locked`), imports it from outside the repo when the runner can run it, and uploads it; `publish-native` runs the publish job’s own steps with `uv build --sdist` plus those wheels in place of `uv build`, and refuses if a release that landed meanwhile moved the version. macOS and Windows minutes (about 10x and 2x Linux) are spent only on this path, never on a PR.
 - Default targets: `linux-x86_64`, `linux-aarch64` (native arm runner), `macos-arm64`, `macos-x86_64` (cross-compiled, not import-tested), `windows-x64`.
@@ -531,7 +533,7 @@ smoke_import = "mypkg._core"        # default: [tool.maturin].module-name
 cargo_test_args = ["-p", "mypkg-core"]   # default: derived from cargo metadata; [] skips
 ```
 
-Commit `Cargo.lock` (the default `--locked` refuses a build without it) and enable pyo3’s `abi3-py3X` feature (a non-abi3 wheel is refused). The Cargo workspace is found from `[tool.maturin].manifest-path`, so it may live below the repo root. If a release lands while the wheels are building, `publish-native` refuses (the wheels carry the old number): re-run **all** jobs, not only the failed one. A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow builds `ci-fixtures/native_pkg` through the same actions on every target whenever the native path changes.
+Commit `Cargo.lock` (the default `--locked` refuses a build without it) and enable pyo3’s `abi3-py3X` feature (a non-abi3 wheel is refused). The Cargo workspace is found from `[tool.maturin].manifest-path`, so it may live below the repo root. If a release lands while the wheels are building, `publish-native` refuses (the wheels carry the old number): re-run **all** jobs, not only the failed one. A setting that does not parse fails the setup job. A pure-Python repo runs exactly the jobs it ran before. The `native-selftest` workflow scaffolds a package with `populate --native maturin` and builds it through the same actions on every target whenever the native path or its templates change.
 
 ### Licence Perimeter (`wads-licence-check`)
 
@@ -6526,7 +6528,7 @@ README.md, pyproject.toml, and .gitignore.
 | [`populate_pkg_dir`](_autosummary/wads.populate.html.md#wads.populate.populate_pkg_dir)(pkg_dir[, version, ...])        | Populate project directory root with useful packaging files, if they're missing. |
 | [`populate_proj_from_url`](_autosummary/wads.populate.html.md#wads.populate.populate_proj_from_url)(url[, proj_rootdir, ...]) | git clone a repository and set the resulting folder up for packaging.            |
 | [`update_pack_and_setup_py`](_autosummary/wads.populate.html.md#wads.populate.update_pack_and_setup_py)(target_pkg_dir[, ...])  | Just copy over setup.py and pack.py (moving the original to be prefixed by '_'   |
-| [`write_pyproject_configs`](_autosummary/wads.populate.html.md#wads.populate.write_pyproject_configs)(pkg_dir, configs)        | Write pyproject.toml file from template and configs.                             |
+| [`write_pyproject_configs`](_autosummary/wads.populate.html.md#wads.populate.write_pyproject_configs)(pkg_dir, configs, \*)    | Write pyproject.toml file from template and configs.                             |
 
 ### Classes
 
@@ -6585,7 +6587,7 @@ subsequent `git clone`).
 
 Entry point of the `populate` console script.
 
-### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, \*\*configs)
+### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, native='', \*\*configs)
 
 Populate project directory root with useful packaging files, if they’re missing.
 
@@ -6654,6 +6656,14 @@ Populate project directory root with useful packaging files, if they’re missin
   * **create_tests** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True, scaffold a `tests/` folder (`__init__.py`,
     a `test_<name>.py` smoke test, and a `tests/util.py` data accessor).
     Off by default so default output is unchanged.
+  * **native** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Native backend for a compiled core (issue #214); `"maturin"` is
+    the only one. Scaffolds a Cargo workspace (`rust/core` pure Rust, `rust/py`
+    the PyO3 binding built as `<name>._core`, abi3), `rust-toolchain.toml`, a
+    facade `<name>/__init__.py` with stub and reference, tests, and generates
+    `Cargo.lock` when cargo is available: the layout wads’ native CI path builds.
+    A new pyproject.toml gets the maturin build system and `[tool.maturin]`; an
+    existing one is never rewritten, and the tables it lacks are reported under
+    “Needs attention”. Existing files are skipped as usual. Empty by default.
   * **configs** – Extra configurations
 * **Returns:**
 
@@ -6665,13 +6675,16 @@ git clone a repository and set the resulting folder up for packaging.
 
 Just copy over setup.py and pack.py (moving the original to be prefixed by ‘_’
 
-### wads.populate.write_pyproject_configs(pkg_dir, configs)
+### wads.populate.write_pyproject_configs(pkg_dir, configs, , native='')
 
 Write pyproject.toml file from template and configs.
 
 * **Parameters:**
   * **pkg_dir** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Path to package directory
   * **configs** ([`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)) – Dictionary of configuration values
+  * **native** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Native backend (e.g. `"maturin"`) whose pyproject tables replace the
+    hatchling build system (`wads.profiles.merge_native_pyproject`); `""`
+    (default) keeps the template’s hatchling setup.
 
 
 # _autosummary/wads.profiles.html.md
@@ -6696,6 +6709,8 @@ This module hosts two opt-in overlays added *on top of* an existing project:
   alias for `--frontend js`). Profiles are extensible through
   [`register_frontend_profile()`](_autosummary/wads.profiles.html.md#wads.profiles.register_frontend_profile).
 - The **tests-folder overlay** (issue #4): scaffolds a `tests/` package.
+- The **native-core registry** (issue #214): a Rust core built by maturin behind
+  a Python facade (`populate --native maturin`); see [`apply_native()`](_autosummary/wads.profiles.html.md#wads.profiles.apply_native).
 
 Nothing here runs by default; the Python `populate` path and the
 `name/name/` root layout are untouched.
@@ -6707,26 +6722,39 @@ Nothing here runs by default; the Python `populate` path and the
 | [`DFLT_RUST_DIR`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_RUST_DIR)              | Where a Rust core lives in the native (maturin) layout; when present, a change there runs the npm CI too (a wasm build may compile it). |
 | [`LICENSE_FILENAMES`](_autosummary/wads.profiles.html.md#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
 | [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
+| [`NATIVE_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.NATIVE_PROFILES)            | The native-backend registry.                                                                                                            |
 
 ### Functions
 
-| [`apply_frontend`](_autosummary/wads.profiles.html.md#wads.profiles.apply_frontend)(pkg_dir, \*[, profile, ...])      | Apply one frontend profile component to an existing project directory.        |
-|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`apply_npm_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)     | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
-| [`apply_tests_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)   | Scaffold a `tests/` folder in an existing project (issue #4).                 |
-| [`default_npm_watch_paths`](_autosummary/wads.profiles.html.md#wads.profiles.default_npm_watch_paths)([repo_dir])              | Inputs outside its subdir an npm component's CI should run on.                |
-| [`find_license_file`](_autosummary/wads.profiles.html.md#wads.profiles.find_license_file)(repo_dir, \*[, names])         | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
-| [`frontend_context`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context)(\*, profile_name, project_name) | Build the render context shared by all frontend-profile templates.            |
-| [`get_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.get_frontend_profile)(name)                       | Look up a registered profile, with an informative error if unknown.           |
-| [`make_tests_overlay_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.make_tests_overlay_artifacts)(project_name, \*)   | Artifacts that scaffold a `tests/` folder for a project.                      |
-| [`npm_overlay_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.npm_overlay_artifacts)([npm_subdir])              | Deprecated: the `js` overlay artifacts.                                       |
-| [`npm_overlay_context`](_autosummary/wads.profiles.html.md#wads.profiles.npm_overlay_context)(\*, project_name[, ...])     | Deprecated: render context for the `js` overlay.                              |
-| [`register_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.register_frontend_profile)(profile)               | Register (or override) a frontend profile by name.                            |
+| [`apply_frontend`](_autosummary/wads.profiles.html.md#wads.profiles.apply_frontend)(pkg_dir, \*[, profile, ...])        | Apply one frontend profile component to an existing project directory.        |
+|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`apply_native`](_autosummary/wads.profiles.html.md#wads.profiles.apply_native)(pkg_dir, \*[, backend, license, ...]) | Scaffold a native core (`backend`) into the project at `pkg_dir`.             |
+| [`apply_npm_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_npm_overlay)(pkg_dir, \*, project_name)       | Deprecated alias for `apply_frontend(profile="js", ...)` (issue #32 surface). |
+| [`apply_tests_overlay`](_autosummary/wads.profiles.html.md#wads.profiles.apply_tests_overlay)(pkg_dir, \*, project_name)     | Scaffold a `tests/` folder in an existing project (issue #4).                 |
+| [`default_npm_watch_paths`](_autosummary/wads.profiles.html.md#wads.profiles.default_npm_watch_paths)([repo_dir])                | Inputs outside its subdir an npm component's CI should run on.                |
+| [`find_license_file`](_autosummary/wads.profiles.html.md#wads.profiles.find_license_file)(repo_dir, \*[, names])           | `(file name, text)` of the repo's root licence, or `None` if it has none.     |
+| [`frontend_context`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context)(\*, profile_name, project_name)   | Build the render context shared by all frontend-profile templates.            |
+| [`get_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.get_frontend_profile)(name)                         | Look up a registered profile, with an informative error if unknown.           |
+| [`get_native_profile`](_autosummary/wads.profiles.html.md#wads.profiles.get_native_profile)(name)                           | Look up a registered native profile, with an informative error if unknown.    |
+| [`make_tests_overlay_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.make_tests_overlay_artifacts)(project_name, \*)     | Artifacts that scaffold a `tests/` folder for a project.                      |
+| [`merge_native_pyproject`](_autosummary/wads.profiles.html.md#wads.profiles.merge_native_pyproject)(pyproject, fragment, \*)    | A copy of `pyproject` with a native `fragment` merged in (for a NEW package). |
+| [`native_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.native_artifacts)(backend, project_name, \*[, ...]) | The `Artifact` list a native backend writes for `project_name`.               |
+| [`native_facade_todo`](_autosummary/wads.profiles.html.md#wads.profiles.native_facade_todo)(pkg_dir, project_name, \*)      | The lines a kept (real) facade lacks for the template's tests ('' if none).   |
+| [`native_licence`](_autosummary/wads.profiles.html.md#wads.profiles.native_licence)(pkg_dir)                            | The SPDX expression the package at `pkg_dir` declares, or `None`.             |
+| [`native_names`](_autosummary/wads.profiles.html.md#wads.profiles.native_names)(project_name, \*[, license, backend]) | Map the template tokens to their values for `project_name`.                   |
+| [`native_pyproject_fragment`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_fragment)(project_name, \*[, ...]) | The pyproject tables `backend` needs, for `project_name`.                     |
+| [`native_pyproject_gaps`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_gaps)(pyproject, project_name, \*) | `(required, recommended)`: what an EXISTING pyproject lacks for `backend`.    |
+| [`native_pyproject_todo`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_todo)(pyproject, project_name, \*) | What an EXISTING pyproject needs for `backend`, as TOML text ('' if nothing). |
+| [`npm_overlay_artifacts`](_autosummary/wads.profiles.html.md#wads.profiles.npm_overlay_artifacts)([npm_subdir])                | Deprecated: the `js` overlay artifacts.                                       |
+| [`npm_overlay_context`](_autosummary/wads.profiles.html.md#wads.profiles.npm_overlay_context)(\*, project_name[, ...])       | Deprecated: render context for the `js` overlay.                              |
+| [`register_frontend_profile`](_autosummary/wads.profiles.html.md#wads.profiles.register_frontend_profile)(profile)                 | Register (or override) a frontend profile by name.                            |
+| [`register_native_profile`](_autosummary/wads.profiles.html.md#wads.profiles.register_native_profile)(profile)                   | Register (or override) a native profile by name.                              |
 
 ### Classes
 
-| [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)(name, default_subdir, ...[, ...])   | A declarative frontend language/toolchain profile.   |
-|------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)(name, default_subdir, ...[, ...])   | A declarative frontend language/toolchain profile.                           |
+|------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`NativeProfile`](_autosummary/wads.profiles.html.md#wads.profiles.NativeProfile)(name, template_dir, ...[, ...])       | A native (compiled-extension) backend that `populate --native` can scaffold. |
 
 ### wads.profiles.DFLT_RUST_DIR *= 'rust'*
 
@@ -6759,6 +6787,43 @@ A declarative frontend language/toolchain profile.
 
 Root licence file names a frontend component copies, in order of preference.
 
+### wads.profiles.NATIVE_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'maturin': NativeProfile(name='maturin', template_dir='/home/runner/work/wads/wads/wads/data/native/maturin', pyproject_fragment='/home/runner/work/wads/wads/wads/data/native/maturin_pyproject.toml', replaces=('build-system',), drops=('tool.hatch',), facade='tmpl_pkg/_\_init_\_.py', new_package_only=('tmpl_pkg/py.typed',), gitignore_patterns=('target', '\*.so'), lockfile='Cargo.lock', lockfile_command=('cargo', 'generate-lockfile', '--quiet'), lockfile_env=(('RUSTUP_AUTO_INSTALL', '0'),), missing_toolchain=('is not installed', 'rustup toolchain install'), toolchain_pin=('rust-toolchain.toml', 'toolchain', 'channel'), toolchain_list=('rustup', 'toolchain', 'list'), unlicensed=(('license = "tmpl-license"', '# license = "<SPDX id>"'), ('license.workspace = true', '# license.workspace = true')), description='Rust core (rust/core) + PyO3 binding (rust/py) built by maturin.')}*
+
+The native-backend registry. Extend it via [`register_native_profile()`](_autosummary/wads.profiles.html.md#wads.profiles.register_native_profile).
+
+### *class* wads.profiles.NativeProfile(name, template_dir, pyproject_fragment, replaces=(), drops=(), facade='', new_package_only=(), gitignore_patterns=(), lockfile='', lockfile_command=(), lockfile_env=(), missing_toolchain=(), toolchain_pin=(), toolchain_list=(), unlicensed=(), description='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A native (compiled-extension) backend that `populate --native` can scaffold.
+
+Paths are template paths (with the tokens); pyproject tables are dotted
+(`"tool.hatch"`).
+
+* **Parameters:**
+  * **name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – registry key; also the backend name `wads.native_build` knows.
+  * **template_dir** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – folder of files written at their (token-substituted) paths.
+  * **pyproject_fragment** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – TOML file of the pyproject tables the backend needs.
+  * **replaces** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – fragment tables that replace the pyproject’s whole (rather than
+    merge into it), e.g. `"build-system"`.
+  * **drops** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – tables a NEW pyproject loses, because they configure what
+    `replaces` replaced (e.g. `"tool.hatch"`); an existing one is told to.
+  * **facade** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – the package’s `__init__.py` template. A missing or blank one is
+    written; a real one is kept and the lines the template tests need are reported.
+  * **new_package_only** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – files written only when the package is new (no real facade).
+  * **gitignore_patterns** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `.gitignore` entries the layout relies on.
+  * **lockfile** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – lockfile the build needs (`--locked`), generated when missing.
+  * **lockfile_command** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – command generating `lockfile`, run in the project root.
+  * **lockfile_env** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(name, value)` pairs added to that command’s environment.
+  * **missing_toolchain** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(marker, command)`: when the lockfile command’s stderr
+    has `marker`, the pinned toolchain is missing and `command` installs it.
+  * **toolchain_pin** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(file, table, key)` naming the pinned toolchain channel
+    (checked against `toolchain_list` before the lockfile command runs).
+  * **toolchain_list** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – command listing the installed toolchains, one per line.
+  * **unlicensed** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(text, replacement)` pairs applied to the templates when the
+    package’s licence cannot be determined (the crates then declare none).
+  * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
+
 ### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
@@ -6775,6 +6840,32 @@ Returns the [`wads.templating.GenerationResult`](_autosummary/wads.templating.ht
 >>> sorted(res.added)
 ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
  'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
+```
+
+* **Return type:**
+  [`GenerationResult`](_autosummary/wads.templating.html.md#wads.templating.GenerationResult)
+
+### wads.profiles.apply_native(pkg_dir, \*, backend='maturin', project_name, license=None, overwrite=(), generate_lockfile=True, lockfile_timeout=300, on_add=None, on_skip=None, on_error=None, on_attention=<function \_warn_attention>)
+
+Scaffold a native core (`backend`) into the project at `pkg_dir`.
+
+Writes the backend’s template files that do not exist yet (`overwrite` names the
+ones to replace). A missing or blank facade (`__init__.py`) is written; a real one
+is kept, the files of a new package only (`py.typed`) are left out, and the lines
+the template’s tests need are reported. `on_attention(filename, reason)` also gets
+missing `.gitignore` entries and a lockfile it could not generate. pyproject.toml is
+not touched here: `populate` merges [`native_pyproject_fragment()`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_fragment) into a new
+one and reports [`native_pyproject_todo()`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_todo) for an existing one.
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> res = apply_native(
+...     d, project_name="fast_thing", generate_lockfile=False, on_attention=None
+... )
+>>> [t for t in res.added if t.startswith("rust/")]
+['rust/core/Cargo.toml', 'rust/core/src/lib.rs', 'rust/py/Cargo.toml',
+ 'rust/py/src/lib.rs']
 ```
 
 * **Return type:**
@@ -6842,6 +6933,13 @@ Look up a registered profile, with an informative error if unknown.
 * **Return type:**
   [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)
 
+### wads.profiles.get_native_profile(name)
+
+Look up a registered native profile, with an informative error if unknown.
+
+* **Return type:**
+  [`NativeProfile`](_autosummary/wads.profiles.html.md#wads.profiles.NativeProfile)
+
 ### wads.profiles.make_tests_overlay_artifacts(project_name, , with_data_util=True)
 
 Artifacts that scaffold a `tests/` folder for a project.
@@ -6853,6 +6951,168 @@ the name is known.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.profiles.merge_native_pyproject(pyproject, fragment, , backend='maturin')
+
+A copy of `pyproject` with a native `fragment` merged in (for a NEW package).
+
+The profile’s `replaces` tables are replaced and its `drops` tables removed; the
+other tables merge, lists gaining the items they lack.
+
+```pycon
+>>> new = merge_native_pyproject(
+...     {"build-system": {"requires": ["hatchling"], "build-backend": "hatchling.build"},
+...      "project": {"optional-dependencies": {"dev": ["pytest"]}},
+...      "tool": {"hatch": {"build": {}}, "ruff": {}}},
+...     native_pyproject_fragment("fast_thing"),
+... )
+>>> new["build-system"]["build-backend"], sorted(new["tool"])
+('maturin', ['maturin', 'pytest', 'ruff', 'uv'])
+>>> new["project"]["optional-dependencies"]["dev"]
+['pytest', 'hypothesis']
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.profiles.native_artifacts(backend, project_name, , license=None, skip=())
+
+The `Artifact` list a native backend writes for `project_name`.
+
+`skip` names template paths to leave out.
+
+```pycon
+>>> sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:3]
+['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.profiles.native_facade_todo(pkg_dir, project_name, , backend='maturin', license=None)
+
+The lines a kept (real) facade lacks for the template’s tests (’’ if none).
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> os.makedirs(os.path.join(d, "fast_thing"))
+>>> _ = open(os.path.join(d, "fast_thing", "__init__.py"), "w").write("X = 1\n")
+>>> print(native_facade_todo(d, "fast_thing"))
+from importlib.metadata import version as _version
+
+from fast_thing import _core
+...
+def hamming(a: str, b: str) -> int:
+...
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.profiles.native_licence(pkg_dir)
+
+The SPDX expression the package at `pkg_dir` declares, or `None`.
+
+Metadata only, never a guess from a licence document: `[project].license` as a
+string or `{text = ...}`, canonicalised; else the `License ::` classifiers,
+joined with `OR` (`None` if any is not recognised). `{file = ...}` or
+`license-files` alone say no SPDX id, so `None`.
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> native_licence(d) is None
+True
+>>> _ = open(os.path.join(d, "pyproject.toml"), "w").write(
+...     '[project]\nclassifiers = ["License :: OSI Approved :: MIT License",'
+...     ' "License :: OSI Approved :: Apache Software License"]\n'
+... )
+>>> native_licence(d)
+'MIT OR Apache-2.0'
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.profiles.native_names(project_name, , license=None, backend='maturin')
+
+Map the template tokens to their values for `project_name`.
+
+The project name is the import name (`populate` makes `<name>/<name>/`), so it
+must be a lowercase identifier; Cargo package names are its kebab-case form.
+`license` is the package’s SPDX id; without one the crates declare no licence
+(the profile’s `unlicensed` edits) rather than a guessed one.
+
+```pycon
+>>> native_names("fast_thing", license="Apache-2.0")
+{'tmpl_pkg': 'fast_thing', 'tmpl-pkg': 'fast-thing', 'tmpl-license': 'Apache-2.0'}
+>>> native_names("fast_thing")['license = "tmpl-license"']
+'# license = "<SPDX id>"'
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.profiles.native_pyproject_fragment(project_name, , backend='maturin')
+
+The pyproject tables `backend` needs, for `project_name`.
+
+```pycon
+>>> frag = native_pyproject_fragment("fast_thing")
+>>> frag["build-system"]["build-backend"], frag["tool"]["maturin"]["module-name"]
+('maturin', 'fast_thing._core')
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.profiles.native_pyproject_gaps(pyproject, project_name, , backend='maturin')
+
+`(required, recommended)`: what an EXISTING pyproject lacks for `backend`.
+
+Required: absent keys and missing list items, and a `replaces` table whose
+scalars differ (another build backend) or are absent, given whole. Recommended:
+values set otherwise than the template’s (a deliberate choice stays yours), and a
+`replaces` table that only lacks list items (e.g. an older `requires` pin).
+
+```pycon
+>>> required, recommended = native_pyproject_gaps(
+...     {"build-system": {"requires": ["maturin>=1.9.4,<2"], "build-backend": "maturin"}},
+...     "fast_thing",
+... )
+>>> "build-system" in required, recommended["build-system"]["build-backend"]
+(False, 'maturin')
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
+
+### wads.profiles.native_pyproject_todo(pyproject, project_name, , backend='maturin')
+
+What an EXISTING pyproject needs for `backend`, as TOML text (’’ if nothing).
+
+`populate` never rewrites an existing pyproject.toml; it reports this instead. Two
+blocks, each valid TOML: `# Required` and `# Recommended`
+([`native_pyproject_gaps()`](_autosummary/wads.profiles.html.md#wads.profiles.native_pyproject_gaps)).
+
+```pycon
+>>> print(native_pyproject_todo({}, "fast_thing"))
+# Required: merge into pyproject.toml (lists: add the items shown).
+# [build-system] replaces yours.
+[build-system]
+requires = [...]
+build-backend = "maturin"
+...
+module-name = "fast_thing._core"
+...
+>>> pyproject = merge_native_pyproject({}, native_pyproject_fragment("fast_thing"))
+>>> native_pyproject_todo(pyproject, "fast_thing")
+''
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.profiles.npm_overlay_artifacts(npm_subdir='js')
 
@@ -6874,6 +7134,13 @@ Register (or override) a frontend profile by name. Returns the profile.
 
 * **Return type:**
   [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)
+
+### wads.profiles.register_native_profile(profile)
+
+Register (or override) a native profile by name. Returns the profile.
+
+* **Return type:**
+  [`NativeProfile`](_autosummary/wads.profiles.html.md#wads.profiles.NativeProfile)
 
 
 # _autosummary/wads.project_setup.html.md
@@ -9141,18 +9408,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-10 10:40 UTC** from commit <a href="https://github.com/i2mint/wads/commit/399e7294f38b56df11764270be3af25d72090c41"><code>399e729</code></a> on branch <code>master</code>, for **wads 0.2.83** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 11:15 UTC** from commit <a href="https://github.com/i2mint/wads/commit/595640ef53b4a3b1c8c8382c452ff79093c4ecc2"><code>595640e</code></a> on branch <code>master</code>, for **wads 0.2.84** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.83) is behind the latest release on PyPI (0.2.84): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/399e7294f38b56df11764270be3af25d72090c41"><code>399e7294f38b56df11764270be3af25d72090c41</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/595640ef53b4a3b1c8c8382c452ff79093c4ecc2"><code>595640ef53b4a3b1c8c8382c452ff79093c4ecc2</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9163,9 +9428,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42800587723">42800587723</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42805380038">42805380038</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>399e7294f38b56df11764270be3af25d72090c41</code> (in the history of the built commit) |
+| Event commit | <code>595640ef53b4a3b1c8c8382c452ff79093c4ecc2</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9190,13 +9455,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.84/">0.2.84</a>, newer than the documented version (0.2.83).
+Latest release: <a href="https://pypi.org/project/wads/0.2.84/">0.2.84</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 399e7294f38b56df11764270be3af25d72090c41
+git checkout 595640ef53b4a3b1c8c8382c452ff79093c4ecc2
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

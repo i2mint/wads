@@ -16,7 +16,7 @@ README.md, pyproject.toml, and .gitignore.
 | [`populate_pkg_dir`](#wads.populate.populate_pkg_dir)(pkg_dir[, version, ...])        | Populate project directory root with useful packaging files, if they're missing. |
 | [`populate_proj_from_url`](#wads.populate.populate_proj_from_url)(url[, proj_rootdir, ...]) | git clone a repository and set the resulting folder up for packaging.            |
 | [`update_pack_and_setup_py`](#wads.populate.update_pack_and_setup_py)(target_pkg_dir[, ...])  | Just copy over setup.py and pack.py (moving the original to be prefixed by '_'   |
-| [`write_pyproject_configs`](#wads.populate.write_pyproject_configs)(pkg_dir, configs)        | Write pyproject.toml file from template and configs.                             |
+| [`write_pyproject_configs`](#wads.populate.write_pyproject_configs)(pkg_dir, configs, \*)    | Write pyproject.toml file from template and configs.                             |
 
 ### Classes
 
@@ -75,7 +75,7 @@ subsequent `git clone`).
 
 Entry point of the `populate` console script.
 
-### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, \*\*configs)
+### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, native='', \*\*configs)
 
 Populate project directory root with useful packaging files, if they’re missing.
 
@@ -144,6 +144,14 @@ Populate project directory root with useful packaging files, if they’re missin
   * **create_tests** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True, scaffold a `tests/` folder (`__init__.py`,
     a `test_<name>.py` smoke test, and a `tests/util.py` data accessor).
     Off by default so default output is unchanged.
+  * **native** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Native backend for a compiled core (issue #214); `"maturin"` is
+    the only one. Scaffolds a Cargo workspace (`rust/core` pure Rust, `rust/py`
+    the PyO3 binding built as `<name>._core`, abi3), `rust-toolchain.toml`, a
+    facade `<name>/__init__.py` with stub and reference, tests, and generates
+    `Cargo.lock` when cargo is available: the layout wads’ native CI path builds.
+    A new pyproject.toml gets the maturin build system and `[tool.maturin]`; an
+    existing one is never rewritten, and the tables it lacks are reported under
+    “Needs attention”. Existing files are skipped as usual. Empty by default.
   * **configs** – Extra configurations
 * **Returns:**
 
@@ -155,10 +163,13 @@ git clone a repository and set the resulting folder up for packaging.
 
 Just copy over setup.py and pack.py (moving the original to be prefixed by ‘_’
 
-### wads.populate.write_pyproject_configs(pkg_dir, configs)
+### wads.populate.write_pyproject_configs(pkg_dir, configs, , native='')
 
 Write pyproject.toml file from template and configs.
 
 * **Parameters:**
   * **pkg_dir** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Path to package directory
   * **configs** ([`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)) – Dictionary of configuration values
+  * **native** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Native backend (e.g. `"maturin"`) whose pyproject tables replace the
+    hatchling build system (`wads.profiles.merge_native_pyproject`); `""`
+    (default) keeps the template’s hatchling setup.
