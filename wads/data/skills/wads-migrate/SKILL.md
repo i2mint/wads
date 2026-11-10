@@ -133,7 +133,7 @@ Flip one repo (idempotent, one command):
 wads-migrate ci-on-demand --dry-run    # print the diff, write nothing
 wads-migrate ci-on-demand --commit     # write + commit exactly pyproject.toml and ci.yml
 git push                               # the pushed commit carries the on-demand stub, so the push itself runs nothing
-wads ci-local                          # what CI would have run: lint, tests, build
+wads ci-local                          # what CI would have run: lint, tests, npm components (per npm-ci*.yml stub; --no-npm skips), build
 ```
 
 What it does per `ci.yml` shape: **stub** → re-rendered, keeping its pin (a JSON-transport stub becomes named, i2mint/wads#101); **inline uv** → converted to the stub, carrying secret-backed env vars into `[tool.wads.ci.env]` first; **2025/legacy/custom** → refused with exit 2 and nothing written (run `ci-to-uv` first); **no ci.yml** → pyproject only. It sets `python_versions = ["3.12"]` and `test_on_windows = false` (override with `--python-versions 3.11,3.12` / `--test-on-windows`; `--run-ci-marker` sets a custom marker). Notes go to stderr: env vars carried, a non-`@master` pin (only a uv-ci.yml with the i2mint/wads#85 job gates keeps a marker quoted in a PR body from running the whole CI), and other workflow files that still run on push, PR or cron.

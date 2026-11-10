@@ -293,7 +293,7 @@ wads-secrets superset                             # names the stub may pass
 # On-demand CI: nothing runs unless the commit subject has "[run ci]" (or workflow_dispatch)
 wads-migrate ci-on-demand --dry-run               # diff: trigger + python 3.12 + no Windows + stub
 wads-migrate ci-on-demand --commit                # apply and commit (idempotent), then git push
-wads ci-local                                     # lint, tests, build from [tool.wads.ci]
+wads ci-local                                     # lint, tests, npm components' validate, build from [tool.wads.ci]
 wads ci-local --publish                           # + bump, upload, commit, tag, push (refuses dirty/off-default)
 
 # Debug CI failures

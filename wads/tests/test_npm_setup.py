@@ -70,9 +70,7 @@ def test_npm_config_trigger_on_demand():
     cfg = NpmCIConfig(
         {
             "name": "x",
-            "wads": {
-                "ci": {"trigger": {"mode": "on-demand", "runCiMarker": "[go]"}}
-            },
+            "wads": {"ci": {"trigger": {"mode": "on-demand", "runCiMarker": "[go]"}}},
         }
     )
     assert cfg.trigger_mode == "on-demand"
@@ -85,8 +83,16 @@ def test_npm_config_trigger_mode_rejects_invalid():
         cfg.trigger_mode
 
 
-def test_npm_config_trigger_marker_rejects_empty():
-    cfg = NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": ""}}}})
+def test_npm_config_trigger_empty_means_unset_as_in_ci():
+    """The workflows read ``runCiMarker || '[run ci]'`` and ``mode || 'auto'``."""
+    cfg = NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": "", "mode": ""}}}})
+    assert cfg.run_ci_marker == "[run ci]"
+    assert cfg.trigger_mode == "auto"
+
+
+@pytest.mark.parametrize("marker", ["   ", "[run\nci]"])
+def test_npm_config_trigger_marker_rejects_blank_or_multiline(marker):
+    cfg = NpmCIConfig({"wads": {"ci": {"trigger": {"runCiMarker": marker}}}})
     with pytest.raises(ValueError, match="runCiMarker"):
         cfg.run_ci_marker
 

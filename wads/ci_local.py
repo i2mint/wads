@@ -12,7 +12,20 @@ the object the reusable workflow's setup job reads, and runs in order:
    one ``--ignore`` per excluded path, then ``pytest_args``). Then one more such leg per
    ``[[tool.wads.ci.testing.pinned]]`` entry, the project and its pins installed in one
    resolve and checked with ``uv pip check``, as the validation job's pinned legs do.
-3. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a
+3. **npm components** (polyglot repos only): for each ``.github/workflows`` stub that
+   calls a wads ``npm-ci*.yml`` reusable workflow (:func:`wads.npm_config.npm_components`),
+   what that workflow's validate job runs in its ``package-dir``
+   (:func:`wads.npm_config.npm_validate_commands`): the install (``npm ci`` with a
+   lockfile, else ``npm install``; ``pnpm install``, frozen with a lockfile), then
+   ``lintCommand``, ``testCommand`` and ``buildCommand``, each through ``bash -e -c`` as
+   a ``run:`` step. They run in a copy of the repo's files git does not ignore, inside the
+   temporary directory, so the tree (``node_modules``, a new lockfile) is never touched;
+   the commands are read from that copy, as CI reads its checkout. The copy has no
+   ``.git``, so an npm script that calls git sees no repository there. A
+   missing tool (bash, node, the package manager) fails the step with an install hint;
+   ``npm=False`` (``--no-npm``) leaves the npm half out. Not run with ``publish=True``:
+   CI's PyPI publish does not wait on the npm workflow either.
+4. **build**: ``uv build`` into the temporary directory, never the repo's ``dist/``, so a
    stale artifact can never be uploaded.
 
 With ``publish=True`` it does what the publish job does in place of the plain build:
@@ -26,7 +39,8 @@ and hosted CI does not: install pins such as ``UV_CONSTRAINT``, and ``PYTHONSAFE
 ``PYTHONPATH``, ``PYTHONHOME``, ``PYTHONOPTIMIZE``; each leg's tests run with its venv
 activated, as CI's are), where CI exports only the
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
-installed; and lint runs on the tree as it is, where CI formats first.
+installed; lint runs on the tree as it is, where CI formats first; and an npm component
+runs once, on the local node, where CI runs once per ``nodeVersions`` entry.
 
 Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's
 PID (:mod:`wads.workdirs`), and gives pytest a private ``--basetemp`` inside it, so
@@ -56,11 +70,12 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads.ci_config import TRIGGER_LEVELS, CIConfig
 from wads.native_build import cargo_test_args, native_build_config
+from wads.npm_config import npm_components, npm_validate_commands
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
 from wads.workdirs import (
     BYTES_PER_GB,
@@ -89,6 +104,8 @@ DIST_DIR = f"{WORKDIR}/dist"
 # ci-local's own pytest --basetemp: private to the run (pytest prunes the shared default
 # one on startup, deleting a concurrent run's live basetemp), and swept with the workdir.
 PYTEST_BASETEMP = f"{WORKDIR}/pytest"
+# The copy of the repo the npm components are validated in (never the tree itself).
+NPM_SOURCE_DIR = f"{WORKDIR}/src"
 _PLACEHOLDER = re.compile(r"<<(\w+)>>")
 
 # Side-effect classes. The default runner refuses the outward ones under pytest.
@@ -135,10 +152,24 @@ WORKDIR_BYTES_PER_PYTHON = 1_000_000_000
 #: to ~82k on a real tmpfs that ran out of inodes, not bytes (issue #159).
 WORKDIR_INODES_PER_PYTHON = 100_000
 
+#: How an npm component's commands run: as the npm workflows' ``run:`` steps, which set
+#: no ``shell:``, so Actions runs them with ``bash -e {0}`` (no pipefail).
+NPM_COMMAND_SHELL = ("bash", "-e", "-c")
+#: Lists the files to copy for the npm half: tracked, plus untracked but not ignored.
+GIT_LS_FILES = ("git", "ls-files", "-z", "--cached", "--others", "--exclude-standard")
+#: Never copied for the npm half, even when git does not ignore them.
+NPM_COPY_IGNORE = (".git", "node_modules")
+#: The npm validate job's commands, in order (fields of ``NpmValidateCommands``).
+NPM_STEP_KINDS = ("install", "lint", "test", "build")
+
 _INSTALL_HINTS = {
     "uv": "install uv: https://docs.astral.sh/uv/getting-started/installation/",
     "uvx": "install uv (it provides uvx): https://docs.astral.sh/uv/getting-started/installation/",
     "git": "install git: https://git-scm.com/downloads",
+    "node": "install Node.js (it provides npm): https://nodejs.org/en/download",
+    "npm": "install Node.js (it provides npm): https://nodejs.org/en/download",
+    "pnpm": "install pnpm: https://pnpm.io/installation",
+    "bash": "install bash (on Windows, Git for Windows provides it: https://gitforwindows.org)",
 }
 
 
@@ -151,7 +182,10 @@ class Step:
     after a path separator, or nothing when it has none), filled in at run time. A non-``blocking``
     failure is reported without stopping the run. ``capture`` names the context value that
     receives the command's last stdout line. A ``check`` takes the run context and returns
-    an error message, or ``None`` when it passes.
+    an error message, or ``None`` when it passes. ``cwd`` is the directory the command
+    runs in, relative to the repo (default: the repo); it may hold placeholders.
+    ``requires`` names tools that must be on the steps' ``PATH``: without one, the step
+    fails with an install hint, without running.
     """
 
     name: str
@@ -162,11 +196,14 @@ class Step:
     side_effect: str = ""
     capture: str = ""
     env: tuple = ()
+    cwd: str = ""
+    requires: tuple = ()
 
     def display(self) -> str:
         if self.check is not None:
             return f"(check) {self.description}"
-        return shlex.join(self.argv)
+        command = shlex.join(self.argv)
+        return f"cd {shlex.quote(self.cwd)} && {command}" if self.cwd else command
 
 
 @dataclass(frozen=True)
@@ -281,8 +318,12 @@ def plan_ci_local(
     publish: bool = False,
     config: Optional[CIConfig] = None,
     platform: str = os.name,
+    npm: bool = True,
 ) -> list[Step]:
-    """Everything ``wads ci-local`` would run for ``repo``, in order, without running it."""
+    """Everything ``wads ci-local`` would run for ``repo``, in order, without running it.
+
+    ``npm=False`` leaves out the npm components' validate steps.
+    """
     repo = Path(repo)
     config = config if config is not None else CIConfig.from_file(repo)
     steps = _publish_preconditions() if publish else []
@@ -292,6 +333,8 @@ def plan_ci_local(
     steps += _rust_steps(config, repo=repo)
     steps += _test_steps(config, platform=platform, repo=repo)
     steps += _pinned_steps(config, platform=platform, repo=repo)
+    if npm and not publish:
+        steps += _npm_steps(repo)
     steps += _release_steps(config, repo=repo) if publish else _build_steps(config)
     return steps
 
@@ -511,6 +554,114 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
             description="cargo test on the pure-Rust crates (not the binding one)",
         ),
     ]
+
+
+def _npm_steps(repo: Path) -> list[Step]:
+    """The npm CI workflows' validate job, per npm component of a polyglot repo (#213),
+    in a copy of the repo inside the workdir.
+
+    The commands are read from the copy, at run time (``npm <dir>: config``), not from
+    the tree: a gitignored lockfile in the tree is not in the copy, nor in CI's checkout.
+    """
+    components = {}
+    for component in npm_components(repo):
+        # One run per (dir, workflow kind), however many stubs call it.
+        components.setdefault((component.dir, component.monorepo), component)
+    if not components:
+        return []
+    steps = [
+        Step(
+            "npm: copy the repo",
+            check=_copy_repo_for_npm,
+            description=f"copy the files git does not ignore to {NPM_SOURCE_DIR}",
+        )
+    ]
+    dirs = [directory for directory, _ in components]
+    for index, ((directory, monorepo), component) in enumerate(components.items()):
+        label = f"npm {directory}"
+        if dirs.count(directory) > 1:  # one dir, called as single and as monorepo
+            label += " (monorepo)" if monorepo else " (single)"
+        cwd = NPM_SOURCE_DIR if directory == "." else f"{NPM_SOURCE_DIR}/{directory}"
+        key = f"npm{index}"
+        steps.append(
+            Step(
+                f"{label}: config",
+                check=_npm_config_check(component, cwd=cwd, key=key),
+                description=(
+                    f"read wads.ci from the copy's {directory}/package.json, "
+                    f"as {component.workflow} does"
+                ),
+            )
+        )
+        for kind in NPM_STEP_KINDS:
+            steps.append(
+                Step(
+                    f"{label}: {kind}",
+                    (*NPM_COMMAND_SHELL, f"<<{key}_{kind}>>"),
+                    cwd=cwd,
+                    requires=("bash", "node", f"<<{key}_manager>>"),
+                )
+            )
+    return steps
+
+
+def _npm_config_check(component, *, cwd: str, key: str) -> Callable:
+    """A check reading ``component``'s commands from the copy into ``<<key_*>>`` values."""
+
+    def check(ctx) -> Optional[str]:
+        try:
+            commands = npm_validate_commands(
+                Path(_fill(cwd, ctx.values)), monorepo=component.monorepo
+            )
+        except (OSError, ValueError) as exc:
+            return f"{component.workflow}: {exc}"
+        ctx.values[f"{key}_manager"] = commands.package_manager
+        for kind in NPM_STEP_KINDS:
+            ctx.values[f"{key}_{kind}"] = getattr(commands, kind)
+        return None
+
+    return check
+
+
+def _ignored_for_npm(name: str) -> bool:
+    """Whether a repo-relative path lies under a ``NPM_COPY_IGNORE`` directory."""
+    return any(part in NPM_COPY_IGNORE for part in Path(name).parts[:-1])
+
+
+def _copy_repo_for_npm(ctx) -> Optional[str]:
+    """Copy what a checkout would hold (git's view of the tree) to ``NPM_SOURCE_DIR``.
+
+    The npm install and builds write in their directory; in the copy they cannot touch
+    the developer's tree. Untracked files git does not ignore are included, as the
+    Python legs test the tree as it is; never anything under ``NPM_COPY_IGNORE`` (a
+    ``node_modules`` the repo forgot to ignore), and, outside git, everything else.
+    """
+    dest = Path(_fill(NPM_SOURCE_DIR, ctx.values))
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+        listing = ctx.run(GIT_LS_FILES, capture=True)
+        if listing.returncode != 0:
+            shutil.copytree(
+                ctx.repo,
+                dest,
+                symlinks=True,
+                ignore=shutil.ignore_patterns(*NPM_COPY_IGNORE),
+                dirs_exist_ok=True,
+            )
+            ctx.notes.append(
+                "not a git checkout: the npm components ran in a full copy"
+            )
+            return None
+        for name in filter(None, listing.stdout.split("\0")):
+            source = ctx.repo / name
+            if _ignored_for_npm(name) or not (source.is_file() or source.is_symlink()):
+                continue  # node_modules, deleted from the tree, or a submodule
+            target = dest / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target, follow_symlinks=False)
+    except (OSError, shutil.Error) as exc:
+        return f"could not copy the repo for the npm components: {exc}"
+    return None
 
 
 def _test_steps(config: CIConfig, *, platform: str, repo=None) -> list[Step]:
@@ -783,16 +934,52 @@ def _last_line(text: str) -> str:
     return lines[-1] if lines else ""
 
 
+def _is_wsl_launcher(path: str) -> bool:
+    """Whether a Windows ``bash`` is System32's WSL launcher, not a real bash."""
+    return "system32" in (part.lower() for part in PureWindowsPath(path).parts)
+
+
+def tool_problems(
+    tools: Sequence[str],
+    env: Mapping[str, str],
+    *,
+    platform: str = os.name,
+    which: Callable = shutil.which,
+) -> list[str]:
+    """Why ``tools`` cannot run with ``env``'s ``PATH`` (the steps' own), with hints.
+
+    >>> tool_problems(["bash"], {"PATH": "/x"}, which=lambda tool, path: "/bin/bash")
+    []
+    >>> tool_problems(["pnpm"], {}, which=lambda tool, path: None)
+    ['pnpm not on PATH: install pnpm: https://pnpm.io/installation']
+    """
+    path = env.get("PATH", "")  # not None: that would search the host's PATH instead
+    problems = []
+    for tool in dict.fromkeys(tools):
+        found = which(tool, path=path)
+        if found is None:
+            hint = _INSTALL_HINTS.get(tool)
+            problems.append(f"{tool} not on PATH" + (f": {hint}" if hint else ""))
+        elif tool == "bash" and platform == "nt" and _is_wsl_launcher(found):
+            problems.append(
+                f"bash on PATH is the WSL launcher ({found}), not a bash: put Git "
+                "Bash first on PATH (https://gitforwindows.org)"
+            )
+    return problems
+
+
 def _execute(step: Step, ctx: _Context) -> tuple[str, str]:
     if step.check is not None:
         error = step.check(ctx)
         return (FAILED, error) if error else (PASSED, "")
-    argv = [_fill(item, ctx.values) for item in step.argv]
     env = dict(ctx.env)
     env.update({key: _fill(value, ctx.values) for key, value in step.env})
+    if problems := tool_problems([_fill(t, ctx.values) for t in step.requires], env):
+        return FAILED, "; ".join(problems)
+    argv = [_fill(item, ctx.values) for item in step.argv]
     result = ctx.runner(
         argv,
-        cwd=ctx.repo,
+        cwd=ctx.repo / _fill(step.cwd, ctx.values) if step.cwd else ctx.repo,
         env=env,
         capture=bool(step.capture),
         side_effect=step.side_effect,
@@ -960,6 +1147,7 @@ def run_ci_local(
     keep_workdir: bool = False,
     workdir_root: Optional[str] = None,
     host_only_vars: Sequence[str] = HOST_ONLY_VARS,
+    npm: bool = True,
 ) -> CILocalReport:
     """Run :func:`plan_ci_local`'s steps, stop at the first blocking failure, and report.
 
@@ -971,12 +1159,12 @@ def run_ci_local(
     (only the upload sees them) and minus ``host_only_vars``, what the dev shell has and
     hosted CI does not: install constraints (#191), ``PYTHONSAFEPATH`` / ``PYTHONPATH``
     (#194). Each leg's tests run with its venv activated (``VIRTUAL_ENV``, its ``bin``
-    first on ``PATH``), as in CI.
+    first on ``PATH``), as in CI. ``npm=False`` leaves out the npm components.
     """
     repo = Path(repo).resolve()
     out = out or sys.stdout
     config = config if config is not None else CIConfig.from_file(repo)
-    steps = plan_ci_local(repo, publish=publish, config=config)
+    steps = plan_ci_local(repo, publish=publish, config=config, npm=npm)
     if n_venvs := _venv_count(steps):
         steps.insert(0, _temp_space_step(n_venvs))
     source_env = dict(os.environ if environ is None else environ)
@@ -1074,10 +1262,13 @@ def ci_local(
     publish: bool = False,
     dry_run: bool = False,
     level: Optional[str] = None,
+    no_npm: bool = False,
 ):
     """Do locally what wads CI would have done, from the repo's [tool.wads.ci] config.
 
-    Lint, tests (a fresh uv venv per configured Python) and build. With --publish, the
+    Lint, tests (a fresh uv venv per configured Python), each npm component's
+    install/lint/test/build (per npm-ci*.yml stub; --no-npm skips them), and build. With
+    --publish, the
     publish job instead: format, bump version, build, upload to PyPI, commit, tag and push,
     refusing on a dirty tree, off the default branch, or without PyPI credentials. With
     --dry-run, print the plan and run nothing. ``--level validate|deploy`` names the same
@@ -1092,8 +1283,8 @@ def ci_local(
             )
         publish = level == "deploy"
     if dry_run:
-        print(render_plan(plan_ci_local(repo, publish=publish)))
+        print(render_plan(plan_ci_local(repo, publish=publish, npm=not no_npm)))
         return None
-    if not run_ci_local(repo, publish=publish).ok:
+    if not run_ci_local(repo, publish=publish, npm=not no_npm).ok:
         raise SystemExit(1)
     return None
