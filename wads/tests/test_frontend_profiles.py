@@ -109,6 +109,7 @@ def test_ts_profile_writes_expected_files(tmp_path):
     assert set(result.added) == {
         "ts/package.json",
         "ts/tsconfig.json",
+        "ts/tsconfig.test.json",
         "ts/src/index.ts",
         "ts/src/index.test.ts",
         ".github/workflows/npm-ci-ts.yml",
@@ -151,6 +152,63 @@ def test_ts_profile_pnpm_package_manager(tmp_path):
     assert NpmCIConfig(pkg_json).package_manager == "pnpm"
 
 
+@pytest.mark.parametrize(
+    "profile, pkg_dir", [("ts", "ts"), ("ts-monorepo", "ts/packages/core")]
+)
+def test_ts_types_resolve_per_condition(tmp_path, profile, pkg_dir):
+    """CommonJS consumers get the .d.cts tsup builds, not the ESM .d.ts (#215)."""
+    apply_frontend(str(tmp_path), profile=profile, project_name="widget")
+    pkg_json = json.loads((tmp_path / pkg_dir / "package.json").read_text())
+    exports = pkg_json["exports"]["."]
+    assert exports["import"] == {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js",
+    }
+    assert exports["require"] == {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs",
+    }
+    assert "types" not in exports  # no single entry masquerading for both
+
+
+@pytest.mark.parametrize(
+    "profile, pkg_dir", [("ts", "ts"), ("ts-monorepo", "ts/packages/core")]
+)
+def test_ts_tests_typechecked_apart_from_library(tmp_path, profile, pkg_dir):
+    """Tests leave the library build; a test tsconfig checks them with Node types."""
+    apply_frontend(str(tmp_path), profile=profile, project_name="widget")
+    lib = json.loads((tmp_path / pkg_dir / "tsconfig.json").read_text())
+    assert "src/**/*.test.ts" in lib["exclude"]
+    assert lib["compilerOptions"]["types"] == []  # no Node globals in src/
+    test_cfg = json.loads((tmp_path / pkg_dir / "tsconfig.test.json").read_text())
+    assert test_cfg["extends"] == "./tsconfig.json"
+    assert test_cfg["compilerOptions"]["types"] == ["node"]
+    assert "src/**/*.test.ts" not in test_cfg["exclude"]
+    pkg_json = json.loads((tmp_path / pkg_dir / "package.json").read_text())
+    assert "tsc -p tsconfig.test.json" in pkg_json["scripts"]["lint"]
+    assert "@types/node" in pkg_json["devDependencies"]
+
+
+@pytest.mark.parametrize(
+    "profile, pkg_dir",
+    [("js", "js"), ("ts", "ts"), ("ts-monorepo", "ts/packages/core")],
+)
+def test_root_license_lands_in_the_published_package_dir(tmp_path, profile, pkg_dir):
+    """npm packs the LICENSE beside package.json; the root one is outside it (#215)."""
+    (tmp_path / "LICENSE").write_text("MIT License\n\nCopyright (c) someone\n")
+    result = apply_frontend(str(tmp_path), profile=profile, project_name="widget")
+    assert f"{pkg_dir}/LICENSE" in result.added
+    assert (tmp_path / pkg_dir / "LICENSE").read_text() == (
+        tmp_path / "LICENSE"
+    ).read_text()
+
+
+def test_no_root_license_writes_none(tmp_path):
+    result = apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    assert "ts/LICENSE" not in result.added
+    assert not (tmp_path / "ts" / "LICENSE").exists()
+
+
 # --- ts-monorepo profile -------------------------------------------------------
 
 
@@ -163,6 +221,7 @@ def test_ts_monorepo_profile_structure(tmp_path):
         "ts/tsconfig.base.json",
         "ts/packages/core/package.json",
         "ts/packages/core/tsconfig.json",
+        "ts/packages/core/tsconfig.test.json",
         "ts/packages/core/src/index.ts",
         "ts/packages/core/src/index.test.ts",
         ".github/workflows/npm-ci-ts.yml",
@@ -228,6 +287,8 @@ def test_populate_frontend_ts(tmp_path):
     assert (pkg_dir / "ts" / "tsconfig.json").exists()
     assert (pkg_dir / ".github" / "workflows" / "npm-ci-ts.yml").exists()
     assert not (pkg_dir / "js").exists()
+    # populate writes the root LICENSE first, so the npm tarball gets it too (#215)
+    assert (pkg_dir / "ts" / "LICENSE").read_text() == (pkg_dir / "LICENSE").read_text()
 
 
 def test_populate_frontend_multi(tmp_path):

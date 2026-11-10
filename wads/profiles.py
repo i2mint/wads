@@ -32,6 +32,7 @@ from wads import (
     github_ci_npm_stub_path,
     package_json_ts_tpl_path,
     tsconfig_tpl_path,
+    tsconfig_test_tpl_path,
     ts_index_tpl_path,
     ts_index_test_tpl_path,
     pnpm_workspace_tpl_path,
@@ -123,6 +124,7 @@ def frontend_context(
     package_manager: str = "npm",
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
+    license_text: Optional[str] = None,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -150,7 +152,18 @@ def frontend_context(
         # Monorepo-only context (ignored by single-package templates):
         "npm_workspace_glob": workspace_glob,
         "example_package_name": example_package_name or (package_name or project_name),
+        # The repo's root LICENSE, copied next to each published package.json
+        # (npm packs a LICENSE found there; the root one is outside the tarball).
+        "license_text": license_text,
     }
+
+
+def _read_text_if_file(path: str) -> Optional[str]:
+    """The text of ``path``, or ``None`` when it is not a file."""
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return f.read()
 
 
 def _src(tpl_path: str) -> FilesystemTemplateSource:
@@ -164,6 +177,21 @@ def _jinja(target: str, tpl_path: str) -> Artifact:
 
 def _copy(target: str, tpl_path: str) -> Artifact:
     return Artifact.from_copy(target, os.path.basename(tpl_path), _src(tpl_path))
+
+
+#: The file a frontend component copies from the repo root into its package dir.
+LICENSE_FILENAME = "LICENSE"
+
+
+def _license_artifact(package_dir: str) -> Artifact:
+    """Copy the repo's root LICENSE into ``package_dir`` (skipped when there is none).
+
+    npm always packs a LICENSE that sits next to ``package.json``, but a component
+    in a subdir does not see the repo root's, so its tarball shipped without one.
+    """
+    return Artifact(
+        f"{package_dir}/{LICENSE_FILENAME}", lambda ctx: ctx.get("license_text")
+    )
 
 
 def _stub_artifact(subdir: str) -> Artifact:
@@ -186,6 +214,7 @@ def _js_artifacts(ctx: Mapping) -> list:
     subdir = ctx["npm_subdir"]
     return [
         _jinja(f"{subdir}/package.json", package_json_tpl_path),
+        _license_artifact(subdir),
         _stub_artifact(subdir),
     ]
 
@@ -196,6 +225,8 @@ def _ts_artifacts(ctx: Mapping) -> list:
     return [
         _jinja(f"{subdir}/package.json", package_json_ts_tpl_path),
         _copy(f"{subdir}/tsconfig.json", tsconfig_tpl_path),
+        _copy(f"{subdir}/tsconfig.test.json", tsconfig_test_tpl_path),
+        _license_artifact(subdir),
         _copy(f"{subdir}/src/index.ts", ts_index_tpl_path),
         # Ship a passing starter test so the `test` step is green out of the
         # box: `vitest run` exits 1 when it finds *no* test files (issue #41).
@@ -220,6 +251,8 @@ def _ts_monorepo_artifacts(ctx: Mapping) -> list:
         _copy(f"{subdir}/tsconfig.base.json", tsconfig_base_tpl_path),
         _jinja(f"{pkg_dir}/package.json", package_json_monorepo_pkg_tpl_path),
         _copy(f"{pkg_dir}/tsconfig.json", tsconfig_monorepo_pkg_tpl_path),
+        _copy(f"{pkg_dir}/tsconfig.test.json", tsconfig_test_tpl_path),
+        _license_artifact(pkg_dir),
         _copy(f"{pkg_dir}/src/index.ts", ts_index_tpl_path),
         # Passing starter test so `turbo run test` is green out of the box (#41).
         _copy(f"{pkg_dir}/src/index.test.ts", ts_index_test_tpl_path),
@@ -322,7 +355,7 @@ def apply_frontend(
     >>> res = apply_frontend(d, profile="ts", project_name="widget")
     >>> sorted(res.added)  # doctest: +NORMALIZE_WHITESPACE
     ['.github/workflows/npm-ci-ts.yml', 'ts/package.json', 'ts/src/index.test.ts',
-     'ts/src/index.ts', 'ts/tsconfig.json']
+     'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
     """
     prof = get_frontend_profile(profile)
     subdir = subdir or prof.default_subdir
@@ -338,6 +371,7 @@ def apply_frontend(
         package_manager=package_manager,
         workspace_glob=workspace_glob,
         example_package_name=example_package_name,
+        license_text=_read_text_if_file(os.path.join(pkg_dir, LICENSE_FILENAME)),
     )
     return generate(
         pkg_dir,
