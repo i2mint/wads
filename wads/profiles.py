@@ -736,42 +736,51 @@ def native_names(
     return {**dict(get_native_profile(backend).unlicensed), **names}
 
 
-def native_licence(pkg_dir: str) -> Optional[str]:
-    """The SPDX id of the package at ``pkg_dir``, or ``None`` when nothing says.
+def _spdx_expression(name: str) -> Optional[str]:
+    """``name`` as a canonical SPDX expression (wads' one alias map), else ``None``."""
+    from wads.toml_util import pep639_license
 
-    In order: a PEP 639 ``[project].license`` string, a ``{text = ...}`` table naming a
-    licence, the ``License ::`` classifiers, then the licence file (``{file = ...}`` or
-    a root ``LICENSE``-like file) recognised by its opening lines.
+    value = pep639_license(name.strip()) if name and name.strip() else None
+    return value if isinstance(value, str) else None
+
+
+def native_licence(pkg_dir: str) -> Optional[str]:
+    """The SPDX expression the package at ``pkg_dir`` declares, or ``None``.
+
+    Metadata only, never a guess from a licence document: ``[project].license`` as a
+    string or ``{text = ...}``, canonicalised; else the ``License ::`` classifiers,
+    joined with ``OR`` (``None`` if any is not recognised). ``{file = ...}`` or
+    ``license-files`` alone say no SPDX id, so ``None``.
 
     >>> import tempfile
     >>> d = tempfile.mkdtemp()
     >>> native_licence(d) is None
     True
-    >>> _ = open(os.path.join(d, "COPYING"), "w").write("Apache License\\nVersion 2.0, January 2004")
+    >>> _ = open(os.path.join(d, "pyproject.toml"), "w").write(
+    ...     '[project]\\nclassifiers = ["License :: OSI Approved :: MIT License",'
+    ...     ' "License :: OSI Approved :: Apache Software License"]\\n'
+    ... )
     >>> native_licence(d)
-    'Apache-2.0'
+    'MIT OR Apache-2.0'
     """
-    from wads.licensing import spdx_from_licence_name, spdx_from_licence_text
-
     text = _read_text(os.path.join(pkg_dir, "pyproject.toml"))
     project = _load_toml_text(text).get("project", {}) if text else {}
     declared = project.get("license")
-    if isinstance(declared, str) and declared.strip():
-        return declared.strip()
-    table = declared if isinstance(declared, dict) else {}
-    candidates = [table.get("text") or ""] + [
-        c for c in project.get("classifiers", []) if c.startswith("License ::")
+    if isinstance(declared, str):
+        return _spdx_expression(declared)
+    if isinstance(declared, dict):
+        return _spdx_expression(declared.get("text") or "")
+    if project.get("license-files"):
+        return None
+    classifiers = [
+        c.rsplit("::", 1)[-1]
+        for c in project.get("classifiers", [])
+        if c.startswith("License ::")
     ]
-    for name in candidates:
-        spdx = name and spdx_from_licence_name(name)
-        if spdx:
-            return spdx
-    if table.get("file"):
-        licence_text = _read_text(os.path.join(pkg_dir, table["file"]))
-    else:
-        found = find_license_file(pkg_dir)
-        licence_text = found[1] if found else None
-    return spdx_from_licence_text(licence_text) if licence_text else None
+    ids = [_spdx_expression(c) for c in classifiers]
+    if not ids or None in ids:
+        return None
+    return _spdx_expression(" OR ".join(dict.fromkeys(ids)))
 
 
 def native_artifacts(
@@ -1232,10 +1241,10 @@ def apply_native(
         if unlicensed:
             on_attention(
                 unlicensed[0],
-                "the package's licence could not be determined (pyproject.toml "
-                "[project].license, its License classifiers, a LICENSE file), so the "
-                f"crates declare none: set it, and uncomment the licence lines in "
-                f"{', '.join(unlicensed)}",
+                "pyproject.toml declares no SPDX licence ([project].license as an "
+                "SPDX expression, or License classifiers), so the crates declare "
+                "none: set [project].license to an SPDX expression, then set the "
+                f"licence and uncomment the licence lines in {', '.join(unlicensed)}",
             )
     lacking = _gitignore_todo(pkg_dir, profile.gitignore_patterns)
     if lacking:

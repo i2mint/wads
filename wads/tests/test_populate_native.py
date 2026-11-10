@@ -458,39 +458,50 @@ def _with_licence(pkg_dir: Path, *, project_license=None, classifiers=(), text=N
         (pkg_dir / "LICENSE").write_text(text)
 
 
+MIT_CLASSIFIER = "License :: OSI Approved :: MIT License"
+APACHE_CLASSIFIER = "License :: OSI Approved :: Apache Software License"
+LGPL3_TEXT = "GNU LESSER GENERAL PUBLIC LICENSE\n  Version 3, 29 June 2007\n"
+CC_BY_SA_TEXT = "Attribution-ShareAlike 4.0 International\n\n=======\n"
+
+
 @pytest.mark.parametrize(
-    "declared",
+    "declared, expected",
     [
-        {"project_license": {"file": "LICENSE"}, "text": "license_body"},
-        {"text": "license_body"},  # no license key at all: the root LICENSE file
-        {"classifiers": ["License :: OSI Approved :: Apache Software License"]},
-        {"project_license": {"text": "apache-2.0"}},
+        ({"project_license": "MIT OR Apache-2.0"}, "MIT OR Apache-2.0"),
+        ({"project_license": {"text": "MIT OR Apache-2.0"}}, "MIT OR Apache-2.0"),
+        ({"project_license": {"text": "Apache 2.0"}}, "Apache-2.0"),
+        ({"classifiers": [APACHE_CLASSIFIER]}, "Apache-2.0"),
+        ({"classifiers": [MIT_CLASSIFIER, APACHE_CLASSIFIER]}, "MIT OR Apache-2.0"),
     ],
 )
-def test_the_crates_take_the_licence_however_the_package_declares_it(
-    tmp_path, no_cargo, declared
+def test_the_crates_take_the_licence_the_metadata_declares(
+    tmp_path, no_cargo, declared, expected
 ):
-    from wads.licensing import license_body
-
     pkg_dir = tmp_path / NAME
-    if declared.get("text") == "license_body":
-        declared = {**declared, "text": license_body("apache-2.0")}
     _with_licence(pkg_dir, **declared)
     _populate(pkg_dir, native="maturin")
 
     workspace = _toml(pkg_dir / "Cargo.toml")["workspace"]["package"]
-    assert workspace["license"] == "Apache-2.0"
+    assert workspace["license"] == expected
 
 
-def test_an_undeterminable_licence_is_omitted_and_reported(
-    tmp_path, no_cargo, attention
+@pytest.mark.parametrize(
+    "declared",
+    [
+        # A licence document is never read: a wrong id in published crates is worse
+        # than none (an LGPL-3.0 text opens like LGPL-2.1's, CC BY-SA like CC0's).
+        {"project_license": {"file": "LICENSE"}, "text": LGPL3_TEXT},
+        {"text": LGPL3_TEXT},
+        {"text": CC_BY_SA_TEXT},
+        {"classifiers": [MIT_CLASSIFIER, "License :: Other/Proprietary License"]},
+        {"project_license": {"text": "Proprietary"}},
+    ],
+)
+def test_without_an_spdx_declaration_the_crates_declare_none(
+    tmp_path, no_cargo, attention, declared
 ):
     pkg_dir = tmp_path / NAME
-    _with_licence(
-        pkg_dir,
-        project_license={"file": "LICENSE"},
-        text="Copyright (c) 2026 Someone. All rights reserved.\n",
-    )
+    _with_licence(pkg_dir, **declared)
     attention.clear()
     _populate(pkg_dir, native="maturin")
     reported = dict(attention)
@@ -498,8 +509,7 @@ def test_an_undeterminable_licence_is_omitted_and_reported(
     assert "license" not in _toml(pkg_dir / "Cargo.toml")["workspace"]["package"]
     for member in ("core", "py"):
         assert "license" not in _toml(pkg_dir / f"rust/{member}/Cargo.toml")["package"]
-    assert "could not be determined" in reported["Cargo.toml"]
-    assert "MIT" not in (pkg_dir / "Cargo.toml").read_text()
+    assert "set [project].license to an SPDX expression" in reported["Cargo.toml"]
     cargo = _toolchain_ready(pkg_dir)
     if cargo:  # and cargo still reads the workspace
         proc = subprocess.run(
