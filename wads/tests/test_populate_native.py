@@ -69,7 +69,7 @@ def _populate(pkg_dir: Path, **kw):
 
 def _files(root: Path) -> dict:
     return {
-        str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()
     }
 
 
