@@ -897,15 +897,12 @@ def populate_pkg_dir(
             if os.path.isfile(pjoin("pyproject.toml"))
             else {}
         )
-        # The crates carry the package's licence: the pyproject's, else the configured one.
-        project_license = pyproject_data.get("project", {}).get("license")
-        if isinstance(project_license, dict):
-            project_license = project_license.get("text")
+        # The crates carry the package's licence, as apply_native reads it from the
+        # pyproject and LICENSE file; none (and a note) when nothing says which.
         apply_native(
             pkg_dir,
             backend=native,
             project_name=name,
-            license=project_license or configs.get("license"),
             overwrite=overwrite,
             on_add=tracker.add,
             on_skip=tracker.skip,

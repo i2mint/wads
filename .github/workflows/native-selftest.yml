@@ -19,6 +19,11 @@ on:
       - "wads/data/pyproject_toml_tpl.toml"
       - "wads/profiles.py"
       - "wads/populate.py"
+      - "wads/templating.py"
+      - "wads/licensing.py"
+      - "wads/__init__.py"
+      - "wads/toml_util.py"
+      - "pyproject.toml"
       - ".github/workflows/native-selftest.yml"
   workflow_dispatch:
 
@@ -112,6 +117,7 @@ jobs:
       - uses: ./actions/setup-rust
         with:
           project-dir: ${{ env.SCAFFOLD }}
+          manifest-path: ${{ fromJson(needs.setup.outputs.native-options).manifest_path }}
       - name: Editable install builds the extension; its tests and doctests pass
         working-directory: ${{ env.SCAFFOLD }}
         run: |

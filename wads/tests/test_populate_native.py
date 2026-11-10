@@ -69,7 +69,9 @@ def _populate(pkg_dir: Path, **kw):
 
 def _files(root: Path) -> dict:
     return {
-        p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in root.rglob("*")
+        if p.is_file()
     }
 
 
@@ -408,6 +410,100 @@ def test_a_missing_pinned_toolchain_is_reported_not_installed(tmp_path, monkeypa
         str(tmp_path / "pkg"), project_name=NAME, on_attention=attention.__setitem__
     )
     assert "rustup toolchain install" in attention["Cargo.lock"]
+
+
+def test_an_absent_pinned_toolchain_stops_cargo_from_running(tmp_path, monkeypatch):
+    """rustup < 1.28 ignores RUSTUP_AUTO_INSTALL, so the pin is checked before cargo."""
+    if os.name == "nt":
+        pytest.skip("POSIX shell scripts stand in for rustup and cargo")
+    bin_dir, ran = tmp_path / "bin", tmp_path / "cargo-ran"
+    bin_dir.mkdir()
+    (bin_dir / "rustup").write_text(
+        "#!/bin/sh\necho 'stable-x86_64-unknown-linux-gnu (default)'\n"
+    )
+    (bin_dir / "cargo").write_text(f"#!/bin/sh\ntouch {ran}\n")
+    for tool in ("rustup", "cargo"):
+        (bin_dir / tool).chmod(0o755)
+    monkeypatch.setattr(profiles, "_find_executable", lambda name: str(bin_dir / name))
+    attention = {}
+    profiles.apply_native(
+        str(tmp_path / "pkg"), project_name=NAME, on_attention=attention.__setitem__
+    )
+
+    assert not ran.exists(), "cargo ran although the pinned toolchain is absent"
+    assert "rustup toolchain install" in attention["Cargo.lock"]
+
+
+def _with_licence(pkg_dir: Path, *, project_license=None, classifiers=(), text=None):
+    """An existing package whose licence is declared the given ways (and only those)."""
+    import tomli_w
+
+    _populate(pkg_dir)
+    data = _toml(pkg_dir / "pyproject.toml")
+    data["project"].pop("license", None)
+    if project_license is not None:
+        data["project"]["license"] = project_license
+    if classifiers:
+        data["project"]["classifiers"] = list(classifiers)
+    (pkg_dir / "pyproject.toml").write_text(tomli_w.dumps(data))
+    (pkg_dir / "LICENSE").unlink()
+    if text is not None:
+        (pkg_dir / "LICENSE").write_text(text)
+
+
+@pytest.mark.parametrize(
+    "declared",
+    [
+        {"project_license": {"file": "LICENSE"}, "text": "license_body"},
+        {"text": "license_body"},  # no license key at all: the root LICENSE file
+        {"classifiers": ["License :: OSI Approved :: Apache Software License"]},
+        {"project_license": {"text": "apache-2.0"}},
+    ],
+)
+def test_the_crates_take_the_licence_however_the_package_declares_it(
+    tmp_path, no_cargo, declared
+):
+    from wads.licensing import license_body
+
+    pkg_dir = tmp_path / NAME
+    if declared.get("text") == "license_body":
+        declared = {**declared, "text": license_body("apache-2.0")}
+    _with_licence(pkg_dir, **declared)
+    _populate(pkg_dir, native="maturin")
+
+    workspace = _toml(pkg_dir / "Cargo.toml")["workspace"]["package"]
+    assert workspace["license"] == "Apache-2.0"
+
+
+def test_an_undeterminable_licence_is_omitted_and_reported(
+    tmp_path, no_cargo, attention
+):
+    pkg_dir = tmp_path / NAME
+    _with_licence(
+        pkg_dir,
+        project_license={"file": "LICENSE"},
+        text="Copyright (c) 2026 Someone. All rights reserved.\n",
+    )
+    attention.clear()
+    _populate(pkg_dir, native="maturin")
+    reported = dict(attention)
+
+    assert "license" not in _toml(pkg_dir / "Cargo.toml")["workspace"]["package"]
+    for member in ("core", "py"):
+        assert "license" not in _toml(pkg_dir / f"rust/{member}/Cargo.toml")["package"]
+    assert "could not be determined" in reported["Cargo.toml"]
+    assert "MIT" not in (pkg_dir / "Cargo.toml").read_text()
+    cargo = _toolchain_ready(pkg_dir)
+    if cargo:  # and cargo still reads the workspace
+        proc = subprocess.run(
+            [cargo, "metadata", "--no-deps", "--format-version", "1"],
+            cwd=pkg_dir,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env={**os.environ, "RUSTUP_AUTO_INSTALL": "0"},
+        )
+        assert proc.returncode == 0, proc.stderr
 
 
 def test_write_errors_reach_the_tracker(tmp_path, no_cargo, monkeypatch):

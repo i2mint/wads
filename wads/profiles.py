@@ -632,6 +632,11 @@ class NativeProfile:
     :param lockfile_env: ``(name, value)`` pairs added to that command's environment.
     :param missing_toolchain: ``(marker, command)``: when the lockfile command's stderr
         has ``marker``, the pinned toolchain is missing and ``command`` installs it.
+    :param toolchain_pin: ``(file, table, key)`` naming the pinned toolchain channel
+        (checked against ``toolchain_list`` before the lockfile command runs).
+    :param toolchain_list: command listing the installed toolchains, one per line.
+    :param unlicensed: ``(text, replacement)`` pairs applied to the templates when the
+        package's licence cannot be determined (the crates then declare none).
     :param description: one-line human summary.
     """
 
@@ -647,6 +652,9 @@ class NativeProfile:
     lockfile_command: tuple = ()
     lockfile_env: tuple = ()
     missing_toolchain: tuple = ()
+    toolchain_pin: tuple = ()
+    toolchain_list: tuple = ()
+    unlicensed: tuple = ()
     description: str = ""
 
 
@@ -686,19 +694,32 @@ register_native_profile(
         # Never download a toolchain as a side effect of scaffolding.
         lockfile_env=(("RUSTUP_AUTO_INSTALL", "0"),),
         missing_toolchain=("is not installed", "rustup toolchain install"),
+        # rustup < 1.28 ignores RUSTUP_AUTO_INSTALL: look before running cargo.
+        toolchain_pin=("rust-toolchain.toml", "toolchain", "channel"),
+        toolchain_list=("rustup", "toolchain", "list"),
+        unlicensed=(
+            ('license = "tmpl-license"', '# license = "<SPDX id>"'),
+            ("license.workspace = true", "# license.workspace = true"),
+        ),
         description="Rust core (rust/core) + PyO3 binding (rust/py) built by maturin.",
     )
 )
 
 
-def native_names(project_name: str, *, license: Optional[str] = None) -> dict:
+def native_names(
+    project_name: str, *, license: Optional[str] = None, backend: str = "maturin"
+) -> dict:
     """Map the template tokens to their values for ``project_name``.
 
     The project name is the import name (``populate`` makes ``<name>/<name>/``), so it
     must be a lowercase identifier; Cargo package names are its kebab-case form.
+    ``license`` is the package's SPDX id; without one the crates declare no licence
+    (the profile's ``unlicensed`` edits) rather than a guessed one.
 
-    >>> native_names("fast_thing", license="apache")
+    >>> native_names("fast_thing", license="Apache-2.0")
     {'tmpl_pkg': 'fast_thing', 'tmpl-pkg': 'fast-thing', 'tmpl-license': 'Apache-2.0'}
+    >>> native_names("fast_thing")['license = "tmpl-license"']
+    '# license = "<SPDX id>"'
     """
     if not _NATIVE_NAME_RE.fullmatch(project_name):
         raise ValueError(
@@ -706,11 +727,51 @@ def native_names(project_name: str, *, license: Optional[str] = None) -> dict:
             f"starting with a letter), got {project_name!r}: it becomes the Python import "
             f"name, the extension module <name>._core and the Cargo crate names."
         )
-    return {
+    names = {
         _SNAKE_TOKEN: project_name,
         _KEBAB_TOKEN: project_name.replace("_", "-"),
-        _LICENSE_TOKEN: _to_spdx(license),
     }
+    if license:
+        return {**names, _LICENSE_TOKEN: license}
+    return {**dict(get_native_profile(backend).unlicensed), **names}
+
+
+def native_licence(pkg_dir: str) -> Optional[str]:
+    """The SPDX id of the package at ``pkg_dir``, or ``None`` when nothing says.
+
+    In order: a PEP 639 ``[project].license`` string, a ``{text = ...}`` table naming a
+    licence, the ``License ::`` classifiers, then the licence file (``{file = ...}`` or
+    a root ``LICENSE``-like file) recognised by its opening lines.
+
+    >>> import tempfile
+    >>> d = tempfile.mkdtemp()
+    >>> native_licence(d) is None
+    True
+    >>> _ = open(os.path.join(d, "COPYING"), "w").write("Apache License\\nVersion 2.0, January 2004")
+    >>> native_licence(d)
+    'Apache-2.0'
+    """
+    from wads.licensing import spdx_from_licence_name, spdx_from_licence_text
+
+    text = _read_text(os.path.join(pkg_dir, "pyproject.toml"))
+    project = _load_toml_text(text).get("project", {}) if text else {}
+    declared = project.get("license")
+    if isinstance(declared, str) and declared.strip():
+        return declared.strip()
+    table = declared if isinstance(declared, dict) else {}
+    candidates = [table.get("text") or ""] + [
+        c for c in project.get("classifiers", []) if c.startswith("License ::")
+    ]
+    for name in candidates:
+        spdx = name and spdx_from_licence_name(name)
+        if spdx:
+            return spdx
+    if table.get("file"):
+        licence_text = _read_text(os.path.join(pkg_dir, table["file"]))
+    else:
+        found = find_license_file(pkg_dir)
+        licence_text = found[1] if found else None
+    return spdx_from_licence_text(licence_text) if licence_text else None
 
 
 def native_artifacts(
@@ -724,7 +785,7 @@ def native_artifacts(
     ['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']
     """
     profile = get_native_profile(backend)
-    names = native_names(project_name, license=license)
+    names = native_names(project_name, license=license, backend=backend)
     src = FilesystemTemplateSource(profile.template_dir)
 
     def is_residue(rel: str) -> bool:
@@ -990,7 +1051,7 @@ def native_facade_todo(
     profile = get_native_profile(backend)
     if not profile.facade:
         return ""
-    names = native_names(project_name, license=license)
+    names = native_names(project_name, license=license, backend=backend)
     existing = _read_text(
         os.path.join(pkg_dir, apply_placeholders(profile.facade, names))
     )
@@ -1021,6 +1082,37 @@ def _find_executable(name: str) -> Optional[str]:
     return fallback if os.path.isfile(fallback) else None
 
 
+def _pinned_toolchain_missing(pkg_dir: str, profile: NativeProfile, *, env, timeout):
+    """True when the project pins a toolchain the toolchain manager lists as absent.
+
+    ``False`` whenever it cannot tell (no pin, no manager, a listing that fails): the
+    lockfile command then runs and its own error, if any, is reported.
+    """
+    if not (profile.toolchain_pin and profile.toolchain_list):
+        return False
+    file, table, key = profile.toolchain_pin
+    text = _read_text(os.path.join(pkg_dir, file))
+    channel = _load_toml_text(text).get(table, {}).get(key) if text else None
+    lister = _find_executable(profile.toolchain_list[0])
+    if not channel or lister is None:
+        return False
+    try:
+        proc = subprocess.run(
+            [lister, *profile.toolchain_list[1:]],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+            env=env,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    if proc.returncode != 0:
+        return False
+    installed = [line.split()[0] for line in proc.stdout.splitlines() if line.strip()]
+    return not any(t == channel or t.startswith(f"{channel}-") for t in installed)
+
+
 def _generate_lockfile(pkg_dir: str, profile: NativeProfile, *, timeout: float):
     """Run the profile's lockfile command; ``None`` on success, else the reason."""
     tool, *args = profile.lockfile_command
@@ -1031,6 +1123,14 @@ def _generate_lockfile(pkg_dir: str, profile: NativeProfile, *, timeout: float):
         return (
             f"{tool} not found: run `{command}` once it is installed, and {then_commit}"
         )
+    env = {**os.environ, **dict(profile.lockfile_env)}
+    missing_toolchain = (
+        f"the pinned toolchain is not installed: run "
+        f"`{(profile.missing_toolchain or ('', 'its installer'))[1]}`, then "
+        f"`{command}`, and {then_commit}"
+    )
+    if _pinned_toolchain_missing(pkg_dir, profile, env=env, timeout=timeout):
+        return missing_toolchain
     try:
         proc = subprocess.run(
             [exe, *args],
@@ -1039,18 +1139,14 @@ def _generate_lockfile(pkg_dir: str, profile: NativeProfile, *, timeout: float):
             text=True,
             timeout=timeout,
             check=False,
-            env={**os.environ, **dict(profile.lockfile_env)},
+            env=env,
         )
     except (OSError, subprocess.TimeoutExpired) as e:
         return f"`{command}` did not complete: {e}"
     if proc.returncode == 0:
         return None
     if profile.missing_toolchain and profile.missing_toolchain[0] in proc.stderr:
-        install = profile.missing_toolchain[1]
-        return (
-            f"the pinned toolchain is not installed: run `{install}`, then `{command}`, "
-            f"and {then_commit}"
-        )
+        return missing_toolchain
     tail = (proc.stderr.strip().splitlines() or ["(no output)"])[-1]
     return f"`{command}` failed: {tail}"
 
@@ -1094,7 +1190,8 @@ def apply_native(
     """
     profile = get_native_profile(backend)
     on_attention = on_attention or (lambda filename, reason: None)
-    names = native_names(project_name, license=license)
+    license = license or native_licence(pkg_dir)
+    names = native_names(project_name, license=license, backend=backend)
     overwrite = {overwrite} if isinstance(overwrite, str) else set(overwrite)
 
     facade = apply_placeholders(profile.facade, names) if profile.facade else ""
@@ -1123,6 +1220,23 @@ def apply_native(
             "kept as it was; the template's tests (tests/) call the example API below. "
             "Add it, then replace the example with your own functions:\n" + lines,
         )
+    if not license:
+        unlicensed = [
+            t
+            for t in result.added
+            if any(
+                r in (_read_text(os.path.join(pkg_dir, t)) or "")
+                for _, r in profile.unlicensed
+            )
+        ]
+        if unlicensed:
+            on_attention(
+                unlicensed[0],
+                "the package's licence could not be determined (pyproject.toml "
+                "[project].license, its License classifiers, a LICENSE file), so the "
+                f"crates declare none: set it, and uncomment the licence lines in "
+                f"{', '.join(unlicensed)}",
+            )
     lacking = _gitignore_todo(pkg_dir, profile.gitignore_patterns)
     if lacking:
         on_attention(
