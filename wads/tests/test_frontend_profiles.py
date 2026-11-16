@@ -341,6 +341,9 @@ def test_populate_with_npm_is_js_alias(tmp_path):
     )
     assert (pkg_dir / "js" / "package.json").exists()
     assert (pkg_dir / ".github" / "workflows" / "npm-ci.yml").exists()
+    # ...and the repository (#239), from root_url + name
+    manifest = json.loads((pkg_dir / "js" / "package.json").read_text())
+    assert manifest["repository"]["url"] == "git+https://github.com/myorg/widget.git"
 
 
 
