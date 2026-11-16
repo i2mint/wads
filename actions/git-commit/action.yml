@@ -48,6 +48,12 @@ outputs:
       names the tree that was committed, i.e. what the publish job built and
       uploaded, which is what a release tag must point at (i2mint/wads#161).
     value: ${{ steps.commit.outputs.commit-sha }}
+  built-from:
+    description: >-
+      The commit the one this action made sits on (its parent), as the short sha:
+      what the run checked out, so what the publish job built (i2mint/wads#208).
+      Empty when nothing was committed.
+    value: ${{ steps.commit.outputs.built-from }}
 
 runs:
   using: 'composite'
@@ -81,19 +87,23 @@ runs:
         git add $ADD_PATTERN
 
         # Check if there are changes to commit
+        built_from=""
         if git diff --staged --quiet; then
           echo "No changes to commit"
           if [ "$ALLOW_EMPTY" = "true" ]; then
             echo "Creating empty commit (allow-empty=true)"
             git commit --allow-empty -m "$COMMIT_MESSAGE"
+            built_from=$(git rev-parse --short HEAD~1)
           else
             echo "Skipping commit (no changes and allow-empty=false)"
           fi
         else
           echo "Committing changes"
           git commit -m "$COMMIT_MESSAGE"
+          built_from=$(git rev-parse --short HEAD~1)
         fi
         echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        echo "built-from=$built_from" >> "$GITHUB_OUTPUT"
 
     - name: Push Changes
       if: ${{ inputs.push == 'true' }}
@@ -101,6 +111,7 @@ runs:
       env:
         TARGET_BRANCH: ${{ inputs.branch }}
         REBASE_RETRIES: ${{ inputs.push-rebase-retries }}
+        BUILT_FROM: ${{ steps.commit.outputs.built-from }}
       # A package.json / package-lock.json version conflict is resolved with
       # wads' own JSON writer (wads/scripts/sync_version.py --file, standard
       # library only), from this action's checkout ($GITHUB_ACTION_PATH).
@@ -137,6 +148,7 @@ runs:
         # arrived meanwhile is the correct resolution. Rebase rather than merge,
         # to keep the generated commit as a single tip commit.
         attempt=0
+        annotated=""
         while true; do
           echo "Pushing to branch: $branch"
           if git push origin "$branch"; then
@@ -304,5 +316,21 @@ runs:
               echo "::error::Cannot replay this commit onto the current 'origin/$branch': the incoming changes conflict with it. Resolve by hand."
               exit 1
             fi
+          fi
+
+          # The commit now sits after merges its tree does not contain (what the
+          # run built is BUILT_FROM, not the new tip), so its subject says so, or
+          # `git log` reads as if the release held them (i2mint/wads#208). Once:
+          # a later rebase keeps the amended message.
+          if [ -n "$BUILT_FROM" ] && [ -z "$annotated" ]; then
+            msg=$(git log -1 --format=%B)
+            msg=${msg%$'\n'}
+            note="(built from $BUILT_FROM)"
+            case "$msg" in
+              *" [skip ci]") msg="${msg% \[skip ci\]} $note [skip ci]" ;;
+              *) msg="$msg $note" ;;
+            esac
+            git commit --amend -q -m "$msg"
+            annotated=1
           fi
         done

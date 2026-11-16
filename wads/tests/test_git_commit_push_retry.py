@@ -128,7 +128,9 @@ def _configure(path: Path):
     _git("config", "user.name", "CI", cwd=path)
 
 
-def run_push_step(clone: Path, *, retries: str = "3", branch: str = ""):
+def run_push_step(
+    clone: Path, *, retries: str = "3", branch: str = "", built_from: str = ""
+):
     """Run the action's push step in ``clone``, as the composite action does."""
     return subprocess.run(
         [BASH, "-c", push_step_script()],
@@ -139,6 +141,7 @@ def run_push_step(clone: Path, *, retries: str = "3", branch: str = ""):
             **os.environ,
             "TARGET_BRANCH": branch,
             "REBASE_RETRIES": retries,
+            "BUILT_FROM": built_from,
             # The runner sets it for a composite action: the JSON resolver runs
             # wads/scripts/sync_version.py from the action's own checkout.
             "GITHUB_ACTION_PATH": str(_repo_root() / "actions" / "git-commit"),
@@ -193,6 +196,68 @@ class TestPushBackRecovery:
             "**CI** bump to 0.0.3",
             "another merge",
         ]
+
+    def test_a_replayed_bump_names_the_commit_it_was_built_from(
+        self, remote_and_clone, tmp_path
+    ):
+        """#208: the replayed commit sits after merges it does not contain, and its
+        subject says which commit the run built, so `git log` cannot be misread."""
+        origin, clone = remote_and_clone
+        built = _git("rev-parse", "--short", "HEAD", cwd=clone).stdout.strip()
+        _commit(
+            clone,
+            "pyproject.toml",
+            'version = "0.0.3"\n',
+            "**CI** Formatted code + Updated version to 0.0.3 [skip ci]",
+        )
+        _land_a_concurrent_merge(origin, tmp_path)
+
+        result = run_push_step(clone, built_from=built)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _subjects(origin, DEFAULT_BRANCH)[:2] == [
+            "**CI** Formatted code + Updated version to 0.0.3 "
+            f"(built from {built}) [skip ci]",
+            "another merge",
+        ]
+
+    def test_the_note_is_added_once_over_repeated_races(
+        self, remote_and_clone, tmp_path
+    ):
+        origin, clone = remote_and_clone
+        built = _git("rev-parse", "--short", "HEAD", cwd=clone).stdout.strip()
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump [skip ci]")
+        _land_a_concurrent_merge(origin, tmp_path)
+        # a second merge lands while the first replay is in flight
+        _land_a_concurrent_merge(origin, tmp_path, filename="OTHER.md")
+
+        assert run_push_step(clone, built_from=built).returncode == 0
+        subject = _subjects(origin, DEFAULT_BRANCH)[0]
+        assert subject == f"**CI** bump (built from {built}) [skip ci]"
+
+    def test_a_subject_without_the_skip_marker_gets_the_note_appended(
+        self, remote_and_clone, tmp_path
+    ):
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "release 0.0.3")
+        _land_a_concurrent_merge(origin, tmp_path)
+        run_push_step(clone, built_from="abc1234")
+        assert _subjects(origin, DEFAULT_BRANCH)[0] == "release 0.0.3 (built from abc1234)"
+
+    def test_an_unmoved_branch_keeps_the_subject_untouched(
+        self, remote_and_clone, tmp_path
+    ):
+        """No replay, nothing to disambiguate: the subject is exactly what was committed."""
+        origin, clone = remote_and_clone
+        _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump [skip ci]")
+        assert run_push_step(clone, built_from="abc1234").returncode == 0
+        assert _subjects(origin, DEFAULT_BRANCH)[0] == "**CI** bump [skip ci]"
+
+    def test_the_commit_step_exports_what_the_run_built(self):
+        action = yaml.safe_load((_repo_root() / "actions" / "git-commit" / "action.yml").read_text())
+        assert "built-from" in action["outputs"]
+        push = [s for s in action["runs"]["steps"] if s.get("name") == PUSH_STEP_NAME][0]
+        assert push["env"]["BUILT_FROM"] == "${{ steps.commit.outputs.built-from }}"
 
     def test_repeated_races_are_retried_up_to_the_budget(
         self, remote_and_clone, tmp_path
@@ -780,5 +845,5 @@ class TestPushStepContract:
         (step,) = [
             s for s in action["runs"]["steps"] if s.get("name") == PUSH_STEP_NAME
         ]
-        assert set(step["env"]) == {"TARGET_BRANCH", "REBASE_RETRIES"}
+        assert set(step["env"]) == {"TARGET_BRANCH", "REBASE_RETRIES", "BUILT_FROM"}
         assert "${{" not in step["run"]
