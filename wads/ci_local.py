@@ -74,7 +74,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PureWindowsPath
 from typing import Callable, Mapping, Optional, Sequence
 
-from wads.ci_config import TRIGGER_LEVELS, CIConfig
+from wads.ci_config import TRIGGER_LEVELS, CIConfig, ignored_commands_message
 from wads.native_build import cargo_test_args, native_build_config
 from wads.npm_config import npm_components, npm_validate_commands
 from wads.scripts.pytest_doctest_flags import doctest_optionflags_arg
@@ -1225,6 +1225,10 @@ def run_ci_local(
         },
         source_env=source_env,
     )
+    ctx.notes += [
+        ignored_commands_message(key, commands)
+        for key, commands in config.ignored_commands.items()
+    ]
     if dropped_host:
         ctx.notes.append(f"ran without {', '.join(dropped_host)} (hosted CI has none)")
     report = CILocalReport(
