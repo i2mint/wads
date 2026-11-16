@@ -345,3 +345,53 @@ def test_populate_with_npm_is_js_alias(tmp_path):
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def _populate_ts_on_existing_python_pkg(tmp_path, pyproject, **kwargs):
+    pkg_dir = tmp_path / "widget"
+    pkg_dir.mkdir()
+    _git_init(pkg_dir, "https://github.com/myorg/widget")
+    (pkg_dir / "pyproject.toml").write_text(pyproject)
+    populate_pkg_dir(
+        str(pkg_dir),
+        root_url="https://github.com/myorg",
+        verbose=False,
+        frontend="ts",
+        **kwargs,
+    )
+    return json.loads((pkg_dir / "ts" / "package.json").read_text())
+
+
+_EXISTING = '[project]\nname = "widget"\nversion = "0.3.12"\ndescription = "Does widgets"\n'
+
+
+def test_frontend_twin_of_an_existing_python_pkg_starts_at_its_version(tmp_path):
+    """#224: the twin's package.json takes [project].version and description."""
+    pkg = _populate_ts_on_existing_python_pkg(tmp_path, _EXISTING)
+    assert pkg["version"] == "0.3.12"
+    assert pkg["description"] == "Does widgets"
+    # ...so a twin that opts into the polyglot version sync passes its guard
+    from wads.version_sync import check_versions_agree
+
+    check_versions_agree(
+        tmp_path / "widget",
+        {
+            "project": {"version": "0.3.12"},
+            "tool": {"wads": {"ci": {"version": {"sync": ["ts/package.json"]}}}},
+        },
+    )
+
+
+def test_an_explicit_npm_version_wins_over_the_python_one(tmp_path):
+    pkg = _populate_ts_on_existing_python_pkg(
+        tmp_path, _EXISTING, npm_version="1.0.0", description="Mine"
+    )
+    assert pkg["version"] == "1.0.0"
+    assert pkg["description"] == "Mine"
+
+
+def test_a_dynamic_python_version_falls_back_to_the_default(tmp_path):
+    pkg = _populate_ts_on_existing_python_pkg(
+        tmp_path, '[project]\nname = "widget"\ndynamic = ["version"]\n'
+    )
+    assert pkg["version"] == "0.0.1"
