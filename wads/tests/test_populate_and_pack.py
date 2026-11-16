@@ -306,22 +306,46 @@ class TestCompatibility:
         # For now, just ensure the functions don't crash when pyproject.toml is missing
         pass
 
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
-
-
 @pytest.mark.parametrize("kwargs", [{}, {"project_type": "ts-package"}])
 def test_an_unknown_license_is_refused_before_anything_is_written(tmp_path, kwargs):
     """#237: it used to print the key list and write an empty LICENSE."""
     from wads.populate import populate_pkg_dir
 
-    with pytest.raises(ValueError, match="apache-2.0"):
+    with pytest.raises(ValueError, match="closest: apache-2.0"):
         populate_pkg_dir(str(tmp_path), license="apache", verbose=False, **kwargs)
     assert list(tmp_path.iterdir()) == []
 
 
-def test_a_license_may_be_a_key_a_name_or_an_spdx_id():
+
+
+def test_an_existing_license_file_keeps_any_spdx_license_for_pyproject(tmp_path):
+    """No LICENSE is written, so the licence only reaches pyproject.toml, which takes any
+    SPDX expression (it used to be refused here too)."""
+    from wads.populate import populate_pkg_dir
+
+    import subprocess
+
+    tmp_path = tmp_path / "x"
+    tmp_path.mkdir()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "remote", "add", "origin", "https://github.com/o/x"],
+        check=True,
+    )
+    (tmp_path / "LICENSE").write_text("custom terms")
+    populate_pkg_dir(
+        str(tmp_path), license="MIT OR Apache-2.0", root_url="https://github.com/o", verbose=False
+    )
+    assert (tmp_path / "LICENSE").read_text() == "custom terms"
+    assert 'license = "MIT OR Apache-2.0"' in (tmp_path / "pyproject.toml").read_text()
+
+
+@pytest.mark.parametrize("spelling", ["MIT", "mit license", "MIT License", "Apache-2.0", "APACHE-2.0", "Apache Software License"])
+def test_a_license_may_be_any_spelling_wads_knows(spelling):
     from wads.licensing import require_license
 
-    assert {require_license(x)["key"] for x in ("mit", "MIT", "MIT License")} == {"mit"}
+    assert require_license(spelling)["key"] in {"mit", "apache-2.0"}
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
