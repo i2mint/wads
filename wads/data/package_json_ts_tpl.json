@@ -21,6 +21,11 @@
   "files": [
     "dist"
   ],
+<%- if npm_engines_node %>
+  "engines": {
+    "node": "<< npm_engines_node >>"
+  },
+<%- endif %>
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "test": "vitest run",
@@ -31,7 +36,7 @@
   "devDependencies": {
     "tsup": "^8",
     "typescript": "^5",
-    "vitest": "^2",
+    "vitest": "<< npm_vitest_range >>",
     "@types/node": "^22"
   },
   "pnpm": {
@@ -41,8 +46,8 @@
     "ci": {
       "subdir": "<< npm_subdir >>",
       "packageManager": "<< npm_package_manager >>",
-      "nodeVersions": ["20", "22", "24"],
-      "publishNode": "24",
+      "nodeVersions": << npm_node_versions | tojson >>,
+      "publishNode": "<< npm_node_versions[-1] >>",
       "lintCommand": "npm run lint --if-present",
       "testCommand": "npm test --if-present",
       "buildCommand": "npm run build --if-present",

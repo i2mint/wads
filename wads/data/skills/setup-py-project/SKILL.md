@@ -210,7 +210,7 @@ After the main setup, offer (don't force) these extras:
    # a pnpm + turbo monorepo:
    populate my-project --root-url https://github.com/ORG/my-project --frontend ts-monorepo
    ```
-   Profiles: `js` (npm single-package), `ts` (TypeScript single-package), `ts-monorepo` (pnpm workspaces + turbo). `--with-npm` is a back-compat alias for `--frontend js`.
+   Profiles: `js` (npm single-package), `ts` (TypeScript single-package), `ts-monorepo` (pnpm workspaces + turbo), `ts-package` (the repo is only a TypeScript package at its root, no Python project). `--with-npm` is a back-compat alias for `--frontend js`.
 
 5. **Publish to PyPI**: "Would you like to publish to PyPI? (This runs `pack go .`)"
 

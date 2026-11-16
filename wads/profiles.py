@@ -25,10 +25,12 @@ Nothing here runs by default; the Python ``populate`` path and the
 
 from __future__ import annotations
 
+import inspect
 import json
+import posixpath
 import os
-from dataclasses import dataclass
-from typing import Callable, Mapping, Optional
+from dataclasses import dataclass, field
+from typing import Callable, Mapping, Optional, Sequence
 
 from wads import (
     package_json_tpl_path,
@@ -114,6 +116,30 @@ _SINGLE_PACKAGE_REUSABLE = "npm-ci.yml"
 _MONOREPO_REUSABLE = "npm-ci-monorepo.yml"
 
 
+#: ``subdir`` of a component that is the repo root (a TypeScript-only package).
+ROOT_SUBDIR = "."
+
+#: vitest's semver range in the ``ts`` template. 3.x still installs on Node 20; 2.x has a
+#: critical advisory (tinypool) and 4.x a moderate one (``@vitest/mocker``); 5.x needs
+#: Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
+DFLT_VITEST_RANGE = "^3"
+
+#: Subdirs whose workflow keeps the bare ``npm-ci.yml`` / ``NPM CI`` names.
+_ANCHOR_SUBDIRS = ("js", ROOT_SUBDIR)
+
+#: Node versions a component's CI matrix runs, unless its profile says otherwise.
+DFLT_NODE_VERSIONS = ("20", "22", "24")
+
+
+def _at(subdir: str, relpath: str) -> str:
+    """``relpath`` inside the component's ``subdir`` (no ``./`` prefix at the root).
+
+    >>> _at("ts", "src/index.ts"), _at(".", "src/index.ts")
+    ('ts/src/index.ts', 'src/index.ts')
+    """
+    return relpath if subdir == ROOT_SUBDIR else f"{subdir}/{relpath}"
+
+
 def _workflow_basename(subdir: str) -> str:
     """Per-component workflow filename, collision-free across subdirs.
 
@@ -126,8 +152,10 @@ def _workflow_basename(subdir: str) -> str:
     'npm-ci.yml'
     >>> _workflow_basename("ts")
     'npm-ci-ts.yml'
+    >>> _workflow_basename(".")  # a repo that is only the package
+    'npm-ci.yml'
     """
-    if subdir == "js":
+    if subdir in _ANCHOR_SUBDIRS:
         return "npm-ci.yml"
     slug = subdir.strip("/").replace("/", "-")
     return f"npm-ci-{slug}.yml"
@@ -135,7 +163,7 @@ def _workflow_basename(subdir: str) -> str:
 
 def _workflow_name(subdir: str) -> str:
     """Human-facing workflow ``name:`` -- ``NPM CI`` for the ``js`` anchor."""
-    return "NPM CI" if subdir == "js" else f"NPM CI ({subdir})"
+    return "NPM CI" if subdir in _ANCHOR_SUBDIRS else f"NPM CI ({subdir})"
 
 
 def frontend_context(
@@ -152,6 +180,9 @@ def frontend_context(
     example_package_name: Optional[str] = None,
     license_file: Optional[tuple] = None,
     watch_paths: Optional[list] = None,
+    node_versions: Sequence[str] = DFLT_NODE_VERSIONS,
+    engines_node: Optional[str] = None,
+    vitest_range: str = DFLT_VITEST_RANGE,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -174,6 +205,11 @@ def frontend_context(
         "npm_license": _to_spdx(license),
         "npm_subdir": subdir,
         "npm_package_manager": package_manager,
+        "npm_node_versions": list(node_versions),
+        # ``engines.node`` range of package.json (the ``ts`` template omits it when None)
+        "npm_engines_node": engines_node,
+        "npm_vitest_range": vitest_range,
+        "npm_is_root": subdir == ROOT_SUBDIR,
         # Stub workflow wiring (per-component, collision-free):
         "npm_workflow_name": _workflow_name(subdir),
         "npm_workflow_file": _workflow_basename(subdir),
@@ -237,8 +273,8 @@ def _license_artifacts(package_dir: str, ctx: Mapping) -> list:
     in a subdir does not see the repo root's, so its tarball shipped without one.
     The copy is derived: :func:`apply_frontend` rewrites it whenever it differs.
     """
-    if not ctx.get("license_file"):
-        return []
+    if not ctx.get("license_file") or package_dir == ROOT_SUBDIR:
+        return []  # at the repo root the licence is already next to package.json
     name, text = ctx["license_file"]
     return [Artifact(f"{package_dir}/{name}", lambda _ctx: text)]
 
@@ -262,7 +298,7 @@ def _js_artifacts(ctx: Mapping) -> list:
     """``js`` profile: the original #32 overlay (back-compat anchor)."""
     subdir = ctx["npm_subdir"]
     return [
-        _jinja(f"{subdir}/package.json", package_json_tpl_path),
+        _jinja(_at(subdir, "package.json"), package_json_tpl_path),
         *_license_artifacts(subdir, ctx),
         _stub_artifact(subdir),
     ]
@@ -272,14 +308,14 @@ def _ts_artifacts(ctx: Mapping) -> list:
     """``ts`` profile: single-package TypeScript (tsconfig + src + build/test)."""
     subdir = ctx["npm_subdir"]
     return [
-        _jinja(f"{subdir}/package.json", package_json_ts_tpl_path),
-        _copy(f"{subdir}/tsconfig.json", tsconfig_tpl_path),
-        _copy(f"{subdir}/tsconfig.test.json", tsconfig_test_tpl_path),
+        _jinja(_at(subdir, "package.json"), package_json_ts_tpl_path),
+        _copy(_at(subdir, "tsconfig.json"), tsconfig_tpl_path),
+        _copy(_at(subdir, "tsconfig.test.json"), tsconfig_test_tpl_path),
         *_license_artifacts(subdir, ctx),
-        _copy(f"{subdir}/src/index.ts", ts_index_tpl_path),
+        _copy(_at(subdir, "src/index.ts"), ts_index_tpl_path),
         # Ship a passing starter test so the `test` step is green out of the
         # box: `vitest run` exits 1 when it finds *no* test files (issue #41).
-        _copy(f"{subdir}/src/index.test.ts", ts_index_test_tpl_path),
+        _copy(_at(subdir, "src/index.test.ts"), ts_index_test_tpl_path),
         _stub_artifact(subdir),
     ]
 
@@ -318,6 +354,10 @@ class FrontendProfile:
     :param default_package_manager: ``"npm"`` or ``"pnpm"``.
     :param artifacts: ``context -> list[Artifact]`` builder for this profile.
     :param description: one-line human summary.
+    :param python: ``False`` for a profile that is the whole repo (no Python project):
+        ``populate`` then writes no ``pyproject.toml``, Python package or Python CI.
+    :param context_defaults: :func:`frontend_context` keyword defaults this profile
+        sets (``node_versions``, ``engines_node``, ``vitest_range``).
     """
 
     name: str
@@ -325,6 +365,8 @@ class FrontendProfile:
     default_package_manager: str
     artifacts: Callable[[Mapping], list]
     description: str = ""
+    python: bool = True
+    context_defaults: Mapping = field(default_factory=dict)
 
 
 #: The frontend profile registry. Extend it via :func:`register_frontend_profile`.
@@ -332,7 +374,18 @@ FRONTEND_PROFILES: dict = {}
 
 
 def register_frontend_profile(profile: FrontendProfile) -> FrontendProfile:
-    """Register (or override) a frontend profile by name. Returns the profile."""
+    """Register (or override) a frontend profile by name. Returns the profile.
+
+    Its ``context_defaults`` keys must be :func:`frontend_context` keywords, so a typo
+    fails here and not at the first ``apply_frontend``.
+    """
+    unknown = set(profile.context_defaults) - set(
+        inspect.signature(frontend_context).parameters
+    )
+    if unknown:
+        raise ValueError(
+            f"profile {profile.name!r}: unknown context_defaults {sorted(unknown)}"
+        )
     FRONTEND_PROFILES[profile.name] = profile
     return profile
 
@@ -364,6 +417,24 @@ register_frontend_profile(
         default_package_manager="npm",
         artifacts=_ts_artifacts,
         description="TypeScript single package (tsconfig + tsup build + vitest).",
+    )
+)
+register_frontend_profile(
+    FrontendProfile(
+        name="ts-package",
+        default_subdir=ROOT_SUBDIR,
+        default_package_manager="npm",
+        artifacts=_ts_artifacts,
+        description=(
+            "A repo that is only a TypeScript package, at its root (no Python "
+            "project; Node >= 22, CI on 22 and 24)."
+        ),
+        python=False,
+        context_defaults={
+            "node_versions": ("22", "24"),
+            "engines_node": ">=22.12",
+            "vitest_range": "^5",
+        },
     )
 )
 register_frontend_profile(
@@ -410,9 +481,10 @@ def apply_frontend(
      'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
     """
     prof = get_frontend_profile(profile)
-    subdir = subdir or prof.default_subdir
+    subdir = posixpath.normpath(subdir or prof.default_subdir)  # "./" -> "."
     package_manager = package_manager or prof.default_package_manager
     context = frontend_context(
+        **dict(prof.context_defaults),
         profile_name=prof.name,
         project_name=project_name,
         description=description,

@@ -23,6 +23,10 @@
 # build — add that script to package.json if it isn't there already).
 name: << npm_workflow_name >>
 on:
+<%- if npm_is_root %>
+  push:
+  pull_request:
+<%- else %>
   push:
     paths:
       - "<< npm_subdir >>/**"
@@ -37,6 +41,7 @@ on:
       - "<< path >>"
 <%- endfor %>
       - ".github/workflows/<< npm_workflow_file >>"
+<%- endif %>
 jobs:
   npm-ci:
     uses: i2mint/wads/.github/workflows/<< reusable_workflow >>@master

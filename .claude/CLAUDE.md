@@ -233,6 +233,12 @@ Built-in profiles:
   `npm-ci.yml`.
 - **`ts`** — single-package TypeScript: `tsconfig.json` + `src/index.ts`, tsup
   build + vitest, same `wads.ci` block + publish model. Subdir `ts/`.
+- **`ts-package`** (#225) — a repo that is *only* a TypeScript package, at its root
+  (`subdir "."`, `package-dir: .`, no path filter in the stub; Node >= 22, CI on 22/24,
+  vitest 5). `Profile.python = False`: `populate -f ts-package` writes no
+  `pyproject.toml`, Python package or Python CI (just LICENSE, `.gitignore` and the
+  `ts` files at the root). `FrontendProfile.context_defaults` carries its Node/vitest
+  settings; the `ts` template itself keeps Node 20 and vitest `^3`.
 - **`ts-monorepo`** — pnpm workspaces + turbo: workspace-root `package.json`
   (private), `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`, and an
   example `packages/core` package. Calls the **monorepo** reusable workflow.
