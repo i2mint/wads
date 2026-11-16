@@ -127,6 +127,9 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("windows-blocking", config.windows_blocking)
         _set_output("job-timeout-minutes", config.job_timeout_minutes)
         _set_output("tests-enabled", config.tests_enabled)
+        # [tool.wads.ci.commands] pre_test / post_test, as JSON lists (issue #203)
+        _set_output("pre-test-commands", list(config.commands_pre_test))
+        _set_output("post-test-commands", list(config.commands_post_test))
         _set_output("pinned-runs", pinned_runs_matrix_include(config))
 
         # Native (maturin) builds (i2mint/wads#166). An invalid native setting raises:

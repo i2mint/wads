@@ -59,6 +59,12 @@ outputs:
   build-wheel:
     description: 'Whether to build wheel (true/false)'
     value: ${{ steps.config.outputs.build-wheel }}
+  pre-test-commands:
+    description: 'JSON list of shell commands to run before pytest ([tool.wads.ci.commands].pre_test); [] when none.'
+    value: ${{ steps.config.outputs.pre-test-commands }}
+  post-test-commands:
+    description: 'JSON list of shell commands to run after pytest ([tool.wads.ci.commands].post_test); [] when none.'
+    value: ${{ steps.config.outputs.post-test-commands }}
   install-extras:
     description: 'Comma-separated extras for CI to install via pip''s .[extras] syntax (from [tool.wads.ci.install].extras). Empty installs only core deps.'
     value: ${{ steps.config.outputs.install-extras }}

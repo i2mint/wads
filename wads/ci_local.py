@@ -40,7 +40,8 @@ and hosted CI does not: install pins such as ``UV_CONSTRAINT``, and ``PYTHONSAFE
 activated, as CI's are), where CI exports only the
 variables ``[tool.wads.ci.env]`` declares; ``[tool.wads.ops.*]`` system packages are not
 installed; lint runs on the tree as it is, where CI formats first; and an npm component
-runs once, on the local node, where CI runs once per ``nodeVersions`` entry.
+runs once, on the local node, where CI runs once per ``nodeVersions`` entry; and a
+``post_test`` command is skipped when the tests fail, where CI runs it regardless.
 
 Each run works in a fresh ``wads-ci-local-*`` temporary directory that records its owner's
 PID (:mod:`wads.workdirs`), and gives pytest a private ``--basetemp`` inside it, so
@@ -478,10 +479,16 @@ def _leg_steps(
             )
         )
     if config.tests_enabled:
+        activated = _activated(venv, platform=platform)
         steps += [
             Step(
                 f"{label}: install pytest",
                 ("uv", "pip", "install", "--python", python, *runner_deps),
+            ),
+            # [tool.wads.ci.commands] pre_test / post_test, as run-tests-uv runs them
+            # (issue #203): through the shell, in the activated venv.
+            *_command_steps(
+                f"{label}: pre_test", config.commands_pre_test, env=activated
             ),
             Step(
                 f"{label}: tests",
@@ -497,10 +504,33 @@ def _leg_steps(
                 ),
                 # The venv activated, as run-tests-uv does: a test that shells out to
                 # `python` or `uv pip` reaches this venv, not the dev shell's (#194).
-                env=_activated(venv, platform=platform),
+                env=activated,
+            ),
+            *_command_steps(
+                f"{label}: post_test",
+                config.commands_post_test,
+                env=activated,
             ),
         ]
     return steps
+
+
+def _command_steps(label: str, commands: Sequence[str], *, env: tuple) -> list[Step]:
+    """One Step per shell command of a ``[tool.wads.ci.commands]`` list.
+
+    >>> [s.name for s in _command_steps("leg: pre_test", ["a", "b"], env=())]
+    ['leg: pre_test 1/2', 'leg: pre_test 2/2']
+    >>> _command_steps("leg: pre_test", [], env=())
+    []
+    """
+    return [
+        Step(
+            f"{label} {i}/{len(commands)}",
+            ("bash", "-c", command),
+            env=env,
+        )
+        for i, command in enumerate(commands, 1)
+    ]
 
 
 def _activated(venv: str, *, platform: str) -> tuple:

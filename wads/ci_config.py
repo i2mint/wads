@@ -347,10 +347,28 @@ class CIConfig:
         return missing
 
     # ⚙️ EXECUTION FLOW AND COMMANDS
+    def _command_list(self, key: str) -> list[str]:
+        """``[tool.wads.ci.commands].<key>`` as a list of shell commands.
+
+        A single string is one command (not one per character); anything else that is
+        not a list of strings is an error naming the key.
+        """
+        value = self.ci_config.get("commands", {}).get(key, [])
+        if isinstance(value, str):
+            return [value] if value.strip() else []
+        if not isinstance(value, (list, tuple)) or not all(
+            isinstance(c, str) for c in value
+        ):
+            raise ValueError(
+                f"[tool.wads.ci.commands].{key} must be a command string or a list "
+                f"of command strings, got {value!r}"
+            )
+        return list(value)
+
     @property
     def commands_pre_test(self) -> list[str]:
         """Get pre-test setup commands."""
-        return self.ci_config.get("commands", {}).get("pre_test", [])
+        return self._command_list("pre_test")
 
     @property
     def commands_test(self) -> list[str]:
@@ -360,7 +378,7 @@ class CIConfig:
     @property
     def commands_post_test(self) -> list[str]:
         """Get post-test commands."""
-        return self.ci_config.get("commands", {}).get("post_test", [])
+        return self._command_list("post_test")
 
     @property
     def commands_lint(self) -> list[str]:
