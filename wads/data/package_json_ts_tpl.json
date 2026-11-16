@@ -3,6 +3,13 @@
   "version": "<< npm_version >>",
   "description": "<< description >>",
   "type": "module",
+<%- if npm_repository %>
+  "repository": {
+    "type": "git",
+    "url": "<< npm_repository >>"<% if npm_repository_directory %>,
+    "directory": "<< npm_repository_directory >>"<% endif %>
+  },
+<%- endif %>
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

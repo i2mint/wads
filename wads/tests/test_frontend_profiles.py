@@ -519,5 +519,68 @@ def test_a_profile_with_a_mistyped_context_default_is_refused():
     assert "typo" not in FRONTEND_PROFILES
 
 
+# --- repository field and the monorepo vitest range (#233) --------------------
+
+
+def test_ts_package_json_carries_the_repository_when_the_url_is_known(tmp_path):
+    apply_frontend(
+        str(tmp_path),
+        profile="ts",
+        project_name="widget",
+        repository_url="https://github.com/myorg/widget",
+    )
+    pkg = json.loads((tmp_path / "ts" / "package.json").read_text())
+    assert pkg["repository"] == {
+        "type": "git",
+        "url": "git+https://github.com/myorg/widget.git",
+        "directory": "ts",
+    }
+
+
+def test_a_root_package_has_no_repository_directory(tmp_path):
+    apply_frontend(
+        str(tmp_path),
+        profile="ts-package",
+        project_name="byok",
+        repository_url="https://github.com/myorg/byok.git",
+    )
+    pkg = json.loads((tmp_path / "package.json").read_text())
+    assert pkg["repository"] == {
+        "type": "git",
+        "url": "git+https://github.com/myorg/byok.git",
+    }
+
+
+def test_no_repository_field_without_a_url(tmp_path):
+    apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    assert "repository" not in json.loads((tmp_path / "ts" / "package.json").read_text())
+
+
+def test_the_monorepo_package_gets_the_repository_and_the_shared_vitest_range(tmp_path):
+    apply_frontend(
+        str(tmp_path),
+        profile="ts-monorepo",
+        project_name="mono",
+        repository_url="https://github.com/myorg/mono",
+    )
+    pkg = json.loads((tmp_path / "ts" / "packages" / "core" / "package.json").read_text())
+    assert pkg["repository"]["directory"] == "ts/packages/core"
+    assert pkg["devDependencies"]["vitest"] == "^3"
+
+
+def test_populate_passes_the_repository_url_to_the_component(tmp_path):
+    pkg_dir = tmp_path / "widget"
+    pkg_dir.mkdir()
+    _git_init(pkg_dir, "https://github.com/myorg/widget")
+    populate_pkg_dir(
+        str(pkg_dir),
+        root_url="https://github.com/myorg",
+        verbose=False,
+        frontend="ts",
+    )
+    pkg = json.loads((pkg_dir / "ts" / "package.json").read_text())
+    assert pkg["repository"]["url"] == "git+https://github.com/myorg/widget.git"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

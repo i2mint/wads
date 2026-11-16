@@ -987,6 +987,7 @@ def populate_pkg_dir(
                 subdir=subdir_override,
                 package_name=name_override,
                 version=npm_version,
+                repository_url=configs.get("url"),
                 package_manager=pm_override,
                 overwrite=overwrite,
                 on_add=tracker.add,
@@ -1125,6 +1126,7 @@ def _populate_frontend_only(
             subdir=npm_subdir if single and npm_subdir != "js" else default_subdir,
             package_name=npm_package_name if single else None,
             version=version,
+            repository_url=url,
             package_manager=npm_package_manager
             if npm_package_manager != "npm"
             else None,

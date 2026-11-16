@@ -3,6 +3,13 @@
   "version": "<< npm_version >>",
   "description": "<< description >>",
   "type": "module",
+<%- if npm_repository %>
+  "repository": {
+    "type": "git",
+    "url": "<< npm_repository >>"<% if npm_repository_directory %>,
+    "directory": "<< npm_repository_directory >>/packages/core"<% endif %>
+  },
+<%- endif %>
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +37,7 @@
   "devDependencies": {
     "tsup": "^8",
     "typescript": "^5",
-    "vitest": "^2",
+    "vitest": "<< npm_vitest_range >>",
     "@types/node": "^22"
   }
 }

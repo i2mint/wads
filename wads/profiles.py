@@ -163,6 +163,24 @@ def _workflow_name(subdir: str) -> str:
     return "NPM CI" if subdir in _ANCHOR_SUBDIRS else f"NPM CI ({subdir})"
 
 
+def git_repository_url(url: Optional[str]) -> Optional[str]:
+    """``url`` as the ``git+https://....git`` form package.json's ``repository`` takes.
+
+    >>> git_repository_url("https://github.com/thorwhalen/byok/")
+    'git+https://github.com/thorwhalen/byok.git'
+    >>> git_repository_url("git+https://github.com/o/r.git")
+    'git+https://github.com/o/r.git'
+    >>> git_repository_url(None) is None
+    True
+    """
+    if not url or not url.strip():
+        return None
+    url = url.strip().rstrip("/")
+    if not url.endswith(".git"):
+        url += ".git"
+    return url if url.startswith("git+") else f"git+{url}"
+
+
 def frontend_context(
     *,
     profile_name: str,
@@ -180,6 +198,7 @@ def frontend_context(
     node_versions: Sequence[str] = DFLT_NODE_VERSIONS,
     engines_node: Optional[str] = None,
     vitest_range: str = DFLT_VITEST_RANGE,
+    repository_url: Optional[str] = None,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -206,6 +225,11 @@ def frontend_context(
         # ``engines.node`` range of package.json (the ``ts`` template omits it when None)
         "npm_engines_node": engines_node,
         "npm_vitest_range": vitest_range,
+        # package.json ``repository`` (npm provenance checks it against the repo that
+        # publishes); ``None`` leaves the field out. ``directory`` is the package's
+        # place in the repo when it is not the root.
+        "npm_repository": git_repository_url(repository_url),
+        "npm_repository_directory": None if subdir == ROOT_SUBDIR else subdir,
         "npm_is_root": subdir == ROOT_SUBDIR,
         # Stub workflow wiring (per-component, collision-free):
         "npm_workflow_name": _workflow_name(subdir),
@@ -459,6 +483,7 @@ def apply_frontend(
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
     watch_paths: Optional[list] = None,
+    repository_url: Optional[str] = None,
     overwrite=(),
     on_add=None,
     on_skip=None,
@@ -496,6 +521,7 @@ def apply_frontend(
         watch_paths=(
             default_npm_watch_paths(pkg_dir) if watch_paths is None else watch_paths
         ),
+        repository_url=repository_url,
     )
     artifacts = prof.artifacts(context)
     return generate(
