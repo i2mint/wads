@@ -174,3 +174,13 @@ def test_native_licence_of_a_bsd_classifier_is_none(tmp_path):
         '[project]\nclassifiers = ["License :: OSI Approved :: BSD License"]\n'
     )
     assert native_licence(str(tmp_path)) is None
+
+
+def test_migrating_a_non_spdx_license_warns_to_set_project_license():
+    with pytest.warns(UserWarning, match=r"set \[project\]\.license"):
+        assert _migrated_license("BSD") == {"text": "BSD"}
+
+
+def test_migrating_an_spdx_license_does_not_warn(recwarn):
+    assert _migrated_license("mit") == "MIT"
+    assert not [w for w in recwarn if "project].license" in str(w.message)]

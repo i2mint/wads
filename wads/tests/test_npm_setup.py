@@ -104,6 +104,15 @@ def test_spdx_mapping():
     assert _to_spdx("MIT") == "MIT"
 
 
+def test_spdx_mapping_never_guesses_a_variant():
+    """#229: one alias map (pep639_license); an ambiguous name passes through."""
+    assert _to_spdx("bsd") == "bsd"
+    assert _to_spdx("gpl") == "gpl"
+    assert _to_spdx("BSD License") == "BSD License"
+    assert _to_spdx("BSD-2-Clause") == "BSD-2-Clause"
+    assert _to_spdx("Apache Software License") == "Apache-2.0"
+
+
 # --- overlay -------------------------------------------------------------------
 
 

@@ -32,6 +32,7 @@ Example:
 import os
 import re
 import sys
+import warnings
 from typing import Union, Mapping, Callable, Optional
 from pathlib import Path
 from configparser import ConfigParser
@@ -374,18 +375,9 @@ def _rule_project_url(cfg: dict) -> str:
 
 def _rule_project_license(cfg: dict) -> str:
     """Extract license identifier."""
-    license_value = _extract_metadata_value(cfg, "license")
-    if license_value:
-        # Normalize common license names
-        license_map = {
-            "mit": "MIT",
-            "apache-2.0": "Apache-2.0",
-            "apache software license": "Apache-2.0",
-            "bsd": "BSD",
-            "gpl": "GPL",
-        }
-        return license_map.get(license_value.lower(), license_value)
-    return license_value
+    # Normalised (to an SPDX id where one is certain) by ``pep639_license`` when the
+    # pyproject is written: the one alias map, so no variant is guessed here.
+    return _extract_metadata_value(cfg, "license")
 
 
 def _rule_project_keywords(cfg: dict) -> list:
@@ -625,6 +617,12 @@ def migrate_setuptools_to_hatching(
     from wads.toml_util import pep639_license
 
     pyproject_dict["project"]["license"] = pep639_license(required_fields["license"])
+    if isinstance(pyproject_dict["project"]["license"], dict):
+        warnings.warn(
+            f"License {required_fields['license']!r} is not a single SPDX id, so it is "
+            f"kept as a table ({{text = ...}}); set [project].license to an SPDX "
+            f"expression (e.g. BSD-3-Clause) once you know which licence it is."
+        )
 
     if "urls" not in pyproject_dict["project"]:
         pyproject_dict["project"]["urls"] = {}
