@@ -427,8 +427,6 @@ class FrontendProfile:
     :param default_package_manager: ``"npm"`` or ``"pnpm"``.
     :param artifacts: ``context -> list[Artifact]`` builder for this profile.
     :param description: one-line human summary.
-    :param python: ``False`` for a profile that is the whole repo (no Python project):
-        ``populate`` then writes no ``pyproject.toml``, Python package or Python CI.
     :param context_defaults: :func:`frontend_context` keyword defaults this profile
         sets (``node_versions``, ``engines_node``, ``vitest_range``).
     """
@@ -438,7 +436,6 @@ class FrontendProfile:
     default_package_manager: str
     artifacts: Callable[[Mapping], list]
     description: str = ""
-    python: bool = True
     context_defaults: Mapping = field(default_factory=dict)
 
 
@@ -502,7 +499,6 @@ register_frontend_profile(
             "A repo that is only a TypeScript package, at its root (no Python "
             "project; Node >= 22, CI on 22 and 24)."
         ),
-        python=False,
         context_defaults={
             "node_versions": ("22", "24"),
             "engines_node": ">=22.12",

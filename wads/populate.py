@@ -352,10 +352,14 @@ def populate_pkg_dir(
     :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)
     :param ci_def_path: Path of the CI definition
     :param ci_tpl_path: Pater of the template definition
+    :param project_type: ``lib`` (default) or ``app`` for a Python project; or a repo kind
+        with no Python project (``FRONTEND_ONLY_KINDS``): ``ts-package``, a repo that is
+        only a TypeScript package at its root (``-f ts-package`` means the same).
     :param frontend: Comma-separated list of frontend profiles to add (issue
         #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the
         original npm overlay), ``ts`` (single-package TypeScript), and
-        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` makes the repo
+        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` (alias of
+    ``project_type='ts-package'``) makes the repo
     itself a TypeScript package, with no Python project. Each component lands in its
         own subdir with its own path-filtered workflow, so multiple profiles
         never collide. Empty by default. The single-component overrides below
@@ -422,15 +426,17 @@ def populate_pkg_dir(
     name = os.path.basename(pkg_dir)
     pjoin = lambda *p: os.path.join(pkg_dir, *p)
 
-    selected = _selected_frontends(frontend, with_npm)
-    if selected and _is_frontend_only(selected):
-        # A repo that is only a frontend package (e.g. ``-f ts-package``): none of the
+    frontend_only = _frontend_only_profiles(
+        project_type, _selected_frontends(frontend, with_npm)
+    )
+    if frontend_only:
+        # A repo that is only a frontend package (``-p ts-package``): none of the
         # Python project below applies.
         if native:
             raise ValueError("--native needs a Python project; this one has none")
         _populate_frontend_only(
             pkg_dir,
-            profiles=selected,
+            profiles=frontend_only,
             name=name,
             description=description,
             license_name=license,
@@ -1060,25 +1066,52 @@ def _selected_frontends(frontend: str, with_npm: bool) -> list:
     return list(dict.fromkeys(names))
 
 
-def _is_frontend_only(profile_names) -> bool:
-    """Whether every selected profile is a whole repo with no Python project.
+#: Repo kinds that are not a Python project, by ``project_type``: the frontend profiles
+#: that make up such a repo (issue #232). Every other ``project_type`` is a Python
+#: project; add a kind here to add a repo type that has none.
+FRONTEND_ONLY_KINDS: dict = {"ts-package": ("ts-package",)}
 
-    >>> _is_frontend_only(["ts-package"]), _is_frontend_only(["ts"]), _is_frontend_only([])
-    (True, False, False)
-    >>> _is_frontend_only(["ts-package", "js"])
+#: The ``project_type`` values of a Python project.
+PYTHON_PROJECT_TYPES = ("lib", "app")
+
+
+def _frontend_only_profiles(project_type, selected) -> Optional[list]:
+    """The frontend profiles of a repo with no Python project, or ``None`` for one that
+    has. The kind is the ``project_type``, or (so ``-f ts-package`` keeps working) a
+    selected profile named like a kind; it cannot be combined with other profiles.
+
+    >>> _frontend_only_profiles("lib", ["ts"]) is None
+    True
+    >>> _frontend_only_profiles("ts_package", [])
     Traceback (most recent call last):
       ...
-    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: ts-package, js
+    ValueError: unknown project_type 'ts_package'; use one of ('lib', 'app', 'ts-package')
+    >>> _frontend_only_profiles("ts-package", [])
+    ['ts-package']
+    >>> _frontend_only_profiles("lib", ["ts-package"])
+    ['ts-package']
+    >>> _frontend_only_profiles("ts-package", ["js"])
+    Traceback (most recent call last):
+      ...
+    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: js
     """
-    from wads.profiles import get_frontend_profile
-
-    python_less = [n for n in profile_names if not get_frontend_profile(n).python]
-    if python_less and len(python_less) != len(profile_names):
+    known = (*PYTHON_PROJECT_TYPES, *FRONTEND_ONLY_KINDS)
+    if project_type is not None and project_type not in known:
+        raise ValueError(f"unknown project_type {project_type!r}; use one of {known}")
+    kind = project_type if project_type in FRONTEND_ONLY_KINDS else None
+    # Legacy alias: ``-f ts-package`` (released before ``-p``) names the kind by its
+    # profile. New kinds get no such alias.
+    kind = kind or next((n for n in selected if n in FRONTEND_ONLY_KINDS), None)
+    if kind is None:
+        return None
+    profiles = list(FRONTEND_ONLY_KINDS[kind])
+    extra = [n for n in selected if n not in profiles]
+    if extra:
         raise ValueError(
-            f"{', '.join(python_less)} is a whole repo with no Python project; it "
-            f"cannot be combined with other frontend profiles: {', '.join(profile_names)}"
+            f"{kind} is a whole repo with no Python project; it cannot be combined "
+            f"with other frontend profiles: {', '.join(extra)}"
         )
-    return bool(python_less)
+    return profiles
 
 
 def _populate_frontend_only(
