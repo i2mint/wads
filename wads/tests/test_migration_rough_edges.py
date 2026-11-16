@@ -46,9 +46,10 @@ def test_setup_to_pyproject_emits_an_spdx_license_string(given, expected):
 
 def test_a_license_that_is_not_spdx_keeps_the_table_form():
     """Hatchling rejects a non-SPDX ``license`` string, so never emit one."""
-    assert _migrated_license("Proprietary, all rights reserved") == {
-        "text": "Proprietary, all rights reserved"
-    }
+    with pytest.warns(UserWarning, match="SPDX"):
+        assert _migrated_license("Proprietary, all rights reserved") == {
+            "text": "Proprietary, all rights reserved"
+        }
 
 
 def test_pep639_license_falls_back_without_a_new_enough_packaging(monkeypatch):

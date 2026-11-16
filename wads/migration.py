@@ -617,11 +617,15 @@ def migrate_setuptools_to_hatching(
     from wads.toml_util import pep639_license
 
     pyproject_dict["project"]["license"] = pep639_license(required_fields["license"])
-    if isinstance(pyproject_dict["project"]["license"], dict):
+    if isinstance(required_fields["license"], str) and isinstance(
+        pyproject_dict["project"]["license"], dict
+    ):
         warnings.warn(
-            f"License {required_fields['license']!r} is not a single SPDX id, so it is "
-            f"kept as a table ({{text = ...}}); set [project].license to an SPDX "
-            f"expression (e.g. BSD-3-Clause) once you know which licence it is."
+            f"License {required_fields['license']!r} could not be normalised to an "
+            f"SPDX expression, so it is kept as a table ({{text = ...}}); set "
+            f"[project].license to an SPDX expression (e.g. BSD-3-Clause) once you "
+            f"know which licence it is.",
+            stacklevel=2,
         )
 
     if "urls" not in pyproject_dict["project"]:
