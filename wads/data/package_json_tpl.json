@@ -3,6 +3,9 @@
   "version": "<< npm_version >>",
   "description": "<< description >>",
   "type": "module",
+<%- if npm_repository %>
+  "repository": << npm_repository | tojson >>,
+<%- endif %>
   "main": "dist/index.js",
   "files": [
     "dist"
