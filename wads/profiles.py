@@ -25,7 +25,9 @@ Nothing here runs by default; the Python ``populate`` path and the
 
 from __future__ import annotations
 
+import inspect
 import json
+import posixpath
 import os
 from dataclasses import dataclass, field
 from typing import Callable, Mapping, Optional, Sequence
@@ -122,6 +124,9 @@ ROOT_SUBDIR = "."
 #: Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
 DFLT_VITEST_RANGE = "^3"
 
+#: Subdirs whose workflow keeps the bare ``npm-ci.yml`` / ``NPM CI`` names.
+_ANCHOR_SUBDIRS = ("js", ROOT_SUBDIR)
+
 #: Node versions a component's CI matrix runs, unless its profile says otherwise.
 DFLT_NODE_VERSIONS = ("20", "22", "24")
 
@@ -150,7 +155,7 @@ def _workflow_basename(subdir: str) -> str:
     >>> _workflow_basename(".")  # a repo that is only the package
     'npm-ci.yml'
     """
-    if subdir in ("js", ROOT_SUBDIR):
+    if subdir in _ANCHOR_SUBDIRS:
         return "npm-ci.yml"
     slug = subdir.strip("/").replace("/", "-")
     return f"npm-ci-{slug}.yml"
@@ -158,7 +163,7 @@ def _workflow_basename(subdir: str) -> str:
 
 def _workflow_name(subdir: str) -> str:
     """Human-facing workflow ``name:`` -- ``NPM CI`` for the ``js`` anchor."""
-    return "NPM CI" if subdir in ("js", ROOT_SUBDIR) else f"NPM CI ({subdir})"
+    return "NPM CI" if subdir in _ANCHOR_SUBDIRS else f"NPM CI ({subdir})"
 
 
 def frontend_context(
@@ -369,7 +374,18 @@ FRONTEND_PROFILES: dict = {}
 
 
 def register_frontend_profile(profile: FrontendProfile) -> FrontendProfile:
-    """Register (or override) a frontend profile by name. Returns the profile."""
+    """Register (or override) a frontend profile by name. Returns the profile.
+
+    Its ``context_defaults`` keys must be :func:`frontend_context` keywords, so a typo
+    fails here and not at the first ``apply_frontend``.
+    """
+    unknown = set(profile.context_defaults) - set(
+        inspect.signature(frontend_context).parameters
+    )
+    if unknown:
+        raise ValueError(
+            f"profile {profile.name!r}: unknown context_defaults {sorted(unknown)}"
+        )
     FRONTEND_PROFILES[profile.name] = profile
     return profile
 
@@ -416,7 +432,7 @@ register_frontend_profile(
         python=False,
         context_defaults={
             "node_versions": ("22", "24"),
-            "engines_node": ">=22",
+            "engines_node": ">=22.12",
             "vitest_range": "^5",
         },
     )
@@ -465,7 +481,7 @@ def apply_frontend(
      'ts/src/index.ts', 'ts/tsconfig.json', 'ts/tsconfig.test.json']
     """
     prof = get_frontend_profile(profile)
-    subdir = subdir or prof.default_subdir
+    subdir = posixpath.normpath(subdir or prof.default_subdir)  # "./" -> "."
     package_manager = package_manager or prof.default_package_manager
     context = frontend_context(
         **dict(prof.context_defaults),

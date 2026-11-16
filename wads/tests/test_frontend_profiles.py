@@ -419,7 +419,9 @@ def test_ts_package_populate_writes_no_python_project(tmp_path):
     written = {p.relative_to(pkg_dir).as_posix() for p in pkg_dir.rglob("*") if p.is_file()}
     assert {
         "LICENSE",
+        "README.md",
         ".gitignore",
+        ".gitattributes",
         "package.json",
         "tsconfig.json",
         "tsconfig.test.json",
@@ -434,7 +436,7 @@ def test_ts_package_populate_writes_no_python_project(tmp_path):
 def test_ts_package_files_sit_at_the_root_and_pin_node_22(tmp_path):
     apply_frontend(str(tmp_path), profile="ts-package", project_name="byok")
     pkg = json.loads((tmp_path / "package.json").read_text())
-    assert pkg["engines"] == {"node": ">=22"}
+    assert pkg["engines"] == {"node": ">=22.12"}
     assert pkg["devDependencies"]["vitest"] == "^5"
     ci = pkg["wads"]["ci"]
     assert ci["subdir"] == "." and ci["nodeVersions"] == ["22", "24"]
@@ -470,6 +472,51 @@ def test_populate_refuses_native_without_a_python_project(tmp_path):
         populate_pkg_dir(
             str(tmp_path), verbose=False, frontend="ts-package", native="maturin"
         )
+
+
+
+
+def test_ts_package_cannot_be_mixed_with_other_profiles(tmp_path):
+    for combo in ("ts-package,js", "ts,ts-package"):
+        with pytest.raises(ValueError, match="cannot be combined"):
+            populate_pkg_dir(str(tmp_path), verbose=False, frontend=combo)
+    assert list(tmp_path.iterdir()) == [], "nothing written before the refusal"
+
+
+def test_ts_package_readme_and_licence_name_the_package_and_its_owner(tmp_path):
+    pkg_dir = tmp_path / "byok"
+    pkg_dir.mkdir()
+    populate_pkg_dir(
+        str(pkg_dir),
+        root_url="https://github.com/myorg",
+        description="Keys",
+        verbose=False,
+        frontend="ts-package",
+    )
+    assert "npm install byok" in (pkg_dir / "README.md").read_text()
+    assert "myorg" in (pkg_dir / "LICENSE").read_text()
+
+
+def test_a_root_subdir_spelled_with_a_slash_is_normalised(tmp_path):
+    res = apply_frontend(
+        str(tmp_path), profile="ts-package", project_name="x", subdir="./"
+    )
+    assert "package.json" in res.added
+    assert (tmp_path / ".github" / "workflows" / "npm-ci.yml").exists()
+
+
+def test_a_profile_with_a_mistyped_context_default_is_refused():
+    with pytest.raises(ValueError, match="engine_node"):
+        register_frontend_profile(
+            FrontendProfile(
+                name="typo",
+                default_subdir="x",
+                default_package_manager="npm",
+                artifacts=lambda ctx: [],
+                context_defaults={"engine_node": ">=22"},
+            )
+        )
+    assert "typo" not in FRONTEND_PROFILES
 
 
 if __name__ == "__main__":

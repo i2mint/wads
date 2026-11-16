@@ -444,6 +444,8 @@ def populate_pkg_dir(
             tracker=tracker,
             clog=_clog,
             verbose=verbose,
+            create_gitattributes=create_gitattributes,
+            create_community_files=create_community_files,
         )
         return name
 
@@ -595,28 +597,21 @@ def populate_pkg_dir(
             tracker.skip("setup.py")
 
     if should_update("LICENSE"):
-        _license_body = license_body(configs["license"])
-
-        # Resolve author for license placeholder substitution
-        # Try to get authors from existing pyproject.toml if it exists
+        # Authors of an existing pyproject.toml are the fallback copyright holder.
         pyproject_authors = None
         if os.path.isfile(pjoin("pyproject.toml")):
             try:
-                pyproject_data = read_pyproject_toml(pjoin(""))
-                pyproject_authors = pyproject_data.get("project", {}).get("authors")
+                pyproject_authors = (
+                    read_pyproject_toml(pjoin("")).get("project", {}).get("authors")
+                )
             except Exception:
                 pass  # If reading fails, continue without pyproject authors
 
-        resolved_author = resolve_author(
+        _license_body = _license_text(
+            configs["license"],
             author=configs.get("author"),
-            pyproject_authors=pyproject_authors,
             url=configs.get("url"),
-        )
-
-        # Substitute placeholders in license
-        _license_body = substitute_license_placeholders(
-            _license_body,
-            author=resolved_author,
+            pyproject_authors=pyproject_authors,
         )
 
         save_txt_to_pkg("LICENSE", _license_body)
@@ -1016,6 +1011,28 @@ def populate_pkg_dir(
 _DFLT_NPM_VERSION = "0.0.1"
 
 
+def _license_text(
+    license_name: str,
+    *,
+    author: Optional[str] = None,
+    url: Optional[str] = None,
+    pyproject_authors: Optional[list] = None,
+) -> str:
+    """The text of the ``license_name`` licence, its copyright holder filled in
+    (:func:`~wads.licensing.resolve_author`: ``author``, else the pyproject authors,
+    else the repository ``url``'s owner).
+
+    >>> "Jane Doe" in _license_text("mit", author="Jane Doe")
+    True
+    """
+    return substitute_license_placeholders(
+        license_body(license_name),
+        author=resolve_author(
+            author=author, pyproject_authors=pyproject_authors, url=url
+        ),
+    )
+
+
 def _selected_frontends(frontend: str, with_npm: bool) -> list:
     """The frontend profile names selected by ``frontend`` (comma-separated) and
     ``with_npm`` (alias for ``js``), de-duplicated, in selection order.
@@ -1036,12 +1053,20 @@ def _is_frontend_only(profile_names) -> bool:
 
     >>> _is_frontend_only(["ts-package"]), _is_frontend_only(["ts"]), _is_frontend_only([])
     (True, False, False)
+    >>> _is_frontend_only(["ts-package", "js"])
+    Traceback (most recent call last):
+      ...
+    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: ts-package, js
     """
     from wads.profiles import get_frontend_profile
 
-    return bool(profile_names) and not any(
-        get_frontend_profile(n).python for n in profile_names
-    )
+    python_less = [n for n in profile_names if not get_frontend_profile(n).python]
+    if python_less and len(python_less) != len(profile_names):
+        raise ValueError(
+            f"{', '.join(python_less)} is a whole repo with no Python project; it "
+            f"cannot be combined with other frontend profiles: {', '.join(profile_names)}"
+        )
+    return bool(python_less)
 
 
 def _populate_frontend_only(
@@ -1061,21 +1086,26 @@ def _populate_frontend_only(
     tracker,
     clog,
     verbose: bool,
+    create_gitattributes: bool = False,
+    create_community_files: bool = False,
 ) -> None:
     """Populate a repo that is only a frontend package: licence, ``.gitignore``, and the
     profile's files at its default subdir (the repo root for ``ts-package``)."""
     from wads.profiles import apply_frontend, get_frontend_profile
     from wads.templating import Artifact, generate
 
-    body = substitute_license_placeholders(
-        license_body(license_name),
-        author=resolve_author(author=author, url=root_url),
+    url = f"{root_url.rstrip('/')}/{name}" if root_url else None
+    body = _license_text(license_name, author=author, url=url)
+    readme = (
+        gen_readme_text(name, description)
+        + f"\n```\nnpm install {npm_package_name or name}\n```\n"
     )
     generate(
         pkg_dir,
         [
             Artifact("LICENSE", lambda _ctx: body),
-            *_static_file_artifacts(False, False),
+            Artifact("README.md", lambda _ctx: readme),
+            *_static_file_artifacts(create_gitattributes, create_community_files),
         ],
         {},
         overwrite=overwrite,
