@@ -1,4 +1,4 @@
-> built 2026-11-16 09:19 UTC from 1ab4068 (master) · wads 0.2.92. Details: build_info.json
+> built 2026-11-16 09:33 UTC from d8a44bf (master) · wads 0.2.93. Details: build_info.json
 
 # index.html.md
 
@@ -108,7 +108,7 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 |---------------|---------------------------------------------------------------------------------------------|----------|---------------------------------------------|
 | `js`          | `package.json` (npm)                                                                        | `js/`    | single-package `npm-ci.yml`                 |
 | `ts`          | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest)                      | `ts/`    | single-package `npm-ci.yml`                 |
-| `ts-package`  | the `ts` files at the repo root, no Python project (`populate . -f ts-package`; Node >= 22) | `.`      | single-package `npm-ci.yml`, no path filter |
+| `ts-package`  | the `ts` files at the repo root, no Python project (`populate . -p ts-package`; Node >= 22) | `.`      | single-package `npm-ci.yml`, no path filter |
 | `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`                             | `ts/`    | matrixed `npm-ci-monorepo.yml`              |
 
 The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo’s root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
@@ -6561,6 +6561,12 @@ Populate a package directory with useful packaging files.
 Provides the `populate_pkg_dir` function to add standard files like
 README.md, pyproject.toml, and .gitignore.
 
+### Module Attributes
+
+| [`FRONTEND_ONLY_KINDS`](_autosummary/wads.populate.html.md#wads.populate.FRONTEND_ONLY_KINDS)   | the frontend profiles that make up such a repo (issue #232).   |
+|------------------------------------------------------------------------|----------------------------------------------------------------|
+| [`PYTHON_PROJECT_TYPES`](_autosummary/wads.populate.html.md#wads.populate.PYTHON_PROJECT_TYPES)  | The `project_type` values of a Python project.                 |
+
 ### Functions
 
 | [`cd`](_autosummary/wads.populate.html.md#wads.populate.cd)(newdir[, verbose])                            | Change your working directory, do stuff, and change back to the original         |
@@ -6578,6 +6584,19 @@ README.md, pyproject.toml, and .gitignore.
 
 | [`PopulateTracker`](_autosummary/wads.populate.html.md#wads.populate.PopulateTracker)()   | Track actions during populate for summary reporting.   |
 |----------------------------------------------------------------------|--------------------------------------------------------|
+
+### wads.populate.FRONTEND_ONLY_KINDS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'ts-package': ('ts-package',)}*
+
+the frontend profiles
+that make up such a repo (issue #232). Every other `project_type` is a Python
+project; add a kind here to add a repo type that has none.
+
+* **Type:**
+  Repo kinds that are not a Python project, by `project_type`
+
+### wads.populate.PYTHON_PROJECT_TYPES *= ('lib', 'app')*
+
+The `project_type` values of a Python project.
 
 ### *class* wads.populate.PopulateTracker
 
@@ -6678,10 +6697,14 @@ Populate project directory root with useful packaging files, if they’re missin
   * **version_control_system** – ‘github’ or ‘gitlab’ (will TRY to be resolved from root url if not given)
   * **ci_def_path** – Path of the CI definition
   * **ci_tpl_path** – Pater of the template definition
+  * **project_type** – `lib` (default) or `app` for a Python project; or a repo kind
+    with no Python project (`FRONTEND_ONLY_KINDS`): `ts-package`, a repo that is
+    only a TypeScript package at its root (`-f ts-package` means the same).
   * **frontend** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated list of frontend profiles to add (issue
     #39), e.g. `"ts"` or `"js,ts"`. Available profiles: `js` (the
     original npm overlay), `ts` (single-package TypeScript), and
-    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` makes the repo
+    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` (alias of
+    `project_type='ts-package'`) makes the repo
     itself a TypeScript package, with no Python project. Each component lands in its
     own subdir with its own path-filtered workflow, so multiple profiles
     never collide. Empty by default. The single-component overrides below
@@ -6831,11 +6854,11 @@ Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
 
 Where the `ts-monorepo` example package lives, relative to the workspace root.
 
-### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', python=True, context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', python=True, context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', python=True, context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', python=False, context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
+### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
 
 The frontend profile registry. Extend it via [`register_frontend_profile()`](_autosummary/wads.profiles.html.md#wads.profiles.register_frontend_profile).
 
-### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', python=True, context_defaults=dict())
+### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', context_defaults=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -6847,8 +6870,6 @@ A declarative frontend language/toolchain profile.
   * **default_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"npm"` or `"pnpm"`.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
-  * **python** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – `False` for a profile that is the whole repo (no Python project):
-    `populate` then writes no `pyproject.toml`, Python package or Python CI.
   * **context_defaults** ([`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)) – [`frontend_context()`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context) keyword defaults this profile
     sets (`node_versions`, `engines_node`, `vitest_range`).
 
@@ -9574,7 +9595,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 09:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/1ab40689bc2fcb46755268b62b69659df329bfa6"><code>1ab4068</code></a> on branch <code>master</code>, for **wads 0.2.92** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 09:33 UTC** from commit <a href="https://github.com/i2mint/wads/commit/d8a44bfdc647be672760b2751214621f1cf7b22f"><code>d8a44bf</code></a> on branch <code>master</code>, for **wads 0.2.93** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9583,7 +9604,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/1ab40689bc2fcb46755268b62b69659df329bfa6"><code>1ab40689bc2fcb46755268b62b69659df329bfa6</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/d8a44bfdc647be672760b2751214621f1cf7b22f"><code>d8a44bfdc647be672760b2751214621f1cf7b22f</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9594,9 +9615,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43838112009">43838112009</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43840305129">43840305129</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>1ab40689bc2fcb46755268b62b69659df329bfa6</code> (in the history of the built commit) |
+| Event commit | <code>d8a44bfdc647be672760b2751214621f1cf7b22f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9621,13 +9642,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.92/">0.2.92</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.93/">0.2.93</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 1ab40689bc2fcb46755268b62b69659df329bfa6
+git checkout d8a44bfdc647be672760b2751214621f1cf7b22f
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

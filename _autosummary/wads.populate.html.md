@@ -5,6 +5,12 @@ Populate a package directory with useful packaging files.
 Provides the `populate_pkg_dir` function to add standard files like
 README.md, pyproject.toml, and .gitignore.
 
+### Module Attributes
+
+| [`FRONTEND_ONLY_KINDS`](#wads.populate.FRONTEND_ONLY_KINDS)   | the frontend profiles that make up such a repo (issue #232).   |
+|------------------------------------------------------------------------|----------------------------------------------------------------|
+| [`PYTHON_PROJECT_TYPES`](#wads.populate.PYTHON_PROJECT_TYPES)  | The `project_type` values of a Python project.                 |
+
 ### Functions
 
 | [`cd`](#wads.populate.cd)(newdir[, verbose])                            | Change your working directory, do stuff, and change back to the original         |
@@ -22,6 +28,19 @@ README.md, pyproject.toml, and .gitignore.
 
 | [`PopulateTracker`](#wads.populate.PopulateTracker)()   | Track actions during populate for summary reporting.   |
 |----------------------------------------------------------------------|--------------------------------------------------------|
+
+### wads.populate.FRONTEND_ONLY_KINDS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'ts-package': ('ts-package',)}*
+
+the frontend profiles
+that make up such a repo (issue #232). Every other `project_type` is a Python
+project; add a kind here to add a repo type that has none.
+
+* **Type:**
+  Repo kinds that are not a Python project, by `project_type`
+
+### wads.populate.PYTHON_PROJECT_TYPES *= ('lib', 'app')*
+
+The `project_type` values of a Python project.
 
 ### *class* wads.populate.PopulateTracker
 
@@ -122,10 +141,14 @@ Populate project directory root with useful packaging files, if they’re missin
   * **version_control_system** – ‘github’ or ‘gitlab’ (will TRY to be resolved from root url if not given)
   * **ci_def_path** – Path of the CI definition
   * **ci_tpl_path** – Pater of the template definition
+  * **project_type** – `lib` (default) or `app` for a Python project; or a repo kind
+    with no Python project (`FRONTEND_ONLY_KINDS`): `ts-package`, a repo that is
+    only a TypeScript package at its root (`-f ts-package` means the same).
   * **frontend** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated list of frontend profiles to add (issue
     #39), e.g. `"ts"` or `"js,ts"`. Available profiles: `js` (the
     original npm overlay), `ts` (single-package TypeScript), and
-    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` makes the repo
+    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` (alias of
+    `project_type='ts-package'`) makes the repo
     itself a TypeScript package, with no Python project. Each component lands in its
     own subdir with its own path-filtered workflow, so multiple profiles
     never collide. Empty by default. The single-component overrides below

@@ -94,11 +94,11 @@ Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
 
 Where the `ts-monorepo` example package lives, relative to the workspace root.
 
-### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', python=True, context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', python=True, context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', python=True, context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', python=False, context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
+### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
 
 The frontend profile registry. Extend it via [`register_frontend_profile()`](#wads.profiles.register_frontend_profile).
 
-### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', python=True, context_defaults=dict())
+### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', context_defaults=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -110,8 +110,6 @@ A declarative frontend language/toolchain profile.
   * **default_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"npm"` or `"pnpm"`.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
-  * **python** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – `False` for a profile that is the whole repo (no Python project):
-    `populate` then writes no `pyproject.toml`, Python package or Python CI.
   * **context_defaults** ([`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)) – [`frontend_context()`](#wads.profiles.frontend_context) keyword defaults this profile
     sets (`node_versions`, `engines_node`, `vitest_range`).
 

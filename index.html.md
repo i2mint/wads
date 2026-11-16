@@ -104,7 +104,7 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 |---------------|---------------------------------------------------------------------------------------------|----------|---------------------------------------------|
 | `js`          | `package.json` (npm)                                                                        | `js/`    | single-package `npm-ci.yml`                 |
 | `ts`          | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest)                      | `ts/`    | single-package `npm-ci.yml`                 |
-| `ts-package`  | the `ts` files at the repo root, no Python project (`populate . -f ts-package`; Node >= 22) | `.`      | single-package `npm-ci.yml`, no path filter |
+| `ts-package`  | the `ts` files at the repo root, no Python project (`populate . -p ts-package`; Node >= 22) | `.`      | single-package `npm-ci.yml`, no path filter |
 | `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`                             | `ts/`    | matrixed `npm-ci-monorepo.yml`              |
 
 The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo’s root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.

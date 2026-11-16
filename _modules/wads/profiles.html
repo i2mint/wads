@@ -730,8 +730,6 @@
 <span class="sd">    :param default_package_manager: ``"npm"`` or ``"pnpm"``.</span>
 <span class="sd">    :param artifacts: ``context -&gt; list[Artifact]`` builder for this profile.</span>
 <span class="sd">    :param description: one-line human summary.</span>
-<span class="sd">    :param python: ``False`` for a profile that is the whole repo (no Python project):</span>
-<span class="sd">        ``populate`` then writes no ``pyproject.toml``, Python package or Python CI.</span>
 <span class="sd">    :param context_defaults: :func:`frontend_context` keyword defaults this profile</span>
 <span class="sd">        sets (``node_versions``, ``engines_node``, ``vitest_range``).</span>
 <span class="sd">    """</span>
@@ -741,7 +739,6 @@
     <span class="n">default_package_manager</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">artifacts</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="nb">list</span><span class="p">]</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-    <span class="n">python</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">context_defaults</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 
@@ -812,7 +809,6 @@
             <span class="s2">"A repo that is only a TypeScript package, at its root (no Python "</span>
             <span class="s2">"project; Node &gt;= 22, CI on 22 and 24)."</span>
         <span class="p">),</span>
-        <span class="n">python</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">context_defaults</span><span class="o">=</span><span class="p">{</span>
             <span class="s2">"node_versions"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"22"</span><span class="p">,</span> <span class="s2">"24"</span><span class="p">),</span>
             <span class="s2">"engines_node"</span><span class="p">:</span> <span class="s2">"&gt;=22.12"</span><span class="p">,</span>
@@ -1805,7 +1801,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=02707aa4"></script>
+</div><script src="../../_static/documentation_options.js?v=ab300ec2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

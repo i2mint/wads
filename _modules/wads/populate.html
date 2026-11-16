@@ -664,10 +664,14 @@
 <span class="sd">    :param version_control_system: 'github' or 'gitlab' (will TRY to be resolved from root url if not given)</span>
 <span class="sd">    :param ci_def_path: Path of the CI definition</span>
 <span class="sd">    :param ci_tpl_path: Pater of the template definition</span>
+<span class="sd">    :param project_type: ``lib`` (default) or ``app`` for a Python project; or a repo kind</span>
+<span class="sd">        with no Python project (``FRONTEND_ONLY_KINDS``): ``ts-package``, a repo that is</span>
+<span class="sd">        only a TypeScript package at its root (``-f ts-package`` means the same).</span>
 <span class="sd">    :param frontend: Comma-separated list of frontend profiles to add (issue</span>
 <span class="sd">        #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the</span>
 <span class="sd">        original npm overlay), ``ts`` (single-package TypeScript), and</span>
-<span class="sd">        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` makes the repo</span>
+<span class="sd">        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` (alias of</span>
+<span class="sd">    ``project_type='ts-package'``) makes the repo</span>
 <span class="sd">    itself a TypeScript package, with no Python project. Each component lands in its</span>
 <span class="sd">        own subdir with its own path-filtered workflow, so multiple profiles</span>
 <span class="sd">        never collide. Empty by default. The single-component overrides below</span>
@@ -734,15 +738,17 @@
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
 
-    <span class="n">selected</span> <span class="o">=</span> <span class="n">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">selected</span> <span class="ow">and</span> <span class="n">_is_frontend_only</span><span class="p">(</span><span class="n">selected</span><span class="p">):</span>
-        <span class="c1"># A repo that is only a frontend package (e.g. ``-f ts-package``): none of the</span>
+    <span class="n">frontend_only</span> <span class="o">=</span> <span class="n">_frontend_only_profiles</span><span class="p">(</span>
+        <span class="n">project_type</span><span class="p">,</span> <span class="n">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">frontend_only</span><span class="p">:</span>
+        <span class="c1"># A repo that is only a frontend package (``-p ts-package``): none of the</span>
         <span class="c1"># Python project below applies.</span>
         <span class="k">if</span> <span class="n">native</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"--native needs a Python project; this one has none"</span><span class="p">)</span>
         <span class="n">_populate_frontend_only</span><span class="p">(</span>
             <span class="n">pkg_dir</span><span class="p">,</span>
-            <span class="n">profiles</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+            <span class="n">profiles</span><span class="o">=</span><span class="n">frontend_only</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
             <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
             <span class="n">license_name</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
@@ -1373,25 +1379,52 @@
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_is_frontend_only</span><span class="p">(</span><span class="n">profile_names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether every selected profile is a whole repo with no Python project.</span>
+<span class="c1">#: Repo kinds that are not a Python project, by ``project_type``: the frontend profiles</span>
+<span class="c1">#: that make up such a repo (issue #232). Every other ``project_type`` is a Python</span>
+<span class="c1">#: project; add a kind here to add a repo type that has none.</span>
+<span class="n">FRONTEND_ONLY_KINDS</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ts-package"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"ts-package"</span><span class="p">,)}</span>
 
-<span class="sd">    &gt;&gt;&gt; _is_frontend_only(["ts-package"]), _is_frontend_only(["ts"]), _is_frontend_only([])</span>
-<span class="sd">    (True, False, False)</span>
-<span class="sd">    &gt;&gt;&gt; _is_frontend_only(["ts-package", "js"])</span>
+<span class="c1">#: The ``project_type`` values of a Python project.</span>
+<span class="n">PYTHON_PROJECT_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"lib"</span><span class="p">,</span> <span class="s2">"app"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_frontend_only_profiles</span><span class="p">(</span><span class="n">project_type</span><span class="p">,</span> <span class="n">selected</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The frontend profiles of a repo with no Python project, or ``None`` for one that</span>
+<span class="sd">    has. The kind is the ``project_type``, or (so ``-f ts-package`` keeps working) a</span>
+<span class="sd">    selected profile named like a kind; it cannot be combined with other profiles.</span>
+
+<span class="sd">    &gt;&gt;&gt; _frontend_only_profiles("lib", ["ts"]) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _frontend_only_profiles("ts_package", [])</span>
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">      ...</span>
-<span class="sd">    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: ts-package, js</span>
+<span class="sd">    ValueError: unknown project_type 'ts_package'; use one of ('lib', 'app', 'ts-package')</span>
+<span class="sd">    &gt;&gt;&gt; _frontend_only_profiles("ts-package", [])</span>
+<span class="sd">    ['ts-package']</span>
+<span class="sd">    &gt;&gt;&gt; _frontend_only_profiles("lib", ["ts-package"])</span>
+<span class="sd">    ['ts-package']</span>
+<span class="sd">    &gt;&gt;&gt; _frontend_only_profiles("ts-package", ["js"])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: js</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_frontend_profile</span>
-
-    <span class="n">python_less</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">profile_names</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">get_frontend_profile</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">python</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">python_less</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile_names</span><span class="p">):</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">PYTHON_PROJECT_TYPES</span><span class="p">,</span> <span class="o">*</span><span class="n">FRONTEND_ONLY_KINDS</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">project_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">project_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown project_type </span><span class="si">{</span><span class="n">project_type</span><span class="si">!r}</span><span class="s2">; use one of </span><span class="si">{</span><span class="n">known</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">project_type</span> <span class="k">if</span> <span class="n">project_type</span> <span class="ow">in</span> <span class="n">FRONTEND_ONLY_KINDS</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="c1"># Legacy alias: ``-f ts-package`` (released before ``-p``) names the kind by its</span>
+    <span class="c1"># profile. New kinds get no such alias.</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">((</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">selected</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">FRONTEND_ONLY_KINDS</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">FRONTEND_ONLY_KINDS</span><span class="p">[</span><span class="n">kind</span><span class="p">])</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">selected</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">profiles</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span><span class="si">}</span><span class="s2"> is a whole repo with no Python project; it "</span>
-            <span class="sa">f</span><span class="s2">"cannot be combined with other frontend profiles: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile_names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> is a whole repo with no Python project; it cannot be combined "</span>
+            <span class="sa">f</span><span class="s2">"with other frontend profiles: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
-    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">profiles</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_populate_frontend_only</span><span class="p">(</span>
@@ -2115,7 +2148,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=02707aa4"></script>
+</div><script src="../../_static/documentation_options.js?v=ab300ec2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
