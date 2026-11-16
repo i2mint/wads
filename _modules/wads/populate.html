@@ -332,6 +332,7 @@
     <span class="n">get_project_metadata</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">require_license</span><span class="p">,</span>
     <span class="n">license_body</span><span class="p">,</span>
     <span class="n">resolve_author</span><span class="p">,</span>
     <span class="n">substitute_license_placeholders</span><span class="p">,</span>
@@ -737,6 +738,12 @@
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="c1"># Fail on an unknown licence before anything is written, when it is going to be</span>
+    <span class="c1"># written: an existing LICENSE is kept, and pyproject takes any SPDX expression.</span>
+    <span class="n">_licence</span> <span class="o">=</span> <span class="n">license</span> <span class="ow">or</span> <span class="n">args_defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"license"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_licence</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">"LICENSE"</span> <span class="ow">in</span> <span class="n">overwrite</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">"LICENSE"</span><span class="p">))):</span>
+        <span class="n">require_license</span><span class="p">(</span><span class="n">_licence</span><span class="p">)</span>
 
     <span class="n">frontend_only</span> <span class="o">=</span> <span class="n">_frontend_only_profiles</span><span class="p">(</span>
         <span class="n">project_type</span><span class="p">,</span> <span class="n">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">)</span>
@@ -1346,7 +1353,7 @@
 <span class="sd">    True</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span>
-        <span class="n">license_body</span><span class="p">(</span><span class="n">license_name</span><span class="p">),</span>
+        <span class="n">license_body</span><span class="p">(</span><span class="n">require_license</span><span class="p">(</span><span class="n">license_name</span><span class="p">)[</span><span class="s2">"key"</span><span class="p">]),</span>
         <span class="n">author</span><span class="o">=</span><span class="n">resolve_author</span><span class="p">(</span>
             <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">pyproject_authors</span><span class="o">=</span><span class="n">pyproject_authors</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
         <span class="p">),</span>
@@ -2148,7 +2155,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=43134f72"></script>
+</div><script src="../../_static/documentation_options.js?v=ea533b14"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

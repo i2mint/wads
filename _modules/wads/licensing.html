@@ -290,6 +290,7 @@
 <span></span><span class="sd">"""Licensing"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="n">licenses_json_path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">difflib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -434,6 +435,46 @@
         <span class="k">return</span> <span class="n">_license_info</span><span class="p">[</span><span class="s2">"body"</span><span class="p">]</span>
 
 
+<div class="viewcode-block" id="require_license">
+<a class="viewcode-back" href="../../_autosummary/wads.licensing.html#wads.licensing.require_license">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">require_license</span><span class="p">(</span><span class="n">license</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``license_info`` of ``license``, or a ``ValueError`` naming the closest keys.</span>
+
+<span class="sd">    ``license`` is a key, name or SPDX id, in any case, or a name</span>
+<span class="sd">    :func:`wads.toml_util.pep639_license` knows (``Apache Software License``). An</span>
+<span class="sd">    unknown one used to print the key list and carry on to write an empty LICENSE</span>
+<span class="sd">    (issue #237).</span>
+
+<span class="sd">    &gt;&gt;&gt; require_license("mit")["spdx_id"], require_license("APACHE-2.0")["key"]</span>
+<span class="sd">    ('MIT', 'apache-2.0')</span>
+<span class="sd">    &gt;&gt;&gt; require_license("Apache Software License")["key"]</span>
+<span class="sd">    'apache-2.0'</span>
+<span class="sd">    &gt;&gt;&gt; require_license("apach")  # doctest: +ELLIPSIS</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: 'apach' is not a valid licence key; closest: apache-2.0 (...</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.toml_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">pep639_license</span>
+
+    <span class="n">licenses</span> <span class="o">=</span> <span class="n">licenses_dict</span><span class="p">()</span>
+    <span class="n">spellings</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># lowercased key / name / SPDX id -&gt; key</span>
+    <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">licenses</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">spelling</span> <span class="ow">in</span> <span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="s2">"spdx_id"</span><span class="p">]):</span>
+            <span class="n">spellings</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">spelling</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"key"</span><span class="p">]</span>
+    <span class="n">spdx</span> <span class="o">=</span> <span class="n">pep639_license</span><span class="p">(</span><span class="n">license</span><span class="p">)</span>  <span class="c1"># a string when `license` names an SPDX id</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="p">),</span> <span class="n">spdx</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spdx</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">spellings</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">licenses</span><span class="p">[</span><span class="n">spellings</span><span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">lower</span><span class="p">()]]</span>
+    <span class="n">close</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">spellings</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">spellings</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">close</span><span class="p">))</span>
+    <span class="n">suggestion</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"closest: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span> <span class="k">if</span> <span class="n">keys</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">license</span><span class="si">!r}</span><span class="s2"> is not a valid licence key; </span><span class="si">{</span><span class="n">suggestion</span><span class="si">}</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"(all keys: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">licenses</span><span class="p">))</span><span class="si">}</span><span class="s2">)"</span>
+    <span class="p">)</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">license_info</span><span class="p">(</span><span class="n">license</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">search_name_and_spdx_id</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">licenses</span> <span class="o">=</span> <span class="n">licenses_dict</span><span class="p">(</span><span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">license</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">licenses</span><span class="p">:</span>
@@ -460,7 +501,8 @@
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">raise</span>
 
-    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">licenses_json_path</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">licenses_json_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="get_licenses_from_github">
@@ -522,7 +564,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=43134f72"></script>
+</div><script src="../../_static/documentation_options.js?v=ea533b14"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

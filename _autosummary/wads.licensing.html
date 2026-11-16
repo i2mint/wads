@@ -317,10 +317,13 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">licenses_dict</span></code>([refresh])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.licensing.resolve_author" title="wads.licensing.resolve_author"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_author</span></code></a>([author, pyproject_authors, url])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.licensing.require_license" title="wads.licensing.require_license"><code class="xref py py-obj docutils literal notranslate"><span class="pre">require_license</span></code></a>(license)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">license_info</span></code> of <code class="docutils literal notranslate"><span class="pre">license</span></code>, or a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming the closest keys.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.licensing.resolve_author" title="wads.licensing.resolve_author"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_author</span></code></a>([author, pyproject_authors, url])</p></td>
 <td><p>Resolve the author name following a priority chain.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.licensing.substitute_license_placeholders" title="wads.licensing.substitute_license_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">substitute_license_placeholders</span></code></a>(license_text)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.licensing.substitute_license_placeholders" title="wads.licensing.substitute_license_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">substitute_license_placeholders</span></code></a>(license_text)</p></td>
 <td><p>Replace placeholders in license text with actual values.</p></td>
 </tr>
 </tbody>
@@ -335,6 +338,31 @@ See pygithub for details.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>license_jsons = get_licenses_json_from_github()
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.licensing.require_license">
+<span class="sig-prename descclassname"><span class="pre">wads.licensing.</span></span><span class="sig-name descname"><span class="pre">require_license</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">license</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/licensing.html#require_license"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.licensing.require_license" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">license_info</span></code> of <code class="docutils literal notranslate"><span class="pre">license</span></code>, or a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming the closest keys.</p>
+<p><code class="docutils literal notranslate"><span class="pre">license</span></code> is a key, name or SPDX id, in any case, or a name
+<a class="reference internal" href="wads.toml_util.html#wads.toml_util.pep639_license" title="wads.toml_util.pep639_license"><code class="xref py py-func docutils literal notranslate"><span class="pre">wads.toml_util.pep639_license()</span></code></a> knows (<code class="docutils literal notranslate"><span class="pre">Apache</span> <span class="pre">Software</span> <span class="pre">License</span></code>). An
+unknown one used to print the key list and carry on to write an empty LICENSE
+(issue #237).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">require_license</span><span class="p">(</span><span class="s2">"mit"</span><span class="p">)[</span><span class="s2">"spdx_id"</span><span class="p">],</span> <span class="n">require_license</span><span class="p">(</span><span class="s2">"APACHE-2.0"</span><span class="p">)[</span><span class="s2">"key"</span><span class="p">]</span>
+<span class="go">('MIT', 'apache-2.0')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">require_license</span><span class="p">(</span><span class="s2">"Apache Software License"</span><span class="p">)[</span><span class="s2">"key"</span><span class="p">]</span>
+<span class="go">'apache-2.0'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">require_license</span><span class="p">(</span><span class="s2">"apach"</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">'apach' is not a valid licence key; closest: apache-2.0 (...</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -465,6 +493,7 @@ See pygithub for details.</p>
             <ul>
 <li><a class="reference internal" href="#">wads.licensing</a><ul>
 <li><a class="reference internal" href="#wads.licensing.get_licenses_from_github"><code class="docutils literal notranslate"><span class="pre">get_licenses_from_github()</span></code></a></li>
+<li><a class="reference internal" href="#wads.licensing.require_license"><code class="docutils literal notranslate"><span class="pre">require_license()</span></code></a></li>
 <li><a class="reference internal" href="#wads.licensing.resolve_author"><code class="docutils literal notranslate"><span class="pre">resolve_author()</span></code></a></li>
 <li><a class="reference internal" href="#wads.licensing.substitute_license_placeholders"><code class="docutils literal notranslate"><span class="pre">substitute_license_placeholders()</span></code></a></li>
 </ul>
@@ -478,7 +507,7 @@ See pygithub for details.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=43134f72"></script>
+</div><script src="../_static/documentation_options.js?v=ea533b14"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

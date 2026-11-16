@@ -1,4 +1,4 @@
-> built 2026-11-16 09:43 UTC from 995d76c (master) · wads 0.2.94. Details: build_info.json
+> built 2026-11-16 09:58 UTC from 91cc05f (master) · wads 0.2.95. Details: build_info.json
 
 # index.html.md
 
@@ -4899,6 +4899,7 @@ Licensing
 | `license_body`([license, ...])                                                                    |                                                                                                                             |
 | `license_info`([license, ...])                                                                    |                                                                                                                             |
 | `licenses_dict`([refresh])                                                                        |                                                                                                                             |
+| [`require_license`](_autosummary/wads.licensing.html.md#wads.licensing.require_license)(license)                         | The `license_info` of `license`, or a `ValueError` naming the closest keys.                                                 |
 | [`resolve_author`](_autosummary/wads.licensing.html.md#wads.licensing.resolve_author)([author, pyproject_authors, url]) | Resolve the author name following a priority chain.                                                                         |
 | [`substitute_license_placeholders`](_autosummary/wads.licensing.html.md#wads.licensing.substitute_license_placeholders)(license_text)    | Replace placeholders in license text with actual values.                                                                    |
 
@@ -4911,6 +4912,29 @@ See pygithub for details.
 ```text
 license_jsons = get_licenses_json_from_github()
 ```
+
+### wads.licensing.require_license(license)
+
+The `license_info` of `license`, or a `ValueError` naming the closest keys.
+
+`license` is a key, name or SPDX id, in any case, or a name
+[`wads.toml_util.pep639_license()`](_autosummary/wads.toml_util.html.md#wads.toml_util.pep639_license) knows (`Apache Software License`). An
+unknown one used to print the key list and carry on to write an empty LICENSE
+(issue #237).
+
+```pycon
+>>> require_license("mit")["spdx_id"], require_license("APACHE-2.0")["key"]
+('MIT', 'apache-2.0')
+>>> require_license("Apache Software License")["key"]
+'apache-2.0'
+>>> require_license("apach")
+Traceback (most recent call last):
+  ...
+ValueError: 'apach' is not a valid licence key; closest: apache-2.0 (...
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### wads.licensing.resolve_author(author=None, pyproject_authors=None, url=None)
 
@@ -9595,7 +9619,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 09:43 UTC** from commit <a href="https://github.com/i2mint/wads/commit/995d76cac4fe3a375873b2ba9014153abe1ce0d5"><code>995d76c</code></a> on branch <code>master</code>, for **wads 0.2.94** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 09:58 UTC** from commit <a href="https://github.com/i2mint/wads/commit/91cc05f81a22030dea15c53952c530f47633f0cb"><code>91cc05f</code></a> on branch <code>master</code>, for **wads 0.2.95** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9604,7 +9628,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/995d76cac4fe3a375873b2ba9014153abe1ce0d5"><code>995d76cac4fe3a375873b2ba9014153abe1ce0d5</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/91cc05f81a22030dea15c53952c530f47633f0cb"><code>91cc05f81a22030dea15c53952c530f47633f0cb</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9615,9 +9639,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43841855651">43841855651</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43843859532">43843859532</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>995d76cac4fe3a375873b2ba9014153abe1ce0d5</code> (in the history of the built commit) |
+| Event commit | <code>91cc05f81a22030dea15c53952c530f47633f0cb</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9642,13 +9666,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.94/">0.2.94</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.95/">0.2.95</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 995d76cac4fe3a375873b2ba9014153abe1ce0d5
+git checkout 91cc05f81a22030dea15c53952c530f47633f0cb
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
