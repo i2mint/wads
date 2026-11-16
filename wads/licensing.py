@@ -1,6 +1,7 @@
 """Licensing"""
 
 from wads import licenses_json_path
+import difflib
 import json
 import os
 import re
@@ -137,6 +138,34 @@ def license_body(license=None, search_name_and_spdx_id=True, refresh=False):
     _license_info = license_info(license, search_name_and_spdx_id, refresh=refresh)
     if _license_info is not None:
         return _license_info["body"]
+
+
+def require_license(license: str) -> dict:
+    """The ``license_info`` of ``license`` (a key, name or SPDX id), or a ``ValueError``
+    that names the closest valid keys: an unknown licence used to print the key list
+    and carry on to write an empty LICENSE (issue #237).
+
+    >>> require_license("mit")["spdx_id"]
+    'MIT'
+    >>> require_license("apach")  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: 'apach' is not a valid licence key; closest: apache-2.0...
+    """
+    licenses = licenses_dict()
+    for info in licenses.values():
+        if license == info["key"] or license in {info["name"], info["spdx_id"]}:
+            return info
+    spellings = {}
+    for info in licenses.values():
+        for spelling in (info["key"], info["name"], info["spdx_id"]):
+            spellings[str(spelling).lower()] = info["key"]
+    close = difflib.get_close_matches(str(license).lower(), spellings, n=3, cutoff=0.4)
+    keys = list(dict.fromkeys(spellings[c] for c in close)) or sorted(licenses)
+    raise ValueError(
+        f"{license!r} is not a valid licence key; closest: {', '.join(keys)} "
+        f"(all keys: {', '.join(sorted(licenses))})"
+    )
 
 
 def license_info(license=None, search_name_and_spdx_id=True, refresh=False):

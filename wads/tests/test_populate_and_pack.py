@@ -309,3 +309,19 @@ class TestCompatibility:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+@pytest.mark.parametrize("kwargs", [{}, {"project_type": "ts-package"}])
+def test_an_unknown_license_is_refused_before_anything_is_written(tmp_path, kwargs):
+    """#237: it used to print the key list and write an empty LICENSE."""
+    from wads.populate import populate_pkg_dir
+
+    with pytest.raises(ValueError, match="apache-2.0"):
+        populate_pkg_dir(str(tmp_path), license="apache", verbose=False, **kwargs)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_a_license_may_be_a_key_a_name_or_an_spdx_id():
+    from wads.licensing import require_license
+
+    assert {require_license(x)["key"] for x in ("mit", "MIT", "MIT License")} == {"mit"}

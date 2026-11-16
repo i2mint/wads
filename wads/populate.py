@@ -43,6 +43,7 @@ from wads.toml_util import (
     get_project_metadata,
 )
 from wads.licensing import (
+    require_license,
     license_body,
     resolve_author,
     substitute_license_placeholders,
@@ -412,6 +413,11 @@ def populate_pkg_dir(
                 raise KeyError(
                     f"{wads_configs_file} json didn't have a {defaults_from} field"
                 )
+
+    # Fail on an unknown licence before anything is written.
+    _licence = license or args_defaults.get("license")
+    if _licence:
+        require_license(_licence)
 
     if isinstance(overwrite, str):
         overwrite = {overwrite}
