@@ -1,4 +1,4 @@
-> built 2026-11-16 07:37 UTC from 6abd1fd (master) · wads 0.2.88. Details: build_info.json
+> built 2026-11-16 07:55 UTC from 465e128 (master) · wads 0.2.89. Details: build_info.json
 
 # index.html.md
 
@@ -490,6 +490,8 @@ wheel = true
 [tool.wads.ci.publish]
 enabled = true  # Publish to PyPI on main/master
 ```
+
+**Which merges does a release contain?** The publish job builds the commit its run checked out. When other PRs merged while it ran, its `**CI** ... Updated version to X` commit is replayed onto the newer branch tip and its subject says so: `... Updated version to X (built from <sha>) [skip ci]`. The tag is on that bump commit as it was before the replay, whose parent is the built commit; do not read “the first bump commit after a merge in `git log`” as the first release containing it. The authoritative answer is `git tag --contains <commit> --sort=v:refname | head -1`.
 
 Commit-subject markers narrow what a default-branch push does. wads matches them against the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count. The one exception is `[skip ci]` itself: GitHub skips the whole run when it appears *anywhere* in the pushed commit message, body included. This also means a PR whose title carries a marker skips that job on its own squash-merge, so keep markers out of PR titles unless you mean it.
 
@@ -9502,7 +9504,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 07:37 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6abd1fd8ad7e7cb793b382736a82e07a0456d5ae"><code>6abd1fd</code></a> on branch <code>master</code>, for **wads 0.2.88** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 07:55 UTC** from commit <a href="https://github.com/i2mint/wads/commit/465e12823cb4dbaee72086c4143d67582938f9c9"><code>465e128</code></a> on branch <code>master</code>, for **wads 0.2.89** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9511,7 +9513,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/6abd1fd8ad7e7cb793b382736a82e07a0456d5ae"><code>6abd1fd8ad7e7cb793b382736a82e07a0456d5ae</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/465e12823cb4dbaee72086c4143d67582938f9c9"><code>465e12823cb4dbaee72086c4143d67582938f9c9</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9522,9 +9524,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43824761637">43824761637</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43826774041">43826774041</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>6abd1fd8ad7e7cb793b382736a82e07a0456d5ae</code> (in the history of the built commit) |
+| Event commit | <code>465e12823cb4dbaee72086c4143d67582938f9c9</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9549,13 +9551,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.88/">0.2.88</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.89/">0.2.89</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 6abd1fd8ad7e7cb793b382736a82e07a0456d5ae
+git checkout 465e12823cb4dbaee72086c4143d67582938f9c9
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
