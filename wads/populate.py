@@ -355,7 +355,8 @@ def populate_pkg_dir(
     :param frontend: Comma-separated list of frontend profiles to add (issue
         #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the
         original npm overlay), ``ts`` (single-package TypeScript), and
-        ``ts-monorepo`` (pnpm workspaces + turbo). Each component lands in its
+        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` makes the repo
+    itself a TypeScript package, with no Python project. Each component lands in its
         own subdir with its own path-filtered workflow, so multiple profiles
         never collide. Empty by default. The single-component overrides below
         (``npm_subdir`` / ``npm_package_name`` / ``npm_package_manager``) apply
@@ -420,6 +421,31 @@ def populate_pkg_dir(
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
     name = os.path.basename(pkg_dir)
     pjoin = lambda *p: os.path.join(pkg_dir, *p)
+
+    selected = _selected_frontends(frontend, with_npm)
+    if selected and _is_frontend_only(selected):
+        # A repo that is only a frontend package (e.g. ``-f ts-package``): none of the
+        # Python project below applies.
+        if native:
+            raise ValueError("--native needs a Python project; this one has none")
+        _populate_frontend_only(
+            pkg_dir,
+            profiles=selected,
+            name=name,
+            description=description,
+            license_name=license,
+            author=author,
+            root_url=root_url,
+            version=npm_version or version,
+            npm_package_name=npm_package_name,
+            npm_subdir=npm_subdir,
+            npm_package_manager=npm_package_manager,
+            overwrite=overwrite,
+            tracker=tracker,
+            clog=_clog,
+            verbose=verbose,
+        )
+        return name
 
     if native:  # fail before writing anything
         from wads.profiles import get_native_profile, native_names
@@ -937,14 +963,7 @@ def populate_pkg_dir(
 
     # Frontend profiles (opt-in, issue #39): add a JS/TS component per selected
     # profile. ``--with-npm`` is the back-compat alias for ``--frontend js``.
-    selected_frontends = [p.strip() for p in frontend.split(",") if p.strip()]
-    if with_npm and "js" not in selected_frontends:
-        selected_frontends = ["js"] + selected_frontends
-    # De-duplicate while preserving selection order.
-    _seen: set = set()
-    selected_frontends = [
-        p for p in selected_frontends if not (p in _seen or _seen.add(p))
-    ]
+    selected_frontends = _selected_frontends(frontend, with_npm)
     if selected_frontends:
         from wads.profiles import apply_frontend
 
@@ -995,6 +1014,95 @@ def populate_pkg_dir(
 
 
 _DFLT_NPM_VERSION = "0.0.1"
+
+
+def _selected_frontends(frontend: str, with_npm: bool) -> list:
+    """The frontend profile names selected by ``frontend`` (comma-separated) and
+    ``with_npm`` (alias for ``js``), de-duplicated, in selection order.
+
+    >>> _selected_frontends("ts, js,ts", with_npm=False)
+    ['ts', 'js']
+    >>> _selected_frontends("ts", with_npm=True)
+    ['js', 'ts']
+    """
+    names = [p.strip() for p in frontend.split(",") if p.strip()]
+    if with_npm and "js" not in names:
+        names = ["js"] + names
+    return list(dict.fromkeys(names))
+
+
+def _is_frontend_only(profile_names) -> bool:
+    """Whether every selected profile is a whole repo with no Python project.
+
+    >>> _is_frontend_only(["ts-package"]), _is_frontend_only(["ts"]), _is_frontend_only([])
+    (True, False, False)
+    """
+    from wads.profiles import get_frontend_profile
+
+    return bool(profile_names) and not any(
+        get_frontend_profile(n).python for n in profile_names
+    )
+
+
+def _populate_frontend_only(
+    pkg_dir: str,
+    *,
+    profiles,
+    name: str,
+    description: str,
+    license_name: str,
+    author,
+    root_url,
+    version: str,
+    npm_package_name,
+    npm_subdir: str,
+    npm_package_manager: str,
+    overwrite,
+    tracker,
+    clog,
+    verbose: bool,
+) -> None:
+    """Populate a repo that is only a frontend package: licence, ``.gitignore``, and the
+    profile's files at its default subdir (the repo root for ``ts-package``)."""
+    from wads.profiles import apply_frontend, get_frontend_profile
+    from wads.templating import Artifact, generate
+
+    body = substitute_license_placeholders(
+        license_body(license_name),
+        author=resolve_author(author=author, url=root_url),
+    )
+    generate(
+        pkg_dir,
+        [
+            Artifact("LICENSE", lambda _ctx: body),
+            *_static_file_artifacts(False, False),
+        ],
+        {},
+        overwrite=overwrite,
+        on_add=tracker.add,
+        on_skip=tracker.skip,
+    )
+    single = len(profiles) == 1
+    for profile_name in profiles:
+        clog(f"\n... adding frontend profile '{profile_name}'")
+        default_subdir = get_frontend_profile(profile_name).default_subdir
+        apply_frontend(
+            pkg_dir,
+            profile=profile_name,
+            project_name=name,
+            description=description,
+            license=license_name,
+            subdir=npm_subdir if single and npm_subdir != "js" else default_subdir,
+            package_name=npm_package_name if single else None,
+            version=version,
+            package_manager=npm_package_manager
+            if npm_package_manager != "npm"
+            else None,
+            overwrite=overwrite,
+            on_add=tracker.add,
+            on_skip=tracker.skip,
+        )
+    tracker.print_summary(verbose=verbose)
 
 
 def _python_metadata_seed(pkg_dir: str) -> dict:

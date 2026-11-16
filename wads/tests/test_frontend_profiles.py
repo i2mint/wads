@@ -403,5 +403,74 @@ def test_a_dynamic_python_version_falls_back_to_the_default(tmp_path):
     assert pkg["version"] == "0.0.1"
 
 
+# --- ts-package: a repo that is only a TypeScript package (#225) --------------
+
+
+def test_ts_package_populate_writes_no_python_project(tmp_path):
+    pkg_dir = tmp_path / "byok"
+    pkg_dir.mkdir()
+    populate_pkg_dir(
+        str(pkg_dir),
+        root_url="https://github.com/myorg",
+        description="Keys, bring your own",
+        verbose=False,
+        frontend="ts-package",
+    )
+    written = {p.relative_to(pkg_dir).as_posix() for p in pkg_dir.rglob("*") if p.is_file()}
+    assert {
+        "LICENSE",
+        ".gitignore",
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.test.json",
+        "src/index.ts",
+        "src/index.test.ts",
+        ".github/workflows/npm-ci.yml",
+    } == written
+    assert not (pkg_dir / "pyproject.toml").exists()
+    assert not (pkg_dir / "byok").exists(), "no Python package directory"
+
+
+def test_ts_package_files_sit_at_the_root_and_pin_node_22(tmp_path):
+    apply_frontend(str(tmp_path), profile="ts-package", project_name="byok")
+    pkg = json.loads((tmp_path / "package.json").read_text())
+    assert pkg["engines"] == {"node": ">=22"}
+    assert pkg["devDependencies"]["vitest"] == "^5"
+    ci = pkg["wads"]["ci"]
+    assert ci["subdir"] == "." and ci["nodeVersions"] == ["22", "24"]
+    assert ci["publishNode"] == "24"
+
+
+def test_ts_package_stub_has_no_path_filter_and_builds_the_root(tmp_path):
+    apply_frontend(str(tmp_path), profile="ts-package", project_name="byok")
+    stub = (tmp_path / ".github" / "workflows" / "npm-ci.yml").read_text()
+    assert "paths:" not in stub
+    assert "package-dir: ." in stub
+    assert "\n  push:\n  pull_request:\n" in stub
+
+
+def test_the_ts_profile_keeps_its_node_20_matrix_and_has_no_engines(tmp_path):
+    """Only ts-package sets a Node floor; ``ts`` still runs where vitest 3 does."""
+    apply_frontend(str(tmp_path), profile="ts", project_name="widget")
+    pkg = json.loads((tmp_path / "ts" / "package.json").read_text())
+    assert "engines" not in pkg
+    assert pkg["wads"]["ci"]["nodeVersions"] == ["20", "22", "24"]
+    assert pkg["devDependencies"]["vitest"] == "^3"
+
+
+def test_ts_package_does_not_copy_the_licence_onto_itself(tmp_path):
+    (tmp_path / "LICENSE").write_text("MIT")
+    res = apply_frontend(str(tmp_path), profile="ts-package", project_name="byok")
+    assert "LICENSE" not in res.added
+    assert (tmp_path / "LICENSE").read_text() == "MIT"
+
+
+def test_populate_refuses_native_without_a_python_project(tmp_path):
+    with pytest.raises(ValueError, match="native"):
+        populate_pkg_dir(
+            str(tmp_path), verbose=False, frontend="ts-package", native="maturin"
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
