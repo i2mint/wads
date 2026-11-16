@@ -46,9 +46,10 @@ def test_setup_to_pyproject_emits_an_spdx_license_string(given, expected):
 
 def test_a_license_that_is_not_spdx_keeps_the_table_form():
     """Hatchling rejects a non-SPDX ``license`` string, so never emit one."""
-    assert _migrated_license("Proprietary, all rights reserved") == {
-        "text": "Proprietary, all rights reserved"
-    }
+    with pytest.warns(UserWarning, match="SPDX"):
+        assert _migrated_license("Proprietary, all rights reserved") == {
+            "text": "Proprietary, all rights reserved"
+        }
 
 
 def test_pep639_license_falls_back_without_a_new_enough_packaging(monkeypatch):
@@ -174,3 +175,13 @@ def test_native_licence_of_a_bsd_classifier_is_none(tmp_path):
         '[project]\nclassifiers = ["License :: OSI Approved :: BSD License"]\n'
     )
     assert native_licence(str(tmp_path)) is None
+
+
+def test_migrating_a_non_spdx_license_warns_to_set_project_license():
+    with pytest.warns(UserWarning, match=r"set \[project\]\.license"):
+        assert _migrated_license("BSD") == {"text": "BSD"}
+
+
+def test_migrating_an_spdx_license_does_not_warn(recwarn):
+    assert _migrated_license("mit") == "MIT"
+    assert not [w for w in recwarn if "project].license" in str(w.message)]

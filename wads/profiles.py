@@ -57,23 +57,20 @@ from wads.templating import (
     generate,
 )
 
-# Map common license identifiers to SPDX identifiers npm expects.
-_SPDX_BY_NAME = {
-    "mit": "MIT",
-    "apache": "Apache-2.0",
-    "apache-2.0": "Apache-2.0",
-    "apache software license": "Apache-2.0",
-    "bsd": "BSD-3-Clause",
-    "bsd-3-clause": "BSD-3-Clause",
-    "gpl": "GPL-3.0-or-later",
-    "gpl-3.0": "GPL-3.0-or-later",
-}
-
 
 def _to_spdx(license_name: Optional[str]) -> str:
+    """The licence as npm's ``license`` field: an SPDX expression when wads' one alias
+    map (:func:`wads.toml_util.pep639_license`) can make one, else the name unchanged
+    (never a guess at a variant), and ``MIT`` when none is given.
+
+    >>> _to_spdx(None), _to_spdx("mit"), _to_spdx("BSD-2-Clause")
+    ('MIT', 'MIT', 'BSD-2-Clause')
+    >>> _to_spdx("bsd")  # which BSD? no guess
+    'bsd'
+    """
     if not license_name:
         return "MIT"
-    return _SPDX_BY_NAME.get(license_name.strip().lower(), license_name)
+    return _spdx_expression(license_name) or license_name
 
 
 # --------------------------------------------------------------------------------------
